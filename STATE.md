@@ -1,4 +1,4 @@
-# StackPick: stan na 2026-08-07 (wieczór)
+# StackPick: stan na 2026-08-08 (noc)
 
 Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
 
@@ -14,7 +14,7 @@ Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
 
 ## Co działa
 
-Darmowy skan: 14 checków, 5 etapów, 16 punktów, zero LLM, wynik odtwarzalny.
+Darmowy skan: 14 checków, 5 etapów, 16 punktów, zero LLM, wynik odtwarzalny (zmierzone, patrz niżej).
 Landing z żywymi rankingami 7 kategorii, karta wyniku pod trwałym linkiem, `/methodology`,
 `/findings`, `/pricing`, `/docs`, konsola operatora, wysyłka raportu mailem w HTML,
 karta OG generowana per raport, skan strumieniowany przez SSE z realnymi krokami.
@@ -53,20 +53,39 @@ grep po tekście zamiast po payloadach `<script>`, brak podwójnego liczenia `.w
 robots.txt nieodczytany nie daje darmowych punktów, kontrast WCAG w obu motywach,
 paski etapów przestały odwracać dane, karta OG nazywa domenę.
 
-## Co zostało z audytów, w kolejności wagi
+## Runda 2026-08-08: co zrobione (formuła 2.2)
 
-1. **"Napraw to najpierw" z deltą** w karcie wyniku: *"Napraw 403, a 3/16 → 6/16, wyprzedzasz
-   tiptap.dev"*. Wszystkie dane już są. Najmocniejsza sugestia audytu designu.
-2. **429 zabija jedyne CTA.** Przy limicie pokazać przykładowy raport i pole na maila zamiast
-   czerwonego błędu. Limit per domena, nie per IP.
-3. **Brak przycisku udostępniania** na raporcie, którego zadaniem jest bycie przekazywanym.
-4. **Discovery nie sonduje subdomen** `docs.` / `developer.` / `api.` (allegro, stripe).
-5. **npm trafia w placeholdery** z dokumentacji (`htmx-ext-extension-name`) i przy 404 z rejestru
-   daje twarde zero zamiast fallbacku na wyszukiwanie.
-6. Header szerszy niż treść na `/methodology` i `/findings`; `autoFocus` otwiera klawiaturę na
-   telefonie; przekreślenie ukończonych kroków czyta się jak anulowanie.
-7. Wynik nie ma własnej formy wizualnej: brak sygnaturowego elementu, który niesie markę w OG,
+1. **"Napraw to najpierw" z deltą** (`src/lib/fixfirst.ts`, `src/components/fix-first.tsx`).
+   Kroki sortowane po nakładzie pracy, nie po punktach, z policzoną arytmetyką i nazwanymi
+   konkurentami, których przeskakujesz. Ten sam plan otwiera maila zamiast listy "also failing".
+   Produkcja: *"Fix the 3 cheapest items below and 8/16 becomes 13/16, past cloudflare.com,
+   supabase.com and vercel.com."*
+2. **Limit przestał zabijać lejek** (`src/lib/scan-gate.ts`). Skan sprzed <15 min idzie ze
+   store'u za darmo, limit liczy się per domena (5/h) z luźnym sufitem per IP (30/h), a odmowa
+   pokazuje najlepszą kartę, jaką mamy, plus pole na maila (`source: rate-limited`,
+   lead bez `reportId`).
+3. **Udostępnianie** na raporcie: kopiuj link, mail z gotową treścią, LinkedIn.
+4. **Discovery sonduje subdomeny** `docs./developer./developers./api.` oraz
+   `app./dashboard./console./accounts.` gdy nawigacja jest w JS. stripe.com i allegro.pl
+   wreszcie mają docsy.
+5. **npm przestał zgadywać.** Placeholdery z dokumentacji odrzucane; nazwa nieznana rejestrowi
+   idzie do wyszukiwania zamiast twardego zera; a wynik wyszukiwania daje punkt **tylko** gdy
+   nazwa to domena/brand/`@brand/brand-js` albo homepage stoi na tej domenie. Reszta to N/A.
+   *Dlaczego to ważne:* allegro.pl dostawało punkt za `worker-nodes`, wewnętrzną bibliotekę.
+6. Jedna szerokość kontenera (header przestał wystawać), `autoFocus` tylko przy `pointer: fine`,
+   ukończone kroki dostają ptaszek zamiast przekreślenia.
+
+**Powtarzalność zmierzona** (3 świeże skany × 3 domeny, produkcja, przez konsolę):
+resend.com 14/14/14, cloudinary.com 8/8/8, tiptap.dev 9/9/9. Zero niestabilnych checków.
+Uwaga: resend spadł z 15 na 14 przez próg `docs_without_js` (1 778 znaków przy progu 2 000) -
+to zmiana po ich stronie, nie nasza, ale pokazuje, że próg jest ostry.
+
+## Co zostało z audytów
+
+1. Wynik nie ma własnej formy wizualnej: brak sygnaturowego elementu, który niesie markę w OG,
    mailu i na stronie.
+2. Wyniki audytów wartości/poprawności i designu z rundy 2026-08-08 (agenty puszczone po
+   deployu) - do przerobienia.
 
 ## Następne kroki merytoryczne
 
