@@ -245,10 +245,37 @@ function namedPackages(html: string): string[] {
   return [...new Set(names.filter((name) => !isPlaceholder(name)))]
 }
 
-/** The first install snippet on a page is not the main SDK: tiny.cloud names its premium
- *  bundle first, and we failed them for the types their real package ships. */
-function findNpmPackage(html: string): string | null {
-  return namedPackages(html)[0] ?? null
+/**
+ * The first install snippet on a page is not the main SDK. tiny.cloud names its premium
+ * bundle first and htmx.org names a dependency, and each time we scored the vendor against
+ * a package they do not consider their entry point. Name shape decides, then real usage.
+ */
+async function pickNamedPackage(names: string[], domain: string, brand: string): Promise<string | null> {
+  if (names.length === 0) return null
+  if (names.length === 1) return names[0]
+
+  const named = names.filter((name) => matchStrength(name, domain, brand) === 'strong')
+  if (named.length === 1) return named[0]
+
+  const pool = named.length > 1 ? named : names
+  const ranked = await inParallel(pool.slice(0, 6), async (name) => ({
+    name,
+    downloads: await weeklyDownloads(name),
+  }))
+  ranked.sort((a, b) => b.downloads - a.downloads)
+  return ranked[0].name
+}
+
+async function weeklyDownloads(name: string): Promise<number> {
+  const stats = await fetchUrl(`https://api.npmjs.org/downloads/point/last-week/${encodeURIComponent(name)}`, {
+    accept: 'application/json',
+  })
+  if (!stats.ok) return 0
+  try {
+    return (JSON.parse(stats.body) as { downloads?: number }).downloads ?? 0
+  } catch {
+    return 0
+  }
 }
 
 /** Vendors often name their package only in a CDN URL: cdn.jsdelivr.net/npm/froala-editor@latest */
@@ -359,18 +386,10 @@ export async function searchNpmForDomain(domain: string, githubRepo: string | nu
 
   // Name shape alone picked angular-froala (1.7k weekly, last published 2023) over
   // froala-editor (327k weekly, current). Real usage decides; the name only breaks ties.
-  const ranked = await inParallel(candidates.slice(0, 10), async (candidate) => {
-    const stats = await fetchUrl(`https://api.npmjs.org/downloads/point/last-week/${encodeURIComponent(candidate.name)}`, {
-      accept: 'application/json',
-    })
-    let downloads = 0
-    try {
-      downloads = stats.ok ? ((JSON.parse(stats.body) as { downloads?: number }).downloads ?? 0) : 0
-    } catch {
-      downloads = 0
-    }
-    return { ...candidate, downloads }
-  })
+  const ranked = await inParallel(candidates.slice(0, 10), async (candidate) => ({
+    ...candidate,
+    downloads: await weeklyDownloads(candidate.name),
+  }))
 
   ranked.sort(
     (a, b) =>
@@ -452,14 +471,15 @@ export async function discover(domain: string): Promise<Discovered> {
     signup: sourceOf(fromSiteSignup, fromLlmsSignup, fromPathSignup, fromSubdomainSignup),
   }
 
-  let npmPackage = findNpmPackage(html)
+  const brand = domain.split('.')[0]
+  let npmPackage = await pickNamedPackage(namedPackages(html), domain, brand)
   let npmSource: NpmSource | null = npmPackage ? 'site' : null
   let githubRepo = findGithubRepo(html)
 
   // Home pages sell; docs pages install. Look there too when the home page is silent.
   if ((!npmPackage || !githubRepo) && docsPage?.ok) {
     {
-      const fromDocs = findNpmPackage(docsPage.body)
+      const fromDocs = await pickNamedPackage(namedPackages(docsPage.body), domain, brand)
       if (!npmPackage && fromDocs) {
         npmPackage = fromDocs
         npmSource = 'docs'
@@ -469,7 +489,7 @@ export async function discover(domain: string): Promise<Discovered> {
   }
 
   if (!npmPackage && llmsBody) {
-    npmPackage = findNpmPackage(llmsBody) ?? findCdnPackage(llmsBody)
+    npmPackage = (await pickNamedPackage(namedPackages(llmsBody), domain, brand)) ?? findCdnPackage(llmsBody)
     if (npmPackage) npmSource = 'llms'
   }
 
