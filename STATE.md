@@ -95,3 +95,48 @@ to zmiana po ich stronie, nie nasza, ale pokazuje, że próg jest ostry.
   wynik handlowy: treść zadania decyduje, czy twoja dokumentacja jest czytana.
 - Jeden przebieg (Opus) nie odwiedził **żadnej strony dostawcy**, tylko rejestr npm i `node_modules`.
   Stąd rekomendacja: licencja musi być w metadanych pakietu, nie tylko na stronie.
+
+## Runda 2026-08-08 (druga): dwa audyty agentowe i formuła 3.0
+
+**Audyt designu** znalazł rzecz, która unieważniała cały sens udostępniania: `metadataBase` nie było
+ustawione, więc `og:image` na produkcji wskazywał na `localhost`. Każdy link wklejony na Slacka czy
+LinkedIn szedł jako goły tekst. Naprawione i zweryfikowane na produkcji. Dalej: strona scrollowała
+się poziomo na 375 px (nawigacja, tabela dowodów, ranking), wynik nie miał skali odniesienia do
+1900 px w dół, `warn` był w 1,05:1 od `brass` w dark (średni wynik czytał się jako kolor marki),
+`ink-soft` i `ink-faint` były tym samym kolorem w dark, a panel limitu wyglądał identycznie jak
+panel sukcesu.
+
+**Audyt wartości** znalazł skaner obalający własne tezy. Najgorsze trzy:
+- Linear dostawał FAIL na OAuth DCR, mając `registration_endpoint` na `mcp.linear.app`. Sondowaliśmy
+  tylko apeks. Teraz idziemy też na host MCP i na trzy ścieżki metadanych, a brak hosta do sprawdzenia
+  to N/A, nie porażka.
+- Cloudinary oblewało provisioning, mając Provisioning API jeden link od strony, którą czytaliśmy.
+  Teraz docsy wybierane są po zawartości (kod, `curl`, `api key`), nie po kolejności w HTML, a grep
+  leci po kilku podstronach; korpus z jednej strony daje N/A.
+- Stripe: żywy `mcp.stripe.com` nie liczył się wcale, a strona dokumentacji `linear.app/docs/mcp.md`
+  dawała punkt. Teraz sondujemy `mcp.<domena>` i `/mcp`; 401 z `WWW-Authenticate` to najmocniejszy dowód.
+
+**I rzecz najpoważniejsza:** check, od którego nazywa się produkt, twierdził "answers a request
+without a browser", wysyłając nagłówki Chrome. Test drzwiowy leci teraz trzy razy jako
+`StackPick/1.0` i raportuje obie odpowiedzi, co samo w sobie jest mocniejszym znaleziskiem.
+
+Do tego: dopasowanie robots po product tokenie (RFC 9309), `Crawl-delay` spoza grupy `*`, brak
+robots.txt punktowany jako najbardziej permisywna odpowiedź (a nie N/A), porównania tylko w obrębie
+jednej wersji formuły, `linkSources` wreszcie widoczne na raporcie, `effort` w planie naprawczym
+liczony z findings, sygnały self-serve bez słowa "starter" (plan Starter za 599 USD to nie darmowy tier).
+
+## Zbiór 51 domen (formuła 2.2/2.3, przed 3.0)
+
+Mediana 8/16, średnia 7,4, rozrzut 1-14. Etapy: Discovery 87%, **wejście dla agenta 17%**,
+rejestracja 20%, provisioning 28%, integracja 59%. 47/51 bez punktu wejścia, 49/51 bez OAuth DCR,
+48/51 bez opisanej ścieżki do klucza. To jest teza produktu w liczbach: rynek rozwiązał czytanie,
+nie rozwiązał dołączania. Dane pod raport branżowy leżą w scratchpadzie (`rescan22`, `rescan23`,
+`rescan30`), skrypt agregujący `aggregate.py`.
+
+## Otwarte
+
+1. Raport branżowy z 51 domen (dane gotowe, strony jeszcze nie ma).
+2. `listReports(500)` po cichu urwie ranking, gdy zbiór urośnie: agregacja per domena w Mongo.
+3. Wynik nadal nie ma sygnaturowego elementu wizualnego niosącego markę w OG, mailu i na stronie.
+4. Runda 2 przebiegów agentowych w izolacji (kopie i skrypt gotowe od 2026-08-07).
+5. Domena i własny nadawca w Resend. Jedyna rzecz blokująca outbound, decyzja Krystiana.
