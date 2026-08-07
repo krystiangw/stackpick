@@ -30,4 +30,4 @@
   Rate limited to 10 scans per hour per address. The response carries a report id; the
   human-readable scorecard is at /r/{id}.
 - Private and loopback addresses are refused on purpose.
-- Contact: hello@stackpick.ai
+- Contact: gwizdala.kr@gmail.com

@@ -43,7 +43,7 @@ const TIERS: readonly Tier[] = [
       'Sixty minutes to walk through it with whoever owns the fix',
     ],
     note: 'Credited in full against a Full audit booked within 90 days.',
-    cta: { label: 'Ask about a diagnostic', href: 'mailto:hello@stackpick.ai?subject=Diagnostic' },
+    cta: { label: 'Ask about a diagnostic', href: 'mailto:gwizdala.kr@gmail.com?subject=Diagnostic' },
   },
   {
     name: 'Full audit',
@@ -57,7 +57,7 @@ const TIERS: readonly Tier[] = [
       'A re-measure after 60 days, so the change is a number and not an opinion',
     ],
     featured: true,
-    cta: { label: 'Ask about an audit', href: 'mailto:hello@stackpick.ai?subject=Full%20agent%20audit' },
+    cta: { label: 'Ask about an audit', href: 'mailto:gwizdala.kr@gmail.com?subject=Full%20agent%20audit' },
   },
 ]
 

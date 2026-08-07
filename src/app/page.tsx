@@ -48,7 +48,7 @@ export default async function Home() {
           <ScanForm autoFocus />
         </div>
         <p className="mt-3 font-mono text-xs text-ink-faint">
-          Free. No account. Reads only what any browser can read.
+          Free. No account. Reads only what you publish.
         </p>
       </section>
 

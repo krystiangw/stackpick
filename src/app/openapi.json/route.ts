@@ -10,7 +10,7 @@ export function GET() {
       title: 'StackPick',
       version: '1.0.0',
       description: `Scores a domain out of ${MAX_SCORE} on agent readiness across ${STAGES.length} funnel stages, using ${CHECKS.length} deterministic HTTP checks. No account, no key.`,
-      contact: { email: 'hello@stackpick.ai', url: `${BASE}/methodology` },
+      contact: { email: 'gwizdala.kr@gmail.com', url: `${BASE}/methodology` },
     },
     servers: [{ url: BASE }],
     paths: {
@@ -67,7 +67,7 @@ export function GET() {
             },
             '400': { description: 'Not a domain' },
             '422': { description: 'Domain refused or unreachable' },
-            '429': { description: 'Rate limit reached, ten per hour per address' },
+            '429': { description: 'Rate limit reached, five per hour per registrable domain, thirty per hour per address' },
           },
         },
       },

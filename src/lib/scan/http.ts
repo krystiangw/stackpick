@@ -9,7 +9,9 @@ export const BROWSER_UA =
  * claiming "answers a request without a browser" while sending Chrome headers was a lie in
  * the one sentence the whole product is named after.
  */
-export const AGENT_UA = 'StackPick/1.0 (+https://stackpick.ai/methodology)'
+// The URL a vendor sees in their logs has to resolve, or the traffic reads as an anonymous
+// scanner. stackpick.ai is not registered yet, so this points at where the product lives.
+export const AGENT_UA = `StackPick/1.0 (+${process.env.STACKPICK_BASE_URL ?? 'https://stackpick-f12d13a227ea.herokuapp.com'}/methodology)`
 
 const TIMEOUT_MS = 15_000
 const MAX_BYTES = 400_000

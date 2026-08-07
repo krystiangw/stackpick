@@ -1,5 +1,5 @@
 {
-  "$schema": "https://stackpick.ai/schemas/agent-access.json",
+  "$schema": "https://stackpick-f12d13a227ea.herokuapp.com/schemas/agent-access.json",
   "name": "StackPick",
   "summary": "Measures whether an AI coding agent can find, register with and integrate a product.",
   "signup_required": false,
@@ -31,5 +31,5 @@
     "IP literals, private ranges and non-resolving hosts are refused on purpose.",
     "Redirects are re-checked at every hop against the resolved address."
   ],
-  "contact": "hello@stackpick.ai"
+  "contact": "gwizdala.kr@gmail.com"
 }

@@ -191,22 +191,35 @@ async function firstLivePath(site: string, paths: string[]): Promise<string | nu
 
 const readsLikeAPage = (got: Fetched) => got.ok && looksLikeHtml(got) && visibleTextLength(got.body) > 200
 
+/** True when a URL is on the scanned registration, so a redirect off-site cannot be scored. */
+function sameSite(url: string, domain: string): boolean {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, '').toLowerCase()
+    return host === domain || host.endsWith(`.${domain}`)
+  } catch {
+    return false
+  }
+}
+
 /**
  * Probes prefix.domain in order, and only walks paths on a host that answered at all.
  * A host that does not resolve costs one failed DNS lookup, not a timeout per path.
  */
 async function firstLiveSubdomain(domain: string, prefixes: string[], paths: string[]): Promise<string | null> {
   const roots = await inParallel(prefixes, (prefix) => fetchUrl(`https://${prefix}.${domain}`))
+  // A subdomain that redirects off-site is not this vendor's page. docs.statuspage.io served
+  // a dead Zendesk placeholder and we reported its 303 characters as their documentation.
+  const onSite = (got: Fetched) => readsLikeAPage(got) && sameSite(got.url, domain)
 
   for (const [index, root] of roots.entries()) {
     if (!root.ok) continue
     if (paths.length === 0) {
-      if (readsLikeAPage(root)) return root.url
+      if (onSite(root)) return root.url
       continue
     }
     const host = `https://${prefixes[index]}.${domain}`
     const pages = await inParallel(paths, (path) => fetchUrl(`${host}${path}`))
-    const hit = pages.find(readsLikeAPage)
+    const hit = pages.find(onSite)
     if (hit) return hit.url
   }
   return null
@@ -221,14 +234,21 @@ const PLACEHOLDER_NAMES =
 
 const isPlaceholder = (name: string) => PLACEHOLDER_NAMES.test(name)
 
-function findNpmPackage(html: string): string | null {
-  const fromRegistryLink = html.match(/npmjs\.com\/package\/(@?[a-z0-9._-]+(?:\/[a-z0-9._-]+)?)/i)
-  if (fromRegistryLink && !isPlaceholder(fromRegistryLink[1])) return fromRegistryLink[1]
-  const fromInstallSnippet = html.match(/npm (?:install|i) (?:--save )?(@?[a-z0-9._-]+(?:\/[a-z0-9._-]+)?)/i)
-  if (fromInstallSnippet && fromInstallSnippet[1].length > 2 && !isPlaceholder(fromInstallSnippet[1])) {
-    return fromInstallSnippet[1]
+function namedPackages(html: string): string[] {
+  const names: string[] = []
+  for (const match of html.matchAll(/npmjs\.com\/package\/(@?[a-z0-9._-]+(?:\/[a-z0-9._-]+)?)/gi)) {
+    names.push(match[1])
   }
-  return null
+  for (const match of html.matchAll(/npm (?:install|i) (?:--save )?(@?[a-z0-9._-]+(?:\/[a-z0-9._-]+)?)/gi)) {
+    if (match[1].length > 2) names.push(match[1])
+  }
+  return [...new Set(names.filter((name) => !isPlaceholder(name)))]
+}
+
+/** The first install snippet on a page is not the main SDK: tiny.cloud names its premium
+ *  bundle first, and we failed them for the types their real package ships. */
+function findNpmPackage(html: string): string | null {
+  return namedPackages(html)[0] ?? null
 }
 
 /** Vendors often name their package only in a CDN URL: cdn.jsdelivr.net/npm/froala-editor@latest */
@@ -278,20 +298,12 @@ async function searchRegistry(text: string): Promise<NpmSearchHit[]> {
   }
 }
 
-const hostOf = (url: string): string => {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '').toLowerCase()
-  } catch {
-    return ''
-  }
-}
-
 /**
  * A name that only shares a GitHub org with the site is a hypothesis, not a finding.
  * allegro.pl has no JS SDK, and the org filter alone happily returned worker-nodes, an
  * internal utility, which then scored a point for shipping types.
  */
-function matchStrength(name: string, links: string[], domain: string, brand: string): 'strong' | 'weak' {
+function matchStrength(name: string, domain: string, brand: string): 'strong' | 'weak' {
   const lower = name.toLowerCase()
   // A bare @brand/ scope is not enough: @allegro/convert-description is an internal library,
   // and calling it the SDK turned "we do not know" into a failed check.
@@ -309,8 +321,9 @@ function matchStrength(name: string, links: string[], domain: string, brand: str
     `@${brand}/api`,
     `@${brand}/node`,
   ]
-  const homed = links.some((link) => hostOf(link) === domain)
-  return entryNames.includes(lower) || homed ? 'strong' : 'weak'
+  // A homepage link is what every unofficial client publishes too: statuspage.io picked up a
+  // third-party GPL wrapper this way and we told Atlassian to ship types for it.
+  return entryNames.includes(lower) ? 'strong' : 'weak'
 }
 
 /**
@@ -335,7 +348,7 @@ export async function searchNpmForDomain(domain: string, githubRepo: string | nu
       (org !== null && links.some((link) => new RegExp(`github\\.com/${org}/`, 'i').test(link)))
     if (!ours) continue
     seen.add(name)
-    candidates.push({ name, confidence: matchStrength(name, links, domain, brand) })
+    candidates.push({ name, confidence: matchStrength(name, domain, brand) })
   }
   if (candidates.length === 0) return null
 
@@ -376,10 +389,11 @@ export async function discover(domain: string): Promise<Discovered> {
 
   const fromSiteDocs = pickLink(links, DOCS_HINTS, base)
   const fromSiteDeveloper = pickLink(links, DEVELOPER_HINTS, base)
-  const fromLlmsDocs = pickFromLlms(llmsEntries, DOCS_HINTS, [/doc/, /guide/, /api reference/, /developer/])
+  const onSiteLlms = llmsEntries.filter((entry) => sameSite(entry.url, domain))
+  const fromLlmsDocs = pickFromLlms(onSiteLlms, DOCS_HINTS, [/doc/, /guide/, /api reference/, /developer/])
   const fromSubdomainDocs = await firstLiveSubdomain(domain, DOCS_SUBDOMAINS, [])
   const fromPathDocs =
-    (fromSiteDocs ?? fromSiteDeveloper ?? fromLlmsDocs ?? fromSubdomainDocs) ? null : await firstLivePath(site, DOCS_FALLBACKS)
+    (fromSiteDocs ?? fromSiteDeveloper ?? fromLlmsDocs) ? null : await firstLivePath(site, DOCS_FALLBACKS)
 
   // Whichever of these reads most like developer documentation wins; order in the HTML does not.
   const chosen = await bestDocs([fromSiteDeveloper, fromSubdomainDocs, fromSiteDocs, fromLlmsDocs, fromPathDocs])
@@ -389,13 +403,13 @@ export async function discover(domain: string): Promise<Discovered> {
   // An llms.txt label saying "Outcome-Based Pricing" sent us to a solutions page and the
   // vendor failed the self-serve check on it, while its real /pricing says $0 three times.
   const fromSitePricing = pickLink(links, PRICING_HINTS, base)
-  const fromLlmsPricing = pickFromLlms(llmsEntries, PRICING_HINTS, [/pricing/, /plans/, /buy/, /cart/])
+  const fromLlmsPricing = pickFromLlms(onSiteLlms, PRICING_HINTS, [/pricing/, /plans/, /buy/, /cart/])
   const chosenPricing = await bestPricing([fromSitePricing, `${site}/pricing`, `${site}/plans`, fromLlmsPricing])
   const pricing = chosenPricing?.url ?? (await firstLivePath(site, PRICING_FALLBACKS))
   const pricingPage = chosenPricing?.page ?? null
 
   const fromSiteSignup = pickLink(links, SIGNUP_HINTS, base)
-  const fromLlmsSignup = pickFromLlms(llmsEntries, SIGNUP_HINTS, [/sign ?up/, /register/, /get started/, /free trial/])
+  const fromLlmsSignup = pickFromLlms(onSiteLlms, SIGNUP_HINTS, [/sign ?up/, /register/, /get started/, /free trial/])
   const fromPathSignup = (fromSiteSignup ?? fromLlmsSignup) ? null : await firstLivePath(site, SIGNUP_FALLBACKS)
   const fromSubdomainSignup =
     (fromSiteSignup ?? fromLlmsSignup ?? fromPathSignup)

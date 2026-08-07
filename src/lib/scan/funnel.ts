@@ -37,11 +37,11 @@ const PROVISIONING_PATTERNS = [
 /** Only signals that actually mean "an agent can finish without a human or a card". */
 const SELF_SERVE_PATTERNS = [
   /no credit card/i,
-  /free tier/i,
-  /free plan/i,
+  /(?<!no )free tier/i,
+  /(?<!no )free plan/i,
   /start for free/i,
   /free forever/i,
-  /\$0(?:\.00)?\b/,
+  /\$0(?:\.00)?(?![.\d])/,
   /\bget started free\b/i,
   /\btry (?:it )?free\b/i,
 ]
@@ -57,7 +57,6 @@ export type SignupFindings = {
   rendersFormWithoutJs: boolean
   captcha: string[]
   behindCloudflare: boolean
-  socialOauth: string[]
 }
 
 export type McpEndpoint = { url: string; status: number; evidence: 'challenges' | 'rejects-get' | 'answers-json' }
@@ -70,7 +69,6 @@ export type FunnelFindings = {
   mcpEndpoints: McpEndpoint[]
   signup: SignupFindings
   provisioning: { programmatic: string[]; selfServeSignals: string[] }
-  mentionsCli: boolean
   /** True when the site answers unknown paths with real text, making entry probes meaningless. */
   servesCatchAll: boolean
   pricingFetched: boolean
@@ -96,7 +94,12 @@ async function probeOauthDcr(site: string, mcpHosts: string[]) {
   for (const got of results) {
     if (!got.ok || looksLikeHtml(got)) continue
     try {
-      const metadata = JSON.parse(got.body) as { registration_endpoint?: string }
+      const metadata = JSON.parse(got.body) as {
+        registration_endpoint?: string
+        issuer?: string
+        authorization_endpoint?: string
+      }
+      if (!metadata.issuer && !metadata.authorization_endpoint) continue
       metadataPublished = true
       if (metadata.registration_endpoint) {
         return { metadataPublished: true, dynamicClientRegistration: true, probedHosts: origins.length }
@@ -119,7 +122,6 @@ async function inspectSignup(url: string | null): Promise<SignupFindings> {
       rendersFormWithoutJs: false,
       captcha: [],
       behindCloudflare: false,
-      socialOauth: [],
     }
   }
   const got = await fetchWithRetries(url)
@@ -135,7 +137,6 @@ async function inspectSignup(url: string | null): Promise<SignupFindings> {
       .filter(([, pattern]) => pattern.test(body))
       .map(([name]) => name),
     behindCloudflare: 'cf-ray' in got.headers || (got.headers.server ?? '').toLowerCase().includes('cloudflare'),
-    socialOauth: ['github', 'google', 'gitlab', 'microsoft'].filter((p) => body.includes(p) && body.includes('oauth')),
   }
 }
 
@@ -168,7 +169,14 @@ async function servesCatchAllText(site: string): Promise<boolean> {
  */
 async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpoint[]> {
   const candidates = [`https://mcp.${domain}`, `https://mcp.${domain}/mcp`, `${site}/mcp`]
-  const results = await inParallel(candidates, (url) => fetchUrl(url, { accept: 'application/json, text/event-stream' }))
+  const [results, control] = await Promise.all([
+    inParallel(candidates, (url) => fetchUrl(url, { accept: 'application/json, text/event-stream' })),
+    fetchUrl(`https://mcp-stackpick-control-8f3a1c.${domain}`, { accept: 'application/json' }),
+  ])
+  // A wildcard host behind an auth proxy answers 401 to anything, including a name nobody
+  // registered. Then every domain would "run an MCP server".
+  const answersAnything = control.status === 401 || control.status === 405 || control.ok
+  if (answersAnything) return []
 
   return results
     .map((got, index) => {
@@ -202,7 +210,7 @@ export async function scanFunnel(
 
   const mcpEndpoints = await probeMcpEndpoints(domain, site)
   const [oauth, signup, pricingPage] = await Promise.all([
-    probeOauthDcr(site, mcpEndpoints.map((endpoint) => new URL(endpoint.url).origin)),
+    probeOauthDcr(site, [...new Set(mcpEndpoints.map((endpoint) => new URL(endpoint.url).origin))]),
     inspectSignup(signupUrl),
     alreadyFetchedPricing ?? (pricingUrl ? fetchUrl(pricingUrl) : Promise.resolve(null)),
   ])
@@ -220,7 +228,6 @@ export async function scanFunnel(
       programmatic: matching(PROVISIONING_PATTERNS, corpus),
       selfServeSignals: matching(SELF_SERVE_PATTERNS, pricingText),
     },
-    mentionsCli: /\b(npx|cli install|command line interface)\b/i.test(corpus),
     servesCatchAll: catchAll,
     pricingFetched: Boolean(pricingPage?.ok),
   }

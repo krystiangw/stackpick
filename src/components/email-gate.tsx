@@ -87,8 +87,8 @@ export function EmailGate({
       <p className="mt-3 font-mono text-xs text-ink-faint">
         One email with the report. No sequence, no newsletter. We keep your address and this domain so we
         can follow up once, and we delete it on request at{' '}
-        <a href="mailto:privacy@stackpick.ai" className="text-brass underline underline-offset-4">
-          privacy@stackpick.ai
+        <a href="mailto:gwizdala.kr@gmail.com" className="text-brass underline underline-offset-4">
+          gwizdala.kr@gmail.com
         </a>
         .
       </p>
