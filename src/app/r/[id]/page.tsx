@@ -6,6 +6,7 @@ import { ComparisonSection } from '@/components/comparison'
 import { buildComparison } from '@/lib/compare'
 import { EmailGate } from '@/components/email-gate'
 import { FixFirst } from '@/components/fix-first'
+import { FunnelMark } from '@/components/funnel-mark'
 import { buildFixPlan } from '@/lib/fixfirst'
 import { getStore } from '@/lib/store'
 import { pickHeadline } from '@/lib/headline'
@@ -117,6 +118,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             </span>
             <span className="text-lg text-ink-faint">/ {scorecard.max}</span>
           </div>
+          <FunnelMark stages={scorecard.stages} />
           <dl className="flex flex-wrap gap-x-8 gap-y-2 font-mono text-xs">
             {scorecard.stages.map((stage) => (
               <div key={stage.stage} className="flex flex-col gap-0.5">

@@ -66,12 +66,37 @@ export function scorecardEmail(report: Report): { subject: string; text: string;
     <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-top:1px solid #dedbd2;padding-top:20px">
       <tr><td style="padding-top:20px">
         <span style="font:700 44px ui-sans-serif,system-ui,sans-serif;color:${
-          scorecard.total <= scorecard.max / 3 ? '#a4382a' : scorecard.total >= (scorecard.max * 2) / 3 ? '#2c6a4c' : '#8a6a12'
+          scorecard.total <= scorecard.max / 3 ? '#a4382a' : scorecard.total >= (scorecard.max * 2) / 3 ? '#2c6a4c' : '#9a4f0a'
         }">${scorecard.total}</span>
         <span style="font:16px ui-sans-serif,system-ui,sans-serif;color:#8a8b8f"> / ${scorecard.max}</span>
       </td></tr>
     </table>
-    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:16px">
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:18px">
+      <tr>
+        ${scorecard.stages
+          .map((stage) => {
+            const share = stage.max > 0 ? stage.points / stage.max : 0
+            const fill = share >= 0.67 ? '#2c6a4c' : share >= 0.34 ? '#9a4f0a' : '#a4382a'
+            const filled = share === 0 ? 2 : Math.max(Math.round(share * 56), 5)
+            return `<td style="padding-right:8px;vertical-align:bottom">
+              <table role="presentation" cellpadding="0" cellspacing="0" width="26">
+                <tr><td height="${56 - filled}" style="background:#e3dfd4;font-size:0;line-height:0">&nbsp;</td></tr>
+                <tr><td height="${filled}" style="background:${fill};font-size:0;line-height:0">&nbsp;</td></tr>
+              </table>
+            </td>`
+          })
+          .join('')}
+      </tr>
+      <tr>
+        ${scorecard.stages
+          .map(
+            (stage) =>
+              `<td style="padding:6px 8px 0 0;font:11px ui-monospace,SFMono-Regular,Menlo,monospace;color:#8a8b8f;text-align:center;width:26px">${stage.letter}</td>`,
+          )
+          .join('')}
+      </tr>
+    </table>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:14px">
       ${scorecard.stages.map((stage) => row(`${stage.letter} · ${stage.title}`, `${stage.points}/${stage.max}`)).join('')}
     </table>
   </td></tr>

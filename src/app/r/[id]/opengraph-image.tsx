@@ -11,7 +11,7 @@ const INK = '#16181c'
 const GROUND = '#faf9f6'
 const RULE = '#dedbd2'
 const FAIL = '#a4382a'
-const WARN = '#8a6a12'
+const WARN = '#9a4f0a'
 const PASS = '#2c6a4c'
 
 export default async function Image({ params }: { params: Promise<{ id: string }> }) {
@@ -66,22 +66,19 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         </div>
 
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', borderTop: `2px solid ${RULE}`, paddingTop: 28 }}>
-          <div style={{ display: 'flex', gap: 34 }}>
-            {scorecard.stages.map((stage) => (
-              <div key={stage.stage} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div style={{ display: 'flex', fontSize: 18, color: '#8a8b8f', letterSpacing: 2 }}>{stage.letter}</div>
-                <div
-                  style={{
-                    display: 'flex',
-                    fontSize: 26,
-                    fontWeight: 600,
-                    color: stage.points === 0 ? FAIL : stage.points === stage.max ? PASS : WARN,
-                  }}
-                >
-                  {stage.points}/{stage.max}
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14 }}>
+            {scorecard.stages.map((stage) => {
+              const share = stage.max > 0 ? stage.points / stage.max : 0
+              const fill = share >= 0.67 ? PASS : share >= 0.34 ? WARN : FAIL
+              return (
+                <div key={stage.stage} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                  <div style={{ display: 'flex', width: 34, height: 96, background: '#e3dfd4', alignItems: 'flex-end' }}>
+                    <div style={{ display: 'flex', width: '100%', height: share === 0 ? 3 : Math.max(share * 96, 8), background: fill }} />
+                  </div>
+                  <div style={{ display: 'flex', fontSize: 20, color: '#8a8b8f', letterSpacing: 2 }}>{stage.letter}</div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
             <div style={{ display: 'flex', fontSize: 96, fontWeight: 700, color: tone, letterSpacing: -5 }}>
