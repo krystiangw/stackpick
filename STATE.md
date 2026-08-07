@@ -161,8 +161,14 @@ Zmiany względem 2.3 pokazują, gdzie stara formuła kłamała: MCP spadło z 22
 
 ## Otwarte
 
-1. **Runda 2 przebiegów agentowych** - odpalona 2026-08-08 w nocy, sześć izolowanych kopii
-   (3× Opus, 3× Sonnet), zadanie o edytor tekstu w `<scratchpad>/runs/run-N`. Wyniki do
-   porównania z rundą 1 (skażoną): 6/6 Tiptap, Froala skreślana na licencji.
+1. ~~Runda 2 przebiegów agentowych~~ **zrobiona**, pełny opis: `ai-audit/runs/editors-round2.md`.
+   Skrót: wszystkie przebiegi wybrały Tiptap, potwierdzone artefaktem (`package.json`, nie
+   deklaracją). **Izolacja powtórzyła wynik rundy 1**, więc skażenie go nie wyprodukowało.
+   **Froala nie weszła nawet do zbioru kandydatów** (w rundzie 1 była wymieniona i skreślona na
+   licencji) - to mocniejszy materiał na rozmowę niż odrzucenie. CKEditor i TinyMCE odrzucane
+   cytatami z ich własnej dokumentacji o wymaganym kluczu. **Hipoteza o źródłach potwierdzona:**
+   przy zadaniu wymagającym weryfikacji licencji po źródła sięgnęły wszystkie przebiegi, w tym
+   wszystkie Sonnety (w badaniu storage: 0/10). 4/6 czytało `node_modules` i pliki `LICENSE`,
+   1/6 nie odwiedził żadnej strony dostawcy.
 2. **Domena i własny nadawca w Resend.** Jedyna rzecz blokująca outbound, decyzja Krystiana.
 3. Trzeci audyt agentowy po tej partii zmian (formuła 3.0 zmieniła dużo w punktacji).
