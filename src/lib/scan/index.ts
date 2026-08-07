@@ -1,4 +1,4 @@
-import { discover, normalizeDomain, type Discovered } from './discover'
+import { discover, normalizeDomain, searchNpmForDomain, type Discovered } from './discover'
 import { fetchUrl, visibleTextLength } from './http'
 import { scanFunnel, type FunnelFindings } from './funnel'
 import { scanMachineContext, type MachineFindings } from './machine'
@@ -18,6 +18,7 @@ export type ScanFindings = {
     signup: string | null
     npmPackage: string | null
     npmSource: 'site' | 'docs' | 'llms' | 'registry-search' | null
+    npmConfidence: 'strong' | 'weak' | null
     githubRepo: string | null
     linkSources: { docs: string | null; pricing: string | null; signup: string | null }
   }
@@ -61,10 +62,26 @@ export async function scanDomain(input: string, onProgress?: ScanProgress): Prom
   const robots = await scanRobots(found.site)
 
   report('Probing llms.txt, .well-known and OpenAPI', 3)
-  const [machine, npm] = await Promise.all([
+  const [machine, scraped] = await Promise.all([
     scanMachineContext(found.site, found.docs),
     checkNpm(found.npmPackage),
   ])
+
+  // A name lifted from a page that the registry has never heard of is our parsing error
+  // far more often than it is a missing SDK, so we ask the registry before scoring a zero.
+  let npm = scraped
+  if (found.npmPackage && !scraped.found && found.npmSource !== 'registry-search') {
+    const searched = await searchNpmForDomain(domain, found.githubRepo)
+    if (searched && searched.name !== found.npmPackage) {
+      const retried = await checkNpm(searched.name)
+      if (retried.found) {
+        npm = retried
+        found.npmPackage = searched.name
+        found.npmSource = 'registry-search'
+        found.npmConfidence = searched.confidence
+      }
+    }
+  }
 
   // The funnel greps documentation prose, so the corpus is docs plus whatever llms.txt exposes.
   report('Testing signup and agent entry points', 4)
@@ -85,6 +102,7 @@ export async function scanDomain(input: string, onProgress?: ScanProgress): Prom
       signup: found.signup,
       npmPackage: found.npmPackage,
       npmSource: found.npmSource,
+      npmConfidence: found.npmConfidence,
       githubRepo: found.githubRepo,
       linkSources: found.linkSources,
     },

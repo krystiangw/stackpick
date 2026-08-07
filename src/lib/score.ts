@@ -2,7 +2,7 @@ import { PROVISIONING_PATTERN_COUNT } from './scan/funnel'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '2.1'
+export const FORMULA_VERSION = '2.2'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -253,6 +253,15 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       if (!f.npm.package) {
         return { points: 0, detail: 'No npm package found on the site or in the registry', inconclusive: true }
+      }
+      // A registry name that only shares a GitHub org with the site is a hypothesis. Scoring
+      // it gave allegro.pl a point for an internal utility it does not publish as an SDK.
+      if (f.discovered.npmSource === 'registry-search' && f.discovered.npmConfidence === 'weak') {
+        return {
+          points: 0,
+          detail: `Unmeasurable: nothing on the site names a package, and the closest registry match (${f.npm.package}) is not clearly yours`,
+          inconclusive: true,
+        }
       }
       if (!f.npm.found) return yes(0, `Package ${f.npm.package} not found on the registry`)
       if (!f.npm.bundledTypes) return yes(0, `${f.npm.package} ships without bundled types`)

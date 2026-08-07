@@ -1,7 +1,7 @@
-import { fetchUrl, looksLikeHtml, visibleTextLength, type Fetched } from './http'
+import { fetchUrl, inParallel, looksLikeHtml, visibleTextLength, type Fetched } from './http'
 
 export type NpmSource = 'site' | 'docs' | 'llms' | 'registry-search'
-export type LinkSource = 'site' | 'llms-txt' | 'fallback-path'
+export type LinkSource = 'site' | 'llms-txt' | 'fallback-path' | 'subdomain'
 
 export type Discovered = {
   site: string
@@ -11,6 +11,8 @@ export type Discovered = {
   signup: string | null
   npmPackage: string | null
   npmSource: NpmSource | null
+  /** Set only for a registry search: whether the match is evidence or a hypothesis. */
+  npmConfidence: 'strong' | 'weak' | null
   githubRepo: string | null
   /** Where each URL came from, so a report can admit when it guessed. */
   linkSources: { docs: LinkSource | null; pricing: LinkSource | null; signup: LinkSource | null }
@@ -52,6 +54,12 @@ const SIGNUP_HINTS = [/\/sign[_-]?up/i, /\/register(\/|$)/i, /\/signup/i, /\/get
 const DOCS_FALLBACKS = ['/docs', '/documentation', '/developers']
 const PRICING_FALLBACKS = ['/pricing', '/plans']
 const SIGNUP_FALLBACKS = ['/signup', '/sign-up', '/register']
+
+// Large vendors put the two pages an agent needs on their own hosts, and their marketing
+// nav is often rendered by JavaScript, so neither the links nor the fallback paths find
+// them. Scoring stripe.com as having no documentation was measuring our crawler.
+const DOCS_SUBDOMAINS = ['docs', 'developer', 'developers', 'api']
+const SIGNUP_SUBDOMAINS = ['app', 'dashboard', 'console', 'accounts']
 
 export function normalizeDomain(input: string): string {
   const trimmed = input.trim().replace(/^https?:\/\//i, '').replace(/\/.*$/, '').replace(/^www\./i, '')
@@ -113,11 +121,45 @@ async function firstLivePath(site: string, paths: string[]): Promise<string | nu
   return null
 }
 
+const readsLikeAPage = (got: Fetched) => got.ok && looksLikeHtml(got) && visibleTextLength(got.body) > 200
+
+/**
+ * Probes prefix.domain in order, and only walks paths on a host that answered at all.
+ * A host that does not resolve costs one failed DNS lookup, not a timeout per path.
+ */
+async function firstLiveSubdomain(domain: string, prefixes: string[], paths: string[]): Promise<string | null> {
+  const roots = await inParallel(prefixes, (prefix) => fetchUrl(`https://${prefix}.${domain}`))
+
+  for (const [index, root] of roots.entries()) {
+    if (!root.ok) continue
+    if (paths.length === 0) {
+      if (readsLikeAPage(root)) return root.url
+      continue
+    }
+    const host = `https://${prefixes[index]}.${domain}`
+    const pages = await inParallel(paths, (path) => fetchUrl(`${host}${path}`))
+    const hit = pages.find(readsLikeAPage)
+    if (hit) return hit.url
+  }
+  return null
+}
+
+/**
+ * Docs write install lines for a reader to fill in. Treating htmx-ext-extension-name as
+ * a real package scored a hard zero on integration for a site that has no such problem.
+ */
+const PLACEHOLDER_NAMES =
+  /(^|[-/@])(your|my|our|the|some|any|example|sample|placeholder)[-/]|(package|module|plugin|extension|project|library|app|repo)[-_]?name$|^<|>$|\.\.\./i
+
+const isPlaceholder = (name: string) => PLACEHOLDER_NAMES.test(name)
+
 function findNpmPackage(html: string): string | null {
   const fromRegistryLink = html.match(/npmjs\.com\/package\/(@?[a-z0-9._-]+(?:\/[a-z0-9._-]+)?)/i)
-  if (fromRegistryLink) return fromRegistryLink[1]
+  if (fromRegistryLink && !isPlaceholder(fromRegistryLink[1])) return fromRegistryLink[1]
   const fromInstallSnippet = html.match(/npm (?:install|i) (?:--save )?(@?[a-z0-9._-]+(?:\/[a-z0-9._-]+)?)/i)
-  if (fromInstallSnippet && fromInstallSnippet[1].length > 2) return fromInstallSnippet[1]
+  if (fromInstallSnippet && fromInstallSnippet[1].length > 2 && !isPlaceholder(fromInstallSnippet[1])) {
+    return fromInstallSnippet[1]
+  }
   return null
 }
 
@@ -153,53 +195,104 @@ function nameAffinity(packageName: string, brand: string): number {
   return 1
 }
 
-/**
- * Last resort when no install snippet is on the site: ask the registry, then accept only a
- * package whose own metadata points back at this domain or at the same GitHub org. Never
- * guess by name alone.
- */
-async function searchNpmForDomain(domain: string, githubRepo: string | null): Promise<string | null> {
-  const brand = domain.split('.')[0]
-  const org = githubRepo?.split('/')[0].toLowerCase() ?? null
-  const got = await fetchUrl(`https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(brand)}&size=20`, {
+/** Whether a searched name can carry a point, or only a hypothesis. */
+export type NpmMatch = { name: string; confidence: 'strong' | 'weak' }
+
+async function searchRegistry(text: string): Promise<NpmSearchHit[]> {
+  const got = await fetchUrl(`https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(text)}&size=20`, {
     accept: 'application/json',
   })
-  if (!got.ok) return null
-
-  let candidates: string[]
+  if (!got.ok) return []
   try {
-    const hits = (JSON.parse(got.body) as { objects?: NpmSearchHit[] }).objects ?? []
-    candidates = hits
-      .filter((hit) => {
-        const links = Object.values(hit.package.links ?? {}).filter(Boolean) as string[]
-        if (links.some((link) => link.includes(domain))) return true
-        return org !== null && links.some((link) => new RegExp(`github\\.com/${org}/`, 'i').test(link))
-      })
-      .map((hit) => hit.package.name)
-      .slice(0, 5)
+    return (JSON.parse(got.body) as { objects?: NpmSearchHit[] }).objects ?? []
   } catch {
-    return null
+    return []
+  }
+}
+
+const hostOf = (url: string): string => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '').toLowerCase()
+  } catch {
+    return ''
+  }
+}
+
+/**
+ * A name that only shares a GitHub org with the site is a hypothesis, not a finding.
+ * allegro.pl has no JS SDK, and the org filter alone happily returned worker-nodes, an
+ * internal utility, which then scored a point for shipping types.
+ */
+function matchStrength(name: string, links: string[], domain: string, brand: string): 'strong' | 'weak' {
+  const lower = name.toLowerCase()
+  // A bare @brand/ scope is not enough: @allegro/convert-description is an internal library,
+  // and calling it the SDK turned "we do not know" into a failed check.
+  const entryNames = [
+    domain,
+    brand,
+    `${brand}-js`,
+    `${brand}-sdk`,
+    `${brand}-node`,
+    `${brand}-client`,
+    `@${brand}/${brand}`,
+    `@${brand}/${brand}-js`,
+    `@${brand}/sdk`,
+    `@${brand}/client`,
+    `@${brand}/api`,
+    `@${brand}/node`,
+  ]
+  const homed = links.some((link) => hostOf(link) === domain)
+  return entryNames.includes(lower) || homed ? 'strong' : 'weak'
+}
+
+/**
+ * Last resort when no install snippet is on the site. Searches the domain as well as the
+ * brand, because the package is often named after the site (htmx.org) and a bare brand
+ * query returns a squatted namesake instead.
+ */
+export async function searchNpmForDomain(domain: string, githubRepo: string | null): Promise<NpmMatch | null> {
+  const brand = domain.split('.')[0]
+  const org = githubRepo?.split('/')[0].toLowerCase() ?? null
+
+  const [byDomain, byBrand] = await Promise.all([searchRegistry(domain), searchRegistry(brand)])
+  const seen = new Set<string>()
+  const candidates: { name: string; confidence: 'strong' | 'weak' }[] = []
+
+  for (const hit of [...byDomain, ...byBrand]) {
+    const name = hit.package.name
+    if (seen.has(name) || isPlaceholder(name)) continue
+    const links = Object.values(hit.package.links ?? {}).filter(Boolean) as string[]
+    const ours =
+      links.some((link) => link.includes(domain)) ||
+      (org !== null && links.some((link) => new RegExp(`github\\.com/${org}/`, 'i').test(link)))
+    if (!ours) continue
+    seen.add(name)
+    candidates.push({ name, confidence: matchStrength(name, links, domain, brand) })
   }
   if (candidates.length === 0) return null
 
   // Name shape alone picked angular-froala (1.7k weekly, last published 2023) over
   // froala-editor (327k weekly, current). Real usage decides; the name only breaks ties.
-  const ranked = await Promise.all(
-    candidates.map(async (name) => {
-      const stats = await fetchUrl(`https://api.npmjs.org/downloads/point/last-week/${encodeURIComponent(name)}`, {
-        accept: 'application/json',
-      })
-      let downloads = 0
-      try {
-        downloads = stats.ok ? ((JSON.parse(stats.body) as { downloads?: number }).downloads ?? 0) : 0
-      } catch {
-        downloads = 0
-      }
-      return { name, downloads }
-    }),
+  const ranked = await inParallel(candidates.slice(0, 10), async (candidate) => {
+    const stats = await fetchUrl(`https://api.npmjs.org/downloads/point/last-week/${encodeURIComponent(candidate.name)}`, {
+      accept: 'application/json',
+    })
+    let downloads = 0
+    try {
+      downloads = stats.ok ? ((JSON.parse(stats.body) as { downloads?: number }).downloads ?? 0) : 0
+    } catch {
+      downloads = 0
+    }
+    return { ...candidate, downloads }
+  })
+
+  ranked.sort(
+    (a, b) =>
+      Number(b.confidence === 'strong') - Number(a.confidence === 'strong') ||
+      b.downloads - a.downloads ||
+      nameAffinity(b.name, brand) - nameAffinity(a.name, brand),
   )
-  ranked.sort((a, b) => b.downloads - a.downloads || nameAffinity(b.name, brand) - nameAffinity(a.name, brand))
-  return ranked[0].name
+  return { name: ranked[0].name, confidence: ranked[0].confidence }
 }
 
 export async function discover(domain: string): Promise<Discovered> {
@@ -215,7 +308,10 @@ export async function discover(domain: string): Promise<Discovered> {
 
   const fromSiteDocs = pickLink(links, DOCS_HINTS, base)
   const fromLlmsDocs = pickFromLlms(llmsEntries, DOCS_HINTS, [/doc/, /guide/, /api reference/, /developer/])
-  const docs = fromSiteDocs ?? fromLlmsDocs ?? (await firstLivePath(site, DOCS_FALLBACKS))
+  const fromPathDocs = (fromSiteDocs ?? fromLlmsDocs) ? null : await firstLivePath(site, DOCS_FALLBACKS)
+  const fromSubdomainDocs =
+    (fromSiteDocs ?? fromLlmsDocs ?? fromPathDocs) ? null : await firstLiveSubdomain(domain, DOCS_SUBDOMAINS, [])
+  const docs = fromSiteDocs ?? fromLlmsDocs ?? fromPathDocs ?? fromSubdomainDocs
 
   const fromSitePricing = pickLink(links, PRICING_HINTS, base)
   const fromLlmsPricing = pickFromLlms(llmsEntries, PRICING_HINTS, [/pricing/, /plans/, /buy/, /cart/])
@@ -223,12 +319,25 @@ export async function discover(domain: string): Promise<Discovered> {
 
   const fromSiteSignup = pickLink(links, SIGNUP_HINTS, base)
   const fromLlmsSignup = pickFromLlms(llmsEntries, SIGNUP_HINTS, [/sign ?up/, /register/, /get started/, /free trial/])
-  const signup = fromSiteSignup ?? fromLlmsSignup ?? (await firstLivePath(site, SIGNUP_FALLBACKS))
+  const fromPathSignup = (fromSiteSignup ?? fromLlmsSignup) ? null : await firstLivePath(site, SIGNUP_FALLBACKS)
+  const fromSubdomainSignup =
+    (fromSiteSignup ?? fromLlmsSignup ?? fromPathSignup)
+      ? null
+      : await firstLiveSubdomain(domain, SIGNUP_SUBDOMAINS, ['/signup', '/register'])
+  const signup = fromSiteSignup ?? fromLlmsSignup ?? fromPathSignup ?? fromSubdomainSignup
+
+  const sourceOf = (
+    onSite: string | null,
+    inLlms: string | null,
+    atPath: string | null,
+    onSubdomain: string | null,
+  ): LinkSource | null =>
+    onSite ? 'site' : inLlms ? 'llms-txt' : atPath ? 'fallback-path' : onSubdomain ? 'subdomain' : null
 
   const linkSources = {
-    docs: fromSiteDocs ? ('site' as const) : fromLlmsDocs ? ('llms-txt' as const) : docs ? ('fallback-path' as const) : null,
-    pricing: fromSitePricing ? ('site' as const) : fromLlmsPricing ? ('llms-txt' as const) : pricing ? ('fallback-path' as const) : null,
-    signup: fromSiteSignup ? ('site' as const) : fromLlmsSignup ? ('llms-txt' as const) : signup ? ('fallback-path' as const) : null,
+    docs: sourceOf(fromSiteDocs, fromLlmsDocs, fromPathDocs, fromSubdomainDocs),
+    pricing: sourceOf(fromSitePricing, fromLlmsPricing, pricing, null),
+    signup: sourceOf(fromSiteSignup, fromLlmsSignup, fromPathSignup, fromSubdomainSignup),
   }
 
   let npmPackage = findNpmPackage(html)
@@ -253,10 +362,15 @@ export async function discover(domain: string): Promise<Discovered> {
     if (npmPackage) npmSource = 'llms'
   }
 
+  let npmConfidence: 'strong' | 'weak' | null = null
   if (!npmPackage) {
-    npmPackage = await searchNpmForDomain(domain, githubRepo)
-    if (npmPackage) npmSource = 'registry-search'
+    const searched = await searchNpmForDomain(domain, githubRepo)
+    if (searched) {
+      npmPackage = searched.name
+      npmSource = 'registry-search'
+      npmConfidence = searched.confidence
+    }
   }
 
-  return { site, home, docs, pricing, signup, npmPackage, npmSource, githubRepo, linkSources }
+  return { site, home, docs, pricing, signup, npmPackage, npmSource, npmConfidence, githubRepo, linkSources }
 }

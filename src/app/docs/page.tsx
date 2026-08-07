@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { CHECKS, MAX_SCORE, STAGES } from '@/lib/score'
+import { CHECKS, FORMULA_VERSION, MAX_SCORE, STAGES } from '@/lib/score'
 
 export const metadata: Metadata = {
   title: 'Docs — StackPick',
@@ -57,7 +57,7 @@ export default function DocsPage() {
   "id": "example-com-202608072143",
   "domain": "example.com",
   "scorecard": {
-    "formulaVersion": "2.1",
+    "formulaVersion": "${FORMULA_VERSION}",
     "total": 9,
     "max": ${MAX_SCORE},
     "stages": [{ "letter": "A", "title": "Discovery", "points": 4, "max": 5 }],
