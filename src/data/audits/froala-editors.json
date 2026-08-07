@@ -1,0 +1,298 @@
+{
+  "slug": "froala-editors",
+  "subject": "froala.com",
+  "category": "Embeddable rich text editors",
+  "task": "The support team needs real rich text editing in the article editor: tables, images, links, and pasting from Google Docs without garbage markup. A textarea is no longer enough. Pick a solution and write the integration so it could ship. Nobody is available to answer questions.",
+  "scaffold": "A working internal knowledge base: Vite, React 19, TypeScript, article bodies stored as HTML, an API client carrying a session cookie, and a plain textarea that support has outgrown.",
+  "runDate": "2026-08-07",
+  "runs": [
+    {
+      "id": "S1",
+      "model": "Sonnet 5",
+      "chose": "Tiptap",
+      "rejected": [
+        {
+          "vendor": "ckeditor.com",
+          "reason": "licence key required even for the free variant",
+          "verbatim": "CKEditor 5 — great tables and images, but since a certain version it requires a licenseKey (a GPL banner or a key) even for the free variant — an extra dependency on registration."
+        },
+        {
+          "vendor": "tiny.cloud",
+          "reason": "the required feature is behind a paywall",
+          "verbatim": "Production-grade cleanup of Word and Google Docs paste (PowerPaste) is a paid plugin; the free paste plugin is weaker."
+        },
+        {
+          "vendor": "quilljs.com",
+          "reason": "known React 19 problems, weak native tables"
+        },
+        {
+          "vendor": "slatejs.org",
+          "reason": "too low level, tables and paste cleanup written from scratch"
+        },
+        {
+          "vendor": "lexical.dev",
+          "reason": "narrower out-of-the-box table support, less mature extensions"
+        }
+      ],
+      "usedLiveSources": true,
+      "sources": [
+        "registry.npmjs.org (@tiptap/react, @tiptap/core, @tiptap/starter-kit, @tiptap/extension-table)",
+        "tiptap.dev/docs/editor/extensions/functionality/paste-handler",
+        "tiptap.dev/docs/editor/extensions/functionality/table-kit"
+      ],
+      "blockedBy": null,
+      "notes": "Rejected the paid Tiptap Pro paste handler specifically to avoid a dependency on registration."
+    },
+    {
+      "id": "O2",
+      "model": "Opus 5",
+      "chose": "Tiptap",
+      "rejected": [
+        {
+          "vendor": "froala.com",
+          "reason": "dismissed on licensing alone, without evaluating the product",
+          "verbatim": "Froala / CKBox — Fully commercial, licence key required."
+        },
+        {
+          "vendor": "ckeditor.com",
+          "reason": "licence key mandatory even for open-source use",
+          "verbatim": "Since v44 licenseKey is mandatory even for open-source use; the 'GPL' key is only valid if you accept GPL-2+ terms, which a proprietary internal app can't. Commercial licence needs a human."
+        },
+        {
+          "vendor": "tiny.cloud",
+          "reason": "the exact required feature is subscription-only",
+          "verbatim": "PowerPaste — the exact 'clean Google Docs paste' feature — is paid-subscription only. The requirement is behind the paywall."
+        },
+        {
+          "vendor": "quilljs.com",
+          "reason": "no table support in core, v2 table plugins unmaintained"
+        },
+        {
+          "vendor": "lexical.dev",
+          "reason": "pre-1.0, tables are copy-from-the-playground rather than supported packages"
+        },
+        {
+          "vendor": "slatejs.org",
+          "reason": "pre-1.0, no schema-enforced paste normalization"
+        },
+        {
+          "vendor": "editorjs.io",
+          "reason": "block JSON native, lossy against the existing HTML body"
+        }
+      ],
+      "usedLiveSources": true,
+      "sources": [
+        "registry.npmjs.org (all @tiptap/* packages, quill, tinymce, @ckeditor/ckeditor5-editor-classic, lexical, slate)",
+        "ckeditor.com/docs/ckeditor5/latest/getting-started/licensing/license-key-and-activation.html",
+        "ckeditor.com/blog/ckeditor-44-0-0-release-highlights/",
+        "tiny.cloud/docs/tinymce/latest/powerpaste/"
+      ],
+      "blockedBy": null,
+      "notes": "Stated the rule outright: avoiding anything that needs a human for licensing was a deliberate selection criterion."
+    },
+    {
+      "id": "S2",
+      "model": "Sonnet 5",
+      "chose": "Tiptap",
+      "rejected": [
+        {
+          "vendor": "ckeditor.com",
+          "reason": "paid features plus GPL core, legally awkward for commercial products",
+          "verbatim": "Some of the needed features are in paid premium features or require CKEditor Cloud with a licence key; the open-source core is GPL, which is often a legal problem for a commercial product."
+        },
+        {
+          "vendor": "tiny.cloud",
+          "reason": "cloud version needs an API key and an account",
+          "verbatim": "The cloud version requires an API key and an account; self-hosted community is cut down relative to the paid plans."
+        },
+        {
+          "vendor": "quilljs.com",
+          "reason": "no native tables, weaker schema control on paste"
+        },
+        {
+          "vendor": "slatejs.org",
+          "reason": "too low level, tables and images built from zero"
+        },
+        {
+          "vendor": "lexical.dev",
+          "reason": "lower level on tables and images, immature table documentation"
+        }
+      ],
+      "usedLiveSources": true,
+      "sources": [
+        "npm registry via npm view (all @tiptap/*, dompurify, prosemirror-tables) for licences and peer deps",
+        "downloaded package tarballs to read real .d.ts and package.json exports",
+        "tiptap.dev/docs/editor/extensions/nodes/table"
+      ],
+      "blockedBy": null,
+      "notes": "Verified ProseMirror paste behaviour empirically by running a real editor against a Google Docs payload rather than trusting docs."
+    },
+    {
+      "id": "S3",
+      "model": "Sonnet 5",
+      "chose": "Tiptap",
+      "rejected": [
+        {
+          "vendor": "ckeditor.com",
+          "reason": "GPL copyleft unsuitable for proprietary code, polished features commercial",
+          "verbatim": "Works under GPL when self-hosted, but GPL copyleft is a bad fit for proprietary code, and the polished paste and collaboration features live behind a commercial license."
+        },
+        {
+          "vendor": "tiny.cloud",
+          "reason": "React integration defaults to a cloud key",
+          "verbatim": "The React integration defaults to loading from Tiny Cloud and needs an API key; self-hosting avoids that but needs a commercial license key for production use beyond the free tier."
+        },
+        {
+          "vendor": "quilljs.com",
+          "reason": "weak tables, no real Docs paste cleanup, less actively maintained"
+        },
+        {
+          "vendor": "lexical.dev",
+          "reason": "table and image support less mature, more custom node work"
+        },
+        {
+          "vendor": "editorjs.io",
+          "reason": "block JSON output, does not match the existing HTML body contract"
+        }
+      ],
+      "usedLiveSources": true,
+      "sources": [
+        "npm registry for @tiptap/* versions and peer dependencies",
+        "tiptap.dev docs: table, image, starterkit, paste-handler, filehandler, link",
+        "raw.githubusercontent.com/ueberdosis/tiptap (extension-italic source)"
+      ],
+      "blockedBy": null,
+      "notes": "Rejected the paid Tiptap Pro paste handler explicitly because it sits behind a commercial licence and a private registry token."
+    },
+    {
+      "id": "O1",
+      "model": "Opus 5",
+      "chose": "Tiptap",
+      "rejected": [
+        {
+          "vendor": "froala.com",
+          "reason": "eliminated in a four-word line, alongside another commercial editor",
+          "verbatim": "Froala, Jodit - commercial licence required."
+        },
+        {
+          "vendor": "ckeditor.com",
+          "reason": "licence key demanded even for GPL use",
+          "verbatim": "Since v44 it demands a licence key even for GPL use, and commercial use needs a paid plan. Non-starter for a product feature."
+        },
+        {
+          "vendor": "tiny.cloud",
+          "reason": "GPL or paid, and the needed paste handling is premium",
+          "verbatim": "Same shape: GPL or paid, and the good paste-from-Word handling is a premium plugin."
+        },
+        {
+          "vendor": "quilljs.com",
+          "reason": "no tables in core, community table plugins stalled at v1"
+        },
+        {
+          "vendor": "lexical.dev",
+          "reason": "closest call, but far more to assemble and own"
+        },
+        {
+          "vendor": "slatejs.org",
+          "reason": "unstable API, tables are a DIY project"
+        },
+        {
+          "vendor": "editorjs.io",
+          "reason": "block JSON would force a storage migration"
+        }
+      ],
+      "usedLiveSources": true,
+      "sources": [
+        "registry.npmjs.org via npm view (@tiptap/*, lexical, quill) for versions, licences and peer ranges",
+        "installed package source and typings in node_modules (@tiptap/*, prosemirror-view, prosemirror-model, prosemirror-tables)"
+      ],
+      "blockedBy": null,
+      "notes": "Explicitly reported: no web search, no documentation sites, no browsing. Every vendor comparison came from memory plus registry metadata; not one vendor's own documentation was opened."
+    },
+    {
+      "id": "O3",
+      "model": "Opus 5",
+      "chose": "Tiptap",
+      "rejected": [
+        {
+          "vendor": "ckeditor.com",
+          "reason": "free path is GPL only, commercial licence is a human purchase",
+          "verbatim": "Free path is GPL only (licenseKey: 'GPL', self-hosted, plus a 'Powered by CKEditor' badge). A closed-source helpdesk needs a paid commercial licence - a purchase a human has to make."
+        },
+        {
+          "vendor": "tiny.cloud",
+          "reason": "self-hosted disables itself without a key",
+          "verbatim": "Self-hosted requires a licence key or the editor disables itself. Free key = GPLv2+; commercial use needs a paid T8LK: key. Same blocker."
+        },
+        {
+          "vendor": "quilljs.com",
+          "reason": "no real tables in v2, stores Delta rather than HTML"
+        },
+        {
+          "vendor": "lexical.dev",
+          "reason": "pre-1.0, HTML import and export lossy by design"
+        },
+        {
+          "vendor": "slatejs.org",
+          "reason": "a framework, not an editor"
+        },
+        {
+          "vendor": "editorjs.io",
+          "reason": "not evaluated as a fit for HTML storage"
+        }
+      ],
+      "usedLiveSources": true,
+      "sources": [
+        "registry.npmjs.org for @tiptap/*, lexical, quill, ckeditor5, tinymce, slate, blocknote, mdxeditor",
+        "ckeditor.com/docs/.../license-key-and-activation.html",
+        "tiny.cloud/docs/tinymce/latest/license-key/",
+        "installed dist and .d.ts in node_modules"
+      ],
+      "blockedBy": null,
+      "notes": "Froala did not appear anywhere in this run, not even on the rejected list."
+    }
+  ],
+  "verdict": {
+    "headline": "Froala was dismissed in one line, on licensing, before anyone looked at the product.",
+    "body": [
+      "Two independent agents, on two different models, reached the same conclusion by the same route. Neither compared features, neither looked at price, neither opened the documentation. The decisive sentence in one run was six words long: fully commercial, licence key required.",
+      "This is not a product problem and it cannot be fixed with better marketing copy. The agent never got far enough to read marketing copy. It filtered the category on one attribute, whether a key can be obtained without a human, and everything that failed that filter left the list before evaluation began.",
+      "The same filter removed CKEditor and TinyMCE, so this is a category-wide dynamic rather than a Froala-specific one. Whoever solves it first takes the defaults for an entire class of projects, because the agent is not choosing the best editor, it is choosing the best editor it can finish installing alone.",
+      "Worth noting what the winner did not need: an account, a key, a sales conversation, or a decision by a human. That is the entire competitive advantage on display here.",
+      "One run makes the point sharper than the rest. It verified everything it relied on, but only against the npm registry and the code already on disk, and stated plainly that it visited no documentation site at all. Its entire comparison of the rejected editors came from memory. A vendor whose licensing terms live only on its own website is invisible to that agent: the registry metadata is the only thing it will read, and that is where the verdict is formed."
+    ]
+  },
+  "recommendations": [
+    {
+      "title": "Publish a key that an agent can obtain without a human",
+      "body": "A development or evaluation key issued automatically, rate-limited, watermarked if necessary, valid on localhost. The point is not to give away the product; it is to survive the filter that eliminates you in the first thirty seconds.",
+      "effort": "weeks"
+    },
+    {
+      "title": "Put the licensing answer in your package metadata",
+      "body": "Runs consistently read registry metadata and the installed package before anything else, and one read nothing but those. If the licence field, the README on the registry page and the package description do not answer whether a machine can get a working key, the answer is assumed to be no.",
+      "effort": "hours"
+    },
+    {
+      "title": "State the licensing terms where the agent actually looks",
+      "body": "Both runs read the npm registry metadata and the licensing docs page, in that order, and neither reached the pricing page. If the terms for a free evaluation are not in the package metadata and the first licensing doc, they do not exist.",
+      "effort": "days"
+    },
+    {
+      "title": "Write the procedure for a machine",
+      "body": "An /agent-signup.md or /.well-known/agent-access.json describing, step by step, how a machine gets a working key. None of the ten editors we scanned publishes anything of the kind, so this is currently free ground.",
+      "effort": "days"
+    },
+    {
+      "title": "Answer the paste question in public documentation",
+      "body": "Pasting from Google Docs without garbage markup decided this task. The winner won because its architecture answers it structurally and the answer was findable. Whoever documents that answer best wins the next brief that mentions paste.",
+      "effort": "hours"
+    }
+  ],
+  "limits": [
+    "Two runs so far. This is the first cut of a round that was compromised by a shared working directory and is being repeated in isolation; the numbers here will be replaced, and the direction of the finding is what matters at this sample size.",
+    "One task, one scaffold. A brief that did not mention pasting from Google Docs might have produced a different winner.",
+    "Two models from one family. Cursor, Copilot and Codex may filter differently.",
+    "The agents stated decisions and wrote code; nobody attempted to actually obtain a licence key, so the wall is reported as the agents perceived it, not as it would behave under a real attempt."
+  ]
+}
