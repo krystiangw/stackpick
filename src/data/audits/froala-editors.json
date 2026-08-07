@@ -4,7 +4,7 @@
   "category": "Embeddable rich text editors",
   "task": "The support team needs real rich text editing in the article editor: tables, images, links, and pasting from Google Docs without garbage markup. A textarea is no longer enough. Pick a solution and write the integration so it could ship. Nobody is available to answer questions.",
   "scaffold": "A working internal knowledge base: Vite, React 19, TypeScript, article bodies stored as HTML, an API client carrying a session cookie, and a plain textarea that support has outgrown.",
-  "runDate": "2026-08-07",
+  "runDate": "2026-08-08",
   "runs": [
     {
       "id": "S1",
@@ -253,13 +253,11 @@
     }
   ],
   "verdict": {
-    "headline": "Froala was dismissed in one line, on licensing, before anyone looked at the product.",
+    "headline": "Froala was not evaluated. In one round it was dismissed on licensing in a single line; in the next it was never named.",
     "body": [
-      "Two independent agents, on two different models, reached the same conclusion by the same route. Neither compared features, neither looked at price, neither opened the documentation. The decisive sentence in one run was six words long: fully commercial, licence key required.",
-      "This is not a product problem and it cannot be fixed with better marketing copy. The agent never got far enough to read marketing copy. It filtered the category on one attribute, whether a key can be obtained without a human, and everything that failed that filter left the list before evaluation began.",
-      "The same filter removed CKEditor and TinyMCE, so this is a category-wide dynamic rather than a Froala-specific one. Whoever solves it first takes the defaults for an entire class of projects, because the agent is not choosing the best editor, it is choosing the best editor it can finish installing alone.",
-      "Worth noting what the winner did not need: an account, a key, a sales conversation, or a decision by a human. That is the entire competitive advantage on display here.",
-      "One run makes the point sharper than the rest. It verified everything it relied on, but only against the npm registry and the code already on disk, and stated plainly that it visited no documentation site at all. Its entire comparison of the rejected editors came from memory. A vendor whose licensing terms live only on its own website is invisible to that agent: the registry metadata is the only thing it will read, and that is where the verdict is formed."
+      "Twelve runs across two rounds, two models, one brief: choose a rich text editor and wire it up. Every run picked the same MIT-licensed competitor, verified from the package files each run left behind rather than from what the run reported. Not one run compared Froala's features, opened its documentation, or looked at its price.",
+      "In the first round Froala reached two of six rejection lists and was struck off both in one line, on licensing. In the second round, where agents listed as many as ten alternatives by name, it reached none. Being rejected means you were in the room. This is the other thing.",
+      "The same runs eliminated CKEditor and TinyMCE by quoting those vendors' own documentation about a required licence key, during dependency research, before any product was compared. The evidence an agent acted on was package metadata and a licence field, not a marketing page."
     ]
   },
   "recommendations": [
@@ -290,9 +288,10 @@
     }
   ],
   "limits": [
-    "Two runs so far. This is the first cut of a round that was compromised by a shared working directory and is being repeated in isolation; the numbers here will be replaced, and the direction of the finding is what matters at this sample size.",
+    "Two rounds, twelve runs. The first round shared one working directory between agents and is reported here only because the second round, run in six isolated copies with the same brief, reached the same result. Where the rounds disagree, the isolated round is what stands.",
     "One task, one scaffold. A brief that did not mention pasting from Google Docs might have produced a different winner.",
     "Two models from one family. Cursor, Copilot and Codex may filter differently.",
-    "The agents stated decisions and wrote code; nobody attempted to actually obtain a licence key, so the wall is reported as the agents perceived it, not as it would behave under a real attempt."
+    "The agents stated decisions and wrote code; nobody attempted to actually obtain a licence key, so the wall is reported as the agents perceived it, not as it would behave under a real attempt.",
+    "Froala appeared in the first round and in neither run of the second. The claim below about how it was dismissed comes from the first round; the second round's finding is the harder one, that it was not considered at all."
   ]
 }

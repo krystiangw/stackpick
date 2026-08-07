@@ -41,7 +41,7 @@ export default async function AuditPage({ params }: { params: Promise<{ slug: st
 
         <div className="mt-10 grid gap-px bg-rule sm:grid-cols-3">
           {[
-            ['Runs', String(counts.totalRuns), 'independent agents, clean context'],
+            ['Runs', String(counts.totalRuns), 'agents, one brief, decisions made alone'],
             [
               `Chose ${audit.subject}`,
               `${counts.subjectChosen} / ${counts.totalRuns}`,
