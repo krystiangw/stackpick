@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# StackPick
 
-## Getting Started
+Measures whether an AI coding agent can find, register with and integrate a product.
 
-First, run the development server:
+Live: https://stackpick-f12d13a227ea.herokuapp.com
+
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+pnpm dev                      # writes reports to ./data, no accounts needed
+pnpm scan supabase.com        # same scanner, straight to the terminal
+VERBOSE=1 pnpm scan vercel.com
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Deploy
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+git push heroku main
+heroku logs -a stackpick --tail
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Config lives in Heroku config vars, see `.env.example` for the list. The console at `/app`
+needs `STACKPICK_CONSOLE_TOKEN`; visit `/app?key=<token>` once and the cookie carries it.
 
-## Learn More
+## Where things are
 
-To learn more about Next.js, take a look at the following resources:
+| Path | What |
+|---|---|
+| `src/lib/scan/` | The scanner: discovery, robots, machine context, funnel, npm |
+| `src/lib/score.ts` | The formula. Data, not code, so `/methodology` renders from it |
+| `src/lib/store.ts` | Filesystem or Mongo, chosen by env |
+| `src/app/r/[id]` | The scorecard, which is the thing that gets emailed |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`ARCHITECTURE.md` covers why the score is deterministic and which traps are already paid for.

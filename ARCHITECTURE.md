@@ -29,11 +29,13 @@ three times and report the median, flagging disagreement.
 
 ## Stack
 
-- Next.js 16 (App Router) + TypeScript + Tailwind 4, deployed on Vercel
-- No ORM: two tables, plain SQL
-- `lib/store` has two implementations chosen by env (filesystem for dev, Postgres for prod)
-  so the app runs with zero external accounts until deploy time
-- Resend for report sharing
+- Next.js 16 (App Router) + TypeScript + Tailwind 4
+- Heroku (Basic dyno, eu) at `stackpick-f12d13a227ea.herokuapp.com`
+- MongoDB Atlas, its own database on the existing cluster. A dyno loses its disk on every
+  restart, and a scorecard link that dies overnight breaks the one thing the report is for
+- `lib/store` picks its implementation from env: filesystem when `MONGODB_URI` is absent, so
+  the app runs locally with no external accounts
+- Resend for report sharing; without an API key the message is logged instead of sent
 
 ## Scan pipeline
 
