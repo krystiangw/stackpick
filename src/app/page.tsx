@@ -1,6 +1,10 @@
 import Link from 'next/link'
+import { Rankings } from '@/components/rankings'
 import { ScanForm } from '@/components/scan-form'
+import { loadRankings } from '@/lib/rankings'
 import { STAGES } from '@/lib/score'
+
+export const dynamic = 'force-dynamic'
 
 const EVIDENCE = [
   {
@@ -26,7 +30,9 @@ const EVIDENCE = [
   },
 ]
 
-export default function Home() {
+export default async function Home() {
+  const rankings = await loadRankings()
+
   return (
     <main className="mx-auto max-w-5xl px-6">
       <section className="border-b border-rule py-16 sm:py-24">
@@ -67,6 +73,8 @@ export default function Home() {
           </Link>
         </p>
       </section>
+
+      <Rankings rankings={rankings} />
 
       <section className="border-b border-rule py-14">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">The five stages</h2>
