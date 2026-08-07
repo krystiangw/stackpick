@@ -11,25 +11,16 @@ export function FixFirst({ plan }: { plan: FixPlan }) {
 
   return (
     <section className="border-b border-rule py-10">
-      <div className="flex flex-wrap items-baseline justify-between gap-4">
-        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-brass">Fix this first</h2>
-        <p className="flex items-baseline gap-2 font-mono text-sm tabular-nums">
-          <span className="text-ink-faint">
-            {plan.from}/{plan.max}
-          </span>
-          <span aria-hidden className="text-ink-faint">
-            →
-          </span>
-          <span className="font-semibold text-pass">
-            {plan.to}/{plan.max}
-          </span>
-          <span className="text-xs text-ink-faint">
-            +{plan.gain} {plan.gain === 1 ? 'point' : 'points'}
-          </span>
-        </p>
-      </div>
+      <h2 className="text-lg font-semibold tracking-tight">Fix this first</h2>
 
-      <p className="mt-4 max-w-3xl text-balance text-2xl font-semibold leading-snug tracking-tight">{plan.claim}</p>
+      {/* The gain is the only number this section adds; the score itself is already above. */}
+      <div className="mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+        <span className="font-mono text-4xl font-semibold tabular-nums text-pass">+{plan.gain}</span>
+        <span className="font-mono text-sm text-ink-soft">
+          {plan.gain === 1 ? 'point' : 'points'}, taking {plan.from}/{plan.max} to {plan.to}/{plan.max}
+          {plan.overtakes.length > 0 && `, past ${plan.overtakes.join(', ')}`}
+        </span>
+      </div>
 
       <ol className="mt-8 flex flex-col">
         {plan.quickWins.map((step, index) => (
@@ -38,8 +29,8 @@ export function FixFirst({ plan }: { plan: FixPlan }) {
             <div className="flex flex-col gap-2">
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <span className="text-sm font-semibold">{step.label}</span>
-                <span className="font-mono text-[0.65rem] uppercase tracking-widest text-ink-faint">
-                  {EFFORT_LABEL[step.effort]} · +{step.gain}
+                <span className="font-mono text-xs text-ink-soft">
+                  {EFFORT_LABEL[step.effort]} · <span className="text-pass tabular-nums">+{step.gain}</span>
                 </span>
               </div>
               <p className="max-w-2xl text-sm leading-relaxed text-ink-soft">{step.how}</p>

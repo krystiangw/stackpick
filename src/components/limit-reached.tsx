@@ -37,8 +37,8 @@ export function LimitReached({ error, example, domain }: { error: string; exampl
   }
 
   return (
-    <div className="border border-brass bg-brass-soft p-6">
-      <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-brass">Not now, but not never</h2>
+    <div className="border border-rule bg-sunken p-6">
+      <h2 className="text-lg font-semibold tracking-tight">Not now, but not never</h2>
       <p className="mt-3 max-w-2xl leading-relaxed">{error}</p>
 
       {example && (
@@ -66,14 +66,14 @@ export function LimitReached({ error, example, domain }: { error: string; exampl
               placeholder="you@company.com"
               disabled={state === 'sending'}
               aria-label="Your email"
-              className="min-w-0 flex-1 border border-rule bg-surface px-4 py-3 font-mono text-sm placeholder:text-ink-faint disabled:opacity-60"
+              className="min-w-0 flex-1 border border-rule bg-ground px-4 py-3 font-mono text-sm placeholder:text-ink-faint disabled:opacity-60"
             />
             <button
               type="submit"
               disabled={state === 'sending'}
               className="bg-ink px-6 py-3 font-mono text-sm text-ground transition-opacity hover:opacity-85 disabled:opacity-40"
             >
-              {state === 'sending' ? 'Saving…' : `Send me ${domain}`}
+              {state === 'sending' ? 'Saving…' : 'Send it to me'}
             </button>
           </form>
           {failed && (

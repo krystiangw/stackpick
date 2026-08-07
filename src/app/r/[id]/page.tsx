@@ -30,6 +30,21 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 }
 
+function scaleAnchor(comparison: Awaited<ReturnType<typeof buildComparison>>, total: number): string | null {
+  const peers = comparison.peers
+  if (peers.length >= 3) {
+    const scores = peers.map((peer) => peer.total).sort((a, b) => a - b)
+    const middle = Math.floor(scores.length / 2)
+    const median = scores.length % 2 === 0 ? (scores[middle - 1] + scores[middle]) / 2 : scores[middle]
+    const best = peers[0]
+    return `You ${total} · category median ${median} · best ${best.domain} ${best.total}`
+  }
+  if (comparison.percentile) {
+    return `Higher than ${comparison.percentile.betterThan} of the ${comparison.percentile.outOf} domains scanned here`
+  }
+  return null
+}
+
 function verdictTone(check: ScoredCheck) {
   if (check.points === check.max) return { label: 'PASS', className: 'text-pass' }
   if (check.inconclusive) return { label: 'N/A', className: 'text-ink-faint' }
@@ -53,6 +68,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   const headline = pickHeadline(findings, scorecard)
   const comparison = await buildComparison(report)
   const fixPlan = buildFixPlan(findings, scorecard, comparison)
+  // A number with no scale is not a finding. The anchor answers "is 8 bad?" above the fold,
+  // from data this page already loaded, instead of 1,900px down the page.
+  const anchor = scaleAnchor(comparison, scorecard.total)
 
   return (
     <main className="mx-auto max-w-5xl px-6">
@@ -97,6 +115,15 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           </dl>
         </div>
 
+        {anchor && (
+          <p className="mt-4 font-mono text-xs text-ink-soft">
+            {anchor} ·{' '}
+            <Link href="/methodology" className="text-brass underline underline-offset-4">
+              14 deterministic HTTP checks, published formula
+            </Link>
+          </p>
+        )}
+
         <div className="mt-8">
           <ShareRow
             domain={report.domain}
@@ -137,7 +164,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       <ComparisonSection comparison={comparison} domain={report.domain} />
 
       <section className="border-b border-rule py-10">
-        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">By stage</h2>
+        <h2 className="text-lg font-semibold tracking-tight">By stage</h2>
         <div className="mt-6 flex flex-col">
           {scorecard.stages.map((stage) => (
             <div key={stage.stage} className="grid grid-cols-[1.5rem_1fr_auto] items-center gap-4 border-t border-rule py-3">
@@ -169,7 +196,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       </section>
 
       <section className="border-b border-rule py-10">
-        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Every check</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Every check</h2>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
           Each line is one HTTP observation with a published rule. Scan the same domain tomorrow and, unless
           it changed, you get the same answer. Anything marked N/A scored zero because we could not measure
@@ -211,7 +238,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       </section>
 
       <section className="border-b border-rule py-10">
-        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">What we discovered on the way</h2>
+        <h2 className="text-lg font-semibold tracking-tight">What we discovered on the way</h2>
         <dl className="mt-5 grid gap-x-8 gap-y-3 font-mono text-xs sm:grid-cols-2">
           {[
             ['Docs', findings.discovered.docs],
@@ -231,9 +258,23 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
               findings.robots.blockedByClass.user.length > 0 ? findings.robots.blockedByClass.user.join(', ') : 'none',
             ],
           ].map(([label, value]) => (
-            <div key={label} className="flex justify-between gap-4 border-b border-rule py-2">
+            // Label over value, and the value wraps. A nowrap URL in a right-aligned cell
+            // pushed "none" off the screen entirely, so rows read as missing data.
+            <div key={label} className="flex min-w-0 flex-col gap-0.5 border-b border-rule py-2 sm:flex-row sm:justify-between sm:gap-4">
               <dt className="text-ink-faint">{label}</dt>
-              <dd className="truncate text-right">{value || 'not found'}</dd>
+              <dd className="min-w-0 break-all sm:text-right">
+                {value ? (
+                  typeof value === 'string' && value.startsWith('http') ? (
+                    <a href={value} className="text-brass underline underline-offset-4" rel="noreferrer">
+                      {value}
+                    </a>
+                  ) : (
+                    value
+                  )
+                ) : (
+                  'not found'
+                )}
+              </dd>
             </div>
           ))}
         </dl>

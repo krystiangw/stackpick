@@ -8,15 +8,18 @@
 @theme {
   --color-ground: #faf9f6;
   --color-surface: #ffffff;
-  --color-sunken: #f0eee8;
+  /* The empty part of a progress track has to be visible, or 0/4 reads as a missing bar. */
+  --color-sunken: #e3dfd4;
   --color-ink: #16181c;
   --color-ink-soft: #55575c;
-  --color-ink-faint: #6b6d72;
-  --color-rule: #dedbd2;
+  --color-ink-faint: #63656a;
+  --color-rule: #c9c5b8;
   --color-brass: #7d5c10;
   --color-brass-soft: #f4edda;
   --color-pass: #2c6a4c;
-  --color-warn: #8a6a12;
+  /* Warn used to sit within 1.2:1 of brass, so a middling score read as brand gold
+     rather than as a warning. Pushed towards orange in both themes. */
+  --color-warn: #9a4f0a;
   --color-fail: #a4382a;
 
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
@@ -27,15 +30,15 @@
   :root {
     --color-ground: #101215;
     --color-surface: #181b1f;
-    --color-sunken: #1f2328;
+    --color-sunken: #272c32;
     --color-ink: #e9eaec;
-    --color-ink-soft: #9ea0a5;
+    --color-ink-soft: #b6b9be;
     --color-ink-faint: #9aa0a6;
-    --color-rule: #2b2f34;
+    --color-rule: #3d434a;
     --color-brass: #c9a33f;
     --color-brass-soft: #2a2416;
     --color-pass: #57a37c;
-    --color-warn: #c2a041;
+    --color-warn: #e0913a;
     --color-fail: #d0705f;
   }
 }

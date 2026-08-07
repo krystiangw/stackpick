@@ -49,8 +49,8 @@ export function EmailGate({
 
   return (
     <div className="border border-rule bg-surface p-8">
-      <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Take it with you</h2>
-      <p className="mt-3 max-w-xl text-2xl font-semibold leading-snug tracking-tight text-balance">
+      <h2 className="text-lg font-semibold tracking-tight">Take it with you</h2>
+      <p className="mt-3 max-w-xl text-xl leading-snug text-balance text-ink-soft">
         {failingCount > 0
           ? `${failingCount} checks are costing ${domain} integrations right now.`
           : `${domain} passes every deterministic check. The interesting question is what agents do anyway.`}

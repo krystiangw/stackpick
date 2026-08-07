@@ -29,13 +29,13 @@ export function ShareRow({ domain, headline, url }: { domain: string; headline: 
     `${headline}\n\nThe full scorecard, every check reproducible with one HTTP request:\n${link}\n`,
   )}`
 
-  const button =
-    'border border-rule px-3 py-2 font-mono text-xs transition-colors hover:border-brass hover:text-brass'
+  const primary = 'bg-ink px-3 py-2 font-mono text-xs text-ground transition-opacity hover:opacity-85'
+  const button = 'border border-ink/40 px-3 py-2 font-mono text-xs transition-colors hover:border-brass hover:text-brass'
 
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span className="mr-1 font-mono text-xs text-ink-faint">Pass it on</span>
-      <button type="button" onClick={copy} className={button} aria-live="polite">
+      <button type="button" onClick={copy} className={primary}>
         {copied ? 'Link copied' : 'Copy link'}
       </button>
       <a href={mail} className={button}>
@@ -49,6 +49,9 @@ export function ShareRow({ domain, headline, url }: { domain: string; headline: 
       >
         LinkedIn
       </a>
+      <span role="status" aria-live="polite" className="font-mono text-xs text-pass">
+        {copied ? 'Copied' : ''}
+      </span>
     </div>
   )
 }
