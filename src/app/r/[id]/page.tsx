@@ -83,7 +83,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                 <dt className="text-ink-faint">{stage.letter} · {stage.title}</dt>
                 <dd
                   className={`tabular-nums ${
-                    stage.points === 0 ? 'text-fail' : stage.points === stage.max ? 'text-pass' : 'text-warn'
+                    stage.points / stage.max >= 0.67 ? 'text-pass' : stage.points / stage.max >= 0.34 ? 'text-warn' : 'text-fail'
                   }`}
                 >
                   {stage.points}/{stage.max}
@@ -133,12 +133,17 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                 <span className="text-xs text-ink-faint">{stage.question}</span>
               </div>
               <div className="flex items-center gap-3">
-                {/* A zero-width bar reads as "no data". A full faint bar reads as "nothing passed". */}
-                <div className={`h-1.5 w-24 sm:w-40 ${stage.points === 0 ? 'bg-fail/25' : 'bg-sunken'}`}>
-                  <div
-                    className={`h-full ${stage.points === stage.max ? 'bg-pass' : 'bg-warn'}`}
-                    style={{ width: `${(stage.points / stage.max) * 100}%` }}
-                  />
+                {/* One track for every row. Zero gets a tick at the origin, because a filled
+                    track for zero made 0/4 look fuller than 3/5. */}
+                <div className="relative h-1.5 w-24 bg-sunken sm:w-40">
+                  {stage.points === 0 ? (
+                    <div className="absolute inset-y-0 left-0 w-0.5 bg-fail" />
+                  ) : (
+                    <div
+                      className={`h-full ${stage.points / stage.max >= 0.67 ? 'bg-pass' : stage.points / stage.max >= 0.34 ? 'bg-warn' : 'bg-fail'}`}
+                      style={{ width: `${(stage.points / stage.max) * 100}%` }}
+                    />
+                  )}
                 </div>
                 <span className="w-12 text-right font-mono text-sm tabular-nums">
                   {stage.points}/{stage.max}
@@ -153,7 +158,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Every check</h2>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
           Each line is one HTTP observation with a published rule. Scan the same domain tomorrow and, unless
-          it changed, you get the same answer.{' '}
+          it changed, you get the same answer. Anything marked N/A scored zero because we could not measure
+          it, not because it is absent.{' '}
           <Link href="/methodology" className="text-brass underline underline-offset-4">
             See the formula
           </Link>
@@ -178,11 +184,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                           {check.points < check.max && !check.inconclusive && (
                             <span className="text-xs italic text-ink-faint">{check.why}</span>
                           )}
-                          {check.inconclusive && (
-                            <span className="text-xs italic text-ink-faint">
-                              Scored zero, but this one is our blind spot rather than a proven absence.
-                            </span>
-                          )}
+
                         </div>
                       </li>
                     )

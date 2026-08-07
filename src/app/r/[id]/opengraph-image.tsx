@@ -54,10 +54,10 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <div style={{ display: 'flex', fontSize: 22, letterSpacing: 3, color: BRASS, textTransform: 'uppercase' }}>
-            Agent readiness
+          <div style={{ display: 'flex', fontSize: 30, fontWeight: 600, letterSpacing: -0.5 }}>{report.domain}</div>
+          <div style={{ display: 'flex', fontSize: 20, color: '#6b6d72', letterSpacing: 2, textTransform: 'uppercase' }}>
+            {standing}
           </div>
-          <div style={{ display: 'flex', fontSize: 22, color: '#8a8b8f' }}>{standing}</div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
