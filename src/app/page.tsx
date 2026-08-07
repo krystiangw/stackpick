@@ -108,12 +108,12 @@ export default function Home() {
             <p className="text-sm leading-relaxed text-ink-soft">
               This is the part no scanner can give you, because it is a measurement of behaviour, not of files.
             </p>
-            <a
-              href="mailto:hello@stackpick.ai?subject=Full%20agent%20audit"
+            <Link
+              href="/pricing"
               className="mt-2 w-fit border border-ink px-5 py-2.5 font-mono text-sm transition-colors hover:bg-ink hover:text-ground"
             >
-              Ask about an audit
-            </a>
+              See what an audit costs
+            </Link>
           </div>
         </div>
       </section>

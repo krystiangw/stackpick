@@ -1,6 +1,7 @@
+import { pickHeadline } from './headline'
 import type { Report } from './store'
 
-const FROM = process.env.STACKPICK_FROM ?? 'StackPick <reports@stackpick.ai>'
+const FROM = process.env.STACKPICK_FROM ?? 'StackPick <onboarding@resend.dev>'
 const BASE_URL = process.env.STACKPICK_BASE_URL ?? 'http://localhost:3000'
 
 export type SendResult = { delivered: boolean; detail: string }
@@ -9,30 +10,98 @@ export function reportUrl(report: Pick<Report, 'id'>): string {
   return `${BASE_URL}/r/${report.id}`
 }
 
-export function scorecardEmail(report: Report): { subject: string; text: string } {
-  const { scorecard, domain } = report
-  const failing = scorecard.checks.filter((check) => check.points < check.max)
-  const worst = failing.slice(0, 3)
+const escape = (value: string) =>
+  value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
-  const subject = `${domain}: agent readiness ${scorecard.total} of ${scorecard.max}`
-  const lines = [
-    `${domain} scores ${scorecard.total} of ${scorecard.max} on agent readiness.`,
+export function scorecardEmail(report: Report): { subject: string; text: string; html: string } {
+  const { scorecard, findings, domain } = report
+  const headline = pickHeadline(findings, scorecard)
+  const failing = scorecard.checks.filter((check) => check.points < check.max && !check.inconclusive).slice(0, 3)
+  const url = reportUrl(report)
+
+  // The subject is the finding, not the product name. A subject line that could have been
+  // sent to a thousand companies gets treated as if it was.
+  const subject = `${domain}: ${headline.claim}`
+
+  const text = [
+    headline.claim,
     '',
-    'By stage:',
+    headline.evidence,
+    '',
+    `Agent readiness: ${scorecard.total} of ${scorecard.max}`,
     ...scorecard.stages.map((stage) => `  ${stage.letter}  ${stage.title.padEnd(14)} ${stage.points}/${stage.max}`),
     '',
-    worst.length > 0 ? 'The three that cost the most:' : 'Nothing is failing, which is rare.',
-    ...worst.map((check) => `  - ${check.label}: ${check.detail}`),
+    failing.length > 0 ? 'Also failing:' : '',
+    ...failing.map((check) => `  - ${check.label}: ${check.detail}`),
     '',
-    `Full scorecard: ${reportUrl(report)}`,
+    `Full scorecard: ${url}`,
+    `How it is scored: ${BASE_URL}/methodology`,
     '',
-    'Every check is an HTTP request with a published rule, so you can reproduce this yourself.',
-    `Formula: ${BASE_URL}/methodology`,
+    'Every check is one HTTP request with a published rule, so you can reproduce all of it.',
   ]
-  return { subject, text: lines.join('\n') }
+    .filter((line, index, all) => !(line === '' && all[index - 1] === ''))
+    .join('\n')
+
+  const row = (label: string, value: string) =>
+    `<tr><td style="padding:6px 16px 6px 0;color:#8a8b8f;font:13px ui-monospace,SFMono-Regular,Menlo,monospace">${escape(label)}</td>` +
+    `<td style="padding:6px 0;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;color:#16181c">${escape(value)}</td></tr>`
+
+  const html = `<!doctype html>
+<html><body style="margin:0;background:#faf9f6;padding:32px 16px">
+<table role="presentation" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #dedbd2">
+  <tr><td style="padding:32px 32px 0">
+    <div style="font:12px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:2px;text-transform:uppercase;color:#9a7318">
+      Agent readiness &middot; ${escape(domain)}
+    </div>
+    <h1 style="margin:20px 0 0;font:600 26px/1.25 ui-sans-serif,system-ui,sans-serif;color:#16181c;letter-spacing:-0.5px">
+      ${escape(headline.claim)}
+    </h1>
+    <p style="margin:16px 0 0;font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:#55575c">
+      ${escape(headline.evidence)}
+    </p>
+  </td></tr>
+
+  <tr><td style="padding:28px 32px 0">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-top:1px solid #dedbd2;padding-top:20px">
+      <tr><td style="padding-top:20px">
+        <span style="font:700 44px ui-sans-serif,system-ui,sans-serif;color:${
+          scorecard.total <= scorecard.max / 3 ? '#a4382a' : scorecard.total >= (scorecard.max * 2) / 3 ? '#2c6a4c' : '#8a6a12'
+        }">${scorecard.total}</span>
+        <span style="font:16px ui-sans-serif,system-ui,sans-serif;color:#8a8b8f"> / ${scorecard.max}</span>
+      </td></tr>
+    </table>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:16px">
+      ${scorecard.stages.map((stage) => row(`${stage.letter} · ${stage.title}`, `${stage.points}/${stage.max}`)).join('')}
+    </table>
+  </td></tr>
+
+  ${
+    failing.length > 0
+      ? `<tr><td style="padding:24px 32px 0">
+    <div style="font:12px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:1.5px;text-transform:uppercase;color:#8a8b8f">Also failing</div>
+    <ul style="margin:12px 0 0;padding-left:18px;font:14px/1.7 ui-sans-serif,system-ui,sans-serif;color:#55575c">
+      ${failing.map((check) => `<li><strong style="color:#16181c">${escape(check.label)}</strong>: ${escape(check.detail)}</li>`).join('')}
+    </ul>
+  </td></tr>`
+      : ''
+  }
+
+  <tr><td style="padding:28px 32px 32px">
+    <a href="${url}" style="display:inline-block;background:#16181c;color:#faf9f6;text-decoration:none;padding:12px 22px;font:14px ui-monospace,SFMono-Regular,Menlo,monospace">
+      Open the full scorecard
+    </a>
+    <p style="margin:20px 0 0;font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:#8a8b8f">
+      Every check is one HTTP request with a published rule, so you can reproduce all of it:
+      <a href="${BASE_URL}/methodology" style="color:#9a7318">${BASE_URL}/methodology</a>
+    </p>
+  </td></tr>
+</table>
+</body></html>`
+
+  return { subject, text, html }
 }
 
-export async function sendEmail(to: string, subject: string, text: string): Promise<SendResult> {
+export async function sendEmail(to: string, subject: string, text: string, html?: string): Promise<SendResult> {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
     console.log(`[email not configured] to=${to} subject=${subject}\n${text}`)
@@ -42,7 +111,7 @@ export async function sendEmail(to: string, subject: string, text: string): Prom
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ from: FROM, to, subject, text }),
+    body: JSON.stringify({ from: FROM, to, subject, text, ...(html ? { html } : {}) }),
   })
 
   if (!response.ok) {

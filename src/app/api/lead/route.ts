@@ -34,8 +34,8 @@ export async function POST(request: Request) {
     source: body.source ?? 'unknown',
   })
 
-  const { subject, text } = scorecardEmail(report)
-  const result = await sendEmail(body.email, subject, text)
+  const { subject, text, html } = scorecardEmail(report)
+  const result = await sendEmail(body.email, subject, text, html)
 
   // A configuration gap is ours, not the visitor's: the lead is captured either way.
   return NextResponse.json({ ok: true, delivered: result.delivered })

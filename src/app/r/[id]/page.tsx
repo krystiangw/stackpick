@@ -1,10 +1,29 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { EmailGate } from '@/components/email-gate'
 import { getStore } from '@/lib/store'
+import { pickHeadline } from '@/lib/headline'
 import { STAGES, type ScoredCheck } from '@/lib/score'
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const report = await getStore().getReport(id)
+  if (!report) return { title: 'Scorecard not found — StackPick' }
+
+  const headline = pickHeadline(report.findings, report.scorecard)
+  return {
+    title: `${report.domain}: agent readiness ${report.scorecard.total}/${report.scorecard.max}`,
+    description: headline.claim,
+    openGraph: {
+      title: `${report.domain} · ${report.scorecard.total}/${report.scorecard.max}`,
+      description: headline.claim,
+    },
+    twitter: { card: 'summary_large_image' },
+  }
+}
 
 function verdictTone(check: ScoredCheck) {
   if (check.points === check.max) return { label: 'PASS', className: 'text-pass' }
@@ -26,19 +45,25 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   // newspaper against an SDK checklist and letting the number imply it failed.
   const looksLikeDeveloperProduct =
     Boolean(findings.discovered.docs) || Boolean(findings.npm.package) || findings.machine.openapi.length > 0
+  const headline = pickHeadline(findings, scorecard)
 
   return (
     <main className="mx-auto max-w-5xl px-6">
       <section className="border-b border-rule py-12">
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Agent readiness scorecard</p>
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <h1 className="font-mono text-3xl font-semibold tracking-tight sm:text-4xl">{report.domain}</h1>
-            <p className="mt-2 font-mono text-xs text-ink-faint">
-              Scanned {scanned.toISOString().slice(0, 16).replace('T', ' ')} UTC · formula v
-              {scorecard.formulaVersion} · {(findings.durationMs / 1000).toFixed(1)}s
-            </p>
-          </div>
+        <div className="flex flex-wrap items-baseline justify-between gap-4">
+          <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Agent readiness · {report.domain}</p>
+          <p className="font-mono text-xs text-ink-faint">
+            {scanned.toISOString().slice(0, 16).replace('T', ' ')} UTC · formula v{scorecard.formulaVersion} ·{' '}
+            {(findings.durationMs / 1000).toFixed(1)}s
+          </p>
+        </div>
+
+        <h1 className="mt-6 max-w-4xl text-balance text-3xl font-semibold leading-[1.15] tracking-tight sm:text-[2.75rem]">
+          {headline.claim}
+        </h1>
+        <p className="mt-4 max-w-2xl font-mono text-sm leading-relaxed text-ink-soft">{headline.evidence}</p>
+
+        <div className="mt-10 flex flex-wrap items-end gap-x-10 gap-y-4">
           <div className="flex items-baseline gap-2 font-mono">
             <span
               className={`text-6xl font-semibold tracking-tighter tabular-nums ${
@@ -49,6 +74,20 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             </span>
             <span className="text-lg text-ink-faint">/ {scorecard.max}</span>
           </div>
+          <dl className="flex flex-wrap gap-x-8 gap-y-2 font-mono text-xs">
+            {scorecard.stages.map((stage) => (
+              <div key={stage.stage} className="flex flex-col gap-0.5">
+                <dt className="text-ink-faint">{stage.letter} · {stage.title}</dt>
+                <dd
+                  className={`tabular-nums ${
+                    stage.points === 0 ? 'text-fail' : stage.points === stage.max ? 'text-pass' : 'text-warn'
+                  }`}
+                >
+                  {stage.points}/{stage.max}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
