@@ -26,6 +26,11 @@ function isPrivateIpv6(address: string): boolean {
   return mapped ? isPrivateIpv4(mapped[1]) : false
 }
 
+/** One predicate for both the pre-flight check and the dispatcher that makes the connection. */
+export function isPrivateAddress(address: string, family: number): boolean {
+  return family === 6 ? isPrivateIpv6(address) : isPrivateIpv4(address)
+}
+
 export function isIpLiteral(host: string): boolean {
   return /^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.includes(':')
 }
@@ -54,7 +59,6 @@ export async function assertPublicHost(host: string): Promise<void> {
   if (addresses.length === 0) throw new BlockedTargetError(`${bare} does not resolve.`)
 
   for (const { address, family } of addresses) {
-    const isPrivate = family === 6 ? isPrivateIpv6(address) : isPrivateIpv4(address)
-    if (isPrivate) throw new BlockedTargetError(`${bare} resolves to a private address.`)
+    if (isPrivateAddress(address, family)) throw new BlockedTargetError(`${bare} resolves to a private address.`)
   }
 }
