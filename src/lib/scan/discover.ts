@@ -342,7 +342,12 @@ export async function searchNpmForDomain(domain: string, githubRepo: string | nu
   for (const hit of [...byDomain, ...byBrand]) {
     const name = hit.package.name
     if (seen.has(name) || isPlaceholder(name)) continue
-    const links = Object.values(hit.package.links ?? {}).filter(Boolean) as string[]
+    // The registry link is the package's own URL, so for a package named after the domain it
+    // matched the ownership test against itself: statuspage.io, a third party's GPL client,
+    // was attributed to Atlassian this way and failed for missing types.
+    const links = (Object.values(hit.package.links ?? {}).filter(Boolean) as string[]).filter(
+      (link) => !/^https?:\/\/(www\.)?npmjs\.com\//i.test(link),
+    )
     const ours =
       links.some((link) => link.includes(domain)) ||
       (org !== null && links.some((link) => new RegExp(`github\\.com/${org}/`, 'i').test(link)))
