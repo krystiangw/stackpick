@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og'
+import { buildComparison } from '@/lib/compare'
 import { pickHeadline } from '@/lib/headline'
 import { getStore } from '@/lib/store'
 
@@ -31,6 +32,11 @@ export default async function Image({ params }: { params: Promise<{ id: string }
 
   const { scorecard, findings } = report
   const headline = pickHeadline(findings, scorecard)
+  const comparison = await buildComparison(report)
+  const rank = comparison.rankInCategory
+  const standing = rank
+    ? `${rank.position} of ${rank.outOf} · ${comparison.category?.label ?? ''}`
+    : report.domain
   const tone = scorecard.total <= scorecard.max / 3 ? FAIL : scorecard.total >= (scorecard.max * 2) / 3 ? PASS : WARN
 
   return new ImageResponse(
@@ -51,7 +57,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
           <div style={{ display: 'flex', fontSize: 22, letterSpacing: 3, color: BRASS, textTransform: 'uppercase' }}>
             Agent readiness
           </div>
-          <div style={{ display: 'flex', fontSize: 22, color: '#8a8b8f' }}>{report.domain}</div>
+          <div style={{ display: 'flex', fontSize: 22, color: '#8a8b8f' }}>{standing}</div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>

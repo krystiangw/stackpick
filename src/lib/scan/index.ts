@@ -30,9 +30,16 @@ export type ScanFindings = {
 
 export class UnreachableDomainError extends Error {}
 
-export async function scanDomain(input: string): Promise<ScanFindings> {
+export type ScanProgress = (step: { label: string; done: number; total: number }) => void
+
+const STEPS = 5
+
+export async function scanDomain(input: string, onProgress?: ScanProgress): Promise<ScanFindings> {
   const startedAt = Date.now()
   const domain = normalizeDomain(input)
+  const report = (label: string, done: number) => onProgress?.({ label, done, total: STEPS })
+
+  report(`Resolving ${normalizeDomain(input)}`, 0)
   const found: Discovered = await discover(domain)
 
   // A 403 to a plain request is not a failed scan, it is the strongest finding this tool
@@ -45,18 +52,24 @@ export async function scanDomain(input: string): Promise<ScanFindings> {
     )
   }
 
+  report(found.docs ? `Reading ${new URL(found.docs).pathname}` : 'Looking for documentation', 1)
   const docsPage = found.docs ? await fetchUrl(found.docs) : null
   const docsText = docsPage?.ok ? docsPage.body : ''
 
-  const [robots, machine, npm] = await Promise.all([
-    scanRobots(found.site),
+  report('Checking robots.txt against 13 AI crawlers', 2)
+  const robots = await scanRobots(found.site)
+
+  report('Probing llms.txt, .well-known and OpenAPI', 3)
+  const [machine, npm] = await Promise.all([
     scanMachineContext(found.site, found.docs),
     checkNpm(found.npmPackage),
   ])
 
   // The funnel greps documentation prose, so the corpus is docs plus whatever llms.txt exposes.
+  report('Testing signup and agent entry points', 4)
   const corpus = docsText + found.home.body
   const funnel = await scanFunnel(found.site, corpus, found.pricing, found.signup)
+  report('Scoring', STEPS)
 
   return {
     domain,
