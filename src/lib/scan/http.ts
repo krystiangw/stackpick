@@ -1,0 +1,138 @@
+export const BROWSER_UA =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0 Safari/537.36'
+
+const TIMEOUT_MS = 15_000
+const MAX_BYTES = 400_000
+
+export type Fetched = {
+  url: string
+  status: number
+  ok: boolean
+  body: string
+  headers: Record<string, string>
+  truncated: boolean
+  error?: string
+}
+
+const empty = (url: string, error: string): Fetched => ({
+  url,
+  status: 0,
+  ok: false,
+  body: '',
+  headers: {},
+  truncated: false,
+  error,
+})
+
+export async function fetchUrl(
+  url: string,
+  { accept = '*/*', ua = BROWSER_UA, method = 'GET' }: { accept?: string; ua?: string; method?: 'GET' | 'HEAD' } = {},
+): Promise<Fetched> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: { 'user-agent': ua, accept },
+      redirect: 'follow',
+      signal: controller.signal,
+    })
+    const buffer = await readCapped(response)
+    return {
+      url: response.url || url,
+      status: response.status,
+      ok: response.status >= 200 && response.status < 300,
+      body: buffer.text,
+      headers: Object.fromEntries([...response.headers].map(([k, v]) => [k.toLowerCase(), v])),
+      truncated: buffer.truncated,
+    }
+  } catch (error) {
+    return empty(url, error instanceof Error ? `${error.name}: ${error.message}` : String(error))
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+async function readCapped(response: Response): Promise<{ text: string; truncated: boolean }> {
+  if (!response.body) return { text: '', truncated: false }
+  const reader = response.body.getReader()
+  const chunks: Uint8Array[] = []
+  let size = 0
+  let truncated = false
+  while (size < MAX_BYTES) {
+    const { done, value } = await reader.read()
+    if (done) break
+    chunks.push(value)
+    size += value.byteLength
+    if (size >= MAX_BYTES) truncated = true
+  }
+  void reader.cancel()
+  const joined = new Uint8Array(size)
+  let offset = 0
+  for (const chunk of chunks) {
+    joined.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return { text: new TextDecoder('utf-8').decode(joined), truncated }
+}
+
+export function looksLikeHtml(fetched: Fetched): boolean {
+  if ((fetched.headers['content-type'] ?? '').includes('html')) return true
+  const head = fetched.body.slice(0, 600).toLowerCase()
+  return head.includes('<!doctype html') || head.includes('<html')
+}
+
+/** Guards against soft-404s: sites that serve their SPA shell for every unknown path. */
+export function isRealTextFile(fetched: Fetched, minLength = 40): boolean {
+  return fetched.ok && !looksLikeHtml(fetched) && fetched.body.trim().length >= minLength
+}
+
+export function visibleTextLength(html: string): number {
+  const withoutScripts = html.replace(/<(script|style|noscript)[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+  return withoutScripts
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim().length
+}
+
+/**
+ * Bot gates answer inconsistently: the same Cloudflare signup returned 200 once and 403
+ * four times during research. Report the majority status, and say so when tries disagree.
+ */
+export async function fetchWithRetries(
+  url: string,
+  options: { accept?: string; ua?: string } = {},
+  tries = 3,
+): Promise<Fetched & { statusesSeen: number[]; consistent: boolean }> {
+  const attempts: Fetched[] = []
+  for (let i = 0; i < tries; i++) {
+    attempts.push(await fetchUrl(url, options))
+  }
+  const statuses = attempts.map((a) => a.status)
+  const counts = new Map<number, number>()
+  for (const status of statuses) counts.set(status, (counts.get(status) ?? 0) + 1)
+  const [majority] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]
+  const representative = attempts.find((a) => a.status === majority) ?? attempts[0]
+  return {
+    ...representative,
+    statusesSeen: statuses,
+    consistent: new Set(statuses).size === 1,
+  }
+}
+
+export async function inParallel<T, R>(
+  items: T[],
+  worker: (item: T) => Promise<R>,
+  concurrency = 6,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length)
+  let cursor = 0
+  const runners = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    while (cursor < items.length) {
+      const index = cursor++
+      results[index] = await worker(items[index])
+    }
+  })
+  await Promise.all(runners)
+  return results
+}
