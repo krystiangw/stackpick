@@ -102,6 +102,7 @@ export default function MethodologyPage() {
             'A passing file is not a passing experience. Publishing llms.txt scores a point here and still tells you nothing about whether an agent chose you. That is what the paid audit measures.',
             'Discovery can be wrong. Docs, pricing, signup and the npm package are inferred from your own links. The scorecard shows exactly what it found so you can see when it guessed badly.',
             'A soft 404 is treated as absence. Sites that answer 200 with an app shell for unknown paths are read as not having the file, which is also how an agent reads them.',
+            'The score depends on where the request comes from. Sites behind an aggressive WAF answer a data-centre address differently from a home connection: one domain scored 9 from a laptop and 2 from our server on the same day. We scan from a data centre on purpose, because that is where ChatGPT and Claude reach you from, so the harsher number is the one your customers actually meet.',
           ].map((limit, index) => (
             <li key={limit} className="grid grid-cols-[2rem_1fr] gap-4">
               <span className="font-mono text-xs text-ink-faint">{String(index + 1).padStart(2, '0')}</span>
