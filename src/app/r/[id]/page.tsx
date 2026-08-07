@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { ComparisonSection } from '@/components/comparison'
+import { buildComparison } from '@/lib/compare'
 import { EmailGate } from '@/components/email-gate'
 import { getStore } from '@/lib/store'
 import { pickHeadline } from '@/lib/headline'
@@ -46,6 +48,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   const looksLikeDeveloperProduct =
     Boolean(findings.discovered.docs) || Boolean(findings.npm.package) || findings.machine.openapi.length > 0
   const headline = pickHeadline(findings, scorecard)
+  const comparison = await buildComparison(report)
 
   return (
     <main className="mx-auto max-w-5xl px-6">
@@ -116,6 +119,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           </div>
         </section>
       )}
+
+      <ComparisonSection comparison={comparison} domain={report.domain} />
 
       <section className="border-b border-rule py-10">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">By stage</h2>

@@ -8,8 +8,14 @@ export const maxDuration = 60
 
 export async function POST(request: Request) {
   const caller = clientKey(request)
+  // The console sits behind a shared token, so seeding a category from it is our own work,
+  // not traffic to be throttled.
+  const fromConsole =
+    process.env.STACKPICK_CONSOLE_TOKEN !== undefined &&
+    request.headers.get('cookie')?.includes(`stackpick_console=${process.env.STACKPICK_CONSOLE_TOKEN}`) === true
+
   const limit = checkRateLimit(caller)
-  if (!limit.allowed) {
+  if (!fromConsole && !limit.allowed) {
     return NextResponse.json(
       { error: `Rate limit reached. Try again in ${Math.ceil(limit.retryAfterSeconds / 60)} minutes.` },
       { status: 429, headers: { 'retry-after': String(limit.retryAfterSeconds) } },
@@ -28,7 +34,7 @@ export async function POST(request: Request) {
 
   try {
     const findings = await scanDomain(domain)
-    recordUse(caller)
+    if (!fromConsole) recordUse(caller)
     const scorecard = scoreFindings(findings)
     const report: Report = {
       id: reportId(findings.domain, findings.scannedAt),
