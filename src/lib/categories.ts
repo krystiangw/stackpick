@@ -46,10 +46,34 @@ export const CATEGORIES: Category[] = [
     ],
   },
   {
-    id: 'payments-and-apis',
-    label: 'Developer-first APIs',
-    jobToBeDone: 'add payments, messaging or auth without building it',
-    domains: ['stripe.com', 'twilio.com', 'auth0.com', 'clerk.com', 'resend.com', 'plaid.com'],
+    id: 'auth',
+    label: 'Authentication as a service',
+    jobToBeDone: 'add login without owning password resets forever',
+    domains: ['auth0.com', 'clerk.com', 'workos.com', 'stytch.com', 'kinde.com', 'logto.io', 'supertokens.com'],
+  },
+  {
+    id: 'transactional-email',
+    label: 'Transactional email APIs',
+    jobToBeDone: 'send password resets and receipts that arrive',
+    domains: ['resend.com', 'postmark.com', 'sendgrid.com', 'mailgun.com', 'loops.so', 'sendlayer.com'],
+  },
+  {
+    id: 'product-analytics',
+    label: 'Product analytics',
+    jobToBeDone: 'find out what users actually do in the product',
+    domains: ['posthog.com', 'mixpanel.com', 'amplitude.com', 'plausible.io', 'usefathom.com', 'june.so'],
+  },
+  {
+    id: 'vector-search',
+    label: 'Vector databases',
+    jobToBeDone: 'give an app semantic search or retrieval',
+    domains: ['pinecone.io', 'weaviate.io', 'qdrant.tech', 'trychroma.com', 'turbopuffer.com', 'zilliz.com'],
+  },
+  {
+    id: 'payments',
+    label: 'Payments and billing',
+    jobToBeDone: 'take money without becoming a payments company',
+    domains: ['stripe.com', 'paddle.com', 'lemonsqueezy.com', 'polar.sh', 'chargebee.com', 'plaid.com'],
   },
 ]
 
