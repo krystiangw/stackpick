@@ -133,10 +133,33 @@ rejestracja 20%, provisioning 28%, integracja 59%. 47/51 bez punktu wejścia, 49
 nie rozwiązał dołączania. Dane pod raport branżowy leżą w scratchpadzie (`rescan22`, `rescan23`,
 `rescan30`), skrypt agregujący `aggregate.py`.
 
+## Runda 2026-08-08 (trzecia): raport branżowy, skalowanie, znak
+
+1. **`/report`** - cały korpus na jednej stronie, przeliczany przy każdym żądaniu ze store'u
+   (`src/lib/industry.ts`), ograniczony do jednej wersji formuły. Nagłówek to teza produktu
+   w liczbach: **91% punktów za bycie czytanym, 16% za posiadanie drzwi dla agenta.**
+   "Unmeasurable" jest osobną kolumną, żeby nasze ślepe plamy nie udawały porażek rynku.
+2. **`latestPerDomain` agreguje w Mongo** (`$group` po domenie). Poprzednio braliśmy 500
+   najnowszych raportów i deduplikowaliśmy w JS, co przy większym korpusie po cichu wyrzuca
+   domenę z jej własnego rankingu, bez żadnego objawu.
+3. **Znak rozpoznawczy** (`src/components/funnel-mark.tsx`): pięć kolumn, po jednej na etap
+   lejka, wypełnionych udziałem zdobytych punktów. Ten sam znak na stronie, w karcie OG i w
+   mailu (tam z komórek tabeli, żeby przeżył klienty pocztowe). Niesie dane, nie ozdobę:
+   sylwetka resend.com (prawie same zielone) i cloudinary.com (dwie puste kolumny) różnią się
+   na pierwszy rzut oka.
+4. Link do udostępniania rozwiązywany po stronie serwera z nagłówka `host`, więc jest absolutny
+   nawet bez skonfigurowanego `STACKPICK_BASE_URL`.
+
+**Korpus na formule 3.0** (51 domen): mediana 8/16, średnia 7,8. Etapy: Discovery 91%,
+wejście dla agenta 16%, rejestracja 20%, provisioning 35%, integracja 61%.
+Zmiany względem 2.3 pokazują, gdzie stara formuła kłamała: MCP spadło z 22 na 14 zdanych
+(liczyliśmy strony dokumentacji jako serwery), OAuth DCR wzrosło z 2 na 9 zdanych przy 37 N/A
+(sondowaliśmy tylko apeks), provisioning z 2 na 6 (czytaliśmy jedną stronę docsów).
+
 ## Otwarte
 
-1. Raport branżowy z 51 domen (dane gotowe, strony jeszcze nie ma).
-2. `listReports(500)` po cichu urwie ranking, gdy zbiór urośnie: agregacja per domena w Mongo.
-3. Wynik nadal nie ma sygnaturowego elementu wizualnego niosącego markę w OG, mailu i na stronie.
-4. Runda 2 przebiegów agentowych w izolacji (kopie i skrypt gotowe od 2026-08-07).
-5. Domena i własny nadawca w Resend. Jedyna rzecz blokująca outbound, decyzja Krystiana.
+1. **Runda 2 przebiegów agentowych** - odpalona 2026-08-08 w nocy, sześć izolowanych kopii
+   (3× Opus, 3× Sonnet), zadanie o edytor tekstu w `<scratchpad>/runs/run-N`. Wyniki do
+   porównania z rundą 1 (skażoną): 6/6 Tiptap, Froala skreślana na licencji.
+2. **Domena i własny nadawca w Resend.** Jedyna rzecz blokująca outbound, decyzja Krystiana.
+3. Trzeci audyt agentowy po tej partii zmian (formuła 3.0 zmieniła dużo w punktacji).
