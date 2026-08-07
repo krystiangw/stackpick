@@ -1,4 +1,4 @@
-import { fetchUrl, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, visibleTextLength, type Fetched } from './http'
+import { fetchUrl, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, visibleTextLength, type Fetched } from './http'
 
 export const AGENT_ENTRY_PATHS = [
   '/agent-signup.md',
@@ -141,8 +141,7 @@ async function inspectSignup(url: string | null): Promise<SignupFindings> {
 
 /** Greps visible text only: a JSON changelog blob inside a <script> once scored 2 of 16 points. */
 function matching(patterns: RegExp[], html: string): string[] {
-  const text = html
-    .replace(/<(script|style|noscript)[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+  const text = stripCodeBlocks(html)
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
   return patterns.filter((pattern) => pattern.test(text)).map((pattern) => pattern.source)

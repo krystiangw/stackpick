@@ -15,13 +15,27 @@ const REUSE_WINDOW_MS = 15 * 60 * 1000
 const PER_DOMAIN_PER_HOUR = 5
 const PER_CALLER_PER_HOUR = 30
 
+/**
+ * Keyed on the registrable name, so a.victim.com and b.victim.com share one budget. One scan
+ * is roughly eighty requests to the target, which makes an unkeyed limit an amplifier
+ * pointed at a third party.
+ */
+function registrableName(hostname: string): string {
+  const labels = hostname.split('.')
+  if (labels.length <= 2) return hostname
+  // Two-label public suffixes (co.uk, com.pl) need three labels to identify the registration.
+  const suffix = labels.slice(-2).join('.')
+  const compound = /^(co|com|net|org|gov|edu|ac|or|ne)\.[a-z]{2}$/.test(suffix)
+  return labels.slice(compound ? -3 : -2).join('.')
+}
+
 export type ExampleReport = { id: string; domain: string; total: number; max: number }
 
 export type Gate =
   | { kind: 'invalid'; error: string }
   | { kind: 'cached'; report: Report }
   | { kind: 'limited'; error: string; retryAfterSeconds: number; example: ExampleReport | null; domain: string }
-  | { kind: 'go'; domain: string; charge: () => void }
+  | { kind: 'go'; domain: string }
 
 /** The best scorecard we hold, so a refusal can still show what good looks like. */
 export async function bestExample(): Promise<ExampleReport | null> {
@@ -45,7 +59,7 @@ export async function gateScan(request: Request, rawDomain: string, bypass = fal
     return { kind: 'invalid', error: 'That does not look like a domain. Try example.com.' }
   }
 
-  if (bypass) return { kind: 'go', domain, charge: () => {} }
+  if (bypass) return { kind: 'go', domain }
 
   const store = getStore()
   const held = await store.latestForDomain(domain)
@@ -54,7 +68,8 @@ export async function gateScan(request: Request, rawDomain: string, bypass = fal
   }
 
   const caller = clientKey(request)
-  const perDomain = checkRateLimit(`domain:${domain}`, PER_DOMAIN_PER_HOUR)
+  const budget = registrableName(domain)
+  const perDomain = checkRateLimit(`domain:${budget}`, PER_DOMAIN_PER_HOUR)
   const perCaller = checkRateLimit(`ip:${caller}`, PER_CALLER_PER_HOUR)
   const blocked = !perDomain.allowed ? perDomain : !perCaller.allowed ? perCaller : null
 
@@ -71,12 +86,9 @@ export async function gateScan(request: Request, rawDomain: string, bypass = fal
     }
   }
 
-  return {
-    kind: 'go',
-    domain,
-    charge: () => {
-      recordUse(`domain:${domain}`)
-      recordUse(`ip:${caller}`)
-    },
-  }
+  // Charged before the work. Six POSTs for a domain that does not resolve used to return six
+  // 422s and cost the caller nothing, while costing us a full discovery pass each time.
+  recordUse(`domain:${budget}`)
+  recordUse(`ip:${caller}`)
+  return { kind: 'go', domain }
 }

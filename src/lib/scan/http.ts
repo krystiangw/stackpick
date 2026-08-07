@@ -51,6 +51,10 @@ export async function fetchUrl(
       if (target.protocol !== 'https:' && target.protocol !== 'http:') {
         return empty(url, 'Refused a non-HTTP redirect')
       }
+      // A public host is free to redirect to its own port 6379. Web ports only.
+      if (target.port !== '' && target.port !== '80' && target.port !== '443') {
+        return empty(url, `Refused a redirect to port ${target.port}`)
+      }
       await assertPublicHost(target.hostname)
 
       const response = await fetch(current, {
@@ -119,8 +123,51 @@ export function isRealTextFile(fetched: Fetched, minLength = 40): boolean {
   return fetched.ok && !looksLikeHtml(fetched) && fetched.body.trim().length >= minLength
 }
 
+/**
+ * Strips script, style and noscript bodies by scanning, not by matching. Every regex form of
+ * this backtracks quadratically on unclosed tags: 600 kB of "<script " measured at 10.1 s
+ * with the original and 17 s with the unrolled rewrite, on the single thread that serves
+ * every other request. An unterminated block drops the rest of the document, which is the
+ * right answer for a page that is already malformed.
+ */
+const CODE_TAGS = ['script', 'style', 'noscript'] as const
+
+export function stripCodeBlocks(html: string): string {
+  const lower = html.toLowerCase()
+  let out = ''
+  let cursor = 0
+
+  // Cached per tag: a tag that never appears must not be searched for again on every block,
+  // which turned a document with 20k script tags into a quadratic scan of its own.
+  const nextOpen = new Map(CODE_TAGS.map((tag) => [tag, lower.indexOf(`<${tag}`)]))
+
+  while (cursor < html.length) {
+    let opensAt = -1
+    let tag = ''
+    for (const candidate of CODE_TAGS) {
+      let at = nextOpen.get(candidate) ?? -1
+      if (at !== -1 && at < cursor) {
+        at = lower.indexOf(`<${candidate}`, cursor)
+        nextOpen.set(candidate, at)
+      }
+      if (at !== -1 && (opensAt === -1 || at < opensAt)) {
+        opensAt = at
+        tag = candidate
+      }
+    }
+    if (opensAt === -1) return out + html.slice(cursor)
+
+    out += `${html.slice(cursor, opensAt)} `
+    const closesAt = lower.indexOf(`</${tag}`, opensAt)
+    if (closesAt === -1) return out
+    const afterClose = html.indexOf('>', closesAt)
+    cursor = afterClose === -1 ? html.length : afterClose + 1
+  }
+  return out
+}
+
 export function visibleTextLength(html: string): number {
-  const withoutScripts = html.replace(/<(script|style|noscript)[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+  const withoutScripts = stripCodeBlocks(html)
   return withoutScripts
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')

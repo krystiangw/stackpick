@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { scorecardEmail, sendEmail } from '@/lib/email'
 import { checkRateLimit, clientKey, recordUse } from '@/lib/rate-limit'
+import { normalizeDomain } from '@/lib/scan/discover'
 import { getStore } from '@/lib/store'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -20,6 +21,12 @@ export async function POST(request: Request) {
   if (!body.email || !EMAIL_PATTERN.test(body.email)) {
     return NextResponse.json({ error: 'That email address does not look right.' }, { status: 400 })
   }
+  // Per address as well as per caller: the IP limit alone lets one caller mail many people,
+  // and the address is the thing being mailed.
+  const perAddress = `lead-to:${body.email.toLowerCase()}`
+  if (!checkRateLimit(perAddress, 3).allowed) {
+    return NextResponse.json({ error: 'That address has had enough for now. Try again later.' }, { status: 429 })
+  }
 
   const store = getStore()
 
@@ -27,10 +34,17 @@ export async function POST(request: Request) {
   // the expensive way to enforce a bandwidth cap.
   if (!body.reportId) {
     if (!body.domain) return NextResponse.json({ error: 'Missing report id.' }, { status: 400 })
+    let domain: string
+    try {
+      domain = normalizeDomain(body.domain)
+    } catch {
+      return NextResponse.json({ error: 'That does not look like a domain.' }, { status: 400 })
+    }
     recordUse(caller)
+    recordUse(perAddress)
     await store.saveLead({
       email: body.email,
-      domain: body.domain,
+      domain,
       reportId: '',
       createdAt: new Date().toISOString(),
       source: body.source ?? 'unknown',
@@ -44,6 +58,7 @@ export async function POST(request: Request) {
   }
 
   recordUse(caller)
+  recordUse(perAddress)
   await store.saveLead({
     email: body.email,
     domain: report.domain,

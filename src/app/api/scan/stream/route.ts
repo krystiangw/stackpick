@@ -57,7 +57,6 @@ export async function POST(request: Request) {
 
       try {
         const findings = await scanDomain(domain, (step) => send('step', step))
-        gate.charge()
         const scorecard = scoreFindings(findings)
         const report: Report = {
           id: reportId(findings.domain, findings.scannedAt),

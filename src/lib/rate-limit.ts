@@ -27,15 +27,26 @@ export function checkRateLimit(
 }
 
 /**
- * Charged only for work actually done. Counting rejected input too would mean ten typos
- * lock someone out for an hour, which punishes the wrong person.
+ * Charged when a scan is admitted, before the work runs. Charging afterwards meant a domain
+ * that never resolved cost the caller nothing and cost us a full discovery pass every time.
+ * Input rejected before that point is still free, so a typo does not lock anyone out.
  */
 export function recordUse(key: string): void {
   const now = Date.now()
   hits.set(key, [...recent(key, now), now])
 }
 
+/**
+ * The LAST entry in X-Forwarded-For, not the first. Heroku's router appends the real client
+ * address to whatever the client sent, so reading the first entry read a value the caller
+ * controls: measured on production, ten requests as 203.0.113.9 hit the limit and changing
+ * one digit reset it.
+ */
 export function clientKey(request: Request): string {
   const forwarded = request.headers.get('x-forwarded-for')
-  return forwarded?.split(',')[0].trim() || request.headers.get('x-real-ip') || 'unknown'
+  if (forwarded) {
+    const hops = forwarded.split(',').map((hop) => hop.trim()).filter(Boolean)
+    if (hops.length > 0) return hops[hops.length - 1]
+  }
+  return request.headers.get('x-real-ip') || 'unknown'
 }
