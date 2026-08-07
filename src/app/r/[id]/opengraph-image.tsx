@@ -33,9 +33,10 @@ export default async function Image({ params }: { params: Promise<{ id: string }
   const headline = pickHeadline(findings, scorecard)
   const comparison = await buildComparison(report)
   const rank = comparison.rankInCategory
+  // Without a category rank this printed the domain a second time, once in each corner.
   const standing = rank
     ? `${rank.position} of ${rank.outOf} · ${comparison.category?.label ?? ''}`
-    : report.domain
+    : `Agent readiness · formula v${scorecard.formulaVersion}`
   const tone = scorecard.total <= scorecard.max / 3 ? FAIL : scorecard.total >= (scorecard.max * 2) / 3 ? PASS : WARN
 
   return new ImageResponse(
