@@ -12,15 +12,18 @@ function recent(key: string, now: number): number[] {
  * ten per hour" rather than stopping them. That is the right trade while a scan costs
  * bandwidth and nothing else.
  */
-export function checkRateLimit(key: string): { allowed: boolean; remaining: number; retryAfterSeconds: number } {
+export function checkRateLimit(
+  key: string,
+  max: number = MAX_PER_WINDOW,
+): { allowed: boolean; remaining: number; retryAfterSeconds: number } {
   const now = Date.now()
   const window = recent(key, now)
   hits.set(key, window)
 
-  if (window.length >= MAX_PER_WINDOW) {
+  if (window.length >= max) {
     return { allowed: false, remaining: 0, retryAfterSeconds: Math.ceil((WINDOW_MS - (now - Math.min(...window))) / 1000) }
   }
-  return { allowed: true, remaining: MAX_PER_WINDOW - window.length, retryAfterSeconds: 0 }
+  return { allowed: true, remaining: max - window.length, retryAfterSeconds: 0 }
 }
 
 /**

@@ -30,7 +30,7 @@ export default async function AuditPage({ params }: { params: Promise<{ slug: st
     .slice(0, 4)
 
   return (
-    <main className="mx-auto max-w-4xl px-6">
+    <main className="mx-auto max-w-5xl px-6">
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">
           Full agent audit · {audit.subject} · {audit.runDate}

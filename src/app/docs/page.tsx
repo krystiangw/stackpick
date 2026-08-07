@@ -19,7 +19,7 @@ function Code({ children }: { children: string }) {
 
 export default function DocsPage() {
   return (
-    <main className="mx-auto max-w-4xl px-6">
+    <main className="mx-auto max-w-5xl px-6">
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Docs</p>
         <h1 className="mt-4 max-w-2xl text-balance text-4xl font-semibold leading-tight tracking-tight">

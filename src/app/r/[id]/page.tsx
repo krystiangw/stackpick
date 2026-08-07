@@ -8,6 +8,7 @@ import { FixFirst } from '@/components/fix-first'
 import { buildFixPlan } from '@/lib/fixfirst'
 import { getStore } from '@/lib/store'
 import { pickHeadline } from '@/lib/headline'
+import { ShareRow } from '@/components/share-row'
 import { STAGES, type ScoredCheck } from '@/lib/score'
 
 export const dynamic = 'force-dynamic'
@@ -94,6 +95,14 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
               </div>
             ))}
           </dl>
+        </div>
+
+        <div className="mt-8">
+          <ShareRow
+            domain={report.domain}
+            headline={headline.claim}
+            url={`${process.env.STACKPICK_BASE_URL ?? ''}/r/${report.id}`}
+          />
         </div>
       </section>
 

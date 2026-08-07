@@ -1,9 +1,11 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { LimitReached } from './limit-reached'
 
 type Step = { label: string; done: number; total: number }
+type Limited = { error: string; example: { id: string; domain: string; total: number; max: number } | null; domain: string }
 
 export function ScanForm({ autoFocus = false }: { autoFocus?: boolean }) {
   const router = useRouter()
@@ -11,6 +13,15 @@ export function ScanForm({ autoFocus = false }: { autoFocus?: boolean }) {
   const [scanning, setScanning] = useState(false)
   const [steps, setSteps] = useState<Step[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [limited, setLimited] = useState<Limited | null>(null)
+  const field = useRef<HTMLInputElement>(null)
+
+  // Autofocus only where a keyboard is already there. On a phone it throws up the keyboard
+  // and hides the page someone came to read.
+  useEffect(() => {
+    if (!autoFocus) return
+    if (window.matchMedia('(pointer: fine)').matches) field.current?.focus()
+  }, [autoFocus])
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
@@ -18,6 +29,7 @@ export function ScanForm({ autoFocus = false }: { autoFocus?: boolean }) {
     setScanning(true)
     setSteps([])
     setError(null)
+    setLimited(null)
 
     try {
       const response = await fetch('/api/scan/stream', {
@@ -28,7 +40,12 @@ export function ScanForm({ autoFocus = false }: { autoFocus?: boolean }) {
 
       if (!response.ok || !response.body) {
         const payload = await response.json().catch(() => ({}))
-        setError(payload.error ?? 'The scan failed. Try again in a moment.')
+        // A limit is not a failure. Refusing with a red line would end the only funnel we have.
+        if (response.status === 429 && payload.limited) {
+          setLimited({ error: payload.error, example: payload.example ?? null, domain: payload.domain ?? domain })
+        } else {
+          setError(payload.error ?? 'The scan failed. Try again in a moment.')
+        }
         setScanning(false)
         return
       }
@@ -78,10 +95,10 @@ export function ScanForm({ autoFocus = false }: { autoFocus?: boolean }) {
     <div className="flex flex-col gap-3">
       <form onSubmit={submit} className="flex flex-col gap-2 sm:flex-row">
         <input
+          ref={field}
           value={domain}
           onChange={(changed) => setDomain(changed.target.value)}
           placeholder="yourdomain.com"
-          autoFocus={autoFocus}
           disabled={scanning}
           aria-label="Domain to scan"
           className="min-w-0 flex-1 border border-rule bg-surface px-4 py-3 font-mono text-base placeholder:text-ink-faint disabled:opacity-60"
@@ -104,17 +121,26 @@ export function ScanForm({ autoFocus = false }: { autoFocus?: boolean }) {
             />
           </div>
           <ol className="flex flex-col gap-1 font-mono text-xs">
-            {steps.map((step, index) => (
-              <li
-                key={`${step.label}-${index}`}
-                className={index === steps.length - 1 ? 'text-ink' : 'text-ink-faint line-through decoration-1'}
-              >
-                {step.label}
-              </li>
-            ))}
+            {steps.map((step, index) => {
+              const done = index !== steps.length - 1
+              return (
+                <li
+                  key={`${step.label}-${index}`}
+                  className={`flex gap-2 ${done ? 'text-ink-faint' : 'text-ink'}`}
+                >
+                  {/* A tick, not a strikethrough: crossed-out steps read as cancelled work. */}
+                  <span aria-hidden className={done ? 'text-pass' : 'text-brass'}>
+                    {done ? '✓' : '▸'}
+                  </span>
+                  {step.label}
+                </li>
+              )
+            })}
           </ol>
         </div>
       )}
+
+      {limited && <LimitReached {...limited} />}
 
       {error && (
         <p role="alert" className="font-mono text-xs text-fail">

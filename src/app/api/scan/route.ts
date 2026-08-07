@@ -1,26 +1,17 @@
 import { NextResponse } from 'next/server'
 import { scanDomain, UnreachableDomainError } from '@/lib/scan'
 import { scoreFindings } from '@/lib/score'
-import { checkRateLimit, clientKey, recordUse } from '@/lib/rate-limit'
+import { gateScan } from '@/lib/scan-gate'
 import { getStore, reportId, type Report } from '@/lib/store'
 
 export const maxDuration = 60
 
 export async function POST(request: Request) {
-  const caller = clientKey(request)
   // The console sits behind a shared token, so seeding a category from it is our own work,
-  // not traffic to be throttled.
+  // not traffic to be throttled, and it always wants a fresh scan.
   const fromConsole =
     process.env.STACKPICK_CONSOLE_TOKEN !== undefined &&
     request.headers.get('cookie')?.includes(`stackpick_console=${process.env.STACKPICK_CONSOLE_TOKEN}`) === true
-
-  const limit = checkRateLimit(caller)
-  if (!fromConsole && !limit.allowed) {
-    return NextResponse.json(
-      { error: `Rate limit reached. Try again in ${Math.ceil(limit.retryAfterSeconds / 60)} minutes.` },
-      { status: 429, headers: { 'retry-after': String(limit.retryAfterSeconds) } },
-    )
-  }
 
   let domain: unknown
   try {
@@ -32,9 +23,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Send a JSON body with a domain field.' }, { status: 400 })
   }
 
+  const gate = await gateScan(request, domain, fromConsole)
+  if (gate.kind === 'invalid') return NextResponse.json({ error: gate.error }, { status: 400 })
+  if (gate.kind === 'cached') {
+    return NextResponse.json({ id: gate.report.id, domain: gate.report.domain, scorecard: gate.report.scorecard, reused: true })
+  }
+  if (gate.kind === 'limited') {
+    return NextResponse.json(
+      { error: gate.error, limited: true, retryAfterSeconds: gate.retryAfterSeconds, example: gate.example, domain: gate.domain },
+      { status: 429, headers: { 'retry-after': String(gate.retryAfterSeconds) } },
+    )
+  }
+
   try {
-    const findings = await scanDomain(domain)
-    if (!fromConsole) recordUse(caller)
+    const findings = await scanDomain(gate.domain)
+    gate.charge()
     const scorecard = scoreFindings(findings)
     const report: Report = {
       id: reportId(findings.domain, findings.scannedAt),

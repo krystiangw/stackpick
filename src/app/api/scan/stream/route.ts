@@ -1,6 +1,6 @@
 import { scanDomain, UnreachableDomainError } from '@/lib/scan'
 import { scoreFindings } from '@/lib/score'
-import { checkRateLimit, clientKey, recordUse } from '@/lib/rate-limit'
+import { gateScan } from '@/lib/scan-gate'
 import { getStore, reportId, type Report } from '@/lib/store'
 
 export const maxDuration = 60
@@ -15,20 +15,35 @@ const event = (type: string, payload: unknown) =>
  * would be a strange place to start lying.
  */
 export async function POST(request: Request) {
-  const caller = clientKey(request)
-  const limit = checkRateLimit(caller)
-  if (!limit.allowed) {
-    return Response.json(
-      { error: `Rate limit reached. Try again in ${Math.ceil(limit.retryAfterSeconds / 60)} minutes.` },
-      { status: 429 },
-    )
-  }
-
   const body = (await request.json().catch(() => ({}))) as { domain?: unknown }
   if (typeof body.domain !== 'string' || body.domain.length === 0) {
     return Response.json({ error: 'Send a JSON body with a domain field.' }, { status: 400 })
   }
-  const domain = body.domain
+
+  const gate = await gateScan(request, body.domain)
+  if (gate.kind === 'invalid') return Response.json({ error: gate.error }, { status: 400 })
+  if (gate.kind === 'cached') {
+    // A scan minutes old is the same answer, so we hand back the report instead of
+    // spending someone else's bandwidth to reprint it.
+    const { report } = gate
+    return new Response(
+      event('done', {
+        id: report.id,
+        domain: report.domain,
+        total: report.scorecard.total,
+        max: report.scorecard.max,
+        reused: true,
+      }),
+      { headers: { 'content-type': 'text/event-stream; charset=utf-8', 'cache-control': 'no-cache, no-transform' } },
+    )
+  }
+  if (gate.kind === 'limited') {
+    return Response.json(
+      { error: gate.error, limited: true, retryAfterSeconds: gate.retryAfterSeconds, example: gate.example, domain: gate.domain },
+      { status: 429, headers: { 'retry-after': String(gate.retryAfterSeconds) } },
+    )
+  }
+  const domain = gate.domain
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -42,7 +57,7 @@ export async function POST(request: Request) {
 
       try {
         const findings = await scanDomain(domain, (step) => send('step', step))
-        recordUse(caller)
+        gate.charge()
         const scorecard = scoreFindings(findings)
         const report: Report = {
           id: reportId(findings.domain, findings.scannedAt),
