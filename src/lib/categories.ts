@@ -80,3 +80,10 @@ export const CATEGORIES: Category[] = [
 export function categoryFor(domain: string): Category | null {
   return CATEGORIES.find((category) => category.domains.includes(domain)) ?? null
 }
+
+/**
+ * The published corpus. A stranger's scan lands in the store and under its own permanent
+ * link, but it must never move a number we publish as research: an anonymous POST silently
+ * turned "51 domains" into "52" and shifted every median on the report page.
+ */
+export const CURATED_DOMAINS = new Set(CATEGORIES.flatMap((category) => category.domains))

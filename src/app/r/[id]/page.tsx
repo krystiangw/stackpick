@@ -173,9 +173,11 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             <p className="mt-3 max-w-2xl leading-relaxed">
               The home page answered <span className="font-mono">{findings.agentStatus}</span> to a request
               identifying itself as an agent, and{' '}
-              <span className="font-mono">{findings.browserStatus}</span> to the same request sent as Chrome. The
-              user-agent was the only difference. Everything below was measured through that wall and is a floor,
-              not a ceiling.
+              <span className="font-mono">{findings.browserStatus}</span> to the same request sent as Chrome.{' '}
+              {findings.browserStatus >= 200 && findings.browserStatus < 400
+                ? 'The user-agent was the only difference between them.'
+                : 'Both were refused, so this reads as an edge rule about where the request came from rather than about agents.'}{' '}
+              Everything below was measured through that wall and is a floor, not a ceiling.
             </p>
           </div>
         </section>

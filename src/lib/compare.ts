@@ -1,4 +1,4 @@
-import { categoryFor, type Category } from './categories'
+import { categoryFor, CURATED_DOMAINS, type Category } from './categories'
 import { getStore, type Report } from './store'
 
 export type Peer = { domain: string; total: number; max: number; isSubject: boolean }
@@ -22,6 +22,8 @@ export async function buildComparison(subject: Report): Promise<Comparison> {
   const all = new Map(
     (await getStore().latestPerDomain(500))
       .filter((report) => report.scorecard.formulaVersion === subject.scorecard.formulaVersion)
+      // A visitor's own scan is compared against the curated corpus, never added to it.
+      .filter((report) => CURATED_DOMAINS.has(report.domain))
       .map((report) => [report.domain, report]),
   )
   all.set(subject.domain, subject)

@@ -1,4 +1,4 @@
-import { CATEGORIES, type Category } from './categories'
+import { CATEGORIES, CURATED_DOMAINS, type Category } from './categories'
 import { getStore, type Report } from './store'
 
 export type RankedEntry = { domain: string; total: number; max: number; reportId: string }
@@ -9,7 +9,11 @@ export type RankedCategory = { category: Category; entries: RankedEntry[]; media
  * is harder to dismiss than an adjective about what the scanner can do.
  */
 export async function loadRankings(): Promise<RankedCategory[]> {
-  const latest = new Map((await getStore().latestPerDomain(500)).map((report) => [report.domain, report]))
+  const latest = new Map(
+    (await getStore().latestPerDomain(500))
+      .filter((report) => CURATED_DOMAINS.has(report.domain))
+      .map((report) => [report.domain, report]),
+  )
 
   return CATEGORIES.map((category) => {
     const entries = category.domains

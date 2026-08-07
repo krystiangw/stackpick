@@ -58,13 +58,13 @@ export default async function IndustryReportPage() {
             <div>
               <p className="font-mono text-5xl font-semibold tabular-nums text-pass">{percent(discovery.share)}</p>
               <p className="mt-2 max-w-xs text-sm text-ink-soft">
-                of the points available for being found and read, on average
+                of the measurable points for being found and read, on average
               </p>
             </div>
             <div>
               <p className="font-mono text-5xl font-semibold tabular-nums text-fail">{percent(entry.share)}</p>
               <p className="mt-2 max-w-xs text-sm text-ink-soft">
-                of the points available for having a door an agent can walk through
+                of the measurable points for having a door an agent can walk through
               </p>
             </div>
           </div>
@@ -74,8 +74,9 @@ export default async function IndustryReportPage() {
       <section className="border-b border-rule py-10">
         <h2 className="text-lg font-semibold tracking-tight">Where the funnel collapses</h2>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
-          Mean share of the points available at each stage. Every domain is measured the same way, so the
-          drop between A and B is a property of the market, not of the sample.
+          Mean share of the points we could actually measure at each stage. Checks we could not evaluate are
+          excluded from the denominator rather than counted as failures, and the count of domains behind each
+          row is printed with it, because our coverage is not equal across stages.
         </p>
         <div className="mt-8 flex flex-col">
           {report.stages.map((stage) => (
@@ -86,6 +87,9 @@ export default async function IndustryReportPage() {
                 <span className="text-xs text-ink-faint">{stage.question}</span>
               </div>
               <div className="flex items-center gap-3">
+                <span className="hidden font-mono text-xs text-ink-faint sm:inline">
+                  n={stage.measuredOn}
+                </span>
                 <div className="hidden h-1.5 w-40 bg-sunken sm:block">
                   <div
                     className={`h-full ${stage.share >= 0.67 ? 'bg-pass' : stage.share >= 0.34 ? 'bg-warn' : 'bg-fail'}`}
@@ -102,20 +106,27 @@ export default async function IndustryReportPage() {
           {entryPoint && (
             <li className="border-l-2 border-fail pl-4 leading-relaxed">
               <span className="font-mono tabular-nums">
-                {entryPoint.fail} of {report.sampleSize}
+                {entryPoint.zero} of {report.sampleSize}
               </span>{' '}
-              publish nothing an agent can follow to become a customer: no{' '}
+              answer none of the nine known agent entry paths: no{' '}
               <span className="font-mono text-sm">/agent-signup.md</span>, no{' '}
-              <span className="font-mono text-sm">/.well-known/agent-access.json</span>, none of the nine known paths.
+              <span className="font-mono text-sm">/.well-known/agent-access.json</span>, nothing.
+              {entryPoint.partial > 0 && (
+                <>
+                  {' '}
+                  A further {entryPoint.partial} publish a service descriptor but no procedure written for a machine.
+                </>
+              )}
             </li>
           )}
           {provisioning && (
             <li className="border-l-2 border-fail pl-4 leading-relaxed">
               <span className="font-mono tabular-nums">
-                {provisioning.fail} of {report.sampleSize}
+                {provisioning.zero} of {provisioning.zero + provisioning.partial + provisioning.pass}
               </span>{' '}
-              describe no way to obtain a credential without a human opening a dashboard, in any documentation
-              page we could read.
+              describe no way to obtain a credential without a human opening a dashboard, across every
+              documentation page we could read. The remaining {provisioning.unmeasurable} gave us too little
+              documentation to judge.
             </li>
           )}
           {mcp && (
@@ -142,7 +153,8 @@ export default async function IndustryReportPage() {
               <tr className="border-b border-rule text-left font-mono text-xs uppercase tracking-[0.12em] text-ink-faint">
                 <th className="py-2 pr-4 font-normal">Check</th>
                 <th className="py-2 pr-4 text-right font-normal">Pass</th>
-                <th className="py-2 pr-4 text-right font-normal">Fail</th>
+                <th className="py-2 pr-4 text-right font-normal">Partial</th>
+                <th className="py-2 pr-4 text-right font-normal">Zero</th>
                 <th className="py-2 text-right font-normal">Unmeasurable</th>
               </tr>
             </thead>
@@ -151,7 +163,8 @@ export default async function IndustryReportPage() {
                 <tr key={check.id} className="border-b border-rule">
                   <td className="py-2.5 pr-4">{check.label}</td>
                   <td className="py-2.5 pr-4 text-right font-mono tabular-nums text-pass">{check.pass}</td>
-                  <td className="py-2.5 pr-4 text-right font-mono tabular-nums text-fail">{check.fail}</td>
+                  <td className="py-2.5 pr-4 text-right font-mono tabular-nums text-warn">{check.partial}</td>
+                  <td className="py-2.5 pr-4 text-right font-mono tabular-nums text-fail">{check.zero}</td>
                   <td className="py-2.5 text-right font-mono tabular-nums text-ink-faint">{check.unmeasurable}</td>
                 </tr>
               ))}
@@ -195,7 +208,13 @@ export default async function IndustryReportPage() {
         <ul className="mt-4 flex max-w-2xl list-disc flex-col gap-3 pl-5 leading-relaxed text-ink-soft">
           <li>
             Not a random sample. These are developer tools we chose, in categories where an agent picking a
-            building block is a real purchase decision. Read it as a picture of that segment.
+            building block is a real purchase decision. A scan anyone runs on this site gets its own permanent
+            link and is compared against this corpus, but never joins it.
+          </li>
+          <li>
+            Not equally measurable across stages. Coverage differs check by check, the n on each stage row is
+            the number of domains behind it, and the table below prints what we could not evaluate rather than
+            burying it in the failures.
           </li>
           <li>
             Not a measure of whether agents actually choose these products. That takes running agents against

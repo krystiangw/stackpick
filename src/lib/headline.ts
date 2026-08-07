@@ -20,11 +20,21 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
   const { robots, funnel, machine, npm, discovered } = findings
 
   if (findings.blocksPlainRequests) {
-    return {
-      claim: `An agent asking for your home page gets ${findings.agentStatus}, not your product.`,
-      evidence: `GET https://${findings.domain}/ answered ${findings.agentStatus} to StackPick/1.0 and ${findings.browserStatus} to a Chrome user-agent. The only difference was the user-agent.`,
-      severity: 'critical',
-    }
+    // Both refused means the WAF is refusing the data centre, not singling out agents.
+    // Claiming "the only difference was the user-agent" when both got 403 was false on the
+    // one check the product is named after, in the largest type on the page.
+    const browserGotThrough = findings.browserStatus >= 200 && findings.browserStatus < 400
+    return browserGotThrough
+      ? {
+          claim: `An agent asking for your home page gets ${findings.agentStatus}. A browser gets ${findings.browserStatus}.`,
+          evidence: `GET https://${findings.domain}/ answered ${findings.agentStatus} to StackPick/1.0 and ${findings.browserStatus} to a Chrome user-agent. The user-agent was the only difference between the two requests.`,
+          severity: 'critical',
+        }
+      : {
+          claim: `Your edge refuses ordinary HTTP from a data centre, agent or not.`,
+          evidence: `GET https://${findings.domain}/ answered ${findings.agentStatus} to StackPick/1.0 and ${findings.browserStatus} to a Chrome user-agent. Both were refused, so this is your WAF rejecting the network we scan from rather than a rule about agents. Everything below was measured through that wall.`,
+          severity: 'critical',
+        }
   }
 
   if (robots.blanketDisallowAll) {
@@ -57,7 +67,7 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
   if (delay !== null && delay > 1) {
     return {
       claim: `Reading twenty pages of your documentation takes a well-behaved agent ${delay * 20} seconds.`,
-      evidence: `robots.txt sets Crawl-delay: ${delay} for User-agent: *. Agents that honour it wait ${delay}s between pages; most give up long before page twenty.`,
+      evidence: `robots.txt sets Crawl-delay: ${delay} for agents. Agents that honour it wait ${delay}s between pages; most give up long before page twenty.`,
       severity: 'serious',
     }
   }
@@ -89,7 +99,7 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
     }
   }
 
-  if (funnel.entryPointsFound.length === 0) {
+  if (funnel.entryPointsFound.length === 0 && !funnel.servesCatchAll) {
     const machineReadable = machine.hasLlmsTxt || machine.openapi.length > 0
     return {
       claim: machineReadable
@@ -102,7 +112,7 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
     }
   }
 
-  if (!funnel.provisioning.programmatic.length) {
+  if (!funnel.provisioning.programmatic.length && (findings.docsPagesRead ?? 0) >= 2) {
     return {
       claim: 'Nowhere in your documentation does an agent learn how to get a key without a human.',
       evidence: 'No management API, service account or programmatic key creation is described in the pages we read.',

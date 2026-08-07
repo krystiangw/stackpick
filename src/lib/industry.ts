@@ -1,3 +1,4 @@
+import { CURATED_DOMAINS } from './categories'
 import { CHECKS, STAGES, type Stage } from './score'
 import { getStore, type Report } from './store'
 
@@ -12,7 +13,10 @@ export type CheckTally = {
   label: string
   stage: Stage
   pass: number
-  fail: number
+  /** Scored above zero but below the maximum. Counting these as failures made a vendor
+   *  answering two of nine entry paths read as answering none. */
+  partial: number
+  zero: number
   unmeasurable: number
 }
 
@@ -24,7 +28,16 @@ export type IndustryReport = {
   mean: number
   scannedFrom: string
   scannedTo: string
-  stages: { stage: Stage; letter: string; title: string; question: string; share: number }[]
+  stages: {
+    stage: Stage
+    letter: string
+    title: string
+    question: string
+    /** Share of the points we could actually measure, not of the points on paper. */
+    share: number
+    /** How many domains contributed a measurable check at this stage. */
+    measuredOn: number
+  }[]
   checks: CheckTally[]
   best: { domain: string; total: number; reportId: string }[]
   worst: { domain: string; total: number; reportId: string }[]
@@ -33,7 +46,7 @@ export type IndustryReport = {
 const MINIMUM_SAMPLE = 20
 
 export async function buildIndustryReport(): Promise<IndustryReport | null> {
-  const all = await getStore().latestPerDomain(500)
+  const all = (await getStore().latestPerDomain(500)).filter((report) => CURATED_DOMAINS.has(report.domain))
   if (all.length === 0) return null
 
   // Mixing formula versions would compare scores that were never comparable, so the report
@@ -51,28 +64,36 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
   const median = totals.length % 2 === 0 ? (totals[middle - 1] + totals[middle]) / 2 : totals[middle]
   const mean = totals.reduce((sum, total) => sum + total, 0) / totals.length
 
+  // Denominator is the points we could measure. Folding our own blind spots into the
+  // market's failures would make the funnel collapse look worse than we can prove it is,
+  // which is exactly the sentence printed two sections below on the same page.
   const stages = STAGES.map((stage) => {
-    const shares = reports.map((report) => {
-      const scored = report.scorecard.stages.find((entry) => entry.stage === stage.id)
-      return scored && scored.max > 0 ? scored.points / scored.max : 0
-    })
+    const shares: number[] = []
+    for (const report of reports) {
+      const inStage = report.scorecard.checks.filter((check) => check.stage === stage.id && !check.inconclusive)
+      const available = inStage.reduce((sum, check) => sum + check.max, 0)
+      if (available === 0) continue
+      shares.push(inStage.reduce((sum, check) => sum + check.points, 0) / available)
+    }
     return {
       stage: stage.id,
       letter: stage.letter,
       title: stage.title,
       question: stage.question,
-      share: shares.reduce((sum, share) => sum + share, 0) / shares.length,
+      share: shares.length > 0 ? shares.reduce((sum, share) => sum + share, 0) / shares.length : 0,
+      measuredOn: shares.length,
     }
   })
 
   const checks: CheckTally[] = CHECKS.map((check) => {
-    const tally = { id: check.id, label: check.label, stage: check.stage, pass: 0, fail: 0, unmeasurable: 0 }
+    const tally = { id: check.id, label: check.label, stage: check.stage, pass: 0, partial: 0, zero: 0, unmeasurable: 0 }
     for (const report of reports) {
       const scored = report.scorecard.checks.find((entry) => entry.id === check.id)
       if (!scored) continue
       if (scored.inconclusive) tally.unmeasurable += 1
       else if (scored.points === scored.max) tally.pass += 1
-      else tally.fail += 1
+      else if (scored.points > 0) tally.partial += 1
+      else tally.zero += 1
     }
     return tally
   })
@@ -88,7 +109,8 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
   return {
     sampleSize: reports.length,
     formulaVersion,
-    max: reports[0].scorecard.max,
+    // Every report in the slice shares a formula version, so they share a maximum.
+    max: Math.max(...reports.map((report) => report.scorecard.max)),
     median,
     mean,
     scannedFrom: scanTimes[0],
