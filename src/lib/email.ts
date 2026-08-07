@@ -1,3 +1,4 @@
+import { buildFixPlan } from './fixfirst'
 import { pickHeadline } from './headline'
 import type { Report } from './store'
 
@@ -16,7 +17,7 @@ const escape = (value: string) =>
 export function scorecardEmail(report: Report): { subject: string; text: string; html: string } {
   const { scorecard, findings, domain } = report
   const headline = pickHeadline(findings, scorecard)
-  const failing = scorecard.checks.filter((check) => check.points < check.max && !check.inconclusive).slice(0, 3)
+  const plan = buildFixPlan(findings, scorecard)
   const url = reportUrl(report)
 
   // The subject is the finding, not the product name. A subject line that could have been
@@ -31,8 +32,8 @@ export function scorecardEmail(report: Report): { subject: string; text: string;
     `Agent readiness: ${scorecard.total} of ${scorecard.max}`,
     ...scorecard.stages.map((stage) => `  ${stage.letter}  ${stage.title.padEnd(14)} ${stage.points}/${stage.max}`),
     '',
-    failing.length > 0 ? 'Also failing:' : '',
-    ...failing.map((check) => `  - ${check.label}: ${check.detail}`),
+    plan ? plan.claim : '',
+    ...(plan ? plan.quickWins.map((step) => `  ${step.gain > 0 ? `+${step.gain}` : ''} ${step.label} (${step.effort}): ${step.how}`) : []),
     '',
     `Full scorecard: ${url}`,
     `How it is scored: ${BASE_URL}/methodology`,
@@ -76,12 +77,20 @@ export function scorecardEmail(report: Report): { subject: string; text: string;
   </td></tr>
 
   ${
-    failing.length > 0
+    plan
       ? `<tr><td style="padding:24px 32px 0">
-    <div style="font:12px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:1.5px;text-transform:uppercase;color:#8a8b8f">Also failing</div>
-    <ul style="margin:12px 0 0;padding-left:18px;font:14px/1.7 ui-sans-serif,system-ui,sans-serif;color:#55575c">
-      ${failing.map((check) => `<li><strong style="color:#16181c">${escape(check.label)}</strong>: ${escape(check.detail)}</li>`).join('')}
-    </ul>
+    <div style="border-top:1px solid #dedbd2;padding-top:20px">
+      <div style="font:12px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:1.5px;text-transform:uppercase;color:#9a7318">Fix this first</div>
+      <p style="margin:12px 0 0;font:600 18px/1.4 ui-sans-serif,system-ui,sans-serif;color:#16181c">${escape(plan.claim)}</p>
+      <ol style="margin:14px 0 0;padding-left:18px;font:14px/1.7 ui-sans-serif,system-ui,sans-serif;color:#55575c">
+        ${plan.quickWins
+          .map(
+            (step) =>
+              `<li><strong style="color:#16181c">${escape(step.label)}</strong> <span style="font:11px ui-monospace,SFMono-Regular,Menlo,monospace;color:#8a8b8f">${escape(step.effort)} &middot; +${step.gain}</span><br>${escape(step.how)}</li>`,
+          )
+          .join('')}
+      </ol>
+    </div>
   </td></tr>`
       : ''
   }

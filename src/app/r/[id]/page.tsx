@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation'
 import { ComparisonSection } from '@/components/comparison'
 import { buildComparison } from '@/lib/compare'
 import { EmailGate } from '@/components/email-gate'
+import { FixFirst } from '@/components/fix-first'
+import { buildFixPlan } from '@/lib/fixfirst'
 import { getStore } from '@/lib/store'
 import { pickHeadline } from '@/lib/headline'
 import { STAGES, type ScoredCheck } from '@/lib/score'
@@ -49,6 +51,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
     Boolean(findings.discovered.docs) || Boolean(findings.npm.package) || findings.machine.openapi.length > 0
   const headline = pickHeadline(findings, scorecard)
   const comparison = await buildComparison(report)
+  const fixPlan = buildFixPlan(findings, scorecard, comparison)
 
   return (
     <main className="mx-auto max-w-5xl px-6">
@@ -119,6 +122,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           </div>
         </section>
       )}
+
+      {fixPlan && <FixFirst plan={fixPlan} />}
 
       <ComparisonSection comparison={comparison} domain={report.domain} />
 
