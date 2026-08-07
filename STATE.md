@@ -205,9 +205,10 @@ porównanie z korpusem, ale do niego nie wchodzi.
    `.well-known/agent-access.json`, nota o prywatności) wskazują na `gwizdala.kr@gmail.com`,
    a `AGENT_UA` na host Heroku. **Do przejrzenia przy domenie:** to prywatny adres na
    publicznej stronie, świadomy wybór, bo adres, który odbija, jest gorszy.
-3. **DNS rebinding.** `assertPublicHost` robi własne `lookup()`, a `fetch` rozwiązuje nazwę
-   drugi raz, więc rekord z TTL 0 przeplatający publiczny adres i `127.0.0.1` przechodzi.
-   Złagodzone (porty tylko 80/443), pełna naprawa wymaga własnego `lookup` w agencie undici.
-4. `reportId` ma dokładność do minuty i `saveReport` robi upsert, więc dwa skany tej samej
-   domeny w tej samej minucie nadpisują się.
+3. ~~DNS rebinding~~ **naprawione**: skan chodzi po dispatcherze undici, którego `lookup`
+   waliduje adres **wewnątrz nawiązywania połączenia**, więc nie ma okna między sprawdzeniem
+   a socketem (`src/lib/scan/dispatcher.ts`). Zweryfikowane na produkcji: `127.0.0.1.nip.io`
+   i `localtest.me` odbite, normalne skany bez zmian. Porty ograniczone do 80/443.
+4. ~~Kolizja `reportId`~~ **naprawione**: sekundy plus cztery znaki losowe. Zweryfikowane,
+   dwa skany tej samej domeny w odstępie dwóch sekund dają różne linki.
 3. Trzeci audyt agentowy po tej partii zmian (formuła 3.0 zmieniła dużo w punktacji).
