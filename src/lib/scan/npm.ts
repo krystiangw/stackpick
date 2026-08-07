@@ -9,12 +9,15 @@ export type NpmFindings = {
   hasHomepage?: boolean
   weeklyDownloads?: number
   lastPublish?: string
+  /** Verbatim license field. Agents eliminate on this before they look at the product. */
+  license?: string
   /** Popular packages abandoned for years are what cheaper models recommend from memory. */
   staleMonths?: number
 }
 
 type Manifest = {
   version?: string
+  license?: string | { type?: string }
   types?: string
   typings?: string
   exports?: unknown
@@ -42,6 +45,7 @@ export async function checkNpm(packageName: string | null): Promise<NpmFindings>
     result.version = meta.version
     // Modern packages declare types in the exports map, not at the top level.
     result.bundledTypes = Boolean(meta.types ?? meta.typings) || JSON.stringify(meta.exports ?? {}).includes('"types"')
+    result.license = typeof meta.license === 'string' ? meta.license : meta.license?.type
     result.hasRepository = Boolean(meta.repository)
     result.hasHomepage = Boolean(meta.homepage)
   } catch {

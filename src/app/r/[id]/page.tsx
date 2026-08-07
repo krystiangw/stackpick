@@ -273,6 +273,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                 : null,
             ],
             ['GitHub', findings.discovered.githubRepo],
+            ['Package licence', findings.npm.license ?? null],
             ['Crawl-delay', findings.robots.crawlDelaySeconds ? `${findings.robots.crawlDelaySeconds}s` : 'none'],
             ['Content-Signal', findings.robots.contentSignal ?? 'none'],
             [
@@ -303,6 +304,21 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             </div>
           ))}
         </dl>
+        {findings.npm.license && !/^[A-Za-z0-9.+-]+$/.test(findings.npm.license) && (
+          <div className="mt-6 border-l-2 border-warn bg-surface p-5">
+            <p className="max-w-2xl leading-relaxed">
+              Your package declares{' '}
+              <span className="font-mono text-sm">{findings.npm.license}</span> rather than a plain licence
+              identifier. We do not score this, because a commercial licence is a business model, not a defect.
+              We report it because in six agent runs on a comparable decision, every model that hit a licence
+              key requirement dropped that vendor in one line, without opening the product.{' '}
+              <Link href="/findings" className="text-brass underline underline-offset-4">
+                What the runs showed
+              </Link>
+            </p>
+          </div>
+        )}
+
         {!findings.funnel.signup.consistent && (
           <p className="mt-4 font-mono text-xs text-warn">
             The signup page answered inconsistently across three tries ({findings.funnel.signup.statusesSeen.join(', ')}).
