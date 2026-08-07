@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto'
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { MongoStore } from './store-mongo'
@@ -113,7 +114,13 @@ export function getStore(): Store {
   return cached
 }
 
+/**
+ * Minute precision plus an upsert meant two scans of one domain in the same minute
+ * overwrote each other, which the console can do trivially since it skips the reuse cache.
+ * Seconds and four random characters make the link a name, not a slot.
+ */
 export function reportId(domain: string, scannedAt: string): string {
-  const stamp = scannedAt.replace(/[-:TZ.]/g, '').slice(0, 12)
-  return `${domain.replace(/\./g, '-')}-${stamp}`
+  const stamp = scannedAt.replace(/[-:TZ.]/g, '').slice(0, 14)
+  const suffix = randomBytes(2).toString('hex')
+  return `${domain.replace(/\./g, '-')}-${stamp}-${suffix}`
 }
