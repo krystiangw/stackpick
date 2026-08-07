@@ -2,7 +2,7 @@ import { PROVISIONING_PATTERN_COUNT } from './scan/funnel'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '2.2'
+export const FORMULA_VERSION = '2.3'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -53,6 +53,15 @@ export const CHECKS: Check[] = [
     max: 1,
     evaluate: (f) => {
       if (f.machine.hasLlmsTxt) {
+        // A site that answers any unknown .txt with real text hands us a file that proves
+        // nothing. Same trap as the entry paths, one probe arm later.
+        if (f.funnel.servesCatchAll) {
+          return {
+            points: 0,
+            detail: 'Unmeasurable: the site answers unknown paths with real text, so a hit on llms.txt proves nothing',
+            inconclusive: true,
+          }
+        }
         return yes(1, f.machine.hasLlmsFullTxt ? 'llms.txt and llms-full.txt present' : 'llms.txt present')
       }
       if (f.blocksPlainRequests) {
@@ -282,7 +291,16 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       const negotiation = f.machine.markdownNegotiation
       if (f.machine.openapi.length > 0) return yes(1, `OpenAPI at ${f.machine.openapi[0]}`)
-      if (negotiation.acceptHeader || negotiation.dotMdSuffix) return yes(1, 'Docs serve markdown to machines')
+      if ((negotiation.acceptHeader || negotiation.dotMdSuffix) && !f.funnel.servesCatchAll) {
+        return yes(1, 'Docs serve markdown to machines')
+      }
+      if (negotiation.acceptHeader || negotiation.dotMdSuffix) {
+        return {
+          points: 0,
+          detail: 'Unmeasurable: the site answers unknown paths with text, so the markdown it served is not evidence of negotiation',
+          inconclusive: true,
+        }
+      }
       if (f.blocksPlainRequests) {
         return { points: 0, detail: 'Unmeasurable behind the WAF', inconclusive: true }
       }

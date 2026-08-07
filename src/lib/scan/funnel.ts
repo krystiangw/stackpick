@@ -129,11 +129,13 @@ function matching(patterns: RegExp[], html: string): string[] {
  * probe every entry path "exists" and the site scores full marks on fabricated evidence.
  */
 async function servesCatchAllText(site: string): Promise<boolean> {
-  const [markdown, json] = await Promise.all([
+  const [markdown, json, plain] = await Promise.all([
     fetchUrl(`${site}/stackpick-control-probe-8f3a1c.md`, { accept: 'text/markdown, text/plain' }),
     fetchUrl(`${site}/.well-known/stackpick-control-probe-8f3a1c.json`, { accept: 'application/json' }),
+    // The .txt arm covers llms.txt, which is scored elsewhere and was unguarded.
+    fetchUrl(`${site}/stackpick-control-probe-8f3a1c.txt`, { accept: 'text/plain' }),
   ])
-  return isRealTextFile(markdown, 30) || isRealTextFile(json, 30)
+  return isRealTextFile(markdown, 30) || isRealTextFile(json, 30) || isRealTextFile(plain, 30)
 }
 
 export async function scanFunnel(
