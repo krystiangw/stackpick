@@ -12,11 +12,16 @@ export const AGENT_ENTRY_PATHS = [
   '/.well-known/ai-plugin.json',
 ]
 
-const CAPTCHA_SIGNATURES: Record<string, string[]> = {
-  recaptcha: ['recaptcha', 'gstatic.com/recaptcha'],
-  hcaptcha: ['hcaptcha.com'],
-  turnstile: ['challenges.cloudflare.com/turnstile', 'cf-turnstile'],
-  arkose: ['arkoselabs', 'funcaptcha'],
+/**
+ * Bare vendor tokens, not CDN hostnames. Stripe's signup carries "show_hcaptcha":true in the
+ * server HTML and never mentions hcaptcha.com until JS runs, so hostname matching awarded a
+ * point for the exact gate this check exists to find.
+ */
+const CAPTCHA_SIGNATURES: Record<string, RegExp> = {
+  recaptcha: /recaptcha/i,
+  hcaptcha: /hcaptcha/i,
+  turnstile: /turnstile|cf-chl/i,
+  arkose: /arkoselabs|funcaptcha/i,
 }
 
 const PROVISIONING_PATTERNS = [
@@ -42,6 +47,8 @@ const SELF_SERVE_PATTERNS = [
   /\btry (?:it )?free\b/i,
 ]
 
+export const PROVISIONING_PATTERN_COUNT = PROVISIONING_PATTERNS.length
+
 export type SignupFindings = {
   url: string | null
   status: number
@@ -61,6 +68,9 @@ export type FunnelFindings = {
   signup: SignupFindings
   provisioning: { programmatic: string[]; selfServeSignals: string[] }
   mentionsCli: boolean
+  /** True when the site answers unknown paths with real text, making entry probes meaningless. */
+  servesCatchAll: boolean
+  pricingFetched: boolean
 }
 
 async function probeOauthDcr(site: string) {
@@ -98,15 +108,32 @@ async function inspectSignup(url: string | null): Promise<SignupFindings> {
     reachable: got.ok,
     rendersFormWithoutJs: body.includes('<form'),
     captcha: Object.entries(CAPTCHA_SIGNATURES)
-      .filter(([, needles]) => needles.some((needle) => body.includes(needle)))
+      .filter(([, pattern]) => pattern.test(body))
       .map(([name]) => name),
     behindCloudflare: 'cf-ray' in got.headers || (got.headers.server ?? '').toLowerCase().includes('cloudflare'),
     socialOauth: ['github', 'google', 'gitlab', 'microsoft'].filter((p) => body.includes(p) && body.includes('oauth')),
   }
 }
 
-function matching(patterns: RegExp[], text: string): string[] {
+/** Greps visible text only: a JSON changelog blob inside a <script> once scored 2 of 16 points. */
+function matching(patterns: RegExp[], html: string): string[] {
+  const text = html
+    .replace(/<(script|style|noscript)[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
   return patterns.filter((pattern) => pattern.test(text)).map((pattern) => pattern.source)
+}
+
+/**
+ * Some sites answer any unknown path with a real markdown or JSON document. Without a control
+ * probe every entry path "exists" and the site scores full marks on fabricated evidence.
+ */
+async function servesCatchAllText(site: string): Promise<boolean> {
+  const [markdown, json] = await Promise.all([
+    fetchUrl(`${site}/stackpick-control-probe-8f3a1c.md`, { accept: 'text/markdown, text/plain' }),
+    fetchUrl(`${site}/.well-known/stackpick-control-probe-8f3a1c.json`, { accept: 'application/json' }),
+  ])
+  return isRealTextFile(markdown, 30) || isRealTextFile(json, 30)
 }
 
 export async function scanFunnel(
@@ -115,7 +142,9 @@ export async function scanFunnel(
   pricingUrl: string | null,
   signupUrl: string | null,
 ): Promise<FunnelFindings> {
+  const catchAll = await servesCatchAllText(site)
   const entries = await inParallel(AGENT_ENTRY_PATHS, async (path) => {
+    if (catchAll) return [path, false] as const
     const got = await fetchUrl(`${site}${path}`, { accept: 'text/markdown, application/json, text/plain' })
     return [path, isRealTextFile(got, 30)] as const
   })
@@ -139,5 +168,7 @@ export async function scanFunnel(
       selfServeSignals: matching(SELF_SERVE_PATTERNS, pricingText),
     },
     mentionsCli: /\b(npx|cli install|command line interface)\b/i.test(corpus),
+    servesCatchAll: catchAll,
+    pricingFetched: Boolean(pricingPage?.ok),
   }
 }

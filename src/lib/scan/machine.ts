@@ -30,9 +30,19 @@ export async function scanMachineContext(site: string, docs: string | null): Pro
     root_llms_full_txt: `${site}/llms-full.txt`,
   }
   if (docs) {
+    // The standard location is the origin root. Appending to the docs page path missed
+    // docs.stripe.com/llms.txt (93 KB) while probing a 404 one level deeper.
+    try {
+      const origin = new URL(docs).origin
+      if (origin !== site) {
+        locations.docs_origin_llms_txt = `${origin}/llms.txt`
+        locations.docs_origin_llms_full_txt = `${origin}/llms-full.txt`
+      }
+    } catch {
+      /* docs URL already validated upstream */
+    }
     const docsBase = docs.replace(/\/$/, '')
-    locations.docs_llms_txt = `${docsBase}/llms.txt`
-    locations.docs_llms_full_txt = `${docsBase}/llms-full.txt`
+    locations.docs_path_llms_txt = `${docsBase}/llms.txt`
   }
 
   const llmsEntries = await inParallel(Object.entries(locations), async ([label, url]) => {

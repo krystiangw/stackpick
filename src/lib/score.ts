@@ -1,3 +1,5 @@
+import { PROVISIONING_PATTERN_COUNT } from './scan/funnel'
+import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
 export const FORMULA_VERSION = '2.1'
@@ -49,10 +51,16 @@ export const CHECKS: Check[] = [
     label: 'llms.txt published',
     why: 'A curated map of your docs is the cheapest way to control what an agent reads first.',
     max: 1,
-    evaluate: (f) =>
-      f.machine.hasLlmsTxt
-        ? yes(1, f.machine.hasLlmsFullTxt ? 'llms.txt and llms-full.txt present' : 'llms.txt present')
-        : yes(0, 'No llms.txt at any of the four standard locations'),
+    evaluate: (f) => {
+      if (f.machine.hasLlmsTxt) {
+        return yes(1, f.machine.hasLlmsFullTxt ? 'llms.txt and llms-full.txt present' : 'llms.txt present')
+      }
+      if (f.blocksPlainRequests) {
+        return { points: 0, detail: 'Unmeasurable: every request was refused', inconclusive: true }
+      }
+      const probed = Object.keys(f.machine.llms).length
+      return yes(0, `No llms.txt at any of the ${probed} locations probed`)
+    },
   },
   {
     id: 'docs_without_js',
@@ -78,6 +86,17 @@ export const CHECKS: Check[] = [
     max: 1,
     evaluate: (f) => {
       const blocked = f.robots.blockedByClass.user
+      if (!f.robots.present) {
+        return { points: 0, detail: 'Unmeasurable: no robots.txt could be read', inconclusive: true }
+      }
+      const explicitlyAllowed = AI_CRAWLERS.filter(
+        (crawler) => crawler.class === 'user' && f.robots.crawlers[crawler.name] === 'allowed_explicit',
+      )
+      // A site that writes a dedicated allow group for on-demand agents is doing the right
+      // thing; a blanket disallow elsewhere should not erase that.
+      if (explicitlyAllowed.length > 0 && blocked.length === 0) {
+        return yes(1, `Explicitly allowed: ${explicitlyAllowed.map((crawler) => crawler.name).join(', ')}`)
+      }
       if (f.robots.blanketDisallowAll) return yes(0, 'robots.txt disallows everything for every agent')
       if (blocked.length > 0) return yes(0, `Blocked: ${blocked.join(', ')}`)
       // A green tick for reachability on a site that 403s everyone is false comfort.
@@ -94,6 +113,9 @@ export const CHECKS: Check[] = [
     why: 'A polite agent honouring Crawl-delay: 10 spends 200 seconds to read 20 doc pages, then gives up.',
     max: 1,
     evaluate: (f) => {
+      if (!f.robots.present) {
+        return { points: 0, detail: 'Unmeasurable: no robots.txt could be read', inconclusive: true }
+      }
       const delay = f.robots.crawlDelaySeconds
       if (delay === null) return yes(1, 'No Crawl-delay directive')
       if (delay <= 1) return yes(1, `Crawl-delay: ${delay}s, negligible`)
@@ -106,10 +128,23 @@ export const CHECKS: Check[] = [
     label: 'Agent entry point',
     why: 'A markdown file written for a machine turns a guessing game into a procedure it can follow.',
     max: 2,
-    evaluate: (f) =>
-      f.funnel.entryPointsFound.length > 0
-        ? yes(2, `Found: ${f.funnel.entryPointsFound.join(', ')}`)
-        : yes(0, 'None of the 9 known agent entry paths answer'),
+    evaluate: (f) => {
+      if (f.funnel.servesCatchAll) {
+        return {
+          points: 0,
+          detail: 'Unmeasurable: the site answers unknown paths with real text, so any hit here proves nothing',
+          inconclusive: true,
+        }
+      }
+      // A .well-known descriptor already scores under MCP; counting it twice sold one file
+      // as three points across two stages.
+      const written = f.funnel.entryPointsFound.filter((path) => !path.startsWith('/.well-known/'))
+      if (written.length > 0) return yes(2, `Found: ${written.join(', ')}`)
+      if (f.funnel.entryPointsFound.length > 0) {
+        return yes(1, `Only service descriptors: ${f.funnel.entryPointsFound.join(', ')}. No procedure written for a machine.`)
+      }
+      return yes(0, 'None of the 9 known agent entry paths answer')
+    },
   },
   {
     id: 'oauth_dcr',
@@ -146,9 +181,17 @@ export const CHECKS: Check[] = [
       if (!f.funnel.signup.url) {
         return { points: 0, detail: 'No signup page linked from the site we could follow', inconclusive: true }
       }
-      return f.funnel.signup.captcha.length === 0
-        ? yes(1, 'No CAPTCHA vendor detected')
-        : yes(0, `CAPTCHA detected: ${f.funnel.signup.captcha.join(', ')}`)
+      if (f.funnel.signup.captcha.length > 0) {
+        return yes(0, `CAPTCHA detected: ${f.funnel.signup.captcha.join(', ')}`)
+      }
+      if (!f.funnel.signup.rendersFormWithoutJs) {
+        return {
+          points: 0,
+          detail: 'Unmeasurable: the signup form is not in the server HTML, so its gates are not either',
+          inconclusive: true,
+        }
+      }
+      return yes(1, 'No CAPTCHA vendor in the server HTML')
     },
   },
   {
@@ -179,7 +222,10 @@ export const CHECKS: Check[] = [
     max: 2,
     evaluate: (f) =>
       f.funnel.provisioning.programmatic.length > 0
-        ? yes(2, `Documented: ${f.funnel.provisioning.programmatic.length} provisioning patterns`)
+        ? yes(
+            f.funnel.provisioning.programmatic.length >= 2 ? 2 : 1,
+            `${f.funnel.provisioning.programmatic.length} of ${PROVISIONING_PATTERN_COUNT} provisioning phrases found in readable text`,
+          )
         : f.blocksPlainRequests
           ? { points: 0, detail: 'Unmeasurable: documentation could not be fetched', inconclusive: true }
           : yes(0, 'No programmatic credential creation found in the pages we could read'),
@@ -190,10 +236,13 @@ export const CHECKS: Check[] = [
     label: 'Self-serve entry without sales',
     why: 'A free tier is what lets an agent finish the job in the same session it started.',
     max: 1,
-    evaluate: (f) =>
-      f.funnel.provisioning.selfServeSignals.length > 0
-        ? yes(1, 'Free tier or no-card signals on pricing')
-        : yes(0, 'No self-serve signal found on the pricing page'),
+    evaluate: (f) => {
+      if (f.funnel.provisioning.selfServeSignals.length > 0) return yes(1, 'Free tier or no-card signals on pricing')
+      if (!f.funnel.pricingFetched) {
+        return { points: 0, detail: 'Unmeasurable: no pricing page could be fetched', inconclusive: true }
+      }
+      return yes(0, 'No self-serve signal found on the pricing page')
+    },
   },
   {
     id: 'typed_package',
