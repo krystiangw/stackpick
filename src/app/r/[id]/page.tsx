@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic'
 
 function verdictTone(check: ScoredCheck) {
   if (check.points === check.max) return { label: 'PASS', className: 'text-pass' }
+  if (check.inconclusive) return { label: 'N/A', className: 'text-ink-faint' }
   if (check.points > 0) return { label: 'PART', className: 'text-warn' }
   return { label: 'FAIL', className: 'text-fail' }
 }
@@ -18,8 +19,13 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   if (!report) notFound()
 
   const { scorecard, findings } = report
-  const failing = scorecard.checks.filter((check) => check.points < check.max)
+  // A check we could not measure is not a failure we can charge someone for.
+  const failing = scorecard.checks.filter((check) => check.points < check.max && !check.inconclusive)
   const scanned = new Date(report.scannedAt)
+  // The formula assumes a product a developer integrates. Saying so beats scoring a
+  // newspaper against an SDK checklist and letting the number imply it failed.
+  const looksLikeDeveloperProduct =
+    Boolean(findings.discovered.docs) || Boolean(findings.npm.package) || findings.machine.openapi.length > 0
 
   return (
     <main className="mx-auto max-w-5xl px-6">
@@ -45,6 +51,32 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           </div>
         </div>
       </section>
+
+      {!looksLikeDeveloperProduct && (
+        <section className="border-b border-rule py-8">
+          <div className="border-l-2 border-warn bg-surface p-6">
+            <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">Probably the wrong yardstick</h2>
+            <p className="mt-3 max-w-2xl leading-relaxed">
+              We found no documentation, no SDK and no API description, so this may not be a product
+              developers integrate. The formula measures whether an agent can adopt you as a building block.
+              Judged as anything else, the score below is not meaningful.
+            </p>
+          </div>
+        </section>
+      )}
+
+      {findings.blocksPlainRequests && (
+        <section className="border-b border-rule py-8">
+          <div className="border-l-2 border-fail bg-surface p-6">
+            <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-fail">Blocked at the door</h2>
+            <p className="mt-3 max-w-2xl leading-relaxed">
+              The home page answered <span className="font-mono">{findings.homeStatus}</span> to an ordinary HTTP
+              request. An agent sends exactly that request, so for a large share of them this site does not exist.
+              Everything below was measured through that wall and is a floor, not a ceiling.
+            </p>
+          </div>
+        </section>
+      )}
 
       <section className="border-b border-rule py-10">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">By stage</h2>
@@ -99,8 +131,13 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                         <div className="flex flex-col gap-1">
                           <span className="text-sm font-medium">{check.label}</span>
                           <span className="font-mono text-xs text-ink-soft">{check.detail}</span>
-                          {check.points < check.max && (
+                          {check.points < check.max && !check.inconclusive && (
                             <span className="text-xs italic text-ink-faint">{check.why}</span>
+                          )}
+                          {check.inconclusive && (
+                            <span className="text-xs italic text-ink-faint">
+                              Scored zero, but this one is our blind spot rather than a proven absence.
+                            </span>
                           )}
                         </div>
                       </li>
@@ -120,7 +157,12 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             ['Docs', findings.discovered.docs],
             ['Pricing', findings.discovered.pricing],
             ['Signup', findings.discovered.signup],
-            ['npm package', findings.discovered.npmPackage],
+            [
+              'npm package',
+              findings.discovered.npmPackage
+                ? `${findings.discovered.npmPackage}${findings.discovered.npmSource === 'registry-search' ? ' (registry guess)' : ''}`
+                : null,
+            ],
             ['GitHub', findings.discovered.githubRepo],
             ['Crawl-delay', findings.robots.crawlDelaySeconds ? `${findings.robots.crawlDelaySeconds}s` : 'none'],
             ['Content-Signal', findings.robots.contentSignal ?? 'none'],

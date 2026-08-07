@@ -9,8 +9,17 @@ export type ScanFindings = {
   domain: string
   site: string
   scannedAt: string
+  homeStatus: number
+  blocksPlainRequests: boolean
   durationMs: number
-  discovered: { docs: string | null; pricing: string | null; signup: string | null; npmPackage: string | null; githubRepo: string | null }
+  discovered: {
+    docs: string | null
+    pricing: string | null
+    signup: string | null
+    npmPackage: string | null
+    npmSource: 'site' | 'docs' | 'llms' | 'registry-search' | null
+    githubRepo: string | null
+  }
   homeTextChars: number
   docsTextChars: number
   robots: RobotsFindings
@@ -26,9 +35,13 @@ export async function scanDomain(input: string): Promise<ScanFindings> {
   const domain = normalizeDomain(input)
   const found: Discovered = await discover(domain)
 
-  if (!found.home.ok) {
+  // A 403 to a plain request is not a failed scan, it is the strongest finding this tool
+  // can produce: the site turns agents away at the door. Only a dead name is an error.
+  if (found.home.status === 0) {
     throw new UnreachableDomainError(
-      found.home.error ? `${domain} did not respond (${found.home.error})` : `${domain} answered ${found.home.status}`,
+      found.home.error?.startsWith('Blocked:')
+        ? found.home.error.replace('Blocked: ', '')
+        : `${domain} did not respond. Check the spelling, or the site may be down.`,
     )
   }
 
@@ -49,12 +62,15 @@ export async function scanDomain(input: string): Promise<ScanFindings> {
     domain,
     site: found.site,
     scannedAt: new Date().toISOString(),
+    homeStatus: found.home.status,
+    blocksPlainRequests: !found.home.ok,
     durationMs: Date.now() - startedAt,
     discovered: {
       docs: found.docs,
       pricing: found.pricing,
       signup: found.signup,
       npmPackage: found.npmPackage,
+      npmSource: found.npmSource,
       githubRepo: found.githubRepo,
     },
     homeTextChars: visibleTextLength(found.home.body),

@@ -1,3 +1,5 @@
+import { assertPublicHost, BlockedTargetError } from './guard'
+
 export const BROWSER_UA =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0 Safari/537.36'
 
@@ -24,6 +26,8 @@ const empty = (url: string, error: string): Fetched => ({
   error,
 })
 
+const MAX_REDIRECTS = 5
+
 export async function fetchUrl(
   url: string,
   { accept = '*/*', ua = BROWSER_UA, method = 'GET' }: { accept?: string; ua?: string; method?: 'GET' | 'HEAD' } = {},
@@ -31,22 +35,42 @@ export async function fetchUrl(
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
   try {
-    const response = await fetch(url, {
-      method,
-      headers: { 'user-agent': ua, accept },
-      redirect: 'follow',
-      signal: controller.signal,
-    })
-    const buffer = await readCapped(response)
-    return {
-      url: response.url || url,
-      status: response.status,
-      ok: response.status >= 200 && response.status < 300,
-      body: buffer.text,
-      headers: Object.fromEntries([...response.headers].map(([k, v]) => [k.toLowerCase(), v])),
-      truncated: buffer.truncated,
+    let current = url
+    // Redirects are followed by hand because every hop has to be re-checked: a public
+    // hostname is free to redirect into a private address.
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      const target = new URL(current)
+      if (target.protocol !== 'https:' && target.protocol !== 'http:') {
+        return empty(url, 'Refused a non-HTTP redirect')
+      }
+      await assertPublicHost(target.hostname)
+
+      const response = await fetch(current, {
+        method,
+        headers: { 'user-agent': ua, accept },
+        redirect: 'manual',
+        signal: controller.signal,
+      })
+
+      const location = response.headers.get('location')
+      if (response.status >= 300 && response.status < 400 && location) {
+        current = new URL(location, current).toString()
+        continue
+      }
+
+      const buffer = method === 'HEAD' ? { text: '', truncated: false } : await readCapped(response)
+      return {
+        url: current,
+        status: response.status,
+        ok: response.status >= 200 && response.status < 300,
+        body: buffer.text,
+        headers: Object.fromEntries([...response.headers].map(([k, v]) => [k.toLowerCase(), v])),
+        truncated: buffer.truncated,
+      }
     }
+    return empty(url, 'Too many redirects')
   } catch (error) {
+    if (error instanceof BlockedTargetError) return empty(url, `Blocked: ${error.message}`)
     return empty(url, error instanceof Error ? `${error.name}: ${error.message}` : String(error))
   } finally {
     clearTimeout(timer)

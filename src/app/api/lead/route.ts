@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
 import { scorecardEmail, sendEmail } from '@/lib/email'
-import { checkRateLimit, clientKey } from '@/lib/rate-limit'
+import { checkRateLimit, clientKey, recordUse } from '@/lib/rate-limit'
 import { getStore } from '@/lib/store'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function POST(request: Request) {
-  if (!checkRateLimit(`lead:${clientKey(request)}`).allowed) {
+  const caller = `lead:${clientKey(request)}`
+  if (!checkRateLimit(caller).allowed) {
     return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 })
   }
 
@@ -24,6 +25,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'That report no longer exists. Run the scan again.' }, { status: 404 })
   }
 
+  recordUse(caller)
   await store.saveLead({
     email: body.email,
     domain: report.domain,

@@ -1,6 +1,6 @@
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '2.0'
+export const FORMULA_VERSION = '2.1'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -12,7 +12,12 @@ export const STAGES: { id: Stage; letter: string; title: string; question: strin
   { id: 'integration', letter: 'E', title: 'Integration', question: 'Can it ship working code?' },
 ]
 
-export type CheckResult = { points: number; detail: string }
+export type CheckResult = {
+  points: number
+  detail: string
+  /** Zero because we could not find the thing, not because it is absent. Shown differently. */
+  inconclusive?: boolean
+}
 
 export type Check = {
   id: string
@@ -27,6 +32,17 @@ export type Check = {
 const yes = (points: number, detail: string): CheckResult => ({ points, detail })
 
 export const CHECKS: Check[] = [
+  {
+    id: 'answers_plain_request',
+    stage: 'discovery',
+    label: 'Answers a request without a browser',
+    why: 'An agent sends HTTP, not a browser fingerprint. A 403 here ends the funnel before any of it starts.',
+    max: 1,
+    evaluate: (f) =>
+      f.blocksPlainRequests
+        ? yes(0, `Home page answered ${f.homeStatus} to a plain request`)
+        : yes(1, `Home page answered ${f.homeStatus}`),
+  },
   {
     id: 'llms_txt',
     stage: 'discovery',
@@ -119,7 +135,9 @@ export const CHECKS: Check[] = [
     why: 'A CAPTCHA is a hard stop. Permissions after signup beat a gate before it.',
     max: 1,
     evaluate: (f) => {
-      if (!f.funnel.signup.url) return yes(0, 'No signup page found')
+      if (!f.funnel.signup.url) {
+        return { points: 0, detail: 'No signup page linked from the site we could follow', inconclusive: true }
+      }
       return f.funnel.signup.captcha.length === 0
         ? yes(1, 'No CAPTCHA vendor detected')
         : yes(0, `CAPTCHA detected: ${f.funnel.signup.captcha.join(', ')}`)
@@ -133,7 +151,9 @@ export const CHECKS: Check[] = [
     max: 1,
     evaluate: (f) => {
       const signup = f.funnel.signup
-      if (!signup.url) return yes(0, 'No signup page found')
+      if (!signup.url) {
+        return { points: 0, detail: 'No signup page linked from the site we could follow', inconclusive: true }
+      }
       if (!signup.reachable) {
         const seen = signup.consistent ? `${signup.status}` : `${signup.statusesSeen.join(', ')}`
         return yes(0, `Signup answers ${seen} to a non-browser request`)
@@ -172,13 +192,17 @@ export const CHECKS: Check[] = [
     why: 'Types are how an agent checks its own work before you ever see the code.',
     max: 1,
     evaluate: (f) => {
-      if (!f.npm.found) return yes(0, f.npm.package ? `Package ${f.npm.package} not found` : 'No npm package discovered')
+      if (!f.npm.package) {
+        return { points: 0, detail: 'No npm package found on the site or in the registry', inconclusive: true }
+      }
+      if (!f.npm.found) return yes(0, `Package ${f.npm.package} not found on the registry`)
       if (!f.npm.bundledTypes) return yes(0, `${f.npm.package} ships without bundled types`)
       const stale = f.npm.staleMonths
       if (stale !== undefined && stale >= 24) {
         return yes(0, `${f.npm.package} is typed but last published ${stale} months ago`)
       }
-      return yes(1, `${f.npm.package}@${f.npm.version} ships types`)
+      const guessed = f.discovered.npmSource === 'registry-search' ? ', matched from the registry rather than a link on the site' : ''
+      return yes(1, `${f.npm.package}@${f.npm.version} ships types${guessed}`)
     },
   },
   {

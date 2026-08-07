@@ -1,5 +1,7 @@
 import { fetchUrl, looksLikeHtml, visibleTextLength, type Fetched } from './http'
 
+export type NpmSource = 'site' | 'docs' | 'llms' | 'registry-search'
+
 export type Discovered = {
   site: string
   home: Fetched
@@ -7,6 +9,7 @@ export type Discovered = {
   pricing: string | null
   signup: string | null
   npmPackage: string | null
+  npmSource: NpmSource | null
   githubRepo: string | null
 }
 
@@ -20,10 +23,23 @@ const SIGNUP_FALLBACKS = ['/signup', '/sign-up', '/register']
 
 export function normalizeDomain(input: string): string {
   const trimmed = input.trim().replace(/^https?:\/\//i, '').replace(/\/.*$/, '').replace(/^www\./i, '')
+  // 253 is the longest a fully qualified name can be, so anything past it is noise or an attack.
+  if (trimmed.length > 253) throw new Error('Not a valid domain')
   if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i.test(trimmed)) {
     throw new Error('Not a valid domain')
   }
   return trimmed.toLowerCase()
+}
+
+/** Attribute values arrive escaped, so a raw href turns &amp; into a literal in the query. */
+function decodeEntities(value: string): string {
+  return value
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#0?39;|&apos;/gi, "'")
+    .replace(/&#x2F;/gi, '/')
 }
 
 function absolutize(href: string, base: string): string | null {
@@ -37,7 +53,7 @@ function absolutize(href: string, base: string): string | null {
 function extractLinks(html: string, base: string): string[] {
   const links: string[] = []
   for (const match of html.matchAll(/<a\b[^>]*href=["']([^"']+)["']/gi)) {
-    const absolute = absolutize(match[1], base)
+    const absolute = absolutize(decodeEntities(match[1]), base)
     if (absolute?.startsWith('http')) links.push(absolute)
   }
   return links
@@ -144,23 +160,34 @@ export async function discover(domain: string): Promise<Discovered> {
   const signup = pickLink(links, SIGNUP_HINTS, base) ?? (await firstLivePath(site, SIGNUP_FALLBACKS))
 
   let npmPackage = findNpmPackage(html)
+  let npmSource: NpmSource | null = npmPackage ? 'site' : null
   let githubRepo = findGithubRepo(html)
 
   // Home pages sell; docs pages install. Look there too when the home page is silent.
   if ((!npmPackage || !githubRepo) && docs) {
     const docsPage = await fetchUrl(docs)
     if (docsPage.ok) {
-      npmPackage ??= findNpmPackage(docsPage.body)
+      const fromDocs = findNpmPackage(docsPage.body)
+      if (!npmPackage && fromDocs) {
+        npmPackage = fromDocs
+        npmSource = 'docs'
+      }
       githubRepo ??= findGithubRepo(docsPage.body)
     }
   }
 
   if (!npmPackage) {
     const llms = await fetchUrl(`${site}/llms.txt`, { accept: 'text/plain' })
-    if (llms.ok && !looksLikeHtml(llms)) npmPackage = findNpmPackage(llms.body)
+    if (llms.ok && !looksLikeHtml(llms)) {
+      npmPackage = findNpmPackage(llms.body)
+      if (npmPackage) npmSource = 'llms'
+    }
   }
 
-  npmPackage ??= await searchNpmForDomain(domain, githubRepo)
+  if (!npmPackage) {
+    npmPackage = await searchNpmForDomain(domain, githubRepo)
+    if (npmPackage) npmSource = 'registry-search'
+  }
 
-  return { site, home, docs, pricing, signup, npmPackage, githubRepo }
+  return { site, home, docs, pricing, signup, npmPackage, npmSource, githubRepo }
 }

@@ -56,8 +56,8 @@ export function EmailGate({
           : `${domain} passes every deterministic check. The interesting question is what agents do anyway.`}
       </p>
       <p className="mt-3 max-w-xl leading-relaxed text-ink-soft">
-        Send yourself the scorecard and we will include how {domain} compares to three competitors in the
-        same category, plus the fix list ordered by effect over effort.
+        Send yourself the scorecard with the three checks that cost the most, and a permanent link you can
+        forward to whoever owns the fix.
       </p>
 
       <form onSubmit={submit} className="mt-6 flex max-w-xl flex-col gap-2 sm:flex-row">
@@ -85,7 +85,12 @@ export function EmailGate({
         </p>
       )}
       <p className="mt-3 font-mono text-xs text-ink-faint">
-        One email with the report. No sequence, no newsletter.
+        One email with the report. No sequence, no newsletter. We keep your address and this domain so we
+        can follow up once, and we delete it on request at{' '}
+        <a href="mailto:privacy@stackpick.ai" className="text-brass underline underline-offset-4">
+          privacy@stackpick.ai
+        </a>
+        .
       </p>
     </div>
   )

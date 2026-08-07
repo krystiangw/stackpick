@@ -1,5 +1,10 @@
 @import 'tailwindcss';
 
+/*
+ * @theme defines the light palette and generates the utility classes. The dark palette must
+ * be plain custom properties: an @theme block nested in a media query gets flattened into
+ * :root by Tailwind, which silently overwrites light and leaves the site dark forever.
+ */
 @theme {
   --color-ground: #faf9f6;
   --color-surface: #ffffff;
@@ -19,7 +24,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  @theme {
+  :root {
     --color-ground: #101215;
     --color-surface: #181b1f;
     --color-sunken: #1f2328;

@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server'
 import { scanDomain, UnreachableDomainError } from '@/lib/scan'
 import { scoreFindings } from '@/lib/score'
-import { checkRateLimit, clientKey } from '@/lib/rate-limit'
+import { checkRateLimit, clientKey, recordUse } from '@/lib/rate-limit'
 import { getStore, reportId, type Report } from '@/lib/store'
 
 export const maxDuration = 60
 
 export async function POST(request: Request) {
-  const limit = checkRateLimit(clientKey(request))
+  const caller = clientKey(request)
+  const limit = checkRateLimit(caller)
   if (!limit.allowed) {
     return NextResponse.json(
       { error: `Rate limit reached. Try again in ${Math.ceil(limit.retryAfterSeconds / 60)} minutes.` },
@@ -27,6 +28,7 @@ export async function POST(request: Request) {
 
   try {
     const findings = await scanDomain(domain)
+    recordUse(caller)
     const scorecard = scoreFindings(findings)
     const report: Report = {
       id: reportId(findings.domain, findings.scannedAt),

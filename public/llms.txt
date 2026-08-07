@@ -1,0 +1,25 @@
+# StackPick
+
+> Measures whether an AI coding agent can find, register with and integrate a product.
+> Every check is an HTTP request with a published rule, so the score reproduces.
+
+## What it does
+
+- Free scan: 13 deterministic checks across five funnel stages (discovery, agent entry,
+  registration, provisioning, integration). No language model is involved and no account is needed.
+- Paid audit: real agent runs against a real codebase, measuring which provider gets picked
+  and in which words the others are rejected.
+
+## Pages
+
+- [Methodology](/methodology): every check, its rule, its point value and why it costs a vendor money
+- [Findings](/findings): twenty agent runs, two models, two conditions, with the limits stated
+- [Scan a domain](/): enter a domain, get a scorecard under a permanent link
+
+## Notes for agents
+
+- To scan a domain programmatically: POST /api/scan with {"domain": "example.com"}.
+  Rate limited to 10 scans per hour per address. The response carries a report id; the
+  human-readable scorecard is at /r/{id}.
+- Private and loopback addresses are refused on purpose.
+- Contact: hello@stackpick.ai
