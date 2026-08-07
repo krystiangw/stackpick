@@ -159,6 +159,36 @@ Zmiany względem 2.3 pokazują, gdzie stara formuła kłamała: MCP spadło z 22
 (liczyliśmy strony dokumentacji jako serwery), OAuth DCR wzrosło z 2 na 9 zdanych przy 37 N/A
 (sondowaliśmy tylko apeks), provisioning z 2 na 6 (czytaliśmy jedną stronę docsów).
 
+## Runda 2026-08-08 (czwarta): trzeci audyt zewnętrzny, formuła 3.1
+
+Najostrzejszy z trzech audytów. Co znalazł i co naprawione:
+
+**Kłamstwa przed kupującym.** Nagłówek mówił froala.com *"the only difference was the
+user-agent"*, gdy oba żądania dostały 403 (czyli WAF odrzuca centrum danych, nie agenty).
+Procenty na `/report` dzieliły przez punkty na papierze, więc nasze N/A liczyło się jako
+porażka rynku, na tej samej stronie, która obiecuje, że tego nie robi. Vendor odpowiadający
+na 2 z 9 ścieżek wejścia trafiał do kubełka "odpowiada na żadną". Strona pełnego audytu
+mówiła "clean context", a jej własna sekcja limitów mówiła o skażeniu.
+
+**Nadużycia.** `X-Forwarded-For` był brany od klienta (Heroku dokleja prawdziwy adres na
+koniec), więc limit resetowało się zmianą jednej cyfry - zmierzone na produkcji. Skan liczył
+się dopiero po sukcesie, więc nieistniejąca domena była darmowa, a limit per host zamiast per
+rejestrowalna nazwa czynił z nas wzmacniacz ~80× w stronę trzecią. Regex zdejmujący `<script>`
+backtrackował kwadratowo: 600 kB nieзamkniętych tagów = 10 s jedynego wątku (moja pierwsza
+poprawka pogorszyła to do 17 s; działa dopiero skanowanie liniowe, teraz <5 ms).
+
+**Pomiar nie na tej stronie.** Subdomena docsów przekierowująca poza serwis liczyła się jako
+dokumentacja vendora (martwa zaślepka Zendesk = *"your documentation renders 303 characters"*).
+Linki z `llms.txt` prowadzące gdziekolwiek pozwalały zdobyć do 4 punktów na cudzym origin
+z pliku kontrolowanego przez skanowaną stronę. Pakiet npm potwierdzał, że jest "nasz", swoim
+własnym linkiem do npmjs.com, przez co cudzy GPL-owy klient został przypisany Atlassianowi.
+Host z wildcardem i proxy odpowiadał 401 na cokolwiek i czytał się jako żywy serwer MCP
+(ta sama dziura, którą ścieżki wejścia miały już załataną sondą kontrolną).
+
+**Korpus.** Anonimowy skan wchodził do publikowanego zbioru i przesuwał każdą medianę na
+`/report`. Teraz publikujemy wyłącznie listę kuratorowaną; skan gościa dostaje trwały link i
+porównanie z korpusem, ale do niego nie wchodzi.
+
 ## Otwarte
 
 1. ~~Runda 2 przebiegów agentowych~~ **zrobiona**, pełny opis: `ai-audit/runs/editors-round2.md`.
@@ -171,4 +201,13 @@ Zmiany względem 2.3 pokazują, gdzie stara formuła kłamała: MCP spadło z 22
    wszystkie Sonnety (w badaniu storage: 0/10). 4/6 czytało `node_modules` i pliki `LICENSE`,
    1/6 nie odwiedził żadnej strony dostawcy.
 2. **Domena i własny nadawca w Resend.** Jedyna rzecz blokująca outbound, decyzja Krystiana.
+   Do czasu zakupu wszystkie adresy na stronie (`/pricing`, `openapi.json`, `llms.txt`,
+   `.well-known/agent-access.json`, nota o prywatności) wskazują na `gwizdala.kr@gmail.com`,
+   a `AGENT_UA` na host Heroku. **Do przejrzenia przy domenie:** to prywatny adres na
+   publicznej stronie, świadomy wybór, bo adres, który odbija, jest gorszy.
+3. **DNS rebinding.** `assertPublicHost` robi własne `lookup()`, a `fetch` rozwiązuje nazwę
+   drugi raz, więc rekord z TTL 0 przeplatający publiczny adres i `127.0.0.1` przechodzi.
+   Złagodzone (porty tylko 80/443), pełna naprawa wymaga własnego `lookup` w agencie undici.
+4. `reportId` ma dokładność do minuty i `saveReport` robi upsert, więc dwa skany tej samej
+   domeny w tej samej minucie nadpisują się.
 3. Trzeci audyt agentowy po tej partii zmian (formuła 3.0 zmieniła dużo w punktacji).
