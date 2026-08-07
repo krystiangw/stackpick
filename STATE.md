@@ -8,8 +8,11 @@ Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
 - Produkcja: **https://stackpick-f12d13a227ea.herokuapp.com** (Heroku Basic, eu)
 - Baza: MongoDB Atlas, klaster `equity-analyst-flex`, baza `stackpick`
 - Konsola: `/app?key=<STACKPICK_CONSOLE_TOKEN>` (`heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick`)
-- Poczta: Resend przez klucz współdzielony z `equity-analyst-web`, nadawca `onboarding@resend.dev`,
-  co fizycznie wysyła **tylko na adres właściciela konta**. Zweryfikowane, `delivered: true`.
+- Poczta: Resend przez klucz współdzielony z `equity-analyst-web`, nadawca `onboarding@resend.dev`.
+  **Właścicielem konta jest `gwizdala.kr@gmail.com` i tylko tam dociera cokolwiek** - wysyłka na
+  `krystiantestgorilla@gmail.com` wraca jako 403 `validation_error`. Zweryfikowane 2026-08-08,
+  `delivered: true` na adres właściciela. Powód dodania logowania w `/api/lead`: wcześniej ta
+  odmowa była niewidoczna, endpoint zwracał `ok: true` i milczał.
 - Domena `stackpick.ai` **nie jest kupiona**. Do outboundu potrzebna domena plus własny nadawca.
 
 ## Co działa
