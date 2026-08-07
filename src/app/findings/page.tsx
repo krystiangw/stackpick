@@ -52,6 +52,25 @@ const RESULTS = [
       'Four other providers were never mentioned once, not even on rejection lists. Meanwhile agents volunteered options we had not asked about. An agent does not start with an empty list, it starts with its own list, and being outside it is not losing a comparison, it is not being at the table.',
     ],
   },
+  {
+    id: 'licence',
+    heading: 'A licence key eliminated two vendors before either product was opened',
+    numbers: [
+      ['Runs that picked the same MIT-licensed library', '6 of 6'],
+      ['Runs that consulted the npm registry', '6 of 6'],
+      ['Runs that never opened a single vendor page', '1 of 6'],
+    ],
+    body: [
+      'A second study, six runs in isolated copies of one codebase, three on a stronger model and three on a cheaper one: choose a rich text editor and wire it up. Every run chose the same library, verified from the package files each run left behind rather than from what the run claimed. Two commercial vendors were dropped in a single line each, quoted from the vendors\u2019 own documentation about a required licence key. One of them states that without a valid key the editor disables itself, and an agent reads that as a dead end.',
+      'The order matters more than the outcome. Elimination happened during dependency research, before any feature was compared, and the evidence used was package metadata and the licence field. If your licence lives only on a pricing page, part of the market decides without ever seeing it.',
+      'One vendor from the same category did not appear on any rejection list. It was not outranked, it was absent, which is a harder problem than losing a comparison and an invisible one from the inside.',
+    ],
+    quote: {
+      text: 'Fully commercial, licence key required.',
+      caption:
+        'The entire evaluation one vendor received, in an earlier round of the same study. The product was never opened.',
+    },
+  },
 ]
 
 export default function FindingsPage() {
@@ -66,7 +85,8 @@ export default function FindingsPage() {
           Each run received the same brief: add image upload and storage to this app, solidly enough to
           ship, and decide alone because nobody will answer questions. No provider names, no mention of an
           audit, clean context in every run. Two models, two conditions: an empty project, and a working
-          application with a real API client.
+          application with a real API client. A second study, six runs in isolated copies of a different
+          codebase, repeated the exercise for a rich text editor, where a licence is part of the decision.
         </p>
       </section>
 
