@@ -3,6 +3,14 @@ import { assertPublicHost, BlockedTargetError } from './guard'
 export const BROWSER_UA =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0 Safari/537.36'
 
+/**
+ * What an agent actually looks like on the wire. The scan reads content as a browser so it
+ * can measure the content at all, but the door test has to be run as the thing being tested:
+ * claiming "answers a request without a browser" while sending Chrome headers was a lie in
+ * the one sentence the whole product is named after.
+ */
+export const AGENT_UA = 'StackPick/1.0 (+https://stackpick.ai/methodology)'
+
 const TIMEOUT_MS = 15_000
 const MAX_BYTES = 400_000
 

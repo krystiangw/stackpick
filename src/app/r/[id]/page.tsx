@@ -45,6 +45,20 @@ function scaleAnchor(comparison: Awaited<ReturnType<typeof buildComparison>>, to
   return null
 }
 
+const SOURCE_LABEL: Record<string, string> = {
+  site: 'linked from the site',
+  'llms-txt': 'from your llms.txt',
+  'fallback-path': 'guessed path',
+  subdomain: 'found on a subdomain',
+}
+
+/** Every wrong verdict in the audits started with the wrong URL, so name where it came from. */
+function withSource(url: string | null, source: string | null): string | null {
+  if (!url) return null
+  const label = source ? SOURCE_LABEL[source] : null
+  return label ? `${url} · ${label}` : url
+}
+
 function verdictTone(check: ScoredCheck) {
   if (check.points === check.max) return { label: 'PASS', className: 'text-pass' }
   if (check.inconclusive) return { label: 'N/A', className: 'text-ink-faint' }
@@ -151,9 +165,11 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           <div className="border-l-2 border-fail bg-surface p-6">
             <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-fail">Blocked at the door</h2>
             <p className="mt-3 max-w-2xl leading-relaxed">
-              The home page answered <span className="font-mono">{findings.homeStatus}</span> to an ordinary HTTP
-              request. An agent sends exactly that request, so for a large share of them this site does not exist.
-              Everything below was measured through that wall and is a floor, not a ceiling.
+              The home page answered <span className="font-mono">{findings.agentStatus}</span> to a request
+              identifying itself as an agent, and{' '}
+              <span className="font-mono">{findings.browserStatus}</span> to the same request sent as Chrome. The
+              user-agent was the only difference. Everything below was measured through that wall and is a floor,
+              not a ceiling.
             </p>
           </div>
         </section>
@@ -241,9 +257,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <h2 className="text-lg font-semibold tracking-tight">What we discovered on the way</h2>
         <dl className="mt-5 grid gap-x-8 gap-y-3 font-mono text-xs sm:grid-cols-2">
           {[
-            ['Docs', findings.discovered.docs],
-            ['Pricing', findings.discovered.pricing],
-            ['Signup', findings.discovered.signup],
+            ['Docs', withSource(findings.discovered.docs, findings.discovered.linkSources.docs)],
+            ['Pricing', withSource(findings.discovered.pricing, findings.discovered.linkSources.pricing)],
+            ['Signup', withSource(findings.discovered.signup, findings.discovered.linkSources.signup)],
             [
               'npm package',
               findings.discovered.npmPackage
@@ -265,9 +281,12 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
               <dd className="min-w-0 break-all sm:text-right">
                 {value ? (
                   typeof value === 'string' && value.startsWith('http') ? (
-                    <a href={value} className="text-brass underline underline-offset-4" rel="noreferrer">
-                      {value}
-                    </a>
+                    <>
+                      <a href={value.split(' · ')[0]} className="text-brass underline underline-offset-4" rel="noreferrer">
+                        {value.split(' · ')[0]}
+                      </a>
+                      {value.includes(' · ') && <span className="text-ink-faint"> · {value.split(' · ')[1]}</span>}
+                    </>
                   ) : (
                     value
                   )

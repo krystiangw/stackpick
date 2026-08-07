@@ -71,12 +71,28 @@ export function parseRobots(body: string): Map<string, Rules> {
   return groups
 }
 
+/**
+ * RFC 9309 matches on the product token, so "User-agent: ChatGPT-User/1.0" is a group for
+ * ChatGPT-User. Exact string comparison read that as unspecified and handed out a pass.
+ */
 function verdictFor(groups: Map<string, Rules>, crawler: string): CrawlerVerdict {
+  const wanted = crawler.toLowerCase()
   for (const [agent, rules] of groups) {
-    if (agent.toLowerCase() !== crawler.toLowerCase()) continue
+    const token = agent.toLowerCase().split('/')[0].trim()
+    if (token !== wanted) continue
     return rules.disallow.includes('/') ? 'blocked' : 'allowed_explicit'
   }
   return 'unspecified'
+}
+
+/** The worst delay any AI crawler is actually subject to, not only the wildcard group. */
+function crawlDelayForAgents(groups: Map<string, Rules>): number | null {
+  const relevant = [...groups.entries()].filter(([agent]) => {
+    const token = agent.toLowerCase().split('/')[0].trim()
+    return token === '*' || AI_CRAWLERS.some((crawler) => crawler.name.toLowerCase() === token)
+  })
+  const delays = relevant.map(([, rules]) => rules.crawlDelay).filter((delay): delay is number => delay !== undefined)
+  return delays.length > 0 ? Math.max(...delays) : null
 }
 
 function directiveValue(body: string, name: string): string | null {
@@ -103,7 +119,7 @@ export async function scanRobots(site: string): Promise<RobotsFindings> {
     crawlers,
     blockedByClass,
     blanketDisallowAll: wildcard?.disallow.includes('/') ?? false,
-    crawlDelaySeconds: wildcard?.crawlDelay ?? null,
+    crawlDelaySeconds: crawlDelayForAgents(groups),
     contentSignal: present ? directiveValue(robots.body, 'content-signal') : null,
     contentUsage: present ? directiveValue(robots.body, 'content-usage') : null,
     declaresLlmsTxt: present && robots.body.toLowerCase().includes('llms.txt'),

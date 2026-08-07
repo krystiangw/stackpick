@@ -35,13 +35,17 @@ export type FixPlan = {
   overtakes: string[]
 }
 
-type Remedy = { effort: Effort; how: (findings: ScanFindings, check: ScoredCheck) => string }
+type Remedy = {
+  /** A function, not a constant: the same check is minutes for one site and a rewrite for another. */
+  effort: Effort | ((findings: ScanFindings) => Effort)
+  how: (findings: ScanFindings, check: ScoredCheck) => string
+}
 
 const REMEDIES: Record<string, Remedy> = {
   answers_plain_request: {
-    effort: 'an afternoon',
+    effort: (f) => (f.browserStatus >= 200 && f.browserStatus < 400 ? 'an afternoon' : 'a project'),
     how: (f) =>
-      `Exempt your public pages from the rule that answers ${f.homeStatus} to requests without browser headers. Rate limit them instead of refusing them.`,
+      `Your public pages answer ${f.browserStatus} to Chrome and ${f.agentStatus} to an agent user-agent. Exempt them from that rule and rate limit instead of refusing.`,
   },
   llms_txt: {
     effort: 'minutes',
@@ -90,7 +94,9 @@ const REMEDIES: Record<string, Remedy> = {
       `Trigger ${f.funnel.signup.captcha[0] ?? 'the challenge'} on a risk signal instead of on every signup, or open an API path to an account. A CAPTCHA is a hard stop, not a speed bump.`,
   },
   signup_reachable: {
-    effort: 'an afternoon',
+    // A 403 on a page that already has a form is a rule change. A form that only exists
+    // after JavaScript runs is a rewrite, and calling that "an afternoon" was nonsense.
+    effort: (f) => (f.funnel.signup.rendersFormWithoutJs ? 'minutes' : 'a project'),
     how: (f) =>
       `Let ${f.funnel.signup.url ?? 'your signup page'} render its form in server HTML and stop refusing non-browser requests to it.`,
   },
@@ -142,7 +148,7 @@ export function buildFixPlan(
         checkId: check.id,
         label: check.label,
         gain: check.max - check.points,
-        effort: remedy.effort,
+        effort: typeof remedy.effort === 'function' ? remedy.effort(findings) : remedy.effort,
         how: remedy.how(findings, check),
       }
     })
@@ -191,8 +197,9 @@ function claimFor(
   if (comparison?.rankInCategory?.position === 1) {
     return `${opener}, and nobody in the category is close.`
   }
-  const cheapest = counted.every((step) => step.effort === 'minutes')
-  return `${opener}. ${cheapest ? 'None of it needs a release.' : 'None of it needs a rewrite.'}`
+  if (counted.every((step) => step.effort === 'minutes')) return `${opener}. None of it needs a release.`
+  if (counted.every((step) => step.effort !== 'a project')) return `${opener}. None of it needs a rewrite.`
+  return `${opener}.`
 }
 
 const lower = (label: string) => label.charAt(0).toLowerCase() + label.slice(1)

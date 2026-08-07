@@ -1,8 +1,9 @@
 import { PROVISIONING_PATTERN_COUNT } from './scan/funnel'
+import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '2.3'
+export const FORMULA_VERSION = '3.0'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -37,13 +38,20 @@ export const CHECKS: Check[] = [
   {
     id: 'answers_plain_request',
     stage: 'discovery',
-    label: 'Answers a request without a browser',
-    why: 'An agent sends HTTP, not a browser fingerprint. A 403 here ends the funnel before any of it starts.',
+    label: 'Answers an agent user-agent',
+    why: 'An agent sends HTTP with its own user-agent, not a browser fingerprint. A 403 here ends the funnel before any of it starts.',
     max: 1,
-    evaluate: (f) =>
-      f.blocksPlainRequests
-        ? yes(0, `Home page answered ${f.homeStatus} to a plain request`)
-        : yes(1, `Home page answered ${f.homeStatus}`),
+    evaluate: (f) => {
+      const seen = f.agentStatusesSeen?.length && new Set(f.agentStatusesSeen).size > 1
+      const tries = seen ? ` across three tries (${f.agentStatusesSeen.join(', ')})` : ''
+      if (f.blocksPlainRequests) {
+        return yes(
+          0,
+          `Answered ${f.agentStatus} to ${AGENT_UA}${tries}, and ${f.browserStatus} to a Chrome user-agent`,
+        )
+      }
+      return yes(1, `Answered ${f.agentStatus} to ${AGENT_UA}${tries}`)
+    },
   },
   {
     id: 'llms_txt',
@@ -78,9 +86,16 @@ export const CHECKS: Check[] = [
     why: 'Most agents fetch HTML, they do not run your bundle. An empty shell reads as an empty product.',
     max: 1,
     evaluate: (f) => {
-      // Zero characters behind a 403 measures the WAF, not the documentation.
-      if (f.blocksPlainRequests && f.docsTextChars === 0) {
-        return { points: 0, detail: 'Unmeasurable: the site refuses plain requests, so no page could be read', inconclusive: true }
+      // Zero characters we never fetched is not thin documentation, it is no measurement.
+      if (!f.discovered.docs) {
+        return { points: 0, detail: 'Unmeasurable: no documentation page could be found to read', inconclusive: true }
+      }
+      if (f.docsTextChars === 0) {
+        return {
+          points: 0,
+          detail: `Unmeasurable: ${f.discovered.docs} returned nothing we could read`,
+          inconclusive: true,
+        }
       }
       return f.docsTextChars >= 2000
         ? yes(1, `${f.docsTextChars.toLocaleString('en-US')} characters of text without JS`)
@@ -95,8 +110,11 @@ export const CHECKS: Check[] = [
     max: 1,
     evaluate: (f) => {
       const blocked = f.robots.blockedByClass.user
+      // No robots.txt is not a blind spot, it is the most permissive answer possible.
       if (!f.robots.present) {
-        return { points: 0, detail: 'Unmeasurable: no robots.txt could be read', inconclusive: true }
+        return f.blocksPlainRequests
+          ? { points: 0, detail: 'Unmeasurable: the site refuses agent requests before robots.txt matters', inconclusive: true }
+          : yes(1, 'No robots.txt, so nothing is disallowed for anyone')
       }
       const explicitlyAllowed = AI_CRAWLERS.filter(
         (crawler) => crawler.class === 'user' && f.robots.crawlers[crawler.name] === 'allowed_explicit',
@@ -123,12 +141,12 @@ export const CHECKS: Check[] = [
     max: 1,
     evaluate: (f) => {
       if (!f.robots.present) {
-        return { points: 0, detail: 'Unmeasurable: no robots.txt could be read', inconclusive: true }
+        return yes(1, 'No robots.txt, so no Crawl-delay applies')
       }
       const delay = f.robots.crawlDelaySeconds
       if (delay === null) return yes(1, 'No Crawl-delay directive')
       if (delay <= 1) return yes(1, `Crawl-delay: ${delay}s, negligible`)
-      return yes(0, `Crawl-delay: ${delay}s applies to every agent`)
+      return yes(0, `Crawl-delay: ${delay}s applies to AI agents`)
     },
   },
   {
@@ -161,10 +179,21 @@ export const CHECKS: Check[] = [
     label: 'OAuth dynamic client registration',
     why: 'RFC 7591 is the only standard path by which an agent can register itself without a human.',
     max: 1,
-    evaluate: (f) =>
-      f.funnel.oauth.dynamicClientRegistration
-        ? yes(1, 'registration_endpoint published')
-        : yes(0, f.funnel.oauth.metadataPublished ? 'OAuth metadata without registration_endpoint' : 'No OAuth metadata'),
+    evaluate: (f) => {
+      const oauth = f.funnel.oauth
+      if (oauth.dynamicClientRegistration) return yes(1, 'registration_endpoint published')
+      if (oauth.metadataPublished) return yes(0, 'OAuth metadata published, but no registration_endpoint in it')
+      // Authorization servers live off the marketing host. With no MCP endpoint to follow we
+      // probed one origin, and one origin is not a search.
+      if (oauth.probedHosts <= 1) {
+        return {
+          points: 0,
+          detail: 'Unmeasurable: no OAuth metadata on the apex, and no authorization host we could follow',
+          inconclusive: true,
+        }
+      }
+      return yes(0, `No OAuth metadata on any of the ${oauth.probedHosts} hosts probed`)
+    },
   },
   {
     id: 'mcp_present',
@@ -173,17 +202,30 @@ export const CHECKS: Check[] = [
     why: 'An MCP server turns your API from something an agent reads about into something it can call.',
     max: 1,
     evaluate: (f) => {
-      if (f.machine.mcp.exposesOwnServer) return yes(1, 'Own MCP server documented')
+      // A live endpoint beats any amount of prose about MCP, and a docs page named mcp.md
+      // is not a server, which is what the old URL pattern kept scoring.
+      const live = f.funnel.mcpEndpoints
+      if (live.length > 0) {
+        const first = live[0]
+        const how =
+          first.evidence === 'challenges'
+            ? `answered ${first.status} with an auth challenge`
+            : first.evidence === 'rejects-get'
+              ? `answered ${first.status} to GET, as an MCP endpoint does`
+              : 'answers JSON'
+        return yes(1, `Live MCP endpoint at ${first.url}, ${how}`)
+      }
       if (f.machine.wellKnown.mcp_server_card) return yes(1, '/.well-known/mcp.json published')
-      return f.machine.mcp.mentions > 0
-        ? yes(0, `MCP mentioned ${f.machine.mcp.mentions}x but no server exposed`)
-        : yes(0, 'No MCP surface')
+      if (f.machine.mcp.mentions > 0) {
+        return yes(0, `MCP mentioned ${f.machine.mcp.mentions}x in your own files, but nothing answers at mcp.${f.domain} or /mcp`)
+      }
+      return yes(0, `No MCP surface: nothing answers at mcp.${f.domain} or /mcp, and no file mentions MCP`)
     },
   },
   {
     id: 'signup_no_captcha',
     stage: 'signup',
-    label: 'Signup without CAPTCHA',
+    label: 'No CAPTCHA in the signup HTML',
     why: 'A CAPTCHA is a hard stop. Permissions after signup beat a gate before it.',
     max: 1,
     evaluate: (f) => {
@@ -200,7 +242,7 @@ export const CHECKS: Check[] = [
           inconclusive: true,
         }
       }
-      return yes(1, 'No CAPTCHA vendor in the server HTML')
+      return yes(1, 'No CAPTCHA vendor in the server HTML. A widget mounted later by JavaScript would not show here.')
     },
   },
   {
@@ -229,15 +271,26 @@ export const CHECKS: Check[] = [
     label: 'Programmatic key provisioning',
     why: 'Documented key creation is the difference between a two-minute integration and a support ticket.',
     max: 2,
-    evaluate: (f) =>
-      f.funnel.provisioning.programmatic.length > 0
-        ? yes(
-            f.funnel.provisioning.programmatic.length >= 2 ? 2 : 1,
-            `${f.funnel.provisioning.programmatic.length} of ${PROVISIONING_PATTERN_COUNT} provisioning phrases found in readable text`,
-          )
-        : f.blocksPlainRequests
-          ? { points: 0, detail: 'Unmeasurable: documentation could not be fetched', inconclusive: true }
-          : yes(0, 'No programmatic credential creation found in the pages we could read'),
+    evaluate: (f) => {
+      const found = f.funnel.provisioning.programmatic.length
+      const pages = f.docsPagesRead ?? 0
+      if (found > 0) {
+        return yes(
+          found >= 2 ? 2 : 1,
+          `${found} of ${PROVISIONING_PATTERN_COUNT} provisioning phrases found across ${pages} documentation ${pages === 1 ? 'page' : 'pages'}`,
+        )
+      }
+      // Absence in one page is absence of evidence. Saying otherwise failed vendors who
+      // document exactly this, one link away from where we happened to look.
+      if (pages < 2) {
+        return {
+          points: 0,
+          detail: `Unmeasurable: only ${pages} documentation ${pages === 1 ? 'page' : 'pages'} could be read, which is too little to conclude anything`,
+          inconclusive: true,
+        }
+      }
+      return yes(0, `No programmatic credential creation described in the ${pages} documentation pages we read`)
+    },
   },
   {
     id: 'self_serve',

@@ -9,6 +9,8 @@ export type Discovered = {
   docs: string | null
   pricing: string | null
   signup: string | null
+  docsPage: Fetched | null
+  pricingPage: Fetched | null
   npmPackage: string | null
   npmSource: NpmSource | null
   /** Set only for a registry search: whether the match is evidence or a hypothesis. */
@@ -48,6 +50,14 @@ function pickFromLlms(entries: { url: string; label: string }[], hints: RegExp[]
 }
 
 const DOCS_HINTS = [/\/docs?(\/|$)/i, /\/documentation/i, /^https?:\/\/docs\./i, /\/developers?(\/|$)/i, /\/api-reference/i]
+// Tried before the generic ones: a help centre and an API reference both live under /docs.
+const DEVELOPER_HINTS = [
+  /^https?:\/\/(developer|developers|api|apidocs)\./i,
+  /\/developers?(\/|$)/i,
+  /\/api-reference/i,
+  /\/reference(\/|$)/i,
+  /\/api(\/|$)/i,
+]
 const PRICING_HINTS = [/\/pricing/i, /\/plans(\/|$)/i]
 const SIGNUP_HINTS = [/\/sign[_-]?up/i, /\/register(\/|$)/i, /\/signup/i, /\/get[_-]started/i, /\/create[_-]account/i]
 
@@ -97,6 +107,64 @@ function extractLinks(html: string, base: string): string[] {
     if (absolute?.startsWith('http')) links.push(absolute)
   }
   return links
+}
+
+/**
+ * How much a page reads like developer documentation rather than a help centre. Picking the
+ * first href matching /docs sent us to cloudinary.com/documentation/figma_integration and
+ * to linear.app/docs, a user help centre, then scored the vendor on what was not there.
+ */
+function developerWeight(fetched: Fetched): number {
+  if (!fetched.ok) return -1
+  const body = fetched.body
+  const text = body.toLowerCase()
+  const signals = [
+    /<code|<pre/gi,
+    /\bcurl\b/gi,
+    /\bapi key\b/gi,
+    /\bauthorization:/gi,
+    /\bendpoint\b/gi,
+    /\bnpm install\b/gi,
+    /\bbearer\b/gi,
+  ]
+  const hits = signals.reduce((sum, pattern) => sum + (text.match(pattern)?.length ?? 0), 0)
+  const words = Math.min(visibleTextLength(body), 40_000) / 1000
+  return hits * 10 + words
+}
+
+/** How much a page reads like a price list rather than a page with the word pricing in it. */
+function pricingWeight(fetched: Fetched): number {
+  if (!fetched.ok) return -1
+  const text = fetched.body.toLowerCase()
+  const signals = [/\$\d/g, /€\d/g, /per month/g, /\/mo\b/g, /\bper user\b/g, /\bbilled (annually|monthly)\b/g]
+  return signals.reduce((sum, pattern) => sum + (text.match(pattern)?.length ?? 0), 0)
+}
+
+async function bestPricing(candidates: (string | null)[]): Promise<{ url: string; page: Fetched } | null> {
+  const unique = [...new Set(candidates.filter((url): url is string => Boolean(url)))].slice(0, 3)
+  if (unique.length === 0) return null
+  const pages = await inParallel(unique, (url) => fetchUrl(url))
+  let best: { url: string; page: Fetched; weight: number } | null = null
+  for (const [index, page] of pages.entries()) {
+    const weight = pricingWeight(page)
+    if (weight <= 0) continue
+    if (!best || weight > best.weight) best = { url: unique[index], page, weight }
+  }
+  return best ? { url: best.url, page: best.page } : null
+}
+
+/** Picks the most developer-looking candidate, and says nothing when none answer. */
+async function bestDocs(candidates: (string | null)[]): Promise<{ url: string; page: Fetched } | null> {
+  const unique = [...new Set(candidates.filter((url): url is string => Boolean(url)))].slice(0, 4)
+  if (unique.length === 0) return null
+  const pages = await inParallel(unique, (url) => fetchUrl(url))
+  let best: { url: string; page: Fetched; weight: number } | null = null
+  for (const [index, page] of pages.entries()) {
+    const weight = developerWeight(page)
+    if (weight < 0) continue
+    if (!best || weight > best.weight) best = { url: unique[index], page, weight }
+  }
+  return best ? { url: best.url, page: best.page } : null
 }
 
 function pickLink(links: string[], hints: RegExp[], sameHostAs: string): string | null {
@@ -307,15 +375,24 @@ export async function discover(domain: string): Promise<Discovered> {
   const llmsEntries = llmsBody ? linksFromLlmsTxt(llmsBody, base) : []
 
   const fromSiteDocs = pickLink(links, DOCS_HINTS, base)
+  const fromSiteDeveloper = pickLink(links, DEVELOPER_HINTS, base)
   const fromLlmsDocs = pickFromLlms(llmsEntries, DOCS_HINTS, [/doc/, /guide/, /api reference/, /developer/])
-  const fromPathDocs = (fromSiteDocs ?? fromLlmsDocs) ? null : await firstLivePath(site, DOCS_FALLBACKS)
-  const fromSubdomainDocs =
-    (fromSiteDocs ?? fromLlmsDocs ?? fromPathDocs) ? null : await firstLiveSubdomain(domain, DOCS_SUBDOMAINS, [])
-  const docs = fromSiteDocs ?? fromLlmsDocs ?? fromPathDocs ?? fromSubdomainDocs
+  const fromSubdomainDocs = await firstLiveSubdomain(domain, DOCS_SUBDOMAINS, [])
+  const fromPathDocs =
+    (fromSiteDocs ?? fromSiteDeveloper ?? fromLlmsDocs ?? fromSubdomainDocs) ? null : await firstLivePath(site, DOCS_FALLBACKS)
 
+  // Whichever of these reads most like developer documentation wins; order in the HTML does not.
+  const chosen = await bestDocs([fromSiteDeveloper, fromSubdomainDocs, fromSiteDocs, fromLlmsDocs, fromPathDocs])
+  const docs = chosen?.url ?? null
+  const docsPage = chosen?.page ?? null
+
+  // An llms.txt label saying "Outcome-Based Pricing" sent us to a solutions page and the
+  // vendor failed the self-serve check on it, while its real /pricing says $0 three times.
   const fromSitePricing = pickLink(links, PRICING_HINTS, base)
   const fromLlmsPricing = pickFromLlms(llmsEntries, PRICING_HINTS, [/pricing/, /plans/, /buy/, /cart/])
-  const pricing = fromSitePricing ?? fromLlmsPricing ?? (await firstLivePath(site, PRICING_FALLBACKS))
+  const chosenPricing = await bestPricing([fromSitePricing, `${site}/pricing`, `${site}/plans`, fromLlmsPricing])
+  const pricing = chosenPricing?.url ?? (await firstLivePath(site, PRICING_FALLBACKS))
+  const pricingPage = chosenPricing?.page ?? null
 
   const fromSiteSignup = pickLink(links, SIGNUP_HINTS, base)
   const fromLlmsSignup = pickFromLlms(llmsEntries, SIGNUP_HINTS, [/sign ?up/, /register/, /get started/, /free trial/])
@@ -335,8 +412,24 @@ export async function discover(domain: string): Promise<Discovered> {
     onSite ? 'site' : inLlms ? 'llms-txt' : atPath ? 'fallback-path' : onSubdomain ? 'subdomain' : null
 
   const linkSources = {
-    docs: sourceOf(fromSiteDocs, fromLlmsDocs, fromPathDocs, fromSubdomainDocs),
-    pricing: sourceOf(fromSitePricing, fromLlmsPricing, pricing, null),
+    docs:
+      docs === fromSiteDocs || docs === fromSiteDeveloper
+        ? ('site' as const)
+        : docs === fromLlmsDocs
+          ? ('llms-txt' as const)
+          : docs === fromSubdomainDocs
+            ? ('subdomain' as const)
+            : docs
+              ? ('fallback-path' as const)
+              : null,
+    pricing:
+      pricing === fromSitePricing
+        ? ('site' as const)
+        : pricing === fromLlmsPricing
+          ? ('llms-txt' as const)
+          : pricing
+            ? ('fallback-path' as const)
+            : null,
     signup: sourceOf(fromSiteSignup, fromLlmsSignup, fromPathSignup, fromSubdomainSignup),
   }
 
@@ -345,9 +438,8 @@ export async function discover(domain: string): Promise<Discovered> {
   let githubRepo = findGithubRepo(html)
 
   // Home pages sell; docs pages install. Look there too when the home page is silent.
-  if ((!npmPackage || !githubRepo) && docs) {
-    const docsPage = await fetchUrl(docs)
-    if (docsPage.ok) {
+  if ((!npmPackage || !githubRepo) && docsPage?.ok) {
+    {
       const fromDocs = findNpmPackage(docsPage.body)
       if (!npmPackage && fromDocs) {
         npmPackage = fromDocs
@@ -372,5 +464,5 @@ export async function discover(domain: string): Promise<Discovered> {
     }
   }
 
-  return { site, home, docs, pricing, signup, npmPackage, npmSource, npmConfidence, githubRepo, linkSources }
+  return { site, home, docs, docsPage, pricing, pricingPage, signup, npmPackage, npmSource, npmConfidence, githubRepo, linkSources }
 }

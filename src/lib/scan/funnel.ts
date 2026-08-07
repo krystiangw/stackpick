@@ -1,4 +1,4 @@
-import { fetchUrl, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, visibleTextLength } from './http'
+import { fetchUrl, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, visibleTextLength, type Fetched } from './http'
 
 export const AGENT_ENTRY_PATHS = [
   '/agent-signup.md',
@@ -34,6 +34,7 @@ const PROVISIONING_PATTERNS = [
   /\/v\d+\/api[-_]keys/i,
 ]
 
+/** Only signals that actually mean "an agent can finish without a human or a card". */
 const SELF_SERVE_PATTERNS = [
   /no credit card/i,
   /free tier/i,
@@ -41,8 +42,6 @@ const SELF_SERVE_PATTERNS = [
   /start for free/i,
   /free forever/i,
   /\$0(?:\.00)?\b/,
-  /\bhobby\b/i,
-  /\bstarter\b/i,
   /\bget started free\b/i,
   /\btry (?:it )?free\b/i,
 ]
@@ -61,10 +60,14 @@ export type SignupFindings = {
   socialOauth: string[]
 }
 
+export type McpEndpoint = { url: string; status: number; evidence: 'challenges' | 'rejects-get' | 'answers-json' }
+
 export type FunnelFindings = {
   entryPaths: Record<string, boolean>
   entryPointsFound: string[]
-  oauth: { metadataPublished: boolean; dynamicClientRegistration: boolean }
+  oauth: { metadataPublished: boolean; dynamicClientRegistration: boolean; probedHosts: number }
+  /** Live MCP endpoints, as opposed to documentation that mentions MCP. */
+  mcpEndpoints: McpEndpoint[]
   signup: SignupFindings
   provisioning: { programmatic: string[]; selfServeSignals: string[] }
   mentionsCli: boolean
@@ -73,15 +76,36 @@ export type FunnelFindings = {
   pricingFetched: boolean
 }
 
-async function probeOauthDcr(site: string) {
-  const got = await fetchUrl(`${site}/.well-known/oauth-authorization-server`, { accept: 'application/json' })
-  if (!got.ok || looksLikeHtml(got)) return { metadataPublished: false, dynamicClientRegistration: false }
-  try {
-    const metadata = JSON.parse(got.body) as { registration_endpoint?: string }
-    return { metadataPublished: true, dynamicClientRegistration: Boolean(metadata.registration_endpoint) }
-  } catch {
-    return { metadataPublished: false, dynamicClientRegistration: false }
+const OAUTH_METADATA_PATHS = [
+  '/.well-known/oauth-authorization-server',
+  '/.well-known/oauth-protected-resource',
+  '/.well-known/openid-configuration',
+]
+
+/**
+ * Probing only the apex told Linear to build an RFC 7591 endpoint it already runs, at
+ * mcp.linear.app. The authorization server for an agent almost never lives on the marketing
+ * host, so we follow the MCP host too, and admit it when we simply did not find one.
+ */
+async function probeOauthDcr(site: string, mcpHosts: string[]) {
+  const origins = [site, ...mcpHosts]
+  const probes = origins.flatMap((origin) => OAUTH_METADATA_PATHS.map((path) => `${origin}${path}`))
+  const results = await inParallel(probes, (url) => fetchUrl(url, { accept: 'application/json' }))
+
+  let metadataPublished = false
+  for (const got of results) {
+    if (!got.ok || looksLikeHtml(got)) continue
+    try {
+      const metadata = JSON.parse(got.body) as { registration_endpoint?: string }
+      metadataPublished = true
+      if (metadata.registration_endpoint) {
+        return { metadataPublished: true, dynamicClientRegistration: true, probedHosts: origins.length }
+      }
+    } catch {
+      /* a JSON body that is not JSON tells us nothing */
+    }
   }
+  return { metadataPublished, dynamicClientRegistration: false, probedHosts: origins.length }
 }
 
 async function inspectSignup(url: string | null): Promise<SignupFindings> {
@@ -138,11 +162,37 @@ async function servesCatchAllText(site: string): Promise<boolean> {
   return isRealTextFile(markdown, 30) || isRealTextFile(json, 30) || isRealTextFile(plain, 30)
 }
 
+/**
+ * A live MCP server is the only proof that beats prose about MCP. A 401 with a
+ * WWW-Authenticate header is the strongest signal there is: something is there and it wants
+ * credentials. 405 counts too, since these endpoints answer POST and refuse GET.
+ */
+async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpoint[]> {
+  const candidates = [`https://mcp.${domain}`, `https://mcp.${domain}/mcp`, `${site}/mcp`]
+  const results = await inParallel(candidates, (url) => fetchUrl(url, { accept: 'application/json, text/event-stream' }))
+
+  return results
+    .map((got, index) => {
+      const authenticating = got.status === 401 && Boolean(got.headers['www-authenticate'])
+      const wrongMethod = got.status === 405
+      const speaksJson = got.ok && (got.headers['content-type'] ?? '').includes('json')
+      if (!authenticating && !wrongMethod && !speaksJson) return null
+      return {
+        url: candidates[index],
+        status: got.status,
+        evidence: authenticating ? ('challenges' as const) : wrongMethod ? ('rejects-get' as const) : ('answers-json' as const),
+      }
+    })
+    .filter((endpoint): endpoint is McpEndpoint => endpoint !== null)
+}
+
 export async function scanFunnel(
+  domain: string,
   site: string,
   corpus: string,
   pricingUrl: string | null,
   signupUrl: string | null,
+  alreadyFetchedPricing: Fetched | null = null,
 ): Promise<FunnelFindings> {
   const catchAll = await servesCatchAllText(site)
   const entries = await inParallel(AGENT_ENTRY_PATHS, async (path) => {
@@ -151,10 +201,11 @@ export async function scanFunnel(
     return [path, isRealTextFile(got, 30)] as const
   })
 
+  const mcpEndpoints = await probeMcpEndpoints(domain, site)
   const [oauth, signup, pricingPage] = await Promise.all([
-    probeOauthDcr(site),
+    probeOauthDcr(site, mcpEndpoints.map((endpoint) => new URL(endpoint.url).origin)),
     inspectSignup(signupUrl),
-    pricingUrl ? fetchUrl(pricingUrl) : Promise.resolve(null),
+    alreadyFetchedPricing ?? (pricingUrl ? fetchUrl(pricingUrl) : Promise.resolve(null)),
   ])
 
   const entryPaths = Object.fromEntries(entries)
@@ -164,6 +215,7 @@ export async function scanFunnel(
     entryPaths,
     entryPointsFound: entries.filter(([, hit]) => hit).map(([path]) => path),
     oauth,
+    mcpEndpoints,
     signup,
     provisioning: {
       programmatic: matching(PROVISIONING_PATTERNS, corpus),

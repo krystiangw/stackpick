@@ -7,7 +7,11 @@ const EFFORT_LABEL: Record<string, string> = {
 }
 
 export function FixFirst({ plan }: { plan: FixPlan }) {
-  const later = plan.steps.filter((step) => !plan.quickWins.some((win) => win.checkId === step.checkId))
+  const rest = plan.steps.filter((step) => !plan.quickWins.some((win) => win.checkId === step.checkId))
+  // Split by what the work costs, not by what fell off the end of the top three. A vendor
+  // with five "minutes" fixes was told two of them could wait.
+  const alsoCheap = rest.filter((step) => step.effort !== 'a project')
+  const later = rest.filter((step) => step.effort === 'a project')
 
   return (
     <section className="border-b border-rule py-10">
@@ -39,19 +43,48 @@ export function FixFirst({ plan }: { plan: FixPlan }) {
         ))}
       </ol>
 
+      {alsoCheap.length > 0 && (
+        <div className="mt-8 border-t border-rule pt-6">
+          <h3 className="font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">Cheap too, same week</h3>
+          <ul className="mt-4 flex flex-col gap-3">
+            {alsoCheap.map((step) => (
+              <li key={step.checkId} className="grid grid-cols-[1.6rem_minmax(0,1fr)] gap-4">
+                <span aria-hidden className="font-mono text-sm text-brass">
+                  ·
+                </span>
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium">
+                    {step.label}{' '}
+                    <span className="font-mono text-xs font-normal text-ink-soft">
+                      {EFFORT_LABEL[step.effort]} · <span className="text-pass">+{step.gain}</span>
+                    </span>
+                  </span>
+                  <span className="max-w-2xl text-xs leading-relaxed text-ink-soft">{step.how}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {later.length > 0 && (
         <div className="mt-8 border-t border-rule pt-6">
           <h3 className="font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">Then, when you have room</h3>
           <ul className="mt-4 flex flex-col gap-3">
             {later.map((step) => (
-              <li key={step.checkId} className="grid grid-cols-[1fr_auto] items-baseline gap-4">
+              <li key={step.checkId} className="grid grid-cols-[1.6rem_minmax(0,1fr)] gap-4">
+                <span aria-hidden className="font-mono text-sm text-ink-faint">
+                  ·
+                </span>
                 <div className="flex flex-col gap-1">
-                  <span className="text-sm font-medium">{step.label}</span>
+                  <span className="text-sm font-medium">
+                    {step.label}{' '}
+                    <span className="font-mono text-xs font-normal text-ink-soft">
+                      {EFFORT_LABEL[step.effort]} · <span className="text-pass">+{step.gain}</span>
+                    </span>
+                  </span>
                   <span className="max-w-2xl text-xs leading-relaxed text-ink-soft">{step.how}</span>
                 </div>
-                <span className="whitespace-nowrap font-mono text-[0.65rem] uppercase tracking-widest text-ink-faint">
-                  {EFFORT_LABEL[step.effort]} · +{step.gain}
-                </span>
               </li>
             ))}
           </ul>

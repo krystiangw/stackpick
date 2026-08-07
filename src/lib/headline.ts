@@ -21,8 +21,8 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
 
   if (findings.blocksPlainRequests) {
     return {
-      claim: `An agent asking for your home page gets ${findings.homeStatus}, not your product.`,
-      evidence: `GET https://${findings.domain}/ answered ${findings.homeStatus} to a request without browser headers.`,
+      claim: `An agent asking for your home page gets ${findings.agentStatus}, not your product.`,
+      evidence: `GET https://${findings.domain}/ answered ${findings.agentStatus} to StackPick/1.0 and ${findings.browserStatus} to a Chrome user-agent. The only difference was the user-agent.`,
       severity: 'critical',
     }
   }
@@ -62,7 +62,8 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
     }
   }
 
-  if (findings.docsTextChars < 2000 && discovered.docs) {
+  // Zero characters can mean thin docs or a page we never got. Only the first is a finding.
+  if (findings.docsTextChars > 0 && findings.docsTextChars < 2000 && discovered.docs) {
     return {
       claim: `Your documentation renders ${findings.docsTextChars.toLocaleString('en-US')} characters without JavaScript. Agents read that, not your bundle.`,
       evidence: `${discovered.docs} served ${findings.docsTextChars.toLocaleString('en-US')} characters of text to a plain fetch.`,

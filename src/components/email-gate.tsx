@@ -52,7 +52,7 @@ export function EmailGate({
       <h2 className="text-lg font-semibold tracking-tight">Take it with you</h2>
       <p className="mt-3 max-w-xl text-xl leading-snug text-balance text-ink-soft">
         {failingCount > 0
-          ? `${failingCount} checks are costing ${domain} integrations right now.`
+          ? `${failingCount} of the checks an agent depends on, ${domain} does not pass.`
           : `${domain} passes every deterministic check. The interesting question is what agents do anyway.`}
       </p>
       <p className="mt-3 max-w-xl leading-relaxed text-ink-soft">

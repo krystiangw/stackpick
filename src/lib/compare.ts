@@ -26,7 +26,12 @@ function latestPerDomain(reports: Report[]): Map<string, Report> {
 }
 
 export async function buildComparison(subject: Report): Promise<Comparison> {
-  const all = latestPerDomain(await getStore().listReports(500))
+  // Ranking a frozen 2.1 score against peers rescored under 3.0 moved a vendor's position
+  // while nothing about the vendor changed. Only like-for-like formulas are comparable.
+  const sameFormula = (await getStore().listReports(500)).filter(
+    (report) => report.scorecard.formulaVersion === subject.scorecard.formulaVersion,
+  )
+  const all = latestPerDomain(sameFormula)
   all.set(subject.domain, subject)
 
   const category = categoryFor(subject.domain)

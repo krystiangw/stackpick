@@ -1,5 +1,5 @@
 import { discover, normalizeDomain, searchNpmForDomain, type Discovered } from './discover'
-import { fetchUrl, visibleTextLength } from './http'
+import { AGENT_UA, fetchUrl, fetchWithRetries, inParallel, visibleTextLength, type Fetched } from './http'
 import { scanFunnel, type FunnelFindings } from './funnel'
 import { scanMachineContext, type MachineFindings } from './machine'
 import { checkNpm, type NpmFindings } from './npm'
@@ -10,6 +10,11 @@ export type ScanFindings = {
   site: string
   scannedAt: string
   homeStatus: number
+  /** What the site answers a browser, kept so we can show the pair. */
+  browserStatus: number
+  /** What it answers an honest agent user-agent, which is the finding that matters. */
+  agentStatus: number
+  agentStatusesSeen: number[]
   blocksPlainRequests: boolean
   durationMs: number
   discovered: {
@@ -24,6 +29,8 @@ export type ScanFindings = {
   }
   homeTextChars: number
   docsTextChars: number
+  /** How many documentation pages the provisioning grep actually had to read. */
+  docsPagesRead: number
   robots: RobotsFindings
   machine: MachineFindings
   funnel: FunnelFindings
@@ -31,6 +38,34 @@ export type ScanFindings = {
 }
 
 export class UnreachableDomainError extends Error {}
+
+const CREDENTIAL_PAGE_HINTS =
+  /(api[-_ ]?key|authentication|auth(\/|$)|credential|token|management|provisioning|admin|account|getting[-_ ]?started|quickstart|reference)/i
+
+/** Follows a few same-host documentation links that look like they discuss credentials. */
+async function readDeeper(docsUrl: string, html: string): Promise<Fetched[]> {
+  const base = new URL(docsUrl)
+  const seen = new Set<string>([docsUrl])
+  const candidates: string[] = []
+
+  for (const match of html.matchAll(/<a\b[^>]*href=["']([^"']+)["']/gi)) {
+    let absolute: URL
+    try {
+      absolute = new URL(match[1].replace(/&amp;/gi, '&'), docsUrl)
+    } catch {
+      continue
+    }
+    const url = absolute.toString().split('#')[0]
+    if (absolute.hostname !== base.hostname || seen.has(url)) continue
+    if (!CREDENTIAL_PAGE_HINTS.test(absolute.pathname)) continue
+    seen.add(url)
+    candidates.push(url)
+    if (candidates.length === 3) break
+  }
+
+  const pages = await inParallel(candidates, (url) => fetchUrl(url))
+  return pages.filter((page) => page.ok)
+}
 
 export type ScanProgress = (step: { label: string; done: number; total: number }) => void
 
@@ -54,9 +89,17 @@ export async function scanDomain(input: string, onProgress?: ScanProgress): Prom
     )
   }
 
+  // The door test, run as the thing being tested. Three tries, because bot gates answer
+  // inconsistently and one 403 out of three is a different finding from three out of three.
+  const asAgent = await fetchWithRetries(found.site, { ua: AGENT_UA })
+
   report(found.docs ? `Reading ${new URL(found.docs).pathname}` : 'Looking for documentation', 1)
-  const docsPage = found.docs ? await fetchUrl(found.docs) : null
+  const docsPage = found.docsPage
   const docsText = docsPage?.ok ? docsPage.body : ''
+  // One documentation page is a lottery: cloudinary describes its Provisioning API on a page
+  // we never opened, then failed the check for not describing it. Follow the pages an agent
+  // hunting for credentials would follow.
+  const deeperDocs = docsPage?.ok && found.docs ? await readDeeper(found.docs, docsPage.body) : []
 
   report('Checking robots.txt against 13 AI crawlers', 2)
   const robots = await scanRobots(found.site)
@@ -83,18 +126,21 @@ export async function scanDomain(input: string, onProgress?: ScanProgress): Prom
     }
   }
 
-  // The funnel greps documentation prose, so the corpus is docs plus whatever llms.txt exposes.
+  // The funnel greps documentation prose, so the corpus is every docs page we read plus home.
   report('Testing signup and agent entry points', 4)
-  const corpus = docsText + found.home.body
-  const funnel = await scanFunnel(found.site, corpus, found.pricing, found.signup)
+  const corpus = [docsText, ...deeperDocs.map((page) => page.body), found.home.body].join('\n')
+  const funnel = await scanFunnel(domain, found.site, corpus, found.pricing, found.signup, found.pricingPage)
   report('Scoring', STEPS)
 
   return {
     domain,
     site: found.site,
     scannedAt: new Date().toISOString(),
-    homeStatus: found.home.status,
-    blocksPlainRequests: !found.home.ok,
+    homeStatus: asAgent.status,
+    browserStatus: found.home.status,
+    agentStatus: asAgent.status,
+    agentStatusesSeen: asAgent.statusesSeen,
+    blocksPlainRequests: !asAgent.ok,
     durationMs: Date.now() - startedAt,
     discovered: {
       docs: found.docs,
@@ -108,6 +154,7 @@ export async function scanDomain(input: string, onProgress?: ScanProgress): Prom
     },
     homeTextChars: visibleTextLength(found.home.body),
     docsTextChars: visibleTextLength(docsText),
+    docsPagesRead: (docsPage?.ok ? 1 : 0) + deeperDocs.length,
     robots,
     machine,
     funnel,
