@@ -189,6 +189,25 @@ Host z wildcardem i proxy odpowiadał 401 na cokolwiek i czytał się jako żywy
 `/report`. Teraz publikujemy wyłącznie listę kuratorowaną; skan gościa dostaje trwały link i
 porównanie z korpusem, ale do niego nie wchodzi.
 
+## Korpus na formule 3.1 (51 domen, 2026-08-08)
+
+Mediana 8/16, średnia 7,6. Etapy: Discovery 91%, **wejście dla agenta 16%**, rejestracja 20%,
+provisioning 32%, integracja 55%. Teza produktu trzyma się także po przejściu na uczciwy
+mianownik (dzielimy przez punkty, które **dało się zmierzyć**, nie przez punkty na papierze).
+
+Jak poprawki zmieniały obraz, czyli ile zawyżały kolejne formuły:
+
+| Check | 2.2 | 3.0 | 3.1 | co się zmieniło |
+|---|---|---|---|---|
+| MCP surface (zdane) | 22 | 14 | 14 | strona dokumentacji przestała uchodzić za serwer |
+| OAuth DCR (zdane / N/A) | 2 / 0 | 9 / 37 | 9 / 37 | sondujemy host MCP; brak hosta to N/A, nie porażka |
+| Provisioning (zdane) | 2 | 6 | 5 | czytamy kilka stron docsów zamiast jednej |
+| Typed SDK (zdane / N/A) | 33 / 12 | 33 / 11 | **27 / 19** | koniec z przypisywaniem cudzych pakietów |
+| Self-serve (zdane) | 34 | 33 | 30 | plan "Starter" za 599 USD przestał być darmowym tierem |
+
+Kierunek jest konsekwentny: **mniej twierdzeń, więcej uczciwego "nie wiemy"**. Każda runda
+audytu zabierała nam punkty, które przyznawaliśmy bez dowodu.
+
 ## Otwarte
 
 1. ~~Runda 2 przebiegów agentowych~~ **zrobiona**, pełny opis: `ai-audit/runs/editors-round2.md`.
