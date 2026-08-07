@@ -25,6 +25,11 @@ export interface Store {
   getReport(id: string): Promise<Report | null>
   latestForDomain(domain: string): Promise<Report | null>
   listReports(limit: number): Promise<Report[]>
+  /**
+   * Newest report per domain. Taking the newest N reports and deduplicating afterwards
+   * silently drops a domain from its own ranking once the corpus outgrows the window.
+   */
+  latestPerDomain(limit: number): Promise<Report[]>
   saveLead(lead: Lead): Promise<void>
   listLeads(limit: number): Promise<Lead[]>
 }
@@ -64,8 +69,18 @@ class FileStore implements Store {
   }
 
   async latestForDomain(domain: string) {
-    const all = await this.listReports(500)
+    const all = await this.listReports(2000)
     return all.find((report) => report.domain === domain) ?? null
+  }
+
+  async latestPerDomain(limit: number) {
+    const all = await this.listReports(2000)
+    const latest = new Map<string, Report>()
+    for (const report of all) {
+      const held = latest.get(report.domain)
+      if (!held || report.scannedAt > held.scannedAt) latest.set(report.domain, report)
+    }
+    return [...latest.values()].slice(0, limit)
   }
 
   async saveLead(lead: Lead) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 /**
  * A scorecard is only useful once it reaches whoever owns the fix, and until now the page
@@ -8,12 +8,8 @@ import { useEffect, useState } from 'react'
  */
 export function ShareRow({ domain, headline, url }: { domain: string; headline: string; url: string }) {
   const [copied, setCopied] = useState(false)
-  // Starts as whatever the server rendered so hydration matches, then becomes absolute.
-  const [link, setLink] = useState(url)
-
-  useEffect(() => {
-    if (!url.startsWith('http')) setLink(window.location.origin + url)
-  }, [url])
+  // The server resolves the absolute URL from the request, so there is nothing to fix up here.
+  const link = url
 
   async function copy() {
     try {

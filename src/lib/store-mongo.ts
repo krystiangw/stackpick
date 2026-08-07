@@ -57,6 +57,20 @@ export class MongoStore implements Store {
     return (await reports.find({}, withoutId).sort({ scannedAt: -1 }).limit(limit).toArray()) as Report[]
   }
 
+  async latestPerDomain(limit: number) {
+    const { reports } = await collections()
+    return (await reports
+      .aggregate([
+        { $sort: { domain: 1, scannedAt: -1 } },
+        { $group: { _id: '$domain', latest: { $first: '$$ROOT' } } },
+        { $replaceRoot: { newRoot: '$latest' } },
+        { $sort: { scannedAt: -1 } },
+        { $limit: limit },
+        { $project: { _id: 0 } },
+      ])
+      .toArray()) as Report[]
+  }
+
   async saveLead(lead: Lead) {
     const { leads } = await collections()
     await leads.insertOne(lead)

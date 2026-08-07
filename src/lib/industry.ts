@@ -30,19 +30,10 @@ export type IndustryReport = {
   worst: { domain: string; total: number; reportId: string }[]
 }
 
-function latestPerDomain(reports: Report[]): Report[] {
-  const latest = new Map<string, Report>()
-  for (const report of reports) {
-    const held = latest.get(report.domain)
-    if (!held || report.scannedAt > held.scannedAt) latest.set(report.domain, report)
-  }
-  return [...latest.values()]
-}
-
 const MINIMUM_SAMPLE = 20
 
 export async function buildIndustryReport(): Promise<IndustryReport | null> {
-  const all = latestPerDomain(await getStore().listReports(500))
+  const all = await getStore().latestPerDomain(500)
   if (all.length === 0) return null
 
   // Mixing formula versions would compare scores that were never comparable, so the report

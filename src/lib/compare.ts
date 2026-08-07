@@ -16,22 +16,14 @@ export type Comparison = {
 
 const SAMPLE_FLOOR = 5
 
-function latestPerDomain(reports: Report[]): Map<string, Report> {
-  const latest = new Map<string, Report>()
-  for (const report of reports) {
-    const held = latest.get(report.domain)
-    if (!held || report.scannedAt > held.scannedAt) latest.set(report.domain, report)
-  }
-  return latest
-}
-
 export async function buildComparison(subject: Report): Promise<Comparison> {
   // Ranking a frozen 2.1 score against peers rescored under 3.0 moved a vendor's position
   // while nothing about the vendor changed. Only like-for-like formulas are comparable.
-  const sameFormula = (await getStore().listReports(500)).filter(
-    (report) => report.scorecard.formulaVersion === subject.scorecard.formulaVersion,
+  const all = new Map(
+    (await getStore().latestPerDomain(500))
+      .filter((report) => report.scorecard.formulaVersion === subject.scorecard.formulaVersion)
+      .map((report) => [report.domain, report]),
   )
-  const all = latestPerDomain(sameFormula)
   all.set(subject.domain, subject)
 
   const category = categoryFor(subject.domain)

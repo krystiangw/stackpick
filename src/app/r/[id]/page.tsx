@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { ComparisonSection } from '@/components/comparison'
 import { buildComparison } from '@/lib/compare'
@@ -85,6 +86,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   // A number with no scale is not a finding. The anchor answers "is 8 bad?" above the fold,
   // from data this page already loaded, instead of 1,900px down the page.
   const anchor = scaleAnchor(comparison, scorecard.total)
+  // Built from the request when no base URL is configured, so a copied link is never relative.
+  const host = (await headers()).get('host') ?? 'localhost:3000'
+  const origin = process.env.STACKPICK_BASE_URL ?? `${host.startsWith('localhost') ? 'http' : 'https'}://${host}`
 
   return (
     <main className="mx-auto max-w-5xl px-6">
@@ -142,7 +146,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           <ShareRow
             domain={report.domain}
             headline={headline.claim}
-            url={`${process.env.STACKPICK_BASE_URL ?? ''}/r/${report.id}`}
+            url={`${origin}/r/${report.id}`}
           />
         </div>
       </section>

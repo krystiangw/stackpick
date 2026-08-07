@@ -9,12 +9,7 @@ export type RankedCategory = { category: Category; entries: RankedEntry[]; media
  * is harder to dismiss than an adjective about what the scanner can do.
  */
 export async function loadRankings(): Promise<RankedCategory[]> {
-  const reports = await getStore().listReports(500)
-  const latest = new Map<string, Report>()
-  for (const report of reports) {
-    const held = latest.get(report.domain)
-    if (!held || report.scannedAt > held.scannedAt) latest.set(report.domain, report)
-  }
+  const latest = new Map((await getStore().latestPerDomain(500)).map((report) => [report.domain, report]))
 
   return CATEGORIES.map((category) => {
     const entries = category.domains
