@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Rankings } from '@/components/rankings'
 import { ScanForm } from '@/components/scan-form'
 import { loadRankings } from '@/lib/rankings'
-import { STAGES } from '@/lib/score'
+import { CHECKS, MAX_SCORE, STAGES } from '@/lib/score'
 
 export const dynamic = 'force-dynamic'
 
@@ -99,8 +99,8 @@ export default async function Home() {
             <h3 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Free scan</h3>
             <p className="text-2xl font-semibold tracking-tight">What a machine can see</p>
             <p className="text-sm leading-relaxed text-ink-soft">
-              Thirteen deterministic checks across the five stages. Published formula, reproducible result,
-              no model involved. Runs in under a minute.
+              {CHECKS.length} deterministic checks across the five stages, {MAX_SCORE} points. Published formula,
+              reproducible result, no model involved. Runs in under a minute.
             </p>
             <div className="mt-2 max-w-sm">
               <ScanForm />

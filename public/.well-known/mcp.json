@@ -1,0 +1,20 @@
+{
+  "name": "stackpick",
+  "description": "Agent readiness scanning: score a domain on whether an agent can find, register with and integrate it.",
+  "version": "1.0.0",
+  "documentation": "https://stackpick-f12d13a227ea.herokuapp.com/docs",
+  "transport": { "type": "http", "url": "https://stackpick-f12d13a227ea.herokuapp.com/api/scan" },
+  "tools": [
+    {
+      "name": "scan_domain",
+      "description": "Score a domain out of 16 on agent readiness across five funnel stages. Returns a per-check breakdown with the reason for each result.",
+      "inputSchema": {
+        "type": "object",
+        "properties": { "domain": { "type": "string", "description": "Bare domain, for example example.com" } },
+        "required": ["domain"]
+      }
+    }
+  ],
+  "authentication": { "type": "none" },
+  "notes": "No account, no key. Rate limited to 10 scans per hour per address."
+}

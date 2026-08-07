@@ -1,6 +1,7 @@
 import { fetchUrl, looksLikeHtml, visibleTextLength, type Fetched } from './http'
 
 export type NpmSource = 'site' | 'docs' | 'llms' | 'registry-search'
+export type LinkSource = 'site' | 'llms-txt' | 'fallback-path'
 
 export type Discovered = {
   site: string
@@ -11,6 +12,37 @@ export type Discovered = {
   npmPackage: string | null
   npmSource: NpmSource | null
   githubRepo: string | null
+  /** Where each URL came from, so a report can admit when it guessed. */
+  linkSources: { docs: LinkSource | null; pricing: LinkSource | null; signup: LinkSource | null }
+}
+
+/**
+ * llms.txt exists precisely so a machine does not have to guess. Reading it for discovery
+ * before falling back to link-scraping is the whole point of the file; scoring a site for
+ * publishing one and then ignoring its contents was the sharpest defect in the first audit.
+ */
+function linksFromLlmsTxt(body: string, base: string): { url: string; label: string }[] {
+  const found: { url: string; label: string }[] = []
+  for (const match of body.matchAll(/\[([^\]]{1,120})\]\((https?:\/\/[^\s)]+)\)/g)) {
+    found.push({ label: match[1].toLowerCase(), url: match[2] })
+  }
+  for (const match of body.matchAll(/^\s*-?\s*(https?:\/\/\S+)\s*$/gm)) {
+    found.push({ label: '', url: match[1] })
+  }
+  void base
+  return found
+}
+
+function pickFromLlms(entries: { url: string; label: string }[], hints: RegExp[], labelHints: RegExp[]): string | null {
+  for (const hint of labelHints) {
+    const hit = entries.find((entry) => hint.test(entry.label))
+    if (hit) return hit.url.split('#')[0]
+  }
+  for (const hint of hints) {
+    const hit = entries.find((entry) => hint.test(entry.url))
+    if (hit) return hit.url.split('#')[0]
+  }
+  return null
 }
 
 const DOCS_HINTS = [/\/docs?(\/|$)/i, /\/documentation/i, /^https?:\/\/docs\./i, /\/developers?(\/|$)/i, /\/api-reference/i]
@@ -89,6 +121,12 @@ function findNpmPackage(html: string): string | null {
   return null
 }
 
+/** Vendors often name their package only in a CDN URL: cdn.jsdelivr.net/npm/froala-editor@latest */
+function findCdnPackage(text: string): string | null {
+  const match = text.match(/(?:jsdelivr\.net\/npm|unpkg\.com)\/(@?[a-z0-9._-]+(?:\/[a-z0-9._-]+)?)/i)
+  return match ? match[1].replace(/@[\d.^~].*$/, '') : null
+}
+
 function findGithubRepo(html: string): string | null {
   const match = html.match(/github\.com\/([a-z0-9._-]+\/[a-z0-9._-]+)/i)
   if (!match) return null
@@ -144,8 +182,24 @@ async function searchNpmForDomain(domain: string, githubRepo: string | null): Pr
   }
   if (candidates.length === 0) return null
 
-  // Search results arrive ranked, so a stable sort keeps registry order as the tie-break.
-  return [...candidates].sort((a, b) => nameAffinity(b, brand) - nameAffinity(a, brand))[0]
+  // Name shape alone picked angular-froala (1.7k weekly, last published 2023) over
+  // froala-editor (327k weekly, current). Real usage decides; the name only breaks ties.
+  const ranked = await Promise.all(
+    candidates.map(async (name) => {
+      const stats = await fetchUrl(`https://api.npmjs.org/downloads/point/last-week/${encodeURIComponent(name)}`, {
+        accept: 'application/json',
+      })
+      let downloads = 0
+      try {
+        downloads = stats.ok ? ((JSON.parse(stats.body) as { downloads?: number }).downloads ?? 0) : 0
+      } catch {
+        downloads = 0
+      }
+      return { name, downloads }
+    }),
+  )
+  ranked.sort((a, b) => b.downloads - a.downloads || nameAffinity(b.name, brand) - nameAffinity(a.name, brand))
+  return ranked[0].name
 }
 
 export async function discover(domain: string): Promise<Discovered> {
@@ -155,9 +209,27 @@ export async function discover(domain: string): Promise<Discovered> {
   const base = home.url || site
   const links = html ? extractLinks(html, base) : []
 
-  const docs = pickLink(links, DOCS_HINTS, base) ?? (await firstLivePath(site, DOCS_FALLBACKS))
-  const pricing = pickLink(links, PRICING_HINTS, base) ?? (await firstLivePath(site, PRICING_FALLBACKS))
-  const signup = pickLink(links, SIGNUP_HINTS, base) ?? (await firstLivePath(site, SIGNUP_FALLBACKS))
+  const llms = await fetchUrl(`${site}/llms.txt`, { accept: 'text/plain' })
+  const llmsBody = llms.ok && !looksLikeHtml(llms) ? llms.body : ''
+  const llmsEntries = llmsBody ? linksFromLlmsTxt(llmsBody, base) : []
+
+  const fromSiteDocs = pickLink(links, DOCS_HINTS, base)
+  const fromLlmsDocs = pickFromLlms(llmsEntries, DOCS_HINTS, [/doc/, /guide/, /api reference/, /developer/])
+  const docs = fromSiteDocs ?? fromLlmsDocs ?? (await firstLivePath(site, DOCS_FALLBACKS))
+
+  const fromSitePricing = pickLink(links, PRICING_HINTS, base)
+  const fromLlmsPricing = pickFromLlms(llmsEntries, PRICING_HINTS, [/pricing/, /plans/, /buy/, /cart/])
+  const pricing = fromSitePricing ?? fromLlmsPricing ?? (await firstLivePath(site, PRICING_FALLBACKS))
+
+  const fromSiteSignup = pickLink(links, SIGNUP_HINTS, base)
+  const fromLlmsSignup = pickFromLlms(llmsEntries, SIGNUP_HINTS, [/sign ?up/, /register/, /get started/, /free trial/])
+  const signup = fromSiteSignup ?? fromLlmsSignup ?? (await firstLivePath(site, SIGNUP_FALLBACKS))
+
+  const linkSources = {
+    docs: fromSiteDocs ? ('site' as const) : fromLlmsDocs ? ('llms-txt' as const) : docs ? ('fallback-path' as const) : null,
+    pricing: fromSitePricing ? ('site' as const) : fromLlmsPricing ? ('llms-txt' as const) : pricing ? ('fallback-path' as const) : null,
+    signup: fromSiteSignup ? ('site' as const) : fromLlmsSignup ? ('llms-txt' as const) : signup ? ('fallback-path' as const) : null,
+  }
 
   let npmPackage = findNpmPackage(html)
   let npmSource: NpmSource | null = npmPackage ? 'site' : null
@@ -176,12 +248,9 @@ export async function discover(domain: string): Promise<Discovered> {
     }
   }
 
-  if (!npmPackage) {
-    const llms = await fetchUrl(`${site}/llms.txt`, { accept: 'text/plain' })
-    if (llms.ok && !looksLikeHtml(llms)) {
-      npmPackage = findNpmPackage(llms.body)
-      if (npmPackage) npmSource = 'llms'
-    }
+  if (!npmPackage && llmsBody) {
+    npmPackage = findNpmPackage(llmsBody) ?? findCdnPackage(llmsBody)
+    if (npmPackage) npmSource = 'llms'
   }
 
   if (!npmPackage) {
@@ -189,5 +258,5 @@ export async function discover(domain: string): Promise<Discovered> {
     if (npmPackage) npmSource = 'registry-search'
   }
 
-  return { site, home, docs, pricing, signup, npmPackage, npmSource, githubRepo }
+  return { site, home, docs, pricing, signup, npmPackage, npmSource, githubRepo, linkSources }
 }

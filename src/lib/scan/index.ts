@@ -19,6 +19,7 @@ export type ScanFindings = {
     npmPackage: string | null
     npmSource: 'site' | 'docs' | 'llms' | 'registry-search' | null
     githubRepo: string | null
+    linkSources: { docs: string | null; pricing: string | null; signup: string | null }
   }
   homeTextChars: number
   docsTextChars: number
@@ -85,6 +86,7 @@ export async function scanDomain(input: string, onProgress?: ScanProgress): Prom
       npmPackage: found.npmPackage,
       npmSource: found.npmSource,
       githubRepo: found.githubRepo,
+      linkSources: found.linkSources,
     },
     homeTextChars: visibleTextLength(found.home.body),
     docsTextChars: visibleTextLength(docsText),

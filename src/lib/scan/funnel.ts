@@ -29,7 +29,18 @@ const PROVISIONING_PATTERNS = [
   /\/v\d+\/api[-_]keys/i,
 ]
 
-const SELF_SERVE_PATTERNS = [/no credit card/i, /free tier/i, /free plan/i, /start for free/i, /free forever/i]
+const SELF_SERVE_PATTERNS = [
+  /no credit card/i,
+  /free tier/i,
+  /free plan/i,
+  /start for free/i,
+  /free forever/i,
+  /\$0(?:\.00)?\b/,
+  /\bhobby\b/i,
+  /\bstarter\b/i,
+  /\bget started free\b/i,
+  /\btry (?:it )?free\b/i,
+]
 
 export type SignupFindings = {
   url: string | null

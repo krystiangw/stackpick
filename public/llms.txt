@@ -10,6 +10,14 @@
 - Paid audit: real agent runs against a real codebase, measuring which provider gets picked
   and in which words the others are rejected.
 
+## For agents
+
+- [/agent-signup.md](/agent-signup.md): why there is no signup and what to do instead
+- [/.well-known/agent-access.json](/.well-known/agent-access.json): endpoints, limits and refusals, machine readable
+- [/.well-known/mcp.json](/.well-known/mcp.json): MCP server card
+- [/openapi.json](/openapi.json): OpenAPI 3.1 spec, generated from the same check definitions the scanner runs
+- [/docs](/docs): how to scan from code
+
 ## Pages
 
 - [Methodology](/methodology): every check, its rule, its point value and why it costs a vendor money

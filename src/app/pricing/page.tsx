@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { CHECKS, MAX_SCORE } from '@/lib/score'
 
 export const metadata: Metadata = {
   title: 'Pricing — StackPick',
@@ -24,7 +25,7 @@ const TIERS: readonly Tier[] = [
     cadence: 'instant, no account',
     pitch: 'What a machine can see from outside.',
     includes: [
-      'Thirteen deterministic checks across five funnel stages',
+      `${CHECKS.length} deterministic checks across five funnel stages, ${MAX_SCORE} points`,
       'A permanent link you can forward',
       'The published formula, so the number can be argued with',
     ],

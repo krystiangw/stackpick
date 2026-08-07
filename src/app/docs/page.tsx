@@ -1,0 +1,152 @@
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { CHECKS, MAX_SCORE, STAGES } from '@/lib/score'
+
+export const metadata: Metadata = {
+  title: 'Docs — StackPick',
+  description: 'How to scan a domain from code: endpoints, response shape, limits, and how to read a scorecard.',
+}
+
+const BASE = process.env.STACKPICK_BASE_URL ?? 'https://stackpick-f12d13a227ea.herokuapp.com'
+
+function Code({ children }: { children: string }) {
+  return (
+    <pre className="overflow-x-auto border border-rule bg-sunken p-4 font-mono text-xs leading-relaxed">
+      <code>{children}</code>
+    </pre>
+  )
+}
+
+export default function DocsPage() {
+  return (
+    <main className="mx-auto max-w-4xl px-6">
+      <section className="border-b border-rule py-14">
+        <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Docs</p>
+        <h1 className="mt-4 max-w-2xl text-balance text-4xl font-semibold leading-tight tracking-tight">
+          Everything here works without an account
+        </h1>
+        <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
+          There is no signup, no key and no OAuth flow, because the scan reads only public pages and there is
+          nothing to protect. If you are building the same kind of thing, that decision is the one worth
+          copying: a gate with nothing behind it costs you every agent that cannot pass it and buys nothing.
+        </p>
+      </section>
+
+      <section className="border-b border-rule py-12">
+        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Scan a domain</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          One endpoint, one field. It returns a scorecard and a permanent link to the readable version.
+        </p>
+        <div className="mt-5">
+          <Code>{`curl -X POST ${BASE}/api/scan \\
+  -H 'content-type: application/json' \\
+  -d '{"domain": "example.com"}'`}</Code>
+        </div>
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          The response carries <code className="font-mono text-xs">id</code>,{' '}
+          <code className="font-mono text-xs">domain</code> and{' '}
+          <code className="font-mono text-xs">scorecard</code>. Every check reports{' '}
+          <code className="font-mono text-xs">points</code>, <code className="font-mono text-xs">max</code>{' '}
+          and a human-readable <code className="font-mono text-xs">detail</code>. A check may also carry{' '}
+          <code className="font-mono text-xs">inconclusive: true</code>, which means it scored zero because we
+          could not measure it rather than because the thing is absent. Treat those differently: they are our
+          blind spot, not a defect in the site.
+        </p>
+        <div className="mt-5">
+          <Code>{`{
+  "id": "example-com-202608072143",
+  "domain": "example.com",
+  "scorecard": {
+    "formulaVersion": "2.1",
+    "total": 9,
+    "max": ${MAX_SCORE},
+    "stages": [{ "letter": "A", "title": "Discovery", "points": 4, "max": 5 }],
+    "checks": [
+      { "id": "llms_txt", "points": 1, "max": 1, "detail": "llms.txt present" },
+      { "id": "signup_reachable", "points": 0, "max": 1,
+        "detail": "No signup page linked from the site we could follow",
+        "inconclusive": true }
+    ]
+  }
+}`}</Code>
+        </div>
+      </section>
+
+      <section className="border-b border-rule py-12">
+        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Progress events</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          A scan takes 15 to 30 seconds, mostly because signup probes run three times: bot gates answer
+          inconsistently and a single try would be a coin flip. If you would rather not wait in silence, the
+          streaming endpoint emits the real steps as they happen.
+        </p>
+        <div className="mt-5">
+          <Code>{`curl -N -X POST ${BASE}/api/scan/stream \\
+  -H 'content-type: application/json' \\
+  -d '{"domain": "example.com"}'
+
+event: step
+data: {"label":"Checking robots.txt against 13 AI crawlers","done":2,"total":5}
+
+event: done
+data: {"id":"example-com-202608072143","total":9,"max":${MAX_SCORE}}`}</Code>
+        </div>
+      </section>
+
+      <section className="border-b border-rule py-12">
+        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Credentials and provisioning</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          There are none. You do not create an API key, there is no management API to call and no service
+          account to provision, because every endpoint is open. Rate limiting is applied per source address
+          rather than per identity: ten scans an hour, and exceeding it returns 429 with a{' '}
+          <code className="font-mono text-xs">retry-after</code> header telling you exactly how long to wait.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          Machine-readable descriptions of all of this live at{' '}
+          <Link href="/openapi.json" className="text-brass underline underline-offset-4">
+            /openapi.json
+          </Link>
+          , <span className="font-mono text-xs">/.well-known/agent-access.json</span>,{' '}
+          <span className="font-mono text-xs">/.well-known/mcp.json</span> and{' '}
+          <span className="font-mono text-xs">/agent-signup.md</span>.
+        </p>
+      </section>
+
+      <section className="border-b border-rule py-12">
+        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Refusals</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          The scanner fetches whatever you send it, so it refuses anything that is not a public host: IP
+          literals, private and loopback ranges, link-local addresses including the cloud metadata endpoint,
+          and names that do not resolve. Redirects are followed by hand and re-checked at every hop against
+          the resolved address, because a public hostname is free to redirect into a private one.
+        </p>
+      </section>
+
+      <section className="py-12">
+        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Reading a scorecard</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          {CHECKS.length} checks across {STAGES.length} stages, {MAX_SCORE} points. The stages follow the order
+          an agent actually meets them in, so a low score in an early stage makes the later ones academic: a
+          site that refuses plain HTTP requests cannot be evaluated on its documentation, and the scorecard
+          says so rather than scoring the same wall five times.
+        </p>
+        <ol className="mt-6 flex flex-col">
+          {STAGES.map((stage) => (
+            <li key={stage.id} className="grid grid-cols-[2rem_1fr] gap-4 border-t border-rule py-3 sm:grid-cols-[3rem_10rem_1fr]">
+              <span className="font-mono text-sm text-brass">{stage.letter}</span>
+              <span className="font-mono text-sm font-medium">{stage.title}</span>
+              <span className="col-span-2 text-sm text-ink-soft sm:col-span-1">{stage.question}</span>
+            </li>
+          ))}
+        </ol>
+        <p className="mt-6 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          Every rule, threshold and point value is on the{' '}
+          <Link href="/methodology" className="text-brass underline underline-offset-4">
+            methodology page
+          </Link>
+          . If a result looks wrong, it is reproducible with curl, and we would rather be corrected than be
+          confidently wrong in someone else&rsquo;s inbox.
+        </p>
+      </section>
+    </main>
+  )
+}

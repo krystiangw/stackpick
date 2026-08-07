@@ -116,8 +116,11 @@ export default function FindingsPage() {
           ))}
         </ol>
         <p className="mt-8 max-w-2xl leading-relaxed text-ink-soft">
-          Every scored vendor gets its scorecard ten working days before anything is published, with a right
-          of reply. We would rather be corrected in private than be wrong in public.
+          The free scans on this site are published as they are produced, because they read only what any
+          browser can read and every vendor can reproduce or dispute them from the methodology page. A
+          different rule applies to anything we write up as research: a scored vendor gets the draft and ten
+          working days before it goes out, because an interpretation deserves a right of reply in a way that
+          a reproducible HTTP check does not.
         </p>
       </section>
     </main>

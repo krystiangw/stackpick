@@ -60,10 +60,15 @@ export const CHECKS: Check[] = [
     label: 'Docs readable without JavaScript',
     why: 'Most agents fetch HTML, they do not run your bundle. An empty shell reads as an empty product.',
     max: 1,
-    evaluate: (f) =>
-      f.docsTextChars >= 2000
+    evaluate: (f) => {
+      // Zero characters behind a 403 measures the WAF, not the documentation.
+      if (f.blocksPlainRequests && f.docsTextChars === 0) {
+        return { points: 0, detail: 'Unmeasurable: the site refuses plain requests, so no page could be read', inconclusive: true }
+      }
+      return f.docsTextChars >= 2000
         ? yes(1, `${f.docsTextChars.toLocaleString('en-US')} characters of text without JS`)
-        : yes(0, `Only ${f.docsTextChars.toLocaleString('en-US')} characters render without JS`),
+        : yes(0, `Only ${f.docsTextChars.toLocaleString('en-US')} characters render without JS`)
+    },
   },
   {
     id: 'user_agents_allowed',
@@ -74,9 +79,12 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       const blocked = f.robots.blockedByClass.user
       if (f.robots.blanketDisallowAll) return yes(0, 'robots.txt disallows everything for every agent')
-      return blocked.length === 0
-        ? yes(1, 'No on-demand agent is blocked')
-        : yes(0, `Blocked: ${blocked.join(', ')}`)
+      if (blocked.length > 0) return yes(0, `Blocked: ${blocked.join(', ')}`)
+      // A green tick for reachability on a site that 403s everyone is false comfort.
+      if (f.blocksPlainRequests) {
+        return yes(0, 'robots.txt permits them, but the WAF refuses the request before robots.txt matters')
+      }
+      return yes(1, 'No on-demand agent is blocked')
     },
   },
   {
@@ -172,7 +180,9 @@ export const CHECKS: Check[] = [
     evaluate: (f) =>
       f.funnel.provisioning.programmatic.length > 0
         ? yes(2, `Documented: ${f.funnel.provisioning.programmatic.length} provisioning patterns`)
-        : yes(0, 'Docs never describe creating credentials programmatically'),
+        : f.blocksPlainRequests
+          ? { points: 0, detail: 'Unmeasurable: documentation could not be fetched', inconclusive: true }
+          : yes(0, 'No programmatic credential creation found in the pages we could read'),
   },
   {
     id: 'self_serve',
@@ -215,7 +225,11 @@ export const CHECKS: Check[] = [
       const negotiation = f.machine.markdownNegotiation
       if (f.machine.openapi.length > 0) return yes(1, `OpenAPI at ${f.machine.openapi[0]}`)
       if (negotiation.acceptHeader || negotiation.dotMdSuffix) return yes(1, 'Docs serve markdown to machines')
-      return yes(0, 'No OpenAPI spec and no markdown negotiation')
+      if (f.blocksPlainRequests) {
+        return { points: 0, detail: 'Unmeasurable behind the WAF', inconclusive: true }
+      }
+      // "Not found on your domain" is what we measured. "Does not exist" is not.
+      return yes(0, 'No OpenAPI spec and no markdown negotiation found on this domain')
     },
   },
 ]

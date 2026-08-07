@@ -31,6 +31,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               Stack<span className="text-brass">Pick</span>
             </Link>
             <nav className="flex gap-5 font-mono text-xs uppercase tracking-widest text-ink-faint">
+              <Link href="/docs" className="hover:text-ink">
+                Docs
+              </Link>
               <Link href="/methodology" className="hover:text-ink">
                 Methodology
               </Link>
