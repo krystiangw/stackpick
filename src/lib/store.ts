@@ -1,5 +1,6 @@
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import { MongoStore } from './store-mongo'
 import type { ScanFindings } from './scan'
 import type { Scorecard } from './score'
 
@@ -88,8 +89,12 @@ class FileStore implements Store {
 
 let cached: Store | null = null
 
+/**
+ * Filesystem locally so the app runs with no external accounts; Mongo wherever
+ * MONGODB_URI exists, because Heroku dynos lose the disk on every restart.
+ */
 export function getStore(): Store {
-  cached ??= new FileStore()
+  cached ??= process.env.MONGODB_URI ? new MongoStore() : new FileStore()
   return cached
 }
 

@@ -6,9 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "scan": "tsx scripts/scan-cli.ts"
   },
   "dependencies": {
+    "mongodb": "^7.5.0",
     "next": "16.3.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
@@ -24,5 +26,8 @@
     "tsx": "^4.23.11",
     "typescript": "^5"
   },
-  "packageManager": "pnpm@10.33.2"
+  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "node": "22.x"
+  }
 }
