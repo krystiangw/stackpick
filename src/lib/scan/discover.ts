@@ -494,6 +494,19 @@ export async function discover(domain: string): Promise<Discovered> {
   }
 
   let npmConfidence: 'strong' | 'weak' | null = null
+
+  // A scraped name unrelated to the brand is usually a dependency, not the entry package:
+  // htmx.org's docs install idiomorph, and we scored htmx against it. Ask the registry
+  // whether something clearly theirs exists before believing the page.
+  if (npmPackage && matchStrength(npmPackage, domain, brand) === 'weak') {
+    const searched = await searchNpmForDomain(domain, githubRepo)
+    if (searched?.confidence === 'strong') {
+      npmPackage = searched.name
+      npmSource = 'registry-search'
+      npmConfidence = 'strong'
+    }
+  }
+
   if (!npmPackage) {
     const searched = await searchNpmForDomain(domain, githubRepo)
     if (searched) {
