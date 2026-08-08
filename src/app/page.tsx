@@ -62,10 +62,10 @@ export default async function Home() {
         {coverage.signupNeedsJavaScript > 0 && (
           <p className="mt-4 max-w-2xl font-mono text-sm leading-relaxed text-ink-soft">
             Of {coverage.domains} vendors we have scanned, {coverage.signupNeedsJavaScript} serve a signup form
-            that renders nothing without JavaScript
+            that renders nothing without JavaScript,{' '}
             {coverage.signupRefusesAgents > 0
-              ? `, and ${coverage.signupRefusesAgents} answer an agent with a refusal where a browser gets through.`
-              : '. Outright refusals aimed at agents are rarer than the noise around them suggests, and we say so rather than counting every 403 our data centre collects.'}
+              ? `and ${coverage.signupRefusesAgents} answer an agent with a refusal where a browser gets through.`
+              : 'which an agent reads as a page with no way in. Outright refusals aimed at agents are rarer than the noise around them suggests, and we say so rather than counting every 403 our data centre collects.'}
           </p>
         )}
         <div className="mt-8 max-w-xl">

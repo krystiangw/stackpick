@@ -1335,3 +1335,36 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-08 (trzydziesta trzecia): liczba, którą sam wystawiłem, nie przeżyła weryfikacji
+
+Godzinę po wystawieniu na stronę główną zdania „15 ze 156 vendorów odpowiada agentowi na
+rejestracji odmową" sprawdziłem te piętnaście wierszy ręcznie. **Zostało zero.**
+
+- `anvil.co`: publikowaliśmy „404 żądaniu przedstawiającemu się jako agent". `anvil.co/signup`
+  daje **404 także Chrome'owi**, bo ich rejestracja stoi na `app.useanvil.com/signup` i
+  **odpowiada agentowi 200**. Napisaliśmy o vendorze dokładną odwrotność prawdy.
+- `nylas.com`, `pandadoc.com`: 429, czyli limit wywołany naszym własnym ruchem. Metodologia mówi
+  w trzech miejscach, że 429 nigdy nie jest ustaleniem o vendorze; check rejestracji jako jedyny
+  tego nie respektował.
+- `cloudflare.com`: 403 dla agenta **i 403 dla Chrome'a** z naszej sieci. Efektowna historia
+  „firma sprzedająca gotowość na agenty blokuje agenta na własnej rejestracji" **nie jest przez
+  nas zmierzona** i wypada z materiałów na start.
+- Po pierwszej poprawce (5.1) zostały dwa wiersze i **oba też były błędne**: 404 dla agenta i 403
+  dla Chrome'a to dwie różne odmowy, a nie drzwi otwarte dla jednego. Reguła wymagała tylko, żeby
+  kody się różniły.
+
+**5.2: przeglądarka musi faktycznie wejść (2xx/3xx), żeby werdykt o zamkniętych drzwiach powstał.**
+Strona rejestracji jest pobierana drugi raz z UA przeglądarki tylko wtedy, gdy agent dostał
+odmowę, a werdykt drukuje obie liczby, tak jak test drzwi robi od dawna.
+
+**Wynik po weryfikacji: 0 udowodnionych odmów wymierzonych w agentów na 156 vendorów.** Za to
+**72 ze 156 serwuje formularz rejestracji, który bez JavaScriptu nie renderuje nic**, czyli agent
+pobierający HTML nie widzi żadnej drogi do środka. To jest bariera, którą umiemy udowodnić, i
+landing prowadzi teraz nią, a nie odmowami.
+
+**Lekcja procesowa, druga dziś:** przepuściłem korpus przez te same hosty pięć razy w jeden dzień
+i część spadków (`postmark.com` 429, zagłodzony handshake `telnyx.com`) **wyprodukowaliśmy sami**.
+Reseed robimy raz na zestaw zmian, nie po każdej.
+
+**Stan:** korpus 156/156 na formule 5.2, `npm run audit` czysty.
