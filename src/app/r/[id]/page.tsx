@@ -223,7 +223,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </section>
       )}
 
-      {findings.blocksPlainRequests && (
+      {/* Not when we were rate limited: that box accuses the vendor of refusing agents, and the
+          box above it says the opposite about the same 429. One page cannot hold both. */}
+      {findings.blocksPlainRequests && !findings.rateLimitedUs && (
         <section className="border-b border-rule py-8">
           <div className="border-l-2 border-fail bg-surface p-6">
             <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-fail">Blocked at the door</h2>
