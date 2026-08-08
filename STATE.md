@@ -487,3 +487,42 @@ zaszyte "14 deterministic HTTP checks". `openapi.json` nie wystawiał `measurabl
 **Znak na landingu.** Sygnaturowy element pokazuje się teraz także na stronie głównej, przy
 liście pięciu etapów, na **prawdziwej domenie** (lider pierwszej kategorii) z linkiem do jej
 karty. Lista A-E była abstrakcją, dopóki nie stanął obok niej kształt.
+
+## Runda 2026-08-08 (trzynasta): kanon walidatorów, SARIF i format agentowy
+
+Research na pytanie Krystiana: czy branża ma wzorzec dla walidatora agent-first. Ma, opisany w
+`ai-audit/11-wzorce-walidatorow.md`. Cztery niezależne źródła (axe-core, Lighthouse, OpenSSF
+Scorecard, SARIF 2.1.0) zbiegły się do tego samego kształtu, a my spełnialiśmy większość z niego
+nie wiedząc o tym.
+
+**Potwierdzenie własnych decyzji:** `axe-core` zwraca cztery kubełki (`passes`, `violations`,
+`incomplete`, `inapplicable`), a Lighthouse trzyma `scoreDisplayMode` z `notApplicable`, przy
+którym `score` jest `null` i **ma być zignorowany, a nie policzony jako zero**. To nasze trzy
+werdykty i mianownik mierzalny, do których doszliśmy przez audyt Froali. Najlepsze potwierdzenie:
+enum `kind` w schemacie SARIF 2.1.0 to dosłownie `pass | fail | review | notApplicable`.
+
+**Domknięte trzy luki:**
+- **`helpUri` przy każdym checku** (kotwice `#<check_id>` na `/methodology`), w tekście MCP i w
+  `structuredContent`. Scorecard i Lighthouse mają to od dawna, my dawaliśmy werdykt bez adresu
+  reguły.
+- **Eksport SARIF 2.1.0** (`format=sarif`), zwalidowany przeciwko schematowi ze schemastore:
+  `valid`. Reguły z rejestru checków, `kind` z naszych werdyktów, `webRequest`/`webResponse` przy
+  teście drzwi (jedyny check, którego dowodem jest para żądanie-odpowiedź, więc tylko tam to
+  deklarujemy), `measurable` i `max` obok siebie we właściwościach przebiegu. Odblokowuje skan
+  w cudzym CI.
+- **Format agentowy** (`format=agent`): markdown z zadaniami zamiast raportu, uporządkowanymi tak
+  jak porządkuje je plan naprawczy, każde z pomiarem, który je wywołał, i linkiem do reguły. Checki
+  niemierzalne w osobnej sekcji z nagłówkiem mówiącym, że **to nie są porażki**, czego żaden inny
+  skaner w tej kategorii nie odróżnia. Do tego zdanie proszące odbiorcę, żeby zweryfikował, zanim
+  cokolwiek zmieni.
+
+**Błąd znaleziony przez weryfikację, nie przez build:** pierwszy SARIF miał wszystkie `helpUri`
+wskazujące na `https://localhost:14735`, bo za proxy Heroku `new URL(request.url).origin` to origin
+dyna. Stąd `publicBaseUrl()`.
+
+**Kontekst konkurencyjny, zweryfikowany żądaniami do ich serwerów** (szczegóły w dokumencie):
+kategoria "agent readiness scanner" zapełniła się, `isitagentready.com` ma działający serwer MCP na
+tym samym protokole co my i dłuższą listę protokołów. Mierzą jednak **płycej**: pass/fail plus
+poziom 0-5, bez mianownika mierzalnego i bez stanu "nie dało się zmierzyć". Etapów C i D
+(rejestracja, poświadczenia) nie mierzy nikt poza nami, a warstwy behawioralnej tym bardziej.
+**Wniosek dla strategii: darmowy skan przestaje być produktem i staje się kwalifikatorem.**
