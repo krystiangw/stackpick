@@ -75,6 +75,54 @@ export const CATEGORIES: Category[] = [
     jobToBeDone: 'take money without becoming a payments company',
     domains: ['stripe.com', 'paddle.com', 'lemonsqueezy.com', 'polar.sh', 'chargebee.com', 'plaid.com'],
   },
+  {
+    id: 'error-monitoring',
+    label: 'Error monitoring',
+    jobToBeDone: 'find out an exception happened before a customer tells you',
+    domains: ['sentry.io', 'rollbar.com', 'bugsnag.com', 'honeybadger.io', 'betterstack.com', 'highlight.io', 'raygun.com'],
+  },
+  {
+    id: 'feature-flags',
+    label: 'Feature flags and experiments',
+    jobToBeDone: 'ship a change to some users and not others',
+    domains: ['launchdarkly.com', 'statsig.com', 'flagsmith.com', 'getunleash.io', 'configcat.com', 'split.io', 'growthbook.io'],
+  },
+  {
+    id: 'search',
+    label: 'Search as a service',
+    jobToBeDone: 'put a search box over your own data',
+    domains: ['algolia.com', 'meilisearch.com', 'typesense.org', 'elastic.co', 'oramasearch.com', 'searchkit.co'],
+  },
+  {
+    id: 'communications',
+    label: 'SMS, voice and messaging',
+    jobToBeDone: 'send a message a person actually reads',
+    domains: ['twilio.com', 'vonage.com', 'plivo.com', 'telnyx.com', 'messagebird.com', 'sinch.com'],
+  },
+  {
+    id: 'headless-cms',
+    label: 'Headless CMS',
+    jobToBeDone: 'let non-engineers edit content the product renders',
+    domains: ['contentful.com', 'sanity.io', 'strapi.io', 'storyblok.com', 'payloadcms.com', 'directus.io', 'hygraph.com'],
+  },
+  {
+    id: 'background-jobs',
+    label: 'Background jobs and workflows',
+    jobToBeDone: 'run work that must not happen inside a request',
+    domains: ['inngest.com', 'trigger.dev', 'temporal.io', 'upstash.com', 'hatchet.run', 'defer.run'],
+  },
+  {
+    id: 'llm-infrastructure',
+    label: 'Model hosting and gateways',
+    jobToBeDone: 'call a model you did not train without running the GPUs',
+    domains: ['openrouter.ai', 'together.ai', 'fireworks.ai', 'groq.com', 'replicate.com', 'modal.com', 'baseten.co'],
+  },
+  {
+    id: 'video',
+    label: 'Video hosting and streaming',
+    jobToBeDone: 'put video in a product without building an encoder',
+    domains: ['mux.com', 'api.video', 'daily.co', 'livekit.io', 'agora.io', 'bitmovin.com'],
+  },
 ]
 
 export function categoryFor(domain: string): Category | null {
