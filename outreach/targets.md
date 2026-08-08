@@ -1,70 +1,70 @@
 # Target list, generated from the corpus
 
-Built 2026-08-08 from `/corpus.json` at formula 4.0, 103 domains in 15 categories.
-Regenerate by rerunning the grouping described at the bottom; do not hand-edit the table.
+Rebuilt 2026-08-08 from `/corpus.json` at formula 4.3, 103 domains in 15 categories, after four
+systemic scanner errors were found and fixed. The previous version of this file was built on
+verdicts that were wrong about MCP servers and npm packages, so it is superseded, not amended.
 
-**28 of 103 have a hook specific enough to open with.** The rest scored well enough or
-uninterestingly enough that there is no honest first sentence, and those are not worth an email.
+Rows the corpus flags as `rateLimited` are excluded: they are thinner than the site deserves.
 
-The four hook types, in the order they are worth sending:
+**95 of 101 have a hook.** That is too many to be useful as a list, so the order below is the
+order worth sending, and the last group is deliberately marked as not worth sending one at a time.
 
-## 1. The door is shut (3)
+## 1. Runs an MCP server, documents no way to get a key (23)
 
-The strongest finding we have, because it ends the funnel before anything else matters and it is
-one line for them to check.
+The strongest finding we have ever produced, and it did not exist yesterday: it only became
+countable when the scan started following the endpoint vendors name in their own card, which took
+the count of live MCP servers from 27 to 49.
 
-| Domain | Score | Category |
-|---|---|---|
-| froala.com | 3/8 | Embeddable rich text editors |
-| vonage.com | 4/10 | SMS, voice and messaging |
-| bitmovin.com | 8/12 | Video hosting and streaming |
+clerk.com · inngest.com · tiptap.dev · betterstack.com · highlight.io · raygun.com · sentry.io ·
+flagsmith.com · growthbook.io · supabase.com · transloadit.com · uploadcare.com · vercel.com ·
+directus.io · payloadcms.com · replicate.com · stripe.com · amplitude.com · posthog.com ·
+loops.so · qdrant.tech · agora.io · mux.com
 
-Say: your edge answered 403 to a plain request from a data centre. An agent integrating you runs
-in a data centre. Everything else we measured is a floor, not a score.
+The sentence writes itself and it is not an insult: **you built a door for a machine, and the
+machine cannot get a key to walk through it.** These are companies who have already decided agents
+matter, which makes them the warmest audience in the corpus and the least likely to argue with the
+premise. Lead with their own MCP endpoint URL, because we have it and it proves we looked.
 
-## 2. The documentation needs JavaScript (11)
+## 2. The door is shut (3)
+
+froala.com · vonage.com · bitmovin.com
+
+Their edge answers 403 to a plain request from a data centre. An agent integrating them runs in a
+data centre. Everything else we measured is a floor rather than a score, and we say so on the card.
+
+Note on bitmovin.com: its edge is inconsistent, the same path answering 200 and 403 on different
+attempts. If it comes up in conversation, say that plainly rather than defending the number.
+
+## 3. The documentation needs JavaScript (11)
 
 upstash.com · prosemirror.net · bugsnag.com · bunny.net · filestack.com · imagekit.io ·
 chargebee.com · june.so · algolia.com · mailgun.com · resend.com
 
-Two are worth leading with because the number is absurd: **chargebee.com serves 14 characters**
-and **filestack.com serves 41** to a plain fetch of their documentation. resend.com is on this
-list at 1,778 characters while scoring 14/16 overall, which makes it the friendliest possible
-first email: one specific gap on an otherwise excellent result.
+Two are worth leading with because the number is absurd: **chargebee.com serves 14 characters** and
+**filestack.com serves 41** to a plain fetch of their documentation. resend.com is the friendliest
+first email in the whole corpus: 14/16 overall, one specific gap, nothing to be defensive about.
 
-## 3. Below their category median while a named competitor is above (5)
+## 4. Below their category median, with a named leader above (1)
 
-| Domain | Score | Category median | Leader |
-|---|---|---|---|
-| defer.run | 1/4 | 57% | inngest.com 10/15 |
-| highlight.io | 5/14 | 56% | honeybadger.io 10/13 |
-| raygun.com | 6/15 | 56% | honeybadger.io 10/13 |
-| directus.io | 6/14 | 58% | hygraph.com 12/16 |
-| searchkit.co | 4/13 | 50% | typesense.org 7/13 |
+Only one domain now clears this bar, because the corpus got more accurate and the spread narrowed.
+Keep the shape of the hook for later rather than forcing it today.
 
-Hardest to send well. Naming the competitor is the whole force of it and also the thing that can
-read as a taunt, so it belongs in the second paragraph, never the subject line.
+## 5. No agent entry point (57)
 
-## 4. Cheap fix, real delta (9)
+Fifty-seven domains publish none of the nine known entry paths. That is most of the market, which
+makes it a finding about the category rather than about any one company. Send it as one piece of
+writing about the category, or fold it into a conversation that started with a hook above. One
+email per domain saying "you are like everyone else" is not worth anyone's two minutes.
 
-editorjs.io · lexical.dev · quilljs.com · betterstack.com · configcat.com · uploadthing.com ·
-lemonsqueezy.com · plausible.io · api.video
+## What this list still cannot tell you
 
-No llms.txt and none of the nine agent entry paths answer. Both are afternoons of work, which
-makes this the easiest yes and the weakest finding: it is also what every other scanner in the
-category reports, so it is not a reason to choose us. Send these last, or fold them into a
-category letter rather than one at a time.
-
-## What the list deliberately leaves out
-
-- Anyone whose only finding is "you score below average". Not specific enough to be worth reading.
-- Rows flagged `rateLimited` in the corpus, which are thinner than the site deserves.
-- The four vendors we have already published full agent audits about. Those get a different email.
+Whether an agent chose them. Every hook here comes from the free scan, which measures files. The
+paid audit is the only thing that measures the choice, and no email should blur the two.
 
 ## How it was built
 
-Group the corpus by category, take the median share per category, then for each domain pick the
-first hook that applies in this order: door refused, documentation needs JavaScript, more than
-twelve points of share below the category median while a named leader sits above, then llms.txt
-and entry paths both absent. First match wins so nobody appears twice, and a vendor with no match
-gets no email.
+Group by category, take the median share per category, then for each domain take the first hook
+that applies in this order: door refused, documentation needs JavaScript, MCP server with no
+documented credential path, more than twelve points of share below the category median while a
+named leader sits above, then no agent entry point. First match wins, so nobody appears twice, and
+a domain with no match gets no email.

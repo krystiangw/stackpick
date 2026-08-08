@@ -1,4 +1,4 @@
-import { fetchUrl, inParallel, looksLikeHtml, visibleTextLength, type Fetched } from './http'
+import { fetchUrl, inParallel, isRealTextFile, looksLikeHtml, visibleTextLength, type Fetched } from './http'
 import { fetchPackageFacts } from './npm'
 
 export type NpmSource = 'site' | 'docs' | 'llms' | 'registry-search'
@@ -69,7 +69,14 @@ const DEVELOPER_HINTS = [
   /\/api(\/|$)/i,
 ]
 const PRICING_HINTS = [/\/pricing/i, /\/plans(\/|$)/i]
-const SIGNUP_HINTS = [/\/sign[_-]?up/i, /\/register(\/|$)/i, /\/signup/i, /\/get[_-]started/i, /\/create[_-]account/i]
+const SIGNUP_HINTS = [
+  /\/sign[_-]?up/i,
+  /\/register(\/|$)/i,
+  /\/registration/i,
+  /\/create[_-]account/i,
+  /\/join(\/|$)/i,
+  /\/get[_-]started/i,
+]
 
 const DOCS_FALLBACKS = ['/docs', '/documentation', '/developers']
 const PRICING_FALLBACKS = ['/pricing', '/plans']
@@ -78,8 +85,13 @@ const SIGNUP_FALLBACKS = ['/signup', '/sign-up', '/register']
 // Large vendors put the two pages an agent needs on their own hosts, and their marketing
 // nav is often rendered by JavaScript, so neither the links nor the fallback paths find
 // them. Scoring stripe.com as having no documentation was measuring our crawler.
-const DOCS_SUBDOMAINS = ['docs', 'developer', 'developers', 'api']
-const SIGNUP_SUBDOMAINS = ['app', 'dashboard', 'console', 'accounts']
+//
+// api.<domain> is asked last and only when nothing else answered: it is the guess least likely
+// to be documentation and the one most likely to resolve and then accept no connection, which
+// costs the full request timeout.
+const DOCS_SUBDOMAINS = ['docs', 'developers', 'developer']
+const LAST_RESORT_DOCS_SUBDOMAINS = ['api']
+const SIGNUP_SUBDOMAINS = ['app', 'dashboard', 'dash', 'console', 'accounts', 'cloud', 'auth', 'login']
 
 export function normalizeDomain(input: string): string {
   const trimmed = input.trim().replace(/^https?:\/\//i, '').replace(/\/.*$/, '').replace(/^www\./i, '')
@@ -124,9 +136,7 @@ function extractLinks(html: string, base: string): string[] {
  * first href matching /docs sent us to cloudinary.com/documentation/figma_integration and
  * to linear.app/docs, a user help centre, then scored the vendor on what was not there.
  */
-function developerWeight(fetched: Fetched): number {
-  if (!fetched.ok) return -1
-  const body = fetched.body
+function developerSignals(body: string): number {
   const text = body.toLowerCase()
   const signals = [
     /<code|<pre/gi,
@@ -137,9 +147,134 @@ function developerWeight(fetched: Fetched): number {
     /\bnpm install\b/gi,
     /\bbearer\b/gi,
   ]
-  const hits = signals.reduce((sum, pattern) => sum + (text.match(pattern)?.length ?? 0), 0)
-  const words = Math.min(visibleTextLength(body), 40_000) / 1000
-  return hits * 10 + words
+  return signals.reduce((sum, pattern) => sum + (text.match(pattern)?.length ?? 0), 0)
+}
+
+const hostOf = (url: string): string => {
+  try {
+    return new URL(url).hostname.replace(/^www\./i, '').toLowerCase()
+  } catch {
+    return ''
+  }
+}
+
+const originOf = (url: string): string => {
+  try {
+    return new URL(url).origin
+  } catch {
+    return ''
+  }
+}
+
+/** The first label of a host: the part a vendor chooses to say what sits there. */
+const hostLabel = (url: string): string => hostOf(url).split('.')[0]
+
+/** A path segment without the extension, so /pricing.md and /pricing are the same word. */
+const bareSegment = (segment: string) => segment.replace(/\.(md|html?|txt|json|xml)$/i, '').toLowerCase()
+
+function pathSegments(url: string): string[] {
+  try {
+    return new URL(url).pathname.split('/').filter(Boolean).map(bareSegment)
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Path segments plus the route in a hash fragment, which is the whole address on an app that
+ * routes client side: app.storyblok.com/#/signup and app.harness.io/auth/#/signup are both
+ * links a vendor writes as their signup, and stripping the fragment leaves the app's front door.
+ */
+function routeSegments(url: string): string[] {
+  try {
+    const parsed = new URL(url)
+    const route = parsed.hash.startsWith('#/') ? parsed.hash.slice(1) : ''
+    return [...parsed.pathname.split('/'), ...route.split('/')].filter(Boolean).map(bareSegment)
+  } catch {
+    return []
+  }
+}
+
+/** Keeps a route fragment, because it is the page; drops an anchor, because it is a scroll position. */
+const routeUrl = (url: string) => (/#\/\S/.test(url) ? url : url.split('#')[0])
+
+const DOCS_SEGMENT = /^(docs?|documentation|api-?docs?|api-?reference|reference|manual|handbook)$/i
+const DEVELOPER_SEGMENT = /^(developers?|dev|api|sdks?)$/i
+const DEVELOPER_HOST_LABEL = /^(developers?|api|apidocs|devcenter|devportal|sdk)$/i
+
+/**
+ * Sections a company files things under that are never its documentation, whatever the page has
+ * to say for itself. flagsmith.com/ebooks is a list of marketing e-books and we counted its pages
+ * as documentation; growthbook.io's llms.txt named a blog post about multi-arm bandits;
+ * storyblok.com's home page links a landing page at /lp/developers; agora.io's links a blog
+ * category called developer.
+ */
+const NOT_DOCUMENTATION_SEGMENT =
+  /^(blog|news|newsroom|press|events?|webinars?|e-?books?|whitepapers?|case-stud(y|ies)|customers?|testimonials|stories|lp|landing|campaigns?|category|categories|topics?|tags?|author|pricing|plans|about|company|team|careers|jobs|partners?|contact|legal|terms|privacy|solutions|use-?cases|industries|compare|community|forum|login|signin|signup|register)$/i
+
+/**
+ * Whether the URL is filed where documentation lives. Only the segments in front of the first
+ * documentation segment are judged: docs.honeybadger.io/resources/mcp is documentation and
+ * flagsmith.com/ebooks is not, and nothing but their position says which.
+ */
+function isFiledAsDocumentation(url: string): boolean {
+  const segments = pathSegments(url)
+  const docsAt = segments.findIndex((segment) => DOCS_SEGMENT.test(segment))
+  const before = docsAt === -1 ? segments : segments.slice(0, docsAt)
+  return !before.some((segment) => NOT_DOCUMENTATION_SEGMENT.test(segment))
+}
+
+/** The host a vendor named docs.<their domain>, as opposed to any host whose name starts with docs. */
+const isCanonicalDocsHost = (url: string, vendor: VendorSite): boolean =>
+  vendor.hosts.some((host) => ['docs', 'documentation'].some((prefix) => hostOf(url) === `${prefix}.${host}`))
+
+/**
+ * How loudly a URL says it is the vendor's documentation, before a word of the page is read.
+ * Content cannot be left to settle this on its own: twilio.com/en-us/developers is a marketing
+ * hub carrying more prose than twilio.com/docs, where /docs/iam/api-keys lives, and
+ * developer.auth0.com carries more code samples than auth0.com/docs.
+ */
+const NO_CONFIRMED_ORIGINS: ReadonlySet<string> = new Set()
+
+function documentationTier(url: string, vendor: VendorSite, confirmedDocsOrigins: ReadonlySet<string>): number {
+  if (isCanonicalDocsHost(url, vendor) || confirmedDocsOrigins.has(originOf(url))) return 3
+  const segments = pathSegments(url)
+  if (segments.some((segment) => DOCS_SEGMENT.test(segment))) return 2
+  if (DEVELOPER_HOST_LABEL.test(hostLabel(url)) || segments.some((segment) => DEVELOPER_SEGMENT.test(segment))) return 1
+  return 0
+}
+
+/**
+ * What a candidate is worth as documentation, or null when it is not documentation at all. The
+ * tier decides first and content only breaks ties inside it, because every wrong pick in the audit
+ * was a page that read richer than the right one.
+ */
+function documentationRank(page: Fetched, vendor: VendorSite, confirmedDocsOrigins: ReadonlySet<string>): number | null {
+  if (!page.ok) return null
+  // A file a vendor publishes for machines is not one of "the N documentation pages we read":
+  // honeybadger.io's llms-small.txt was counted as one, and so were typesense.org's docs/llms.txt
+  // and supabase.com's llms-full.txt.
+  if (!looksLikeHtml(page)) return null
+  // The URL we landed on, not the one we followed: daily.co's home page links docs.pipecat.daily.co,
+  // which lands on docs.pipecat.ai, the documentation of a separate voice framework.
+  if (!onVendorSite(page.url, vendor)) return null
+  if (!isFiledAsDocumentation(page.url)) return null
+  // Four questions in order of how much they settle, each worth more than everything under it.
+  // Content comes last on purpose: every wrong pick in the audit read richer than the right one.
+  const words = Math.min(visibleTextLength(page.body), 40_000) / 1000
+  // The documentation is the front of the section, not the richest page in it. honeybadger.io's
+  // home page links a Rails exception-tracking guide carrying more code than docs.honeybadger.io.
+  const depth = Math.min(pathSegments(page.url).length, 9)
+  // And the nearer host, when two of them are documentation: docs-latam.messaging.sinch.com is a
+  // regional site and developers.sinch.com is the one a developer is sent to.
+  const hostDepth = Math.min(hostOf(page.url).split('.').length, 6)
+  return (
+    documentationTier(page.url, vendor, confirmedDocsOrigins) * 1_000_000 +
+    (10 - depth) * 10_000 +
+    (6 - hostDepth) * 1_000 +
+    Math.min(developerSignals(page.body), 50) * 10 +
+    Math.min(words, 20)
+  )
 }
 
 /** How much a page reads like a price list rather than a page with the word pricing in it. */
@@ -177,18 +312,28 @@ async function bestPricing(
   return fallback ? { ...fallback, pricesVisible: false } : null
 }
 
-/** Picks the most developer-looking candidate, and says nothing when none answer. */
-async function bestDocs(candidates: (string | null)[]): Promise<{ url: string; page: Fetched } | null> {
-  const unique = [...new Set(candidates.filter((url): url is string => Boolean(url)))].slice(0, 4)
+/** Picks the best-ranked documentation candidate, and says nothing when none of them is one. */
+async function bestDocs(
+  candidates: (string | null)[],
+  vendor: VendorSite,
+  confirmedDocsOrigins: ReadonlySet<string>,
+): Promise<{ url: string; page: Fetched; requested: string } | null> {
+  // Wide enough to hold every source at once: capping it at four dropped developers.sinch.com,
+  // the one candidate that was the documentation, because three links and an index entry came
+  // first. Most of them are already in the per-scan response cache by the time we get here.
+  const unique = [...new Set(candidates.filter((url): url is string => Boolean(url)))].slice(0, 8)
   if (unique.length === 0) return null
   const pages = await inParallel(unique, (url) => fetchUrl(url))
-  let best: { url: string; page: Fetched; weight: number } | null = null
+  let best: { page: Fetched; rank: number; requested: string } | null = null
   for (const [index, page] of pages.entries()) {
-    const weight = developerWeight(page)
-    if (weight < 0) continue
-    if (!best || weight > best.weight) best = { url: unique[index], page, weight }
+    const rank = documentationRank(page, vendor, confirmedDocsOrigins)
+    if (rank === null) continue
+    if (!best || rank > best.rank) best = { page, rank, requested: unique[index] }
   }
-  return best ? { url: best.url, page: best.page } : null
+  // The URL we landed on rather than the one we asked for, so the report names the page that was
+  // actually read and machine.ts probes llms.txt on the origin that served it. The one we asked
+  // for comes back too, because that is the one that says where the URL came from.
+  return best ? { url: best.page.url, page: best.page, requested: best.requested } : null
 }
 
 function pickLink(links: string[], hints: RegExp[], sameHostAs: string): string | null {
@@ -218,8 +363,6 @@ async function firstLivePath(site: string, paths: string[]): Promise<string | nu
   return null
 }
 
-const readsLikeAPage = (got: Fetched) => got.ok && looksLikeHtml(got) && visibleTextLength(got.body) > 200
-
 /** True when a URL is on the scanned registration, so a redirect off-site cannot be scored. */
 function sameSite(url: string, domain: string): boolean {
   try {
@@ -231,29 +374,214 @@ function sameSite(url: string, domain: string): boolean {
 }
 
 /**
- * Probes prefix.domain in order, and only walks paths on a host that answered at all.
- * A host that does not resolve costs one failed DNS lookup, not a timeout per path.
+ * The names that are this vendor's own. The scanned domain is one; wherever its home page landed
+ * is the other, because a company that moved keeps redirecting: livekit.io serves livekit.com,
+ * and a docs host under the new name is still theirs.
  */
-async function firstLiveSubdomain(domain: string, prefixes: string[], paths: string[]): Promise<string | null> {
-  // Read back in priority order while all of them are still in flight. Waiting for the whole
-  // set meant one guessed host that accepts no connection - api.payloadcms.com - held up a
-  // docs URL that docs.payloadcms.com had already answered, for the full request timeout.
-  const roots = prefixes.map((prefix) => fetchUrl(`https://${prefix}.${domain}`))
-  // A subdomain that redirects off-site is not this vendor's page. docs.statuspage.io served
-  // a dead Zendesk placeholder and we reported its 303 characters as their documentation.
-  const onSite = (got: Fetched) => readsLikeAPage(got) && sameSite(got.url, domain)
+type VendorSite = { domain: string; hosts: string[]; homeOrigin: string }
 
-  for (const [index, pending] of roots.entries()) {
-    const root = await pending
-    if (!root.ok) continue
-    if (paths.length === 0) {
-      if (onSite(root)) return root.url
+const vendorSiteOf = (domain: string, homeUrl: string): VendorSite => ({
+  domain,
+  hosts: [...new Set([domain, hostOf(homeUrl)].filter(Boolean))],
+  homeOrigin: originOf(homeUrl),
+})
+
+const onVendorSite = (url: string, vendor: VendorSite): boolean =>
+  vendor.hosts.some((host) => sameSite(url, host))
+
+/**
+ * The hosts a vendor could have put documentation on that answer at all. Returning only the first
+ * one meant docs.sinch.com, which redirects to a regional LATAM messaging site, was reported as
+ * their documentation and developers.sinch.com was never asked.
+ *
+ * The thin-page guard the other probes use is deliberately absent: docs.agora.io renders 77
+ * characters without JavaScript, and that is a finding about them rather than a reason to go
+ * looking for their documentation somewhere it is not.
+ */
+async function liveDocsHosts(domain: string, vendor: VendorSite): Promise<string[]> {
+  const found = await answeringHosts(domain, DOCS_SUBDOMAINS, vendor)
+  return found.length > 0 ? found : answeringHosts(domain, LAST_RESORT_DOCS_SUBDOMAINS, vendor)
+}
+
+async function answeringHosts(domain: string, prefixes: string[], vendor: VendorSite): Promise<string[]> {
+  // All of them go on the wire at once and are read back in priority order, so a guessed host
+  // that accepts no connection - api.payloadcms.com does exactly that - is only ever waited on
+  // when nothing better has answered.
+  const pending = prefixes.map((prefix) => fetchUrl(`https://${prefix}.${domain}`))
+  const found: string[] = []
+  for (const request of pending) {
+    const got = await request
+    // A subdomain that redirects off-site is not this vendor's page. docs.statuspage.io served
+    // a dead Zendesk placeholder and we reported its 303 characters as their documentation.
+    if (!got.ok || !looksLikeHtml(got) || !onVendorSite(got.url, vendor)) continue
+    // docs.twilio.com and docs.auth0.com both land on the marketing home page. A guessed host
+    // that bounces back to where we started is only documentation if it lands somewhere
+    // documentation lives: docs.algolia.com lands on www.algolia.com/doc, which does.
+    if (originOf(got.url) === vendor.homeOrigin && documentationTier(got.url, vendor, NO_CONFIRMED_ORIGINS) < 2) {
       continue
     }
-    const host = `https://${prefixes[index]}.${domain}`
-    const pages = await inParallel(paths, (path) => fetchUrl(`${host}${path}`))
-    const hit = pages.find(onSite)
-    if (hit) return hit.url
+    if (!found.includes(got.url)) found.push(got.url)
+    // The host the vendor themselves called docs.<domain> is their answer to the question, so
+    // the guesses behind it are not worth waiting for.
+    if (isCanonicalDocsHost(got.url, vendor)) break
+  }
+  return found
+}
+
+/**
+ * Whether a host publishes an index of itself: an llms.txt that is mostly its own pages. That is
+ * the vendor stating, in a file written for us, that this host is where their documentation is,
+ * and it outranks anything we guessed at from a hostname or a link. daily.co and honeybadger.io
+ * both publish one, and both were handed a documentation URL from somewhere else - a separate
+ * voice framework's site, and a raw llms-small.txt.
+ *
+ * Only the host is taken from it. The entry point is the front page of a host that publishes an
+ * index of itself, not a line out of the index: these files list every page a site has, mostly as
+ * raw markdown, and lifting one is the same guess in a different costume.
+ */
+async function publishesDocsIndex(origin: string): Promise<boolean> {
+  // text/plain because machine.ts asks the winning origin for the same file with the same header
+  // later in the scan, and the per-scan response cache then serves it for nothing.
+  const got = await fetchUrl(`${origin}/llms.txt`, { accept: 'text/plain' })
+  if (!isRealTextFile(got, 200)) return false
+  // A file listing nothing on its own host is not that host's index of itself.
+  return linksFromLlmsTxt(got.body, origin).filter((entry) => originOf(entry.url) === origin).length >= 3
+}
+
+/** The hosts a company puts its front door on, as opposed to the one it puts its marketing on. */
+const AUTH_HOST_LABEL =
+  /^(app|apps|dash|dashboard|console|accounts?|auth|login|signin|signup|register|sso|id|identity|cloud|portal|secure|my|admin)$/i
+
+const SIGNUP_SEGMENT = /^(sign[-_]?up|register|registration|create[-_]?account|new[-_]?account|join|onboarding)$/i
+
+/**
+ * What a page is filed as when it is not a signup. The word signup in a slug is not enough:
+ * twilio.com's signup resolved to a blog post announcing one, livekit.io's to a documentation page
+ * about encryption, openrouter.ai's to a cookbook page and temporal.io's to a learning portal.
+ */
+const NOT_A_SIGNUP_SEGMENT =
+  /^(blog|news|press|docs?|documentation|reference|guides?|tutorials?|cookbook|learn|changelog|api|resources?|library|category|categories|tags?|events?|webinars?|case-stud(y|ies)|customers?|pricing|plans|about|company|careers|partners?|contact|legal|terms|privacy|support|help|community|forum|status)$/i
+
+const isAuthenticationHost = (url: string) => AUTH_HOST_LABEL.test(hostLabel(url))
+
+/**
+ * A form you could put an account into. A bare <form> is not it - a newsletter box is a form, and
+ * so are the six on flagsmith.com/ebooks - so the field the account is made of has to be there.
+ */
+function hasCredentialForm(html: string): boolean {
+  if (/<input[^>]+type=["']?password/i.test(html)) return true
+  return /<form/i.test(html) && /<input[^>]+(?:type|name|autocomplete)=["']?email/i.test(html)
+}
+
+/**
+ * Whether a page is the thing you fill in to get an account, rather than a page that mentions one.
+ * Three ways to show it, and a candidate needs one: it renders the form, it sits on the host the
+ * company authenticates on, or its own path says it is the registration.
+ */
+function looksLikeSignup(got: Fetched, homeUrl: string): boolean {
+  // The home page is where the search for a signup starts, so it cannot be the answer to it.
+  // replicate.com's llms.txt offered it and we published it as their signup.
+  if (got.url.replace(/\/$/, '') === homeUrl.replace(/\/$/, '')) return false
+  const segments = routeSegments(got.url)
+  if (segments.some((segment) => NOT_A_SIGNUP_SEGMENT.test(segment))) return false
+  const shapeSaysSignup = isAuthenticationHost(got.url) || segments.some((segment) => SIGNUP_SEGMENT.test(segment))
+  // A door held shut is the finding these checks exist to make, not a reason to keep looking
+  // for a different door: dash.cloudflare.com/sign-up answers 403 to a plain request. A 404 is
+  // the other thing entirely - app.flagsmith.com/signup has not existed for some time, and we
+  // published it as their signup and then scored them on its status.
+  if (!got.ok) return REFUSED_US.has(got.status) && shapeSaysSignup
+  if (!looksLikeHtml(got)) return false
+  return hasCredentialForm(got.body) || shapeSaysSignup
+}
+
+/** Statuses that say the page is there and we were turned away, as opposed to it not being there. */
+const REFUSED_US = new Set([401, 403, 406, 429, 500, 502, 503, 504])
+
+/**
+ * Signup links on a page we already have. Off-site links count here and nowhere else: split.io was
+ * acquired and its own home page sends you to app.harness.io to register, which is a different
+ * registrable name and still the answer to "where does an agent get an account".
+ */
+function signupLinksOn(html: string, base: string, vendor: VendorSite): string[] {
+  const links = extractLinks(html, base).filter(
+    (link) => onVendorSite(link, vendor) || isAuthenticationHost(link),
+  )
+  // Keyed on the page rather than on the whole URL, keeping the shortest way of writing it: the
+  // same registration is linked six times from elastic.co's home page, five of them carrying a
+  // different campaign parameter, and a report should name the page and not the campaign.
+  const found = new Map<string, string>()
+  for (const hint of SIGNUP_HINTS) {
+    for (const link of links) {
+      if (!hint.test(link)) continue
+      const url = routeUrl(link)
+      const page = originOf(url) + new URL(url).pathname + new URL(url).hash
+      const held = found.get(page)
+      if (!held || url.length < held.length) found.set(page, url)
+    }
+  }
+  return [...found.values()]
+}
+
+/**
+ * llms.txt lists a vendor's pages, not their front doors, so a candidate out of it is proposed
+ * on exactly the same terms as one scraped off the home page and has to clear the same test.
+ * Four of the worst signup picks in the audit were labelled "from your llms.txt".
+ */
+const SIGNUP_LABELS = [/sign ?up/, /create (an )?account/, /register/, /free trial/]
+
+function signupFromLlmsTxt(entries: { url: string; label: string }[], vendor: VendorSite): string[] {
+  const usable = entries.filter((entry) => onVendorSite(entry.url, vendor) || isAuthenticationHost(entry.url))
+  const found: string[] = []
+  const add = (url: string) => {
+    const clean = routeUrl(url)
+    if (!found.includes(clean)) found.push(clean)
+  }
+  for (const label of SIGNUP_LABELS) {
+    for (const entry of usable) if (label.test(entry.label)) add(entry.url)
+  }
+  for (const hint of SIGNUP_HINTS) {
+    for (const entry of usable) if (hint.test(entry.url)) add(entry.url)
+  }
+  return found
+}
+
+type SignupPick = { url: string; source: LinkSource }
+
+/** Takes the first candidate in a tier that turns out to be a signup, and pays for nothing else. */
+async function firstRealSignup(
+  candidates: string[],
+  source: LinkSource,
+  homeUrl: string,
+  limit = 3,
+): Promise<SignupPick | null> {
+  const unique = [...new Set(candidates)].slice(0, limit)
+  if (unique.length === 0) return null
+  const pages = await inParallel(unique, (url) => fetchUrl(url))
+  for (const [index, page] of pages.entries()) {
+    // The link as the vendor wrote it, because the route fragment survives a fetch that drops it.
+    if (looksLikeSignup(page, homeUrl)) return { url: unique[index], source }
+  }
+  return null
+}
+
+/**
+ * Signup hosts, probed at their root as well as at the conventional paths. The thin-page guard is
+ * off here for the same reason it is off for documentation: cloud.temporal.io answers 14 characters
+ * without JavaScript, and app.growthbook.io 21, and both are where their accounts are made.
+ */
+async function signupOnSubdomains(domain: string, vendor: VendorSite, homeUrl: string): Promise<SignupPick | null> {
+  const roots = SIGNUP_SUBDOMAINS.map((prefix) => fetchUrl(`https://${prefix}.${domain}`))
+  for (const [index, request] of roots.entries()) {
+    const root = await request
+    if (!root.ok || !onVendorSite(root.url, vendor)) continue
+    const host = `https://${SIGNUP_SUBDOMAINS[index]}.${domain}`
+    const onHost = await firstRealSignup(
+      ['/signup', '/register'].map((path) => `${host}${path}`),
+      'subdomain',
+      homeUrl,
+    )
+    if (onHost) return onHost
+    if (looksLikeSignup(root, homeUrl)) return { url: root.url, source: 'subdomain' }
   }
   return null
 }
@@ -819,26 +1147,40 @@ export async function discover(domain: string): Promise<Discovered> {
   const llmsBody = llms.ok && !looksLikeHtml(llms) ? llms.body : ''
   const llmsEntries = llmsBody ? linksFromLlmsTxt(llmsBody, base) : []
 
+  const vendor = vendorSiteOf(domain, base)
   const fromSiteDocs = pickLink(links, DOCS_HINTS, base)
   const fromSiteDeveloper = pickLink(links, DEVELOPER_HINTS, base)
   const onSiteLlms = llmsEntries.filter((entry) => sameSite(entry.url, domain))
   const fromLlmsDocs = pickFromLlms(onSiteLlms, DOCS_HINTS, [/doc/, /guide/, /api reference/, /developer/])
   const fromSitePricing = pickLink(links, PRICING_HINTS, base)
   const fromLlmsPricing = pickFromLlms(onSiteLlms, PRICING_HINTS, [/pricing/, /plans/, /buy/, /cart/])
-  const fromSiteSignup = pickLink(links, SIGNUP_HINTS, base)
-  const fromLlmsSignup = pickFromLlms(onSiteLlms, SIGNUP_HINTS, [/sign ?up/, /register/, /get started/, /free trial/])
 
   // Documentation, pricing and signup are three searches over the same home page that share
   // nothing but the page itself, and they used to run one after another. Only the package
   // hunt has a real dependency, on whichever page turns out to be the documentation.
   const docsPending = (async () => {
-    const [fromSubdomainDocs, fromPathDocs] = await Promise.all([
-      firstLiveSubdomain(domain, DOCS_SUBDOMAINS, []),
-      (fromSiteDocs ?? fromSiteDeveloper ?? fromLlmsDocs) ? null : firstLivePath(site, DOCS_FALLBACKS),
+    const named = [fromSiteDeveloper, fromSiteDocs, fromLlmsDocs].filter((url): url is string => Boolean(url))
+    const [hosts, fromPathDocs] = await Promise.all([
+      liveDocsHosts(domain, vendor),
+      named.length > 0 ? null : firstLivePath(site, DOCS_FALLBACKS),
     ])
-    // Whichever of these reads most like developer documentation wins; order in the HTML does not.
-    const chosen = await bestDocs([fromSiteDeveloper, fromSubdomainDocs, fromSiteDocs, fromLlmsDocs, fromPathDocs])
-    return { chosen, fromSubdomainDocs }
+    // Only the hosts that could be the documentation are asked for an index, and only the two
+    // best-placed of them, because each one that is not there is a request spent finding out.
+    // The marketing origin is never one of them: half the sites in the corpus publish an llms.txt
+    // at their apex, and it says nothing about where their documentation is.
+    const origins = [...new Set(hosts.map(originOf))].filter((origin) => origin !== vendor.homeOrigin).slice(0, 2)
+    const published = await inParallel(origins, (origin) => publishesDocsIndex(origin))
+    const confirmedDocsOrigins = new Set(origins.filter((_, index) => published[index]))
+
+    // Whichever of these is most plainly the vendor's documentation wins; order in the HTML does not.
+    let chosen = await bestDocs([...named, ...hosts, fromPathDocs], vendor, confirmedDocsOrigins)
+    // Everything we were pointed at turned out to be something else. A guessed path is worth one
+    // more round trip before telling a vendor we could not find their documentation at all:
+    // storyblok.com links a landing page at /lp/developers and serves its documentation at /docs.
+    if (!chosen && named.length > 0) {
+      chosen = await bestDocs([await firstLivePath(site, DOCS_FALLBACKS)], vendor, confirmedDocsOrigins)
+    }
+    return { chosen, hosts }
   })()
 
   const pricingPending = (async () => {
@@ -857,45 +1199,64 @@ export async function discover(domain: string): Promise<Discovered> {
     return { chosenPricing, pricing: chosenPricing?.url ?? (await firstLivePath(site, PRICING_FALLBACKS)) }
   })()
 
+  // Each source is asked in turn and its candidates have to survive the same test, so a link the
+  // vendor wrote is preferred to a guess without being trusted more than one. Nothing here runs
+  // until the source in front of it has come up empty.
   const signupPending = (async () => {
-    const fromPathSignup = (fromSiteSignup ?? fromLlmsSignup) ? null : await firstLivePath(site, SIGNUP_FALLBACKS)
-    const fromSubdomainSignup =
-      (fromSiteSignup ?? fromLlmsSignup ?? fromPathSignup)
-        ? null
-        : await firstLiveSubdomain(domain, SIGNUP_SUBDOMAINS, ['/signup', '/register'])
-    return { fromPathSignup, fromSubdomainSignup }
+    const fromSite = await firstRealSignup(signupLinksOn(html, base, vendor), 'site', base)
+    if (fromSite) return fromSite
+
+    const fromLlms = await firstRealSignup(signupFromLlmsTxt(llmsEntries, vendor), 'llms-txt', base)
+    if (fromLlms) return fromLlms
+
+    // The link can sit on a page we have already paid for rather than on the home page:
+    // typesense.org links /signup from its pricing page and nowhere on its front page.
+    const [{ chosenPricing }, { chosen }] = await Promise.all([pricingPending, docsPending])
+    const alreadyRead = [chosenPricing?.page, chosen?.page].filter((page): page is Fetched => Boolean(page?.ok))
+    const fromRead = await firstRealSignup(
+      alreadyRead.flatMap((page) => signupLinksOn(page.body, page.url, vendor)),
+      'site',
+      base,
+    )
+    if (fromRead) return fromRead
+
+    const atPath = await firstRealSignup(
+      SIGNUP_FALLBACKS.map((path) => `${site}${path}`),
+      'fallback-path',
+      base,
+    )
+    return atPath ?? (await signupOnSubdomains(domain, vendor, base))
   })()
 
   const npmPending = docsPending.then(({ chosen }) => attributePackage(domain, html, llmsBody, chosen?.page ?? null))
 
-  const [{ chosen, fromSubdomainDocs }, { chosenPricing, pricing }, { fromPathSignup, fromSubdomainSignup }, npm] =
-    await Promise.all([docsPending, pricingPending, signupPending, npmPending])
+  const [{ chosen, hosts }, { chosenPricing, pricing }, signupPick, npm] = await Promise.all([
+    docsPending,
+    pricingPending,
+    signupPending,
+    npmPending,
+  ])
 
   const docs = chosen?.url ?? null
   const docsPage = chosen?.page ?? null
   const pricingPage = chosenPricing?.page ?? null
   const pricesVisibleWithoutJs = chosenPricing?.pricesVisible ?? null
-  const signup = fromSiteSignup ?? fromLlmsSignup ?? fromPathSignup ?? fromSubdomainSignup
-
-  const sourceOf = (
-    onSite: string | null,
-    inLlms: string | null,
-    atPath: string | null,
-    onSubdomain: string | null,
-  ): LinkSource | null =>
-    onSite ? 'site' : inLlms ? 'llms-txt' : atPath ? 'fallback-path' : onSubdomain ? 'subdomain' : null
+  const signup = signupPick?.url ?? null
 
   const linkSources = {
-    docs:
-      docs === fromSiteDocs || docs === fromSiteDeveloper
+    // Compared against the URL we asked for as well as the one we landed on, because a redirect
+    // is what turns docs.cloudflare.com into developers.cloudflare.com.
+    docs: !chosen
+      ? null
+      : // Against the URL we asked for, not the one we landed on: resend.com links /docs and
+        // serves /docs/introduction, and calling that a guessed path was us guessing.
+        [fromSiteDocs, fromSiteDeveloper].includes(chosen.requested)
         ? ('site' as const)
-        : docs === fromLlmsDocs
+        : chosen.requested === fromLlmsDocs
           ? ('llms-txt' as const)
-          : docs === fromSubdomainDocs
+          : hosts.includes(chosen.requested)
             ? ('subdomain' as const)
-            : docs
-              ? ('fallback-path' as const)
-              : null,
+            : ('fallback-path' as const),
     pricing:
       pricing === fromSitePricing
         ? ('site' as const)
@@ -904,7 +1265,7 @@ export async function discover(domain: string): Promise<Discovered> {
           : pricing
             ? ('fallback-path' as const)
             : null,
-    signup: sourceOf(fromSiteSignup, fromLlmsSignup, fromPathSignup, fromSubdomainSignup),
+    signup: signupPick?.source ?? null,
   }
 
   return {
