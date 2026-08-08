@@ -158,7 +158,9 @@ export default async function IndustryReportPage() {
           Unmeasurable is its own column on purpose. A check we could not evaluate is our blind spot, and
           folding it into failures would make the market look worse than we can prove it is.
         </p>
-        <div className="mt-6 overflow-x-auto">
+        {/* On a phone the Unmeasurable column sits off the right edge with nothing to say so. */}
+        <p className="mt-6 font-mono text-xs text-ink-faint sm:hidden">Scroll the table sideways for the last column.</p>
+        <div className="mt-2 overflow-x-auto sm:mt-6">
           <table className="w-full min-w-[34rem] border-collapse text-sm">
             <thead>
               <tr className="border-b border-rule text-left font-mono text-xs uppercase tracking-[0.12em] text-ink-faint">
