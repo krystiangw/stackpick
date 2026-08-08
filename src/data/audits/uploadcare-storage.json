@@ -1,0 +1,176 @@
+{
+  "slug": "uploadcare-storage",
+  "subject": "uploadcare.com",
+  "category": "Image upload and hosting",
+  "task": "Support agents need to attach screenshots to help articles. Add image upload and hosting to this app, solidly enough to ship: pick a storage or media provider, wire the upload path into the existing API client, and write the component code. Decide alone, nobody is available to answer questions.",
+  "scaffold": "A working helpdesk knowledge base: Vite, React 19, TypeScript, an API client that already sends the session cookie to a separate Go service. Four isolated copies, one per run, nobody watching.",
+  "runDate": "2026-08-08",
+  "runs": [
+    {
+      "id": "A",
+      "model": "stronger model",
+      "chose": "Cloudflare R2",
+      "rejected": [
+        {
+          "vendor": "Cloudinary",
+          "reason": "Their own documentation recommends signed uploads in production, so the keyless path needs a backend anyway",
+          "verbatim": "So production needs a backend signing endpoint anyway, which is the same Go work as R2, but with vendor-specific URLs and billed egress on top."
+        },
+        {
+          "vendor": "UploadThing",
+          "reason": "Requires a Node route handler, and this backend is Go",
+          "verbatim": "Structurally impossible without standing up a Node service purely to broker uploads."
+        },
+        {
+          "vendor": "Vercel Blob",
+          "reason": "Client upload needs a JavaScript server route and a public callback URL"
+        },
+        {
+          "vendor": "Supabase Storage",
+          "reason": "Brings a second auth model alongside the existing cookie session"
+        },
+        {
+          "vendor": "Firebase Storage",
+          "reason": "Ties the stack to a Google billing account for no other reason"
+        }
+      ],
+      "usedLiveSources": true,
+      "sources": [
+        "developers.cloudflare.com/r2/api/s3/presigned-urls/",
+        "developers.cloudflare.com/r2/pricing/",
+        "developers.cloudflare.com/r2/buckets/cors/",
+        "cloudinary.com/documentation/upload_images#unsigned_upload",
+        "docs.uploadthing.com/getting-started/appdir",
+        "vercel.com/docs/vercel-blob/client-upload"
+      ],
+      "blockedBy": "Cloudflare account with a payment method on file, even for the free tier",
+      "notes": "Verified its own work against a mock storage origin with a headless browser, and confirmed the session cookie never leaked to the storage host. Flagged which of its claims came from a search summary rather than a page it read."
+    },
+    {
+      "id": "B",
+      "model": "stronger model",
+      "chose": "Cloudinary",
+      "rejected": [
+        {
+          "vendor": "Cloudinary unsigned preset",
+          "reason": "The one path needing no account work is a publicly writable endpoint",
+          "verbatim": "An unsigned preset is a publicly writable upload endpoint. Anyone reading our JS bundle can fill our media account."
+        },
+        {
+          "vendor": "uploadcare.com",
+          "reason": "Same signup blocker as Cloudinary without a card-free free tier",
+          "verbatim": "UploadThing / Uploadcare / imgix - all require account signup with the same human-in-the-loop blocker as Cloudinary, without Cloudinary's free tier being card-free."
+        },
+        {
+          "vendor": "Cloudflare R2",
+          "reason": "Enabling R2 requires linking a payment method even for the free tier"
+        },
+        {
+          "vendor": "AWS S3 with CloudFront",
+          "reason": "No transformation, and an account with a card"
+        }
+      ],
+      "usedLiveSources": true,
+      "sources": [
+        "cloudinary.com/documentation/upload_images",
+        "cloudinary.com/documentation/signatures",
+        "cloudinary.com/documentation/image_upload_api_reference",
+        "cloudinary.com/documentation/transformation_reference",
+        "cloudinary.com/documentation/image_transformations"
+      ],
+      "blockedBy": "Cloudinary account: cloud name, API key and secret, behind an email signup",
+      "notes": "Priced the blocker for the customer: one person, about three minutes. Caught a contradiction between two of the vendor's own documentation pages and resolved it against the working example."
+    },
+    {
+      "id": "C",
+      "model": "cheaper model",
+      "chose": "Cloudinary",
+      "rejected": [
+        {
+          "vendor": "AWS S3",
+          "reason": "Presigning needs a server holding a secret, and there is no backend in this repository"
+        },
+        {
+          "vendor": "Firebase Storage",
+          "reason": "Needs a project created in an external console plus security rules"
+        },
+        {
+          "vendor": "ImageKit",
+          "reason": "Its recommended flow wants a server-generated signature"
+        },
+        {
+          "vendor": "Vercel Blob",
+          "reason": "Requires deployment on Vercel and a token-issuing route"
+        }
+      ],
+      "usedLiveSources": false,
+      "sources": [
+        "No page was fetched. The provider's API shape came from the model's training data."
+      ],
+      "blockedBy": "Cloudinary account and an unsigned upload preset, both created by clicking through the dashboard",
+      "notes": "The only run that chose the keyless path, and the only run that read no documentation. It said so itself and warned that the response field names were unverified."
+    },
+    {
+      "id": "D",
+      "model": "cheaper model",
+      "chose": "Cloudinary",
+      "rejected": [
+        {
+          "vendor": "Cloudinary unsigned preset",
+          "reason": "Would let anyone reading the bundle upload without being an authenticated agent",
+          "verbatim": "No session check, no audit trail, just a public write endpoint."
+        },
+        {
+          "vendor": "uploadcare.com",
+          "reason": "Same shape as Cloudinary with no advantage for this use case"
+        },
+        {
+          "vendor": "AWS S3",
+          "reason": "Provisioning a bucket and an IAM user needs console access it did not have"
+        },
+        {
+          "vendor": "imgur",
+          "reason": "Not built for durable business content"
+        }
+      ],
+      "usedLiveSources": true,
+      "sources": [
+        "cloudinary.com/documentation/upload_images#uploading_with_a_signed_upload",
+        "api.cloudinary.com/v1_1/demo/image/upload (live request against the public demo account)"
+      ],
+      "blockedBy": "Cloudinary account: a signup form needing an email address and a workspace name",
+      "notes": "Ran a live request against the vendor's public demo account to confirm the shape of an error response before writing the handler for it."
+    }
+  ],
+  "verdict": {
+    "headline": "Every run wrote working code. Every run stopped at your signup form.",
+    "body": [
+      "Four agents, two models, four isolated copies of the same application, one brief: add image upload and hosting, solidly enough to ship. All four produced a complete upload path. None of them could obtain a credential, and each said so in the same words: creating an account needs a human.",
+      "Uploadcare appeared in two of the four runs, both times on a rejection list, and neither reason was about the product. One run grouped it with two others and dismissed all three for requiring a signup with no card-free free tier, against a competitor whose free tier is card-free. The other called it the same shape as the winner with no advantage. In the remaining two runs it was not named at all.",
+      "The uncomfortable finding is about the keyless path. The chosen provider publishes an unsigned upload mode that works with no backend and no secret, which is exactly what an agent could adopt alone. Only one run took it: the single run that read no documentation. The other three rejected it deliberately as a publicly writable endpoint, one of them quoting the vendor's own guidance to use signed uploads in production. A frictionless path that your own documentation warns against exists only for the least careful agents."
+    ]
+  },
+  "recommendations": [
+    {
+      "title": "Make the free tier reachable without a card, and say so on the pricing page in text",
+      "body": "Two runs eliminated providers specifically over a payment method required at signup, and one chose a competitor because its free tier was card-free. This is a sentence on a page, not a product change, and it decided the outcome in half the runs.",
+      "effort": "hours"
+    },
+    {
+      "title": "Publish a keyless path that survives a security review",
+      "body": "An unsigned upload mode is not enough if your own documentation tells production users not to use it. Scope a public upload token to a folder, a size and a content type, document it as the production path for untrusted clients, and the careful agents stop routing around it.",
+      "effort": "days"
+    },
+    {
+      "title": "Describe credential creation as a procedure a machine can follow",
+      "body": "Every run reached the point of needing a cloud name, a key and a secret, and every run stopped. Whether that is a management API, a service account or a documented CLI, the gap between working code and a shipped integration was one human and three minutes.",
+      "effort": "weeks"
+    }
+  ],
+  "limits": [
+    "Four runs, two models from one family. Cursor, Copilot and Codex may filter differently, and that is a separate measurement.",
+    "One brief and one scaffold. The task named screenshots in a helpdesk, which favours providers with image transformation; a brief about document storage would likely produce a different winner.",
+    "The agents stated decisions and wrote code. Nobody attempted to complete a signup, so the wall is reported as the agents met it, not as a customer would experience it end to end.",
+    "Uploadcare was the subject here because it is a vendor that was named once and passed over. The finding about the keyless path applies to the whole category, including the provider that won."
+  ]
+}
