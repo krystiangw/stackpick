@@ -208,6 +208,41 @@ Jak poprawki zmieniały obraz, czyli ile zawyżały kolejne formuły:
 Kierunek jest konsekwentny: **mniej twierdzeń, więcej uczciwego "nie wiemy"**. Każda runda
 audytu zabierała nam punkty, które przyznawaliśmy bez dowodu.
 
+## Runda 2026-08-08 (piąta): audyt wartości, formuła 3.2, drugi audyt agentowy
+
+**Najmocniejszy zarzut i najważniejsza naprawa.** Stosowaliśmy uczciwy mianownik do rynku na
+`/report` i nieuczciwy do vendora na jego własnej karcie wyniku, czyli do jedynej osoby, która
+ma zapłacić. Publikowaliśmy `froala.com 3/16`, gdzie **8 z 16 punktów nigdy nie zostało
+zmierzonych**, bo ich WAF odrzucił nasze żądania. Teraz wynik jest z **punktów mierzalnych**
+(froala 3/8, prosemirror 3/9), a papierowe 16 zeszło do podpisu mówiącego, ilu nie dało się
+zmierzyć. Rankingi i percentyl sortują po udziale w mierzalnych, więc strona, której nie
+umieliśmy przeczytać, ma mniejszy mianownik, a nie gorszą liczbę. Efekt widoczny na landingu:
+**slatejs.org 6/9 wyprzedza ckeditor.com 8/14**.
+
+Doszły trzy stany zamiast dwóch: `UNMEASURED` (nie umieliśmy zmierzyć) i `N/A` (nie dotyczy
+tego produktu, bo biblioteka open source nie ma rejestracji). Każda linia bez werdyktu niesie
+teraz **jeden krok, który by ją odblokował**. Plan naprawczy pokazuje własny sufit, gdy punkty
+siedzą za checkami, których nie umiemy ocenić.
+
+**Konwersja.** Karta wyniku nie miała żadnego wyjścia na płatny audyt: kupujący w momencie
+największego zainteresowania dostawał ofertę wysłania sobie mailem tej samej strony. Doszedł
+blok z jednym zdaniem odróżniającym skan od audytu. Strona pełnego audytu była sierotą
+(nielinkowana znikąd, bez CTA) - weszła do nawigacji i sitemapy. Cennik przepakowany: Diagnostic
+obiecywał dwie rzeczy, **które darmowy skan już daje lepiej**, a Full audit sprzedawał "dwanaście
+przebiegów", co zaprasza do dzielenia ceny przez dwanaście. Doszło "Who runs this", prawo do
+odpowiedzi przy cenie i informacja, czego potrzebujemy od klienta (nic poza produktem).
+
+**Drugi pełny audyt agentowy: storage** (`/audit/uploadcare-storage`, N=4, 2× Opus, 2× Sonnet).
+4/4 napisały działający kod i **4/4 stanęły na formularzu rejestracji**. Nowy wynik handlowy:
+**ścieżka bezobsługowa przegrywa z bezpieczeństwem** - Cloudinary ma tryb unsigned działający bez
+backendu i sekretu, ale wybrał go tylko ten jeden przebieg, który nie przeczytał dokumentacji;
+trzy pozostałe odrzuciły go świadomie, w tym cytując zalecenie samego Cloudinary. Pełny opis:
+`ai-audit/runs/storage-round2.md`.
+
+**Korpus na 3.2:** średnio **2,84 z 16 punktów niemierzalnych**, a tylko **3 z 51 domen** dało się
+zmierzyć w całości. To samo w sobie jest argumentem sprzedażowym: z zewnątrz nie da się zmierzyć
+wszystkiego, a płatny audyt zamyka właśnie tę lukę.
+
 ## Otwarte
 
 1. ~~Runda 2 przebiegów agentowych~~ **zrobiona**, pełny opis: `ai-audit/runs/editors-round2.md`.
