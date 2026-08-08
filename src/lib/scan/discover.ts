@@ -1,4 +1,5 @@
 import { fetchUrl, inParallel, looksLikeHtml, visibleTextLength, type Fetched } from './http'
+import { fetchPackageFacts } from './npm'
 
 export type NpmSource = 'site' | 'docs' | 'llms' | 'registry-search'
 export type LinkSource = 'site' | 'llms-txt' | 'fallback-path' | 'subdomain'
@@ -15,8 +16,13 @@ export type Discovered = {
   pricesVisibleWithoutJs: boolean | null
   npmPackage: string | null
   npmSource: NpmSource | null
-  /** Set only for a registry search: whether the match is evidence or a hypothesis. */
-  npmConfidence: 'strong' | 'weak' | null
+  /**
+   * Set only for a registry search, and only ever 'strong': a search now returns a package
+   * whose maintainers or GitHub org show it is the vendor's, or it returns nothing. There is
+   * no hypothesis left to report, and reporting one meant telling a vendor their own package
+   * was not clearly theirs.
+   */
+  npmConfidence: 'strong' | null
   /** Whether the matched package looks like the one a developer installs. */
   npmEntryShape: boolean | null
   githubRepo: string | null
@@ -410,23 +416,44 @@ const NOT_AN_SDK =
 /** The package part of a name, without the scope: @daily-co/daily-js is a daily-js. */
 const bareName = (name: string) => (name.startsWith('@') ? (name.split('/')[1] ?? '') : name).toLowerCase()
 
+/** A name that is nothing but the words an SDK is called: sdk-core, js-client-sdk, node. */
+function onlySdkWords(text: string): boolean {
+  const words = text.split(/[^a-z0-9]+/).filter(Boolean)
+  return words.length > 0 && words.every((word) => SDK_WORD.test(word))
+}
+
+/** What is left of a name once the vendor's own name is taken off the front of it. */
+function afterVendorName(part: string, vendor: Vendor): string | null {
+  const flat = flatten(part)
+  for (const alias of [vendor.flatDomain, ...vendor.aliases]) {
+    if (flat === alias || alias.startsWith(flat)) return ''
+    if (flat.startsWith(alias)) return part.toLowerCase().slice(part.toLowerCase().indexOf(alias[0]) + alias.length)
+  }
+  return null
+}
+
 /**
- * How much a name reads like the package a developer installs. Low is better. Ranking by how
- * much of the brand a name carries once picked froala-pages over froala-editor, so the brand
- * only opens the first tier; usage still breaks ties inside it.
+ * How much a name reads like the package a developer installs. Low is better, and the tiers
+ * are coarse on purpose: ranking by how much of the brand a name carries once picked
+ * froala-pages over froala-editor, so within a tier real usage still decides.
  */
-function shapeRank(name: string, vendor: Vendor): number {
+export function shapeRank(name: string, vendor: Vendor): number {
   const part = bareName(name)
-  if (NOT_AN_SDK.test(part) || NOT_AN_SDK.test(name.toLowerCase())) return 4
-  if (carriesVendorName(part, vendor)) return 0
-  if (SDK_WORD.test(part)) return 1
-  if (SDK_SHAPE.test(part)) return 2
-  return 3
+  if (NOT_AN_SDK.test(part) || NOT_AN_SDK.test(name.toLowerCase())) return 5
+  const rest = afterVendorName(part, vendor)
+  if (rest === '') return 0
+  // launchdarkly-js-client-sdk is what LaunchDarkly ships; launchdarkly-eventsource is what it
+  // depends on, at 3.1M weekly against 2.8M, and both carry the brand and publish from the
+  // same account. Nothing but the shape of the name separates them.
+  if (rest !== null) return onlySdkWords(rest) ? 1 : 2
+  if (onlySdkWords(part)) return 2
+  if (SDK_SHAPE.test(part)) return 3
+  return 4
 }
 
 /** Is this the package a developer installs, or just something the vendor happens to publish? */
 export function looksLikeEntryPackage(name: string, domain: string): boolean {
-  return shapeRank(name, vendorOf(domain)) <= 2
+  return shapeRank(name, vendorOf(domain)) <= 3
 }
 
 type Candidate = {
@@ -495,7 +522,7 @@ const isProvisional = (candidate: Candidate) => candidate.version.includes('-') 
 const MIN_WEEKLY_DOWNLOADS = 1000
 
 function looksLikeTheirProduct(candidate: Candidate, vendor: Vendor, downloads: number): boolean {
-  if (shapeRank(candidate.name, vendor) < 3) return true
+  if (shapeRank(candidate.name, vendor) < 4) return true
   const mentioned =
     mentionsVendorName(candidate.description, vendor) ||
     candidate.keywords.some((keyword) => mentionsVendorName(keyword, vendor))
@@ -553,16 +580,21 @@ export async function searchNpmForDomain(domain: string, githubRepo: string | nu
 
   // A CLI or a framework binding is the vendor's own and still not what a developer installs
   // to use them, so it does not stand in for an SDK we could not find.
-  owned = owned.filter((candidate) => shapeRank(candidate.name, vendor) < 4)
+  owned = owned.filter((candidate) => shapeRank(candidate.name, vendor) < 5)
   if (owned.length === 0) return null
 
-  // Downloads are fetched for a shortlist rather than for everything the vendor publishes, so
-  // the cheap signals order the field first and usage only settles what is left.
+  // Everything the cheap signals cannot separate goes to the download check together. Taking a
+  // fixed number instead dropped launchdarkly-js-client-sdk, which sorts late alphabetically
+  // and by length among the twenty packages LaunchDarkly publishes.
   const cheapRank = (candidate: Candidate) =>
     Number(isDormant(candidate)) * 100 + shapeRank(candidate.name, vendor) * 10 + Number(isProvisional(candidate))
-  owned.sort((a, b) => cheapRank(a) - cheapRank(b) || a.name.length - b.name.length)
+  const best = Math.min(...owned.map(cheapRank))
+  const shortlist = owned
+    .filter((candidate) => cheapRank(candidate) === best)
+    .sort((a, b) => a.name.length - b.name.length)
+    .slice(0, 20)
 
-  const ranked = await inParallel(owned.slice(0, 8), async (candidate) => ({
+  const ranked = await inParallel(shortlist, async (candidate) => ({
     candidate,
     downloads: await weeklyDownloads(candidate.name),
   }))
@@ -570,8 +602,36 @@ export async function searchNpmForDomain(domain: string, githubRepo: string | nu
   const plausible = ranked.filter((entry) => looksLikeTheirProduct(entry.candidate, vendor, entry.downloads))
   if (plausible.length === 0) return null
 
-  plausible.sort((a, b) => cheapRank(a.candidate) - cheapRank(b.candidate) || b.downloads - a.downloads)
-  return { name: plausible[0].candidate.name, confidence: 'strong' }
+  plausible.sort((a, b) => b.downloads - a.downloads)
+  // A package that ships inside another is downloaded at least as often as it, so the trap
+  // shows up as a near tie. A leader ahead by orders of magnitude is not in that trap, and
+  // letting the manifest overturn it swapped launchdarkly-js-client-sdk, at 2.8M installs a
+  // week, for a deprecated sibling with a longer dependency list.
+  const contenders = plausible
+    .filter((entry) => entry.downloads * 2 >= plausible[0].downloads)
+    .slice(0, 3)
+    .map((entry) => entry.candidate.name)
+  return { name: await preferUmbrella(contenders, vendor), confidence: 'strong' }
+}
+
+/**
+ * An umbrella package installs the vendor's other packages, and every one of them is therefore
+ * downloaded at least as often as it is: @sinch/sdk-client ships inside the eight service
+ * packages that @sinch/sdk-core pulls in, and finishes ahead of it on weekly installs. Which
+ * of two packages contains the other is in the manifest and nowhere else.
+ *
+ * Only ever asked of candidates the cheap signals could not separate, so it cannot promote a
+ * plugin over an SDK.
+ */
+async function preferUmbrella(names: string[], vendor: Vendor): Promise<string> {
+  if (names.length < 2) return names[0]
+  const facts = await inParallel(names, (name) => fetchPackageFacts(name))
+  const scored = names.map((name, index) => ({
+    name,
+    pullsIn: (facts[index]?.dependencies ?? []).filter((dependency) => carriesVendorName(dependency, vendor)).length,
+  }))
+  scored.sort((a, b) => b.pullsIn - a.pullsIn)
+  return scored[0].name
 }
 
 export async function discover(domain: string): Promise<Discovered> {
@@ -655,15 +715,15 @@ export async function discover(domain: string): Promise<Discovered> {
     signup: sourceOf(fromSiteSignup, fromLlmsSignup, fromPathSignup, fromSubdomainSignup),
   }
 
-  const brand = domain.split('.')[0]
-  let npmPackage = await pickNamedPackage(namedPackages(html), domain, brand)
+  const vendor = vendorOf(domain)
+  let npmPackage = await pickNamedPackage(namedPackages(html), vendor)
   let npmSource: NpmSource | null = npmPackage ? 'site' : null
   let githubRepo = findGithubRepo(html)
 
   // Home pages sell; docs pages install. Look there too when the home page is silent.
   if ((!npmPackage || !githubRepo) && docsPage?.ok) {
     {
-      const fromDocs = await pickNamedPackage(namedPackages(docsPage.body), domain, brand)
+      const fromDocs = await pickNamedPackage(namedPackages(docsPage.body), vendor)
       if (!npmPackage && fromDocs) {
         npmPackage = fromDocs
         npmSource = 'docs'
@@ -673,21 +733,33 @@ export async function discover(domain: string): Promise<Discovered> {
   }
 
   if (!npmPackage && llmsBody) {
-    npmPackage = (await pickNamedPackage(namedPackages(llmsBody), domain, brand)) ?? findCdnPackage(llmsBody)
+    npmPackage = (await pickNamedPackage(namedPackages(llmsBody), vendor)) ?? findCdnPackage(llmsBody)
     if (npmPackage) npmSource = 'llms'
   }
 
-  let npmConfidence: 'strong' | 'weak' | null = null
+  let npmConfidence: 'strong' | null = null
 
-  // A scraped name unrelated to the brand is usually a dependency, not the entry package:
-  // htmx.org's docs install idiomorph, and we scored htmx against it. Ask the registry
-  // whether something clearly theirs exists before believing the page.
-  if (npmPackage && matchStrength(npmPackage, domain, brand) === 'weak') {
-    const searched = await searchNpmForDomain(domain, githubRepo)
-    if (searched?.confidence === 'strong') {
-      npmPackage = searched.name
-      npmSource = 'registry-search'
-      npmConfidence = 'strong'
+  // A scraped name that carries neither the vendor's name nor their maintainers is usually a
+  // dependency the docs told you to install alongside theirs: htmx.org's install idiomorph.
+  // Asking the registry who publishes the scraped package answers that without guessing, and
+  // it is what keeps froala-editor - scraped, and published by accounts@froala.com - from
+  // being swapped for whichever of froala.com's other packages a search happens to rank first.
+  if (npmPackage && !carriesVendorName(bareName(npmPackage), vendor)) {
+    const facts = await fetchPackageFacts(npmPackage)
+    const theirs =
+      facts !== null &&
+      publishedByVendor(
+        { maintainers: facts.maintainers, links: [facts.repository, facts.homepage].filter(Boolean) },
+        vendor,
+        githubRepo?.split('/')[0].toLowerCase() ?? null,
+      )
+    if (!theirs) {
+      const searched = await searchNpmForDomain(domain, githubRepo)
+      if (searched) {
+        npmPackage = searched.name
+        npmSource = 'registry-search'
+        npmConfidence = 'strong'
+      }
     }
   }
 
@@ -712,7 +784,7 @@ export async function discover(domain: string): Promise<Discovered> {
     npmPackage,
     npmSource,
     npmConfidence,
-    npmEntryShape: npmPackage ? looksLikeEntryPackage(npmPackage, brand) : null,
+    npmEntryShape: npmPackage ? looksLikeEntryPackage(npmPackage, domain) : null,
     githubRepo,
     linkSources,
   }

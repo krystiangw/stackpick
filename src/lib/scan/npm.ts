@@ -26,6 +26,7 @@ type Manifest = {
   description?: string
   keywords?: string[]
   maintainers?: { name?: string; email?: string }[]
+  dependencies?: Record<string, string>
 }
 
 /** Who publishes a package and how it describes itself, from the manifest we already read. */
@@ -37,6 +38,7 @@ export type PackageFacts = {
   maintainers: { name: string; email: string }[]
   repository: string
   homepage: string
+  dependencies: string[]
 }
 
 const repositoryUrl = (repository: unknown): string => {
@@ -65,6 +67,7 @@ export async function fetchPackageFacts(packageName: string): Promise<PackageFac
       maintainers: (meta.maintainers ?? []).map((one) => ({ name: one.name ?? '', email: one.email ?? '' })),
       repository: repositoryUrl(meta.repository),
       homepage: meta.homepage ?? '',
+      dependencies: Object.keys(meta.dependencies ?? {}),
     }
   } catch {
     return null
