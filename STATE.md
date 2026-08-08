@@ -677,3 +677,42 @@ między próbami raportowany, tak jak przy drzwiach.
 
 Zostająca ślepa plama numer jeden: `signup_no_captcha` (22), gdzie formularz nie istnieje w HTML-u
 serwera. Bez przeglądarki nienaprawialne, i tak ma zostać opisane.
+
+## Runda 2026-08-08 (osiemnasta): powtarzalność pomiaru zamiast kolejnych punktów
+
+Runda o **wariancji**, nie o zasięgu. Wyszła z jednego spadku zauważonego w rundzie 17.
+
+**Cennik czytany raz był próbką, nie pomiarem.** `supertokens.com` odpowiadał tym samym URL-em raz
+z frazą o darmowym planie, raz bez, w odstępie czterdziestu minut, i to przesuwało punkt. Cennik
+jest teraz pobierany dwa razy, a sygnały to **suma obu prób**; karta mówi wprost, gdy próby się
+różniły. To ta sama zasada, którą test drzwi stosuje od dawna, tylko przeniesiona z kodu odpowiedzi
+na treść.
+
+**Trzy strony cenowe, których "nie umieliśmy znaleźć", istnieją.** `bunny.net` i `filestack.com`
+serwują cennik, którego **ceny składa JavaScript**: agent czytający serwowany HTML też ich nie
+zobaczy, więc to jest znalezisko o nich, a nie luka u nas. Zamiast "nie dało się pobrać cennika"
+mówimy teraz, że **nic z ich cennika nie przeżywa bez JavaScriptu**. `plausible.io` sprzedaje
+z kotwicy na stronie głównej, więc osobnej strony nigdy nie było czego szukać.
+
+**Próbka dokumentacji była loterią.** Czytamy trzy strony z setek, a braliśmy je w kolejności, w
+jakiej wypisała je strona albo sitemapa: `amplitude.com` dostał raz 1 z 7 fraz, raz 0, z innej
+trójki. Kandydaci są teraz sortowani po tym, **jak wprost ścieżka obiecuje poświadczenia**
+(`api-key` przed `credential` przed `provisioning` ... przed `reference`), z krótszą ścieżką jako
+rozstrzygnięciem remisu. Próbka jest ta sama przy każdym uruchomieniu i lepiej wycelowana:
+auth0.com +2, pinecone.io +1, supabase.com +1, zilliz.com +1.
+
+**Korpus (3.3 → 3.9, 51 domen):** niemierzalnych werdyktów **108 → 45**, średnio punktów
+mierzalnych **13,10 → 14,35**, domen zmierzonych w całości **3 → 14**.
+
+**Test powtarzalności na produkcji, dwa skany pod rząd:** amplitude.com 9/15 = 9/15,
+paddle.com 9/15 = 9/15, editorjs.io 4/10 = 4/10, **auth0.com 12/16 kontra 10/15**.
+
+**To jest następna pozycja i jedyna znana niestabilność.** auth0.com potrafi między dwoma skanami
+zmienić mianownik, czyli jeden check przechodzi z mierzalnego w niemierzalny. Podejrzenie: wybór
+źródła dokumentacji (`developer.auth0.com` kontra `auth0.com/docs`) albo powodzenie sondy sitemapy
+bywają różne. **Nie zgaduj, zmierz:** puścić ten sam skan kilka razy z logiem, które URL-e trafiły
+do korpusu, i porównać.
+
+Do czasu naprawy limit jest **opublikowany** na `/methodology`: czytamy stronę główną dokumentacji
+plus najwyżej trzy, karta podaje ile stron przeczytała, a vendor, którego strona o poświadczeniach
+nie trafiła do próbki, może nam to powiedzieć i przeskanujemy ponownie.
