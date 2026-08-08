@@ -552,3 +552,44 @@ liczbę z landingu: średnio 13 punktów mierzalnych, 3 domeny zmierzone w cało
 to StackPick and a link to the methodology". To jest wystarczające, ale **sformalizowanie tego
 jako CC BY 4.0** (co robi większość publicznych korpusów badawczych) jest decyzją właściciela,
 nie moją. Do rozstrzygnięcia razem z domeną.
+
+## Runda 2026-08-08 (piętnasta): korpus wskazał najsłabszy check, i był to nasz błąd
+
+Pierwsza runda, w której **następną pozycję wybrały dane, a nie intuicja**. Opublikowany godzinę
+wcześniej `/corpus.json` pozwolił zadać pytanie, którego wcześniej nie dało się zadać: który check
+jest najczęściej niemierzalny. Odpowiedź była brutalna: **`oauth_dcr` niemierzalny na 37 z 51
+domen**, czyli na trzech czwartych korpusu, i to w etapie B, który reklamujemy jako naszą część
+lejka.
+
+**Przyczyna:** sondowaliśmy jeden origin. Serwer autoryzacyjny prawie nigdy nie stoi na hoście
+marketingowym, więc bez endpointu MCP do podążenia nie mieliśmy czego szukać. Dokładnie te
+37 domen to te, które nie mają MCP. Sonda szuka teraz na origin rejestracji oraz na
+subdomenach, na których serwer autoryzacyjny albo zasobowy naprawdę mieszka (`auth`, `login`,
+`accounts`, `id`, `oauth`, `api`), z podziałem ścieżek na te dla serwera autoryzacyjnego i te dla
+zasobowego. Zapisujemy **listę sprawdzonych originów**, żeby vendor mógł powtórzyć dokładnie to,
+co zrobiliśmy, zamiast wierzyć w słowo "sprawdziliśmy".
+
+**Brak wyniku po przeszukaniu wszystkich hostów jest teraz pomiarem**, a nie niewiedzą.
+Niemierzalne zostaje wyłącznie tam, gdzie edge odrzuca nasze żądania, bo tam faktycznie nic nie
+udowodniliśmy. Formuła **3.4**.
+
+**Efekt na korpusie, po przeskanowaniu wszystkich 51 domen (51 ok, 0 błędów):**
+
+| | 3.3 | 3.4 |
+|---|---|---|
+| `oauth_dcr` niemierzalny | 37 | **1** |
+| Średnio punktów mierzalnych | 13,10 | **13,82** |
+| Domen zmierzonych w całości | 3 | **6** |
+
+**Sześć firm dostało punkt, bo naprawdę wystawiają RFC 7591, a my byliśmy na to ślepi:**
+auth0.com, pinecone.io, supabase.com, supertokens.com, tiny.cloud, trychroma.com. Żadna domena
+nie straciła punktu.
+
+**Odwrócenie wzorca z rund 9-12.** Tamte odejmowały punkty nam, bo publikowaliśmy więcej, niż
+zmierzyliśmy. Ta **dodała punkty vendorom**, bo mierzyliśmy mniej, niż istnieje. Oba są tym samym
+błędem: rozjazdem między tym, co twierdzimy, a tym, co sprawdziliśmy. Raport branżowy mówi teraz
+o 50 domenach zamiast o 14: **14 wystawia dynamiczną rejestrację klienta, 36 mierzalnie nie**.
+
+**Lekcja procesowa:** publikowanie własnych danych jako danych opłaciło się w ciągu godziny, i to
+nie na zewnątrz, tylko do środka. Następne pytania do tego samego zbioru: `signup_no_captcha`
+(22 niemierzalne) i `typed_package` (19).
