@@ -36,6 +36,13 @@
       "request": "JSON-RPC 2.0: initialize, tools/list, tools/call with scan_domain",
       "response": "JSON-RPC 2.0 result, text content plus structuredContent carrying the scorecard",
       "notes": "Streamable HTTP, no authentication. Same scan and same limits as /api/scan."
+    },
+    {
+      "name": "corpus",
+      "method": "GET",
+      "url": "https://stackpick-f12d13a227ea.herokuapp.com/corpus.json",
+      "response": "Every published scan as data: one row per domain, one entry per check, one formula version. CSV at /corpus.csv",
+      "notes": "No authentication, no rate limit. Free to use and quote with attribution."
     }
   ],
   "human_readable_report": "https://stackpick-f12d13a227ea.herokuapp.com/r/{id}",

@@ -19,6 +19,8 @@
   that a code-scanning pipeline can ingest, `agent` for markdown tasks you can act on directly
 - [/.well-known/mcp.json](/.well-known/mcp.json): the card describing it
 - [/openapi.json](/openapi.json): OpenAPI 3.1 spec, generated from the same check definitions the scanner runs
+- [/corpus.json](/corpus.json) and [/corpus.csv](/corpus.csv): every published scan as data, one entry
+  per domain and check, scored under a single formula version. Free to use with attribution
 - [/docs](/docs): how to scan from code
 
 ## Pages

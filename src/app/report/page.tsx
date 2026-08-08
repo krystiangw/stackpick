@@ -230,11 +230,25 @@ export default async function IndustryReportPage() {
             from the store on every request rather than quoting a frozen number.
           </li>
         </ul>
-        <p className="mt-8">
-          <Link href="/methodology" className="text-brass underline underline-offset-4">
-            How every check is defined and scored
-          </Link>
-        </p>
+        <div className="mt-10 border border-rule p-6">
+          <h3 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Take the data</h3>
+          <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
+            Every row behind this page, one entry per domain and check, with the verdict, the points and the
+            sentence we measured it from. Free to use and quote with attribution. Disagreeing with us is easier
+            with the data than with the prose.
+          </p>
+          <p className="mt-4 flex flex-wrap gap-4 font-mono text-sm">
+            <a href="/corpus.json" className="text-brass underline underline-offset-4">
+              /corpus.json
+            </a>
+            <a href="/corpus.csv" className="text-brass underline underline-offset-4">
+              /corpus.csv
+            </a>
+            <Link href="/methodology" className="text-brass underline underline-offset-4">
+              How every check is defined and scored
+            </Link>
+          </p>
+        </div>
       </section>
     </main>
   )
