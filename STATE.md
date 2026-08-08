@@ -974,3 +974,44 @@ informacji. Teraz jest o tym zdanie, widoczne tylko na wąskim ekranie.
 którym ktoś się podzielił, renderował się generycznym krojem**, choć cała strona jest w IBM Plex.
 To akurat ten jeden asset, który reprezentuje markę w momencie udostępnienia. Dwie wagi wgrane
 jako TrueType, bo satori nie czyta woff2, czytane raz na proces, licencja OFL leży obok plików.
+
+## Runda 2026-08-08 (dwudziesta piąta): skan mieści się w bramie, i nie punktuje tego, czego nie dotknął
+
+Wada z rundy 23 zamknięta. Przyczyny zmierzone, nie zgadnięte, i były trzy naraz:
+
+1. **Martwy host sondowany w kółko po 10 sekund.** `api.payloadcms.com` rozwiązuje się i nie
+   przyjmuje połączeń; domyślny timeout połączenia undici odpalał **cztery razy w jednym skanie**
+   (subdomena docsów, sonda MCP, dwie ścieżki OAuth), co dało ~30 z 37,8 s. Nic nie dzieliło się
+   wiedzą, że host już raz nie odpowiedział.
+2. **Sześć faz szło szeregowo bez powodu.** Discovery 8,3 s → funnel 7,1 s → machine 2,1 s,
+   prawie nic wzajemnie zależne.
+3. **Rozgałęzienie czekało na najwolniejszego.** Jeden martwy `api.` blokował adres docsów, który
+   już mieliśmy w ręku.
+
+**Naprawa:** budżet całego skanu w `AsyncLocalStorage`, dziedziczony przez REST, MCP i SSE, timeout
+pojedynczego żądania pod timeoutem połączenia undici, **pamięć zdrowia hostów** pomijająca tylko te,
+które nigdy nie odpowiedziały, cache odpowiedzi w obrębie skanu (test drzwi i powtórka cennika
+świadomie z niego wypisane) oraz limit równoległości na witrynę z pałeczką podawaną następnemu
+czekającemu, żeby zwolniony slot nie przepuścił nadmiarowego żądania.
+
+**Zmierzone:** payloadcms.com 37,9 → 10,0 s, stripe.com 19,9 → 6,7 s, resend.com 11,4 → 4,0 s,
+api.video 10,2 → 3,0 s, przy **wszystkich 70 wynikach checków identycznych** z wersją sprzed zmiany.
+Na produkcji `api.video` i `payloadcms.com` **zwracają wynik zamiast 503**, a przeskanowanie korpusu
+poszło **103 na 103, zero błędów** - pierwszy raz bez ani jednego timeoutu.
+
+**Najważniejsze jest w scorerze, nie w skanerze.** Ucięty skan oznacza teraz każdy nietknięty check
+jako niemierzalny **niezależnie od tego, ile punktów dostał**, bo punkty nie są dowodem: `robots.txt`,
+którego nigdy nie pobraliśmy, czytał się jako „brak robots.txt, więc nic nie jest zabronione"
+i dostawał za to punkt. Sprawdzone przy wymuszonym budżecie 3 s: karta wraca, mianownik kurczy się
+do tego, co faktycznie zmierzone.
+
+**Jedno zdanie sprzeczne samo ze sobą, znalezione przy porównaniu korpusu:** `postmark.com`
+odpowiedział 200, 429, 200, a karta mówiła **„Unmeasurable: answered 200"**. Rate limit oślepia nas
+tylko wtedy, gdy jest **jedyną** odpowiedzią, jaką dostaliśmy.
+
+**Do obserwacji po wdrożeniu:** `bitmovin.com` stracił punkt za punkty wejścia, a ich edge jest
+udokumentowany jako niedeterministyczny (ta sama ścieżka raz 200, raz 403). Nie widzę mechanizmu po
+naszej stronie, ale to jest domena do sprawdzenia przy następnym korpusie. Drugi punkt uwagi:
+**SSE dzieli teraz ten sam budżet 21 s** co REST, więc przeglądarka może uciąć skan, który wcześniej
+kończyła; zostawione celowo, żeby wszystkie powierzchnie mierzyły tak samo, i sterowalne przez
+`SCAN_BUDGET_MS`.
