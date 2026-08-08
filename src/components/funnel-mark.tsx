@@ -1,5 +1,18 @@
-import { buildMark, fillHeight, hasUnmeasured, UNMEASURED_LEGEND } from '@/lib/mark'
+import { buildMark, fillHeight, hasUnmeasured, UNMEASURED_LEGEND, type MarkState } from '@/lib/mark'
 import type { Scorecard } from '@/lib/score'
+
+/**
+ * The page takes its colours from the theme, not from the literals in lib/mark: those exist for
+ * the OG card and the email, which have no stylesheet, and they are the light-mode values.
+ * Using them here left the bars in light-mode green while the score beside them went dark-mode green.
+ */
+const FILL_CLASS: Record<MarkState, string> = {
+  high: 'bg-pass',
+  mid: 'bg-warn',
+  low: 'bg-fail',
+  zero: 'bg-fail',
+  unmeasured: 'bg-transparent',
+}
 
 /**
  * The signature element. Geometry comes from lib/mark so the OG card and the email draw the
@@ -41,8 +54,8 @@ export function FunnelMark({
             >
               {segment.state !== 'unmeasured' && (
                 <div
-                  className="absolute bottom-0 left-0 right-0"
-                  style={{ height: fillHeight(segment, height), background: segment.color }}
+                  className={`absolute bottom-0 left-0 right-0 ${FILL_CLASS[segment.state]}`}
+                  style={{ height: fillHeight(segment, height) }}
                 />
               )}
             </div>
