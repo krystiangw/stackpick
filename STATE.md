@@ -271,7 +271,20 @@ wszystkiego, a płatny audyt zamyka właśnie tę lukę.
    ("an account-ownership decision I should not make unilaterally"), więc ścieżka bezobsługowa
    musi być **prowizoryczna**, nie tylko łatwa. Do tego: w auth bariera terminalna należy do
    Google (własny klient OAuth), nie do dostawcy.
-5. **Czwarta kategoria** (płatności albo analytics), gdyby potrzebny był czwarty punkt pomiarowy.
+5. ~~Czwarta kategoria~~ **zrobiona: płatności** (`/audit/paddle-payments`,
+   `ai-audit/runs/payments-round1.md`). Wybrana celowo jako najtrudniejszy przypadek dla tezy, bo
+   krok ludzki jest tam **wymagany prawnie**. Okazało się, że **nikt do prawa nie dotarł**: 4/4
+   wybrały Stripe, napisały kompletny checkout i stanęły na zakładaniu konta, czyli na decyzji
+   dostawcy, nie regulatora. Jeden przebieg zmierzył krawędź żywymi wywołaniami: publiczny
+   przykładowy klucz Stripe tworzy prawdziwy token karty (200), iframe się montuje, a droga kończy
+   się na jednym wywołaniu wymagającym klucza tajnego (401 bez klucza, **403 `secret_key_required`**
+   z publicznym). **Rekomendacja nie do zbycia regulacją:** efemeryczny klucz tajny w trybie
+   testowym, bez konta i bez umowy, przeprowadziłby agenta przez całość. Nikt w tej kategorii tego
+   nie oferuje.
+6. **Znalezisko o źródłach potwierdzone w czwartej kategorii z rzędu.** Paddle odrzucone m.in. na
+   liczbach ze stron porównawczych pisanych przez konkurencyjnych dostawców płatności, których agent
+   nie otworzył i sam nazwał *"the weakest evidence in this report"*. Trzy przebiegi zbudowały trzy
+   różne obrazy tego samego onboardingu.
 
 ## Runda 2026-08-08 (szósta): teza z trzech kategorii, korekta własnych twierdzeń
 
