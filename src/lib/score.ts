@@ -362,7 +362,10 @@ export const CHECKS: Check[] = [
       if (pages < 2) {
         return {
           points: 0,
-          detail: `Unmeasurable: only ${pages} documentation ${pages === 1 ? 'page' : 'pages'} could be read, which is too little to conclude anything`,
+          detail:
+            pages === 0
+              ? 'Unmeasurable: we could not read a single documentation page, so there was nothing to look in'
+              : `Unmeasurable: only ${pages} documentation page could be read, which is too little to conclude anything`,
           inconclusive: true,
           unblock: 'Link your API reference from your docs index or from llms.txt and this becomes measurable.',
         }
