@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { runScan } from '@/lib/scan-run'
 import { reportUrl } from '@/lib/email'
-import { toAgentInstructions, toSarif } from '@/lib/export'
+import { publicBaseUrl, toAgentInstructions, toSarif } from '@/lib/export'
 import { CHECKS, MAX_SCORE, STAGES, checkHelpUri } from '@/lib/score'
 
 export const maxDuration = 60
@@ -97,7 +97,7 @@ export async function POST(request: Request) {
 
     const { report, reused } = scan
     const { scorecard } = report
-    const base = new URL(reportUrl(report)).origin
+    const base = publicBaseUrl(request)
     const measurable = scorecard.measurable ?? scorecard.max
 
     if (args.format === 'agent') {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { toAgentInstructions, toSarif } from '@/lib/export'
+import { publicBaseUrl, toAgentInstructions, toSarif } from '@/lib/export'
 import { runScan } from '@/lib/scan-run'
 
 export const maxDuration = 60
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const base = new URL(request.url).origin
+  const base = publicBaseUrl(request)
 
   if (format === 'sarif') {
     return NextResponse.json(toSarif(scan.report, base), {

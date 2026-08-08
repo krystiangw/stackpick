@@ -16,6 +16,19 @@ import type { Report } from './store'
 
 const SARIF_SCHEMA = 'https://json.schemastore.org/sarif-2.1.0.json'
 
+/**
+ * Behind Heroku's proxy `new URL(request.url).origin` is the dyno's own localhost, which is how
+ * every helpUri in the first SARIF we emitted pointed at localhost:14735. The configured base
+ * URL is the only one that is true from outside.
+ */
+export function publicBaseUrl(request: Request): string {
+  const configured = process.env.STACKPICK_BASE_URL
+  if (configured) return configured.replace(/\/$/, '')
+  const forwarded = request.headers.get('x-forwarded-host')
+  if (forwarded) return `${request.headers.get('x-forwarded-proto') ?? 'https'}://${forwarded}`
+  return new URL(request.url).origin
+}
+
 type SarifKind = 'pass' | 'fail' | 'review' | 'notApplicable'
 type SarifLevel = 'none' | 'note' | 'warning'
 
