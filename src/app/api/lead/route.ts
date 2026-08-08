@@ -7,6 +7,12 @@ import { getStore } from '@/lib/store'
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function POST(request: Request) {
+  const site = request.headers.get('sec-fetch-site')
+  const contentType = request.headers.get('content-type') ?? ''
+  if ((site && site !== 'same-origin') || !contentType.includes('application/json')) {
+    return NextResponse.json({ error: 'Send this from the scorecard page.' }, { status: 403 })
+  }
+
   const caller = `lead:${clientKey(request)}`
   if (!checkRateLimit(caller).allowed) {
     return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 })
@@ -27,6 +33,10 @@ export async function POST(request: Request) {
   if (!checkRateLimit(perAddress, 3).allowed) {
     return NextResponse.json({ error: 'That address has had enough for now. Try again later.' }, { status: 429 })
   }
+  // Charged here rather than after a successful send. Every early return below skipped it, so a
+  // caller asking repeatedly for a report id that does not exist was never charged for anything.
+  recordUse(caller)
+  recordUse(perAddress)
 
   const store = getStore()
 
@@ -40,8 +50,6 @@ export async function POST(request: Request) {
     } catch {
       return NextResponse.json({ error: 'That does not look like a domain.' }, { status: 400 })
     }
-    recordUse(caller)
-    recordUse(perAddress)
     await store.saveLead({
       email: body.email,
       domain,
@@ -57,8 +65,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'That report no longer exists. Run the scan again.' }, { status: 404 })
   }
 
-  recordUse(caller)
-  recordUse(perAddress)
   await store.saveLead({
     email: body.email,
     domain: report.domain,

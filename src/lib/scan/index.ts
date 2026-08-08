@@ -113,13 +113,20 @@ async function sitemapCandidates(domain: string, docsUrl: string, seen: Set<stri
       if (child.ok) pages.push(...[...child.body.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((match) => match[1]))
     }
 
-    const ranked = [...pages].sort((a, b) => {
-      try {
-        return byHint(a, b)
-      } catch {
-        return 0
-      }
-    })
+    // Bounded and keyed before sorting: a hostile sitemap can carry twenty thousand entries, and
+    // comparing them built three URL objects per comparison on the thread serving every request.
+    const ranked = pages
+      .slice(0, 500)
+      .map((page) => {
+        try {
+          return { page, path: new URL(page).pathname }
+        } catch {
+          return null
+        }
+      })
+      .filter((entry): entry is { page: string; path: string } => entry !== null)
+      .sort((a, b) => hintRank(a.path) - hintRank(b.path) || a.path.length - b.path.length)
+      .map((entry) => entry.page)
     for (const page of ranked) {
       if (found.length >= want) break
       let url: URL
@@ -130,7 +137,9 @@ async function sitemapCandidates(domain: string, docsUrl: string, seen: Set<stri
       }
       const clean = url.toString().split('#')[0]
       // Same site rather than same host, because the fallback roots are deliberately elsewhere.
-      if (!url.hostname.endsWith(domain) || seen.has(clean)) continue
+      // On the label boundary: without the dot, scanning ank.com would follow mybank.com.
+      const sameSite = url.hostname === domain || url.hostname.endsWith(`.${domain}`)
+      if (!sameSite || seen.has(clean)) continue
       if (!CREDENTIAL_PAGE_HINTS.test(url.pathname)) continue
       seen.add(clean)
       found.push(clean)

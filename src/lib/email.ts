@@ -27,7 +27,7 @@ export function scorecardEmail(report: Report): { subject: string; text: string;
 
   // The subject is the finding, not the product name. A subject line that could have been
   // sent to a thousand companies gets treated as if it was.
-  const subject = `${domain}: ${headline.claim}`
+  const subject = `${domain}: ${headline.claim}`.replace(/[\r\n]+/g, ' ')
 
   const text = [
     headline.claim,

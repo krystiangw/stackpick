@@ -24,8 +24,8 @@ const SARIF_SCHEMA = 'https://json.schemastore.org/sarif-2.1.0.json'
 export function publicBaseUrl(request: Request): string {
   const configured = process.env.STACKPICK_BASE_URL
   if (configured) return configured.replace(/\/$/, '')
-  const forwarded = request.headers.get('x-forwarded-host')
-  if (forwarded) return `${request.headers.get('x-forwarded-proto') ?? 'https'}://${forwarded}`
+  // Never x-forwarded-host: it is the caller's to set, and it lands in every SARIF helpUri and
+  // every URL we hand an agent. Falling back to the request origin is only right in development.
   return new URL(request.url).origin
 }
 

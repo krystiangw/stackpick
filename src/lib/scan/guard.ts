@@ -21,7 +21,9 @@ function isPrivateIpv6(address: string): boolean {
   const normalized = address.toLowerCase().replace(/^\[|\]$/g, '')
   if (normalized === '::1' || normalized === '::') return true
   if (/^f[cd]/.test(normalized)) return true // unique local
-  if (normalized.startsWith('fe80')) return true // link-local
+  // fe80::/10 spans fe80 to febf, and the deprecated site-local block is fec0::/10. Matching the
+  // literal string let febf::1 and fec0::1 through a check meant to stop link-local addresses.
+  if (/^fe[89ab]/.test(normalized) || normalized.startsWith('fec')) return true // link-local, site-local
   const mapped = normalized.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/)
   return mapped ? isPrivateIpv4(mapped[1]) : false
 }

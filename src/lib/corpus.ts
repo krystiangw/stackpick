@@ -108,7 +108,10 @@ export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus 
 export function corpusToCsv(corpus: Corpus): string {
   const escape = (value: string | number | null) => {
     const text = value === null ? '' : String(value)
-    return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+    // A cell opening with one of these is a formula to Excel and Sheets, and forty cells in this
+    // file already start with an @ because npm scopes do.
+    const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text
+    return /[",\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe
   }
   const header = [
     'domain',
