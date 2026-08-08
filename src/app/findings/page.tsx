@@ -1,4 +1,8 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
+import { buildIndustryReport } from '@/lib/industry'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Findings — StackPick',
@@ -104,7 +108,10 @@ const RESULTS: Result[] = [
   },
 ]
 
-export default function FindingsPage() {
+export default async function FindingsPage() {
+  // The behavioural studies say a wall exists. The corpus says how much of the market is standing
+  // behind it, and this page argued the first half without ever showing the second.
+  const corpus = await buildIndustryReport()
   return (
     <main className="mx-auto max-w-5xl px-6">
       <section className="border-b border-rule py-14">
@@ -171,6 +178,29 @@ export default function FindingsPage() {
             </li>
           ))}
         </ol>
+        {corpus && (
+          <div className="mt-10 border border-rule p-6">
+            <h3 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">
+              And the same wall, counted across the market
+            </h3>
+            <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
+              Everything above comes from running agents, which is expensive and small. The free scanner is the
+              cheap half of the same question, and it now covers {corpus.sampleSize} vendors:{' '}
+              <span className="font-mono">{corpus.mcpWithoutKeys}</span> of them run an MCP server and document
+              no way for an agent to obtain a credential for it. A door built for a machine, and nothing behind
+              it the machine can unlock alone. That is the studies above, at scale, without a single agent run.
+            </p>
+            <p className="mt-4 flex flex-wrap gap-4 font-mono text-sm">
+              <Link href="/report" className="text-brass underline underline-offset-4">
+                The whole market, aggregated
+              </Link>
+              <a href="/corpus.json" className="text-brass underline underline-offset-4">
+                or every row of it as data
+              </a>
+            </p>
+          </div>
+        )}
+
         <p className="mt-8 max-w-2xl leading-relaxed text-ink-soft">
           The scans in our own published corpus, the ones on the landing page and the industry report, are
           published as we produce them, because they read only what any browser can read and every vendor can
