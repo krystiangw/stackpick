@@ -15,6 +15,8 @@ const REFUSAL = /every request was refused|edge refused our requests|nothing we 
 // be non-zero for a sentence to prove we read anything.
 const READ_SOMETHING = /[1-9][\d,]* characters|[1-9][\d,]* documentation pages|pages we read|Found: |present\b|at https?:\/\//i
 const NO_SIGNUP = /nothing on the site links to an account signup|nothing on the site links to pricing/i
+/** Checks whose evidence is one page, so a pass has to say which one. */
+const URL_BACKED = new Set(['machine_readable_api', 'mcp_present', 'agent_entry_point'])
 
 let bad = 0
 for (const row of corpus.rows) {
@@ -42,6 +44,14 @@ for (const row of corpus.rows) {
   const denies = row.checks.filter((c) => NO_SIGNUP.test(c.detail))
   const cites = row.checks.find((c) => /signup|register|sign[- ]?up/i.test(c.detail) && !NO_SIGNUP.test(c.detail))
   if (denies.length > 0 && cites) say(`${denies[0].id} says nothing links to signup while ${cites.id} cites one`)
+
+  // A pass on one of these is a claim about one specific page, and the page it is true of is
+  // usually not the one a vendor would try: ckeditor.com/docs/ answers HTML while the page two
+  // levels under it answers markdown. A verdict that cannot be reproduced from its own sentence
+  // is indistinguishable from one we invented.
+  for (const check of row.checks.filter((c) => URL_BACKED.has(c.id) && c.verdict === 'pass')) {
+    if (!/https?:\/\/\S+/.test(check.detail)) say(`${check.id} passes without naming the page it passed on: "${check.detail}"`)
+  }
 }
 
 console.log(`\n${corpus.rows.length} rows on formula ${corpus.formulaVersion}, ${bad} contradiction${bad === 1 ? '' : 's'}`)
