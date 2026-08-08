@@ -8,11 +8,18 @@ export const dynamic = 'force-dynamic'
 
 const EVIDENCE = [
   {
-    figure: '10 / 10',
-    against: '0 / 10',
-    claim: 'Whether your documentation gets read at all depends on which model your customer uses.',
+    figure: '14 / 14',
+    against: '0 / 8',
+    claim: 'Every run shipped working code. Not one got a credential where the work needed one.',
     detail:
-      'Across twenty independent runs, the stronger model pulled live documentation in every single run. The cheaper one did not fetch a single external source, in any run, and said so: own knowledge only.',
+      'Fourteen runs in isolated copies of a real application, across three categories. In the two that need an account, every run stopped at the signup form and said so in its own words. In the third no account was needed and the barrier still appeared, earlier: a required licence key struck vendors off during dependency research, before their product was opened.',
+  },
+  {
+    figure: '0 / 10',
+    against: '6 / 6',
+    claim: 'Whether your documentation gets read depends on the kind of decision, not on the model.',
+    detail:
+      'In one study the cheaper model fetched no external source in ten runs and said so: own knowledge only. In another, where the choice turned on a licence, every run fetched sources including all of the cheaper ones. A decision that cannot be answered from memory is what makes your documentation get read.',
   },
   {
     figure: '5 → 0',
