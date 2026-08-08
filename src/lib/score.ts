@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '5.4'
+export const FORMULA_VERSION = '5.5'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -94,7 +94,10 @@ export const CHECKS: Check[] = [
             inconclusive: true,
           }
         }
-        return yes(1, f.machine.hasLlmsFullTxt ? 'llms.txt and llms-full.txt present' : 'llms.txt present')
+        // deepl.com and mixpanel.com publish theirs only on a documentation subdomain, so
+        // "llms.txt present" sent a vendor to an apex that 404s and read as invented.
+        const at = f.machine.llmsUrls?.[0] ? ` at ${f.machine.llmsUrls[0]}` : ''
+        return yes(1, f.machine.hasLlmsFullTxt ? `llms.txt and llms-full.txt present${at}` : `llms.txt present${at}`)
       }
       if (blindedBy(f)) {
         return { points: 0, detail: 'Unmeasurable: every request was refused', inconclusive: true }
@@ -576,7 +579,10 @@ export const CHECKS: Check[] = [
       if (!f.npm.bundledTypes) return yes(0, `${f.npm.package} ships without bundled types`)
       const stale = f.npm.staleMonths
       if (stale !== undefined && stale >= 24) {
-        return yes(0, `${f.npm.package} is typed but last published ${stale} months ago`)
+        // What we measure is the registry record's Last-Modified, which any metadata write moves,
+        // so it is a floor on the age and not the publish date. june.so read as 28 months where
+        // the newest version is 35.6 months old, and the sentence claimed the smaller number.
+        return yes(0, `${f.npm.package} is typed, and its registry record has not changed in ${stale} months`)
       }
       // Withholding the point when the name did not look like an SDK cost chromadb and
       // @amplitude/analytics-browser, both of which are exactly the package a developer

@@ -804,6 +804,12 @@ const SDK_SHAPE = /(^|[-.])(sdk|client|node|js|api|core)([-.]|$)/
 const NOT_AN_SDK =
   /(^|[-/])(cli|n8n|node-red|mcp|plugins?|preset|loader|codemod|webpack|vite|rollup|esbuild|babel|eslint|prettier|docs?|examples?|demo|starter|template|tests?|testing|mocks?|fixtures|internal|tools|utils|utility|utilities|types|config|react|vue|angular|svelte|next|nuxt|remix|nest|hono|express|koa|fastify|gatsby|astro|ember|jquery|wordpress|drupal|laravel|rails|django|flutter|ionic|electron)([-/]|$)/
 
+/**
+ * A typeface is not a client library. cal.com scored a point for @calcom/cal-sans-ui, which is
+ * their brand font under OFL-1.1, while @calcom/atoms shipped three days before the scan.
+ */
+const IS_A_TYPEFACE = /(^|[-/])(font|fonts|sans|serif|mono|typeface|icons?)([-/]|$)/
+
 /** The package part of a name, without the scope: @daily-co/daily-js is a daily-js. */
 const bareName = (name: string) => (name.startsWith('@') ? (name.split('/')[1] ?? '') : name).toLowerCase()
 
@@ -842,6 +848,7 @@ function afterVendorName(part: string, vendor: Vendor): string | null {
 function shapeRank(name: string, vendor: Vendor, description = ''): number {
   const part = bareName(name)
   if (NOT_AN_SDK.test(part) || NOT_AN_SDK.test(name.toLowerCase())) return 5
+  if (IS_A_TYPEFACE.test(part) || /\bOFL\b|open font license|typeface/i.test(description)) return 5
   // The package named exactly after the vendor is not always the SDK: `storyblok` is
   // Storyblok's command line tool, and only its own description says so.
   if (/\b(cli|command[- ]line)\b/i.test(description)) return 5

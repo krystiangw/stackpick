@@ -21,6 +21,8 @@ export type MachineFindings = {
   wellKnown: Record<string, boolean>
   openapi: string[]
   /** Which pages were asked, so a vendor can rerun the exact request behind the verdict. */
+  /** Where the files actually answered, so a verdict names a URL instead of a filename. */
+  llmsUrls?: string[]
   markdownNegotiation: {
     acceptHeader: boolean
     dotMdSuffix: boolean
@@ -162,6 +164,7 @@ export async function scanMachineContext(
     findings: {
       llms,
       hasLlmsTxt: Object.values(llms).some((f) => f.present),
+      llmsUrls,
       hasLlmsFullTxt: Object.entries(llms).some(([label, f]) => label.includes('full') && f.present),
       wellKnown: Object.fromEntries(wellKnownEntries),
       openapi: openapiHits.filter((path): path is string => path !== null),
