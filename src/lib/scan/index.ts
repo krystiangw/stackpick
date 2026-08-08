@@ -16,6 +16,8 @@ export type ScanFindings = {
   agentStatus: number
   agentStatusesSeen: number[]
   blocksPlainRequests: boolean
+  /** 429 is us asking too often, not the site refusing agents. Never a finding about them. */
+  rateLimitedUs: boolean
   durationMs: number
   discovered: {
     docs: string | null
@@ -32,6 +34,8 @@ export type ScanFindings = {
   docsTextChars: number
   /** How many documentation pages the provisioning grep actually had to read. */
   docsPagesRead: number
+  /** Which ones. A verdict about documentation is only reproducible if we name what we read. */
+  docsPagesReadUrls: string[]
   robots: RobotsFindings
   machine: MachineFindings
   funnel: FunnelFindings
@@ -191,6 +195,7 @@ export async function scanDomain(input: string, onProgress?: ScanProgress): Prom
   // The door test, run as the thing being tested. Three tries, because bot gates answer
   // inconsistently and one 403 out of three is a different finding from three out of three.
   const asAgent = await fetchWithRetries(found.site, { ua: AGENT_UA })
+  const rateLimitedUs = asAgent.statusesSeen.some((status) => status === 429)
 
   report(found.docs ? `Reading ${new URL(found.docs).pathname}` : 'Looking for documentation', 1)
   const docsPage = found.docsPage
@@ -247,7 +252,12 @@ export async function scanDomain(input: string, onProgress?: ScanProgress): Prom
     browserStatus: found.home.status,
     agentStatus: asAgent.status,
     agentStatusesSeen: asAgent.statusesSeen,
+    // Still "we could not read it", so everything downstream stays unmeasurable rather than
+    // silently becoming a measured absence. What changes is who it is a finding about: a 429
+    // says we asked too often. auth0.com read as blocked only after we had scanned it four
+    // times in a row while testing repeatability, and calling that a WAF would be an accusation.
     blocksPlainRequests: !asAgent.ok,
+    rateLimitedUs,
     durationMs: Date.now() - startedAt,
     discovered: {
       docs: found.docs,
@@ -263,6 +273,7 @@ export async function scanDomain(input: string, onProgress?: ScanProgress): Prom
     homeTextChars: visibleTextLength(found.home.body),
     docsTextChars: visibleTextLength(docsText),
     docsPagesRead: (docsPage?.ok ? 1 : 0) + deeperDocs.length,
+    docsPagesReadUrls: [...(docsPage?.ok && found.docs ? [found.docs] : []), ...deeperDocs.map((page) => page.url)],
     robots,
     machine,
     funnel,

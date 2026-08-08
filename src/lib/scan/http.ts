@@ -190,6 +190,9 @@ export async function fetchWithRetries(
 ): Promise<Fetched & { statusesSeen: number[]; consistent: boolean }> {
   const attempts: Fetched[] = []
   for (let i = 0; i < tries; i++) {
+    // Three requests to the same URL with no gap is itself a burst, and a site that rate limits
+    // it hands us a 429 we then have to explain away rather than a finding about agents.
+    if (i > 0) await new Promise((resolve) => setTimeout(resolve, 400))
     attempts.push(await fetchUrl(url, options))
   }
   const statuses = attempts.map((a) => a.status)

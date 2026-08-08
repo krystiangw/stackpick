@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '3.9'
+export const FORMULA_VERSION = '4.0'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -48,6 +48,14 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       const seen = f.agentStatusesSeen?.length && new Set(f.agentStatusesSeen).size > 1
       const tries = seen ? ` across three tries (${f.agentStatusesSeen.join(', ')})` : ''
+      if (f.rateLimitedUs) {
+        return {
+          points: 0,
+          detail: `Unmeasurable: answered ${f.agentStatus} to ${AGENT_UA}${tries}, which is a rate limit on us rather than a rule about agents`,
+          inconclusive: true,
+          unblock: 'Nothing for you to do. We will rescan later and this becomes measurable.',
+        }
+      }
       if (f.blocksPlainRequests) {
         return yes(
           0,
@@ -132,6 +140,14 @@ export const CHECKS: Check[] = [
       if (f.robots.blanketDisallowAll) return yes(0, 'robots.txt disallows everything for every agent')
       if (blocked.length > 0) return yes(0, `Blocked: ${blocked.join(', ')}`)
       // A green tick for reachability on a site that 403s everyone is false comfort.
+      if (f.rateLimitedUs) {
+        return {
+          points: 0,
+          detail: 'Unmeasurable: we were rate limited before robots.txt mattered, which is our problem and not a rule of yours',
+          inconclusive: true,
+          unblock: 'Nothing for you to do. We will rescan later and this becomes measurable.',
+        }
+      }
       if (f.blocksPlainRequests) {
         return yes(0, 'robots.txt permits them, but the WAF refuses the request before robots.txt matters')
       }
