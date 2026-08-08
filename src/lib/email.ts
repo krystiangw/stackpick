@@ -58,12 +58,15 @@ export function scorecardEmail(report: Report): { subject: string; text: string;
     `<tr><td style="padding:6px 16px 6px 0;color:#8a8b8f;font:13px ui-monospace,SFMono-Regular,Menlo,monospace">${escape(label)}</td>` +
     `<td style="padding:6px 0;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;color:#16181c">${escape(value)}</td></tr>`
 
+  // Without the charset every non-ASCII character in a headline or a detail renders as
+  // mojibake in clients that do not sniff, and the middot below is in every stage label.
   const html = `<!doctype html>
-<html><body style="margin:0;background:#faf9f6;padding:32px 16px">
+<html><head><meta charset="utf-8"><meta name="color-scheme" content="light"></head>
+<body style="margin:0;background:#faf9f6;padding:32px 16px">
 <table role="presentation" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #dedbd2">
   <tr><td style="padding:32px 32px 0">
     <div style="font:12px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:2px;text-transform:uppercase;color:#9a7318">
-      Agent readiness &middot; ${escape(domain)}
+      StackPick &middot; agent readiness &middot; ${escape(domain)}
     </div>
     <h1 style="margin:20px 0 0;font:600 26px/1.25 ui-sans-serif,system-ui,sans-serif;color:#16181c;letter-spacing:-0.5px">
       ${escape(headline.claim)}
