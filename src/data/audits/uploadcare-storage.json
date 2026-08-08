@@ -13,13 +13,11 @@
       "rejected": [
         {
           "vendor": "Cloudinary",
-          "reason": "Their own documentation recommends signed uploads in production, so the keyless path needs a backend anyway",
-          "verbatim": "So production needs a backend signing endpoint anyway, which is the same Go work as R2, but with vendor-specific URLs and billed egress on top."
+          "reason": "Their own documentation recommends signed uploads in production, so the keyless path needs a backend anyway, which is the same work as the winner with vendor-specific URLs and billed egress on top"
         },
         {
           "vendor": "UploadThing",
-          "reason": "Requires a Node route handler, and this backend is Go",
-          "verbatim": "Structurally impossible without standing up a Node service purely to broker uploads."
+          "reason": "Requires a Node route handler, and this backend is Go"
         },
         {
           "vendor": "Vercel Blob",
@@ -58,8 +56,7 @@
         },
         {
           "vendor": "uploadcare.com",
-          "reason": "Same signup blocker as Cloudinary without a card-free free tier",
-          "verbatim": "UploadThing / Uploadcare / imgix - all require account signup with the same human-in-the-loop blocker as Cloudinary, without Cloudinary's free tier being card-free."
+          "reason": "Grouped with two other providers and dismissed together for needing a signup, with no card-free free tier to offset it, unlike the provider this run chose (paraphrased: no quotation was archived from this run)"
         },
         {
           "vendor": "Cloudflare R2",
@@ -117,8 +114,7 @@
       "rejected": [
         {
           "vendor": "Cloudinary unsigned preset",
-          "reason": "Would let anyone reading the bundle upload without being an authenticated agent",
-          "verbatim": "No session check, no audit trail, just a public write endpoint."
+          "reason": "Would let anyone reading the bundle upload without being an authenticated agent"
         },
         {
           "vendor": "uploadcare.com",
@@ -170,6 +166,7 @@
   "limits": [
     "Four runs, two models from one family. Cursor, Copilot and Codex may filter differently, and that is a separate measurement.",
     "One brief and one scaffold. The task named screenshots in a helpdesk, which favours providers with image transformation; a brief about document storage would likely produce a different winner.",
+    "Rejection reasons are summaries taken from each run's own report. Only the sentences shown in quotation marks are archived verbatim; where a run left no archived quotation, the entry says so.",
     "The agents stated decisions and wrote code. Nobody attempted to complete a signup, so the wall is reported as the agents met it, not as a customer would experience it end to end.",
     "Uploadcare was the subject here because it is a vendor that was named once and passed over. The finding about the keyless path applies to the whole category, including the provider that won."
   ]

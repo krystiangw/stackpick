@@ -244,6 +244,7 @@
   "limits": [
     "Six runs, two models from one family. Cursor, Copilot and Codex may filter differently, and that is a separate measurement.",
     "One brief and one scaffold. The brief named pasted images and code blocks, which favours editors with those built in; a brief about collaborative editing would likely produce a different winner.",
+    "Rejection reasons are summaries taken from each run's own report; this study published no run quotations except the one named in these limits.",
     "An earlier round of the same study, run before these six, shared one working directory between agents and is not reported here. It reached the same winner, and in it Froala was named twice and struck off both times on licensing, in four words: \"Fully commercial, licence key required.\" That quote is worth knowing and it is not from an isolated run.",
     "The agents stated decisions and wrote code. Nobody attempted to obtain a commercial licence, so the wall is reported as the agents perceived it."
   ]

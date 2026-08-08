@@ -5,7 +5,15 @@ export const metadata: Metadata = {
   description: 'Thirty-eight runs, five studies, two models. What agents pick when nobody is watching, and where every one of them stops.',
 }
 
-const RESULTS = [
+type Result = {
+  id: string
+  heading: string
+  numbers: string[][]
+  body: string[]
+  quote?: { text: string; caption: string; translated?: boolean }
+}
+
+const RESULTS: Result[] = [
   {
     id: 'wall',
     heading: 'Four categories, eighteen runs, one wall in four disguises',
@@ -22,7 +30,7 @@ const RESULTS = [
       'Two things surfaced that no vendor can see from inside. One run refused to create an account it was technically able to create, because ownership is a decision it would not make for someone else, which means frictionless is not the same as acceptable. And in the authentication study a vendor was called the most attractive on price and rejected anyway, on a claim from a search result the run never opened and flagged, in its own report, as the weakest link in its reasoning.',
     ],
     quote: {
-      text: 'I stopped at the signup form. What it would take: one person, about three minutes.',
+      text: 'I stopped at the signup form\u2026 somebody has to own it, and I am not going to create a company account on the team\u2019s behalf. What it would take: one person, ~3 minutes.',
       caption:
         'A run pricing the barrier for the vendor it had just chosen. Three minutes of a human is the distance between an agent shipping your product and an agent shipping someone else\u2019s.',
     },
@@ -42,8 +50,9 @@ const RESULTS = [
     ],
     quote: {
       text: 'Last published 2.0.2 on 2023-03-06, so over three years without a release despite 1.5 million weekly downloads. Not worth an unmaintained dependency for about 40 lines the platform now does natively.',
+      translated: true,
       caption:
-        'The stronger model rejecting a package the cheaper model recommended in three runs. We verified the registry independently on 7 August 2026: version 2.0.2, published 6 March 2023, 1,527,048 downloads that week.',
+        'The stronger model rejecting a package the cheaper model recommended in three runs. The numbers are not translated: we verified the registry independently on 7 August 2026, and found version 2.0.2, published 6 March 2023, with 1,527,048 downloads that week.',
     },
   },
   {
@@ -134,6 +143,11 @@ export default function FindingsPage() {
           </div>
           {result.quote && (
             <figure className="mt-6 max-w-2xl border-l-2 border-brass pl-5">
+              {result.quote.translated && (
+                <p className="mb-2 font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">
+                  Our translation, not a quotation: this run reported in Polish
+                </p>
+              )}
               <blockquote className="text-lg italic leading-relaxed">{result.quote.text}</blockquote>
               <figcaption className="mt-2 font-mono text-xs text-ink-faint">{result.quote.caption}</figcaption>
             </figure>

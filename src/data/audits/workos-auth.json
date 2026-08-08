@@ -13,8 +13,8 @@
       "rejected": [
         {
           "vendor": "workos.com",
-          "reason": "Believed its SPA path requires a backend endpoint, from a search summary the run never opened and flagged as its weakest claim",
-          "verbatim": "The most attractive on price. Rejected on architecture... this is a search summary, not a doc I read, so the claim that AuthKit's SPA path needs a backend endpoint is the weakest link in my reasoning and worth confirming against WorkOS's docs before treating that rejection as settled."
+          "reason": "Called the most attractive on price, then rejected on a belief that its SPA path requires a backend endpoint, taken from a search summary the run never opened and flagged as its weakest claim",
+          "verbatim": "the claim that AuthKit's SPA path needs a backend endpoint is the weakest link in my reasoning and worth confirming against WorkOS's docs before treating that rejection as settled."
         },
         {
           "vendor": "Clerk",
@@ -50,8 +50,7 @@
       "rejected": [
         {
           "vendor": "workos.com",
-          "reason": "Called the better long-term fit, then set aside as enterprise SSO the company does not need yet",
-          "verbatim": "Genuinely close, and arguably the better long-term fit since support agents are staff and this is really SSO. This is the one I would revisit if the company ever wants SCIM provisioning of agents."
+          "reason": "Named while reviewing alternatives and set aside as enterprise SSO the company does not need yet, with a note to revisit it if directory provisioning ever matters (paraphrased: no quotation was archived from this run)"
         },
         {
           "vendor": "Clerk",
@@ -88,7 +87,7 @@
         {
           "vendor": "Auth0",
           "reason": "Believed a credit card is required even on the free tier, from a pricing aggregator rather than the vendor's own page",
-          "verbatim": "Current sources (2026) indicate credit-card verification is now required even for the free tier."
+          "verbatim": "credit-card verification is now required even for the free tier."
         },
         {
           "vendor": "Okta",
@@ -170,6 +169,7 @@
   "limits": [
     "Four runs, two models from one family. Cursor, Copilot and Codex may filter differently.",
     "One brief and one scaffold, and the scaffold decided a lot: a Go backend the agent could not edit is what made SDK-neutral token verification the deciding criterion. A Node backend would very likely produce a different winner.",
+    "Rejection reasons are summaries taken from each run's own report. Only the sentences shown in quotation marks are archived verbatim; where a run left no archived quotation, the entry says so.",
     "The agents stated decisions and wrote code. Nobody attempted a signup, so the wall is reported as the agents met it.",
     "WorkOS is the subject because it was named and passed over twice. The findings about search summaries and ownership decisions apply to the whole category, including the two providers that won."
   ]

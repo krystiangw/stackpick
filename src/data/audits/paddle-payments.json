@@ -164,6 +164,7 @@
   "limits": [
     "Four runs, two models from one family. Cursor, Copilot and Codex may filter differently.",
     "One brief and one scaffold. Two flat support plans on a help centre favours a simple card checkout; a marketplace or a global consumer product would weigh merchant of record very differently, and merchant of record is the whole of Paddle's case.",
+    "Rejection reasons are summaries taken from each run's own report. Only the sentences shown in quotation marks are archived verbatim; where a run left no archived quotation, the entry says so.",
     "Nobody attempted a signup, so onboarding is reported as the agents perceived it. Where they disagreed, we checked: sandbox accounts are self-serve with email verification and no business or domain approval, and the manual review applies to live merchant-of-record accounts. One run was describing the live path.",
     "Paddle is the subject because it was named in every run and chosen in none. The finding about sandbox credentials applies to the whole category, including the provider that won."
   ]
