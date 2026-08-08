@@ -1,18 +1,17 @@
 import { ImageResponse } from 'next/og'
 import { buildComparison } from '@/lib/compare'
 import { pickHeadline } from '@/lib/headline'
+import { buildMark, fillHeight, MARK_PALETTE, scoreTone } from '@/lib/mark'
 import { getStore } from '@/lib/store'
 
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 export const alt = 'Agent readiness scorecard'
 
-const INK = '#16181c'
-const GROUND = '#faf9f6'
-const RULE = '#dedbd2'
-const FAIL = '#a4382a'
-const WARN = '#9a4f0a'
-const PASS = '#2c6a4c'
+const INK = MARK_PALETTE.ink
+const GROUND = MARK_PALETTE.ground
+const RULE = MARK_PALETTE.rule
+const TRACK = 96
 
 export default async function Image({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -38,7 +37,8 @@ export default async function Image({ params }: { params: Promise<{ id: string }
     ? `${rank.position} of ${rank.outOf} · ${comparison.category?.label ?? ''}`
     : `Agent readiness · formula v${scorecard.formulaVersion}`
   const measurable = scorecard.measurable ?? scorecard.max
-  const tone = scorecard.total <= measurable / 3 ? FAIL : scorecard.total >= (measurable * 2) / 3 ? PASS : WARN
+  const tone = scoreTone(scorecard.total, measurable)
+  const segments = buildMark(scorecard.stages)
 
   return new ImageResponse(
     (
@@ -69,19 +69,23 @@ export default async function Image({ params }: { params: Promise<{ id: string }
 
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', borderTop: `2px solid ${RULE}`, paddingTop: 28 }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14 }}>
-            {scorecard.stages.map((stage) => {
-              const stageMax = stage.measurable ?? stage.max
-              const share = stageMax > 0 ? stage.points / stageMax : 0
-              const fill = share >= 0.67 ? PASS : share >= 0.34 ? WARN : FAIL
-              return (
-                <div key={stage.stage} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                  <div style={{ display: 'flex', width: 34, height: 96, background: '#e3dfd4', alignItems: 'flex-end' }}>
-                    <div style={{ display: 'flex', width: '100%', height: stageMax === 0 ? 0 : share === 0 ? 3 : Math.max(share * 96, 8), background: fill }} />
-                  </div>
-                  <div style={{ display: 'flex', fontSize: 20, color: '#8a8b8f', letterSpacing: 2 }}>{stage.letter}</div>
+            {segments.map((segment) => (
+              <div key={segment.letter} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    width: 34,
+                    height: TRACK,
+                    alignItems: 'flex-end',
+                    background: segment.state === 'unmeasured' ? 'transparent' : MARK_PALETTE.sunken,
+                    border: segment.state === 'unmeasured' ? `2px dashed ${RULE}` : 'none',
+                  }}
+                >
+                  <div style={{ display: 'flex', width: '100%', height: fillHeight(segment, TRACK), background: segment.color }} />
                 </div>
-              )
-            })}
+                <div style={{ display: 'flex', fontSize: 20, color: '#8a8b8f', letterSpacing: 2 }}>{segment.letter}</div>
+              </div>
+            ))}
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
             <div style={{ display: 'flex', fontSize: 96, fontWeight: 700, color: tone, letterSpacing: -5 }}>

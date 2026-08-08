@@ -1,5 +1,6 @@
 import { buildFixPlan } from './fixfirst'
 import { pickHeadline } from './headline'
+import { buildMark, fillHeight, hasUnmeasured, MARK_PALETTE, scoreTone, UNMEASURED_LEGEND } from './mark'
 import type { Report } from './store'
 
 const FROM = process.env.STACKPICK_FROM ?? 'StackPick <onboarding@resend.dev>'
@@ -19,6 +20,10 @@ export function scorecardEmail(report: Report): { subject: string; text: string;
   const headline = pickHeadline(findings, scorecard)
   const plan = buildFixPlan(findings, scorecard)
   const url = reportUrl(report)
+  // Reports stored before the measurable denominator existed still have to render.
+  const measurable = scorecard.measurable ?? scorecard.max
+  const segments = buildMark(scorecard.stages)
+  const TRACK = 56
 
   // The subject is the finding, not the product name. A subject line that could have been
   // sent to a thousand companies gets treated as if it was.
@@ -29,8 +34,14 @@ export function scorecardEmail(report: Report): { subject: string; text: string;
     '',
     headline.evidence,
     '',
-    `Agent readiness: ${scorecard.total} of ${scorecard.max}`,
-    ...scorecard.stages.map((stage) => `  ${stage.letter}  ${stage.title.padEnd(14)} ${stage.points}/${stage.max}`),
+    `Agent readiness: ${scorecard.total} of ${measurable} points we could measure`,
+    ...scorecard.stages.map((stage) => {
+      const stageMeasurable = stage.measurable ?? stage.max
+      return `  ${stage.letter}  ${stage.title.padEnd(14)} ${
+        stageMeasurable > 0 ? `${stage.points}/${stageMeasurable}` : 'not measurable'
+      }`
+    }),
+    ...(hasUnmeasured(segments) ? ['', UNMEASURED_LEGEND] : []),
     '',
     plan ? plan.claim : '',
     ...(plan ? plan.quickWins.map((step) => `  ${step.gain > 0 ? `+${step.gain}` : ''} ${step.label} (${step.effort}): ${step.how}`) : []),
@@ -65,40 +76,54 @@ export function scorecardEmail(report: Report): { subject: string; text: string;
   <tr><td style="padding:28px 32px 0">
     <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-top:1px solid #dedbd2;padding-top:20px">
       <tr><td style="padding-top:20px">
-        <span style="font:700 44px ui-sans-serif,system-ui,sans-serif;color:${
-          scorecard.total <= scorecard.max / 3 ? '#a4382a' : scorecard.total >= (scorecard.max * 2) / 3 ? '#2c6a4c' : '#9a4f0a'
-        }">${scorecard.total}</span>
-        <span style="font:16px ui-sans-serif,system-ui,sans-serif;color:#8a8b8f"> / ${scorecard.max}</span>
+        <span style="font:700 44px ui-sans-serif,system-ui,sans-serif;color:${scoreTone(
+          scorecard.total,
+          measurable,
+        )}">${scorecard.total}</span>
+        <span style="font:16px ui-sans-serif,system-ui,sans-serif;color:#8a8b8f"> / ${measurable}</span>
       </td></tr>
     </table>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:18px">
       <tr>
-        ${scorecard.stages
-          .map((stage) => {
-            const share = stage.max > 0 ? stage.points / stage.max : 0
-            const fill = share >= 0.67 ? '#2c6a4c' : share >= 0.34 ? '#9a4f0a' : '#a4382a'
-            const filled = share === 0 ? 2 : Math.max(Math.round(share * 56), 5)
+        ${segments
+          .map((segment) => {
+            const filled = fillHeight(segment, TRACK)
+            const track =
+              segment.state === 'unmeasured'
+                ? `<tr><td height="${TRACK}" style="border:1px dashed ${MARK_PALETTE.rule};font-size:0;line-height:0">&nbsp;</td></tr>`
+                : `<tr><td height="${TRACK - filled}" style="background:${MARK_PALETTE.sunken};font-size:0;line-height:0">&nbsp;</td></tr>` +
+                  `<tr><td height="${filled}" style="background:${segment.color};font-size:0;line-height:0">&nbsp;</td></tr>`
             return `<td style="padding-right:8px;vertical-align:bottom">
-              <table role="presentation" cellpadding="0" cellspacing="0" width="26">
-                <tr><td height="${56 - filled}" style="background:#e3dfd4;font-size:0;line-height:0">&nbsp;</td></tr>
-                <tr><td height="${filled}" style="background:${fill};font-size:0;line-height:0">&nbsp;</td></tr>
-              </table>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="26">${track}</table>
             </td>`
           })
           .join('')}
       </tr>
       <tr>
-        ${scorecard.stages
+        ${segments
           .map(
-            (stage) =>
-              `<td style="padding:6px 8px 0 0;font:11px ui-monospace,SFMono-Regular,Menlo,monospace;color:#8a8b8f;text-align:center;width:26px">${stage.letter}</td>`,
+            (segment) =>
+              `<td style="padding:6px 8px 0 0;font:11px ui-monospace,SFMono-Regular,Menlo,monospace;color:#8a8b8f;text-align:center;width:26px">${segment.letter}</td>`,
           )
           .join('')}
       </tr>
     </table>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:14px">
-      ${scorecard.stages.map((stage) => row(`${stage.letter} · ${stage.title}`, `${stage.points}/${stage.max}`)).join('')}
+      ${scorecard.stages
+        .map((stage) => {
+          const stageMeasurable = stage.measurable ?? stage.max
+          return row(
+            `${stage.letter} · ${stage.title}`,
+            stageMeasurable > 0 ? `${stage.points}/${stageMeasurable}` : 'not measurable',
+          )
+        })
+        .join('')}
     </table>
+    ${
+      hasUnmeasured(segments)
+        ? `<p style="margin:12px 0 0;font:11px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:#8a8b8f">${UNMEASURED_LEGEND}</p>`
+        : ''
+    }
   </td></tr>
 
   ${
