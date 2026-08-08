@@ -8,11 +8,11 @@ export const dynamic = 'force-dynamic'
 
 const EVIDENCE = [
   {
-    figure: '14 / 14',
-    against: '0 / 8',
+    figure: '18 / 18',
+    against: '0 / 12',
     claim: 'Every run shipped working code. Not one got a credential where the work needed one.',
     detail:
-      'Fourteen runs in isolated copies of a real application, across three categories. In the two that need an account, every run stopped at the signup form and said so in its own words. In the third no account was needed and the barrier still appeared, earlier: a required licence key struck vendors off during dependency research, before their product was opened.',
+      'Eighteen runs in isolated copies of a real application, across four categories. In the three that need an account, every run stopped at the signup form and said so in its own words. In the fourth no account was needed and the barrier still appeared, earlier: a required licence key struck vendors off during dependency research, before their product was opened.',
   },
   {
     figure: '0 / 10',
@@ -74,7 +74,7 @@ export default async function Home() {
           ))}
         </div>
         <p className="mt-6 font-mono text-xs text-ink-faint">
-          Thirty-four runs across four studies, with the limits of each one stated.{' '}
+          Thirty-eight runs across five studies, with the limits of each one stated.{' '}
           <Link href="/findings" className="text-brass underline underline-offset-4">
             Read the method
           </Link>

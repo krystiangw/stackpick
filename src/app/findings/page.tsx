@@ -8,15 +8,16 @@ export const metadata: Metadata = {
 const RESULTS = [
   {
     id: 'wall',
-    heading: 'Three categories, fourteen runs, one wall in three disguises',
+    heading: 'Four categories, eighteen runs, one wall in four disguises',
     numbers: [
-      ['Runs that produced working code', '14 of 14'],
-      ['Runs that obtained a credential where one was needed', '0 of 8'],
-      ['Categories where the same barrier appeared', '3 of 3'],
+      ['Runs that produced working code', '18 of 18'],
+      ['Runs that obtained a credential where one was needed', '0 of 12'],
+      ['Categories where the same barrier appeared', '4 of 4'],
     ],
     body: [
-      'Three studies, three categories, fourteen runs in isolated copies of a real application: choose a rich text editor, add image upload and hosting, replace a proxy cookie with real authentication. Every run shipped working code. In the two categories where the work needs a credential, not one run obtained it, and each said the same thing in its own words: creating the account needs a human.',
-      'The third category is the interesting one, because no credential was required at all and the barrier still appeared. It simply moved earlier. Vendors whose libraries require a licence key were struck off during dependency research, in one line each, before any product was opened. That is the shape of the finding: wherever a human step exists, it either stops the agent at the end or removes you from the list at the start. It does not slow adoption down. It decides it.',
+      'Four studies, four categories, eighteen runs in isolated copies of a real application: choose a rich text editor, add image upload and hosting, replace a proxy cookie with real authentication, sell two support plans. Every run shipped working code. In the three categories where the work needs a credential, not one of twelve runs obtained one, and each said the same thing in its own words: creating the account needs a human.',
+      'One category needed no credential and the barrier appeared anyway, earlier: vendors whose libraries require a licence key were struck off during dependency research, in one line each, before any product was opened. That is the shape of it. Wherever a human step exists, it either stops the agent at the end or removes you from the list at the start. It does not slow adoption down. It decides it.',
+      'Payments was chosen as the hardest case, because there the human step is the law. It turned out the law was never reached. Every run stopped at account creation, which is a vendor decision, and one measured the edge exactly: the vendor\u2019s own public sample key creates a real card token, the checkout form mounts, and the run stops on the single call that needs a secret key. The last step an agent cannot take alone is the one no provider in that category offers.',
       'Two things surfaced that no vendor can see from inside. One run refused to create an account it was technically able to create, because ownership is a decision it would not make for someone else, which means frictionless is not the same as acceptable. And in the authentication study a vendor was called the most attractive on price and rejected anyway, on a claim from a search result the run never opened and flagged, in its own report, as the weakest link in its reasoning.',
     ],
     quote: {
@@ -99,11 +100,11 @@ export default function FindingsPage() {
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Research</p>
         <h1 className="mt-4 max-w-2xl text-balance text-4xl font-semibold leading-tight tracking-tight">
-          Thirty-four agents, four studies, nobody watching
+          Thirty-eight agents, five studies, nobody watching
         </h1>
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
-          Four studies so far, across three categories: image upload and storage, a rich text editor, and
-          authentication for a support tool. Every run received a brief and nothing else. No provider names,
+          Five studies so far, across four categories: image upload and storage twice, a rich text editor,
+          authentication for a support tool, and payments. Every run received a brief and nothing else. No provider names,
           no mention of an audit, no hint that anyone was watching, and no way to ask a question. Two models,
           isolated copies of a real application, and a record of every source each run consulted, separating
           the pages it read from the summaries it only skimmed.

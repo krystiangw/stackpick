@@ -1,0 +1,135 @@
+{
+  "slug": "paddle-payments",
+  "subject": "paddle.com",
+  "category": "Payments for a support plan",
+  "task": "The company wants to sell paid support plans to customers who read the help centre. Add a checkout to this app: a page that offers two plans, takes a card payment, and tells the existing Go API which customer bought what. Pick a payment provider, wire the client side, and document what the Go service has to do. Decide alone, nobody is available to answer questions.",
+  "scaffold": "A working helpdesk knowledge base: Vite, React 19, TypeScript, a static bundle in front of a separate Go service the agent cannot see or edit. Four isolated copies, one per run.",
+  "runDate": "2026-08-08",
+  "runs": [
+    {
+      "id": "A",
+      "model": "Opus 5",
+      "chose": "Stripe",
+      "rejected": [
+        {
+          "vendor": "paddle.com",
+          "reason": "Onboarding needs manual seller approval and a business review, which the run judged further out of reach than a Stripe key",
+          "verbatim": "Merchant of record, so VAT and sales tax stop being our problem. Rejected because onboarding requires manual seller approval and a business review, which is even further out of reach for an agent than a Stripe key, and merchant-of-record pricing is a commercial decision nobody authorised."
+        },
+        { "vendor": "Lemon Squeezy", "reason": "The same approval gate, and Stripe-owned since 2024, so its independence is a bet the run would not make alone" },
+        { "vendor": "Adyen", "reason": "An enterprise contract and a sales negotiation before any credential exists" },
+        { "vendor": "Polar", "reason": "A smaller vendor for a company's billing spine, and the same signup wall" },
+        { "vendor": "Braintree and PayPal", "reason": "Weaker React story and clumsier subscription tooling" }
+      ],
+      "usedLiveSources": true,
+      "sources": [
+        "docs.stripe.com embedded checkout quickstart and fulfilment pages (read)",
+        "the stripe-go source at v86.2.0 on raw.githubusercontent.com, to verify every symbol used",
+        "the @stripe/react-stripe-js tarball on disk, which is what confirmed the component API rather than the prose",
+        "live calls to api.stripe.com: token creation 200, checkout session 401 with no key and 403 with a publishable one",
+        "search summaries for merchant-of-record pricing (skimmed, and flagged as the weakest evidence in the report)"
+      ],
+      "blockedBy": "A Stripe secret key, which requires an account, which requires accepting the Services Agreement on the company's behalf",
+      "notes": "Measured the edge of the wall instead of asserting it. Stripe's public sample publishable key still works and created a real card token, the checkout iframe mounts, and the run stops precisely at the one call that needs a secret key."
+    },
+    {
+      "id": "B",
+      "model": "Opus 5",
+      "chose": "Stripe",
+      "rejected": [
+        {
+          "vendor": "paddle.com",
+          "reason": "Rejected on fee figures the run took from competitor-published comparison pages it never opened",
+          "verbatim": "All SEO comparison content, much of it published by competing payment providers, so the fee figures should be confirmed on the vendors' own pricing pages before anyone acts on them. I did not open any of those pages."
+        },
+        { "vendor": "Lemon Squeezy", "reason": "The same merchant-of-record trade-off, and now Stripe-owned" },
+        { "vendor": "Adyen and Braintree", "reason": "Both expect sales-led onboarding with contracts before sandbox credentials exist" },
+        { "vendor": "Polar, Dodo, Fungies", "reason": "Too new to carry a revenue-bearing flow" }
+      ],
+      "usedLiveSources": true,
+      "sources": [
+        "docs.stripe.com keys, custom quickstart and fulfilment pages (read)",
+        "the npm tarballs and the stripe-go module zip, read as shipped code rather than as documentation",
+        "live probes: checkout sessions 401, accounts 401, the register page 200",
+        "search summaries for merchant-of-record pricing (skimmed, sources named and flagged as competitor content)"
+      ],
+      "blockedBy": "A Stripe key of any kind: creating even a test-mode secret key needs a code sent by email or text",
+      "notes": "Found a defect that ships silently: with the key unset, Vite folds the checkout branch to unreachable and the bundler strips the entire payment interface while the build stays green. Measured at 207.70 kB against 215.33 kB."
+    },
+    {
+      "id": "C",
+      "model": "Sonnet 5",
+      "chose": "Stripe",
+      "rejected": [
+        {
+          "vendor": "paddle.com",
+          "reason": "Merchant-of-record margin for tax handling the task did not need, and a thinner Go ecosystem",
+          "verbatim": "An extra 1.5 to 2 percentage points of margin for tax handling that two simple support plans do not need."
+        },
+        { "vendor": "Braintree and PayPal", "reason": "Weaker developer experience for a card-only checkout" },
+        { "vendor": "Stripe Elements", "reason": "A custom card form widens PCI scope with nobody available to verify compliance" }
+      ],
+      "usedLiveSources": true,
+      "sources": [
+        "docs.stripe.com keys and checkout quickstart (read)",
+        "search summaries for signup requirements and merchant-of-record fees (skimmed)"
+      ],
+      "blockedBy": "Stripe signup: an email with a verification link and two-factor authentication by phone or authenticator",
+      "notes": "Noted that Stripe issues test keys immediately after signup with no business or bank verification, so the regulatory wall sits further back than the account wall it actually hit."
+    },
+    {
+      "id": "D",
+      "model": "Sonnet 5",
+      "chose": "Stripe",
+      "rejected": [
+        {
+          "vendor": "paddle.com",
+          "reason": "Lighter to test than the winner, and rejected anyway for being a merchant of record",
+          "verbatim": "Genuinely lighter to test: sandbox signup needs no domain or business approval, unlike its live accounts. Rejected mainly because it is a merchant of record, which changes the integration shape and the business relationship more than the task called for."
+        },
+        { "vendor": "Lemon Squeezy", "reason": "Test mode is automatic after signup, but the merchant-of-record scope change remains" },
+        { "vendor": "Adyen", "reason": "Onboarding is built around enterprise accounts rather than a quick sandbox" },
+        { "vendor": "Stripe Elements", "reason": "Needs a publishable key on the client and widens PCI scope for no gain" }
+      ],
+      "usedLiveSources": true,
+      "sources": [
+        "docs.stripe.com keys (read)",
+        "dashboard.stripe.com/register, opened in a real browser and inspected, with nothing entered",
+        "search summaries for Paddle sandbox and Lemon Squeezy test mode (skimmed)"
+      ],
+      "blockedBy": "Account creation itself, and its own rules against creating accounts on someone's behalf",
+      "notes": "Checked whether any competitor avoids the first wall and concluded none does: account creation with a verifiable email is the first and only gate across Stripe, Paddle and Lemon Squeezy alike."
+    }
+  ],
+  "verdict": {
+    "headline": "Named in all four runs, chosen in none, and the numbers that sank you came from your competitors' pages.",
+    "body": [
+      "Four agents, two models, four isolated copies, one brief: sell two support plans. All four chose Stripe and all four stopped before a payment could be made. Not one reached identity verification or a bank account, which is where the regulator actually stands. They stopped at account creation, which is a vendor decision.",
+      "One run measured the wall exactly rather than describing it. Stripe's public sample publishable key still works and created a real card token; the checkout iframe mounts; and the run stops on the single call that needs a secret key, which answers 403 secret_key_required. So an agent can get to the last step alone, and the last step is the one nobody offers.",
+      "Paddle was named in all four runs and chosen in none, and the reasons diverge in a way worth reading. One run called it genuinely lighter to test, since sandbox signup skips business and domain approval. Another rejected it for needing manual seller approval, judging that harder than a Stripe key. A third rejected it on fee figures it took from comparison pages published by competing payment providers, pages it never opened and flagged as the weakest evidence in its own report. Three runs, three different pictures of the same onboarding."
+    ]
+  },
+  "recommendations": [
+    {
+      "title": "Publish your own entry requirements in text a summariser will quote",
+      "body": "Two of four runs formed their picture of your onboarding from third-party comparison content, one of them written by a competitor, and both said so. What a search engine summarises about your sandbox, your approval step and your fees is the version being acted on. That is checkable today and fixable with a page.",
+      "effort": "hours"
+    },
+    {
+      "title": "Issue a sandbox credential that commits nobody",
+      "body": "Every run reached the last step and stopped at a key. Identity checks are law and nobody is asking you to skip them, but an expiring test credential issued without an account, and before any agreement, is entirely your choice. No provider in this category offers one, so the first that does is the only one an agent can finish with.",
+      "effort": "weeks"
+    },
+    {
+      "title": "Say where the approval step actually sits",
+      "body": "Runs disagreed about whether your sandbox needs seller approval, and the disagreement decided the outcome. One sentence on the developer page, stating what sandbox access requires and what only live accounts require, removes the guess.",
+      "effort": "hours"
+    }
+  ],
+  "limits": [
+    "Four runs, two models from one family. Cursor, Copilot and Codex may filter differently.",
+    "One brief and one scaffold. Two flat support plans on a help centre favours a simple card checkout; a marketplace or a global consumer product would weigh merchant of record very differently, and merchant of record is the whole of Paddle's case.",
+    "Nobody attempted a signup, so onboarding is reported as the agents perceived it. Where they disagreed about your approval step, that disagreement is itself the finding.",
+    "Paddle is the subject because it was named in every run and chosen in none. The finding about sandbox credentials applies to the whole category, including the provider that won."
+  ]
+}
