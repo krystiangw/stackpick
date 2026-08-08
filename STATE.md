@@ -1445,3 +1445,30 @@ zamiast `@statsig/js-client`, choć zdanie o nim jest już prawdziwe (mówi o re
 nie o dacie publikacji).
 
 **Stan:** korpus 156/156 na 5.6 po reseedzie, `npm run audit` czysty w obu wymiarach.
+
+## Runda 2026-08-09 (trzydziesta szósta): pierwszy błąd złapany na plus
+
+Reseed 5.6 potwierdził naprawę SendGrida (27 333 znaki na ich własnej stronie o ustawieniach
+konta wobec 16 435 na stronie Twilio Chat w wierszu twilio.com, czyli dwie różne liczby zamiast
+jednej skopiowanej). Ale diff pokazał, że **`sentry.io` skoczył o trzy punkty**, z czego dwa za
+`agent-signup.md` i `skill.md`.
+
+Sprawdzone ręcznie: **sentry.io odpowiada tą samą stroną HTML o rozmiarze 20 402 bajtów na każdą
+ścieżkę `.md`**, łącznie z `zzz-nonsense-abc.md`. Przyznaliśmy dwa punkty za dwa nieistniejące
+pliki, na domenie, dla której ta pułapka jest opisana w naszej własnej metodologii.
+
+**Przyczyna, warta zapamiętania: kontrola była boolem, a nie porównaniem.** Sonda kontrolna
+poprawnie odrzucała stronę-widmo jako HTML, więc wychodziło „ta witryna nie serwuje wszystkiego"
+i kontrola nikogo nie dyskwalifikowała, a same sondy trafiały w tę samą stronę i były oceniane
+tylko po tym, czy wyglądają jak prawdziwy plik. **5.7** zapamiętuje długość ciała odpowiedzi
+z nierutowanej ścieżki w danej przestrzeni nazw i porównuje ją wprost: trafienie identyczne
+z niczym jest niczym.
+
+To był **czwarty raz, kiedy diff korpusu po reseedzie złapał błąd, którego nie złapał ani build,
+ani test, ani audyt spójności, i pierwszy raz na plus** (punkty przyznane za nic, a nie odebrane
+niesłusznie). Reseed 5.7: sentry wraca z 12 na 9, `loops.so`, `openrouter.ai` i `weaviate.io`
+zachowują prawdziwe pliki, pozostałe ruchy to znane wahania (rejestr npm, bramka bota).
+
+**Stan:** korpus 156/156 na 5.7, audyt czysty w obu wymiarach. Puszczony **drugi przebieg
+adwersaryjny** na sześć napraw z pierwszego, z pytaniem wprost, które z nich są udowodnione,
+a które nie, i z bazą porównawczą 16,7 procent błędu.
