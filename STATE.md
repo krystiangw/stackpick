@@ -1368,3 +1368,48 @@ i część spadków (`postmark.com` 429, zagłodzony handshake `telnyx.com`) **w
 Reseed robimy raz na zestaw zmian, nie po każdej.
 
 **Stan:** korpus 156/156 na formule 5.2, `npm run audit` czysty.
+
+## Runda 2026-08-08 (trzydziesta czwarta): zmierzona stopa błędu, 16,7 procent
+
+Subagent zaatakował **138 opublikowanych twierdzeń** z korpusu 5.2 realnymi żądaniami i obalił
+**23**, z czego **13 zmienia werdykt albo wynik**, a 10 to fałszywe zdania przy poprawnym
+werdykcie. Do tego pełny spis `robots.txt` na wszystkich 156 domenach, nie próbka.
+
+**Sześć przyczyn, wszystkie naprawione w 5.3:**
+
+1. **403 na `robots.txt` czytany jako brak pliku.** `bitmovin.com`, `vonage.com`, `pandadoc.com`
+   dostawały punkt za „nie ma robots.txt, więc nic nie jest zabronione", a wszystkie trzy go
+   publikują. Bitmovin ma ten sam `Crawl-delay: 10`, za który oblaliśmy ckeditor.com. Tylko 404
+   znaczy teraz „nie ma".
+2. **„No Crawl-delay directive" bywało fałszem.** `stripe.com` ma dyrektywę dla rogerbota,
+   `twilio.com` dla Swiftbota. Przestaliśmy też nazywać regułę `User-agent: *` regułą wymierzoną
+   w AI, bo nią nie jest.
+3. **Kontrola soft-404 była globalna.** Witryna odpowiadająca prawdziwą stroną na dowolną ścieżkę
+   `.md` kasowała **prawdziwy `llms.txt` serwowany jako `text/plain`**: `sentry.io` i `agora.io`.
+   Kontrola jest teraz per przestrzeń nazw; pułapki (`raygun.com`, `crowdin.com`) dalej odpadają.
+4. **Sonda OAuth omijała host MCP dokładnie wtedy, gdy był potrzebny.** `datadoghq.com` i
+   `contentful.com` publikują `registration_endpoint` na `mcp.<domena>`; pisaliśmy, że nie mają.
+5. **Cennik ważony na surowym dokumencie, razem ze skryptami.** Stąd `cal.com/plans` (czyjś link
+   do rezerwacji spotkania) wygrywał z `cal.com/pricing`, a `vercel.com/plans` (ekran logowania)
+   z prawdziwym cennikiem Vercela.
+6. **Wiek pakietu czytany z pola `modified`**, które bumpuje przy każdym zapisie metadanych.
+   `june.so`: 28 miesięcy wobec 35,6 faktycznych. **Jeszcze nie naprawione.**
+
+**Znalezione przy sprawdzaniu zarzutów, nie przez audytora:** `posthog.com/pricing`,
+`cal.com/pricing` i `amplitude.com/pricing` **przekraczają nasz limit odczytu 400 kB**, a ich
+cenniki leżą za cięciem. „Nie znaleźliśmy free tier" było faktem o naszym limicie, nie o
+vendorze. Teraz niemierzalne.
+
+**Co się obroniło:** `signup_no_captcha` 20 na 20 (z osobnym rozróżnieniem widżetu od stopki
+prawnej), `docs_without_js` 10 na 11 w granicach 5 procent, wszystkie porażki `typed_package`
+potwierdzone rozpakowaniem paczek, `llms_txt` 22 na 24, `oauth_dcr` 15 na 18 przy sondzie
+szerszej niż nasza, `user_agents_allowed` poprawny na wszystkich 156.
+
+**Zostało z tego audytu, nienaprawione:**
+- wiek pakietu z `modified` zamiast z czasu publikacji najnowszej wersji (`june.so`);
+- `cal.com` `typed_package` wskazuje paczkę z krojem pisma (`@calcom/cal-sans-ui`) zamiast
+  `@calcom/atoms`; `statsig.com` wskazuje wygenerowany stub 0.0.2 zamiast `@statsig/js-client`;
+- `sendgrid.com` `docs_without_js` mierzy dokumentację Twilio i podaje liczbę identyczną co do
+  bajta z wierszem twilio.com;
+- `llms_txt` przy zaliczeniu nie podaje URL-a, a na `deepl.com` i `mixpanel.com` plik jest tylko
+  na subdomenie.
