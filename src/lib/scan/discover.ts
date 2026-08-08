@@ -411,12 +411,15 @@ export async function searchNpmForDomain(domain: string, githubRepo: string | nu
   // SDK when @pinecone-database/pinecone exists. Downloads alone got that wrong in the other
   // direction once, picking angular-froala over froala-editor, so shape breaks the tie only
   // among names that actually carry the brand.
-  // Binary on purpose. Ranking by how much of the brand a name carries picked froala-pages
-  // over froala-editor because the suffix was shorter, which is the same defect as picking
-  // angular-froala, just wearing a different disguise. Only an exact hit skips the downloads.
+  // A scope proves the vendor published it and says nothing about which of their packages is
+  // the SDK. Downloads alone answered @transloadit/prettier-bytes, a byte formatter that ships
+  // as an Uppy dependency, and @workos/radar-signals@0.0.1. Shape decides that much and no more:
+  // ranking by how much of the brand a name carries once picked froala-pages over froala-editor.
+  const SDK_WORDS = /(^|[-.])(sdk|client|node|js|api|core)([-.]|$)/
   const entryRank = (name: string) => {
     const part = (name.startsWith('@') ? (name.split('/')[1] ?? '') : name).toLowerCase()
-    return part === brand ? 0 : 1
+    if (part === brand) return 0
+    return SDK_WORDS.test(part) ? 1 : 2
   }
   ranked.sort(
     (a, b) =>
