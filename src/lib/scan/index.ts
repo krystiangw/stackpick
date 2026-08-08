@@ -238,7 +238,17 @@ async function sitemapCandidates(domain: string, docsUrl: string, seen: Set<stri
 }
 
 /** Follows a few same-host documentation links that look like they discuss credentials. */
-async function readDeeper(domain: string, docsUrl: string, html: string): Promise<{ pages: Fetched[]; unreadable: number }> {
+async function readDeeper(
+  domain: string,
+  docsUrl: string,
+  html: string,
+  /**
+   * Set only when the scanned brand redirects into another company's site. sendgrid.com lands on
+   * twilio.com, whose documentation covers a dozen products, and every page we read was about
+   * Twilio Chat and Authy. We published those numbers under SendGrid's name.
+   */
+  mustMention: string | null = null,
+): Promise<{ pages: Fetched[]; unreadable: number }> {
   const base = new URL(docsUrl)
   const seen = new Set<string>([docsUrl])
   const fromLinks: string[] = []
@@ -263,7 +273,8 @@ async function readDeeper(domain: string, docsUrl: string, html: string): Promis
   // /docs/cloud-account and /docs/reference from its docs front page, and the pages that answer
   // the question are in its sitemap, which we never opened because three links were enough.
   const fromSitemap = await sitemapCandidates(domain, docsUrl, seen, 3)
-  const candidates = [...fromLinks, ...fromSitemap].sort(byHint).slice(0, 3)
+  const onBrand = (url: string) => !mustMention || url.toLowerCase().includes(mustMention)
+  const candidates = [...fromLinks, ...fromSitemap].filter(onBrand).sort(byHint).slice(0, 3)
 
   const pages = await inParallel(candidates, (url) => fetchUrl(url))
   const readable = pages.filter((page) => page.ok)
@@ -403,6 +414,19 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     )
   }
 
+  // A brand living on another company's site has its own section of that documentation, and
+  // reading the host's index instead measures the host. twilio.com/docs/sendgrid is SendGrid's;
+  // twilio.com/docs is Twilio's.
+  const brandOnHost = found.resolvedElsewhere ? domain.split('.')[0].toLowerCase() : null
+  const brandSection =
+    brandOnHost && found.docs && !found.docs.toLowerCase().includes(brandOnHost)
+      ? await fetchUrl(`${found.docs.replace(/\/$/, '')}/${brandOnHost}`)
+      : null
+  if (brandSection?.ok && visibleTextLength(brandSection.body) > 0) {
+    found.docs = brandSection.url
+    found.docsPage = brandSection
+  }
+
   report(found.docs ? `Reading ${new URL(found.docs).pathname}` : 'Looking for documentation', 1)
   const docsPage = found.docsPage
   const docsText = docsPage?.ok ? docsPage.body : ''
@@ -413,8 +437,13 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
   // One documentation page is a lottery: cloudinary describes its Provisioning API on a page
   // we never opened, then failed the check for not describing it. Follow the pages an agent
   // hunting for credentials would follow.
+  // Only the pages filed under the brand we were asked about, when that brand's site is
+  // somebody else's. Everything on twilio.com/docs is documentation; almost none of it is
+  // SendGrid's, and a scorecard headed sendgrid.com must not be measuring Twilio Chat.
   const docsPending = phase('docs', async () =>
-    docsPage?.ok && found.docs ? readDeeper(domain, found.docs, docsPage.body) : { pages: [], unreadable: 0 },
+    docsPage?.ok && found.docs
+      ? readDeeper(domain, found.docs, docsPage.body, brandOnHost)
+      : { pages: [], unreadable: 0 },
   )
   const robotsPending = phase('robots', () => scanRobots(found.site))
   const machinePending = phase('machine', () =>
