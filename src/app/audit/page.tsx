@@ -7,14 +7,15 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'Agent audits — StackPick',
   description:
-    'Four categories, eighteen runs in isolated copies of a real application. What agents chose, what they rejected, and where every one of them stopped.',
+    'Every category we have measured, in isolated copies of a real application. What agents chose, what they rejected, and where each of them stopped.',
 }
 
 export default async function AuditIndexPage() {
   const audits = await listAudits()
   const runs = audits.reduce((sum, audit) => sum + audit.runs.length, 0)
+  const categories = new Set(audits.map((audit) => audit.category)).size
   const blocked = audits.reduce(
-    (sum, audit) => sum + audit.runs.filter((run) => run.blockedBy !== null).length,
+    (sum, audit) => sum + audit.runs.filter((run) => Boolean(run.blockedBy)).length,
     0,
   )
 
@@ -23,7 +24,7 @@ export default async function AuditIndexPage() {
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Full agent audits</p>
         <h1 className="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-tight tracking-tight">
-          What agents do when nobody is watching, in four categories
+          What agents do when nobody is watching, across {categories} categories
         </h1>
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
           Each audit is the same instrument pointed at one category: agents given a brief and nothing else, in
@@ -80,7 +81,7 @@ export default async function AuditIndexPage() {
       <section className="py-12">
         <h2 className="text-lg font-semibold tracking-tight">The same instrument, pointed at your category</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          These four were run to build the method, so the subjects are vendors we have no relationship with and
+          These were run to build the method, so the subjects are vendors we have no relationship with and
           the write-ups are public. Yours would not be: nothing from a paid audit is published without your
           written agreement.
         </p>

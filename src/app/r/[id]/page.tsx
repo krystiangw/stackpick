@@ -218,9 +218,10 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           Everything above is a file an agent could read. Whether one actually chose you is a different
           measurement. We ran six agents on one brief, in six isolated copies of a real codebase, and recorded
-          what they did. All six picked the same competitor. The vendor we were watching was struck off in four
-          words, before its product was opened: <span className="font-mono text-sm text-ink">Fully commercial, licence key required.</span>{' '}
-          In the second round it was not named at all.
+          what they did. All six picked the same competitor. The vendor we were watching was never named, not
+          even on a rejection list, and between them the runs named and dismissed ten alternatives. In an earlier
+          round, run before we isolated the copies, it was named twice and struck off both times in four words:{' '}
+          <span className="font-mono text-sm text-ink">Fully commercial, licence key required.</span>
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link

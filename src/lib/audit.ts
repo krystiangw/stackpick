@@ -46,7 +46,8 @@ export async function listAudits(): Promise<FullAudit[]> {
       .filter((file) => file.endsWith('.json'))
       .map(async (file) => JSON.parse(await readFile(path.join(AUDITS_DIR, file), 'utf8')) as FullAudit),
   )
-  return audits.sort((a, b) => b.runDate.localeCompare(a.runDate))
+  // Same-day audits would otherwise fall back to filesystem order.
+  return audits.sort((a, b) => b.runDate.localeCompare(a.runDate) || a.slug.localeCompare(b.slug))
 }
 
 export async function getAudit(slug: string): Promise<FullAudit | null> {

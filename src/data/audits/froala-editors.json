@@ -11,13 +11,34 @@
       "model": "Opus 5",
       "chose": "Tiptap",
       "rejected": [
-        { "vendor": "CKEditor 5", "reason": "Licence field is SEE LICENSE IN LICENSE.md; free use means setting licenseKey 'GPL', which imposes GPL and renders a badge, and the free commercial tier is cloud-only and capped at 1,000 editor loads a month" },
-        { "vendor": "TinyMCE", "reason": "Self-hosting needs a licence key or the GPL key, and without a valid key the editor disables itself" },
-        { "vendor": "Lexical", "reason": "HTML is not its canonical state and image paste needs a hand-written node" },
-        { "vendor": "react-quill", "reason": "Last published 2023, peer dependencies stop at React 18" },
-        { "vendor": "BlockNote", "reason": "Block JSON is its native format, and it is built on the library we already picked" },
-        { "vendor": "Slate", "reason": "No toolbar, no HTML serializer, no image handling: three of the four requested features would be ours to build" },
-        { "vendor": "Editor.js", "reason": "Block JSON only, no HTML output at all" }
+        {
+          "vendor": "CKEditor 5",
+          "reason": "Licence field is SEE LICENSE IN LICENSE.md; free use means setting licenseKey 'GPL', which imposes GPL and renders a badge, and the free commercial tier is cloud-only and capped at 1,000 editor loads a month"
+        },
+        {
+          "vendor": "TinyMCE",
+          "reason": "Self-hosting needs a licence key or the GPL key, and without a valid key the editor disables itself"
+        },
+        {
+          "vendor": "Lexical",
+          "reason": "HTML is not its canonical state and image paste needs a hand-written node"
+        },
+        {
+          "vendor": "react-quill",
+          "reason": "Last published 2023, peer dependencies stop at React 18"
+        },
+        {
+          "vendor": "BlockNote",
+          "reason": "Block JSON is its native format, and it is built on the library we already picked"
+        },
+        {
+          "vendor": "Slate",
+          "reason": "No toolbar, no HTML serializer, no image handling: three of the four requested features would be ours to build"
+        },
+        {
+          "vendor": "Editor.js",
+          "reason": "Block JSON only, no HTML output at all"
+        }
       ],
       "usedLiveSources": true,
       "sources": [
@@ -34,11 +55,26 @@
       "model": "Opus 5",
       "chose": "Tiptap",
       "rejected": [
-        { "vendor": "CKEditor 5", "reason": "Requires config.licenseKey to run at all; the free path forces the literal GPL key and a badge" },
-        { "vendor": "TinyMCE", "reason": "Quoted from the vendor's own documentation: a licence key must be provided and valid, otherwise the editor is disabled" },
-        { "vendor": "react-quill", "reason": "Peer dependencies cap at React 18 against this project's React 19" },
-        { "vendor": "Lexical", "reason": "Pre-1.0, no toolbar, and HTML is a conversion rather than the native format" },
-        { "vendor": "Plate", "reason": "A large Slate superstructure for a single component" }
+        {
+          "vendor": "CKEditor 5",
+          "reason": "Requires config.licenseKey to run at all; the free path forces the literal GPL key and a badge"
+        },
+        {
+          "vendor": "TinyMCE",
+          "reason": "Quoted from the vendor's own documentation: a licence key must be provided and valid, otherwise the editor is disabled"
+        },
+        {
+          "vendor": "react-quill",
+          "reason": "Peer dependencies cap at React 18 against this project's React 19"
+        },
+        {
+          "vendor": "Lexical",
+          "reason": "Pre-1.0, no toolbar, and HTML is a conversion rather than the native format"
+        },
+        {
+          "vendor": "Plate",
+          "reason": "A large Slate superstructure for a single component"
+        }
       ],
       "usedLiveSources": true,
       "sources": [
@@ -55,11 +91,26 @@
       "model": "Opus 5",
       "chose": "Tiptap",
       "rejected": [
-        { "vendor": "CKEditor 5", "reason": "npm licence field is SEE LICENSE IN LICENSE.md, an explicit licenceKey has been required since v44, and the free commercial plan caps at 1,000 editor loads a month with trial keys expiring after 14 days" },
-        { "vendor": "TinyMCE", "reason": "Self-hosting requires a licence key and without one the editor is disabled outright" },
-        { "vendor": "Quill 2", "reason": "Delta-native, so the existing HTML column would need a conversion layer" },
-        { "vendor": "Lexical", "reason": "Still 0.x with breaking changes between minors" },
-        { "vendor": "Slate", "reason": "Pre-1.0 with an explicitly unstable API and no HTML serialization" }
+        {
+          "vendor": "CKEditor 5",
+          "reason": "npm licence field is SEE LICENSE IN LICENSE.md, an explicit licenceKey has been required since v44, and the free commercial plan caps at 1,000 editor loads a month with trial keys expiring after 14 days"
+        },
+        {
+          "vendor": "TinyMCE",
+          "reason": "Self-hosting requires a licence key and without one the editor is disabled outright"
+        },
+        {
+          "vendor": "Quill 2",
+          "reason": "Delta-native, so the existing HTML column would need a conversion layer"
+        },
+        {
+          "vendor": "Lexical",
+          "reason": "Still 0.x with breaking changes between minors"
+        },
+        {
+          "vendor": "Slate",
+          "reason": "Pre-1.0 with an explicitly unstable API and no HTML serialization"
+        }
       ],
       "usedLiveSources": true,
       "sources": [
@@ -76,13 +127,29 @@
       "model": "Sonnet 5",
       "chose": "Tiptap",
       "rejected": [
-        { "vendor": "react-quill", "reason": "Last published 2022, no React 19 peer range, effectively unmaintained" },
-        { "vendor": "react-quill-new", "reason": "A single-maintainer fork of an abandoned project" },
-        { "vendor": "Lexical", "reason": "JSON-tree first, so HTML in and out is a secondary path" },
-        { "vendor": "Slate", "reason": "A document-model toolkit with no marks, toolbar or serializer" }
+        {
+          "vendor": "react-quill",
+          "reason": "Last published 2022, no React 19 peer range, effectively unmaintained"
+        },
+        {
+          "vendor": "react-quill-new",
+          "reason": "A single-maintainer fork of an abandoned project"
+        },
+        {
+          "vendor": "Lexical",
+          "reason": "JSON-tree first, so HTML in and out is a secondary path"
+        },
+        {
+          "vendor": "Slate",
+          "reason": "A document-model toolkit with no marks, toolbar or serializer"
+        }
       ],
       "usedLiveSources": true,
-      "sources": ["npm registry for nine packages", "tiptap.dev install and extension pages (read)", "one web search"],
+      "sources": [
+        "npm registry for nine packages",
+        "tiptap.dev install and extension pages (read)",
+        "one web search"
+      ],
       "blockedBy": null,
       "notes": "Confirmed the choice by installing it and typechecking, and reported the pre-existing gaps in the scaffold rather than papering over them."
     },
@@ -91,13 +158,29 @@
       "model": "Sonnet 5",
       "chose": "Tiptap",
       "rejected": [
-        { "vendor": "CKEditor 5", "reason": "The open-source distribution is GPL and shows a badge; the CDN build refuses the GPL key and needs a paid licence key" },
-        { "vendor": "Lexical", "reason": "JSON-first, and HTML requires a separate package plus a headless DOM shim outside the browser" },
-        { "vendor": "react-quill-new", "reason": "A monolithic editor whose module system has to be fought rather than composed" },
-        { "vendor": "Slate", "reason": "Build-your-own-editor toolkit, disproportionate for a minimal component" }
+        {
+          "vendor": "CKEditor 5",
+          "reason": "The open-source distribution is GPL and shows a badge; the CDN build refuses the GPL key and needs a paid licence key"
+        },
+        {
+          "vendor": "Lexical",
+          "reason": "JSON-first, and HTML requires a separate package plus a headless DOM shim outside the browser"
+        },
+        {
+          "vendor": "react-quill-new",
+          "reason": "A monolithic editor whose module system has to be fought rather than composed"
+        },
+        {
+          "vendor": "Slate",
+          "reason": "Build-your-own-editor toolkit, disproportionate for a minimal component"
+        }
       ],
       "usedLiveSources": true,
-      "sources": ["npm registry for seven packages", "tiptap.dev documentation (read)", "two web searches"],
+      "sources": [
+        "npm registry for seven packages",
+        "tiptap.dev documentation (read)",
+        "two web searches"
+      ],
       "blockedBy": null,
       "notes": "Named the licensing question as the deciding factor in its own words, before comparing any feature."
     },
@@ -106,10 +189,22 @@
       "model": "Sonnet 5",
       "chose": "Tiptap",
       "rejected": [
-        { "vendor": "CKEditor 5", "reason": "Licence field is SEE LICENSE IN LICENSE.md rather than a permissive identifier, so production use means complying with GPL" },
-        { "vendor": "react-quill-new", "reason": "A community fork of an abandoned project, and Delta rather than HTML" },
-        { "vendor": "Lexical", "reason": "No built-in toolbar or default node set, so everything would be assembled by hand" },
-        { "vendor": "Slate", "reason": "Fully headless: no marks, blocks, toolbar or serializer" }
+        {
+          "vendor": "CKEditor 5",
+          "reason": "Licence field is SEE LICENSE IN LICENSE.md rather than a permissive identifier, so production use means complying with GPL"
+        },
+        {
+          "vendor": "react-quill-new",
+          "reason": "A community fork of an abandoned project, and Delta rather than HTML"
+        },
+        {
+          "vendor": "Lexical",
+          "reason": "No built-in toolbar or default node set, so everything would be assembled by hand"
+        },
+        {
+          "vendor": "Slate",
+          "reason": "Fully headless: no marks, blocks, toolbar or serializer"
+        }
       ],
       "usedLiveSources": false,
       "sources": [
@@ -124,7 +219,7 @@
   "verdict": {
     "headline": "Six agents chose the same editor. Froala was not named once, not even to reject it.",
     "body": [
-      "Six runs, two models, six isolated copies of the same application, one brief: choose a rich text editor and wire it up. Every run chose the same MIT-licensed library, confirmed from the package files each run left behind rather than from what the run said it did. Between them the runs named and dismissed eleven alternatives. Froala was not among them.",
+      "Six runs, two models, six isolated copies of the same application, one brief: choose a rich text editor and wire it up. Every run chose the same MIT-licensed library, confirmed from the package files each run left behind rather than from what the run said it did. Between them the runs named and dismissed ten alternatives. Froala was not among them.",
       "Two commercial vendors were dismissed in a line each, and the line was always about the licence, never about the product. One run quoted TinyMCE's own documentation: without a valid key the editor disables itself. Three runs recorded that CKEditor requires an explicit licence key, that the free path imposes GPL and a badge, and that the free commercial tier is capped at a thousand editor loads a month. None of the six compared a feature of any of them.",
       "The order is the finding. Elimination happened during dependency research, from package metadata and licence fields, before any product was opened. One run never opened a vendor page at all and decided entirely from the registry and the code it had installed. If your licence and your entry requirements live only on your website, that run never saw them."
     ]
@@ -137,7 +232,7 @@
     },
     {
       "title": "Get into the candidate set before optimising the comparison",
-      "body": "Being dismissed in one line is a positioning problem. Not being named at all is a different and harder one, and it is invisible from inside: no impression, no trial, no lost deal to review. Eleven alternatives were named across these runs and you were not one of them.",
+      "body": "Being dismissed in one line is a positioning problem. Not being named at all is a different and harder one, and it is invisible from inside: no impression, no trial, no lost deal to review. Ten alternatives were named across these runs and you were not one of them.",
       "effort": "weeks"
     },
     {

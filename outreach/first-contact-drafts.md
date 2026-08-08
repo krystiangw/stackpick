@@ -26,9 +26,10 @@ I run a small study on how AI coding agents pick libraries. Six agents, two mode
 copies of the same React app, one brief: add a rich text editor and wire it up.
 
 All six picked Tiptap. Froala was not named once, not even on a rejection list, and between them
-the runs named and dismissed eleven alternatives.
+the runs named and dismissed ten alternatives.
 
-In an earlier round Froala did come up twice, and both times it was struck off in four words:
+In an earlier round, run before we isolated the copies, Froala did come up twice, and both times it
+was struck off in four words:
 "Fully commercial, licence key required." No feature was compared.
 
 The full round, with what each run read and rejected, is here: <link to /audit/froala-editors>
