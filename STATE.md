@@ -1276,3 +1276,39 @@ Insights od 2026-06-23, Cloudflare wypuścił produkt AEO 2026-08-06, a Agent Na
 1 456 narzędzi za darmo od marca. **Ale nikt nie mierzy ścieżki rejestracja → poświadczenie**, a
 `dash.cloudflare.com/sign-up` odpowiada **403** zwykłemu klientowi HTTP: firma sprzedająca gotowość
 na agenty blokuje agenta na własnej rejestracji. To jest wolne pole i mamy na nie dowód.
+
+## Runda 2026-08-08 (trzydziesta druga): naprawa, która zepsuła to, czego miała bronić
+
+Trzy wersje w jednej turze, bo dwie z nich znalazł diff korpusu, a nie build.
+
+**4.9: skaner nie czytał skompresowanych sitemap.** undici rozpakowuje tylko to, co sam
+wynegocjował, a `sitemap.xml.gz` serwowany pod nazwą `sitemap.xml` przychodzi z
+`content-encoding: gzip` niezależnie od tego, o co prosimy. `docs.datadoghq.com/sitemap.xml`
+wracał jako bajty, nie pasował do żadnego `<loc>`, więc **check provisioningu oceniał Datadoga na
+samej stronie tytułowej dokumentacji**. Po naprawie indeks daje 5 sitemap, a plik potomny **1 652
+URL-e, z zera**. Rozpakowanie jest częściowe (`Z_SYNC_FLUSH`), bo tniemy odczyt na 400 kB, a ścisłe
+inflate wyrzuca wtedy całe ciało.
+
+**4.9: werdykt publikował źródło regexa.** Naprawa z rundy 31, która miała nazywać dopasowane
+frazy, wypisywała na kartę `creat(?:e|ing) (?:an?|your|a new|new|the)?\s*(?:api[- ]?key|...)`.
+Złapane moim testem regresji na sześciu domenach, zanim zobaczył to jakikolwiek vendor.
+
+**5.0: sonda kontrolna MCP głodziła handshake, który ma chronić.** To jest lekcja tej rundy.
+Kontrola odpalała nierutowaną ścieżkę **na każdym origin z góry**: trzy dodatkowe żądania na ten
+sam limit współbieżności per host, w budżecie 21 s. Na `telnyx.com` zagłodziło to jedno żądanie,
+które dowodzi, że serwer jest żywy, i **endpoint zwracający pełny `protocolVersion` został
+opublikowany jako nieistniejący**. Sonda przeciw fałszywym trafieniom wyprodukowała fałszywe
+pominięcie. Teraz kontrola idzie tylko tam, gdzie może jeszcze zmienić odpowiedź, czyli nigdy, gdy
+handshake już wrócił.
+
+**Wzorzec, który się powtarza w tym projekcie i który trzeba nazwać:** każda naprawa wprowadza błąd
+przeciwny, a znajduje go **diff korpusu po reseedzie**, nie test i nie build. Dlatego kolejność
+`deploy → reseed → diff → sprawdź KAŻDY spadek ręcznie` jest obowiązkowa, a nie opcjonalna.
+
+Pozostałe spadki sprawdzone i odrzucone jako znane wahania: froala i anvil.co (bramka bota, 403
+zamiast 200), amplitude i supertokens (dwa odczyty cennika), launchdarkly i tomtom (wyszukiwanie
+w rejestrze npm padło pod obciążeniem, check poprawnie niemierzalny), loops.so (inny zestaw stron
+dokumentacji, ręcznie potwierdzone, że na przeczytanych stronach frazy nie ma).
+
+**Stan:** korpus 156/156 na formule 5.0, `npm run audit` czysty (0 sprzeczności, 0 liczb
+rozjechanych ze stroną), 54 domeny z żywym serwerem MCP.
