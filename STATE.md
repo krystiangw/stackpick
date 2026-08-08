@@ -1122,3 +1122,40 @@ mówi, **ilu z rynku za nią stoi**, a strona robiąca ten argument nigdy tego n
 blok liczony na żywo: 103 vendorów, z czego **26 uruchamia serwer MCP i nie dokumentuje żadnej
 drogi do poświadczenia dla niego**. To jest ta sama teza co osiemnaście przebiegów wyżej, tylko
 w skali, do której żadna liczba przebiegów by nie dobiła, i za zero kosztu modelu.
+
+## Runda 2026-08-08 (dwudziesta dziewiąta): piąta przyczyna, większa niż cztery poprzednie razem
+
+Weryfikacja czterech napraw przyniosła gorszą wiadomość niż same naprawy. **Piąta przyczyna
+systemowa: każdy check treściowy rozstrzygamy na jednym adresie i na dopasowaniu ciągu znaków,
+po czym publikujemy wynik jako twierdzenie o całej witrynie, mimo że ten sam skan trzyma już
+w pamięci dowody, które temu przeczą.**
+
+Mechanizmy, każdy sprawdzony realnym żądaniem:
+- Ranker dokumentacji premiuje **najpłytszą** stronę, a front docsów to dokładnie shell nawigacji
+  renderowany JS-em. Publikujemy `chargebee.com` jako **„Only 14 characters render without JS"**,
+  podczas gdy strona o kluczach API tego samego serwisu, **pobrana w tym samym skanie**, ma 8 856
+  znaków. Tak samo stytch.com (1 680 kontra 16 957), plivo.com (883 kontra 12 377) i siedem innych.
+- `docsTextChars` liczy się z tej jednej strony; trzy strony z `readDeeper()` idą wyłącznie do
+  grepa provisioningu i nigdy nie wracają.
+- Plik pobrany dla jednego checku jest niewidoczny dla drugiego. `trigger.dev` ma „Management API"
+  we własnym `llms.txt`, **który przeczytaliśmy**, i dostaje 0/2 za brak tego, co mieliśmy w ręku.
+- Sitemapa jest ucinana do pierwszych 500 URL-i **przed** rankingiem, a strony o kluczach API
+  algolii siedzą od pozycji 816, launchdarkly od 853.
+- **Publikujemy zdanie o żądaniu, którego nie wysyłamy:** „Signup answers N to a non-browser
+  request", podczas gdy sonda idzie z UA przeglądarki. `liveblocks.io` odpowiada 200 z prawdziwym
+  formularzem agentowi trzy razy na trzy i jest za to oblany. **Naprawione po mojej stronie od
+  razu:** zdanie nie twierdzi już nic o user-agencie, dopóki sonda go nie wysyła.
+- `ckeditor.com`: „MCP mentioned 108x" pochodzi z ciała uciętego na 400 kB przy pliku 7,08 MB.
+  Prawdziwa liczba to 540. Publikujemy zaniżoną pięciokrotnie liczbę jako fakt o vendorze.
+
+**Osobna klasa błędu, znaleziona przy okazji:** `sendgrid.com` przekierowuje na
+`www.twilio.com/en-us/sendgrid`, a my mierzymy Twilio i publikujemy to **pod nazwą SendGrida**.
+Dziesięć z czternastu zdań w obu wierszach jest identycznych.
+
+### Lekcja o moim własnym sprawdzaniu
+
+Deploy odrzucony przez Heroku ujawnił, że **grepowanie „Compiled successfully" nie jest zieloną
+kompilacją**: `next build` puszcza typecheck **po** tym komunikacie. Mój skrypt audytowy miał
+`process.exit` w środku, więc dopisany kod był nieosiągalny, typowany jako `never` i nie
+kompilował się. Lokalnie widziałem „Compiled successfully" i uznawałem to za zielone.
+**Od teraz grepuję też `Failed to type check` i `error TS`.**
