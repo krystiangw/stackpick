@@ -27,15 +27,16 @@ const RESULTS = [
   },
   {
     id: 'sources',
-    heading: 'Whether your docs get read depends on the model, not on your docs',
+    heading: 'What makes your documentation get read is the kind of decision, not the model',
     numbers: [
-      ['Stronger model, runs that fetched live sources', '10 / 10'],
-      ['Cheaper model, runs that fetched live sources', '0 / 10'],
-      ['Average tool calls per run', '13 vs 7'],
+      ['Storage brief, cheaper model, runs that fetched live sources', '0 / 10'],
+      ['Editor brief, every model, runs that fetched live sources', '6 / 6'],
+      ['Average tool calls per run, stronger against cheaper', '13 vs 7'],
     ],
     body: [
-      'The result replicated across both conditions, so it is not an artefact of one prompt. The stronger model pulled provider documentation, MDN and the npm registry in every run. The cheaper one declared it was working from its own knowledge, in all ten runs, and fetched nothing.',
-      'The commercial consequence is uncomfortable: your investment in llms.txt, MCP and fresh documentation reaches roughly half the market. The other half gets whatever the model memorised during training.',
+      'In the storage study the stronger model pulled provider documentation, MDN and the npm registry in every run, and the cheaper one declared it was working from its own knowledge, in all ten runs, and fetched nothing. That replicated across both conditions, so it was not an artefact of one prompt, and it looked like a fact about models.',
+      'A later study broke that reading. Choosing a rich text editor turns on a licence, and a licence cannot be answered from memory: every run fetched sources, including all three on the cheaper model. The same model that read nothing about storage read vendor documentation, the registry and the compiled package on disk when the decision required it.',
+      'So the commercial consequence is sharper than a note about models. Where the choice can be made from what a model already knows, your documentation may never be opened and you are judged on what was true at training time. Where the choice turns on something checkable, a licence, a price, an entry requirement, everything reads you. Both cases are worth knowing, and only one of them is fixable by writing better documentation.',
     ],
     quote: {
       text: 'Last published 2.0.2 on 2023-03-06, so over three years without a release despite 1.5 million weekly downloads. Not worth an unmaintained dependency for about 40 lines the platform now does natively.',
