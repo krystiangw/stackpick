@@ -1159,3 +1159,41 @@ kompilacją**: `next build` puszcza typecheck **po** tym komunikacie. Mój skryp
 `process.exit` w środku, więc dopisany kod był nieosiągalny, typowany jako `never` i nie
 kompilował się. Lokalnie widziałem „Compiled successfully" i uznawałem to za zielone.
 **Od teraz grepuję też `Failed to type check` i `error TS`.**
+
+## Runda 2026-08-08 (trzydziesta): weryfikacja piątej naprawy realnym żądaniem
+
+Poprzednia runda podniosła średnią z 8,50 do 9,23 i zmieniła 56 domen. Raport subagenta zawierał
+zdanie, którego nie dało się pogodzić z opublikowanym korpusem: **„ckeditor stays 0 (it genuinely
+does not negotiate)"**, podczas gdy korpus 4.5 pokazywał `ckeditor.com | Docs serve markdown to
+machines`. Jedno z dwóch było fałszem, więc poszło żądanie po żądaniu.
+
+**Wygrał korpus, nie raport.** `ckeditor.com/docs/` oddaje `text/html`, ale
+`ckeditor.com/docs/ckeditor5/latest/getting-started/index.html` oddaje **`text/markdown`, 5 897 B**.
+Subagent sprawdził front docsów i uogólnił to na witrynę, czyli popełnił dokładnie tę piątą
+przyczynę, którą naprawiał. Sprawdzone ręcznie sześć nowych przejść (`ckeditor`, `bitmovin`,
+`chargebee`, `configcat`, `contentful`, `directus`): **wszystkie negocjują naprawdę**, żadne nie
+robi tego na stronie tytułowej dokumentacji.
+
+Z tego wynikła naprawa, nie z testu: **werdykt „Docs serve markdown to machines" nie nazywał
+strony**. Vendor testował jedyny adres, jaki podawaliśmy, dostawał HTML i miał pełne prawo uznać
+finding za wymyślony. Teraz zdanie kończy się adresem, który faktycznie odpowiedział.
+
+**Druga naprawa, znaleziona przy trzech domenach, które spadły.** `postmark.com` zjechał 10 -> 8 na
+`programmatic_provisioning`, a lokalnie ten sam skan znajduje u nich „management api" i „account
+api". Różnica: produkcja przeczytała 2 dokumenty, lokalna maszyna 3. **Stronę, która odmówiła nam
+odpowiedzi, liczyliśmy jako stronę, która milczy o kluczach.** Postmark dokumentuje tworzenie
+kluczy przez Account API, a my publikowaliśmy o nich „No programmatic credential creation
+described". Nieprzeczytana strona daje teraz `inconclusive`, nie porażkę.
+
+`getunleash.io` (11 -> 10) nie jest regresją wyceny: skan skończył się na budżecie 21 s, trzy checki
+poszły jako niemierzalne. `baseten.co` (10 -> 9) czeka.
+
+**Wciąż otwarte i oddane subagentowi:** liczba głębszych stron dokumentacji **waha się między
+identycznymi przebiegami na tej samej maszynie** (postmark: raz 1 strona, raz 0), a przy zerze
+`docsPagesUnread` też jest zerem, więc kandydaci nie odpadli na pobieraniu, tylko lista wyszła
+pusta. Zgadywałem dwa razy i dwa razy się myliłem, więc analiza poszła do subagenta z poleceniem
+instrumentacji zamiast hipotez. Podejrzenie do potwierdzenia: `sitemapCandidates` wymaga
+`hostname === domain`, a docsy Postmarka stoją na **postmarkapp.com** przy skanowanej domenie
+**postmark.com**, więc cała sitemapa (950 wpisów) mogła zostać odrzucona.
+
+Formuła **4.6**.
