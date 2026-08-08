@@ -44,6 +44,13 @@ export type IndustryReport = {
    * The whole funnel thesis in one number: a door built for a machine, and no key behind it.
    */
   mcpWithoutKeys: number
+  /**
+   * The stage nobody else grades. Lighthouse ships an agentic browsing category and Cloudflare
+   * ships a readiness scanner, and both stop at documentation and protocol files: neither asks
+   * whether an unattended client can get an account. These two numbers are that question.
+   */
+  signupRefusesAgents: number
+  signupNeedsJavaScript: number
   best: { domain: string; total: number; measurable: number; reportId: string }[]
   worst: { domain: string; total: number; measurable: number; reportId: string }[]
 }
@@ -126,8 +133,18 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
     return mcp.points === mcp.max && scored && provisioning.points === 0
   }).length
 
+  // Read off the findings rather than off the verdict sentence, so the two numbers stay true
+  // when the wording changes.
+  const withSignup = reports.filter((report) => report.findings.funnel.signup.url !== null)
+  const signupRefusesAgents = withSignup.filter((report) => !report.findings.funnel.signup.reachable).length
+  const signupNeedsJavaScript = withSignup.filter(
+    (report) => report.findings.funnel.signup.reachable && !report.findings.funnel.signup.rendersFormWithoutJs,
+  ).length
+
   return {
     mcpWithoutKeys,
+    signupRefusesAgents,
+    signupNeedsJavaScript,
     sampleSize: reports.length,
     formulaVersion,
     // Every report in the slice shares a formula version, so they share a maximum.

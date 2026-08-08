@@ -190,6 +190,15 @@ export default async function FindingsPage() {
               no way for an agent to obtain a credential for it. A door built for a machine, and nothing behind
               it the machine can unlock alone. That is the studies above, at scale, without a single agent run.
             </p>
+            <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+              One stage further down, where nobody else is looking:{' '}
+              <span className="font-mono">{corpus.signupRefusesAgents}</span> of them answer an agent at the
+              signup form with a refusal rather than a form, and{' '}
+              <span className="font-mono">{corpus.signupNeedsJavaScript}</span> more serve a form that renders
+              nothing without JavaScript. Google ships an agentic browsing category in Lighthouse and Cloudflare
+              ships a readiness scanner, and both stop at documentation and protocol files. Neither asks whether
+              an unattended client can get an account, which is the step every one of our agent runs died on.
+            </p>
             <p className="mt-4 flex flex-wrap gap-4 font-mono text-sm">
               <Link href="/report" className="text-brass underline underline-offset-4">
                 The whole market, aggregated
