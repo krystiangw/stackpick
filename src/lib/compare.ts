@@ -63,6 +63,9 @@ export async function buildComparison(subject: Report): Promise<Comparison> {
 
   const position = peers.findIndex((peer) => peer.isSubject) + 1
   const rankInCategory = position > 0 && peers.length >= 3 ? { position, outOf: peers.length } : null
+  // A league table whose only row is the reader is not a comparison. It happened whenever a
+  // visitor scanned the first domain we held in their category, and it read as a made-up ranking.
+  if (peers.length < 3) return { category, peers: [], rankInCategory: null, percentile, beatenOn: [] }
 
   const beatenOn = subject.scorecard.checks
     .filter((check) => check.points < check.max && !check.inconclusive)

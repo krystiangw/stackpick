@@ -54,6 +54,18 @@ const SELF_SERVE_PATTERNS = [
   /\btry (?:it )?free\b/i,
 ]
 
+/**
+ * What separates a file an agent can act on from one that only states a policy: something to
+ * authenticate with, somewhere to send a request, or a way to get an account. Deliberately
+ * generous, because the check is about whether the file was written for a machine at all.
+ */
+const PROCEDURE_SIGNALS =
+  /api[- ]?key|api[- ]?token|access[- ]token|bearer|authorization|endpoint|curl |POST https?:|sign[- ]?up|register|base[- ]?url/i
+
+function describesAProcedure(body: string): boolean {
+  return body.trim().length >= 400 && PROCEDURE_SIGNALS.test(body)
+}
+
 export const PROVISIONING_PATTERN_COUNT = PROVISIONING_PATTERNS.length
 
 /**
@@ -87,6 +99,13 @@ export type McpEndpoint = { url: string; status: number; evidence: 'challenges' 
 export type FunnelFindings = {
   entryPaths: Record<string, boolean>
   entryPointsFound: string[]
+  /**
+   * Of those, the ones that read as a procedure rather than a declaration. inngest.com scored
+   * the full two points for a 583 byte ai.txt whose entire content is Allow-AI-Training: yes,
+   * which is a permissions policy in the shape of robots.txt and tells an agent nothing about
+   * how to get in. Existence of a file was never the thing worth two points.
+   */
+  entryPointsWithProcedure: string[]
   oauth: {
     metadataPublished: boolean
     dynamicClientRegistration: boolean
@@ -377,9 +396,10 @@ export async function scanFunnel({
   // path they prove nothing, and firing them anyway would be nine requests spent to learn that.
   const catchAll = await catchAllPending
   const entriesPending = inParallel(AGENT_ENTRY_PATHS, async (path) => {
-    if (catchAll) return [path, false] as const
+    if (catchAll) return [path, false, false] as const
     const got = await fetchUrl(`${site}${path}`, { accept: 'text/markdown, application/json, text/plain' })
-    return [path, isRealTextFile(got, 30)] as const
+    const present = isRealTextFile(got, 30)
+    return [path, present, present && describesAProcedure(got.body)] as const
   })
 
   const mcpEndpoints = await mcpPending
@@ -402,7 +422,7 @@ export async function scanFunnel({
   // is the same rule the door test already follows, applied to content instead of status.
   const pricingRetry = pricingPage?.ok && pricingUrl ? await fetchUrl(pricingUrl, { fresh: true }) : null
 
-  const entryPaths = Object.fromEntries(entries)
+  const entryPaths = Object.fromEntries(entries.map(([path, hit]) => [path, hit]))
   const firstPricingText = pricingPage?.ok && visibleTextLength(pricingPage.body) > 0 ? pricingPage.body : ''
   const retryText = pricingRetry?.ok && visibleTextLength(pricingRetry.body) > 0 ? pricingRetry.body : ''
   const pricingText = retryText ? `${firstPricingText}\n${retryText}` : firstPricingText
@@ -410,6 +430,7 @@ export async function scanFunnel({
   return {
     entryPaths,
     entryPointsFound: entries.filter(([, hit]) => hit).map(([path]) => path),
+    entryPointsWithProcedure: entries.filter(([, , procedure]) => procedure).map(([path]) => path),
     oauth,
     mcpEndpoints,
     signup,

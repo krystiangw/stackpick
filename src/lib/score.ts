@@ -206,9 +206,21 @@ export const CHECKS: Check[] = [
       // A .well-known descriptor already scores under MCP; counting it twice sold one file
       // as three points across two stages.
       const written = f.funnel.entryPointsFound.filter((path) => !path.startsWith('/.well-known/'))
-      if (written.length > 0) return yes(2, `Found: ${written.join(', ')}`)
+      // Older reports predate the content test, and rescoring them as policy files would be a
+      // claim about a body we no longer hold.
+      const withProcedure = (f.funnel.entryPointsWithProcedure ?? written).filter(
+        (path) => !path.startsWith('/.well-known/'),
+      )
+      const at = (paths: string[]) => paths.map((path) => `${f.site}${path}`).join(', ')
+      if (withProcedure.length > 0) return yes(2, `Found: ${at(withProcedure)}`)
+      if (written.length > 0) {
+        return yes(
+          1,
+          `Found ${at(written)}, but it states a policy rather than a procedure: nothing in it names a credential, an endpoint or a way to get an account.`,
+        )
+      }
       if (f.funnel.entryPointsFound.length > 0) {
-        return yes(1, `Only service descriptors: ${f.funnel.entryPointsFound.join(', ')}. No procedure written for a machine.`)
+        return yes(1, `Only service descriptors: ${at(f.funnel.entryPointsFound)}. No procedure written for a machine.`)
       }
       return yes(0, 'None of the 9 known agent entry paths answer')
     },

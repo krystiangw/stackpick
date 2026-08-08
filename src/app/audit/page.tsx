@@ -86,7 +86,10 @@ export default async function AuditIndexPage() {
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           These were run to build the method, so the subjects are vendors we have no relationship with and
           the write-ups are public. Yours would not be: nothing from a paid audit is published without your
-          written agreement.
+          written agreement. If you are one of the four and you think a page here is wrong, write to us and
+          the correction goes up beside the finding, or the page comes down. That offer is not conditional
+          on you buying anything, and it applies to an interpretation more than to a check, because an
+          interpretation is the part you cannot rerun yourself.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link href="/pricing" className="bg-ink px-5 py-3 font-mono text-sm text-ground transition-opacity hover:opacity-85">
