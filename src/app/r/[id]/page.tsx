@@ -209,6 +209,20 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </section>
       )}
 
+      {findings.rateLimitedUs && (
+        <section className="border-b border-rule py-8">
+          <div className="border-l-2 border-warn bg-surface p-6">
+            <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">We were rate limited</h2>
+            <p className="mt-3 max-w-2xl leading-relaxed">
+              Every request we made was answered with 429. That is either a limit we triggered or a gate on the
+              network we scan from, and we cannot tell those apart from here. Either way it is not a measurement
+              of how you treat agents, so the checks that depended on reading you are marked unmeasurable rather
+              than failed.
+            </p>
+          </div>
+        </section>
+      )}
+
       {findings.blocksPlainRequests && (
         <section className="border-b border-rule py-8">
           <div className="border-l-2 border-fail bg-surface p-6">
