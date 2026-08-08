@@ -387,16 +387,14 @@ export const CHECKS: Check[] = [
       // Owning the scope proves the vendor published it, not that it is the package a developer
       // installs. @transloadit/prettier-bytes is a byte formatter that rides along as an Uppy
       // dependency, and awarding a point for it would answer a question nobody asked.
-      if (
-        f.discovered.npmSource === 'registry-search' &&
-        f.discovered.npmConfidence === 'strong' &&
-        f.discovered.npmEntryShape === false
-      ) {
+      // Applies whatever the source was: workos.com's own pages led us to a 0.0.1 package whose
+      // name says nothing about being an SDK, and scoring it would answer a question nobody asked.
+      if (f.discovered.npmEntryShape === false) {
         return {
           points: 0,
-          detail: `Unmeasurable: ${f.npm.package} is published under your npm scope, but nothing about it says it is the package a developer installs`,
+          detail: `Unmeasurable: the closest package we could tie to you is ${f.npm.package}, and nothing about its name says it is the one a developer installs`,
           inconclusive: true,
-          unblock: 'Name your SDK once in your docs and we will score that instead of guessing from the registry.',
+          unblock: 'Name your SDK once in your docs and we will score that instead of guessing.',
         }
       }
       // A registry name that only shares a GitHub org with the site is a hypothesis. Scoring
