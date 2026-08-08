@@ -716,3 +716,39 @@ do korpusu, i porównać.
 Do czasu naprawy limit jest **opublikowany** na `/methodology`: czytamy stronę główną dokumentacji
 plus najwyżej trzy, karta podaje ile stron przeczytała, a vendor, którego strona o poświadczeniach
 nie trafiła do próbki, może nam to powiedzieć i przeskanujemy ponownie.
+
+## Runda 2026-08-08 (dziewiętnasta): niestabilność auth0 była moja, nie ich
+
+Pozycja z rundy 18 zamknięta, i wniosek jest niewygodny: **niestabilność wyprodukowałem sam
+testując powtarzalność**. Instrumentacja najpierw, zgadywanie nigdy: dopisałem do wyników listę
+adresów, z których faktycznie czytaliśmy dokumentację, i lokalnie auth0.com dał **trzy identyczne
+przebiegi 12/16 z tą samą czwórką URL-i**. Sortowanie kandydatów z rundy 18 zadziałało.
+
+Na produkcji wahanie zostało, więc porównałem check po checku ze świeżym wpisem z korpusu. Winne
+były trzy pozycje naraz: `answers_plain_request` 1/1 → 0/1, `user_agents_allowed` 1/1 → 0/1,
+`machine_readable_api` 0/1 → niemierzalne. Wspólna przyczyna: **auth0 odpowiadał 429 po czterech
+skanach pod rząd**, czyli po moim własnym młóceniu.
+
+**To był realny błąd produktowy, nie tylko artefakt testu.** Traktowaliśmy 429 tak samo jak 403
+i pisaliśmy vendorowi, że **jego edge odrzuca zwykły HTTP**, za coś, co spowodowaliśmy sami. To
+jest dokładnie ta klasa błędu, którą tępimy od rundy 9, tylko wycelowana na zewnątrz.
+
+Naprawa:
+- 429 daje **niemierzalne** z jawnym zdaniem *"which is a rate limit on us rather than a rule about
+  agents"*, a nie zero. To samo dla `user_agents_allowed`.
+- `blocksPlainRequests` **zostaje prawdą**, więc reszta checków dalej mówi "nie umieliśmy
+  przeczytać" zamiast po cichu zamienić się w zmierzoną nieobecność. Zmienia się tylko to, **czyj
+  to jest problem**.
+- Test drzwi **rozstawia swoje trzy próby o 400 ms**, żeby nie produkować 429, który potem trzeba
+  tłumaczyć.
+- Korpus ma kolumnę **`rateLimited`** i notę o niej: skan pod limitem daje wiersz chudszy niż
+  strona, a że korpus bierze najświeższy skan na domenę, taki wiersz mógłby wejść do publikacji
+  bez ostrzeżenia. Filtrowanie go jest teraz możliwe dla każdego, kto bierze nasze dane.
+
+**Dowód na produkcji, pięć skanów pod rząd:** 12/16, 12/16, potem 429 i **10/13** trzy razy, z
+checkiem drzwi jako niemierzalnym. Zwróć uwagę na sam mechanizm: pod limitem **kurczy się
+mianownik**, a nie wynik vendora, więc jego pozycja idzie 75% → 77% zamiast spaść. Przed naprawą
+byłoby to 10/15 i dwa oskarżenia.
+
+Korpus na formule **4.0**: 51 domen, niemierzalnych 45, średnio 14,35 punktu mierzalnego,
+14 domen zmierzonych w całości, zero wierszy oznaczonych jako rate limited.
