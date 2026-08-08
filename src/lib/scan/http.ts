@@ -45,12 +45,25 @@ const outOfTimeDuring = `${OUT_OF_TIME}: the scan deadline passed while this was
 export const ranOutOfTime = (fetched: Fetched): boolean => fetched.error?.startsWith(OUT_OF_TIME) ?? false
 
 /**
- * Running the phases at once only stays polite if what is in flight against one hostname is
- * capped. Six is what a single phase already used, so a scan puts no more load on a stranger's
- * site than it did when the phases ran one after another; what it stops paying for is the
- * stall at the end of every wave, where five finished requests waited on the slowest.
+ * Running the phases at once only stays polite if what is in flight against one site is
+ * capped. Six is what a single phase already used, so a scan puts no more load on a stranger
+ * than it did when the phases ran one after another; what it stops paying for is the stall at
+ * the end of every wave, where five finished requests waited on the slowest.
  */
-const MAX_PER_HOST = 6
+const MAX_PER_SITE = 6
+
+/**
+ * docs.x, api.x and the apex are one site behind one edge, and the cap has to mean something
+ * to whoever is paying for that edge. Same rule the scan rate limit uses on registrable names,
+ * kept here rather than imported so that the fetch layer does not depend on the store.
+ */
+function siteKey(hostname: string): string {
+  const labels = hostname.split('.')
+  if (labels.length <= 2) return hostname
+  const suffix = labels.slice(-2).join('.')
+  const compound = /^(co|com|net|org|gov|edu|ac|or|ne)\.[a-z]{2}$/.test(suffix)
+  return labels.slice(compound ? -3 : -2).join('.')
+}
 
 type HostSlots = { active: number; waiting: (() => void)[] }
 
@@ -145,10 +158,11 @@ function countIfLost(state: ScanState, fetched: Fetched): Fetched {
   return fetched
 }
 
-async function takeHostSlot(state: ScanState, host: string): Promise<() => void> {
-  const slots = state.slots.get(host) ?? { active: 0, waiting: [] }
-  state.slots.set(host, slots)
-  if (slots.active >= MAX_PER_HOST) await new Promise<void>((resolve) => slots.waiting.push(resolve))
+async function takeSiteSlot(state: ScanState, hostname: string): Promise<() => void> {
+  const key = siteKey(hostname)
+  const slots = state.slots.get(key) ?? { active: 0, waiting: [] }
+  state.slots.set(key, slots)
+  if (slots.active >= MAX_PER_SITE) await new Promise<void>((resolve) => slots.waiting.push(resolve))
   slots.active++
   let released = false
   return () => {
@@ -206,7 +220,7 @@ async function runFetch(url: string, options: FetchOptions, state: ScanState | n
 
       // Held for the whole request, including the body read, and keyed on the host of the
       // first hop: a redirect that leaves the site is too rare to queue separately for.
-      if (state && !releaseSlot) releaseSlot = await takeHostSlot(state, attempted)
+      if (state && !releaseSlot) releaseSlot = await takeSiteSlot(state, attempted)
       if (state && Date.now() >= state.deadlineAt) return empty(url, outOfTimeBefore)
 
       const response = await fetch(current, {

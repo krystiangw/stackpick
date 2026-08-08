@@ -969,3 +969,8 @@ MCP, i że wszystko opublikowane leży w `/corpus.json`.
 Drobne z audytu UI: tabela na `/report` przewija się w bok, a na telefonie kolumna
 **Unmeasurable**, czyli ta, o którą cała strona się spiera, leżała poza krawędzią bez żadnej
 informacji. Teraz jest o tym zdanie, widoczne tylko na wąskim ekranie.
+
+**Karta OG w firmowym kroju.** Satori bez podanego fontu używa własnego, więc **każdy scorecard,
+którym ktoś się podzielił, renderował się generycznym krojem**, choć cała strona jest w IBM Plex.
+To akurat ten jeden asset, który reprezentuje markę w momencie udostępnienia. Dwie wagi wgrane
+jako TrueType, bo satori nie czyta woff2, czytane raz na proces, licencja OFL leży obok plików.
