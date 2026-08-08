@@ -1015,3 +1015,25 @@ naszej stronie, ale to jest domena do sprawdzenia przy następnym korpusie. Drug
 **SSE dzieli teraz ten sam budżet 21 s** co REST, więc przeglądarka może uciąć skan, który wcześniej
 kończyła; zostawione celowo, żeby wszystkie powierzchnie mierzyły tak samo, i sterowalne przez
 `SCAN_BUDGET_MS`.
+
+## Runda 2026-08-08 (dwudziesta szósta): narzędzie, które czyta nasze wiersze tak, jak przeczyta je obcy
+
+Czwarta przyczyna systemowa z audytu poprawności, ta najtańsza do złapania: **wiersz sprzeczny sam
+ze sobą**. Rzędy mówiły „każde żądanie zostało odrzucone", a sąsiedni check w tym samym wierszu
+cytował właśnie pobraną stronę. To widać bez wykonania choćby jednego żądania, samym czytaniem
+wiersza linia po linii, więc powinno być łapane przed publikacją, a nie przez obcego.
+
+**`npm run audit`** czyta opublikowany korpus i szuka: sprzeczności między odmową a zacytowaną
+treścią, wiersza twierdzącego „nic nie linkuje do rejestracji", gdy inny check cytuje link
+rejestracji, oraz dwóch niezmienników arytmetycznych (suma punktów liczonych równa się `total`,
+a checki wykluczone tłumaczą dokładnie różnicę `max - measurable`). Na 103 wierszach formuły 4.3:
+**zero sprzeczności**, po naprawie jednego fałszywego trafienia w samym detektorze („only 0
+documentation pages could be read" to zaprzeczenie, nie dowód).
+
+Przy okazji poprawione zdanie, które i tak było bez sensu: przy zerze stron mówimy teraz, że nie
+udało się przeczytać ani jednej strony dokumentacji, zamiast „only 0 pages".
+
+**W toku:** subagent naprawia trzecią przyczynę systemową, czyli discovery przyjmujące dowolny URL
+jako „docs", „signup" albo „pricing" bez sprawdzenia, czy strona jest tym, co mówi etykieta.
+To stąd dokumentacja Pipecata jako dokumentacja Daily, wpis blogowy jako docsy GrowthBooka,
+`/ebooks` jako dokumentacja Flagsmitha i wpis blogowy Twilio jako strona rejestracji.
