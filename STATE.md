@@ -915,3 +915,41 @@ kłócić się z formułą łatwiej danymi niż prozą.
    najtrudniejsze: scorecard oddaje priorytetyzowaną roadmapę, `/findings` oddaje wnioski
    wszystkich pięciu badań, a strony audytów oddają rekomendacje kategorialne. Do przemyślenia,
    nie do załatania jednym akapitem.
+
+## Runda 2026-08-08 (dwudziesta trzecia): atrybucja npm przepisana, i wada produkcyjna pod spodem
+
+**Atrybucja npm rozdzielona na dwa pytania z osobnymi dowodami.** Kto publikuje: `maintainers[]`
+z odpowiedzi registry, którą i tak już czytamy, domena w mailu maintainera albo repo w organizacji
+nazwanej po vendorze. **Scope npm nie jest dowodem własności** i to jest kontrintuicyjne, ale
+`@betterstack/*` należy do innej firmy niż `betterstack.com`. Która z ich paczek jest SDK: odsiew
+CLI, wtyczek i bindingów po nazwie **i po opisie**, zepchnięcie paczek uśpionych i przedpremierowych,
+potem kształt nazwy, potem użycie, a przy remisie pytanie manifestu, która paczka wciąga którą.
+
+Naprawione: launchdarkly, algolia, daily, sinch, searchkit, baseten, temporal, together, typesense,
+split, unleash, orama, twilio, raygun, highlight, honeybadger, storyblok, mailgun, workos,
+tiny.cloud i transloadit. Regresje historyczne trzymają: htmx nadal wybiera `htmx.org`, nie
+`idiomorph`, `statuspage.io` i `allegro.pl` nadal odrzucone, froala nadal `froala-editor`.
+
+**Dwa nowe błędy weszły razem z poprawką i wyłapałem je na korpusie, nie na testach.**
+`@boundstate/editorjs-attaches` to fork opublikowany w cudzym scope, którego pole `repository`
+nadal wskazuje `github.com/editor-js`, więc trafiło w regułę „repo w organizacji vendora". Repo
+liczy się teraz tylko wtedy, gdy paczka **nie jest w cudzym scope**. Druga: paczka `agora` nie ma
+repozytorium, opisu ani słów kluczowych i jest publikowana przez `agora.build`, inną firmę niż
+`agora.io`. Paczka, która nic o sobie nie mówi, nie jest niczyim SDK.
+
+**Efekt na korpusie:** `typed_package` niemierzalny **24 → 7**, zdanych **68 → 87**, werdyktów
+niemierzalnych łącznie **108 → 91**, domen zmierzonych w całości **20 → 23**.
+
+### Wada produkcyjna: skan wolnej domeny umiera na 30 sekundach
+
+Zmierzone na produkcji: `resend.com` 200 w 9,8 s, `api.video` **503 po 30,19 s**, `payloadcms.com`
+**503 po 30,32 s**. To jest **timeout routera Heroku**, a `maxDuration = 60` w trasie to dyrektywa
+Vercela i na tym hoście nie robi nic. Każda domena, której skan trwa dłużej niż 30 sekund, zawodzi
+dla każdego wywołującego: strony, narzędzia MCP i CI. Robi to po cichu od zawsze, a dzisiejsze
+dodatki (handshake MCP do pięciu adresów, OAuth po ośmiu hostach, sitemapy, kilka zapytań do
+registry przy atrybucji) zbliżyły reszcie domen do progu.
+
+**Zlecone subagentowi:** najpierw pomiar, gdzie idzie czas, potem **twardy deadline mieszczący się
+w 30 sekundach**, przy którym skan **nadal zwraca kartę**: co zmierzone zostaje zmierzone, a każdy
+check bez dowodu wraca jako **niemierzalny ze zdaniem, że zabrakło czasu**, nigdy jako zmierzone
+zero. Ucięty skan nie może wyglądać jak kompletny.
