@@ -228,14 +228,14 @@ function isFiledAsDocumentation(url: string): boolean {
 const isCanonicalDocsHost = (url: string, vendor: VendorSite): boolean =>
   vendor.hosts.some((host) => ['docs', 'documentation'].some((prefix) => hostOf(url) === `${prefix}.${host}`))
 
+const NO_CONFIRMED_ORIGINS: ReadonlySet<string> = new Set()
+
 /**
  * How loudly a URL says it is the vendor's documentation, before a word of the page is read.
  * Content cannot be left to settle this on its own: twilio.com/en-us/developers is a marketing
  * hub carrying more prose than twilio.com/docs, where /docs/iam/api-keys lives, and
  * developer.auth0.com carries more code samples than auth0.com/docs.
  */
-const NO_CONFIRMED_ORIGINS: ReadonlySet<string> = new Set()
-
 function documentationTier(url: string, vendor: VendorSite, confirmedDocsOrigins: ReadonlySet<string>): number {
   if (isCanonicalDocsHost(url, vendor) || confirmedDocsOrigins.has(originOf(url))) return 3
   const segments = pathSegments(url)
@@ -245,9 +245,9 @@ function documentationTier(url: string, vendor: VendorSite, confirmedDocsOrigins
 }
 
 /**
- * What a candidate is worth as documentation, or null when it is not documentation at all. The
- * tier decides first and content only breaks ties inside it, because every wrong pick in the audit
- * was a page that read richer than the right one.
+ * What a candidate is worth as documentation, or null when it is not documentation at all. Four
+ * questions, each worth more than everything under it, and content last: every wrong pick in the
+ * audit read richer than the page it beat.
  */
 function documentationRank(page: Fetched, vendor: VendorSite, confirmedDocsOrigins: ReadonlySet<string>): number | null {
   if (!page.ok) return null
@@ -259,8 +259,6 @@ function documentationRank(page: Fetched, vendor: VendorSite, confirmedDocsOrigi
   // which lands on docs.pipecat.ai, the documentation of a separate voice framework.
   if (!onVendorSite(page.url, vendor)) return null
   if (!isFiledAsDocumentation(page.url)) return null
-  // Four questions in order of how much they settle, each worth more than everything under it.
-  // Content comes last on purpose: every wrong pick in the audit read richer than the right one.
   const words = Math.min(visibleTextLength(page.body), 40_000) / 1000
   // The documentation is the front of the section, not the richest page in it. honeybadger.io's
   // home page links a Rails exception-tracking guide carrying more code than docs.honeybadger.io.
@@ -473,6 +471,9 @@ function hasCredentialForm(html: string): boolean {
   return /<form/i.test(html) && /<input[^>]+(?:type|name|autocomplete)=["']?email/i.test(html)
 }
 
+/** Statuses that say the page is there and we were turned away, as opposed to it not being there. */
+const REFUSED_US = new Set([401, 403, 406, 429, 500, 502, 503, 504])
+
 /**
  * Whether a page is the thing you fill in to get an account, rather than a page that mentions one.
  * Three ways to show it, and a candidate needs one: it renders the form, it sits on the host the
@@ -493,9 +494,6 @@ function looksLikeSignup(got: Fetched, homeUrl: string): boolean {
   if (!looksLikeHtml(got)) return false
   return hasCredentialForm(got.body) || shapeSaysSignup
 }
-
-/** Statuses that say the page is there and we were turned away, as opposed to it not being there. */
-const REFUSED_US = new Set([401, 403, 406, 429, 500, 502, 503, 504])
 
 /**
  * Signup links on a page we already have. Off-site links count here and nowhere else: split.io was
@@ -522,13 +520,13 @@ function signupLinksOn(html: string, base: string, vendor: VendorSite): string[]
   return [...found.values()]
 }
 
+const SIGNUP_LABELS = [/sign ?up/, /create (an )?account/, /register/, /free trial/]
+
 /**
  * llms.txt lists a vendor's pages, not their front doors, so a candidate out of it is proposed
  * on exactly the same terms as one scraped off the home page and has to clear the same test.
  * Four of the worst signup picks in the audit were labelled "from your llms.txt".
  */
-const SIGNUP_LABELS = [/sign ?up/, /create (an )?account/, /register/, /free trial/]
-
 function signupFromLlmsTxt(entries: { url: string; label: string }[], vendor: VendorSite): string[] {
   const usable = entries.filter((entry) => onVendorSite(entry.url, vendor) || isAuthenticationHost(entry.url))
   const found: string[] = []
@@ -547,14 +545,16 @@ function signupFromLlmsTxt(entries: { url: string; label: string }[], vendor: Ve
 
 type SignupPick = { url: string; source: LinkSource }
 
+/** A source that has offered three pages and none of them a signup is not about to offer a fourth. */
+const MOST_CANDIDATES_PER_SOURCE = 3
+
 /** Takes the first candidate in a tier that turns out to be a signup, and pays for nothing else. */
 async function firstRealSignup(
   candidates: string[],
   source: LinkSource,
   homeUrl: string,
-  limit = 3,
 ): Promise<SignupPick | null> {
-  const unique = [...new Set(candidates)].slice(0, limit)
+  const unique = [...new Set(candidates)].slice(0, MOST_CANDIDATES_PER_SOURCE)
   if (unique.length === 0) return null
   const pages = await inParallel(unique, (url) => fetchUrl(url))
   for (const [index, page] of pages.entries()) {
