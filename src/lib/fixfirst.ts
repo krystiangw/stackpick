@@ -56,7 +56,9 @@ const REMEDIES: Record<string, Remedy> = {
   docs_without_js: {
     effort: 'a project',
     how: (f) =>
-      `Server-render the docs or mirror them as markdown. Right now a plain fetch gets ${f.docsTextChars.toLocaleString('en-US')} characters, which reads as an empty product.`,
+      `Server-render the docs or mirror them as markdown. A plain fetch gets ${f.docsTextChars.toLocaleString('en-US')} characters${
+        f.docsTextChars >= 1500 ? ', just under the 2,000 we look for' : ', which reads as an empty product'
+      }.`,
   },
   user_agents_allowed: {
     effort: 'minutes',
@@ -109,7 +111,7 @@ const REMEDIES: Record<string, Remedy> = {
   self_serve: {
     effort: 'a project',
     how: () =>
-      'State a free tier or a no-card trial in text on the pricing page. An agent cannot finish in one session if the next step is a sales call.',
+      'If you have a free tier or a no-card trial, say so in text on the pricing page rather than in an image or a button. If you are usage-priced with no free tier, this check is one an agent will read as a cost, not a defect.',
   },
   typed_package: {
     effort: 'an afternoon',
@@ -137,8 +139,11 @@ export function buildFixPlan(
   scorecard: Scorecard,
   comparison?: Comparison | null,
 ): FixPlan | null {
-  // Unmeasurable is not the same as absent, so we never promise points for it.
-  const fixable = scorecard.checks.filter((check) => check.points < check.max && !check.inconclusive)
+  // Anything outside the denominator is outside the promise. Offering froala.com seven points
+  // when only five were missing produced a plan that ended above its own maximum.
+  const fixable = scorecard.checks.filter(
+    (check) => check.points < check.max && !check.inconclusive && !check.notApplicable,
+  )
   if (fixable.length === 0) return null
 
   const steps: FixStep[] = fixable

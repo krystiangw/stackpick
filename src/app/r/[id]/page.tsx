@@ -157,7 +157,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
         <p className="mt-3 font-mono text-xs text-ink-faint">
           {unmeasured > 0
-            ? `of the ${measurable} points we could measure · ${unmeasured} of ${scorecard.max} were not measurable on this domain`
+            ? `of the ${measurable} points that apply to you and we could measure · ${unmeasured} of ${scorecard.max} were not scored`
             : `all ${scorecard.max} points were measurable on this domain`}
         </p>
 
@@ -276,8 +276,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <h2 className="text-lg font-semibold tracking-tight">Every check</h2>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
           Each line is one HTTP observation with a published rule. Scan the same domain tomorrow and, unless
-          it changed, you get the same answer. Anything marked N/A scored zero because we could not measure
-          it, not because it is absent.{' '}
+          it changed, you get the same answer. PASS and PART are counted. UNMEASURED means we could not
+          evaluate it, N/A means it does not apply to a product like yours, and neither is in the score or
+          its denominator.{' '}
           <Link href="/methodology" className="text-brass underline underline-offset-4">
             See the formula
           </Link>

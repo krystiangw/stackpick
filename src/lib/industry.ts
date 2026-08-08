@@ -71,7 +71,9 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
   const stages = STAGES.map((stage) => {
     const shares: number[] = []
     for (const report of reports) {
-      const inStage = report.scorecard.checks.filter((check) => check.stage === stage.id && !check.inconclusive)
+      const inStage = report.scorecard.checks.filter(
+        (check) => check.stage === stage.id && !check.inconclusive && !check.notApplicable,
+      )
       const available = inStage.reduce((sum, check) => sum + check.max, 0)
       if (available === 0) continue
       shares.push(inStage.reduce((sum, check) => sum + check.points, 0) / available)
@@ -91,7 +93,7 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
     for (const report of reports) {
       const scored = report.scorecard.checks.find((entry) => entry.id === check.id)
       if (!scored) continue
-      if (scored.inconclusive) tally.unmeasurable += 1
+      if (scored.inconclusive || scored.notApplicable) tally.unmeasurable += 1
       else if (scored.points === scored.max) tally.pass += 1
       else if (scored.points > 0) tally.partial += 1
       else tally.zero += 1

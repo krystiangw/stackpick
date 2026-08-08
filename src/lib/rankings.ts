@@ -30,8 +30,12 @@ export async function loadRankings(): Promise<RankedCategory[]> {
       // this tool could do real damage.
       .sort((a, b) => b.total / b.max - a.total / a.max || b.total - a.total || a.domain.localeCompare(b.domain))
 
-    const totals = entries.map((entry) => entry.total).sort((a, b) => a - b)
-    const median = totals.length === 0 ? 0 : totals[Math.floor(totals.length / 2)]
+    // The upper middle is not the median, and a median of raw totals is not comparable when
+    // every row has its own denominator.
+    const shares = entries.map((entry) => (entry.max === 0 ? 0 : entry.total / entry.max)).sort((a, b) => a - b)
+    const middle = Math.floor(shares.length / 2)
+    const median =
+      shares.length === 0 ? 0 : shares.length % 2 === 0 ? (shares[middle - 1] + shares[middle]) / 2 : shares[middle]
     return { category, entries, median }
   })
     .filter((ranked) => ranked.entries.length >= 4)

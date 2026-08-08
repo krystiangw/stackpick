@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '3.2'
+export const FORMULA_VERSION = '3.3'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -221,7 +221,12 @@ export const CHECKS: Check[] = [
               : 'answers JSON'
         return yes(1, `Live MCP endpoint at ${first.url}, ${how}`)
       }
-      if (f.machine.wellKnown.mcp_server_card) return yes(1, '/.well-known/mcp.json published')
+      if (f.machine.wellKnown.mcp_server_card) {
+        return yes(
+          0,
+          `/.well-known/mcp.json is published, but nothing answered at mcp.${f.domain} or /mcp. A card is a claim about a server, not a server.`,
+        )
+      }
       if (f.machine.mcp.mentions > 0) {
         return yes(0, `MCP mentioned ${f.machine.mcp.mentions}x in your own files, but nothing answers at mcp.${f.domain} or /mcp`)
       }
@@ -236,15 +241,28 @@ export const CHECKS: Check[] = [
     max: 1,
     evaluate: (f) => {
       if (!f.funnel.signup.url) {
-        return {
-          points: 0,
-          detail: 'Not applicable: nothing on the site links to an account signup, so there is no gate to measure',
-          notApplicable: true,
-          unblock: 'If accounts are created somewhere else, tell us where and we will rescan.',
-        }
+        // Behind a wall we did not find the signup, which is not the same as there not being one.
+        return f.blocksPlainRequests
+          ? {
+              points: 0,
+              detail: 'Unmeasurable: your edge refused our requests, so no signup page could be found',
+              inconclusive: true,
+              unblock: 'Let ordinary HTTP through to your public pages and this becomes measurable.',
+            }
+          : {
+              points: 0,
+              detail: 'Not applicable: nothing on the site links to an account signup, so there is no gate to measure',
+              notApplicable: true,
+              unblock: 'If accounts are created somewhere else, tell us where and we will rescan.',
+            }
       }
       if (f.funnel.signup.captcha.length > 0) {
-        return yes(0, `CAPTCHA detected: ${f.funnel.signup.captcha.join(', ')}`)
+        return yes(
+          0,
+          `${f.funnel.signup.captcha.join(', ')} appears in the signup page's server HTML${
+            f.funnel.signup.rendersFormWithoutJs ? '' : ', even though the form itself is assembled by JavaScript'
+          }`,
+        )
       }
       if (!f.funnel.signup.rendersFormWithoutJs) {
         return {
@@ -266,12 +284,19 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       const signup = f.funnel.signup
       if (!signup.url) {
-        return {
-          points: 0,
-          detail: 'Not applicable: nothing on the site links to an account signup',
-          notApplicable: true,
-          unblock: 'A product with no accounts cannot fail this. If yours has them elsewhere, point us at the page.',
-        }
+        return f.blocksPlainRequests
+          ? {
+              points: 0,
+              detail: 'Unmeasurable: your edge refused our requests, so no signup page could be found',
+              inconclusive: true,
+              unblock: 'Let ordinary HTTP through to your public pages and this becomes measurable.',
+            }
+          : {
+              points: 0,
+              detail: 'Not applicable: nothing on the site links to an account signup',
+              notApplicable: true,
+              unblock: 'A product with no accounts cannot fail this. If yours has them elsewhere, point us at the page.',
+            }
       }
       if (!signup.reachable) {
         const seen = signup.consistent ? `${signup.status}` : `${signup.statusesSeen.join(', ')}`
@@ -291,11 +316,21 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       const found = f.funnel.provisioning.programmatic.length
       const pages = f.docsPagesRead ?? 0
-      if (found > 0) {
+      // One page was enough to award two points and too little to conclude anything when the
+      // count was zero. That asymmetry inflated every vendor whose first docs page mentioned keys.
+      if (found > 0 && pages >= 2) {
         return yes(
           found >= 2 ? 2 : 1,
-          `${found} of ${PROVISIONING_PATTERN_COUNT} provisioning phrases found across ${pages} documentation ${pages === 1 ? 'page' : 'pages'}`,
+          `${found} of ${PROVISIONING_PATTERN_COUNT} provisioning phrases found across ${pages} documentation pages`,
         )
+      }
+      if (found > 0) {
+        return {
+          points: 0,
+          detail: `Provisioning language found, but on only ${pages} documentation ${pages === 1 ? 'page' : 'pages'}, which is too little to score either way`,
+          inconclusive: true,
+          unblock: 'Link your API reference from your docs index or from llms.txt so there is more than one page to read.',
+        }
       }
       // Absence in one page is absence of evidence. Saying otherwise failed vendors who
       // document exactly this, one link away from where we happened to look.
@@ -313,8 +348,8 @@ export const CHECKS: Check[] = [
   {
     id: 'self_serve',
     stage: 'provisioning',
-    label: 'Self-serve entry without sales',
-    why: 'A free tier is what lets an agent finish the job in the same session it started.',
+    label: 'Free tier or no-card trial stated in text',
+    why: 'A free tier is what lets an agent finish the job in the same session it started. Usage-priced products with self-serve signup can fail this honestly, which is why it is one point and not a verdict.',
     max: 1,
     evaluate: (f) => {
       if (f.funnel.provisioning.selfServeSignals.length > 0) return yes(1, 'Free tier or no-card signals on pricing')
@@ -335,9 +370,9 @@ export const CHECKS: Check[] = [
       if (!f.npm.package) {
         return {
           points: 0,
-          detail: 'Not applicable: nothing on your site, in your docs or in the registry names a package of yours',
-          notApplicable: true,
-          unblock: 'Name your package once in your docs and this becomes measurable. If you do not ship one, this check does not apply to you.',
+          detail: 'Unmeasurable: we could not identify a package as yours from your site, your docs or a registry search',
+          inconclusive: true,
+          unblock: 'Name your package once in your docs, or link it from your repository, and we stop guessing.',
         }
       }
       // A registry name that only shares a GitHub org with the site is a hypothesis. Scoring

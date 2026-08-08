@@ -20,7 +20,8 @@ export function Rankings({ rankings }: { rankings: RankedCategory[] }) {
       </div>
 
       <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-        These are real scans, not examples. Each vendor can open its own scorecard, reproduce every check and
+        Ordered by the share of measurable points each domain earned, which is why a smaller number can sit
+        above a larger one. These are real scans, not examples. Each vendor can open its own scorecard, reproduce every check and
         tell us where we are wrong. That offer is the whole point of publishing the formula. Scores are out of
         the points we could measure on each domain, not out of sixteen: a site that refuses our requests
         scores against a smaller denominator, not a worse number.
@@ -31,7 +32,9 @@ export function Rankings({ rankings }: { rankings: RankedCategory[] }) {
           <div key={category.id}>
             <div className="flex items-baseline justify-between gap-3 border-b border-rule pb-2">
               <h3 className="font-mono text-sm font-medium">{category.label}</h3>
-              <span className="font-mono text-xs tabular-nums text-ink-faint">median {median}</span>
+              <span className="font-mono text-xs tabular-nums text-ink-faint">
+                median {Math.round(median * 100)}%
+              </span>
             </div>
             <ol className="flex flex-col">
               {entries.map((entry, index) => (
