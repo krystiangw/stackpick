@@ -9,7 +9,7 @@ export function GET() {
     info: {
       title: 'StackPick',
       version: '1.0.0',
-      description: `Scores a domain out of ${MAX_SCORE} on agent readiness across ${STAGES.length} funnel stages, using ${CHECKS.length} deterministic HTTP checks. No account, no key.`,
+      description: `Scores a domain on agent readiness across ${STAGES.length} funnel stages, using ${CHECKS.length} deterministic HTTP checks. ${MAX_SCORE} points exist on paper; the score is out of \`measurable\`, the points that both applied and could be evaluated. No account, no key.`,
       contact: { email: 'gwizdala.kr@gmail.com', url: `${BASE}/methodology` },
     },
     servers: [{ url: BASE }],
@@ -41,7 +41,11 @@ export function GET() {
                         properties: {
                           formulaVersion: { type: 'string' },
                           total: { type: 'integer' },
-                          max: { type: 'integer' },
+                          max: { type: 'integer', description: 'The paper maximum, the same for every domain' },
+                          measurable: {
+                            type: 'integer',
+                            description: 'The denominator: points that applied and could be evaluated on this domain',
+                          },
                           checks: {
                             type: 'array',
                             items: {
@@ -51,6 +55,10 @@ export function GET() {
                                 points: { type: 'integer' },
                                 max: { type: 'integer' },
                                 detail: { type: 'string' },
+                                notApplicable: {
+                                  type: 'boolean',
+                                  description: 'The check does not apply to a product of this kind, so it is out of the score and out of measurable',
+                                },
                                 inconclusive: {
                                   type: 'boolean',
                                   description: 'Zero because we could not measure it, not because it is absent',

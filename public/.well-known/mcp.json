@@ -3,18 +3,30 @@
   "description": "Agent readiness scanning: score a domain on whether an agent can find, register with and integrate it.",
   "version": "1.0.0",
   "documentation": "https://stackpick-f12d13a227ea.herokuapp.com/docs",
-  "transport": { "type": "http", "url": "https://stackpick-f12d13a227ea.herokuapp.com/api/scan" },
+  "transport": {
+    "type": "http",
+    "url": "https://stackpick-f12d13a227ea.herokuapp.com/mcp"
+  },
   "tools": [
     {
       "name": "scan_domain",
-      "description": "Score a domain on agent readiness across five funnel stages, out of the points that apply to it and we could measure. Returns a per-check breakdown with the reason for each result.",
+      "description": "Score a domain on agent readiness across five funnel stages. Sixteen points exist on paper; the score is out of the points that both applied to the domain and could be evaluated. Returns a per-check breakdown with the reason for each result and a permanent link.",
       "inputSchema": {
         "type": "object",
-        "properties": { "domain": { "type": "string", "description": "Bare domain, for example example.com" } },
-        "required": ["domain"]
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Bare domain, for example example.com"
+          }
+        },
+        "required": [
+          "domain"
+        ]
       }
     }
   ],
-  "authentication": { "type": "none" },
-  "notes": "No account, no key. Rate limited to 10 scans per hour per address."
+  "authentication": {
+    "type": "none"
+  },
+  "notes": "No account, no key. Five scans per hour per registrable domain, thirty per hour per caller. A scan repeated within fifteen minutes returns the stored result."
 }
