@@ -1149,17 +1149,18 @@ async function attributePackage(
   // an entry package, which is what keeps froala.com on the froala-editor its llms.txt names.
   if (npmPackage) {
     const scrapedRank = shapeRank(npmPackage, vendor)
-    const { theirs, aboutThem, draft } =
-      scrapedRank === 0
-        ? { theirs: true, aboutThem: true, draft: false }
-        : await readScrapedPackage(npmPackage, vendor, githubRepo)
+    // The exact vendor name used to be waved through unread, so statsig.com matched `statsig`,
+    // a generated stub at 0.0.2, while @statsig/js-client shipped the day before the scan. The
+    // name being right is not the same as the package being the one you install.
+    const { theirs, aboutThem, draft } = await readScrapedPackage(npmPackage, vendor, githubRepo)
     // Three packages share the same unhelpful name shape and only two are worth looking past.
     // @amplitude/analytics-browser calls itself the official Amplitude SDK for Web. idiomorph
     // is "an id-based DOM morphing library" and never mentions htmx. @workos/radar-signals
     // does say WorkOS, and is at 0.0.1, which is the vendor saying it is not the one yet.
-    if (!theirs || (scrapedRank >= 4 && (!aboutThem || draft))) {
+    if (!theirs || draft || (scrapedRank >= 4 && !aboutThem)) {
       // A name that is not theirs loses to an equal shape; one that is theirs has to be beaten.
-      const ceiling = theirs ? scrapedRank : scrapedRank + 1
+      // A draft has to be beaten by anything at all, including a name of the same shape.
+      const ceiling = draft ? shapeRank(npmPackage, vendor) + 1 : theirs ? scrapedRank : scrapedRank + 1
       const searched = await searchNpmForDomain(domain, githubRepo)
       if (searched && shapeRank(searched.name, vendor) < ceiling) {
         npmPackage = searched.name
