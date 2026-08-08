@@ -325,7 +325,7 @@ export const CHECKS: Check[] = [
       }
       if (!signup.reachable) {
         const seen = signup.consistent ? `${signup.status}` : `${signup.statusesSeen.join(', ')}`
-        return yes(0, `Signup answers ${seen} to a non-browser request`)
+        return yes(0, `Signup answers ${seen}`)
       }
       return signup.rendersFormWithoutJs
         ? yes(1, 'Form renders in server HTML')
