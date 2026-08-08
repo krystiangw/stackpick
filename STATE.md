@@ -85,8 +85,8 @@ to zmiana po ich stronie, nie nasza, ale pokazuje, że próg jest ostry.
 
 ## Co zostało z audytów
 
-1. Wynik nie ma własnej formy wizualnej: brak sygnaturowego elementu, który niesie markę w OG,
-   mailu i na stronie.
+1. ~~Wynik nie ma własnej formy wizualnej~~ **zrobione 2026-08-08 (runda 11)**: znak scorecardu
+   ma jedną definicję (`src/lib/mark.ts`) i rysują go trzy powierzchnie.
 2. Wyniki audytów wartości/poprawności i designu z rundy 2026-08-08 (agenty puszczone po
    deployu) - do przerobienia.
 
@@ -415,3 +415,31 @@ Archiwa cytatów dopisane do `storage-round2.md` i `auth-round1.md`. Wszystkie c
 w limitach zdanie o proweniencji. **Kopie przebiegów storage i auth już nie istnieją**, więc
 usuniętych cytatów nie da się odtworzyć - to koszt tego, że archiwum powstało dopiero przy czwartej
 kategorii.
+
+
+## Runda 2026-08-08 (jedenasta): jeden znak na trzech powierzchniach
+
+Pozycja 1 z "Co zostało z audytów" zamknięta, ale znalezisko po drodze jest ważniejsze od samego
+znaku. **Mail liczył wynik z `max`, a strona i karta OG z `measurable`.** Vendor dostawał w skrzynce
+jedną liczbę, a na stronie, do której mail linkuje, inną. Froala: `3/16` w mailu kontra `3/8`
+na stronie. To ta sama klasa błędu co sprzeczności między stronami z rund 9 i 10, tylko że tutaj
+rozjazd był między produktem a jego własnym mailem.
+
+**Przyczyna była strukturalna:** znak istniał w trzech kopiach (komponent React, ręcznie odtworzony
+w `opengraph-image.tsx`, ręcznie odtworzony w `email.ts`). Geometria, paleta i progi tonów siedzą
+teraz w `src/lib/mark.ts` i trzy powierzchnie rysują z tego samego źródła.
+
+**Etap niemierzalny wygląda inaczej niż zerowy.** Wcześniej kolumna bez żadnych mierzalnych punktów
+była pustym torem, a etap z zerem punktów miał 2-pikselowy znacznik: różnica praktycznie niewidoczna.
+Teraz niemierzalny to **kolumna przerywana** z podpisem "A dashed column is a stage we could not
+measure, not a stage you failed", w mailu i na stronie, a na karcie OG "Dashed: nothing here could
+be measured". Etapy w tabelce mailowej pokazują `not measurable` zamiast `0/3`.
+
+**Błąd maila znaleziony przy oglądaniu:** brak `<meta charset>`, więc każda etykieta etapu
+renderowała się jako `A Â· Discovery`. Dorzucony też `color-scheme: light`, żeby dark mode Gmaila
+nie odwracał kolorów znaku.
+
+**Zweryfikowane end to end:** świeży skan `resend.com` (14/16 zgodne w mailu i na stronie), skan
+`froala.com` z dwoma etapami niemierzalnymi (3/8, kolumny C i D przerywane na wszystkich trzech
+powierzchniach), karta OG pobrana z produkcji i obejrzana, mail wyrenderowany i obejrzany, oraz
+realna wysyłka na skrzynkę właściciela: `delivered: true`.
