@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '5.2'
+export const FORMULA_VERSION = '5.3'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -87,10 +87,10 @@ export const CHECKS: Check[] = [
       if (f.machine.hasLlmsTxt) {
         // A site that answers any unknown .txt with real text hands us a file that proves
         // nothing. Same trap as the entry paths, one probe arm later.
-        if (f.funnel.servesCatchAll) {
+        if (f.funnel.catchAll?.text ?? f.funnel.servesCatchAll) {
           return {
             points: 0,
-            detail: 'Unmeasurable: the site answers unknown paths with real text, so a hit on llms.txt proves nothing',
+            detail: 'Unmeasurable: the site answers unknown .txt paths with real text, so a hit on llms.txt proves nothing',
             inconclusive: true,
           }
         }
@@ -142,8 +142,17 @@ export const CHECKS: Check[] = [
     max: 1,
     evaluate: (f) => {
       const blocked = f.robots.blockedByClass.user
-      // No robots.txt is not a blind spot, it is the most permissive answer possible.
+      // No robots.txt is not a blind spot, it is the most permissive answer possible. A refused
+      // one is the opposite: a file we know exists and were not allowed to read.
       if (!f.robots.present) {
+        if (f.robots.unreadable) {
+          return {
+            points: 0,
+            detail: 'Unmeasurable: your edge answered our request for robots.txt with a refusal rather than the file, so what it permits is not something we measured',
+            inconclusive: true,
+            unblock: 'Serve robots.txt to ordinary HTTP clients. Every crawler you want has to read it too.',
+          }
+        }
         return blindedBy(f)
           ? { points: 0, detail: 'Unmeasurable: the site refuses agent requests before robots.txt matters', inconclusive: true }
           : yes(1, 'No robots.txt, so nothing is disallowed for anyone')
@@ -181,12 +190,24 @@ export const CHECKS: Check[] = [
     max: 1,
     evaluate: (f) => {
       if (!f.robots.present) {
+        if (f.robots.unreadable) {
+          return {
+            points: 0,
+            detail: 'Unmeasurable: robots.txt was refused rather than absent, so any Crawl-delay in it is unread',
+            inconclusive: true,
+            unblock: 'Serve robots.txt to ordinary HTTP clients and this becomes measurable.',
+          }
+        }
         return yes(1, 'No robots.txt, so no Crawl-delay applies')
       }
       const delay = f.robots.crawlDelaySeconds
-      if (delay === null) return yes(1, 'No Crawl-delay directive')
+      // The old sentence said "No Crawl-delay directive" while stripe.com has one for rogerbot
+      // and twilio.com for Swiftbot. The verdict was right and the sentence was flatly false.
+      if (delay === null) return yes(1, 'No Crawl-delay applies to the agents we check')
       if (delay <= 1) return yes(1, `Crawl-delay: ${delay}s, negligible`)
-      return yes(0, `Crawl-delay: ${delay}s applies to AI agents`)
+      // It is a wildcard directive on nearly every site that has one, and calling a User-agent: *
+      // rule "AI-specific" was us reading intent into a line written years before any of this.
+      return yes(0, `Crawl-delay: ${delay}s applies to the agents we check`)
     },
   },
   {
@@ -475,23 +496,48 @@ export const CHECKS: Check[] = [
     why: 'A free tier is what lets an agent finish the job in the same session it started. Usage-priced products with self-serve signup can fail this honestly, which is why it is one point and not a verdict.',
     max: 1,
     evaluate: (f) => {
+      // Every sentence here says which page it read. "The pricing page" was a claim about a page
+      // we often had not opened: cal.com/plans is somebody's booking link, vercel.com/plans
+      // redirects to a login screen, and groq.com/pricing answers 308 to the home page.
+      const page = f.discovered.pricing ?? f.funnel.signup ?? null
+      const at = page ? ` at ${page}` : ''
       if (f.funnel.provisioning.selfServeSignals.length > 0) {
         // Saying it once out of two tries still means you say it, and hiding the disagreement
         // would leave a vendor unable to explain why the number moved between two scans.
         return yes(
           1,
           f.funnel.pricingTriesDisagreed
-            ? 'Free tier or no-card signals on pricing, present in one of the two fetches of that page'
-            : 'Free tier or no-card signals on pricing',
+            ? `Free tier or no-card signals${at}, present in one of the two fetches of that page`
+            : `Free tier or no-card signals${at}`,
         )
+      }
+      // Absence read off a body we cut short is not absence. The same rule already governs the
+      // MCP mention count, and it is what separates a finding from an artefact of our own cap.
+      if (f.funnel.pricingTruncated) {
+        return {
+          points: 0,
+          detail: `Unmeasurable: ${page ?? 'your pricing page'} is larger than we read, so anything we did not find in it is a fact about our cap and not about your tiers`,
+          inconclusive: true,
+          unblock: 'Nothing for you to do. A smaller pricing page, or one that states its tiers early, makes this measurable.',
+        }
       }
       // A pricing page that needs JavaScript to show a price is one an agent cannot read either,
       // so this is a measured finding about the page rather than a gap in the scan.
       if (f.funnel.pricingFetched && f.funnel.pricesVisibleWithoutJs === false) {
         return yes(
           0,
-          'Your pricing page answers a plain request with no prices in it, so nothing about your tiers survives without JavaScript',
+          `${page ?? 'Your pricing page'} answers a plain request with no prices in it, so nothing about your tiers survives without JavaScript`,
         )
+      }
+      // A path we guessed and that carries no pricing signal is far more likely to be the wrong
+      // page than a vendor with no free tier, and the wrong page is our mistake to own.
+      if (f.discovered.linkSources?.pricing === 'fallback-path') {
+        return {
+          points: 0,
+          detail: `Unmeasurable: we guessed ${page} and found no pricing there, which is more likely to be the wrong page than an answer about your tiers`,
+          inconclusive: true,
+          unblock: 'Link your pricing page from your home page, and this becomes a measurement rather than a guess.',
+        }
       }
       if (!f.funnel.pricingFetched) {
         // A library with nothing to buy has no free tier to state, and marking that unmeasurable
@@ -508,7 +554,7 @@ export const CHECKS: Check[] = [
         return { points: 0, detail: 'Unmeasurable: no pricing page could be fetched',
           unblock: 'Link a pricing page from your home page, or list one in llms.txt.', inconclusive: true }
       }
-      return yes(0, 'No self-serve signal found on the pricing page')
+      return yes(0, `No free tier or no-card wording${at || ' on the pricing page'}`)
     },
   },
   {
@@ -554,7 +600,8 @@ export const CHECKS: Check[] = [
       // The path alone is ambiguous on a vendor whose docs and site are different hosts, and
       // it is the sentence a sceptic reruns first.
       if (f.machine.openapi.length > 0) return yes(1, `OpenAPI at ${f.site}${f.machine.openapi[0]}`)
-      if ((negotiation.acceptHeader || negotiation.dotMdSuffix) && !f.funnel.servesCatchAll) {
+      const fakesMarkdown = f.funnel.catchAll?.markdown ?? f.funnel.servesCatchAll
+      if ((negotiation.acceptHeader || negotiation.dotMdSuffix) && !fakesMarkdown) {
         // Naming the page matters more here than anywhere else: on nearly every domain that
         // passes, the docs front page is the one page that does not negotiate, so a vendor
         // testing the obvious URL sees HTML and concludes we made the finding up.
@@ -564,7 +611,7 @@ export const CHECKS: Check[] = [
       if (negotiation.acceptHeader || negotiation.dotMdSuffix) {
         return {
           points: 0,
-          detail: 'Unmeasurable: the site answers unknown paths with text, so the markdown it served is not evidence of negotiation',
+          detail: 'Unmeasurable: the site answers unknown markdown paths with text, so the markdown it served is not evidence of negotiation',
           inconclusive: true,
         }
       }

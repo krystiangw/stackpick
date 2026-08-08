@@ -104,6 +104,9 @@ export type SignupFindings = {
 
 export type McpEndpoint = { url: string; status: number; evidence: 'challenges' | 'rejects-get' | 'answers-json' }
 
+/** Whether unknown paths answer with a real document, asked once per file type we probe. */
+export type CatchAll = { markdown: boolean; json: boolean; text: boolean }
+
 export type FunnelFindings = {
   entryPaths: Record<string, boolean>
   entryPointsFound: string[]
@@ -127,11 +130,19 @@ export type FunnelFindings = {
   provisioning: { programmatic: string[]; selfServeSignals: string[] }
   /** True when the site answers unknown paths with real text, making entry probes meaningless. */
   servesCatchAll: boolean
+  /** The same question per namespace, because one does not imply another. */
+  catchAll?: CatchAll
   pricingFetched: boolean
   /** True when repeated fetches of the pricing page did not carry the same self-serve wording. */
   pricingTriesDisagreed: boolean
   /** Null when no pricing page was found, false when one exists and shows no prices to a plain fetch. */
   pricesVisibleWithoutJs: boolean | null
+  /**
+   * True when the pricing page was larger than we read. posthog.com/pricing and cal.com/pricing
+   * both exceed the cap and carry their tiers past it, so "no free tier wording" was a claim
+   * about the part of the page we happened to hold.
+   */
+  pricingTruncated: boolean
 }
 
 const OAUTH_METADATA_PATHS = [
@@ -146,7 +157,10 @@ const OAUTH_METADATA_PATHS = [
  * one of them a domain with no MCP endpoint to follow. Probing one origin is not a search.
  */
 const AUTH_SUBDOMAINS = ['auth', 'login', 'accounts', 'id', 'oauth']
-const RESOURCE_SUBDOMAINS = ['api']
+// mcp is here rather than only behind a found endpoint: datadoghq.com and contentful.com both
+// publish a registration_endpoint on mcp.<domain> while our MCP probe concluded nothing answers
+// there, so the host that had the answer was the one host we never asked.
+const RESOURCE_SUBDOMAINS = ['api', 'mcp']
 
 type OauthTarget = { origin: string; paths: string[] }
 type OauthProbe = { metadataPublished: boolean; dynamicClientRegistration: boolean; origins: string[] }
@@ -270,14 +284,24 @@ function matching(patterns: RegExp[], html: string, labels?: string[]): string[]
  * Some sites answer any unknown path with a real markdown or JSON document. Without a control
  * probe every entry path "exists" and the site scores full marks on fabricated evidence.
  */
-async function servesCatchAllText(site: string): Promise<boolean> {
+/**
+ * Per namespace, because a catch-all in one is not a catch-all in another. sentry.io answers any
+ * .md path with the same 976 byte page and answers an unknown .txt with a redirect to its HTML
+ * login screen, so the .md arm was suppressing a real llms.txt that is served as text/plain.
+ * Same for agora.io. Both earned a point and both were told the file proved nothing.
+ */
+async function servesCatchAllText(site: string): Promise<CatchAll> {
   const [markdown, json, plain] = await Promise.all([
     fetchUrl(`${site}/stackpick-control-probe-8f3a1c.md`, { accept: 'text/markdown, text/plain' }),
     fetchUrl(`${site}/.well-known/stackpick-control-probe-8f3a1c.json`, { accept: 'application/json' }),
     // The .txt arm covers llms.txt, which is scored elsewhere and was unguarded.
     fetchUrl(`${site}/stackpick-control-probe-8f3a1c.txt`, { accept: 'text/plain' }),
   ])
-  return isRealTextFile(markdown, 30) || isRealTextFile(json, 30) || isRealTextFile(plain, 30)
+  return {
+    markdown: isRealTextFile(markdown, 30),
+    json: isRealTextFile(json, 30),
+    text: isRealTextFile(plain, 30),
+  }
 }
 
 /**
@@ -427,7 +451,9 @@ export async function scanFunnel({
   // path they prove nothing, and firing them anyway would be nine requests spent to learn that.
   const catchAll = await catchAllPending
   const entriesPending = inParallel(AGENT_ENTRY_PATHS, async (path) => {
-    if (catchAll) return [path, false, false] as const
+    // Judged against the namespace the path is in: /ai.txt is not discredited by a .md catch-all.
+    const namespace = path.endsWith('.json') ? catchAll.json : path.endsWith('.txt') ? catchAll.text : catchAll.markdown
+    if (namespace) return [path, false, false] as const
     const got = await fetchUrl(`${site}${path}`, { accept: 'text/markdown, application/json, text/plain' })
     const present = isRealTextFile(got, 30)
     return [path, present, present && describesAProcedure(got.body)] as const
@@ -457,6 +483,7 @@ export async function scanFunnel({
   const firstPricingText = pricingPage?.ok && visibleTextLength(pricingPage.body) > 0 ? pricingPage.body : ''
   const retryText = pricingRetry?.ok && visibleTextLength(pricingRetry.body) > 0 ? pricingRetry.body : ''
   const pricingText = retryText ? `${firstPricingText}\n${retryText}` : firstPricingText
+  const pricingTruncated = Boolean(pricingPage?.truncated) || Boolean(pricingRetry?.truncated)
 
   return {
     entryPaths,
@@ -469,9 +496,11 @@ export async function scanFunnel({
       programmatic: matching(PROVISIONING_PATTERNS, await corpus, PROVISIONING_PATTERN_LABELS),
       selfServeSignals: matching(SELF_SERVE_PATTERNS, pricingText),
     },
-    servesCatchAll: catchAll,
+    servesCatchAll: catchAll.markdown || catchAll.json || catchAll.text,
+    catchAll,
     pricingFetched: Boolean(pricingPage?.ok),
     pricesVisibleWithoutJs,
+    pricingTruncated,
     pricingTriesDisagreed:
       retryText.length > 0 &&
       matching(SELF_SERVE_PATTERNS, firstPricingText).length !== matching(SELF_SERVE_PATTERNS, retryText).length,

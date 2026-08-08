@@ -23,6 +23,13 @@ type Rules = { allow: string[]; disallow: string[]; crawlDelay?: number }
 
 export type RobotsFindings = {
   present: boolean
+  /**
+   * True when the file was refused rather than absent. A 403 is not permission: bitmovin.com,
+   * vonage.com and pandadoc.com all publish a robots.txt and all answer 403 to us, and we
+   * awarded each of them a point for "no robots.txt, so nothing is disallowed for anyone",
+   * having failed ckeditor.com for the Crawl-delay that bitmovin also publishes.
+   */
+  unreadable: boolean
   crawlers: Record<string, CrawlerVerdict>
   blockedByClass: Record<CrawlerClass, string[]>
   blanketDisallowAll: boolean
@@ -103,6 +110,8 @@ function directiveValue(body: string, name: string): string | null {
 export async function scanRobots(site: string): Promise<RobotsFindings> {
   const robots = await fetchUrl(`${site}/robots.txt`, { accept: 'text/plain' })
   const present = robots.ok && !looksLikeHtml(robots)
+  // 404 is the one status that means absent. Everything else means we did not get to read it.
+  const unreadable = !present && robots.status !== 404
   const groups = present ? parseRobots(robots.body) : new Map<string, Rules>()
 
   const crawlers: Record<string, CrawlerVerdict> = {}
@@ -116,6 +125,7 @@ export async function scanRobots(site: string): Promise<RobotsFindings> {
   const wildcard = groups.get('*')
   return {
     present,
+    unreadable,
     crawlers,
     blockedByClass,
     blanketDisallowAll: wildcard?.disallow.includes('/') ?? false,

@@ -1,4 +1,4 @@
-import { fetchUrl, inParallel, isRealTextFile, looksLikeHtml, registrableDomain, visibleTextLength, type Fetched } from './http'
+import { fetchUrl, inParallel, isRealTextFile, looksLikeHtml, registrableDomain, visibleTextLength, type Fetched , stripCodeBlocks } from './http'
 import { fetchPackageFacts } from './npm'
 
 export type NpmSource = 'site' | 'docs' | 'llms' | 'registry-search'
@@ -290,7 +290,12 @@ function documentationRank(page: Fetched, vendor: VendorSite, confirmedDocsOrigi
 /** How much a page reads like a price list rather than a page with the word pricing in it. */
 function pricingWeight(fetched: Fetched): number {
   if (!fetched.ok) return -1
-  const text = fetched.body.toLowerCase()
+  // Visible text, not the raw document. amplitude.com/pricing renders 17 characters without
+  // JavaScript and carries its whole price table inside a script payload, so counting the raw
+  // body called it "prices visible without JS" and hid the finding that matters about it.
+  const text = stripCodeBlocks(fetched.body)
+    .replace(/<[^>]+>/g, ' ')
+    .toLowerCase()
   const signals = [/\$\d/g, /€\d/g, /per month/g, /\/mo\b/g, /\bper user\b/g, /\bbilled (annually|monthly)\b/g]
   return signals.reduce((sum, pattern) => sum + (text.match(pattern)?.length ?? 0), 0)
 }
