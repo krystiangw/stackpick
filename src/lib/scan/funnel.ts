@@ -78,6 +78,10 @@ export type FunnelFindings = {
   /** True when the site answers unknown paths with real text, making entry probes meaningless. */
   servesCatchAll: boolean
   pricingFetched: boolean
+  /** True when repeated fetches of the pricing page did not carry the same self-serve wording. */
+  pricingTriesDisagreed: boolean
+  /** Null when no pricing page was found, false when one exists and shows no prices to a plain fetch. */
+  pricesVisibleWithoutJs: boolean | null
 }
 
 const OAUTH_METADATA_PATHS = [
@@ -237,6 +241,7 @@ export async function scanFunnel(
   pricingUrl: string | null,
   signupUrl: string | null,
   alreadyFetchedPricing: Fetched | null = null,
+  pricesVisibleWithoutJs: boolean | null = null,
 ): Promise<FunnelFindings> {
   const catchAll = await servesCatchAllText(site)
   const entries = await inParallel(AGENT_ENTRY_PATHS, async (path) => {
@@ -252,8 +257,17 @@ export async function scanFunnel(
     alreadyFetchedPricing ?? (pricingUrl ? fetchUrl(pricingUrl) : Promise.resolve(null)),
   ])
 
+  // supertokens.com answered the same URL with and without its free-tier wording forty minutes
+  // apart, which moved a scored point. Pricing pages are assembled and cached like any other
+  // page, so one fetch is a sample. Reading it again and taking the union of what was stated
+  // is the same rule the door test already follows, applied to content instead of status.
+  const pricingRetry =
+    pricingPage?.ok && pricingUrl ? await fetchUrl(pricingUrl) : null
+
   const entryPaths = Object.fromEntries(entries)
-  const pricingText = pricingPage?.ok && visibleTextLength(pricingPage.body) > 0 ? pricingPage.body : ''
+  const firstPricingText = pricingPage?.ok && visibleTextLength(pricingPage.body) > 0 ? pricingPage.body : ''
+  const retryText = pricingRetry?.ok && visibleTextLength(pricingRetry.body) > 0 ? pricingRetry.body : ''
+  const pricingText = retryText ? `${firstPricingText}\n${retryText}` : firstPricingText
 
   return {
     entryPaths,
@@ -267,5 +281,9 @@ export async function scanFunnel(
     },
     servesCatchAll: catchAll,
     pricingFetched: Boolean(pricingPage?.ok),
+    pricesVisibleWithoutJs,
+    pricingTriesDisagreed:
+      retryText.length > 0 &&
+      matching(SELF_SERVE_PATTERNS, firstPricingText).length !== matching(SELF_SERVE_PATTERNS, retryText).length,
   }
 }

@@ -11,6 +11,8 @@ export type Discovered = {
   signup: string | null
   docsPage: Fetched | null
   pricingPage: Fetched | null
+  /** Null when no pricing page was found at all, false when one exists but shows no prices. */
+  pricesVisibleWithoutJs: boolean | null
   npmPackage: string | null
   npmSource: NpmSource | null
   /** Set only for a registry search: whether the match is evidence or a hypothesis. */
@@ -142,17 +144,31 @@ function pricingWeight(fetched: Fetched): number {
   return signals.reduce((sum, pattern) => sum + (text.match(pattern)?.length ?? 0), 0)
 }
 
-async function bestPricing(candidates: (string | null)[]): Promise<{ url: string; page: Fetched } | null> {
-  const unique = [...new Set(candidates.filter((url): url is string => Boolean(url)))].slice(0, 3)
+/**
+ * A pricing page whose prices are assembled by JavaScript used to come back as no pricing page
+ * at all, and we told bunny.net, filestack.com and plausible.io that we could not find one. They
+ * all have one. What they do not have is a price an agent can read from the served HTML, and that
+ * is a finding about them rather than a gap in us, so the page comes back either way.
+ */
+async function bestPricing(
+  candidates: (string | null)[],
+): Promise<{ url: string; page: Fetched; pricesVisible: boolean } | null> {
+  const unique = [...new Set(candidates.filter((url): url is string => Boolean(url)))].slice(0, 4)
   if (unique.length === 0) return null
   const pages = await inParallel(unique, (url) => fetchUrl(url))
   let best: { url: string; page: Fetched; weight: number } | null = null
+  let fallback: { url: string; page: Fetched } | null = null
   for (const [index, page] of pages.entries()) {
+    if (!page.ok) continue
     const weight = pricingWeight(page)
-    if (weight <= 0) continue
-    if (!best || weight > best.weight) best = { url: unique[index], page, weight }
+    if (weight > 0) {
+      if (!best || weight > best.weight) best = { url: unique[index], page, weight }
+    } else if (!fallback) {
+      fallback = { url: unique[index], page }
+    }
   }
-  return best ? { url: best.url, page: best.page } : null
+  if (best) return { url: best.url, page: best.page, pricesVisible: true }
+  return fallback ? { ...fallback, pricesVisible: false } : null
 }
 
 /** Picks the most developer-looking candidate, and says nothing when none answer. */
@@ -468,9 +484,19 @@ export async function discover(domain: string): Promise<Discovered> {
   // vendor failed the self-serve check on it, while its real /pricing says $0 three times.
   const fromSitePricing = pickLink(links, PRICING_HINTS, base)
   const fromLlmsPricing = pickFromLlms(onSiteLlms, PRICING_HINTS, [/pricing/, /plans/, /buy/, /cart/])
-  const chosenPricing = await bestPricing([fromSitePricing, `${site}/pricing`, `${site}/plans`, fromLlmsPricing])
+  // plausible.io sells from an anchor on its home page, so there is no pricing page to find and
+  // "we could not fetch one" was the wrong sentence: the prices are right there, one fetch away.
+  const pricingOnHome = /href=["'][^"']*#(pricing|plans)\b/i.test(html) ? site : null
+  const chosenPricing = await bestPricing([
+    fromSitePricing,
+    `${site}/pricing`,
+    `${site}/plans`,
+    fromLlmsPricing,
+    pricingOnHome,
+  ])
   const pricing = chosenPricing?.url ?? (await firstLivePath(site, PRICING_FALLBACKS))
   const pricingPage = chosenPricing?.page ?? null
+  const pricesVisibleWithoutJs = chosenPricing?.pricesVisible ?? null
 
   const fromSiteSignup = pickLink(links, SIGNUP_HINTS, base)
   const fromLlmsSignup = pickFromLlms(onSiteLlms, SIGNUP_HINTS, [/sign ?up/, /register/, /get started/, /free trial/])
@@ -563,6 +589,7 @@ export async function discover(domain: string): Promise<Discovered> {
     docsPage,
     pricing,
     pricingPage,
+    pricesVisibleWithoutJs,
     signup,
     npmPackage,
     npmSource,

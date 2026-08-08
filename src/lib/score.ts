@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '3.8'
+export const FORMULA_VERSION = '3.9'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -361,7 +361,24 @@ export const CHECKS: Check[] = [
     why: 'A free tier is what lets an agent finish the job in the same session it started. Usage-priced products with self-serve signup can fail this honestly, which is why it is one point and not a verdict.',
     max: 1,
     evaluate: (f) => {
-      if (f.funnel.provisioning.selfServeSignals.length > 0) return yes(1, 'Free tier or no-card signals on pricing')
+      if (f.funnel.provisioning.selfServeSignals.length > 0) {
+        // Saying it once out of two tries still means you say it, and hiding the disagreement
+        // would leave a vendor unable to explain why the number moved between two scans.
+        return yes(
+          1,
+          f.funnel.pricingTriesDisagreed
+            ? 'Free tier or no-card signals on pricing, present in one of the two fetches of that page'
+            : 'Free tier or no-card signals on pricing',
+        )
+      }
+      // A pricing page that needs JavaScript to show a price is one an agent cannot read either,
+      // so this is a measured finding about the page rather than a gap in the scan.
+      if (f.funnel.pricingFetched && f.funnel.pricesVisibleWithoutJs === false) {
+        return yes(
+          0,
+          'Your pricing page answers a plain request with no prices in it, so nothing about your tiers survives without JavaScript',
+        )
+      }
       if (!f.funnel.pricingFetched) {
         // A library with nothing to buy has no free tier to state, and marking that unmeasurable
         // implied we had failed to find something that does not exist. The signup checks already

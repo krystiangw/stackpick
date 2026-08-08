@@ -189,7 +189,15 @@ export async function scanDomain(input: string, onProgress?: ScanProgress): Prom
   // The funnel greps documentation prose, so the corpus is every docs page we read plus home.
   report('Testing signup and agent entry points', 4)
   const corpus = [docsText, ...deeperDocs.map((page) => page.body), found.home.body].join('\n')
-  const funnel = await scanFunnel(domain, found.site, corpus, found.pricing, found.signup, found.pricingPage)
+  const funnel = await scanFunnel(
+    domain,
+    found.site,
+    corpus,
+    found.pricing,
+    found.signup,
+    found.pricingPage,
+    found.pricesVisibleWithoutJs,
+  )
   report('Scoring', STEPS)
 
   return {
