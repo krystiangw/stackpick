@@ -31,7 +31,6 @@ type Manifest = {
 
 /** Who publishes a package and how it describes itself, from the manifest we already read. */
 export type PackageFacts = {
-  name: string
   version: string
   description: string
   keywords: string[]
@@ -60,7 +59,6 @@ export async function fetchPackageFacts(packageName: string): Promise<PackageFac
   try {
     const meta = JSON.parse(got.body) as Manifest
     return {
-      name: packageName,
       version: meta.version ?? '',
       description: meta.description ?? '',
       keywords: meta.keywords ?? [],

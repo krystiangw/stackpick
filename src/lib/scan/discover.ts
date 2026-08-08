@@ -383,7 +383,9 @@ function handleMentionsVendor(text: string, vendor: Vendor): boolean {
 function mentionsVendorName(text: string, vendor: Vendor): boolean {
   const words = text.toLowerCase().split(/[^a-z0-9.]+/)
   if (words.some((word) => flatten(word) === vendor.flatDomain || vendor.aliases.includes(flatten(word)))) return true
-  return flatten(text).includes(vendor.flatDomain)
+  // Written out as two words in prose - "Better Stack Node.js logger" - it is one in the domain.
+  const flat = flatten(text)
+  return flat.includes(vendor.flatDomain) || vendor.aliases.some((alias) => alias.length >= 5 && flat.includes(alias))
 }
 
 const githubOrg = (url: string): string | null => url.match(/github\.com[/:]([a-z0-9._-]+)/i)?.[1]?.toLowerCase() ?? null
@@ -437,12 +439,23 @@ function onlySdkWords(text: string): boolean {
   return words.length > 0 && words.every((word) => SDK_WORD.test(word))
 }
 
-/** What is left of a name once the vendor's own name is taken off the front of it. */
+/**
+ * What is left of a name once the vendor's own name is taken off the front of it, or null when
+ * the name does not start with it. Counted over letters and digits only, because the separators
+ * are the package author's taste: daily-co and dailyco are the same seven characters of brand.
+ */
 function afterVendorName(part: string, vendor: Vendor): string | null {
   const flat = flatten(part)
   for (const alias of [vendor.flatDomain, ...vendor.aliases]) {
-    if (flat === alias || alias.startsWith(flat)) return ''
-    if (flat.startsWith(alias)) return part.toLowerCase().slice(part.toLowerCase().indexOf(alias[0]) + alias.length)
+    if (flat === alias || (alias.startsWith(flat) && flat.length >= 4)) return ''
+    if (!flat.startsWith(alias)) continue
+    let taken = 0
+    let cursor = 0
+    while (cursor < part.length && taken < alias.length) {
+      if (/[a-z0-9]/i.test(part[cursor])) taken++
+      cursor++
+    }
+    return part.slice(cursor).toLowerCase()
   }
   return null
 }
@@ -452,7 +465,7 @@ function afterVendorName(part: string, vendor: Vendor): string | null {
  * are coarse on purpose: ranking by how much of the brand a name carries once picked
  * froala-pages over froala-editor, so within a tier real usage still decides.
  */
-export function shapeRank(name: string, vendor: Vendor, description = ''): number {
+function shapeRank(name: string, vendor: Vendor, description = ''): number {
   const part = bareName(name)
   if (NOT_AN_SDK.test(part) || NOT_AN_SDK.test(name.toLowerCase())) return 5
   // The package named exactly after the vendor is not always the SDK: `storyblok` is
@@ -499,13 +512,12 @@ const candidateOf = (hit: NpmSearchHit['package']): Candidate => ({
 
 /**
  * Who publishes this. The maintainer list arrives with every search result and is the only
- * field on it a stranger cannot set to whatever they like: @utdk/launchdarkly is maintained by
- * an unrelated person, the third party behind the `statuspage.io` package links to Atlassian's
+ * field on it a stranger cannot help themselves to: @utdk/launchdarkly is maintained by an
+ * unrelated person, the third party behind the `statuspage.io` package links to Atlassian's
  * domain because it wraps it, and @betterstack/upload-client sits in a scope registered by a
- * different company altogether. A repo in the vendor's own GitHub org counts too, because
- * founders often publish from personal accounts: searchkit.co and typesense.org both do.
+ * different company altogether.
  */
-export function maintainedByVendor(candidate: Pick<Candidate, 'maintainers'>, vendor: Vendor): boolean {
+function maintainedByVendor(candidate: Pick<Candidate, 'maintainers'>, vendor: Vendor): boolean {
   return candidate.maintainers.some((maintainer) => {
     if (handleMentionsVendor(maintainer.name, vendor)) return true
     const [local, host] = maintainer.email.split('@')
@@ -516,7 +528,11 @@ export function maintainedByVendor(candidate: Pick<Candidate, 'maintainers'>, ve
   })
 }
 
-export function publishedByVendor(
+/**
+ * A repo in the vendor's own GitHub org counts as well, because founders publish from personal
+ * accounts: nothing in searchkit.co's or typesense.org's maintainer lists says the company.
+ */
+function publishedByVendor(
   candidate: Pick<Candidate, 'name' | 'maintainers' | 'links'>,
   vendor: Vendor,
   siteOrg: string | null,
@@ -536,13 +552,6 @@ const monthsSince = (at: number) => (at === 0 ? 0 : (Date.now() - at) / (1000 * 
 const isDormant = (candidate: Candidate) => monthsSince(candidate.publishedAt) >= 24
 const isProvisional = (candidate: Candidate) => candidate.version.includes('-') || candidate.version.startsWith('0.')
 
-/**
- * A package whose name says nothing about the vendor can still be the SDK - chromadb is
- * trychroma.com's and @amplitude/analytics-browser is Amplitude's - but so is every internal
- * library a company open-sources. allegro.pl publishes worker-nodes, a thread pool, and
- * convert-description, a helper used by 351 installs a week. What separates them is whether
- * the package presents itself as being about the product, and whether anyone installs it.
- */
 const MIN_WEEKLY_DOWNLOADS = 1000
 
 function saysItIsAboutTheVendor(what: { description: string; keywords: string[] }, vendor: Vendor): boolean {
@@ -552,6 +561,13 @@ function saysItIsAboutTheVendor(what: { description: string; keywords: string[] 
   )
 }
 
+/**
+ * A package whose name says nothing about the vendor can still be the SDK - chromadb is
+ * trychroma.com's and @amplitude/analytics-browser is Amplitude's - but so is every internal
+ * library a company open-sources. allegro.pl publishes worker-nodes, a thread pool, and
+ * convert-description, a helper for its own API at 351 installs a week. What separates them is
+ * whether the package says it is about the product, and whether anyone installs it.
+ */
 function looksLikeTheirProduct(candidate: Candidate, vendor: Vendor, downloads: number): boolean {
   if (shapeRank(candidate.name, vendor, candidate.description) < 4) return true
   return saysItIsAboutTheVendor(candidate, vendor) && downloads >= MIN_WEEKLY_DOWNLOADS
@@ -809,11 +825,10 @@ export async function discover(domain: string): Promise<Discovered> {
       scrapedRank === 0
         ? { theirs: true, aboutThem: true, draft: false }
         : await readScrapedPackage(npmPackage, vendor, githubRepo)
-    // @amplitude/analytics-browser is named after nothing but what it does, and calls itself
-    // the official Amplitude SDK for Web. idiomorph, on the same shape, is "an id-based DOM
-    // morphing library" and never mentions htmx. Only the second is worth looking past.
-    // @workos/radar-signals is WorkOS's and says so, and it is at 0.0.1: a version number is
-    // the vendor telling us this is not the package they want a developer to reach for.
+    // Three packages share the same unhelpful name shape and only two are worth looking past.
+    // @amplitude/analytics-browser calls itself the official Amplitude SDK for Web. idiomorph
+    // is "an id-based DOM morphing library" and never mentions htmx. @workos/radar-signals
+    // does say WorkOS, and is at 0.0.1, which is the vendor saying it is not the one yet.
     if (!theirs || (scrapedRank >= 4 && (!aboutThem || draft))) {
       // A name that is not theirs loses to an equal shape; one that is theirs has to be beaten.
       const ceiling = theirs ? scrapedRank : scrapedRank + 1

@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '4.1'
+export const FORMULA_VERSION = '4.2'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -428,16 +428,6 @@ export const CHECKS: Check[] = [
           unblock: 'Name your package once in your docs, or link it from your repository, and we stop guessing.',
         }
       }
-      // A registry name that only shares a GitHub org with the site is a hypothesis. Scoring
-      // it gave allegro.pl a point for an internal utility it does not publish as an SDK.
-      if (f.discovered.npmSource === 'registry-search' && f.discovered.npmConfidence === 'weak') {
-        return {
-          points: 0,
-          detail: `Unmeasurable: nothing on the site names a package, and the closest registry match (${f.npm.package}) is not clearly yours`,
-          inconclusive: true,
-          unblock: 'Name your package once in your docs and we stop guessing.',
-        }
-      }
       if (!f.npm.found) return yes(0, `Package ${f.npm.package} not found on the registry`)
       if (!f.npm.bundledTypes) return yes(0, `${f.npm.package} ships without bundled types`)
       const stale = f.npm.staleMonths
@@ -451,9 +441,7 @@ export const CHECKS: Check[] = [
       const basis =
         f.discovered.npmSource !== 'registry-search'
           ? ''
-          : f.discovered.npmEntryShape === false
-            ? ', published under your npm scope. If this is not the package you want evaluated, name that one in your docs'
-            : ', matched from the registry rather than a link on the site'
+          : ', matched from the registry by who publishes it rather than by a link on your site'
       return yes(1, `${f.npm.package}@${f.npm.version} ships types${basis}`)
     },
   },
