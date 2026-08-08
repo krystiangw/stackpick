@@ -145,7 +145,14 @@ export function toAgentInstructions(report: Report, baseUrl: string): string {
   )
   const unmeasured = scorecard.checks.filter((check) => check.inconclusive)
 
-  const steps = actionable.map((check) => {
+  // Ordered the way the fix plan orders them, cheapest real gain first, so an agent working
+  // top to bottom does the same thing a person reading the scorecard would.
+  const ranked = plan ? plan.steps.map((step) => step.checkId) : []
+  const ordered = [...actionable].sort(
+    (a, b) => (ranked.indexOf(a.id) + 1 || 99) - (ranked.indexOf(b.id) + 1 || 99),
+  )
+
+  const steps = ordered.map((check) => {
     const step = plan?.steps.find((candidate) => candidate.checkId === check.id)
     return [
       `### ${check.label} (+${step?.gain ?? check.max - check.points}, ${step?.effort ?? 'unscoped'})`,
@@ -174,7 +181,10 @@ export function toAgentInstructions(report: Report, baseUrl: string): string {
           '## Not tasks: things we could not measure',
           '',
           'These are not failures and must not be reported as such. Each one says what would make it measurable.',
-          ...unmeasured.map((check) => `- ${check.label}: ${check.detail}${check.unblock ? ` ${check.unblock}` : ''}`),
+              ...unmeasured.map((check) => {
+            const detail = check.detail.replace(/[.\s]*$/, '')
+            return `- ${check.label}: ${detail}.${check.unblock ? ` What would make it measurable: ${check.unblock}` : ''}`
+          }),
         ]
       : []),
   ]

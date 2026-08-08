@@ -110,6 +110,14 @@ data: {"id":"example-com-202608072143","total":9,"max":${MAX_SCORE}}`}</Code>
           <span className="font-mono text-xs">/.well-known/mcp.json</span>.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          Both surfaces take a <code className="font-mono text-xs">format</code>.{' '}
+          <code className="font-mono text-xs">sarif</code> returns SARIF 2.1.0, whose result kinds are the same four
+          we use, so a scan can run in your pipeline and fail a build when the score drops.{' '}
+          <code className="font-mono text-xs">agent</code> returns markdown tasks instead of a report: one task per
+          failing check, each carrying the measurement behind it and a link to the rule, with the unmeasured checks
+          listed separately and marked as not failures.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           Machine-readable descriptions of all of this live at{' '}
           <Link href="/openapi.json" className="text-brass underline underline-offset-4">
             /openapi.json
