@@ -1037,3 +1037,59 @@ udało się przeczytać ani jednej strony dokumentacji, zamiast „only 0 pages"
 jako „docs", „signup" albo „pricing" bez sprawdzenia, czy strona jest tym, co mówi etykieta.
 To stąd dokumentacja Pipecata jako dokumentacja Daily, wpis blogowy jako docsy GrowthBooka,
 `/ebooks` jako dokumentacja Flagsmitha i wpis blogowy Twilio jako strona rejestracji.
+
+## Runda 2026-08-08 (dwudziesta siódma): czwarta i ostatnia przyczyna systemowa
+
+Discovery przyjmowało URL jako „dokumentację", „rejestrację" albo „cennik" **na podstawie tego,
+gdzie znaleziono link**, a nie czym strona jest. Wszystko poniżej mierzyło potem złą stronę
+i publikowało to pod nazwą vendora ze zdaniem „w N stronach dokumentacji, które przeczytaliśmy".
+
+Naprawione przypadki: `daily.co` oceniane po dokumentacji **innego frameworka** (Pipecat),
+`growthbook.io` po wpisie blogowym o multi-arm bandits, `flagsmith.com` po marketingowej liście
+e-booków, `twilio.com` po stronie-hubie, gdy ich własne `/docs` leżało jedno zgadnięcie dalej,
+`honeybadger.io` po surowym pliku tekstowym policzonym jako „strona dokumentacji", a jako
+„rejestracja" braliśmy wpis blogowy Twilio, bo miał słowo signup w slugu.
+
+**Reguła:** każdy kandydat jest teraz pobierany i sprawdzany, czym jest. Link vendora jest
+**preferowany** nad zgadnięciem, ale nie **bardziej ufany**, więc llms.txt straciło przywilej -
+kilka najgorszych wyborów pochodziło właśnie stamtąd. Dokumentacja odpada, gdy nie jest HTML-em,
+gdy końcowy URL wychodzi poza witrynę vendora albo gdy leży w sekcji, która dokumentacją nigdy nie
+jest. Zwycięzcy są sortowani po tym, **jak kanoniczne jest miejsce**, a nie po ilości tekstu, bo
+każdy błędny wybór czytał się bogaciej niż strona, którą pokonał. Rejestracja musi mieć formularz
+z polem hasła lub e-maila, host uwierzytelniający albo segment ścieżki, który **jest** słowem
+signup. **401 i 403 na stronie rejestracji są akceptowane**, bo to jest dokładnie to znalezisko,
+dla którego te checki istnieją.
+
+Do tego wyłapane linki rejestracji leżące na stronach, które i tak już pobraliśmy, oraz na innej
+domenie rejestrowalnej po przejęciu: `elastic.co`, `typesense.org` i `split.io` były raportowane
+jako **niemające żadnego linku do rejestracji**, mając go w HTML-u, który mieliśmy w ręku.
+
+**Korpus 4.4, 103 na 103, zero błędów, zero sprzeczności w `npm run audit`:**
+
+| | 4.3 | 4.4 |
+|---|---|---|
+| Werdyktów „nie dotyczy" | 58 | **38** |
+| Domen zmierzonych w całości | 22 | **29** |
+| Średnio punktów mierzalnych | 14,43 | **14,60** |
+| Domen ze zmienionym wynikiem | - | 32 (15 w górę, 17 w dół) |
+
+Spadek liczby „nie dotyczy" o dwadzieścia to sedno: tyle razy pisaliśmy „to cię nie dotyczy",
+podczas gdy dotyczyło, tylko patrzyliśmy na złą stronę. Rozkład zmian mniej więcej po równo w obie
+strony jest tym, czego się spodziewać, gdy przestaje się mierzyć niewłaściwą stronę: jednych
+schlebiał bogaty wpis blogowy, innych krzywdziła chuda strona docelowa. `auth0.com` spadł
+z 12 na 10, bo jest wreszcie oceniany po `auth0.com/docs`, a nie po portalu deweloperskim.
+
+### Wszystkie cztery przyczyny systemowe zamknięte
+
+1. Sonda MCP zgadywała nazwę hosta zamiast rozwiązać adres z karty vendora → **27 → 49** znalezionych
+   serwerów.
+2. Atrybucja npm po kształcie nazwy zamiast po tym, kto publikuje → **19 z 52** wierszy poprawionych.
+3. Zamknięte drzwi frontowe traktowane jak ślepota na całą witrynę → pięć checków wracało do
+   mianownika.
+4. Typ strony brany z etykiety linku, nie ze strony → powyżej.
+
+### Lekcja procesowa
+
+Dwukrotnie moje `git add -A` wciągnęło do commita pliki, nad którymi pracował subagent. Nic nie
+przepadło, ale historia jest myląca. **Gdy subagent pracuje na plikach, commituję po ścieżkach,
+nie `-A`.**
