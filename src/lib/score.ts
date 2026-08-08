@@ -51,7 +51,7 @@ export const CHECKS: Check[] = [
       if (f.rateLimitedUs) {
         return {
           points: 0,
-          detail: `Unmeasurable: answered ${f.agentStatus} to ${AGENT_UA}${tries}, which is a rate limit on us rather than a rule about agents`,
+          detail: `Unmeasurable: answered ${f.agentStatus} to ${AGENT_UA}${tries}, which is either a limit we triggered or a gate on the network we scan from. Neither is a measurement of how you treat agents`,
           inconclusive: true,
           unblock: 'Nothing for you to do. We will rescan later and this becomes measurable.',
         }
@@ -143,7 +143,7 @@ export const CHECKS: Check[] = [
       if (f.rateLimitedUs) {
         return {
           points: 0,
-          detail: 'Unmeasurable: we were rate limited before robots.txt mattered, which is our problem and not a rule of yours',
+          detail: 'Unmeasurable: a 429 stopped us before robots.txt mattered, so what your rules say could not be tested',
           inconclusive: true,
           unblock: 'Nothing for you to do. We will rescan later and this becomes measurable.',
         }
