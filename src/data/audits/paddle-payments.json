@@ -52,7 +52,7 @@
         {
           "vendor": "paddle.com",
           "reason": "Rejected on fee figures the run took from competitor-published comparison pages it never opened",
-          "verbatim": "All SEO comparison content, much of it published by competing payment providers, so the fee figures should be confirmed on the vendors' own pricing pages before anyone acts on them. I did not open any of those pages."
+          "verbatim": "All SEO comparison content, much of it published by competing payment providers, so the fee figures (Stripe 2.9% + $0.30, Paddle 5% + $0.50) should be confirmed on the vendors' own pricing pages before anyone acts on them. I did not open any of those pages."
         },
         {
           "vendor": "Lemon Squeezy",
