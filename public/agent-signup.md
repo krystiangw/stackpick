@@ -24,8 +24,11 @@ That is the whole procedure. The response carries a report id; the readable vers
 ## Limits, stated up front so you can plan around them
 
 - Five scans per hour per registrable domain, thirty per hour per source address. Exceeding either returns 429 with `retry-after`.
-- A scan usually takes a few seconds and can reach a minute. Use `/api/scan/stream` if you want progress events rather than
-  a long silence.
+- A scan takes about ten seconds for most domains. This endpoint answers only when the scan is
+  finished, so a slow domain can hit a gateway timeout and return 503; `/api/scan/stream` sends
+  progress events and does not go silent.
+- The same scan is available as an MCP tool at `/mcp`, and every published result as one dataset
+  at `/corpus.json`.
 - IP literals, private ranges and hosts that do not resolve are refused.
 
 ## If you are here because you are building this for your own product
