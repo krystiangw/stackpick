@@ -364,6 +364,18 @@ function carriesVendorName(text: string, vendor: Vendor): boolean {
   )
 }
 
+/**
+ * Whether a handle is built round the vendor's name wherever it sits in it. People append the
+ * company they publish for as often as they prepend it: zane-highlight, philipkiely-baseten,
+ * raygunowner. Package names get the stricter test above, because nuxt-betterstack is somebody
+ * else's integration and not Better Stack's package.
+ */
+function handleMentionsVendor(text: string, vendor: Vendor): boolean {
+  const flat = flatten(text)
+  if (!flat) return false
+  return flat.includes(vendor.flatDomain) || vendor.aliases.some((alias) => alias.length >= 4 && flat.includes(alias))
+}
+
 /** Whether prose names the vendor, which a name-shaped test cannot see: "Better Stack Node.js logger". */
 function mentionsVendorName(text: string, vendor: Vendor): boolean {
   const words = text.toLowerCase().split(/[^a-z0-9.]+/)
@@ -487,23 +499,25 @@ const candidateOf = (hit: NpmSearchHit['package']): Candidate => ({
  * different company altogether. A repo in the vendor's own GitHub org counts too, because
  * founders often publish from personal accounts: searchkit.co and typesense.org both do.
  */
+export function maintainedByVendor(candidate: Pick<Candidate, 'maintainers'>, vendor: Vendor): boolean {
+  return candidate.maintainers.some((maintainer) => {
+    if (handleMentionsVendor(maintainer.name, vendor)) return true
+    const [local, host] = maintainer.email.split('@')
+    if (!host) return false
+    if (flatten(host) === vendor.flatDomain || host.toLowerCase().endsWith(`.${vendor.domain}`)) return true
+    // hello@raygun.io maintains raygun.com's packages: a company mails from more than one tld.
+    return carriesVendorName(host.split('.')[0], vendor) || handleMentionsVendor(local, vendor)
+  })
+}
+
 export function publishedByVendor(
   candidate: Pick<Candidate, 'maintainers' | 'links'>,
   vendor: Vendor,
   siteOrg: string | null,
 ): boolean {
-  for (const maintainer of candidate.maintainers) {
-    if (carriesVendorName(maintainer.name, vendor)) return true
-    const host = maintainer.email.split('@')[1] ?? ''
-    if (!host) continue
-    if (flatten(host) === vendor.flatDomain || host.toLowerCase().endsWith(`.${vendor.domain}`)) return true
-    // hello@raygun.io maintains raygun.com's packages: a company mails from more than one tld.
-    if (carriesVendorName(host.split('.')[0], vendor)) return true
-    if (carriesVendorName(maintainer.email.split('@')[0], vendor)) return true
-  }
+  if (maintainedByVendor(candidate, vendor)) return true
   const orgs = candidate.links.map(githubOrg)
-  if (orgs.some((org) => orgIsVendor(org, vendor))) return true
-  return siteOrg !== null && orgs.some((org) => org === siteOrg)
+  return orgs.some((org) => orgIsVendor(org, vendor) || (siteOrg !== null && org === siteOrg))
 }
 
 const monthsSince = (at: number) => (at === 0 ? 0 : (Date.now() - at) / (1000 * 60 * 60 * 24 * 30.44))
@@ -538,7 +552,7 @@ function looksLikeTheirProduct(candidate: Candidate, vendor: Vendor, downloads: 
 function vendorMaintainer(candidates: Candidate[], vendor: Vendor): string | null {
   for (const candidate of candidates) {
     for (const maintainer of candidate.maintainers) {
-      if (maintainer.name && carriesVendorName(maintainer.name, vendor)) return maintainer.name
+      if (maintainer.name && handleMentionsVendor(maintainer.name, vendor)) return maintainer.name
     }
   }
   return null
@@ -566,7 +580,14 @@ export async function searchNpmForDomain(domain: string, githubRepo: string | nu
     byName.set(hit.package.name, candidateOf(hit.package))
   }
 
-  let owned = [...byName.values()].filter((candidate) => publishedByVendor(candidate, vendor, siteOrg))
+  // A GitHub org that reads like the vendor's is the weaker of the two proofs, and on a package
+  // nobody has published for years it is not enough: github.com/betterstack belongs to an
+  // unrelated company whose upload-client last shipped in 2019, and betterstack.com would have
+  // been handed it as their SDK.
+  const isTheirs = (candidate: Candidate) =>
+    publishedByVendor(candidate, vendor, siteOrg) && (!isDormant(candidate) || maintainedByVendor(candidate, vendor))
+
+  let owned = [...byName.values()].filter(isTheirs)
 
   const handle = vendorMaintainer(owned, vendor)
   if (handle) {
@@ -574,7 +595,7 @@ export async function searchNpmForDomain(domain: string, githubRepo: string | nu
       if (isPlaceholder(hit.package.name) || byName.has(hit.package.name)) continue
       const candidate = candidateOf(hit.package)
       byName.set(candidate.name, candidate)
-      if (publishedByVendor(candidate, vendor, siteOrg)) owned.push(candidate)
+      if (isTheirs(candidate)) owned.push(candidate)
     }
   }
 

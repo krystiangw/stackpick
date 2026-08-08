@@ -860,3 +860,25 @@ pozycja merytoryczna.
    powinno być.
 5. Korpus 103 vendorów jest wspomniany na jednej stronie, na dole. Jako jedyny asset zdolny
    przyciągać ruch bez outboundu, powinien być na `/docs`, `/methodology` i karcie wyniku.
+
+### Efekt poprawki MCP na korpusie: byliśmy ślepi na 22 działające serwery
+
+Przeskanowanie 103 domen na formule 4.1 (102 od razu, payloadcms.com przy powtórce):
+
+| | 4.0 | 4.1 |
+|---|---|---|
+| **Znalezione serwery MCP** | 27 | **49** |
+| Werdyktów niemierzalnych łącznie | 119 | **108** |
+| `machine_readable_api` niemierzalny | 6 | 3 |
+| `signup_reachable` / `user_agents_allowed` / `oauth_dcr` niemierzalne | 3 / 3 / 3 | 1 / 1 / 1 |
+| Średnio punktów mierzalnych | 14,17 | 14,24 |
+
+**Mówiliśmy 22 firmom, że nie mają serwera MCP, a mają.** To najdroższy błąd, jaki ten skaner
+popełnił, bo dotyczył checku, który sami reklamujemy jako nasz obszar, i był sprawdzalny jednym
+curlem. Przyczyna: sondowaliśmy nazwę hosta zamiast rozwiązać adres, który vendor sam podaje
+w karcie.
+
+Przy okazji zdanie w raporcie branżowym przestało być prawdziwe w chwili, gdy skan się poprawił:
+*„Talking about MCP is common; running one is not"* przy 49 na 103. Teraz raport mówi, że to
+jedyny etap lejka, który rynek ruszył, i że serwer, który agent może wywołać, to nie poświadczenie,
+które agent może zdobyć.
