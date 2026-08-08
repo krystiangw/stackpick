@@ -76,8 +76,12 @@ const REMEDIES: Record<string, Remedy> = {
   },
   agent_entry_point: {
     effort: 'an afternoon',
-    how: () =>
-      'Publish /agent-signup.md: the path from nothing to a working key, written as steps for a machine rather than a tour for a person.',
+    // The one step where a worked example is worth more than the instruction, and the only
+    // honest example we can point at is our own, which this scanner scores like anyone else's.
+    how: (_f, check) =>
+      check.points > 0
+        ? 'The file is there and it states a policy rather than a procedure. It counts when it names a credential, an endpoint or a way to get an account: the path from nothing to a working key, in steps. Ours is at /agent-signup.md and it is 1.7 kB.'
+        : 'Publish /agent-signup.md: the path from nothing to a working key, written as steps for a machine rather than a tour for a person. Ours is at /agent-signup.md if you want a worked example, and it says plainly that we have nothing to sign up for.',
   },
   oauth_dcr: {
     effort: 'a project',
