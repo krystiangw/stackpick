@@ -526,3 +526,29 @@ tym samym protokole co my i dłuższą listę protokołów. Mierzą jednak **pł
 poziom 0-5, bez mianownika mierzalnego i bez stanu "nie dało się zmierzyć". Etapów C i D
 (rejestracja, poświadczenia) nie mierzy nikt poza nami, a warstwy behawioralnej tym bardziej.
 **Wniosek dla strategii: darmowy skan przestaje być produktem i staje się kwalifikatorem.**
+
+## Runda 2026-08-08 (czternasta): korpus jako dane
+
+Ostatni brakujący punkt kanonu z rundy 13. Scorecard publikuje wszystkie swoje wyniki jako
+odpytywalny dataset i **to** czyni go cytowalnym, a nie tylko czytelnym; nasze 51 domen siedziało
+zamknięte w HTML-u.
+
+**`/corpus.json` i `/corpus.csv`**, jedna pozycja na domenę i check: werdykt, punkty i **zdanie,
+z którego to zmierzyliśmy**. 51 domen, 714 wierszy, jedna wersja formuły (3.3), bo mieszanie
+wersji porównywałoby wyniki, które nigdy nie były porównywalne. Nagłówki `cache-control` na
+godzinę i `access-control-allow-origin: *`, żeby dało się to zaciągnąć z notebooka albo z cudzej
+strony. Podlinkowane z `/report`, `llms.txt` i `.well-known/agent-access.json`.
+
+**Dataset niesie własne noty**, między innymi tę, która ma znaczenie prawne i handlowe: `share`
+liczy się przez `measurable`, nie przez `max`, więc domena, która odrzuciła nasze żądania, ma
+mniejszy mianownik, a nie gorszą liczbę, i sortowanie po samym `total` byłoby błędem.
+
+**Sprawdzone niezmienniki na produkcji**, nie tylko kod 200: dla każdej z 51 domen suma punktów
+checków wykluczonych (`unmeasured` + `notApplicable`) równa się dokładnie `max - measurable`,
+a suma punktów checków liczonych równa się `total`. Zero rozjazdów. Dataset niezależnie odtwarza
+liczbę z landingu: średnio 13 punktów mierzalnych, 3 domeny zmierzone w całości.
+
+**Do decyzji Krystiana:** wpisałem `terms` jako "free to use, quote and republish with attribution
+to StackPick and a link to the methodology". To jest wystarczające, ale **sformalizowanie tego
+jako CC BY 4.0** (co robi większość publicznych korpusów badawczych) jest decyzją właściciela,
+nie moją. Do rozstrzygnięcia razem z domeną.
