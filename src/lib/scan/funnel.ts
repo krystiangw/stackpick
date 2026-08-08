@@ -321,18 +321,14 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpo
   // same request at a path nobody registered, on the same origin, so the only thing that counts
   // is /mcp answering differently from the rest of the site.
   const controlPath = '/mcp-stackpick-control-8f3a1c'
-  const origins = [...new Set(candidates.map((url) => new URL(url).origin))]
-  const [results, wildcard, controls] = await Promise.all([
+  const [results, control] = await Promise.all([
     inParallel(candidates, (url) =>
       // An MCP server speaks JSON-RPC over POST; a GET tells us far less and is what made us
       // read a live server as absent when its GET handler differed from its POST handler.
       fetchUrl(url, handshake),
     ),
     fetchUrl(`https://mcp-stackpick-control-8f3a1c.${domain}`, { accept: 'application/json' }),
-    inParallel(origins, (origin) => fetchUrl(`${origin}${controlPath}`, handshake)),
   ])
-  const control = wildcard
-  const nonsenseStatus = new Map(origins.map((origin, index) => [origin, controls[index].status]))
   // A wildcard host behind an auth proxy answers 401 to anything, including a name nobody
   // registered. Then every domain would "run an MCP server".
   const answersAnything = control.status === 401 || control.status === 405 || control.ok
@@ -341,6 +337,23 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpo
   // outranks the control probe. Without it, contentful.com's wildcard hid a server that answers.
   const completesHandshake = (body: string) =>
     /"protocolVersion"|"serverInfo"/.test(body) && /"jsonrpc"|"result"/.test(body)
+
+  // Only for addresses the control could still discredit. Probing every origin up front cost
+  // three more requests against the same per-site concurrency cap, and on telnyx.com that
+  // starved the handshake that proves their server is real: a live MCP endpoint read as absent.
+  const needsControl = [
+    ...new Set(
+      candidates
+        .filter((url, index) => {
+          const got = results[index]
+          if (got.status === 0 || completesHandshake(got.body)) return false
+          return !answersAnything || fromCard.includes(url)
+        })
+        .map((url) => new URL(url).origin),
+    ),
+  ]
+  const controls = await inParallel(needsControl, (origin) => fetchUrl(`${origin}${controlPath}`, handshake))
+  const nonsenseStatus = new Map(needsControl.map((origin, index) => [origin, controls[index].status]))
 
   return results
     .map((got, index) => {
