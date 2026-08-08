@@ -7,6 +7,25 @@ export const metadata: Metadata = {
 
 const RESULTS = [
   {
+    id: 'wall',
+    heading: 'Three categories, fourteen runs, one wall in three disguises',
+    numbers: [
+      ['Runs that produced working code', '14 of 14'],
+      ['Runs that obtained a credential where one was needed', '0 of 8'],
+      ['Categories where the same barrier appeared', '3 of 3'],
+    ],
+    body: [
+      'Three studies, three categories, fourteen runs in isolated copies of a real application: choose a rich text editor, add image upload and hosting, replace a proxy cookie with real authentication. Every run shipped working code. In the two categories where the work needs a credential, not one run obtained it, and each said the same thing in its own words: creating the account needs a human.',
+      'The third category is the interesting one, because no credential was required at all and the barrier still appeared. It simply moved earlier. Vendors whose libraries require a licence key were struck off during dependency research, in one line each, before any product was opened. That is the shape of the finding: wherever a human step exists, it either stops the agent at the end or removes you from the list at the start. It does not slow adoption down. It decides it.',
+      'Two things surfaced that no vendor can see from inside. One run refused to create an account it was technically able to create, because ownership is a decision it would not make for someone else, which means frictionless is not the same as acceptable. And in the authentication study a vendor was called the most attractive on price and rejected anyway, on a claim from a search result the run never opened and flagged, in its own report, as the weakest link in its reasoning.',
+    ],
+    quote: {
+      text: 'I stopped at the signup form. What it would take: one person, about three minutes.',
+      caption:
+        'A run pricing the barrier for the vendor it had just chosen. Three minutes of a human is the distance between an agent shipping your product and an agent shipping someone else\u2019s.',
+    },
+  },
+  {
     id: 'sources',
     heading: 'Whether your docs get read depends on the model, not on your docs',
     numbers: [
@@ -79,14 +98,14 @@ export default function FindingsPage() {
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Research</p>
         <h1 className="mt-4 max-w-2xl text-balance text-4xl font-semibold leading-tight tracking-tight">
-          Twenty agents, one task, nobody watching
+          Thirty-four agents, four studies, nobody watching
         </h1>
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
-          Each run received the same brief: add image upload and storage to this app, solidly enough to
-          ship, and decide alone because nobody will answer questions. No provider names, no mention of an
-          audit, clean context in every run. Two models, two conditions: an empty project, and a working
-          application with a real API client. A second study, six runs in isolated copies of a different
-          codebase, repeated the exercise for a rich text editor, where a licence is part of the decision.
+          Four studies so far, across three categories: image upload and storage, a rich text editor, and
+          authentication for a support tool. Every run received a brief and nothing else. No provider names,
+          no mention of an audit, no hint that anyone was watching, and no way to ask a question. Two models,
+          isolated copies of a real application, and a record of every source each run consulted, separating
+          the pages it read from the summaries it only skimmed.
         </p>
       </section>
 
