@@ -1116,3 +1116,9 @@ sprawdzenie na produkcji, nie przez build.
 **W toku:** subagent weryfikuje, czy cztery naprawione przyczyny są naprawdę zamknięte, co te
 naprawy popsuły (32 domeny zmieniły wynik, 17 w dół) i czy istnieje piąta przyczyna, której nikt
 jeszcze nie nazwał.
+
+**`/findings` argumentowało połowę sprawy.** Badania agentowe mówią, że ściana istnieje; korpus
+mówi, **ilu z rynku za nią stoi**, a strona robiąca ten argument nigdy tego nie pokazywała. Doszedł
+blok liczony na żywo: 103 vendorów, z czego **26 uruchamia serwer MCP i nie dokumentuje żadnej
+drogi do poświadczenia dla niego**. To jest ta sama teza co osiemnaście przebiegów wyżej, tylko
+w skali, do której żadna liczba przebiegów by nie dobiła, i za zero kosztu modelu.
