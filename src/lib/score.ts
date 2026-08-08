@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '4.0'
+export const FORMULA_VERSION = '4.1'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -84,7 +84,7 @@ export const CHECKS: Check[] = [
         }
         return yes(1, f.machine.hasLlmsFullTxt ? 'llms.txt and llms-full.txt present' : 'llms.txt present')
       }
-      if (f.blocksPlainRequests) {
+      if (blindedBy(f)) {
         return { points: 0, detail: 'Unmeasurable: every request was refused', inconclusive: true }
       }
       const probed = Object.keys(f.machine.llms).length
@@ -125,7 +125,7 @@ export const CHECKS: Check[] = [
       const blocked = f.robots.blockedByClass.user
       // No robots.txt is not a blind spot, it is the most permissive answer possible.
       if (!f.robots.present) {
-        return f.blocksPlainRequests
+        return blindedBy(f)
           ? { points: 0, detail: 'Unmeasurable: the site refuses agent requests before robots.txt matters', inconclusive: true }
           : yes(1, 'No robots.txt, so nothing is disallowed for anyone')
       }
@@ -148,8 +148,8 @@ export const CHECKS: Check[] = [
           unblock: 'Nothing for you to do. We will rescan later and this becomes measurable.',
         }
       }
-      if (f.blocksPlainRequests) {
-        return yes(0, 'robots.txt permits them, but the WAF refuses the request before robots.txt matters')
+      if (blindedBy(f)) {
+        return yes(0, 'robots.txt permits them, but nothing we requested got through, so the rules never applied')
       }
       return yes(1, 'No on-demand agent is blocked')
     },
@@ -207,7 +207,7 @@ export const CHECKS: Check[] = [
       // Our own corpus said this check was unmeasurable on 37 of 51 domains, because with no MCP
       // endpoint to follow we probed one origin. We now search the hosts an authorization server
       // actually lives on, so finding nothing across all of them is a measurement.
-      if (f.blocksPlainRequests) {
+      if (blindedBy(f)) {
         return {
           points: 0,
           detail: 'Unmeasurable: your edge refused our requests, so nothing we probed proves anything',
@@ -267,7 +267,7 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       if (!f.funnel.signup.url) {
         // Behind a wall we did not find the signup, which is not the same as there not being one.
-        return f.blocksPlainRequests
+        return blindedBy(f)
           ? {
               points: 0,
               detail: 'Unmeasurable: your edge refused our requests, so no signup page could be found',
@@ -309,7 +309,7 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       const signup = f.funnel.signup
       if (!signup.url) {
-        return f.blocksPlainRequests
+        return blindedBy(f)
           ? {
               points: 0,
               detail: 'Unmeasurable: your edge refused our requests, so no signup page could be found',
@@ -476,7 +476,7 @@ export const CHECKS: Check[] = [
           inconclusive: true,
         }
       }
-      if (f.blocksPlainRequests) {
+      if (blindedBy(f)) {
         return { points: 0, detail: 'Unmeasurable behind the WAF',
           unblock: 'Let ordinary HTTP through to your public pages and this becomes measurable.', inconclusive: true }
       }
@@ -515,6 +515,12 @@ export type Scorecard = {
   }[]
   checks: ScoredCheck[]
 }
+
+/**
+ * A shut door only blinds us to what we could not read anyway. Treating it as site-wide made a
+ * row claim every request was refused while its neighbours quoted the pages we had just fetched.
+ */
+const blindedBy = (f: ScanFindings) => f.blocksPlainRequests && !f.readAnything
 
 const counts = (check: ScoredCheck) => !check.inconclusive && !check.notApplicable
 

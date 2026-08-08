@@ -43,7 +43,12 @@ const MAX_REDIRECTS = 5
 
 export async function fetchUrl(
   url: string,
-  { accept = '*/*', ua = BROWSER_UA, method = 'GET' }: { accept?: string; ua?: string; method?: 'GET' | 'HEAD' } = {},
+  {
+    accept = '*/*',
+    ua = BROWSER_UA,
+    method = 'GET',
+    body,
+  }: { accept?: string; ua?: string; method?: 'GET' | 'HEAD' | 'POST'; body?: string } = {},
 ): Promise<Fetched> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
@@ -64,7 +69,12 @@ export async function fetchUrl(
 
       const response = await fetch(current, {
         method,
-        headers: { 'user-agent': ua, accept },
+        headers: {
+          'user-agent': ua,
+          accept,
+          ...(body === undefined ? {} : { 'content-type': 'application/json' }),
+        },
+        ...(body === undefined ? {} : { body }),
         redirect: 'manual',
         signal: controller.signal,
       })

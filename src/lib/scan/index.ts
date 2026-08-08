@@ -16,6 +16,12 @@ export type ScanFindings = {
   agentStatus: number
   agentStatusesSeen: number[]
   blocksPlainRequests: boolean
+  /**
+   * Whether anything substantive was read despite the door being shut. vonage.com answered 403 on
+   * its marketing host while we successfully read its llms.txt, its documentation and its package,
+   * and five checks still dropped out saying every request had been refused.
+   */
+  readAnything: boolean
   /** 429 is us asking too often, not the site refusing agents. Never a finding about them. */
   rateLimitedUs: boolean
   durationMs: number
@@ -266,6 +272,12 @@ export async function scanDomain(input: string, onProgress?: ScanProgress): Prom
     // says we asked too often. auth0.com read as blocked only after we had scanned it four
     // times in a row while testing repeatability, and calling that a WAF would be an accusation.
     blocksPlainRequests: !asAgent.ok,
+    readAnything:
+      docsText.length > 0 ||
+      machine.hasLlmsTxt ||
+      robots.present ||
+      Boolean(found.pricingPage?.ok) ||
+      Boolean(funnel.signup.url),
     rateLimitedUs,
     durationMs: Date.now() - startedAt,
     discovered: {

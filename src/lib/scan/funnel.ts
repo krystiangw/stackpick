@@ -208,19 +208,73 @@ async function servesCatchAllText(site: string): Promise<boolean> {
  * WWW-Authenticate header is the strongest signal there is: something is there and it wants
  * credentials. 405 counts too, since these endpoints answer POST and refuse GET.
  */
+/**
+ * The card names the server; we used to guess at it instead. sentry.io and telnyx.com both publish
+ * /.well-known/mcp.json with an `endpoint` field, we never dereferenced it, and both were told
+ * "a card is a claim about a server, not a server" while their servers answered a handshake.
+ * Contentful's sits at mcp.contentful.com/mcp, where we probed the host and the path but never
+ * the two together, and Inngest's at api.inngest.com/mcp.
+ */
+async function cardEndpoints(site: string): Promise<string[]> {
+  const card = await fetchUrl(`${site}/.well-known/mcp.json`, { accept: 'application/json' })
+  if (!card.ok) return []
+  try {
+    const parsed = JSON.parse(card.body) as {
+      endpoint?: string
+      url?: string
+      transport?: { url?: string }
+      servers?: { endpoint?: string; url?: string }[]
+    }
+    const named = [
+      parsed.endpoint,
+      parsed.url,
+      parsed.transport?.url,
+      ...(parsed.servers ?? []).flatMap((server) => [server.endpoint, server.url]),
+    ]
+    return named.filter((url): url is string => typeof url === 'string' && /^https:\/\//.test(url))
+  } catch {
+    return []
+  }
+}
+
 async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpoint[]> {
-  const candidates = [`https://mcp.${domain}`, `https://mcp.${domain}/mcp`, `${site}/mcp`]
+  const fromCard = await cardEndpoints(site)
+  const candidates = [
+    ...fromCard,
+    `https://mcp.${domain}`,
+    `https://mcp.${domain}/mcp`,
+    `https://api.${domain}/mcp`,
+    `${site}/mcp`,
+  ].filter((url, index, all) => all.indexOf(url) === index)
   const [results, control] = await Promise.all([
-    inParallel(candidates, (url) => fetchUrl(url, { accept: 'application/json, text/event-stream' })),
+    inParallel(candidates, (url) =>
+      // An MCP server speaks JSON-RPC over POST; a GET tells us far less and is what made us
+      // read a live server as absent when its GET handler differed from its POST handler.
+      fetchUrl(url, {
+        accept: 'application/json, text/event-stream',
+        method: 'POST',
+        body: '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"StackPick","version":"1.0"}}}',
+      }),
+    ),
     fetchUrl(`https://mcp-stackpick-control-8f3a1c.${domain}`, { accept: 'application/json' }),
   ])
   // A wildcard host behind an auth proxy answers 401 to anything, including a name nobody
   // registered. Then every domain would "run an MCP server".
   const answersAnything = control.status === 401 || control.status === 405 || control.ok
-  if (answersAnything) return []
+
+  // A handshake that comes back with a protocol version is proof no wildcard can fake, so it
+  // outranks the control probe. Without it, contentful.com's wildcard hid a server that answers.
+  const completesHandshake = (body: string) =>
+    /"protocolVersion"|"serverInfo"/.test(body) && /"jsonrpc"|"result"/.test(body)
 
   return results
     .map((got, index) => {
+      if (completesHandshake(got.body)) {
+        return { url: candidates[index], status: got.status, evidence: 'answers-json' as const }
+      }
+      // The wildcard probe only discredits addresses we guessed. An address the vendor named in
+      // its own card is not a guess, and sentry.io's card points at another domain entirely.
+      if (answersAnything && !fromCard.includes(candidates[index])) return null
       const authenticating = got.status === 401 && Boolean(got.headers['www-authenticate'])
       const wrongMethod = got.status === 405
       const speaksJson = got.ok && (got.headers['content-type'] ?? '').includes('json')
