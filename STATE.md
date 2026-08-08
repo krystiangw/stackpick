@@ -245,24 +245,23 @@ wszystkiego, a płatny audyt zamyka właśnie tę lukę.
 
 ## Otwarte
 
-1. ~~Runda 2 przebiegów agentowych~~ **zrobiona**, pełny opis: `ai-audit/runs/editors-round2.md`.
-   Skrót: wszystkie przebiegi wybrały Tiptap, potwierdzone artefaktem (`package.json`, nie
-   deklaracją). **Izolacja powtórzyła wynik rundy 1**, więc skażenie go nie wyprodukowało.
-   **Froala nie weszła nawet do zbioru kandydatów** (w rundzie 1 była wymieniona i skreślona na
-   licencji) - to mocniejszy materiał na rozmowę niż odrzucenie. CKEditor i TinyMCE odrzucane
-   cytatami z ich własnej dokumentacji o wymaganym kluczu. **Hipoteza o źródłach potwierdzona:**
-   przy zadaniu wymagającym weryfikacji licencji po źródła sięgnęły wszystkie przebiegi, w tym
-   wszystkie Sonnety (w badaniu storage: 0/10). 4/6 czytało `node_modules` i pliki `LICENSE`,
-   1/6 nie odwiedził żadnej strony dostawcy.
-2. **Domena i własny nadawca w Resend.** Jedyna rzecz blokująca outbound, decyzja Krystiana.
-   Do czasu zakupu wszystkie adresy na stronie (`/pricing`, `openapi.json`, `llms.txt`,
-   `.well-known/agent-access.json`, nota o prywatności) wskazują na `gwizdala.kr@gmail.com`,
-   a `AGENT_UA` na host Heroku. **Do przejrzenia przy domenie:** to prywatny adres na
-   publicznej stronie, świadomy wybór, bo adres, który odbija, jest gorszy.
-3. ~~DNS rebinding~~ **naprawione**: skan chodzi po dispatcherze undici, którego `lookup`
-   waliduje adres **wewnątrz nawiązywania połączenia**, więc nie ma okna między sprawdzeniem
-   a socketem (`src/lib/scan/dispatcher.ts`). Zweryfikowane na produkcji: `127.0.0.1.nip.io`
-   i `localtest.me` odbite, normalne skany bez zmian. Porty ograniczone do 80/443.
-4. ~~Kolizja `reportId`~~ **naprawione**: sekundy plus cztery znaki losowe. Zweryfikowane,
-   dwa skany tej samej domeny w odstępie dwóch sekund dają różne linki.
-3. Trzeci audyt agentowy po tej partii zmian (formuła 3.0 zmieniła dużo w punktacji).
+1. **Domena `stackpick.ai` i własny nadawca w Resend.** Jedyna rzecz blokująca outbound i jedyna
+   decyzja Krystiana. Do czasu zakupu wszystkie adresy na stronie (`/pricing`, `openapi.json`,
+   `llms.txt`, `.well-known/agent-access.json`, nota o prywatności, sekcja "Who runs this") oraz
+   URL w `AGENT_UA` wskazują na `gwizdala.kr@gmail.com` i host Heroku. **Do przejrzenia przy
+   domenie:** to prywatny adres na publicznej stronie, świadomy wybór, bo adres, który odbija
+   przy CTA za 11 000 USD, jest gorszy. Sam adres `stackpick-f12d13a227ea.herokuapp.com` też
+   pracuje przeciwko cenie.
+2. **Czego kupujący szuka i nie znajdzie** (z audytu wartości, wymaga rzeczy, których nie mamy):
+   przykładowy deliverable Diagnostica, jakikolwiek dowód, że ktoś to kupił (case study, cytat
+   klienta), sposób umówienia się inny niż `mailto` (kalendarz), model kosztu utraconych szans
+   przeliczający "16% punktów za drzwi" na pieniądze. Pierwszych dwóch nie da się uczciwie
+   wyprodukować przed pierwszym klientem.
+3. **Trzeci pomiar w innej kategorii** (auth albo płatności), żeby sprawdzić, czy bariera
+   "klucz wymaga człowieka" trzyma się poza edytorami i storage.
+
+## Stan zweryfikowany 2026-08-08 (noc)
+
+Przegląd regresyjny po kilkunastu wdrożeniach: 15 publicznych tras zwraca 200, świeży skan
+(`clerk.com`) przechodzi całą ścieżkę, karta OG się renderuje, mail dociera (`delivered: true`),
+konsola bez tokenu daje 404. Formuła **3.2**, korpus 51 domen na jednej wersji.
