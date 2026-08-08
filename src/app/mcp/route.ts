@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { runScan } from '@/lib/scan-run'
 import { reportUrl } from '@/lib/email'
+import { toAgentInstructions, toSarif } from '@/lib/export'
 import { CHECKS, MAX_SCORE, STAGES, checkHelpUri } from '@/lib/score'
 
 export const maxDuration = 60
@@ -21,7 +22,17 @@ const TOOL = {
     'could be evaluated. Returns a per-check breakdown with the reason for each result and a permanent link.',
   inputSchema: {
     type: 'object',
-    properties: { domain: { type: 'string', description: 'Bare domain, for example example.com' } },
+    properties: {
+      domain: { type: 'string', description: 'Bare domain, for example example.com' },
+      format: {
+        type: 'string',
+        enum: ['summary', 'agent', 'sarif'],
+        description:
+          'summary is the readable breakdown. agent returns markdown instructions you can act on directly, ' +
+          'each task carrying the measurement behind it. sarif returns SARIF 2.1.0 for a code-scanning pipeline.',
+        default: 'summary',
+      },
+    },
     required: ['domain'],
     additionalProperties: false,
   },
@@ -76,7 +87,7 @@ export async function POST(request: Request) {
     const params = message.params ?? {}
     if (params.name !== TOOL.name) return failure(id, -32602, `Unknown tool: ${String(params.name)}`)
 
-    const args = (params.arguments ?? {}) as { domain?: unknown }
+    const args = (params.arguments ?? {}) as { domain?: unknown; format?: unknown }
     if (typeof args.domain !== 'string' || args.domain.length === 0) {
       return toolFailure(id, 'Pass a domain, for example example.com.')
     }
@@ -88,6 +99,15 @@ export async function POST(request: Request) {
     const { scorecard } = report
     const base = new URL(reportUrl(report)).origin
     const measurable = scorecard.measurable ?? scorecard.max
+
+    if (args.format === 'agent') {
+      return result(id, { content: [{ type: 'text', text: toAgentInstructions(report, base) }] })
+    }
+    if (args.format === 'sarif') {
+      const sarif = toSarif(report, base)
+      return result(id, { content: [{ type: 'text', text: JSON.stringify(sarif, null, 2) }], structuredContent: { sarif } })
+    }
+
     const summary = [
       `${report.domain}: ${scorecard.total} of ${measurable} measurable points (${MAX_SCORE} exist on paper).`,
       ...scorecard.stages.map((stage) => {
