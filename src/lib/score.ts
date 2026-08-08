@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '4.7'
+export const FORMULA_VERSION = '4.8'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -521,7 +521,9 @@ export const CHECKS: Check[] = [
     max: 1,
     evaluate: (f) => {
       const negotiation = f.machine.markdownNegotiation
-      if (f.machine.openapi.length > 0) return yes(1, `OpenAPI at ${f.machine.openapi[0]}`)
+      // The path alone is ambiguous on a vendor whose docs and site are different hosts, and
+      // it is the sentence a sceptic reruns first.
+      if (f.machine.openapi.length > 0) return yes(1, `OpenAPI at ${f.site}${f.machine.openapi[0]}`)
       if ((negotiation.acceptHeader || negotiation.dotMdSuffix) && !f.funnel.servesCatchAll) {
         // Naming the page matters more here than anywhere else: on nearly every domain that
         // passes, the docs front page is the one page that does not negotiate, so a vendor
