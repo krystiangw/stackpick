@@ -62,13 +62,13 @@ const RESULTS = [
   },
   {
     id: 'absent',
-    heading: 'Five providers were never in the conversation at all',
+    heading: 'Four providers were never named once, in any run',
     numbers: [
       ['Never selected, but considered and rejected', '19 of 20'],
       ['Providers with zero mentions across all runs', '4'],
     ],
     body: [
-      'One provider was rejected in nineteen of twenty runs in almost identical words, because it assumes a framework the project did not use. That is a positioning problem fixable with one documentation chapter, and the company cannot fix it because nobody told them it happens.',
+      'A fifth provider was in the conversation and lost it: rejected in nineteen of twenty runs in almost identical words, because it assumes a framework the project did not use. That is a positioning problem fixable with one documentation chapter, and the company cannot fix it because nobody told them it happens.',
       'Four other providers were never mentioned once, not even on rejection lists. Meanwhile agents volunteered options we had not asked about. An agent does not start with an empty list, it starts with its own list, and being outside it is not losing a comparison, it is not being at the table.',
     ],
   },
@@ -143,9 +143,9 @@ export default function FindingsPage() {
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Limits we will not hide</h2>
         <ol className="mt-5 flex max-w-2xl flex-col gap-4">
           {[
-            'Five to six runs per cell. The direction of both main results is one-sided enough that we expect the proportions to sharpen rather than flip, but the sample is small and we say so.',
+            'Five to six runs per cell in the first study, two per cell in the later ones. The direction of both main results is one-sided enough that we expect the proportions to sharpen rather than flip, but the sample is small and we say so.',
             'One prompt variant per condition. Sensitivity to how the task is worded is the next measurement, not a solved question.',
-            'Decisions were stated, not executed. Agents did not install packages, so this measures selection and not integration success.',
+            'In the first study decisions were stated, not executed: nothing was installed, so it measured selection rather than integration. The three later studies did install and verify, and each choice there is confirmed from the files the run left behind.',
             'Two models from one family. Other coding tools may choose differently.',
             'One specific scaffold in the real-code condition. A different codebase gives a different answer, which is precisely the finding.',
           ].map((limit, index) => (
@@ -156,11 +156,13 @@ export default function FindingsPage() {
           ))}
         </ol>
         <p className="mt-8 max-w-2xl leading-relaxed text-ink-soft">
-          The free scans on this site are published as they are produced, because they read only what any
-          browser can read and every vendor can reproduce or dispute them from the methodology page. A
-          different rule applies to anything we write up as research: a scored vendor gets the draft and ten
-          working days before it goes out, because an interpretation deserves a right of reply in a way that
-          a reproducible HTTP check does not.
+          The scans in our own published corpus, the ones on the landing page and the industry report, are
+          published as we produce them, because they read only what any browser can read and every vendor can
+          reproduce or dispute them from the methodology page. A scan you run yourself is different: it gets a
+          permanent link you can forward and it never joins that corpus, so nothing about your domain is
+          published because you tried the tool. A third rule applies to anything we write up as research: a
+          scored vendor gets the draft and ten working days before it goes out, because an interpretation
+          deserves a right of reply in a way that a reproducible HTTP check does not.
         </p>
       </section>
     </main>

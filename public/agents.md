@@ -15,12 +15,12 @@ Returns `{id, domain, scorecard}`. The scorecard carries a total, per-stage poin
 entry per check with `points`, `max`, `detail` and, where relevant, `inconclusive: true`
 meaning we could not find the thing rather than proving it absent.
 
-A scan takes 15 to 30 seconds because signup probes run three times: bot gates answer
+A scan usually takes a few seconds and can reach a minute, because signup probes run three times: bot gates answer
 inconsistently and a single try would be a coin flip.
 
 ## Limits
 
-Ten scans per hour per address. Scanning reads only what any browser can read. IP literals,
+Five scans per hour per registrable domain and thirty per hour per address. Scanning reads only what any browser can read. IP literals,
 private ranges and non-resolving hosts are refused.
 
 ## Read the formula first

@@ -94,6 +94,37 @@ export default function MethodologyPage() {
         <p className="mt-4 font-mono text-xs leading-relaxed text-ink-soft">{AGENT_ENTRY_PATHS.join('  ·  ')}</p>
       </section>
 
+      <section className="border-b border-rule py-12">
+        <h2 className="text-lg font-semibold tracking-tight">Three verdict states, and what the score is out of</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          Sixteen points exist on paper. A domain is scored out of the points that both apply to it and we
+          could evaluate, and the scorecard prints that denominator beside the number. Charging a vendor for
+          our own blind spots would make a site we could not read look worse than one we could.
+        </p>
+        <dl className="mt-6 flex max-w-2xl flex-col">
+          {[
+            ['PASS and PART', 'Measured, and counted in both the score and the denominator.'],
+            [
+              'UNMEASURED',
+              'We could not evaluate it: an edge that refused our requests, a form assembled by JavaScript, too few documentation pages to conclude anything. Out of the score and out of the denominator, and each of these lines says what would make it measurable.',
+            ],
+            [
+              'N/A',
+              'The check does not apply to a product of this kind. A library with no accounts cannot fail a check about signup gates. Out of the score and out of the denominator.',
+            ],
+          ].map(([state, meaning]) => (
+            <div key={state} className="grid gap-1 border-t border-rule py-4 sm:grid-cols-[10rem_1fr] sm:gap-6">
+              <dt className="font-mono text-sm">{state}</dt>
+              <dd className="text-sm leading-relaxed text-ink-soft">{meaning}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="mt-6 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          Rankings and the industry report sort on the share of measurable points, which is why a smaller
+          number can sit above a larger one: 6 of 9 is ahead of 8 of 14.
+        </p>
+      </section>
+
       <section className="py-12">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Known limits</h2>
         <ol className="mt-5 flex flex-col gap-4">

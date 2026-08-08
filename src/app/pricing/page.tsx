@@ -52,7 +52,7 @@ const TIERS: readonly Tier[] = [
     pitch: 'What agents actually do when nobody is watching.',
     includes: [
       'Three experiment cells (model × condition × brief), four runs each, recorded',
-      'A brief designed for your category: in our own study the task wording decided whether documentation was read at all, 0 of 10 runs against 6 of 6',
+      'A brief designed for your category: on the same cheaper model, one brief produced 0 of 10 runs that read any documentation and another produced 3 of 3, because the second decision turned on a licence',
       'Which provider gets picked over you, and the words used to reject you',
       'Where an agent stalls: registration, credentials, or the first integration',
       'A re-measure after 60 days on the same brief, the same scaffold and pinned model versions, with any model change reported as a confound rather than as a result',
@@ -189,7 +189,7 @@ export default function PricingPage() {
             ],
             [
               'Will you publish what you find about us?',
-              'The free scans are published as they are produced, because every line is one HTTP request with a published rule and you can reproduce all of it. A paid audit is yours: nothing from it is published without your written agreement, and if we ever want to write about a pattern we saw, you get the draft and ten working days before anything goes out.',
+              'The scans in our own published corpus are published as we produce them, because every line is one HTTP request with a published rule and you can reproduce all of it. A scan you run yourself never joins that corpus: it gets a permanent link you can forward, and we do not post it anywhere. A paid audit is yours: nothing from it is published without your written agreement, and if we ever want to write about a pattern we saw, you get the draft and ten working days before anything goes out.',
             ],
             [
               'What do you need from us?',

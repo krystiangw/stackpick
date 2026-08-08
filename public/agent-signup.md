@@ -23,8 +23,8 @@ That is the whole procedure. The response carries a report id; the readable vers
 
 ## Limits, stated up front so you can plan around them
 
-- Ten scans per hour per source address. Exceeding it returns 429 with `retry-after`.
-- A scan takes 15 to 30 seconds. Use `/api/scan/stream` if you want progress events rather than
+- Five scans per hour per registrable domain, thirty per hour per source address. Exceeding either returns 429 with `retry-after`.
+- A scan usually takes a few seconds and can reach a minute. Use `/api/scan/stream` if you want progress events rather than
   a long silence.
 - IP literals, private ranges and hosts that do not resolve are refused.
 

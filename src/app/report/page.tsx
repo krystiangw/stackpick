@@ -214,7 +214,7 @@ export default async function IndustryReportPage() {
           </li>
           <li>
             Not equally measurable across stages. Coverage differs check by check, the n on each stage row is
-            the number of domains behind it, and the table below prints what we could not evaluate rather than
+            the number of domains behind it, and the table above prints what we could not evaluate rather than
             burying it in the failures.
           </li>
           <li>

@@ -7,7 +7,7 @@
   "tools": [
     {
       "name": "scan_domain",
-      "description": "Score a domain out of 16 on agent readiness across five funnel stages. Returns a per-check breakdown with the reason for each result.",
+      "description": "Score a domain on agent readiness across five funnel stages, out of the points that apply to it and we could measure. Returns a per-check breakdown with the reason for each result.",
       "inputSchema": {
         "type": "object",
         "properties": { "domain": { "type": "string", "description": "Bare domain, for example example.com" } },

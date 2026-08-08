@@ -8,7 +8,7 @@
   "runs": [
     {
       "id": "A",
-      "model": "stronger model",
+      "model": "Opus 5",
       "chose": "Cloudflare R2",
       "rejected": [
         {
@@ -48,7 +48,7 @@
     },
     {
       "id": "B",
-      "model": "stronger model",
+      "model": "Opus 5",
       "chose": "Cloudinary",
       "rejected": [
         {
@@ -83,7 +83,7 @@
     },
     {
       "id": "C",
-      "model": "cheaper model",
+      "model": "Sonnet 5",
       "chose": "Cloudinary",
       "rejected": [
         {
@@ -112,7 +112,7 @@
     },
     {
       "id": "D",
-      "model": "cheaper model",
+      "model": "Sonnet 5",
       "chose": "Cloudinary",
       "rejected": [
         {
@@ -143,7 +143,7 @@
     }
   ],
   "verdict": {
-    "headline": "Every run wrote working code. Every run stopped at your signup form.",
+    "headline": "Every run wrote working code. None got a credential, and none got as far as your signup form.",
     "body": [
       "Four agents, two models, four isolated copies of the same application, one brief: add image upload and hosting, solidly enough to ship. All four produced a complete upload path. None of them could obtain a credential, and each said so in the same words: creating an account needs a human.",
       "Uploadcare appeared in two of the four runs, both times on a rejection list, and neither reason was about the product. One run grouped it with two others and dismissed all three for requiring a signup with no card-free free tier, against a competitor whose free tier is card-free. The other called it the same shape as the winner with no advantage. In the remaining two runs it was not named at all.",

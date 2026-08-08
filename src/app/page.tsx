@@ -24,7 +24,7 @@ const EVIDENCE = [
   {
     figure: '5 → 0',
     against: 'one line of code',
-    claim: 'A provider that won every greenfield run lost every run against a real codebase.',
+    claim: 'A provider that won five of eight greenfield runs won none of twelve against real code.',
     detail:
       'The app already had a session cookie. Adopting that provider meant running a second identity system just to upload a file, and three separate runs rejected it in almost the same words.',
   },
@@ -74,7 +74,7 @@ export default async function Home() {
           ))}
         </div>
         <p className="mt-6 font-mono text-xs text-ink-faint">
-          Twenty runs, two models, two conditions, clean context.{' '}
+          Thirty-four runs across four studies, with the limits of each one stated.{' '}
           <Link href="/findings" className="text-brass underline underline-offset-4">
             Read the method
           </Link>

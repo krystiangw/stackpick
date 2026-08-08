@@ -8,7 +8,7 @@
   "runs": [
     {
       "id": "A",
-      "model": "stronger model",
+      "model": "Opus 5",
       "chose": "Auth0",
       "rejected": [
         {
@@ -16,10 +16,22 @@
           "reason": "Believed its SPA path requires a backend endpoint, from a search summary the run never opened and flagged as its weakest claim",
           "verbatim": "The most attractive on price. Rejected on architecture... this is a search summary, not a doc I read, so the claim that AuthKit's SPA path needs a backend endpoint is the weakest link in my reasoning and worth confirming against WorkOS's docs before treating that rejection as settled."
         },
-        { "vendor": "Clerk", "reason": "Needs a JWT template to target our API's audience, a second token beside the session token" },
-        { "vendor": "Firebase Auth", "reason": "ID tokens are scoped to the Firebase project, not to our API, and Go verification wants a service-account key" },
-        { "vendor": "Supabase Auth", "reason": "An identity silo for one feature when the Go API already owns the data" },
-        { "vendor": "Keycloak, Zitadel, Ory", "reason": "No signup wall at all, but the team would run an identity provider for one internal tool" }
+        {
+          "vendor": "Clerk",
+          "reason": "Needs a JWT template to target our API's audience, a second token beside the session token"
+        },
+        {
+          "vendor": "Firebase Auth",
+          "reason": "ID tokens are scoped to the Firebase project, not to our API, and Go verification wants a service-account key"
+        },
+        {
+          "vendor": "Supabase Auth",
+          "reason": "An identity silo for one feature when the Go API already owns the data"
+        },
+        {
+          "vendor": "Keycloak, Zitadel, Ory",
+          "reason": "No signup wall at all, but the team would run an identity provider for one internal tool"
+        }
       ],
       "usedLiveSources": true,
       "sources": [
@@ -33,7 +45,7 @@
     },
     {
       "id": "B",
-      "model": "stronger model",
+      "model": "Opus 5",
       "chose": "Auth0",
       "rejected": [
         {
@@ -41,10 +53,22 @@
           "reason": "Called the better long-term fit, then set aside as enterprise SSO the company does not need yet",
           "verbatim": "Genuinely close, and arguably the better long-term fit since support agents are staff and this is really SSO. This is the one I would revisit if the company ever wants SCIM provisioning of agents."
         },
-        { "vendor": "Clerk", "reason": "A short-lived session token refreshed by its own SDK pulls vendor session semantics into a service we cannot edit" },
-        { "vendor": "Supabase Auth", "reason": "Adopting a database platform to get a login form" },
-        { "vendor": "Firebase Auth", "reason": "Token verification in Go wants the Admin SDK and a service-account key" },
-        { "vendor": "Better Auth", "reason": "A TypeScript backend library, and there is no Node backend here" }
+        {
+          "vendor": "Clerk",
+          "reason": "A short-lived session token refreshed by its own SDK pulls vendor session semantics into a service we cannot edit"
+        },
+        {
+          "vendor": "Supabase Auth",
+          "reason": "Adopting a database platform to get a login form"
+        },
+        {
+          "vendor": "Firebase Auth",
+          "reason": "Token verification in Go wants the Admin SDK and a service-account key"
+        },
+        {
+          "vendor": "Better Auth",
+          "reason": "A TypeScript backend library, and there is no Node backend here"
+        }
       ],
       "usedLiveSources": true,
       "sources": [
@@ -58,7 +82,7 @@
     },
     {
       "id": "C",
-      "model": "cheaper model",
+      "model": "Sonnet 5",
       "chose": "Firebase Auth",
       "rejected": [
         {
@@ -66,9 +90,18 @@
           "reason": "Believed a credit card is required even on the free tier, from a pricing aggregator rather than the vendor's own page",
           "verbatim": "Current sources (2026) indicate credit-card verification is now required even for the free tier."
         },
-        { "vendor": "Okta", "reason": "No self-serve free path: this typically starts with a sales conversation" },
-        { "vendor": "AWS Cognito", "reason": "Would need an AWS account it does not have" },
-        { "vendor": "Supabase Auth", "reason": "A project-wide shared secret rather than public-key verification" }
+        {
+          "vendor": "Okta",
+          "reason": "No self-serve free path: this typically starts with a sales conversation"
+        },
+        {
+          "vendor": "AWS Cognito",
+          "reason": "Would need an AWS account it does not have"
+        },
+        {
+          "vendor": "Supabase Auth",
+          "reason": "A project-wide shared secret rather than public-key verification"
+        }
       ],
       "usedLiveSources": true,
       "sources": [
@@ -80,13 +113,25 @@
     },
     {
       "id": "D",
-      "model": "cheaper model",
+      "model": "Sonnet 5",
       "chose": "Clerk",
       "rejected": [
-        { "vendor": "Auth0", "reason": "No first-party Go SDK, so verification means hand-rolling JWKS caching" },
-        { "vendor": "Firebase Auth", "reason": "Ties identity to the Google ecosystem and has a weaker React UI story" },
-        { "vendor": "AWS Cognito", "reason": "Worse ergonomics and more steps for the same Google federation" },
-        { "vendor": "Okta", "reason": "Enterprise-oriented, no reasonable self-serve path for a small internal tool" }
+        {
+          "vendor": "Auth0",
+          "reason": "No first-party Go SDK, so verification means hand-rolling JWKS caching"
+        },
+        {
+          "vendor": "Firebase Auth",
+          "reason": "Ties identity to the Google ecosystem and has a weaker React UI story"
+        },
+        {
+          "vendor": "AWS Cognito",
+          "reason": "Worse ergonomics and more steps for the same Google federation"
+        },
+        {
+          "vendor": "Okta",
+          "reason": "Enterprise-oriented, no reasonable self-serve path for a small internal tool"
+        }
       ],
       "usedLiveSources": true,
       "sources": [
@@ -101,7 +146,7 @@
     "headline": "You were the best option in one run and the cheapest in another. You were rejected in both, once on a claim nobody checked.",
     "body": [
       "Four agents, two models, four isolated copies, one brief: replace a proxy cookie with real authentication. All four produced a working login flow. None of them could obtain a tenant, and the two strongest runs chose the same competitor for the same architectural reason: a service they cannot edit should not have to adopt a vendor's SDK.",
-      "WorkOS was named in two runs and chosen in none. One called it the most attractive on price and rejected it for needing a backend endpoint in a single-page app, a claim taken from a search result it never opened and flagged, in its own report, as the weakest link in its reasoning. The other called it arguably the better long-term fit and set it aside as enterprise SSO not needed today. Neither rejection was about the product as documented.",
+      "WorkOS was named in two runs and chosen in none. One called it the most attractive on price and rejected it for needing a backend endpoint in a single-page app, a claim taken from a search result it never opened and flagged, in its own report, as the weakest link in its reasoning. The other named it while reviewing alternatives and set it aside as enterprise SSO not needed today. Neither rejection was about the product as documented.",
       "That is the finding worth acting on, and it is not specific to one vendor. In the same study a competitor was rejected for requiring a credit card, from a pricing aggregator, while another run opened that vendor's own pricing page and found no card is required. The same product was eliminated and accepted depending on whether the agent read the source or the summary of it. If your documentation does not answer the entry question in a form that surfaces in a search summary, an aggregator answers for you, and its answer is what gets acted on."
     ]
   },

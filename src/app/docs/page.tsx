@@ -75,7 +75,7 @@ export default function DocsPage() {
       <section className="border-b border-rule py-12">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Progress events</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          A scan takes 15 to 30 seconds, mostly because signup probes run three times: bot gates answer
+          A scan usually takes a few seconds and can reach a minute, mostly because signup probes run three times: bot gates answer
           inconsistently and a single try would be a coin flip. If you would rather not wait in silence, the
           streaming endpoint emits the real steps as they happen.
         </p>
