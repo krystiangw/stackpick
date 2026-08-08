@@ -35,11 +35,11 @@ const TIERS: readonly Tier[] = [
     name: 'Diagnostic',
     price: '$2,900',
     cadence: 'one week',
-    pitch: 'The scan, verified by hand, against your competitors.',
+    pitch: 'One behavioural cell, not a better version of the free file.',
     includes: [
-      'Every automated finding checked manually, including the ones the scanner got wrong',
-      'Side by side with three competitors in your category',
-      'Fix list ordered by effect over effort',
+      'Three real agent runs on one brief we design with you, recorded',
+      'Whether you are in the candidate set at all, or absent from it',
+      'The words used to reject you, quoted',
       'Sixty minutes to walk through it with whoever owns the fix',
     ],
     note: 'Credited in full against a Full audit booked within 90 days.',
@@ -51,10 +51,11 @@ const TIERS: readonly Tier[] = [
     cadence: 'two to three weeks',
     pitch: 'What agents actually do when nobody is watching.',
     includes: [
-      'Twelve or more real agent runs against a real codebase, recorded',
+      'Three experiment cells (model × condition × brief), four runs each, recorded',
+      'A brief designed for your category: in our own study the task wording decided whether documentation was read at all, 0 of 10 runs against 6 of 6',
       'Which provider gets picked over you, and the words used to reject you',
       'Where an agent stalls: registration, credentials, or the first integration',
-      'A re-measure after 60 days, so the change is a number and not an opinion',
+      'A re-measure after 60 days on the same brief, the same scaffold and pinned model versions, with any model change reported as a confound rather than as a result',
     ],
     featured: true,
     cta: { label: 'Ask about an audit', href: 'mailto:gwizdala.kr@gmail.com?subject=Full%20agent%20audit' },
@@ -149,8 +150,29 @@ export default function PricingPage() {
         </div>
       </section>
 
+      <section className="border-b border-rule py-12">
+        <h2 className="text-lg font-semibold tracking-tight">Who runs this</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          Krystian Gwizdała. The research on this site is mine: the scanner, the formula, the agent runs and
+          every number on{' '}
+          <Link href="/findings" className="text-brass underline underline-offset-4">
+            Findings
+          </Link>{' '}
+          and{' '}
+          <Link href="/report" className="text-brass underline underline-offset-4">
+            the industry report
+          </Link>
+          . An audit is run by me, not by a team you never meet, and the raw runs go to you with the report.
+        </p>
+        <p className="mt-4 font-mono text-sm">
+          <a href="mailto:gwizdala.kr@gmail.com" className="text-brass underline underline-offset-4">
+            gwizdala.kr@gmail.com
+          </a>
+        </p>
+      </section>
+
       <section className="py-12">
-        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Questions people ask first</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Questions people ask first</h2>
         <dl className="mt-6 flex flex-col">
           {[
             [
@@ -164,6 +186,14 @@ export default function PricingPage() {
             [
               'Why is the free scan actually free?',
               'It is HTTP requests. No language model runs, so it costs bandwidth and nothing else. Charging for it would be charging for a script, and the script is published.',
+            ],
+            [
+              'Will you publish what you find about us?',
+              'The free scans are published as they are produced, because every line is one HTTP request with a published rule and you can reproduce all of it. A paid audit is yours: nothing from it is published without your written agreement, and if we ever want to write about a pattern we saw, you get the draft and ten working days before anything goes out.',
+            ],
+            [
+              'What do you need from us?',
+              'For the audit, nothing but the product as a customer sees it. No repository access, no staging environment, no calls with your engineers. That is the point: the measurement has to happen from outside, the way an agent meets you.',
             ],
             [
               'Can we just buy the fixes?',

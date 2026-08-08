@@ -211,6 +211,33 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
       {fixPlan && <FixFirst plan={fixPlan} />}
 
+      {/* The one sentence that separates a scan from an audit, at the only moment the reader
+          is holding a list of things to do and wondering whether any of it changes behaviour. */}
+      <section className="border-b border-rule py-10">
+        <h2 className="text-lg font-semibold tracking-tight">None of this tells you whether an agent picked you</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          Everything above is a file an agent could read. Whether one actually chose you is a different
+          measurement. We ran six agents on one brief, in six isolated copies of a real codebase, and recorded
+          what they did. All six picked the same competitor. The vendor we were watching was struck off in four
+          words, before its product was opened: <span className="font-mono text-sm text-ink">Fully commercial, licence key required.</span>{' '}
+          In the second round it was not named at all.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href="/audit/froala-editors"
+            className="bg-ink px-5 py-3 font-mono text-sm text-ground transition-opacity hover:opacity-85"
+          >
+            Read that audit in full
+          </Link>
+          <Link
+            href="/pricing"
+            className="border border-ink/40 px-5 py-3 font-mono text-sm transition-colors hover:border-brass hover:text-brass"
+          >
+            What the same run on {report.domain} costs
+          </Link>
+        </div>
+      </section>
+
       <ComparisonSection comparison={comparison} domain={report.domain} />
 
       <section className="border-b border-rule py-10">

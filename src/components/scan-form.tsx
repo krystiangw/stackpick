@@ -140,6 +140,11 @@ export function ScanForm({ autoFocus = false }: { autoFocus?: boolean }) {
         </div>
       )}
 
+      <p className="font-mono text-xs leading-relaxed text-ink-faint">
+        Your scan gets a permanent link you can forward. It is never added to the published corpus, and we do
+        not post it anywhere.
+      </p>
+
       {limited && <LimitReached {...limited} />}
 
       {error && (

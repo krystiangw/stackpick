@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getAudit, listAudits, tally } from '@/lib/audit'
@@ -173,6 +174,26 @@ export default async function AuditPage({ params }: { params: Promise<{ slug: st
             </li>
           ))}
         </ol>
+      </section>
+
+      <section className="border-t border-rule py-12">
+        <h2 className="text-lg font-semibold tracking-tight">This is what a full audit produces</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          Agents on one brief, in isolated copies of a real codebase, nobody watching, every source they
+          consulted recorded. The same instrument pointed at your product and your category takes two to three
+          weeks.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link href="/pricing" className="bg-ink px-5 py-3 font-mono text-sm text-ground transition-opacity hover:opacity-85">
+            What it costs
+          </Link>
+          <a
+            href="mailto:gwizdala.kr@gmail.com?subject=Full%20agent%20audit"
+            className="border border-ink/40 px-5 py-3 font-mono text-sm transition-colors hover:border-brass hover:text-brass"
+          >
+            Ask what your brief would be
+          </a>
+        </div>
       </section>
     </main>
   )
