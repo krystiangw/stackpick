@@ -50,7 +50,7 @@
       "rejected": [
         {
           "vendor": "workos.com",
-          "reason": "Named while reviewing alternatives and set aside as enterprise SSO the company does not need yet, with a note to revisit it if directory provisioning ever matters (paraphrased: no quotation was archived from this run)"
+          "reason": "Named while reviewing alternatives and set aside as enterprise SSO the company does not need yet, with a note to revisit it if directory provisioning ever matters"
         },
         {
           "vendor": "Clerk",

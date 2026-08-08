@@ -26,9 +26,11 @@ export default async function AuditPage({ params }: { params: Promise<{ slug: st
   if (!audit) notFound()
 
   const counts = tally(audit)
-  const quotes = audit.runs
-    .flatMap((run) => run.rejected.filter((rejection) => rejection.vendor === audit.subject && rejection.verbatim))
-    .slice(0, 4)
+  const subjectRejections = audit.runs.flatMap((run) =>
+    run.rejected
+      .filter((rejection) => rejection.vendor === audit.subject)
+      .map((rejection) => ({ ...rejection, run: run.id, model: run.model })),
+  )
 
   return (
     <main className="mx-auto max-w-5xl px-6">
@@ -99,16 +101,29 @@ export default async function AuditPage({ params }: { params: Promise<{ slug: st
         </ol>
       </section>
 
-      {quotes.length > 0 && (
+      {subjectRejections.length > 0 && (
         <section className="border-b border-rule py-12">
           <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">
-            Why they rejected {audit.subject}, in their words
+            Why they rejected {audit.subject}
           </h2>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-soft">
+            Every run that named {audit.subject} appears here. Where the run left a sentence we hold verbatim, it is
+            quoted; where it did not, the entry is our summary of that run&rsquo;s own report and says so.
+          </p>
           <div className="mt-6 flex flex-col gap-6">
-            {quotes.map((quote) => (
-              <figure key={quote.verbatim} className="border-l-2 border-fail pl-5">
-                <blockquote className="text-lg italic leading-relaxed">{quote.verbatim}</blockquote>
-                <figcaption className="mt-2 font-mono text-xs text-ink-faint">{quote.reason}</figcaption>
+            {subjectRejections.map((rejection) => (
+              <figure key={`${rejection.run}-${rejection.vendor}`} className="border-l-2 border-fail pl-5">
+                <figcaption className="font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">
+                  Run {rejection.run}, {rejection.model} · {rejection.verbatim ? 'verbatim' : 'our summary, no quotation archived'}
+                </figcaption>
+                {rejection.verbatim ? (
+                  <>
+                    <blockquote className="mt-2 text-lg italic leading-relaxed">{rejection.verbatim}</blockquote>
+                    <p className="mt-2 font-mono text-xs text-ink-faint">{rejection.reason}</p>
+                  </>
+                ) : (
+                  <p className="mt-2 text-lg leading-relaxed">{rejection.reason}</p>
+                )}
               </figure>
             ))}
           </div>
