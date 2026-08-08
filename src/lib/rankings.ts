@@ -1,4 +1,4 @@
-import { refusesAgentsAtSignup } from './score'
+import { refusesAgentsAtSignup, signupNeedsJavaScript } from './score'
 import { CATEGORIES, type Category } from './categories'
 import { publishedCorpus } from './published'
 import type { Report } from './store'
@@ -51,10 +51,7 @@ export async function loadRankings(): Promise<RankingsView> {
       (report) => (report.scorecard.measurable ?? report.scorecard.max) === report.scorecard.max,
     ).length,
     signupRefusesAgents: scanned.filter((report) => refusesAgentsAtSignup(report.findings)).length,
-    signupNeedsJavaScript: scanned.filter(
-      (report) =>
-        report.findings.funnel.signup.reachable && !report.findings.funnel.signup.rendersFormWithoutJs,
-    ).length,
+    signupNeedsJavaScript: scanned.filter(signupNeedsJavaScript).length,
   }
 
   const categories = CATEGORIES.map((category) => {

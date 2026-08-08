@@ -160,7 +160,13 @@ const AUTH_SUBDOMAINS = ['auth', 'login', 'accounts', 'id', 'oauth']
 // mcp is here rather than only behind a found endpoint: datadoghq.com and contentful.com both
 // publish a registration_endpoint on mcp.<domain> while our MCP probe concluded nothing answers
 // there, so the host that had the answer was the one host we never asked.
-const RESOURCE_SUBDOMAINS = ['api', 'mcp']
+const RESOURCE_SUBDOMAINS = ['api']
+/**
+ * One path, not the usual two: adding this host cost telnyx.com four checks to the 21 second
+ * budget. The authorization-server document is where datadoghq.com and contentful.com publish
+ * the registration_endpoint we were missing, so it is the one worth the request.
+ */
+const MCP_OAUTH_PATH = '/.well-known/oauth-authorization-server'
 
 type OauthTarget = { origin: string; paths: string[] }
 type OauthProbe = { metadataPublished: boolean; dynamicClientRegistration: boolean; origins: string[] }
@@ -217,7 +223,11 @@ function oauthTargetsKnownUpFront(domain: string, site: string, signupUrl: strin
     })),
   ].filter((candidate) => !named.includes(candidate.origin))
 
-  return [...named.map((origin) => ({ origin, paths: OAUTH_METADATA_PATHS })), ...guessed]
+  return [
+    ...named.map((origin) => ({ origin, paths: OAUTH_METADATA_PATHS })),
+    ...guessed,
+    ...(named.includes(`https://mcp.${domain}`) ? [] : [{ origin: `https://mcp.${domain}`, paths: [MCP_OAUTH_PATH] }]),
+  ]
 }
 
 function mergeOauthProbes(first: OauthProbe, second: OauthProbe): FunnelFindings['oauth'] {

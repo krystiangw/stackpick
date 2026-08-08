@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '5.3'
+export const FORMULA_VERSION = '5.4'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -630,6 +630,15 @@ export const CHECKS: Check[] = [
  * page are this, not "the signup was not reachable": a 429 is our own traffic, and a 404 to
  * everybody is our discovery being wrong about where the page lives.
  */
+export function signupNeedsJavaScript(report: { findings: ScanFindings; scorecard: Scorecard }): boolean {
+  // Read off the scored verdict, not off the raw finding. telnyx.com's scan ran out of time, so
+  // its check came back unmeasured while the finding still said "reachable, no form in the HTML",
+  // and the landing page counted a domain the corpus itself refuses to score.
+  const check = report.scorecard.checks.find((candidate) => candidate.id === 'signup_reachable')
+  if (!check || check.inconclusive || check.notApplicable || check.points > 0) return false
+  return report.findings.funnel.signup.reachable && !report.findings.funnel.signup.rendersFormWithoutJs
+}
+
 export function refusesAgentsAtSignup(findings: ScanFindings): boolean {
   const signup = findings.funnel.signup
   if (!signup.url || signup.reachable) return false

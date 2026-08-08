@@ -1,5 +1,5 @@
 import { publishedCorpus } from './published'
-import { CHECKS, refusesAgentsAtSignup, STAGES, type Stage } from './score'
+import { CHECKS, refusesAgentsAtSignup, signupNeedsJavaScript, STAGES, type Stage } from './score'
 import type { Report } from './store'
 
 /**
@@ -137,14 +137,12 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
   // when the wording changes.
   const withSignup = reports.filter((report) => report.findings.funnel.signup.url !== null)
   const signupRefusesAgents = withSignup.filter((report) => refusesAgentsAtSignup(report.findings)).length
-  const signupNeedsJavaScript = withSignup.filter(
-    (report) => report.findings.funnel.signup.reachable && !report.findings.funnel.signup.rendersFormWithoutJs,
-  ).length
+  const needsJavaScript = withSignup.filter(signupNeedsJavaScript).length
 
   return {
     mcpWithoutKeys,
     signupRefusesAgents,
-    signupNeedsJavaScript,
+    signupNeedsJavaScript: needsJavaScript,
     sampleSize: reports.length,
     formulaVersion,
     // Every report in the slice shares a formula version, so they share a maximum.
