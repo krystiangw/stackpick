@@ -383,3 +383,35 @@ brak pola jako blokadę, sortowanie po równej dacie było niestabilne.
 **Wzór, czwarty raz z rzędu:** każda runda audytu **odejmuje**, nigdy nie dodaje. Tu odjęła trzy
 cytaty i dwie liczby. Najgroźniejsza kategoria znalezisk to nadal **sprzeczność między stronami**:
 zdanie na jednej stronie obalone naszym własnym późniejszym pomiarem na drugiej.
+
+## Runda 2026-08-08 (dziesiąta): kontrakt cytatowy zastosowany wstecz
+
+Kontrakt z rundy dziewiątej powstał przy płatnościach, ale trzy wcześniejsze audyty nigdy przez niego
+nie przeszły. Przeszły teraz. **Z ośmiu cytatów na stronach storage i auth dokładne pokrycie
+w archiwum miał jeden.**
+
+- **Pięć bez żadnego pokrycia**, usunięte: uzasadnienia przebiegu A dla Cloudinary i UploadThing,
+  przebiegu B dla **Uploadcare** (czyli podmiotu audytu) i przebiegu D dla unsigned presetu,
+  plus cytat przebiegu B o WorkOS.
+- **Dwa sklejone albo doprawione:** cytat przebiegu A o WorkOS łączył dwa fragmenty z archiwum
+  słowami, których w archiwum nie ma (*"Rejected on architecture... this is a search summary,
+  not a doc I read, so"*); cytat przebiegu C miał doklejone *"Current sources (2026) indicate"*.
+  Przycięte do archiwum.
+- **`/findings` miało dwa własne problemy:** cytat o formularzu rejestracji wycinał środek zdania
+  bez wielokropka i zaokrąglał `~3 minutes` do "about three minutes", a cytat o martwej paczce npm
+  **jest tłumaczeniem polskiej wypowiedzi** i stał w blockquote jako cytat. Teraz ma nad sobą
+  etykietę "Our translation, not a quotation", a liczby (zweryfikowane w rejestrze) stoją osobno.
+- Cytat przebiegu B o Paddle wycinał liczby z nawiasu (*Stripe 2.9% + $0.30, Paddle 5% + $0.50*),
+  czyli akurat to, o czym mówi. Przywrócone.
+
+**Błąd w komponencie, który tę korektę ukrywał:** sekcja "Why they rejected <podmiot>" renderowała
+**tylko** odrzucenia z cytatem. Usunięcie niepotwierdzonego cytatu kasowało cały przebieg ze strony,
+więc czytelnik widział podzbiór dobrany przez to, co dało się zacytować. Teraz widać **każde**
+odrzucenie podmiotu, z numerem przebiegu, modelem i etykietą `verbatim` albo
+`our summary, no quotation archived`. Na stronie Uploadcare oznacza to, że oba powody odrzucenia
+stoją jawnie jako nasze streszczenia.
+
+Archiwa cytatów dopisane do `storage-round2.md` i `auth-round1.md`. Wszystkie cztery audyty mają
+w limitach zdanie o proweniencji. **Kopie przebiegów storage i auth już nie istnieją**, więc
+usuniętych cytatów nie da się odtworzyć - to koszt tego, że archiwum powstało dopiero przy czwartej
+kategorii.
