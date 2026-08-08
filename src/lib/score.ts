@@ -427,6 +427,11 @@ export const CHECKS: Check[] = [
 export const MAX_SCORE = CHECKS.reduce((total, check) => total + check.max, 0)
 
 export type ScoredCheck = Check & CheckResult
+/** Every machine-readable surface points a reader at the rule behind a verdict, not just the verdict. */
+export function checkHelpUri(checkId: string, baseUrl: string): string {
+  return `${baseUrl}/methodology#${checkId}`
+}
+
 export type Scorecard = {
   formulaVersion: string
   total: number

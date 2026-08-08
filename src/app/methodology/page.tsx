@@ -45,12 +45,15 @@ export default function MethodologyPage() {
                 </h3>
                 <ul className="mt-4 flex flex-col gap-4">
                   {checks.map((check) => (
-                    <li key={check.id} className="grid grid-cols-[2.5rem_1fr] gap-4">
+                    <li key={check.id} id={check.id} className="grid scroll-mt-24 grid-cols-[2.5rem_1fr] gap-4">
                       <span className="font-mono text-xs tabular-nums text-ink-faint">{check.max} pt</span>
                       <div className="flex flex-col gap-1">
                         <span className="text-sm font-medium">{check.label}</span>
                         <span className="text-sm leading-relaxed text-ink-soft">{check.why}</span>
-                        <code className="font-mono text-xs text-ink-faint">{check.id}</code>
+                        {/* The anchor is the helpUri every machine-readable result points at. */}
+                        <a href={`#${check.id}`} className="font-mono text-xs text-ink-faint hover:text-brass">
+                          <code>{check.id}</code>
+                        </a>
                       </div>
                     </li>
                   ))}

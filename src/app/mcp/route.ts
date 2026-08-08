@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { runScan } from '@/lib/scan-run'
 import { reportUrl } from '@/lib/email'
-import { CHECKS, MAX_SCORE, STAGES } from '@/lib/score'
+import { CHECKS, MAX_SCORE, STAGES, checkHelpUri } from '@/lib/score'
 
 export const maxDuration = 60
 
@@ -86,6 +86,7 @@ export async function POST(request: Request) {
 
     const { report, reused } = scan
     const { scorecard } = report
+    const base = new URL(reportUrl(report)).origin
     const measurable = scorecard.measurable ?? scorecard.max
     const summary = [
       `${report.domain}: ${scorecard.total} of ${measurable} measurable points (${MAX_SCORE} exist on paper).`,
@@ -94,10 +95,11 @@ export async function POST(request: Request) {
         return `${stage.letter} ${stage.title}: ${stageMeasurable > 0 ? `${stage.points}/${stageMeasurable}` : 'not measurable'}`
       }),
       '',
-      ...scorecard.checks.map(
-        (check) =>
-          `${check.notApplicable ? 'N/A' : check.inconclusive ? 'UNMEASURED' : `${check.points}/${check.max}`} ${check.id}: ${check.detail}`,
-      ),
+      ...scorecard.checks.map((check) => {
+        const verdict = check.notApplicable ? 'N/A' : check.inconclusive ? 'UNMEASURED' : `${check.points}/${check.max}`
+        // The rule behind the verdict, so the caller can act without asking us what we meant.
+        return `${verdict} ${check.id}: ${check.detail}${check.unblock ? ` Next step: ${check.unblock}` : ''} [${checkHelpUri(check.id, base)}]`
+      }),
       '',
       `Scorecard: ${reportUrl(report)}`,
       `Formula v${scorecard.formulaVersion}, published at /methodology.`,
@@ -106,7 +108,16 @@ export async function POST(request: Request) {
 
     return result(id, {
       content: [{ type: 'text', text: summary }],
-      structuredContent: { id: report.id, domain: report.domain, url: reportUrl(report), reused, scorecard },
+      structuredContent: {
+        id: report.id,
+        domain: report.domain,
+        url: reportUrl(report),
+        reused,
+        scorecard: {
+          ...scorecard,
+          checks: scorecard.checks.map((check) => ({ ...check, helpUri: checkHelpUri(check.id, base) })),
+        },
+      },
     })
   }
 
