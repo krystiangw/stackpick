@@ -330,8 +330,19 @@ async function searchRegistry(text: string): Promise<NpmSearchHit[]> {
  * allegro.pl has no JS SDK, and the org filter alone happily returned worker-nodes, an
  * internal utility, which then scored a point for shipping types.
  */
+/**
+ * An npm scope is owned by whoever registered it, so a scope that is the brand is the vendor
+ * claiming the package. Bare names get no such rule: anyone can publish `polaroid-sdk`.
+ */
+function scopeIsBrand(name: string, brand: string): boolean {
+  const scope = name.startsWith('@') ? name.slice(1).split('/')[0].toLowerCase() : null
+  if (!scope) return false
+  return scope === brand || scope.startsWith(`${brand}-`) || scope.replace(/-/g, '') === brand
+}
+
 function matchStrength(name: string, domain: string, brand: string): 'strong' | 'weak' {
   const lower = name.toLowerCase()
+  if (scopeIsBrand(lower, brand)) return 'strong'
   // A bare @brand/ scope is not enough: @allegro/convert-description is an internal library,
   // and calling it the SDK turned "we do not know" into a failed check.
   const entryNames = [
@@ -375,12 +386,16 @@ export async function searchNpmForDomain(domain: string, githubRepo: string | nu
     const links = (Object.values(hit.package.links ?? {}).filter(Boolean) as string[]).filter(
       (link) => !/^https?:\/\/(www\.)?npmjs\.com\//i.test(link),
     )
-    const ours =
-      links.some((link) => link.includes(domain)) ||
-      (org !== null && links.some((link) => new RegExp(`github\\.com/${org}/`, 'i').test(link)))
-    if (!ours) continue
+    // Linking to the vendor's domain is not ownership: every third-party client links to the
+    // service it wraps, which is how statuspage.io-api was once attributed to Atlassian. The
+    // proofs that hold are an npm scope the vendor registered, or a repo in their own org that
+    // also points back at their domain.
+    const claimsDomain = links.some((link) => link.includes(domain))
+    const sharesOrg = org !== null && links.some((link) => new RegExp(`github\\.com/${org}/`, 'i').test(link))
+    if (!claimsDomain && !sharesOrg) continue
     seen.add(name)
-    candidates.push({ name, confidence: matchStrength(name, domain, brand) })
+    const owned = matchStrength(name, domain, brand) === 'strong' || (claimsDomain && sharesOrg)
+    candidates.push({ name, confidence: owned ? 'strong' : 'weak' })
   }
   if (candidates.length === 0) return null
 
@@ -391,9 +406,22 @@ export async function searchNpmForDomain(domain: string, githubRepo: string | nu
     downloads: await weeklyDownloads(candidate.name),
   }))
 
+  // Ownership decides first, then which package inside that ownership is the entry point.
+  // A scope proves the vendor published it; it does not say @pinecone-database/connect is the
+  // SDK when @pinecone-database/pinecone exists. Downloads alone got that wrong in the other
+  // direction once, picking angular-froala over froala-editor, so shape breaks the tie only
+  // among names that actually carry the brand.
+  // Binary on purpose. Ranking by how much of the brand a name carries picked froala-pages
+  // over froala-editor because the suffix was shorter, which is the same defect as picking
+  // angular-froala, just wearing a different disguise. Only an exact hit skips the downloads.
+  const entryRank = (name: string) => {
+    const part = (name.startsWith('@') ? (name.split('/')[1] ?? '') : name).toLowerCase()
+    return part === brand ? 0 : 1
+  }
   ranked.sort(
     (a, b) =>
       Number(b.confidence === 'strong') - Number(a.confidence === 'strong') ||
+      entryRank(a.name) - entryRank(b.name) ||
       b.downloads - a.downloads ||
       nameAffinity(b.name, brand) - nameAffinity(a.name, brand),
   )
