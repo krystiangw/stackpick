@@ -752,3 +752,33 @@ byłoby to 10/15 i dwa oskarżenia.
 
 Korpus na formule **4.0**: 51 domen, niemierzalnych 45, średnio 14,35 punktu mierzalnego,
 14 domen zmierzonych w całości, zero wierszy oznaczonych jako rate limited.
+
+## Runda 2026-08-08 (dwudziesta): korpus podwojony, pięć audytów w tle
+
+Na prośbę Krystiana: więcej sektorów, żeby było do kogo iść, gdy ruszamy na rynek.
+
+**Korpus 51 → 103 domeny, 7 → 15 kategorii.** Dołożone: monitoring błędów, feature flagi, search
+as a service, SMS/voice, headless CMS, kolejki i workflowy, hosting modeli i bramki LLM, oraz
+wideo. Reguła doboru bez zmian: produkty, które deweloper integruje przez API i gdzie **zdobycie
+poświadczenia jest krokiem, który agent musi przeżyć**. Każda kategoria ma co najmniej sześć
+domen, więc wszystkie pokazują się w rankingach.
+
+Skan całości na formule 4.0: **100 od razu, 3 timeouty** (sentry.io, telnyx.com, temporal.io),
+wszystkie trzy przeszły przy powtórce. Średnio 14,17 punktu mierzalnego, **20 domen zmierzonych
+w całości**, jeden wiersz oznaczony jako rate limited.
+
+**Raport branżowy dostał punkt, którego wcześniej nie mógł postawić:** `36 z 50 nie publikuje
+metadanych OAuth z endpointem rejestracji na żadnym hoście, który umieliśmy sprawdzić`. Przed
+rundą 15 ten check był niemierzalny na 37 domenach, więc raport milczał o RFC 7591. Do tego trzy
+nowe limity opublikowane na `/methodology`: 429 nigdy nie jest znaleziskiem o vendorze, cennik
+czytany dwa razy, rejestracja klienta szukana na wielu hostach.
+
+**Korekta własnego zdania o 429.** `defer.run` odpowiada 429 dynowi Heroku przy pierwszym
+kontakcie, a 301 mojemu laptopowi, więc dla części hostów to **bramka na ruch z centrum danych**,
+a nie limit, który wywołaliśmy. Nie umiemy tych dwóch przyczyn rozróżnić z samej odpowiedzi, więc
+zdanie **wymienia obie** zamiast twierdzić jedną. Dla mierzalności to bez różnicy: nadal
+niemierzalne.
+
+**Pięć audytów puszczonych równolegle** (bezpieczeństwo, wartość dla kupującego, poprawność
+werdyktów na nowych kategoriach, UI/UX przy 15 kategoriach, badanie problemów rynku). Wyniki
+i decyzje w następnej rundzie.
