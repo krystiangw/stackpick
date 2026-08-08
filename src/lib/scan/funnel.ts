@@ -241,11 +241,17 @@ async function inspectSignup(url: string | null): Promise<SignupFindings> {
 }
 
 /** Greps visible text only: a JSON changelog blob inside a <script> once scored 2 of 16 points. */
-function matching(patterns: RegExp[], html: string): string[] {
+/**
+ * Returns the matched rule in the words it is published in, not its regex source. The verdict
+ * quotes these back to the vendor, and one of the seven is an alternation forty characters long.
+ */
+function matching(patterns: RegExp[], html: string, labels?: string[]): string[] {
   const text = stripCodeBlocks(html)
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
-  return patterns.filter((pattern) => pattern.test(text)).map((pattern) => pattern.source)
+  return patterns
+    .map((pattern, index) => (pattern.test(text) ? (labels?.[index] ?? pattern.source) : null))
+    .filter((label): label is string => label !== null)
 }
 
 /**
@@ -435,7 +441,7 @@ export async function scanFunnel({
     mcpEndpoints,
     signup,
     provisioning: {
-      programmatic: matching(PROVISIONING_PATTERNS, await corpus),
+      programmatic: matching(PROVISIONING_PATTERNS, await corpus, PROVISIONING_PATTERN_LABELS),
       selfServeSignals: matching(SELF_SERVE_PATTERNS, pricingText),
     },
     servesCatchAll: catchAll,

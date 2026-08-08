@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
+import { brotliDecompressSync, constants as zlibConstants, gunzipSync, inflateSync } from 'node:zlib'
 import { installGuardedDispatcher } from './dispatcher'
 import { assertPublicHost, BlockedTargetError } from './guard'
 
@@ -274,6 +275,29 @@ async function runFetch(url: string, options: FetchOptions, state: ScanState | n
   }
 }
 
+/**
+ * A body the server compressed and we did not ask it to. undici only decompresses what it
+ * negotiated itself, and a stored sitemap.xml.gz is served with content-encoding: gzip to
+ * anybody: docs.datadoghq.com/sitemap.xml came back as bytes, matched no <loc>, and the
+ * provisioning check then scored Datadog on its documentation front page alone.
+ */
+function decoded(bytes: Uint8Array, encoding: string | undefined): Uint8Array {
+  const how = (encoding ?? '').toLowerCase()
+  // Sync flush rather than a finished stream: we cap what we read, so a large sitemap arrives
+  // cut in the middle, and a strict inflate throws away everything we did receive.
+  const partial = { finishFlush: zlibConstants.Z_SYNC_FLUSH }
+  try {
+    if (how.includes('gzip')) return gunzipSync(bytes, partial)
+    if (how.includes('deflate')) return inflateSync(bytes, partial)
+    if (how.includes('br')) {
+      return brotliDecompressSync(bytes, { finishFlush: zlibConstants.BROTLI_OPERATION_FLUSH })
+    }
+  } catch {
+    // Not decompressible at all, which is what a mislabelled body looks like.
+  }
+  return bytes
+}
+
 async function readCapped(response: Response): Promise<{ text: string; truncated: boolean }> {
   if (!response.body) return { text: '', truncated: false }
   const reader = response.body.getReader()
@@ -294,7 +318,8 @@ async function readCapped(response: Response): Promise<{ text: string; truncated
     joined.set(chunk, offset)
     offset += chunk.byteLength
   }
-  return { text: new TextDecoder('utf-8').decode(joined), truncated }
+  const body = decoded(joined, response.headers.get('content-encoding') ?? undefined)
+  return { text: new TextDecoder('utf-8').decode(body), truncated }
 }
 
 export function looksLikeHtml(fetched: Fetched): boolean {

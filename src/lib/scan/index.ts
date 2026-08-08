@@ -109,7 +109,7 @@ export type ScanFindings = {
 export class UnreachableDomainError extends Error {}
 
 const CREDENTIAL_PAGE_HINTS =
-  /(api[-_ ]?key|authentication|auth(\/|$)|credential|token|management|provisioning|admin|account|getting[-_ ]?started|quickstart|reference)/i
+  /(api[-_ ]?(?:app[-_ ]?)?keys?|authentication|auth(\/|$)|credential|token|management|provisioning|admin|account|getting[-_ ]?started|quickstart|reference)/i
 
 /**
  * We read three documentation pages out of what can be hundreds, so which three decides the
@@ -119,7 +119,9 @@ const CREDENTIAL_PAGE_HINTS =
  * same every time, and makes it the sample most likely to answer the question.
  */
 const HINT_PRIORITY = [
-  /api[-_ ]?key/i,
+  // datadoghq.com files theirs at /account_management/api-app-keys, which "api-key" does not
+  // match, so the page the check is asking about ranked below their access-control page.
+  /api[-_ ]?(?:app[-_ ]?)?keys?/i,
   /credential/i,
   /provisioning/i,
   /token/i,
@@ -131,7 +133,16 @@ const HINT_PRIORITY = [
   /reference/i,
 ]
 
+/**
+ * Pages about somebody else's credentials. Datadog documents every cloud resource its agent can
+ * see, so the three best-ranked pages on the whole site were gcp_apikeys_key, aws_location_api_key
+ * and aws_apigateway_apikey, while account_management/api-app-keys, which is the page the check is
+ * asking about, was never opened. A path can carry the word and be about another company.
+ */
+const THIRD_PARTY_CREDENTIAL_PAGES = /resource[-_]catalog|\/integrations?\/|(^|[/_])(aws|gcp|azure|google|alibaba)[-_]/i
+
 function hintRank(pathname: string): number {
+  if (THIRD_PARTY_CREDENTIAL_PAGES.test(pathname)) return HINT_PRIORITY.length + 1
   const index = HINT_PRIORITY.findIndex((pattern) => pattern.test(pathname))
   return index === -1 ? HINT_PRIORITY.length : index
 }
