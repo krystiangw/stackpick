@@ -123,6 +123,60 @@ export const CATEGORIES: Category[] = [
     jobToBeDone: 'put video in a product without building an encoder',
     domains: ['mux.com', 'api.video', 'daily.co', 'livekit.io', 'agora.io', 'bitmovin.com'],
   },
+  {
+    id: 'browser-infrastructure',
+    label: 'Browser and scraping infrastructure',
+    jobToBeDone: 'drive a real browser or read a page you do not own',
+    domains: ['browserbase.com', 'apify.com', 'firecrawl.dev', 'scrapingbee.com', 'browserless.io', 'zenrows.com'],
+  },
+  {
+    id: 'notifications',
+    label: 'Notification infrastructure',
+    jobToBeDone: 'send one event to email, push and Slack without writing three integrations',
+    domains: ['knock.app', 'courier.com', 'novu.co', 'onesignal.com', 'pusher.com', 'magicbell.com'],
+  },
+  {
+    id: 'scheduling',
+    label: 'Scheduling and calendar APIs',
+    jobToBeDone: 'book a meeting into a calendar you do not control',
+    domains: ['cal.com', 'calendly.com', 'nylas.com', 'savvycal.com', 'cronofy.com'],
+  },
+  {
+    id: 'maps-geo',
+    label: 'Maps and geocoding',
+    jobToBeDone: 'turn an address into coordinates and draw it on a map',
+    domains: ['mapbox.com', 'maptiler.com', 'radar.com', 'tomtom.com', 'here.com', 'locationiq.com'],
+  },
+  {
+    id: 'databases',
+    label: 'Managed databases',
+    jobToBeDone: 'get a production database without running one',
+    domains: ['neon.tech', 'planetscale.com', 'turso.tech', 'cockroachlabs.com', 'xata.io', 'tigrisdata.com'],
+  },
+  {
+    id: 'observability',
+    label: 'Observability and logging',
+    jobToBeDone: 'find out why production is slow at three in the morning',
+    domains: ['datadoghq.com', 'grafana.com', 'honeycomb.io', 'newrelic.com', 'axiom.co', 'signoz.io'],
+  },
+  {
+    id: 'documents-signature',
+    label: 'Documents and e-signature',
+    jobToBeDone: 'generate a document and get it signed',
+    domains: ['docuseal.com', 'documenso.com', 'dropboxsign.com', 'pandadoc.com', 'anvil.co', 'pdfmonkey.io'],
+  },
+  {
+    id: 'commerce',
+    label: 'Commerce platforms',
+    jobToBeDone: 'sell something without building a checkout',
+    domains: ['shopify.com', 'bigcommerce.com', 'medusajs.com', 'saleor.io', 'swell.is', 'commercetools.com'],
+  },
+  {
+    id: 'localization',
+    label: 'Translation and localization',
+    jobToBeDone: 'ship the same product in a language nobody on the team speaks',
+    domains: ['deepl.com', 'lokalise.com', 'crowdin.com', 'phrase.com', 'weglot.com', 'tolgee.io'],
+  },
 ]
 
 export function categoryFor(domain: string): Category | null {
