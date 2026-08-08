@@ -443,3 +443,47 @@ nie odwracał kolorów znaku.
 `froala.com` z dwoma etapami niemierzalnymi (3/8, kolumny C i D przerywane na wszystkich trzech
 powierzchniach), karta OG pobrana z produkcji i obejrzana, mail wyrenderowany i obejrzany, oraz
 realna wysyłka na skrzynkę właściciela: `delivered: true`.
+
+## Runda 2026-08-08 (dwunasta): audyt wartości i poprawności, własny serwer MCP
+
+Pozycja 2 z "Co zostało z audytów" zamknięta przeglądem żywej strony, nie z pamięci.
+
+**Znalezisko 1, sprzedażowe: obiecywaliśmy mianownik, którego prawie nigdy nie osiągamy.**
+Landing mówił "Scores are out of the points we could measure on each domain, not out of sixteen",
+a trzysta pikseli niżej sprzedawał "16 points". `/pricing` sprzedawał to samo, `openapi.json`
+opisywał produkt jako "Scores a domain out of 16", a to jest plik, który czyta agent.
+Naprawione wszędzie, a liczba jest teraz **liczona z korpusu**: 51 domen, średnio **13 z 16**
+punktów mierzalnych, **tylko 3 domeny dało się zmierzyć w całości**. To samo zdanie jest
+argumentem za płatnym audytem, bo płatny audyt zamyka dokładnie tę lukę. Pokrycie liczy się
+w tym samym zapytaniu co rankingi, więc nie kosztuje dodatkowego round-tripu do bazy.
+
+**Znalezisko 2: sprzedawaliśmy cytaty, których nie zawsze możemy dostarczyć.** Diagnostic
+obiecywał "The words used to reject you, quoted", a po rundach 9 i 10 wiemy, że przebieg może
+nie zostawić nic cytowalnego. Teraz oferta mówi wprost: cytat tam, gdzie przebieg zostawił
+zdanie, oznaczona parafraza tam, gdzie nie zostawił. To jest wyróżnik, nie słabość.
+
+**Znalezisko 3, najostrzejsze: nie przechodziliśmy własnego checku.** Publikowaliśmy
+`/.well-known/mcp.json`, a nasz własny skaner odmawia punktu za kartę, pod którą nic nie
+odpowiada, z uzasadnieniem "a card is a claim about a server, not a server". Karta wskazywała na
+`/api/scan` (REST, nie MCP), obiecywała limit 10/h, którego nie ma w kodzie, a `GET /mcp`
+zwracał 404. **Zbudowany prawdziwy serwer MCP** (`src/app/mcp/route.ts`): Streamable HTTP,
+JSON-RPC 2.0, `initialize` / `ping` / `tools/list` / `tools/call`, jedno narzędzie `scan_domain`
+zwracające tekst i `structuredContent`. Nasz własny skan po wdrożeniu: `1/1 mcp_present: Live MCP
+endpoint ... answered 405 to GET, as an MCP endpoint does`, wynik **10/11**.
+
+**Ścieżka skanu wyciągnięta do `src/lib/scan-run.ts`**, bo REST i narzędzie MCP byłyby trzecim
+miejscem w tym kodzie z tą samą logiką w dwóch kopiach, a poprzednie dwa się rozjechały.
+
+**Regres znaleziony i naprawiony w tej samej rundzie:** przeniesienie palety do `lib/mark`
+zabrało znakowi na stronie reakcję na dark mode (literały są wartościami z trybu jasnego,
+bo karta OG i mail nie mają arkusza stylów). Strona bierze teraz klasy Tailwinda po stanie
+segmentu, a literały zostały tam, gdzie są potrzebne.
+
+**Drobne, ale tej samej klasy:** `/docs` reklamowało "ten scans an hour", a limity w kodzie to
+5 na domenę i 30 na wywołującego; teraz są importowane, nie pamiętane. Karta wyniku miała
+zaszyte "14 deterministic HTTP checks". `openapi.json` nie wystawiał `measurable` ani
+`notApplicable`, więc agent czytający schemat nie mógł odtworzyć liczby ze strony.
+
+**Znak na landingu.** Sygnaturowy element pokazuje się teraz także na stronie głównej, przy
+liście pięciu etapów, na **prawdziwej domenie** (lider pierwszej kategorii) z linkiem do jej
+karty. Lista A-E była abstrakcją, dopóki nie stanął obok niej kształt.
