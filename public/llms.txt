@@ -14,7 +14,8 @@
 
 - [/agent-signup.md](/agent-signup.md): why there is no signup and what to do instead
 - [/.well-known/agent-access.json](/.well-known/agent-access.json): endpoints, limits and refusals, machine readable
-- [/.well-known/mcp.json](/.well-known/mcp.json): MCP server card
+- [/mcp](/mcp): MCP server, Streamable HTTP, no authentication, one tool `scan_domain`
+- [/.well-known/mcp.json](/.well-known/mcp.json): the card describing it
 - [/openapi.json](/openapi.json): OpenAPI 3.1 spec, generated from the same check definitions the scanner runs
 - [/docs](/docs): how to scan from code
 

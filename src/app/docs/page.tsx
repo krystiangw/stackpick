@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR, REUSE_WINDOW_MS } from '@/lib/scan-gate'
 import { CHECKS, FORMULA_VERSION, MAX_SCORE, STAGES } from '@/lib/score'
 
 export const metadata: Metadata = {
@@ -96,9 +97,17 @@ data: {"id":"example-com-202608072143","total":9,"max":${MAX_SCORE}}`}</Code>
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Credentials and provisioning</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           There are none. You do not create an API key, there is no management API to call and no service
-          account to provision, because every endpoint is open. Rate limiting is applied per source address
-          rather than per identity: ten scans an hour, and exceeding it returns 429 with a{' '}
-          <code className="font-mono text-xs">retry-after</code> header telling you exactly how long to wait.
+          account to provision, because every endpoint is open. The limits are {PER_DOMAIN_PER_HOUR} scans an hour
+          per domain and {PER_CALLER_PER_HOUR} per caller, and a domain scanned again within{' '}
+          {REUSE_WINDOW_MS / 60000} minutes returns the stored result rather than a fresh one. Exceeding a limit
+          returns 429 with a <code className="font-mono text-xs">retry-after</code> header telling you exactly how
+          long to wait.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          There is also an MCP server at <span className="font-mono text-xs">/mcp</span>, Streamable HTTP, no
+          authentication, one tool called <span className="font-mono text-xs">scan_domain</span>. It runs the same
+          scan as the REST endpoint through the same limits, and the card describing it is at{' '}
+          <span className="font-mono text-xs">/.well-known/mcp.json</span>.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           Machine-readable descriptions of all of this live at{' '}

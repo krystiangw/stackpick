@@ -12,9 +12,9 @@ import { getStore, type Report } from './store'
  * with a loose per-caller ceiling left as an abuse backstop.
  */
 
-const REUSE_WINDOW_MS = 15 * 60 * 1000
-const PER_DOMAIN_PER_HOUR = 5
-const PER_CALLER_PER_HOUR = 30
+export const REUSE_WINDOW_MS = 15 * 60 * 1000
+export const PER_DOMAIN_PER_HOUR = 5
+export const PER_CALLER_PER_HOUR = 30
 
 /**
  * Keyed on the registrable name, so a.victim.com and b.victim.com share one budget. One scan

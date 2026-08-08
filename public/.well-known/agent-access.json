@@ -4,13 +4,19 @@
   "signup_required": false,
   "why_no_signup": "The scan reads only public pages, so there is nothing to authenticate. An account would be a gate with nothing behind it.",
   "authentication": "none",
-  "rate_limit": { "requests": 10, "window": "1h", "scope": "per source address" },
+  "rate_limit": {
+    "requests": 10,
+    "window": "1h",
+    "scope": "per source address"
+  },
   "endpoints": [
     {
       "name": "scan",
       "method": "POST",
       "url": "https://stackpick-f12d13a227ea.herokuapp.com/api/scan",
-      "request": { "domain": "example.com" },
+      "request": {
+        "domain": "example.com"
+      },
       "response": "{ id, domain, scorecard }",
       "notes": "Takes 15-30s. Signup probes run three times because bot gates answer inconsistently."
     },
@@ -18,8 +24,18 @@
       "name": "scan_streaming",
       "method": "POST",
       "url": "https://stackpick-f12d13a227ea.herokuapp.com/api/scan/stream",
-      "request": { "domain": "example.com" },
+      "request": {
+        "domain": "example.com"
+      },
       "response": "text/event-stream with 'step', 'done' and 'failed' events"
+    },
+    {
+      "name": "mcp",
+      "method": "POST",
+      "url": "https://stackpick-f12d13a227ea.herokuapp.com/mcp",
+      "request": "JSON-RPC 2.0: initialize, tools/list, tools/call with scan_domain",
+      "response": "JSON-RPC 2.0 result, text content plus structuredContent carrying the scorecard",
+      "notes": "Streamable HTTP, no authentication. Same scan and same limits as /api/scan."
     }
   ],
   "human_readable_report": "https://stackpick-f12d13a227ea.herokuapp.com/r/{id}",
