@@ -1197,3 +1197,82 @@ instrumentacji zamiast hipotez. Podejrzenie do potwierdzenia: `sitemapCandidates
 **postmark.com**, więc cała sitemapa (950 wpisów) mogła zostać odrzucona.
 
 Formuła **4.6**.
+
+## Runda 2026-08-08 (trzydziesta pierwsza): audyt z zewnątrz, czyli co widzi obcy
+
+Subagent przeczytał **tylko to, co widać przez HTTP**, w trzech rolach: DevRel u zeskanowanego
+vendora, inżynier szukający co zrobić w poniedziałek, i sceptyk z jednym curl-em. Zweryfikowałem
+najcięższe zarzuty własnymi żądaniami, zanim cokolwiek ruszyłem. Formuła **4.7**, potem **4.8**.
+
+### 1. Złamana obietnica o prywatności, jedyny zarzut prawny na liście
+
+Cztery razy na stronie obiecywaliśmy, że skan uruchomiony przez odwiedzającego **nigdy nie trafia
+do publikowanego korpusu**. Trafiał. Skan zeskanowanej domeny stawał się najnowszym raportem, jaki
+trzymamy, więc **jedno anonimowe żądanie usunęło `resend.com`** z opublikowanych danych i z raportu
+branżowego. Potwierdzone: korpus miał 101 wierszy i nie miał resend.com, który dzień wcześniej był
+numerem jeden rankingu.
+
+Naprawa: raport niesie znacznik `seeded` (czy uruchomiliśmy go my), a `publishedCorpus()` jest
+**jedyną definicją korpusu**. Przy okazji znikły trzy różne liczby domen, bo strona główna, `/report`
+i `corpus.json` liczyły każde po swojemu (103 kontra 104 kontra 101 w tej samej minucie).
+
+### 2. Sztandarowa teza fałszywa dla 18 z 49 wierszy
+
+„Live MCP endpoint, answered 405 to GET" brało **405 na POST** za dowód serwera, a zdanie mówiło
+o GET, którego nie wysyłamy. Sprawdzone ręcznie: `tiptap.dev/mcp` i `tiptap.dev/zzz-nonsense-9182`
+odpowiadają **identycznie**, tak samo temporal.io i configcat.com. Sonda kontrolna, która od dawna
+chroni pliki `.md`, **nie była zapięta na MCP**.
+
+Teraz jest: nierutowana ścieżka na tym samym origin, ta sama metoda. Wyjątek dla wyzwania OAuth
+z nagłówkiem `WWW-Authenticate`, bo host bramkujący każdą ścieżkę to dokładnie `mcp.sentry.dev`
+(bez tego wyjątku wycinałem prawdziwy serwer Sentry). Zweryfikowane na produkcji: tiptap, temporal,
+configcat i postmark wypadły, sentry, stripe, cloudflare, supabase, linear i agora zostały.
+
+### 3. Karaliśmy vendora za własną ślepotę
+
+`openai.com`: proza na karcie mówiła „to wasz WAF odrzuca sieć, z której skanujemy, a nie reguła
+o agentach", a punkt i tak szedł do mianownika. Gdy przeglądarka też dostaje odmowę, check jest
+teraz niemierzalny, zgodnie z tym, co obiecuje metodologia.
+
+### 4. Dwa punkty za istnienie pliku
+
+`agent_entry_point` to 2 z 16 punktów, najwięcej w formule, i dostawało się je za **sam plik**.
+`inngest.com` miał pełne 2/2 za 583-bajtowy `ai.txt`, którego cała treść to `Allow-AI-Training: yes`,
+czyli polityka uprawnień w kształcie robots.txt. Plik musi teraz nazwać poświadczenie, endpoint albo
+drogę do konta. Inngest spada na 1/2 z uzasadnieniem, loops.so, weaviate.io i openrouter.ai zostają.
+
+### 5. `facebook/react` jako repozytorium buttondown.com
+
+Discovery brało **pierwszy link do GitHuba na stronie**, czyli framework każdego docsa na Mintlify.
+To jedyna linijka, którą vendor sprawdza w pół sekundy. Właściciel musi teraz nieść nazwę vendora,
+a brak repozytorium jest lepszą odpowiedzią niż cudze.
+
+### Reszta z tej rundy
+
+- Najcięższy check nazywa dopasowane frazy, a metodologia publikuje wszystkie siedem i przestaje
+  twierdzić o pułapie czterech stron, który łamała na 67 ze 103 wierszy.
+- Akapit o sześciu agentach na każdej karcie brzmiał, jakby dotyczył czytelnika. Teraz mówi wprost,
+  że badanie było o innym vendorze.
+- `/docs` nie dokumentowało pola `measurable`, czyli **jedynego mianownika**, o którym cała reszta
+  strony mówi, że jest najważniejszy. Integrator implementujący nasz kontrakt publikowałby 8/16
+  zamiast 8/14, czyli dokładnie ten błąd, który zwalczamy.
+- Trzy pożyczone liczby bez źródła: dwie dostały je (Otterly, `browser-image-compression` do
+  sprawdzenia jednym `npm view`), trzeciej („2 961 promptów") nie dało się przypisać nikomu, więc
+  wyleciała i zastąpił ją nasz własny pomiar.
+- Liga rankingowa z jednym wierszem (czytelnik sam ze sobą) już się nie renderuje.
+- Audyt Froali podawał przekonania agentów o licencji CKEditora jak fakt. Teraz mówi, że to
+  przekonanie agenta, i `/audit` deklaruje prawo do odpowiedzi dla czterech nazwanych vendorów.
+- Niezmiennik w `npm run audit`: **pass, którego dowodem jest jedna strona, musi tę stronę nazwać**.
+  Znalazł 74 werdykty na 4.5, potem 22 na 4.7, na 4.8 ma być zero.
+
+### Korpus i rynek
+
+Korpus urósł do **24 kategorii i 156 vendorów** (browser infra, notyfikacje, kalendarze, mapy, bazy,
+observability, dokumenty i podpis, commerce, lokalizacja). Reseed 156/156 bez jednego błędu.
+
+Research popytowy przyniósł jedno ustalenie, które zmienia kierunek: **nie jesteśmy wcześnie**.
+Lighthouse ma kategorię Agentic Browsing w domyślnej konfiguracji od 2026-05-07 i w PageSpeed
+Insights od 2026-06-23, Cloudflare wypuścił produkt AEO 2026-08-06, a Agent Native Registry ocenia
+1 456 narzędzi za darmo od marca. **Ale nikt nie mierzy ścieżki rejestracja → poświadczenie**, a
+`dash.cloudflare.com/sign-up` odpowiada **403** zwykłemu klientowi HTTP: firma sprzedająca gotowość
+na agenty blokuje agenta na własnej rejestracji. To jest wolne pole i mamy na nie dowód.
