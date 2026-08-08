@@ -132,6 +132,9 @@ export default function MethodologyPage() {
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Known limits</h2>
         <ol className="mt-5 flex flex-col gap-4">
           {[
+            'A 429 is never a finding about you. If a host rate limits us, the checks that depended on reading it come back unmeasured and say so, because reporting our own traffic as your refusal would be an accusation. The door test also spaces its three tries, so we are not manufacturing the limit we would then have to explain.',
+            'Pricing pages are read twice and the self-serve wording is the union of both reads. One vendor answered the same URL with and without its free-tier sentence forty minutes apart, which moved a scored point; the scorecard says when the two reads disagreed.',
+            'The client registration check follows more than the apex: the signup origin, any MCP host, and the subdomains an authorization or resource server conventionally lives on. Finding nothing across all of them is a measurement, and the scorecard names the origins we probed so you can rerun exactly what we ran.',
             'Bot gates are not deterministic. The same signup endpoint answered 200 once and 403 four times during research, so gated checks run three times and the scorecard says when the tries disagreed.',
             'A passing file is not a passing experience. Publishing llms.txt scores a point here and still tells you nothing about whether an agent chose you. That is what the paid audit measures.',
             'Discovery can be wrong. Docs, pricing, signup and the npm package are inferred from your own links. The scorecard shows exactly what it found so you can see when it guessed badly.',
