@@ -39,6 +39,11 @@ export type IndustryReport = {
     measuredOn: number
   }[]
   checks: CheckTally[]
+  /**
+   * Domains that run an MCP server and document no way for an agent to get a credential for it.
+   * The whole funnel thesis in one number: a door built for a machine, and no key behind it.
+   */
+  mcpWithoutKeys: number
   best: { domain: string; total: number; measurable: number; reportId: string }[]
   worst: { domain: string; total: number; measurable: number; reportId: string }[]
 }
@@ -112,7 +117,17 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
   })
   const scanTimes = reports.map((report) => report.scannedAt).sort()
 
+  const verdict = (report: Report, id: string) => report.scorecard.checks.find((check) => check.id === id)
+  const mcpWithoutKeys = reports.filter((report) => {
+    const mcp = verdict(report, 'mcp_present')
+    const provisioning = verdict(report, 'programmatic_provisioning')
+    if (!mcp || !provisioning) return false
+    const scored = !provisioning.inconclusive && !provisioning.notApplicable
+    return mcp.points === mcp.max && scored && provisioning.points === 0
+  }).length
+
   return {
+    mcpWithoutKeys,
     sampleSize: reports.length,
     formulaVersion,
     // Every report in the slice shares a formula version, so they share a maximum.

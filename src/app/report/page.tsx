@@ -139,6 +139,13 @@ export default async function IndustryReportPage() {
               cannot register itself as a client. RFC 7591 is the only standard by which it could.
             </li>
           )}
+          {report.mcpWithoutKeys > 0 && (
+            <li className="border-l-2 border-fail pl-4 leading-relaxed">
+              <span className="font-mono tabular-nums">{report.mcpWithoutKeys} of {report.sampleSize}</span>{' '}
+              run an MCP server and document no way for an agent to obtain a credential for it. That pair is the
+              whole finding: a door built for a machine, and nothing behind it the machine can unlock on its own.
+            </li>
+          )}
           {mcp && (
             <li className="border-l-2 border-warn pl-4 leading-relaxed">
               <span className="font-mono tabular-nums">
