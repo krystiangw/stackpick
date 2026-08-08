@@ -12,7 +12,7 @@ export function EmailGate({
   failingCount: number
 }) {
   const [email, setEmail] = useState('')
-  const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle')
+  const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'undelivered'>('idle')
   const [error, setError] = useState<string | null>(null)
 
   async function submit(event: React.FormEvent) {
@@ -33,7 +33,11 @@ export function EmailGate({
       setState('idle')
       return
     }
-    setState('sent')
+    // The route answers 200 with delivered:false when the mail provider refused it, and we
+    // used to call that success: a visitor at the deepest point of intent was told the
+    // scorecard was in their inbox when nothing had been sent.
+    const payload = (await response.json().catch(() => ({}))) as { delivered?: boolean; queued?: boolean }
+    setState(payload.delivered === false && !payload.queued ? 'undelivered' : 'sent')
   }
 
   if (state === 'sent') {
@@ -42,6 +46,23 @@ export function EmailGate({
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-brass">On its way</h2>
         <p className="mt-3 max-w-xl leading-relaxed">
           The scorecard for {domain} is in your inbox, with a permanent link you can forward.
+        </p>
+      </div>
+    )
+  }
+
+  if (state === 'undelivered') {
+    return (
+      <div className="border border-warn p-8">
+        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">We could not send it</h2>
+        <p className="mt-3 max-w-xl leading-relaxed">
+          Our mail provider refused the message, which is our problem and not yours. We have your address
+          and the scorecard for {domain} lives at this URL permanently, so copy the link from your browser
+          and it will keep working.
+        </p>
+        <p className="mt-3 max-w-xl leading-relaxed text-ink-soft">
+          Telling you it was on its way would have been the easy thing to print here. This tool exists to
+          say what actually happened.
         </p>
       </div>
     )
@@ -56,7 +77,7 @@ export function EmailGate({
           : `${domain} passes every deterministic check. The interesting question is what agents do anyway.`}
       </p>
       <p className="mt-3 max-w-xl leading-relaxed text-ink-soft">
-        Send yourself the scorecard with the three checks that cost the most, and a permanent link you can
+        Send yourself the scorecard with the checks that cost the most, and a permanent link you can
         forward to whoever owns the fix.
       </p>
 
