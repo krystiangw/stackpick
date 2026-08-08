@@ -16,7 +16,15 @@ export type RankedCategory = { category: Category; entries: RankedEntry[]; media
  * every "16 points" claim on the site, and it is also the argument for the paid audit: the gap
  * between the paper maximum and what a scanner can see is the part somebody has to run agents for.
  */
-export type CorpusCoverage = { domains: number; max: number; averageMeasurable: number; fullyMeasurable: number }
+export type CorpusCoverage = {
+  domains: number
+  max: number
+  averageMeasurable: number
+  fullyMeasurable: number
+  /** The stage the free scanners from Google and Cloudflare both stop short of. */
+  signupRefusesAgents: number
+  signupNeedsJavaScript: number
+}
 
 export type RankingsView = { categories: RankedCategory[]; coverage: CorpusCoverage }
 
@@ -40,6 +48,13 @@ export async function loadRankings(): Promise<RankingsView> {
           scanned.length,
     fullyMeasurable: scanned.filter(
       (report) => (report.scorecard.measurable ?? report.scorecard.max) === report.scorecard.max,
+    ).length,
+    signupRefusesAgents: scanned.filter(
+      (report) => report.findings.funnel.signup.url !== null && !report.findings.funnel.signup.reachable,
+    ).length,
+    signupNeedsJavaScript: scanned.filter(
+      (report) =>
+        report.findings.funnel.signup.reachable && !report.findings.funnel.signup.rendersFormWithoutJs,
     ).length,
   }
 

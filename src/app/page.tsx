@@ -47,14 +47,25 @@ export default async function Home() {
   return (
     <main className="mx-auto max-w-5xl px-6">
       <section className="border-b border-rule py-16 sm:py-24">
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Agent readiness, measured</p>
+        <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">
+          The signup and credential path, measured
+        </p>
         <h1 className="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">
           Your next customer is an agent, and it already decided without asking you.
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-soft">
           When a developer says “add file uploads”, an agent picks the provider, reads the docs, and writes
-          the integration. StackPick measures whether it can pick you, register, get credentials and ship.
+          the integration. Google and Cloudflare will both tell you for free whether your documentation is
+          machine readable. Neither asks the next question, which is the one all eighteen of our agent runs
+          died on: can an unattended client register and get a key?
         </p>
+        {coverage.signupRefusesAgents > 0 && (
+          <p className="mt-4 max-w-2xl font-mono text-sm leading-relaxed text-ink-soft">
+            Of {coverage.domains} vendors we have scanned, {coverage.signupRefusesAgents} answer an agent at
+            the signup form with a refusal rather than a form, and {coverage.signupNeedsJavaScript} more serve
+            a form that renders nothing without JavaScript.
+          </p>
+        )}
         <div className="mt-8 max-w-xl">
           <ScanForm autoFocus />
         </div>
