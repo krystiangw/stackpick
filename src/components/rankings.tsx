@@ -21,7 +21,9 @@ export function Rankings({ rankings }: { rankings: RankedCategory[] }) {
 
       <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
         These are real scans, not examples. Each vendor can open its own scorecard, reproduce every check and
-        tell us where we are wrong. That offer is the whole point of publishing the formula.
+        tell us where we are wrong. That offer is the whole point of publishing the formula. Scores are out of
+        the points we could measure on each domain, not out of sixteen: a site that refuses our requests
+        scores against a smaller denominator, not a worse number.
       </p>
 
       <div className="mt-10 grid gap-10 md:grid-cols-2">
