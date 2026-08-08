@@ -91,6 +91,13 @@ export type ScanFindings = {
   docsPagesRead: number
   /** Which ones. A verdict about documentation is only reproducible if we name what we read. */
   docsPagesReadUrls: string[]
+  /**
+   * Documentation pages we picked and then could not fetch. Silence in a page we never got is not
+   * silence in their documentation: postmark.com answers its credential page here and refused it
+   * to the dyno, and the scan published "no programmatic credential creation described" about a
+   * vendor whose Account API creates keys.
+   */
+  docsPagesUnread: number
   robots: RobotsFindings
   machine: MachineFindings
   funnel: FunnelFindings
@@ -212,7 +219,7 @@ async function sitemapCandidates(domain: string, docsUrl: string, seen: Set<stri
 }
 
 /** Follows a few same-host documentation links that look like they discuss credentials. */
-async function readDeeper(domain: string, docsUrl: string, html: string): Promise<Fetched[]> {
+async function readDeeper(domain: string, docsUrl: string, html: string): Promise<{ pages: Fetched[]; unreadable: number }> {
   const base = new URL(docsUrl)
   const seen = new Set<string>([docsUrl])
   const fromLinks: string[] = []
@@ -240,7 +247,8 @@ async function readDeeper(domain: string, docsUrl: string, html: string): Promis
   const candidates = [...fromLinks, ...fromSitemap].sort(byHint).slice(0, 3)
 
   const pages = await inParallel(candidates, (url) => fetchUrl(url))
-  return pages.filter((page) => page.ok)
+  const readable = pages.filter((page) => page.ok)
+  return { pages: readable, unreadable: pages.length - readable.length }
 }
 
 /**
@@ -387,14 +395,14 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
   // we never opened, then failed the check for not describing it. Follow the pages an agent
   // hunting for credentials would follow.
   const docsPending = phase('docs', async () =>
-    docsPage?.ok && found.docs ? readDeeper(domain, found.docs, docsPage.body) : [],
+    docsPage?.ok && found.docs ? readDeeper(domain, found.docs, docsPage.body) : { pages: [], unreadable: 0 },
   )
   const robotsPending = phase('robots', () => scanRobots(found.site))
   const machinePending = phase('machine', () =>
     scanMachineContext(
       found.site,
       found.docs,
-      docsPending.then((deeper) => deeper.map((page) => page.url)),
+      docsPending.then((deeper) => deeper.pages.map((page) => page.url)),
     ),
   )
   const npmPending = phase('npm', () => resolvePackage(domain, found))
@@ -408,7 +416,7 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
       // named in the llms.txt we had open. It is handed over unresolved: the grep is the last
       // thing the funnel does, so nothing here waits on it.
       corpus: Promise.all([docsPending, machinePending]).then(([deeper, machine]) =>
-        [docsText, ...deeper.map((page) => page.body), found.home.body, machine.llmsCorpus].join('\n'),
+        [docsText, ...deeper.pages.map((page) => page.body), found.home.body, machine.llmsCorpus].join('\n'),
       ),
       pricingUrl: found.pricing,
       signupUrl: found.signup,
@@ -444,10 +452,10 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     asAgent.statusesSeen.length > 0 && asAgent.statusesSeen.every((status) => status === 429)
   report('Scoring', STEPS)
 
-  const readable = docsWithoutJs(found.docs, [...(docsPage ? [docsPage] : []), ...deeperDocs])
+  const readable = docsWithoutJs(found.docs, [...(docsPage ? [docsPage] : []), ...deeperDocs.pages])
   const documentsRead = [
     ...(docsPage?.ok && found.docs ? [found.docs] : []),
-    ...deeperDocs.map((page) => page.url),
+    ...deeperDocs.pages.map((page) => page.url),
     ...machine.llmsUrls,
   ]
 
@@ -491,6 +499,7 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     // sentence describes a body of evidence the verdict was not taken from.
     docsPagesRead: documentsRead.length,
     docsPagesReadUrls: documentsRead,
+    docsPagesUnread: deeperDocs.unreadable,
     robots,
     machine: machine.findings,
     funnel,

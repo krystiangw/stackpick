@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '4.5'
+export const FORMULA_VERSION = '4.6'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -385,6 +385,17 @@ export const CHECKS: Check[] = [
           unblock: 'Link your API reference from your docs index or from llms.txt and this becomes measurable.',
         }
       }
+      // A page that refused us is not a page that stays silent about keys. postmark.com documents
+      // creating them and its edge turned our fetch away, and we published the absence as theirs.
+      const unread = f.docsPagesUnread ?? 0
+      if (unread > 0) {
+        return {
+          points: 0,
+          detail: `Unmeasurable: ${unread} documentation ${unread === 1 ? 'page we selected refused our request' : 'pages we selected refused our request'}, so nothing here is a finding about what you document`,
+          inconclusive: true,
+          unblock: 'Let ordinary HTTP reach your documentation pages and this becomes measurable.',
+        }
+      }
       return yes(0, `No programmatic credential creation described in the ${pages} documentation pages we read`)
     },
   },
@@ -473,7 +484,11 @@ export const CHECKS: Check[] = [
       const negotiation = f.machine.markdownNegotiation
       if (f.machine.openapi.length > 0) return yes(1, `OpenAPI at ${f.machine.openapi[0]}`)
       if ((negotiation.acceptHeader || negotiation.dotMdSuffix) && !f.funnel.servesCatchAll) {
-        return yes(1, 'Docs serve markdown to machines')
+        // Naming the page matters more here than anywhere else: on nearly every domain that
+        // passes, the docs front page is the one page that does not negotiate, so a vendor
+        // testing the obvious URL sees HTML and concludes we made the finding up.
+        const where = negotiation.answeredAt ? `, at ${negotiation.answeredAt}` : ''
+        return yes(1, `Docs serve markdown to machines${where}`)
       }
       if (negotiation.acceptHeader || negotiation.dotMdSuffix) {
         return {

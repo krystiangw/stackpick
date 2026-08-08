@@ -21,7 +21,14 @@ export type MachineFindings = {
   wellKnown: Record<string, boolean>
   openapi: string[]
   /** Which pages were asked, so a vendor can rerun the exact request behind the verdict. */
-  markdownNegotiation: { acceptHeader: boolean; dotMdSuffix: boolean; probed: string[] }
+  markdownNegotiation: {
+    acceptHeader: boolean
+    dotMdSuffix: boolean
+    probed: string[]
+    /** The page that actually answered. The front page usually is not it, and a verdict that
+     * cannot name a URL sends a vendor to test the one page that disproves us. */
+    answeredAt: string | null
+  }
   mcp: {
     /** Exact, over the files we read in full. A number off a truncated body is not a fact. */
     mentions: number
@@ -50,15 +57,17 @@ const MOST_NEGOTIATION_RETRIES = 2
  * has already fetched them: supabase.com/docs/guides/auth returns text/markdown, and
  * docs.strapi.io/cms/features/api-tokens.md is a real file.
  */
-async function negotiatesMarkdown(url: string): Promise<{ acceptHeader: boolean; dotMdSuffix: boolean }> {
+async function negotiatesMarkdown(
+  url: string,
+): Promise<{ acceptHeader: boolean; dotMdSuffix: boolean; answeredAt: string | null }> {
+  const suffixUrl = `${url.replace(/\/$/, '')}.md`
   const [viaAccept, viaSuffix] = await Promise.all([
     fetchUrl(url, { accept: 'text/markdown' }),
-    fetchUrl(`${url.replace(/\/$/, '')}.md`, { accept: 'text/markdown' }),
+    fetchUrl(suffixUrl, { accept: 'text/markdown' }),
   ])
-  return {
-    acceptHeader: (viaAccept.headers['content-type'] ?? '').includes('markdown'),
-    dotMdSuffix: isRealTextFile(viaSuffix, 200),
-  }
+  const acceptHeader = (viaAccept.headers['content-type'] ?? '').includes('markdown')
+  const dotMdSuffix = isRealTextFile(viaSuffix, 200)
+  return { acceptHeader, dotMdSuffix, answeredAt: acceptHeader ? url : dotMdSuffix ? suffixUrl : null }
 }
 
 export async function scanMachineContext(
@@ -144,6 +153,7 @@ export async function scanMachineContext(
     for (const [index, retry] of retries.entries()) {
       negotiation.acceptHeader ||= retry.acceptHeader
       negotiation.dotMdSuffix ||= retry.dotMdSuffix
+      negotiation.answeredAt ??= retry.answeredAt
       negotiation.probed.push(deeper[index])
     }
   }
