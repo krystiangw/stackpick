@@ -209,6 +209,21 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </section>
       )}
 
+      {findings.resolvedElsewhere && (
+        <section className="border-b border-rule py-8">
+          <div className="border-l-2 border-warn bg-surface p-6">
+            <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">This domain resolves elsewhere</h2>
+            <p className="mt-3 max-w-2xl leading-relaxed">
+              {findings.resolvedElsewhere.requestedDomain} redirects to{' '}
+              <span className="font-mono text-sm">{findings.resolvedElsewhere.finalUrl}</span>, so everything
+              below was measured on {findings.resolvedElsewhere.finalDomain}. That is worth knowing on its own:
+              an agent asking for {findings.resolvedElsewhere.requestedDomain} ends up reading a different
+              company&rsquo;s pages, and every sentence here names the host its number came from.
+            </p>
+          </div>
+        </section>
+      )}
+
       {findings.rateLimitedUs && (
         <section className="border-b border-rule py-8">
           <div className="border-l-2 border-warn bg-surface p-6">

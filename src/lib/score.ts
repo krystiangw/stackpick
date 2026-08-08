@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '4.4'
+export const FORMULA_VERSION = '4.5'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -110,9 +110,16 @@ export const CHECKS: Check[] = [
           inconclusive: true,
         }
       }
+      const chars = f.docsTextChars.toLocaleString('en-US')
+      const entry = f.discovered.docs
+      const from = f.docsTextCharsFrom
+      // The richest page we read is not always the one an agent lands on, and a pass earned on a
+      // deeper page while the entry point renders nothing is a different fact from a pass earned
+      // where the reader arrives. Name the page either way.
+      const where = from && from !== entry ? `, on ${from} rather than on ${entry}` : ''
       return f.docsTextChars >= 2000
-        ? yes(1, `${f.docsTextChars.toLocaleString('en-US')} characters of text without JS`)
-        : yes(0, `Only ${f.docsTextChars.toLocaleString('en-US')} characters render without JS`)
+        ? yes(1, `${chars} characters of text without JS${where}`)
+        : yes(0, `Only ${chars} characters render without JS${where}`)
     },
   },
   {
@@ -252,6 +259,14 @@ export const CHECKS: Check[] = [
           `/.well-known/mcp.json is published, but nothing answered at mcp.${f.domain} or /mcp. A card is a claim about a server, not a server.`,
         )
       }
+      if (f.machine.mcp.mentions === 0 && f.machine.mcp.mentionsTruncated) {
+        return {
+          points: 0,
+          detail: 'Unmeasurable: one of your machine-readable files was larger than we read, so silence about MCP in it proves nothing',
+          inconclusive: true,
+          unblock: 'Publish an MCP endpoint and we will find it whatever the file size, or split the file.',
+        }
+      }
       if (f.machine.mcp.mentions > 0) {
         return yes(0, `MCP mentioned ${f.machine.mcp.mentions}x in your own files, but nothing answers at mcp.${f.domain} or /mcp`)
       }
@@ -325,7 +340,7 @@ export const CHECKS: Check[] = [
       }
       if (!signup.reachable) {
         const seen = signup.consistent ? `${signup.status}` : `${signup.statusesSeen.join(', ')}`
-        return yes(0, `Signup answers ${seen}`)
+        return yes(0, `Signup answers ${seen} to a request identifying itself as an agent`)
       }
       return signup.rendersFormWithoutJs
         ? yes(1, 'Form renders in server HTML')

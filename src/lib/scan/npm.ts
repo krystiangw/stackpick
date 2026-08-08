@@ -5,6 +5,12 @@ export type NpmFindings = {
   found: boolean
   version?: string
   bundledTypes?: boolean
+  /**
+   * What the answer rests on. A manifest field is the vendor declaring types; a declaration file
+   * beside the entry point is TypeScript finding them anyway, which is what a developer's editor
+   * does and what our manifest-only reading called "ships without bundled types".
+   */
+  typesFrom?: 'manifest' | 'declaration-file'
   hasRepository?: boolean
   hasHomepage?: boolean
   weeklyDownloads?: number
@@ -20,6 +26,7 @@ type Manifest = {
   license?: string | { type?: string }
   types?: string
   typings?: string
+  main?: string
   exports?: unknown
   repository?: unknown
   homepage?: string
@@ -72,6 +79,68 @@ export async function fetchPackageFacts(packageName: string): Promise<PackageFac
   }
 }
 
+/** What the registry allows a package and a version to be called. Anything else we misread. */
+const PACKAGE_NAME = /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/i
+const VERSION = /^[a-z0-9][a-z0-9.+-]*$/i
+
+/** The file a `require` of the package resolves to, which is where TypeScript looks for its types. */
+function entryPoints(meta: Manifest): string[] {
+  const named: string[] = []
+  if (typeof meta.main === 'string') named.push(meta.main)
+  const root = (meta.exports as Record<string, unknown> | null | undefined)?.['.'] ?? meta.exports
+  if (typeof root === 'string') named.push(root)
+  else if (root && typeof root === 'object') {
+    for (const condition of ['types', 'import', 'require', 'default', 'node']) {
+      const value = (root as Record<string, unknown>)[condition]
+      if (typeof value === 'string') named.push(value)
+    }
+  }
+  // No entry at all means index.js, which is the case the manifest is silent about and the one
+  // @sendgrid/client is in: it ships index.d.ts and declares nothing.
+  return named.length > 0 ? named : ['index.js']
+}
+
+/** The declaration files TypeScript would accept for an entry point, in its own resolution order. */
+function declarationsFor(entry: string): string[] {
+  const path = entry.replace(/^\.?\//, '')
+  const withoutExtension = path.replace(/\.(?:m|c)?jsx?$/i, '')
+  const names = [`${withoutExtension}.d.ts`, `${withoutExtension}.d.mts`, `${withoutExtension}.d.cts`]
+  // A `main` pointing at a directory resolves through its index, and one pointing at a file does not.
+  if (withoutExtension === path) names.push(`${path.replace(/\/$/, '')}/index.d.ts`)
+  return names
+}
+
+/**
+ * Whether the published tarball carries types even though the manifest never says so. TypeScript
+ * resolves a declaration file sitting next to the entry point regardless of a `types` field, so
+ * reading the manifest alone told @sendgrid/client, meilisearch and plivo that they ship without
+ * types while every editor that installs them disagrees. One request, and only after the manifest
+ * has already said no.
+ */
+async function shipsDeclarationFile(packageName: string, version: string, meta: Manifest): Promise<boolean> {
+  // The scope separator is part of this path, so the name goes in as written - percent-encoding
+  // the @ asks jsdelivr for a package that does not exist - and is checked against the charset
+  // the registry allows first, because the name can have come off a page we scraped.
+  if (!PACKAGE_NAME.test(packageName) || !VERSION.test(version)) return false
+  const listing = await fetchUrl(
+    `https://data.jsdelivr.com/v1/packages/npm/${packageName}@${version}?structure=flat`,
+    { accept: 'application/json' },
+  )
+  if (!listing.ok) return false
+  let files: string[]
+  try {
+    files = ((JSON.parse(listing.body) as { files?: { name?: string }[] }).files ?? [])
+      .map((file) => file.name)
+      .filter((name): name is string => typeof name === 'string')
+  } catch {
+    return false
+  }
+  const published = new Set(files.map((name) => name.replace(/^\//, '')))
+  return entryPoints(meta)
+    .flatMap(declarationsFor)
+    .some((candidate) => published.has(candidate))
+}
+
 export async function checkNpm(packageName: string | null): Promise<NpmFindings> {
   if (!packageName) return { package: null, found: false }
   const encoded = encodeURIComponent(packageName)
@@ -87,16 +156,25 @@ export async function checkNpm(packageName: string | null): Promise<NpmFindings>
   const result: NpmFindings = { package: packageName, found: latest.ok }
   if (!latest.ok) return result
 
+  let manifest: Manifest
   try {
-    const meta = JSON.parse(latest.body) as Manifest
-    result.version = meta.version
-    // Modern packages declare types in the exports map, not at the top level.
-    result.bundledTypes = Boolean(meta.types ?? meta.typings) || JSON.stringify(meta.exports ?? {}).includes('"types"')
-    result.license = typeof meta.license === 'string' ? meta.license : meta.license?.type
-    result.hasRepository = Boolean(meta.repository)
-    result.hasHomepage = Boolean(meta.homepage)
+    manifest = JSON.parse(latest.body) as Manifest
   } catch {
     return result
+  }
+  result.version = manifest.version
+  // Modern packages declare types in the exports map, not at the top level.
+  const declared =
+    Boolean(manifest.types ?? manifest.typings) || JSON.stringify(manifest.exports ?? {}).includes('"types"')
+  result.bundledTypes = declared
+  if (declared) result.typesFrom = 'manifest'
+  result.license = typeof manifest.license === 'string' ? manifest.license : manifest.license?.type
+  result.hasRepository = Boolean(manifest.repository)
+  result.hasHomepage = Boolean(manifest.homepage)
+
+  if (!declared && manifest.version && (await shipsDeclarationFile(packageName, manifest.version, manifest))) {
+    result.bundledTypes = true
+    result.typesFrom = 'declaration-file'
   }
 
   if (downloads.ok) {

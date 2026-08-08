@@ -1,12 +1,24 @@
-import { fetchUrl, inParallel, isRealTextFile, looksLikeHtml, visibleTextLength, type Fetched } from './http'
+import { fetchUrl, inParallel, isRealTextFile, looksLikeHtml, registrableDomain, visibleTextLength, type Fetched } from './http'
 import { fetchPackageFacts } from './npm'
 
 export type NpmSource = 'site' | 'docs' | 'llms' | 'registry-search'
 export type LinkSource = 'site' | 'llms-txt' | 'fallback-path' | 'subdomain'
 
+/**
+ * Where the name we were asked about actually landed, when that is somebody else's registrable
+ * name. sendgrid.com serves www.twilio.com/en-us/sendgrid, and every page the scan then reads is
+ * Twilio's: the two rows in our own corpus shared ten of fourteen sentences, down to the
+ * character count of the documentation. Measuring the parent is still the most useful thing we
+ * can do - that is where the docs are - but it is a finding about the name we were given, and
+ * the scorecard has to say whose site the numbers came off.
+ */
+export type ResolvedElsewhere = { requestedDomain: string; finalUrl: string; finalDomain: string }
+
 export type Discovered = {
   site: string
   home: Fetched
+  /** Null when the home page stayed on the domain we were asked about, which is nearly always. */
+  resolvedElsewhere: ResolvedElsewhere | null
   docs: string | null
   pricing: string | null
   signup: string | null
@@ -217,7 +229,7 @@ const NOT_DOCUMENTATION_SEGMENT =
  * documentation segment are judged: docs.honeybadger.io/resources/mcp is documentation and
  * flagsmith.com/ebooks is not, and nothing but their position says which.
  */
-function isFiledAsDocumentation(url: string): boolean {
+export function isFiledAsDocumentation(url: string): boolean {
   const segments = pathSegments(url)
   const docsAt = segments.findIndex((segment) => DOCS_SEGMENT.test(segment))
   const before = docsAt === -1 ? segments : segments.slice(0, docsAt)
@@ -386,6 +398,15 @@ const vendorSiteOf = (domain: string, homeUrl: string): VendorSite => ({
 
 const onVendorSite = (url: string, vendor: VendorSite): boolean =>
   vendor.hosts.some((host) => sameSite(url, host))
+
+/** Where the home page landed, when that is a different company's registrable name. */
+function resolvedElsewhereFrom(domain: string, home: Fetched): ResolvedElsewhere | null {
+  const landed = hostOf(home.url)
+  if (home.status === 0 || !landed) return null
+  const finalDomain = registrableDomain(landed)
+  if (finalDomain === registrableDomain(domain)) return null
+  return { requestedDomain: domain, finalUrl: home.url, finalDomain }
+}
 
 /**
  * The hosts a vendor could have put documentation on that answer at all. Returning only the first
@@ -1271,6 +1292,7 @@ export async function discover(domain: string): Promise<Discovered> {
   return {
     site,
     home,
+    resolvedElsewhere: resolvedElsewhereFrom(domain, home),
     docs,
     docsPage,
     pricing,

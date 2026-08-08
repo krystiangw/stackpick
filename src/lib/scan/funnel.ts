@@ -1,4 +1,4 @@
-import { fetchUrl, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, visibleTextLength, type Fetched } from './http'
+import { AGENT_UA, fetchUrl, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, visibleTextLength, type Fetched } from './http'
 
 export const AGENT_ENTRY_PATHS = [
   '/agent-signup.md',
@@ -24,14 +24,22 @@ const CAPTCHA_SIGNATURES: Record<string, RegExp> = {
   arkose: /arkoselabs|funcaptcha/i,
 }
 
+/**
+ * The seven ways a vendor says an agent can make its own credentials. Each one covers the words
+ * for a credential rather than one spelling of it: LaunchDarkly documents creating an access
+ * token at /docs/api/access-tokens and never writes "api key" on the page, and a rule that only
+ * knew that spelling read their API reference as silence.
+ */
+const CREDENTIAL = String.raw`(?:api[- ]?key|api[- ]?token|access[- ]token|personal[- ]access[- ]token|service[- ]account|auth[- ]token|secret[- ]key)`
+
 const PROVISIONING_PATTERNS = [
   /management api/i,
   /provisioning api/i,
   /account api/i,
-  /create an? api[- ]key/i,
+  new RegExp(String.raw`creat(?:e|ing) (?:an?|your|a new|new|the)?\s*${CREDENTIAL}`, 'i'),
   /programmatically create/i,
   /service account/i,
-  /\/v\d+\/api[-_]keys/i,
+  new RegExp(String.raw`/v\d+/(?:api[-_]keys|access[-_]tokens)`, 'i'),
 ]
 
 /** Only signals that actually mean "an agent can finish without a human or a card". */
@@ -179,7 +187,10 @@ async function inspectSignup(url: string | null): Promise<SignupFindings> {
       behindCloudflare: false,
     }
   }
-  const got = await fetchWithRetries(url)
+  // As the agent, because that is what the finding says. Sending Chrome and then publishing
+  // "the signup answers N to a non-browser request" was a claim about a request we never made,
+  // and it cost liveblocks.io a point on a page that answers 200 with a real form to StackPick/1.0.
+  const got = await fetchWithRetries(url, { ua: AGENT_UA })
   const body = got.body.toLowerCase()
   return {
     url,

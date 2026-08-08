@@ -78,7 +78,10 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
       // Stating the number without stating that it is too little read as a compliment: the same
       // 1,778 characters headlined resend.com's scorecard while the check below it scored zero.
       claim: `Only ${findings.docsTextChars.toLocaleString('en-US')} characters of your documentation survive without JavaScript, and that is the version an agent reads.`,
-      evidence: `${discovered.docs} served ${findings.docsTextChars.toLocaleString('en-US')} characters of text to a plain fetch. The check passes at 2,000, which is about one screen of prose.`,
+      // The page the number came off, which is the richest documentation page this scan read and
+      // not always the one we call the entry point. Naming the entry point instead attributed a
+      // measurement to a page that never produced it.
+      evidence: `${findings.docsTextCharsFrom ?? discovered.docs} served ${findings.docsTextChars.toLocaleString('en-US')} characters of text to a plain fetch. The check passes at 2,000, which is about one screen of prose.`,
       severity: 'serious',
     }
   }

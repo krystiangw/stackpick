@@ -20,11 +20,52 @@ export type MachineFindings = {
   hasLlmsFullTxt: boolean
   wellKnown: Record<string, boolean>
   openapi: string[]
-  markdownNegotiation: { acceptHeader: boolean; dotMdSuffix: boolean }
-  mcp: { mentions: number; documentedUrls: string[]; exposesOwnServer: boolean }
+  /** Which pages were asked, so a vendor can rerun the exact request behind the verdict. */
+  markdownNegotiation: { acceptHeader: boolean; dotMdSuffix: boolean; probed: string[] }
+  mcp: {
+    /** Exact, over the files we read in full. A number off a truncated body is not a fact. */
+    mentions: number
+    /** True when a file was cut off at the read cap, so `mentions` is a floor and not a count. */
+    mentionsTruncated: boolean
+    documentedUrls: string[]
+    exposesOwnServer: boolean
+  }
 }
 
-export async function scanMachineContext(site: string, docs: string | null): Promise<MachineFindings> {
+/**
+ * The findings, and the text they were read out of. The corpus is deliberately not part of the
+ * findings - it runs to hundreds of kilobytes and everything downstream stores them - but the
+ * provisioning grep has to see it: trigger.dev documents its Management API in the llms.txt this
+ * scan had already read, and scored zero for not documenting it.
+ */
+export type MachineScan = { findings: MachineFindings; llmsCorpus: string; llmsUrls: string[] }
+
+/** Enough to tell a shell from a site, and few enough that a negotiating site pays nothing. */
+const MOST_NEGOTIATION_RETRIES = 2
+
+/**
+ * The two ways a page can hand a machine markdown. Asked of the documentation front page, which is
+ * the page least likely to answer: it is a navigation shell, and on a docs host its ".md" twin is
+ * not even a URL - docs.strapi.io/.md is nothing. The pages under it do answer, and the same scan
+ * has already fetched them: supabase.com/docs/guides/auth returns text/markdown, and
+ * docs.strapi.io/cms/features/api-tokens.md is a real file.
+ */
+async function negotiatesMarkdown(url: string): Promise<{ acceptHeader: boolean; dotMdSuffix: boolean }> {
+  const [viaAccept, viaSuffix] = await Promise.all([
+    fetchUrl(url, { accept: 'text/markdown' }),
+    fetchUrl(`${url.replace(/\/$/, '')}.md`, { accept: 'text/markdown' }),
+  ])
+  return {
+    acceptHeader: (viaAccept.headers['content-type'] ?? '').includes('markdown'),
+    dotMdSuffix: isRealTextFile(viaSuffix, 200),
+  }
+}
+
+export async function scanMachineContext(
+  site: string,
+  docs: string | null,
+  deeperDocsPages: Promise<string[]> = Promise.resolve([]),
+): Promise<MachineScan> {
   const locations: Record<string, string> = {
     root_llms_txt: `${site}/llms.txt`,
     root_llms_full_txt: `${site}/llms-full.txt`,
@@ -49,7 +90,7 @@ export async function scanMachineContext(site: string, docs: string | null): Pro
 
   // Four independent probe sets. Run one after another they cost four waves, each ending at
   // its own slowest request; the per-host cap in fetchUrl keeps the load the same either way.
-  const [llmsEntries, wellKnownEntries, openapiHits, viaAccept, viaSuffix] = await Promise.all([
+  const [llmsEntries, wellKnownEntries, openapiHits, frontPage] = await Promise.all([
     inParallel(Object.entries(locations), async ([label, url]) => {
       const got = await fetchUrl(url, { accept: 'text/plain' })
       const present = isRealTextFile(got)
@@ -59,7 +100,7 @@ export async function scanMachineContext(site: string, docs: string | null): Pro
         links: present ? (got.body.match(/\]\(http/g) ?? []).length : 0,
         truncated: present && got.truncated,
       }
-      return [label, file, present ? got.body : ''] as const
+      return [label, file, present ? got.body : '', url] as const
     }),
     inParallel(Object.entries(WELL_KNOWN_PATHS), async ([label, path]) => {
       const got = await fetchUrl(`${site}${path}`, { accept: 'application/json, text/plain' })
@@ -71,34 +112,61 @@ export async function scanMachineContext(site: string, docs: string | null): Pro
       const isSpec = isRealTextFile(got, 20) && (head.includes('openapi') || head.includes('swagger'))
       return isSpec ? path : null
     }),
-    fetchUrl(docsUrl, { accept: 'text/markdown' }),
-    fetchUrl(`${docsUrl.replace(/\/$/, '')}.md`, { accept: 'text/markdown' }),
+    negotiatesMarkdown(docsUrl),
   ])
 
   const llms: Record<string, LlmsFile> = {}
   let corpus = ''
-  for (const [label, file, body] of llmsEntries) {
+  /** The count of a word is only a fact about a file we hold all of. */
+  let countable = ''
+  let anyTruncated = false
+  const llmsUrls: string[] = []
+  // The same file answers at more than one of these locations - chargebee.com serves its llms.txt
+  // on the apex and on www - and counting one document twice would be counting evidence twice.
+  const seenBodies = new Set<string>()
+  for (const [label, file, body, url] of llmsEntries) {
     llms[label] = file
+    if (!file.present || seenBodies.has(body)) continue
+    seenBodies.add(body)
+    llmsUrls.push(url)
     corpus += body
+    if (file.truncated) anyTruncated = true
+    else countable += body
   }
 
   const mcpUrls = [...corpus.matchAll(/https?:\/\/[^\s)"']*mcp[^\s)"']*/gi)].map((m) => m[0])
   const uniqueMcpUrls = [...new Set(mcpUrls)].slice(0, 5)
 
+  const negotiation = { ...frontPage, probed: [docsUrl] }
+  if (!negotiation.acceptHeader && !negotiation.dotMdSuffix) {
+    const deeper = (await deeperDocsPages).slice(0, MOST_NEGOTIATION_RETRIES)
+    const retries = await inParallel(deeper, (url) => negotiatesMarkdown(url))
+    for (const [index, retry] of retries.entries()) {
+      negotiation.acceptHeader ||= retry.acceptHeader
+      negotiation.dotMdSuffix ||= retry.dotMdSuffix
+      negotiation.probed.push(deeper[index])
+    }
+  }
+
   return {
-    llms,
-    hasLlmsTxt: Object.values(llms).some((f) => f.present),
-    hasLlmsFullTxt: Object.entries(llms).some(([label, f]) => label.includes('full') && f.present),
-    wellKnown: Object.fromEntries(wellKnownEntries),
-    openapi: openapiHits.filter((path): path is string => path !== null),
-    markdownNegotiation: {
-      acceptHeader: (viaAccept.headers['content-type'] ?? '').includes('markdown'),
-      dotMdSuffix: isRealTextFile(viaSuffix, 200),
+    findings: {
+      llms,
+      hasLlmsTxt: Object.values(llms).some((f) => f.present),
+      hasLlmsFullTxt: Object.entries(llms).some(([label, f]) => label.includes('full') && f.present),
+      wellKnown: Object.fromEntries(wellKnownEntries),
+      openapi: openapiHits.filter((path): path is string => path !== null),
+      markdownNegotiation: negotiation,
+      mcp: {
+        // ckeditor.com's llms-full.txt is 7.08 MB and we read the first 400 kB of it, counted 108
+        // mentions in what we held and published that as the number in their files. It is 540.
+        // A URL we found in the part we read is still a thing we found; a count is not.
+        mentions: (countable.match(/\bmcp\b/gi) ?? []).length,
+        mentionsTruncated: anyTruncated,
+        documentedUrls: uniqueMcpUrls,
+        exposesOwnServer: uniqueMcpUrls.some((url) => /\/(docs|tools)\/.*mcp|mcp-server/i.test(url)),
+      },
     },
-    mcp: {
-      mentions: (corpus.match(/\bmcp\b/gi) ?? []).length,
-      documentedUrls: uniqueMcpUrls,
-      exposesOwnServer: uniqueMcpUrls.some((url) => /\/(docs|tools)\/.*mcp|mcp-server/i.test(url)),
-    },
+    llmsCorpus: corpus,
+    llmsUrls,
   }
 }

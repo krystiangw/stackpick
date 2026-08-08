@@ -1,10 +1,18 @@
-import { discover, normalizeDomain, searchNpmForDomain, type Discovered } from './discover'
+import {
+  discover,
+  isFiledAsDocumentation,
+  normalizeDomain,
+  searchNpmForDomain,
+  type Discovered,
+  type ResolvedElsewhere,
+} from './discover'
 import {
   AGENT_UA,
   fetchUrl,
   fetchWithRetries,
   inParallel,
   inPhase,
+  looksLikeHtml,
   ranOutOfTime,
   SCAN_BUDGET_MS,
   visibleTextLength,
@@ -52,6 +60,11 @@ export type ScanFindings = {
   readAnything: boolean
   /** 429 is us asking too often, not the site refusing agents. Never a finding about them. */
   rateLimitedUs: boolean
+  /**
+   * Set when the domain we were asked about serves another company's site, so every measurement
+   * below is off that other site and says so. Null on nearly every scan.
+   */
+  resolvedElsewhere: ResolvedElsewhere | null
   durationMs: number
   discovered: {
     docs: string | null
@@ -65,8 +78,16 @@ export type ScanFindings = {
     linkSources: { docs: string | null; pricing: string | null; signup: string | null }
   }
   homeTextChars: number
+  /**
+   * The most text any documentation page in this scan rendered to a plain fetch. Measured over
+   * every page we read, not over the entry point alone: the entry point is a navigation shell on
+   * exactly the sites this check is meant to catch, and answering "can an agent read your docs"
+   * with the thinnest page we hold is a verdict against evidence already in hand.
+   */
   docsTextChars: number
-  /** How many documentation pages the provisioning grep actually had to read. */
+  /** Which page that number came off, so the claim names a page a vendor can fetch themselves. */
+  docsTextCharsFrom: string | null
+  /** How many documents the provisioning grep actually had to read. */
   docsPagesRead: number
   /** Which ones. A verdict about documentation is only reproducible if we name what we read. */
   docsPagesReadUrls: string[]
@@ -149,10 +170,14 @@ async function sitemapCandidates(domain: string, docsUrl: string, seen: Set<stri
       if (child.ok) pages.push(...[...child.body.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((match) => match[1]))
     }
 
-    // Bounded and keyed before sorting: a hostile sitemap can carry twenty thousand entries, and
-    // comparing them built three URL objects per comparison on the thread serving every request.
+    // Filtered on the raw string before anything is parsed, because truncating first threw away
+    // the answer: algolia.com's API-key pages sit from entry 816 and launchdarkly.com's whole
+    // /docs/api/access-tokens section from 853, and both were cut before ranking ever ran. The
+    // hint is a substring test on the URL, so the full sitemap costs no URL object per entry, and
+    // what survives it is small enough to sort. Kept as a cap of its own against a hostile file.
     const ranked = pages
-      .slice(0, 500)
+      .filter((page) => CREDENTIAL_PAGE_HINTS.test(page))
+      .slice(0, 2_000)
       .map((page) => {
         try {
           return { page, path: new URL(page).pathname }
@@ -177,6 +202,7 @@ async function sitemapCandidates(domain: string, docsUrl: string, seen: Set<stri
       const sameSite = url.hostname === domain || url.hostname.endsWith(`.${domain}`)
       if (!sameSite || seen.has(clean)) continue
       if (!CREDENTIAL_PAGE_HINTS.test(url.pathname)) continue
+      if (!isDocumentationPage(clean, docsUrl)) continue
       seen.add(clean)
       found.push(clean)
     }
@@ -189,7 +215,7 @@ async function sitemapCandidates(domain: string, docsUrl: string, seen: Set<stri
 async function readDeeper(domain: string, docsUrl: string, html: string): Promise<Fetched[]> {
   const base = new URL(docsUrl)
   const seen = new Set<string>([docsUrl])
-  const candidates: string[] = []
+  const fromLinks: string[] = []
 
   for (const match of html.matchAll(/<a\b[^>]*href=["']([^"']+)["']/gi)) {
     let absolute: URL
@@ -201,18 +227,63 @@ async function readDeeper(domain: string, docsUrl: string, html: string): Promis
     const url = absolute.toString().split('#')[0]
     if (absolute.hostname !== base.hostname || seen.has(url)) continue
     if (!CREDENTIAL_PAGE_HINTS.test(absolute.pathname)) continue
+    if (!isDocumentationPage(url, docsUrl)) continue
     seen.add(url)
-    candidates.push(url)
+    fromLinks.push(url)
   }
-  candidates.sort(byHint)
-  candidates.splice(3)
 
-  if (candidates.length < 3) {
-    candidates.push(...(await sitemapCandidates(domain, docsUrl, seen, 3 - candidates.length)))
-  }
+  // Both sources are ranked together rather than one being tried only when the other comes up
+  // short. Being in the served HTML said nothing about being the better page: elastic.co links
+  // /docs/cloud-account and /docs/reference from its docs front page, and the pages that answer
+  // the question are in its sitemap, which we never opened because three links were enough.
+  const fromSitemap = await sitemapCandidates(domain, docsUrl, seen, 3)
+  const candidates = [...fromLinks, ...fromSitemap].sort(byHint).slice(0, 3)
 
   const pages = await inParallel(candidates, (url) => fetchUrl(url))
   return pages.filter((page) => page.ok)
+}
+
+/**
+ * Whether a page belongs to the documentation, as opposed to somewhere else on the same site
+ * whose URL happens to carry a credential word. A sitemap read whole is full of them:
+ * ckeditor.com/solutions/content-management and a liveblocks.io blog post about rolling API keys
+ * both outrank real documentation on the hint alone, and the verdict then calls them "the
+ * documentation pages we read".
+ */
+function isDocumentationPage(pageUrl: string, docsUrl: string): boolean {
+  let page: URL
+  let docs: URL
+  try {
+    page = new URL(pageUrl)
+    docs = new URL(docsUrl)
+  } catch {
+    return false
+  }
+  // Off the host the documentation is on, where the vendor files the page is all we have.
+  if (page.origin !== docs.origin) return isFiledAsDocumentation(pageUrl)
+  const section = docs.pathname.split('/').filter(Boolean)[0]
+  return !section || page.pathname.split('/').filter(Boolean)[0] === section
+}
+
+/**
+ * How much of the documentation renders without JavaScript, measured over every documentation
+ * page this scan read rather than over the one page the ranker chose to call the entry point.
+ * Those two questions have different answers on the sites where it matters: chargebee.com's docs
+ * front page is a navigation shell rendering 14 characters, and the same scan had already read
+ * 8,856 characters off /docs/billing/2.0/site-configuration/api_keys. Publishing the shell as the
+ * measurement of the whole site was a claim we held the evidence against.
+ */
+function docsWithoutJs(docsUrl: string | null, pages: Fetched[]): { chars: number; from: string | null } {
+  let best: { chars: number; from: string | null } = { chars: 0, from: null }
+  if (!docsUrl) return best
+  for (const page of pages) {
+    // HTML only: a markdown file renders all of itself without JavaScript by construction, and
+    // reading one would answer a different question than the one this check asks.
+    if (!page.ok || !looksLikeHtml(page) || !isDocumentationPage(page.url, docsUrl)) continue
+    const chars = visibleTextLength(page.body)
+    if (chars > best.chars) best = { chars, from: page.url }
+  }
+  return best
 }
 
 export type ScanProgress = (step: { label: string; done: number; total: number }) => void
@@ -319,16 +390,25 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     docsPage?.ok && found.docs ? readDeeper(domain, found.docs, docsPage.body) : [],
   )
   const robotsPending = phase('robots', () => scanRobots(found.site))
-  const machinePending = phase('machine', () => scanMachineContext(found.site, found.docs))
+  const machinePending = phase('machine', () =>
+    scanMachineContext(
+      found.site,
+      found.docs,
+      docsPending.then((deeper) => deeper.map((page) => page.url)),
+    ),
+  )
   const npmPending = phase('npm', () => resolvePackage(domain, found))
   const funnelPending = phase('funnel', () =>
     scanFunnel({
       domain,
       site: found.site,
-      // The funnel greps documentation prose, so the corpus is every docs page we read plus
-      // home. It is handed over unresolved: the grep is the last thing it does.
-      corpus: docsPending.then((deeper) =>
-        [docsText, ...deeper.map((page) => page.body), found.home.body].join('\n'),
+      // The funnel greps documentation prose, so the corpus is every document this scan read:
+      // the docs pages, the home page, and the files the vendor publishes for machines. Leaving
+      // llms.txt out of it meant trigger.dev scored zero for not documenting the Management API
+      // named in the llms.txt we had open. It is handed over unresolved: the grep is the last
+      // thing the funnel does, so nothing here waits on it.
+      corpus: Promise.all([docsPending, machinePending]).then(([deeper, machine]) =>
+        [docsText, ...deeper.map((page) => page.body), found.home.body, machine.llmsCorpus].join('\n'),
       ),
       pricingUrl: found.pricing,
       signupUrl: found.signup,
@@ -364,6 +444,13 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     asAgent.statusesSeen.length > 0 && asAgent.statusesSeen.every((status) => status === 429)
   report('Scoring', STEPS)
 
+  const readable = docsWithoutJs(found.docs, [...(docsPage ? [docsPage] : []), ...deeperDocs])
+  const documentsRead = [
+    ...(docsPage?.ok && found.docs ? [found.docs] : []),
+    ...deeperDocs.map((page) => page.url),
+    ...machine.llmsUrls,
+  ]
+
   return {
     domain,
     site: found.site,
@@ -379,11 +466,12 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     blocksPlainRequests: !asAgent.ok,
     readAnything:
       docsText.length > 0 ||
-      machine.hasLlmsTxt ||
+      machine.findings.hasLlmsTxt ||
       robots.present ||
       Boolean(found.pricingPage?.ok) ||
       Boolean(funnel.signup.url),
     rateLimitedUs,
+    resolvedElsewhere: found.resolvedElsewhere,
     durationMs: Date.now() - startedAt,
     discovered: {
       docs: found.docs,
@@ -397,11 +485,14 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
       linkSources: found.linkSources,
     },
     homeTextChars: visibleTextLength(found.home.body),
-    docsTextChars: visibleTextLength(docsText),
-    docsPagesRead: (docsPage?.ok ? 1 : 0) + deeperDocs.length,
-    docsPagesReadUrls: [...(docsPage?.ok && found.docs ? [found.docs] : []), ...deeperDocs.map((page) => page.url)],
+    docsTextChars: readable.chars,
+    docsTextCharsFrom: readable.from,
+    // The corpus and the count of what it was read from have to be the same thing, or the
+    // sentence describes a body of evidence the verdict was not taken from.
+    docsPagesRead: documentsRead.length,
+    docsPagesReadUrls: documentsRead,
     robots,
-    machine,
+    machine: machine.findings,
     funnel,
     npm,
     truncation: truncationOf(incomplete, SCAN_BUDGET_MS, Date.now() - startedAt),

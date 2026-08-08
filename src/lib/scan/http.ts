@@ -56,8 +56,11 @@ const MAX_PER_SITE = 6
  * docs.x, api.x and the apex are one site behind one edge, and the cap has to mean something
  * to whoever is paying for that edge. Same rule the scan rate limit uses on registrable names,
  * kept here rather than imported so that the fetch layer does not depend on the store.
+ *
+ * Exported because the same question decides something else entirely: whether the page we
+ * ended up reading still belongs to the company we were asked about.
  */
-function siteKey(hostname: string): string {
+export function registrableDomain(hostname: string): string {
   const labels = hostname.split('.')
   if (labels.length <= 2) return hostname
   const suffix = labels.slice(-2).join('.')
@@ -159,7 +162,7 @@ function countIfLost(state: ScanState, fetched: Fetched): Fetched {
 }
 
 async function takeSiteSlot(state: ScanState, hostname: string): Promise<() => void> {
-  const key = siteKey(hostname)
+  const key = registrableDomain(hostname)
   const slots = state.slots.get(key) ?? { active: 0, waiting: [] }
   state.slots.set(key, slots)
   // A freed slot is handed to the next waiter without passing through the count. Releasing it
