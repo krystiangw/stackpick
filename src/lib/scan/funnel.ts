@@ -105,7 +105,13 @@ export type SignupFindings = {
 export type McpEndpoint = { url: string; status: number; evidence: 'challenges' | 'rejects-get' | 'answers-json' }
 
 /** Whether unknown paths answer with a real document, asked once per file type we probe. */
-export type CatchAll = { markdown: boolean; json: boolean; text: boolean }
+export type CatchAll = {
+  markdown: boolean
+  json: boolean
+  text: boolean
+  /** What an unregistered path in each namespace answered with, in bytes. */
+  bodyLengths?: { markdown: number; json: number; text: number }
+}
 
 export type FunnelFindings = {
   entryPaths: Record<string, boolean>
@@ -311,6 +317,11 @@ async function servesCatchAllText(site: string): Promise<CatchAll> {
     markdown: isRealTextFile(markdown, 30),
     json: isRealTextFile(json, 30),
     text: isRealTextFile(plain, 30),
+    // Kept for a direct comparison, because the boolean above is not enough on its own:
+    // sentry.io answers every .md path with the same 20,402 byte HTML page, which our control
+    // correctly discards as HTML and which then discredits nothing. A file that comes back the
+    // same size as a path nobody registered is that page, whatever its content type says.
+    bodyLengths: { markdown: markdown.body.length, json: json.body.length, text: plain.body.length },
   }
 }
 
@@ -465,7 +476,13 @@ export async function scanFunnel({
     const namespace = path.endsWith('.json') ? catchAll.json : path.endsWith('.txt') ? catchAll.text : catchAll.markdown
     if (namespace) return [path, false, false] as const
     const got = await fetchUrl(`${site}${path}`, { accept: 'text/markdown, application/json, text/plain' })
-    const present = isRealTextFile(got, 30)
+    const controlLength = path.endsWith('.json')
+      ? catchAll.bodyLengths?.json
+      : path.endsWith('.txt')
+        ? catchAll.bodyLengths?.text
+        : catchAll.bodyLengths?.markdown
+    const sameAsNonsense = controlLength !== undefined && controlLength > 0 && got.body.length === controlLength
+    const present = !sameAsNonsense && isRealTextFile(got, 30)
     return [path, present, present && describesAProcedure(got.body)] as const
   })
 
