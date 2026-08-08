@@ -1093,3 +1093,26 @@ z 12 na 10, bo jest wreszcie oceniany po `auth0.com/docs`, a nie po portalu dewe
 Dwukrotnie moje `git add -A` wciągnęło do commita pliki, nad którymi pracował subagent. Nic nie
 przepadło, ale historia jest myląca. **Gdy subagent pracuje na plikach, commituję po ścieżkach,
 nie `-A`.**
+
+## Runda 2026-08-08 (dwudziesta ósma): trzy stany skanu widoczne na karcie, i sprzeczność, którą sam zrobiłem
+
+Skan może się teraz skończyć na trzy sposoby i **dwa z nich były niewidoczne dla czytelnika karty**,
+choć siedziały w zdaniach przy pojedynczych checkach. Liczba na górze jest tym, co ludzie cytują,
+więc ucięty skan wyglądał jak kompletny.
+
+Doszły dwa bannery obok istniejącego „Blocked at the door":
+- **„This scan ran out of time"** z liczbą checków, które nie dostały dowodu, i zdaniem, że wynik
+  nie jest gorszy, tylko mniejszy.
+- **„We were rate limited"**, jedyny banner, który **broni vendora zamiast go oskarżać**: 429 to
+  albo limit, który wywołaliśmy, albo bramka na sieć, z której skanujemy, i z zewnątrz nie
+  rozróżnimy tych dwóch.
+
+**I natychmiast zrobiłem sprzeczność, którą tępię od rundy 9.** Na karcie `defer.run` renderowały
+się **oba** bannery naraz: jeden mówił, że 429 nie jest pomiarem tego, jak traktujesz agenty,
+a drugi zaraz pod nim, że drzwi są zamknięte dla agentów, o tym samym 429. Jedna strona nie może
+trzymać obu. „Blocked at the door" nie pokazuje się już przy rate limicie. Wyłapane przez
+sprawdzenie na produkcji, nie przez build.
+
+**W toku:** subagent weryfikuje, czy cztery naprawione przyczyny są naprawdę zamknięte, co te
+naprawy popsuły (32 domeny zmieniły wynik, 17 w dół) i czy istnieje piąta przyczyna, której nikt
+jeszcze nie nazwał.
