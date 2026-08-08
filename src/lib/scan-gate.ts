@@ -1,5 +1,5 @@
 import { checkRateLimit, clientKey, recordUse } from './rate-limit'
-import { CURATED_DOMAINS } from './categories'
+import { publishedCorpus } from './published'
 import { normalizeDomain } from './scan/discover'
 import { getStore, type Report } from './store'
 
@@ -41,7 +41,7 @@ export type Gate =
 /** The best scorecard we hold, so a refusal can still show what good looks like. */
 export async function bestExample(): Promise<ExampleReport | null> {
   // From the curated corpus only, and out of the same denominator as everywhere else.
-  const reports = (await getStore().latestPerDomain(200)).filter((report) => CURATED_DOMAINS.has(report.domain))
+  const reports = (await publishedCorpus()).reports
   const best = reports.reduce<Report | null>((held, report) => {
     if (!held) return report
     const share = (candidate: Report) =>

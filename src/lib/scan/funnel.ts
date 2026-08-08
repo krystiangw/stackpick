@@ -56,6 +56,21 @@ const SELF_SERVE_PATTERNS = [
 
 export const PROVISIONING_PATTERN_COUNT = PROVISIONING_PATTERNS.length
 
+/**
+ * The same seven rules in the words a vendor can search their own documentation for. Published
+ * on the methodology page: a verdict that says "1 of 7 phrases" and never says which seven is
+ * not a published rule, and it is the heaviest check on the card.
+ */
+export const PROVISIONING_PATTERN_LABELS = [
+  'management api',
+  'provisioning api',
+  'account api',
+  'create an api key, api token, access token, personal access token, service account, auth token or secret key',
+  'programmatically create',
+  'service account',
+  'a documented path like /v1/api_keys or /v2/access-tokens',
+]
+
 export type SignupFindings = {
   url: string | null
   status: number
@@ -271,18 +286,28 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpo
     `https://api.${domain}/mcp`,
     `${site}/mcp`,
   ].filter((url, index, all) => all.indexOf(url) === index)
-  const [results, control] = await Promise.all([
+  const handshake = {
+    accept: 'application/json, text/event-stream',
+    method: 'POST' as const,
+    body: '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"StackPick","version":"1.0"}}}',
+  }
+  // Nearly every site answers 405 to a POST at a path it does not route, so "405 at /mcp" was
+  // evidence of nothing and we published it as a live server on 18 domains. The control is the
+  // same request at a path nobody registered, on the same origin, so the only thing that counts
+  // is /mcp answering differently from the rest of the site.
+  const controlPath = '/mcp-stackpick-control-8f3a1c'
+  const origins = [...new Set(candidates.map((url) => new URL(url).origin))]
+  const [results, wildcard, controls] = await Promise.all([
     inParallel(candidates, (url) =>
       // An MCP server speaks JSON-RPC over POST; a GET tells us far less and is what made us
       // read a live server as absent when its GET handler differed from its POST handler.
-      fetchUrl(url, {
-        accept: 'application/json, text/event-stream',
-        method: 'POST',
-        body: '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"StackPick","version":"1.0"}}}',
-      }),
+      fetchUrl(url, handshake),
     ),
     fetchUrl(`https://mcp-stackpick-control-8f3a1c.${domain}`, { accept: 'application/json' }),
+    inParallel(origins, (origin) => fetchUrl(`${origin}${controlPath}`, handshake)),
   ])
+  const control = wildcard
+  const nonsenseStatus = new Map(origins.map((origin, index) => [origin, controls[index].status]))
   // A wildcard host behind an auth proxy answers 401 to anything, including a name nobody
   // registered. Then every domain would "run an MCP server".
   const answersAnything = control.status === 401 || control.status === 405 || control.ok
@@ -301,6 +326,11 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpo
       // its own card is not a guess, and sentry.io's card points at another domain entirely.
       if (answersAnything && !fromCard.includes(candidates[index])) return null
       const authenticating = got.status === 401 && Boolean(got.headers['www-authenticate'])
+      // An unrouted path answering the same way means the answer was about the site, not about
+      // MCP. Exempting the auth challenge is deliberate: a host that gates every path behind
+      // OAuth is what an MCP server looks like, and mcp.sentry.dev is exactly that, while its
+      // WWW-Authenticate header is something a marketing site's 405 never carries.
+      if (!authenticating && got.status === nonsenseStatus.get(new URL(candidates[index]).origin)) return null
       const wrongMethod = got.status === 405
       const speaksJson = got.ok && (got.headers['content-type'] ?? '').includes('json')
       if (!authenticating && !wrongMethod && !speaksJson) return null

@@ -50,8 +50,12 @@ export default function DocsPage() {
           <code className="font-mono text-xs">points</code>, <code className="font-mono text-xs">max</code>{' '}
           and a human-readable <code className="font-mono text-xs">detail</code>. A check may also carry{' '}
           <code className="font-mono text-xs">inconclusive: true</code>, which means it scored zero because we
-          could not measure it rather than because the thing is absent. Treat those differently: they are our
-          blind spot, not a defect in the site.
+          could not measure it rather than because the thing is absent, or{' '}
+          <code className="font-mono text-xs">notApplicable: true</code>, which means the check does not apply to
+          a product of this kind. Treat those differently: they are our blind spot, not a defect in the site.
+          Both are excluded from <code className="font-mono text-xs">measurable</code>, which is the denominator
+          to divide by. Dividing by <code className="font-mono text-xs">max</code> reports a domain we could not
+          fully read as worse than one we could, which is the one mistake this format exists to prevent.
         </p>
         <div className="mt-5">
           <Code>{`{
@@ -60,13 +64,17 @@ export default function DocsPage() {
   "scorecard": {
     "formulaVersion": "${FORMULA_VERSION}",
     "total": 9,
+    "measurable": 14,
     "max": ${MAX_SCORE},
-    "stages": [{ "letter": "A", "title": "Discovery", "points": 4, "max": 5 }],
+    "stages": [{ "letter": "A", "title": "Discovery", "points": 4, "measurable": 4, "max": 5 }],
     "checks": [
-      { "id": "llms_txt", "points": 1, "max": 1, "detail": "llms.txt present" },
-      { "id": "signup_reachable", "points": 0, "max": 1,
+      { "id": "llms_txt", "stage": "discovery", "label": "llms.txt published",
+        "points": 1, "max": 1, "detail": "llms.txt present" },
+      { "id": "signup_reachable", "stage": "signup", "label": "Signup page reachable",
+        "points": 0, "max": 1,
         "detail": "No signup page linked from the site we could follow",
-        "inconclusive": true }
+        "inconclusive": true,
+        "unblock": "Link your signup page from your home page and this becomes measurable." }
     ]
   }
 }`}</Code>

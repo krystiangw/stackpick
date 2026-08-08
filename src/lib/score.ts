@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '4.6'
+export const FORMULA_VERSION = '4.7'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -57,6 +57,18 @@ export const CHECKS: Check[] = [
         }
       }
       if (f.blocksPlainRequests) {
+        const browserGotThrough = f.browserStatus >= 200 && f.browserStatus < 400
+        // The check asks whether an agent user-agent is treated worse than a browser. An edge
+        // that refuses both is refusing the network we scan from, which our own scorecard prose
+        // already said out loud while the score charged the vendor a point for it anyway.
+        if (!browserGotThrough) {
+          return {
+            points: 0,
+            detail: `Unmeasurable: answered ${f.agentStatus} to ${AGENT_UA}${tries} and ${f.browserStatus} to a Chrome user-agent, so the refusal is about where we ask from, not about agents`,
+            inconclusive: true,
+            unblock: 'Nothing for you to do here. Whether agents are treated differently becomes measurable from a network your edge admits.',
+          }
+        }
         return yes(
           0,
           `Answered ${f.agentStatus} to ${AGENT_UA}${tries}, and ${f.browserStatus} to a Chrome user-agent`,
@@ -69,7 +81,7 @@ export const CHECKS: Check[] = [
     id: 'llms_txt',
     stage: 'discovery',
     label: 'llms.txt published',
-    why: 'A curated map of your docs is the cheapest way to control what an agent reads first. Worth one point and not more: in eighteen isolated agent runs across four categories, not one cited llms.txt among its sources, and an independent measurement over ninety days found it served 84 requests against 62,100 AI-bot visits.',
+    why: 'A curated map of your docs is the cheapest way to control what an agent reads first. Worth one point and not more: in eighteen isolated agent runs across four categories, not one cited llms.txt among its sources, and an independent ninety-day measurement published by Otterly in February 2026 found it served 84 requests against 62,100 AI-bot visits.',
     max: 1,
     evaluate: (f) => {
       if (f.machine.hasLlmsTxt) {
@@ -249,7 +261,7 @@ export const CHECKS: Check[] = [
           first.evidence === 'challenges'
             ? `answered ${first.status} with an auth challenge`
             : first.evidence === 'rejects-get'
-              ? `answered ${first.status} to GET, as an MCP endpoint does`
+              ? `answered ${first.status} to a JSON-RPC initialize, and answers an unrouted path differently`
               : 'answers JSON'
         return yes(1, `Live MCP endpoint at ${first.url}, ${how}`)
       }
@@ -356,12 +368,28 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       const found = f.funnel.provisioning.programmatic.length
       const pages = f.docsPagesRead ?? 0
+      const unread = f.docsPagesUnread ?? 0
       // One page was enough to award two points and too little to conclude anything when the
       // count was zero. That asymmetry inflated every vendor whose first docs page mentioned keys.
       if (found > 0 && pages >= 2) {
+        // One phrase is a floor rather than a score while pages we picked went unread, because
+        // the phrase that would have earned the second point can be on the page we never got.
+        // postmark.com alternated between one point and two across scans of documentation that
+        // had not changed, and the difference was which of its pages its edge happened to refuse.
+        if (found === 1 && unread > 0) {
+          return {
+            points: 0,
+            detail: `Unmeasurable: provisioning language found on the pages we read, and ${unread} more we selected refused our request, so how much of it you document is not something this scan measured`,
+            inconclusive: true,
+            unblock: 'Let ordinary HTTP reach your documentation pages and this becomes measurable.',
+          }
+        }
+        // Naming the phrases is the difference between a rule and a grep nobody can rerun: this
+        // is the heaviest check on the card and a vendor could not tell which seven we looked for.
+        const named = f.funnel.provisioning.programmatic.map((phrase) => `"${phrase}"`).join(', ')
         return yes(
           found >= 2 ? 2 : 1,
-          `${found} of ${PROVISIONING_PATTERN_COUNT} provisioning phrases found across ${pages} documentation pages`,
+          `${found} of ${PROVISIONING_PATTERN_COUNT} provisioning phrases across the ${pages} documents we read: ${named}`,
         )
       }
       if (found > 0) {
@@ -387,7 +415,6 @@ export const CHECKS: Check[] = [
       }
       // A page that refused us is not a page that stays silent about keys. postmark.com documents
       // creating them and its edge turned our fetch away, and we published the absence as theirs.
-      const unread = f.docsPagesUnread ?? 0
       if (unread > 0) {
         return {
           points: 0,
@@ -396,7 +423,7 @@ export const CHECKS: Check[] = [
           unblock: 'Let ordinary HTTP reach your documentation pages and this becomes measurable.',
         }
       }
-      return yes(0, `No programmatic credential creation described in the ${pages} documentation pages we read`)
+      return yes(0, `None of the ${PROVISIONING_PATTERN_COUNT} provisioning phrases appears in the ${pages} documents we read`)
     },
   },
   {

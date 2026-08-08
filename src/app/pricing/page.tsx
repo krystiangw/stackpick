@@ -136,10 +136,10 @@ export default function PricingPage() {
       <section className="border-b border-rule py-12">
         <h2 className="text-lg font-semibold tracking-tight">Why one run of an agent proves nothing</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Ask a model the same question twice and it will not answer the same way. The best public measurement
-          of this ran 2,961 prompts and found the same set of brands came back in fewer than one attempt in a
-          hundred. Anyone selling you a position in an AI ranking from a single run is selling noise, and they
-          should be treated that way.
+          Ask a model the same question twice and it will not answer the same way. Our own runs say it plainly:
+          one vendor was rejected in nineteen of twenty runs and chosen in the twentieth, and one signup endpoint
+          answered 200 once and 403 four times inside an hour. Anyone selling you a position in an AI ranking
+          from a single run is selling noise, and they should be treated that way.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           So we do not sell a position. Every cell is repeated, every run is recorded separately, and what you

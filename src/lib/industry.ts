@@ -1,6 +1,6 @@
-import { CURATED_DOMAINS } from './categories'
+import { publishedCorpus } from './published'
 import { CHECKS, STAGES, type Stage } from './score'
-import { getStore, type Report } from './store'
+import type { Report } from './store'
 
 /**
  * The industry picture, computed from the store at request time. Hardcoding the numbers
@@ -51,7 +51,7 @@ export type IndustryReport = {
 const MINIMUM_SAMPLE = 20
 
 export async function buildIndustryReport(): Promise<IndustryReport | null> {
-  const all = (await getStore().latestPerDomain(500)).filter((report) => CURATED_DOMAINS.has(report.domain))
+  const all = (await publishedCorpus()).reports
   if (all.length === 0) return null
 
   // Mixing formula versions would compare scores that were never comparable, so the report

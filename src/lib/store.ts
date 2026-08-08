@@ -11,6 +11,8 @@ export type Report = {
   scannedAt: string
   findings: ScanFindings
   scorecard: Scorecard
+  /** Run by us to build the published corpus, as opposed to run by a visitor on their own site. */
+  seeded?: boolean
 }
 
 export type Lead = {
@@ -30,7 +32,7 @@ export interface Store {
    * Newest report per domain. Taking the newest N reports and deduplicating afterwards
    * silently drops a domain from its own ranking once the corpus outgrows the window.
    */
-  latestPerDomain(limit: number): Promise<Report[]>
+  latestPerDomain(limit: number, seededOnly?: boolean): Promise<Report[]>
   saveLead(lead: Lead): Promise<void>
   listLeads(limit: number): Promise<Lead[]>
 }
@@ -74,8 +76,8 @@ class FileStore implements Store {
     return all.find((report) => report.domain === domain) ?? null
   }
 
-  async latestPerDomain(limit: number) {
-    const all = await this.listReports(2000)
+  async latestPerDomain(limit: number, seededOnly = false) {
+    const all = (await this.listReports(2000)).filter((report) => !seededOnly || report.seeded === true)
     const latest = new Map<string, Report>()
     for (const report of all) {
       const held = latest.get(report.domain)

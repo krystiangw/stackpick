@@ -150,6 +150,13 @@ const byHint = (a: string, b: string) => {
  */
 async function sitemapCandidates(domain: string, docsUrl: string, seen: Set<string>, want: number): Promise<string[]> {
   const base = new URL(docsUrl)
+  // The documentation is not always on the name we were asked about: postmark.com redirects to
+  // postmarkapp.com, and all 50 credential pages in the sitemap we had open were thrown away by a
+  // same-site test written against the scanned name, leaving one link off the front page as the
+  // whole evidence for the provisioning check. Widened to the documentation host and nothing
+  // above it: that host is one this scan already accepted as the vendor's documentation, while
+  // its registration can be a public suffix that would let a stranger's pages in.
+  const ownSites = [...new Set([domain, base.hostname.replace(/^www\./, '')])]
   // The docs section usually has its own sitemap under its first path segment. Trying the whole
   // documentation path instead sent us to /docs/get-started/sitemap.xml, which nobody publishes.
   const section = base.pathname.split('/').filter(Boolean)[0]
@@ -206,7 +213,8 @@ async function sitemapCandidates(domain: string, docsUrl: string, seen: Set<stri
       const clean = url.toString().split('#')[0]
       // Same site rather than same host, because the fallback roots are deliberately elsewhere.
       // On the label boundary: without the dot, scanning ank.com would follow mybank.com.
-      const sameSite = url.hostname === domain || url.hostname.endsWith(`.${domain}`)
+      const host = url.hostname.replace(/^www\./, '')
+      const sameSite = ownSites.some((site) => host === site || host.endsWith(`.${site}`))
       if (!sameSite || seen.has(clean)) continue
       if (!CREDENTIAL_PAGE_HINTS.test(url.pathname)) continue
       if (!isDocumentationPage(clean, docsUrl)) continue

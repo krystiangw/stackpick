@@ -265,11 +265,13 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <h2 className="text-lg font-semibold tracking-tight">None of this tells you whether an agent picked you</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           Everything above is a file an agent could read. Whether one actually chose you is a different
-          measurement. We ran six agents on one brief, in six isolated copies of a real codebase, and recorded
-          what they did. All six picked the same competitor. The vendor we were watching was never named, not
-          even on a rejection list, and between them the runs named and dismissed ten alternatives. In an earlier
-          round, run before we isolated the copies, it was named twice and struck off both times in four words:{' '}
-          <span className="font-mono text-sm text-ink">Fully commercial, licence key required.</span>
+          measurement, and we have not run it on {report.domain}. What we have run it on is a rich text editor
+          vendor: six agents, one brief, six isolated copies of a real codebase. All six picked the same
+          competitor, and the vendor being studied was never named, not even on a rejection list, while the runs
+          named and dismissed ten alternatives between them. In an earlier round, run before we isolated the
+          copies, it was named twice and struck off both times in four words:{' '}
+          <span className="font-mono text-sm text-ink">Fully commercial, licence key required.</span> That study
+          is about them, not about you. It is here because it is the difference between a file and a decision.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link

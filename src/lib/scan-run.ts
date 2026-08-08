@@ -21,7 +21,8 @@ function fromConsole(request: Request): boolean {
 }
 
 export async function runScan(request: Request, domain: string): Promise<ScanRun> {
-  const gate = await gateScan(request, domain, fromConsole(request))
+  const seeded = fromConsole(request)
+  const gate = await gateScan(request, domain, seeded)
   if (gate.kind === 'invalid') return { kind: 'error', error: gate.error, status: 400 }
   if (gate.kind === 'cached') return { kind: 'ok', report: gate.report, reused: true }
   if (gate.kind === 'limited') {
@@ -43,6 +44,7 @@ export async function runScan(request: Request, domain: string): Promise<ScanRun
       scannedAt: findings.scannedAt,
       findings,
       scorecard: scoreFindings(findings),
+      seeded,
     }
     await getStore().saveReport(report)
     return { kind: 'ok', report, reused: false }

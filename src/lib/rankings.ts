@@ -1,5 +1,6 @@
-import { CATEGORIES, CURATED_DOMAINS, type Category } from './categories'
-import { getStore, type Report } from './store'
+import { CATEGORIES, type Category } from './categories'
+import { publishedCorpus } from './published'
+import type { Report } from './store'
 
 export type RankedEntry = {
   domain: string
@@ -25,9 +26,7 @@ export type RankingsView = { categories: RankedCategory[]; coverage: CorpusCover
  */
 export async function loadRankings(): Promise<RankingsView> {
   const latest = new Map(
-    (await getStore().latestPerDomain(500))
-      .filter((report) => CURATED_DOMAINS.has(report.domain))
-      .map((report) => [report.domain, report]),
+    (await publishedCorpus()).reports.map((report) => [report.domain, report]),
   )
 
   const scanned = [...latest.values()]

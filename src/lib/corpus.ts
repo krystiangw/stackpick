@@ -1,6 +1,6 @@
-import { categoryFor, CURATED_DOMAINS } from './categories'
+import { categoryFor } from './categories'
+import { publishedCorpus } from './published'
 import { checkHelpUri, CHECKS, MAX_SCORE, type ScoredCheck } from './score'
-import { getStore, type Report } from './store'
 
 /**
  * The corpus as data rather than as a page. OpenSSF Scorecard publishes every result it has as a
@@ -45,15 +45,8 @@ export function verdictOf(check: ScoredCheck): CorpusVerdict {
 }
 
 export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus | null> {
-  const all = (await getStore().latestPerDomain(500)).filter((report) => CURATED_DOMAINS.has(report.domain))
-  if (all.length === 0) return null
-
-  const byVersion = new Map<string, Report[]>()
-  for (const report of all) {
-    const version = report.scorecard.formulaVersion
-    byVersion.set(version, [...(byVersion.get(version) ?? []), report])
-  }
-  const [formulaVersion, reports] = [...byVersion.entries()].sort((a, b) => b[1].length - a[1].length)[0]
+  const { reports, formulaVersion } = await publishedCorpus()
+  if (reports.length === 0) return null
 
   const rows: CorpusRow[] = reports
     .map((report) => {

@@ -57,10 +57,11 @@ export class MongoStore implements Store {
     return (await reports.find({}, withoutId).sort({ scannedAt: -1 }).limit(limit).toArray()) as Report[]
   }
 
-  async latestPerDomain(limit: number) {
+  async latestPerDomain(limit: number, seededOnly = false) {
     const { reports } = await collections()
     return (await reports
       .aggregate([
+        ...(seededOnly ? [{ $match: { seeded: true } }] : []),
         { $sort: { domain: 1, scannedAt: -1 } },
         { $group: { _id: '$domain', latest: { $first: '$$ROOT' } } },
         { $replaceRoot: { newRoot: '$latest' } },

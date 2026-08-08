@@ -56,7 +56,7 @@ const RESULTS: Result[] = [
       text: 'Last published 2.0.2 on 2023-03-06, so over three years without a release despite 1.5 million weekly downloads. Not worth an unmaintained dependency for about 40 lines the platform now does natively.',
       translated: true,
       caption:
-        'The stronger model rejecting a package the cheaper model recommended in three runs. The numbers are not translated: we verified the registry independently on 7 August 2026, and found version 2.0.2, published 6 March 2023, with 1,527,048 downloads that week.',
+        'The stronger model rejecting browser-image-compression, which the cheaper model recommended in three runs. The numbers are not translated: we verified the registry independently on 7 August 2026 and found version 2.0.2, published 6 March 2023, with 1,527,048 downloads that week. Check it with npm view browser-image-compression time.modified version.',
     },
   },
   {

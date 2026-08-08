@@ -670,12 +670,23 @@ function findCdnPackage(text: string): string | null {
   return match ? match[1].replace(/@[\d.^~].*$/, '') : null
 }
 
-function findGithubRepo(html: string): string | null {
-  const match = html.match(/github\.com\/([a-z0-9._-]+\/[a-z0-9._-]+)/i)
-  if (!match) return null
-  const repo = match[1].replace(/\.git$/, '')
-  if (/^(features|about|pricing|login|orgs|sponsors)\b/i.test(repo)) return null
-  return repo
+/**
+ * The first GitHub link on the page is whatever the site was built with, not who built it:
+ * every Mintlify documentation site links facebook/react, and we published that as
+ * buttondown.com's repository. An owner has to carry the vendor's own name, and no repository
+ * at all is a better answer than somebody else's.
+ */
+function findGithubRepo(html: string, vendor: Vendor): string | null {
+  const seen = new Set<string>()
+  for (const match of html.matchAll(/github\.com\/([a-z0-9._-]+\/[a-z0-9._-]+)/gi)) {
+    const repo = match[1].replace(/\.git$/, '')
+    if (/^(features|about|pricing|login|orgs|sponsors)\b/i.test(repo)) continue
+    if (seen.has(repo)) continue
+    seen.add(repo)
+    const [owner, name] = repo.split('/')
+    if (carriesVendorName(owner, vendor) || carriesVendorName(name, vendor)) return repo
+  }
+  return null
 }
 
 type NpmSearchHit = {
@@ -1099,7 +1110,7 @@ async function attributePackage(
   const vendor = vendorOf(domain)
   let npmPackage = await pickNamedPackage(namedPackages(html), vendor)
   let npmSource: NpmSource | null = npmPackage ? 'site' : null
-  let githubRepo = findGithubRepo(html)
+  let githubRepo = findGithubRepo(html, vendor)
 
   // Home pages sell; docs pages install. Look there too when the home page is silent.
   if ((!npmPackage || !githubRepo) && docsPage?.ok) {
@@ -1108,7 +1119,7 @@ async function attributePackage(
       npmPackage = fromDocs
       npmSource = 'docs'
     }
-    githubRepo ??= findGithubRepo(docsPage.body)
+    githubRepo ??= findGithubRepo(docsPage.body, vendor)
   }
 
   if (!npmPackage && llmsBody) {
