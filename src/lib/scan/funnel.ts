@@ -98,32 +98,12 @@ const OAUTH_METADATA_PATHS = [
 const AUTH_SUBDOMAINS = ['auth', 'login', 'accounts', 'id', 'oauth']
 const RESOURCE_SUBDOMAINS = ['api']
 
-/**
- * Probing only the apex told Linear to build an RFC 7591 endpoint it already runs, at
- * mcp.linear.app. The authorization server for an agent almost never lives on the marketing
- * host, so we follow the MCP host too, and admit it when we simply did not find one.
- */
-async function probeOauthDcr(domain: string, site: string, mcpHosts: string[], signupUrl: string | null) {
-  const signupOrigin = signupUrl ? new URL(signupUrl).origin : null
-  const full = [...new Set([site, ...mcpHosts, ...(signupOrigin ? [signupOrigin] : [])])]
-  // Cheaper on the subdomains we are guessing at: an auth host publishes authorization-server
-  // metadata, a resource host publishes protected-resource metadata, and neither publishes both.
-  const guessed: { origin: string; paths: string[] }[] = [
-    ...AUTH_SUBDOMAINS.map((prefix) => ({
-      origin: `https://${prefix}.${domain}`,
-      paths: ['/.well-known/oauth-authorization-server', '/.well-known/openid-configuration'],
-    })),
-    ...RESOURCE_SUBDOMAINS.map((prefix) => ({
-      origin: `https://${prefix}.${domain}`,
-      paths: ['/.well-known/oauth-protected-resource', '/.well-known/oauth-authorization-server'],
-    })),
-  ].filter((candidate) => !full.includes(candidate.origin))
+type OauthTarget = { origin: string; paths: string[] }
+type OauthProbe = { metadataPublished: boolean; dynamicClientRegistration: boolean; origins: string[] }
 
-  const origins = [...full, ...guessed.map((candidate) => candidate.origin)]
-  const probes = [
-    ...full.flatMap((origin) => OAUTH_METADATA_PATHS.map((path) => `${origin}${path}`)),
-    ...guessed.flatMap((candidate) => candidate.paths.map((path) => `${candidate.origin}${path}`)),
-  ]
+async function probeOauthOrigins(targets: OauthTarget[]): Promise<OauthProbe> {
+  const origins = targets.map((target) => target.origin)
+  const probes = targets.flatMap((target) => target.paths.map((path) => `${target.origin}${path}`))
   const results = await inParallel(probes, (url) => fetchUrl(url, { accept: 'application/json' }))
 
   let metadataPublished = false
@@ -138,18 +118,52 @@ async function probeOauthDcr(domain: string, site: string, mcpHosts: string[], s
       if (!metadata.issuer && !metadata.authorization_endpoint) continue
       metadataPublished = true
       if (metadata.registration_endpoint) {
-        return {
-          metadataPublished: true,
-          dynamicClientRegistration: true,
-          probedHosts: origins.length,
-          probedOrigins: origins,
-        }
+        return { metadataPublished: true, dynamicClientRegistration: true, origins }
       }
     } catch {
       /* a JSON body that is not JSON tells us nothing */
     }
   }
-  return { metadataPublished, dynamicClientRegistration: false, probedHosts: origins.length, probedOrigins: origins }
+  return { metadataPublished, dynamicClientRegistration: false, origins }
+}
+
+/**
+ * Probing only the apex told Linear to build an RFC 7591 endpoint it already runs, at
+ * mcp.linear.app. The authorization server for an agent almost never lives on the marketing
+ * host, so we follow the MCP host too, and admit it when we simply did not find one.
+ *
+ * Split in two because only the second half depends on the MCP probe: the apex, the signup
+ * host and the subdomains an authorization server conventionally sits on are all known before
+ * a single MCP address has been tried, and waiting for one to start the other cost a full
+ * round of probes in series.
+ */
+function oauthTargetsKnownUpFront(domain: string, site: string, signupUrl: string | null): OauthTarget[] {
+  const signupOrigin = signupUrl ? new URL(signupUrl).origin : null
+  const named = [...new Set([site, ...(signupOrigin ? [signupOrigin] : [])])]
+  // Cheaper on the subdomains we are guessing at: an auth host publishes authorization-server
+  // metadata, a resource host publishes protected-resource metadata, and neither publishes both.
+  const guessed: OauthTarget[] = [
+    ...AUTH_SUBDOMAINS.map((prefix) => ({
+      origin: `https://${prefix}.${domain}`,
+      paths: ['/.well-known/oauth-authorization-server', '/.well-known/openid-configuration'],
+    })),
+    ...RESOURCE_SUBDOMAINS.map((prefix) => ({
+      origin: `https://${prefix}.${domain}`,
+      paths: ['/.well-known/oauth-protected-resource', '/.well-known/oauth-authorization-server'],
+    })),
+  ].filter((candidate) => !named.includes(candidate.origin))
+
+  return [...named.map((origin) => ({ origin, paths: OAUTH_METADATA_PATHS })), ...guessed]
+}
+
+function mergeOauthProbes(first: OauthProbe, second: OauthProbe): FunnelFindings['oauth'] {
+  const origins = [...new Set([...first.origins, ...second.origins])]
+  return {
+    metadataPublished: first.metadataPublished || second.metadataPublished,
+    dynamicClientRegistration: first.dynamicClientRegistration || second.dynamicClientRegistration,
+    probedHosts: origins.length,
+    probedOrigins: origins,
+  }
 }
 
 async function inspectSignup(url: string | null): Promise<SignupFindings> {
@@ -288,35 +302,64 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpo
     .filter((endpoint): endpoint is McpEndpoint => endpoint !== null)
 }
 
-export async function scanFunnel(
-  domain: string,
-  site: string,
-  corpus: string,
-  pricingUrl: string | null,
-  signupUrl: string | null,
-  alreadyFetchedPricing: Fetched | null = null,
-  pricesVisibleWithoutJs: boolean | null = null,
-): Promise<FunnelFindings> {
-  const catchAll = await servesCatchAllText(site)
-  const entries = await inParallel(AGENT_ENTRY_PATHS, async (path) => {
+export type FunnelInput = {
+  domain: string
+  site: string
+  /**
+   * The documentation prose to grep. A promise, because it is the one input none of the
+   * network work below needs: waiting for the docs crawl to finish before opening a single
+   * socket put the two longest phases of the scan end to end for no reason.
+   */
+  corpus: Promise<string>
+  pricingUrl: string | null
+  signupUrl: string | null
+  alreadyFetchedPricing?: Fetched | null
+  pricesVisibleWithoutJs?: boolean | null
+}
+
+export async function scanFunnel({
+  domain,
+  site,
+  corpus,
+  pricingUrl,
+  signupUrl,
+  alreadyFetchedPricing = null,
+  pricesVisibleWithoutJs = null,
+}: FunnelInput): Promise<FunnelFindings> {
+  const mcpPending = probeMcpEndpoints(domain, site)
+  const oauthKnownPending = probeOauthOrigins(oauthTargetsKnownUpFront(domain, site, signupUrl))
+  const signupPending = inspectSignup(signupUrl)
+  const pricingPending = alreadyFetchedPricing ?? (pricingUrl ? fetchUrl(pricingUrl) : Promise.resolve(null))
+  const catchAllPending = servesCatchAllText(site)
+
+  // The entry probes are the one thing that has to wait: on a site that answers every unknown
+  // path they prove nothing, and firing them anyway would be nine requests spent to learn that.
+  const catchAll = await catchAllPending
+  const entriesPending = inParallel(AGENT_ENTRY_PATHS, async (path) => {
     if (catchAll) return [path, false] as const
     const got = await fetchUrl(`${site}${path}`, { accept: 'text/markdown, application/json, text/plain' })
     return [path, isRealTextFile(got, 30)] as const
   })
 
-  const mcpEndpoints = await probeMcpEndpoints(domain, site)
-  const [oauth, signup, pricingPage] = await Promise.all([
-    probeOauthDcr(domain, site, [...new Set(mcpEndpoints.map((endpoint) => new URL(endpoint.url).origin))], signupUrl),
-    inspectSignup(signupUrl),
-    alreadyFetchedPricing ?? (pricingUrl ? fetchUrl(pricingUrl) : Promise.resolve(null)),
+  const mcpEndpoints = await mcpPending
+  const mcpOrigins = [...new Set(mcpEndpoints.map((endpoint) => new URL(endpoint.url).origin))]
+  const alreadyProbed = new Set((await oauthKnownPending).origins)
+  const [oauthKnown, oauthFromMcp, entries, signup, pricingPage] = await Promise.all([
+    oauthKnownPending,
+    probeOauthOrigins(
+      mcpOrigins.filter((origin) => !alreadyProbed.has(origin)).map((origin) => ({ origin, paths: OAUTH_METADATA_PATHS })),
+    ),
+    entriesPending,
+    signupPending,
+    pricingPending,
   ])
+  const oauth = mergeOauthProbes(oauthKnown, oauthFromMcp)
 
   // supertokens.com answered the same URL with and without its free-tier wording forty minutes
   // apart, which moved a scored point. Pricing pages are assembled and cached like any other
   // page, so one fetch is a sample. Reading it again and taking the union of what was stated
   // is the same rule the door test already follows, applied to content instead of status.
-  const pricingRetry =
-    pricingPage?.ok && pricingUrl ? await fetchUrl(pricingUrl) : null
+  const pricingRetry = pricingPage?.ok && pricingUrl ? await fetchUrl(pricingUrl, { fresh: true }) : null
 
   const entryPaths = Object.fromEntries(entries)
   const firstPricingText = pricingPage?.ok && visibleTextLength(pricingPage.body) > 0 ? pricingPage.body : ''
@@ -330,7 +373,7 @@ export async function scanFunnel(
     mcpEndpoints,
     signup,
     provisioning: {
-      programmatic: matching(PROVISIONING_PATTERNS, corpus),
+      programmatic: matching(PROVISIONING_PATTERNS, await corpus),
       selfServeSignals: matching(SELF_SERVE_PATTERNS, pricingText),
     },
     servesCatchAll: catchAll,

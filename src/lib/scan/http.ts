@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'node:async_hooks'
 import { installGuardedDispatcher } from './dispatcher'
 import { assertPublicHost, BlockedTargetError } from './guard'
 
@@ -16,8 +17,92 @@ export const BROWSER_UA =
 // scanner. stackpick.ai is not registered yet, so this points at where the product lives.
 export const AGENT_UA = `StackPick/1.0 (+${process.env.STACKPICK_BASE_URL ?? 'https://stackpick-f12d13a227ea.herokuapp.com'}/methodology)`
 
-const TIMEOUT_MS = 15_000
+/**
+ * Under undici's own 10 s connect timeout, so a host that resolves and then accepts nothing -
+ * api.payloadcms.com does exactly that - is given up on by us rather than by the socket.
+ * Every request is additionally clamped to whatever is left of the scan budget.
+ */
+const TIMEOUT_MS = 8_000
 const MAX_BYTES = 400_000
+
+/**
+ * Heroku's router answers 503 to a request that has sent no byte for 30 seconds, so a scan
+ * that runs past it produces nothing at all: not a low score, a dead connection. This is the
+ * scan's whole wall-clock allowance, and it leaves room to score, store and serialise inside
+ * the 30. `maxDuration` in a route file is a Vercel directive and does nothing on this host.
+ */
+export const SCAN_BUDGET_MS = Number(process.env.SCAN_BUDGET_MS ?? 21_000)
+
+/**
+ * The error prefix that means "we never found out", as opposed to a site answering us. A
+ * check standing on one of these is unmeasured, and reporting it as a measured zero is the
+ * one failure worse than the timeout it replaces.
+ */
+const OUT_OF_TIME = 'Out of time'
+const outOfTimeBefore = `${OUT_OF_TIME}: the scan deadline passed before this could be requested`
+const outOfTimeDuring = `${OUT_OF_TIME}: the scan deadline passed while this was in flight`
+
+export const ranOutOfTime = (fetched: Fetched): boolean => fetched.error?.startsWith(OUT_OF_TIME) ?? false
+
+/**
+ * Running the phases at once only stays polite if what is in flight against one hostname is
+ * capped. Six is what a single phase already used, so a scan puts no more load on a stranger's
+ * site than it did when the phases ran one after another; what it stops paying for is the
+ * stall at the end of every wave, where five finished requests waited on the slowest.
+ */
+const MAX_PER_HOST = 6
+
+type HostSlots = { active: number; waiting: (() => void)[] }
+
+type ScanState = {
+  deadlineAt: number
+  /**
+   * Hosts that answered at all, and hosts that would not connect. A guessed subdomain that
+   * times out costs eight seconds, and api.payloadcms.com was guessed at by four separate
+   * probes in one scan.
+   */
+  hostHealth: Map<string, 'ok' | 'dead'>
+  slots: Map<string, HostSlots>
+  /** One scan asks for the same URL up to four times, from phases that cannot see each other. */
+  responses: Map<string, Promise<Fetched>>
+  /** How much evidence the phase now running lost to the deadline. */
+  lost: { count: number }
+}
+
+const scanState = new AsyncLocalStorage<ScanState>()
+
+/** Runs a whole scan under one wall-clock deadline. Nothing outside it is time-limited. */
+export function withScanBudget<T>(budgetMs: number, run: () => Promise<T>): Promise<T> {
+  return scanState.run(
+    {
+      deadlineAt: Date.now() + budgetMs,
+      hostHealth: new Map(),
+      slots: new Map(),
+      responses: new Map(),
+      lost: { count: 0 },
+    },
+    run,
+  )
+}
+
+export const timeLeftMs = (): number => {
+  const state = scanState.getStore()
+  return state ? state.deadlineAt - Date.now() : Number.POSITIVE_INFINITY
+}
+
+export const outOfTime = (): boolean => timeLeftMs() <= 0
+
+/**
+ * Runs one phase and reports how many of its requests the deadline ate, so a scan that ran out
+ * of time can name the checks whose evidence never arrived instead of scoring them zero.
+ */
+export async function inPhase<T>(run: () => Promise<T>): Promise<{ value: T; lostEvidence: number }> {
+  const parent = scanState.getStore()
+  if (!parent) return { value: await run(), lostEvidence: 0 }
+  const state: ScanState = { ...parent, lost: { count: 0 } }
+  const value = await scanState.run(state, run)
+  return { value, lostEvidence: state.lost.count }
+}
 
 export type Fetched = {
   url: string
@@ -27,6 +112,15 @@ export type Fetched = {
   headers: Record<string, string>
   truncated: boolean
   error?: string
+}
+
+export type FetchOptions = {
+  accept?: string
+  ua?: string
+  method?: 'GET' | 'HEAD' | 'POST'
+  body?: string
+  /** Bypasses the per-scan response cache, for the reads that are repeated on purpose. */
+  fresh?: boolean
 }
 
 const empty = (url: string, error: string): Fetched => ({
@@ -41,17 +135,53 @@ const empty = (url: string, error: string): Fetched => ({
 
 const MAX_REDIRECTS = 5
 
-export async function fetchUrl(
-  url: string,
-  {
-    accept = '*/*',
-    ua = BROWSER_UA,
-    method = 'GET',
-    body,
-  }: { accept?: string; ua?: string; method?: 'GET' | 'HEAD' | 'POST'; body?: string } = {},
-): Promise<Fetched> {
+const cacheKey = (url: string, options: FetchOptions): string =>
+  // The accept header is part of the key because content negotiation is one of the things
+  // this scan measures: the same path answers differently to text/markdown and to */*.
+  [options.method ?? 'GET', options.ua ?? BROWSER_UA, options.accept ?? '*/*', options.body ?? '', url].join('\n')
+
+function countIfLost(state: ScanState, fetched: Fetched): Fetched {
+  if (ranOutOfTime(fetched)) state.lost.count++
+  return fetched
+}
+
+async function takeHostSlot(state: ScanState, host: string): Promise<() => void> {
+  const slots = state.slots.get(host) ?? { active: 0, waiting: [] }
+  state.slots.set(host, slots)
+  if (slots.active >= MAX_PER_HOST) await new Promise<void>((resolve) => slots.waiting.push(resolve))
+  slots.active++
+  let released = false
+  return () => {
+    if (released) return
+    released = true
+    slots.active--
+    slots.waiting.shift()?.()
+  }
+}
+
+export async function fetchUrl(url: string, options: FetchOptions = {}): Promise<Fetched> {
+  const state = scanState.getStore()
+  if (!state) return runFetch(url, options, null)
+  if (Date.now() >= state.deadlineAt) return countIfLost(state, empty(url, outOfTimeBefore))
+  if (options.fresh) return countIfLost(state, await runFetch(url, options, state))
+
+  const key = cacheKey(url, options)
+  const held = state.responses.get(key)
+  if (held) return countIfLost(state, await held)
+  const started = runFetch(url, options, state)
+  state.responses.set(key, started)
+  return countIfLost(state, await started)
+}
+
+async function runFetch(url: string, options: FetchOptions, state: ScanState | null): Promise<Fetched> {
+  const { accept = '*/*', ua = BROWSER_UA, method = 'GET', body } = options
+  const timeoutMs = Math.min(TIMEOUT_MS, state ? state.deadlineAt - Date.now() : TIMEOUT_MS)
+  if (timeoutMs <= 0) return empty(url, outOfTimeBefore)
+
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  let attempted = ''
+  let releaseSlot: (() => void) | null = null
   try {
     let current = url
     // Redirects are followed by hand because every hop has to be re-checked: a public
@@ -65,7 +195,19 @@ export async function fetchUrl(
       if (target.port !== '' && target.port !== '80' && target.port !== '443') {
         return empty(url, `Refused a redirect to port ${target.port}`)
       }
+      // Before anything else on every hop, including hops we go on to skip: a redirect is
+      // free to point at a private address, and nothing here may reach one.
       await assertPublicHost(target.hostname)
+
+      attempted = target.hostname.toLowerCase()
+      if (state?.hostHealth.get(attempted) === 'dead') {
+        return empty(url, `${attempted} would not accept a connection earlier in this scan`)
+      }
+
+      // Held for the whole request, including the body read, and keyed on the host of the
+      // first hop: a redirect that leaves the site is too rare to queue separately for.
+      if (state && !releaseSlot) releaseSlot = await takeHostSlot(state, attempted)
+      if (state && Date.now() >= state.deadlineAt) return empty(url, outOfTimeBefore)
 
       const response = await fetch(current, {
         method,
@@ -78,6 +220,7 @@ export async function fetchUrl(
         redirect: 'manual',
         signal: controller.signal,
       })
+      state?.hostHealth.set(attempted, 'ok')
 
       const location = response.headers.get('location')
       if (response.status >= 300 && response.status < 400 && location) {
@@ -98,9 +241,14 @@ export async function fetchUrl(
     return empty(url, 'Too many redirects')
   } catch (error) {
     if (error instanceof BlockedTargetError) return empty(url, `Blocked: ${error.message}`)
+    if (state && Date.now() >= state.deadlineAt) return empty(url, outOfTimeDuring)
+    // Only ever a first impression: a host that has already answered something is never
+    // written off on a later failure, so one reset cannot end the scan of a live site.
+    if (state && attempted && !state.hostHealth.has(attempted)) state.hostHealth.set(attempted, 'dead')
     return empty(url, error instanceof Error ? `${error.name}: ${error.message}` : String(error))
   } finally {
     clearTimeout(timer)
+    releaseSlot?.()
   }
 }
 
@@ -202,8 +350,15 @@ export async function fetchWithRetries(
   for (let i = 0; i < tries; i++) {
     // Three requests to the same URL with no gap is itself a burst, and a site that rate limits
     // it hands us a 429 we then have to explain away rather than a finding about agents.
-    if (i > 0) await new Promise((resolve) => setTimeout(resolve, 400))
-    attempts.push(await fetchUrl(url, options))
+    if (i > 0) {
+      // One inconsistent status is a weaker finding than none, but a scan cut off at the
+      // deadline reports nothing at all. Stop repeating once there is no room to.
+      if (timeLeftMs() < 1_500) break
+      await new Promise((resolve) => setTimeout(resolve, 400))
+    }
+    // Deliberately the same URL again: the cache would hand back the first answer and the
+    // disagreement between tries is the entire measurement.
+    attempts.push(await fetchUrl(url, { ...options, fresh: true }))
   }
   const statuses = attempts.map((a) => a.status)
   const counts = new Map<number, number>()

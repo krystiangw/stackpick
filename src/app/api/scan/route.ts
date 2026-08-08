@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { publicBaseUrl, toAgentInstructions, toSarif } from '@/lib/export'
 import { runScan } from '@/lib/scan-run'
 
+// Vercel reads this; the host we run on does not. What actually keeps a scan inside Heroku's
+// 30-second router timeout is SCAN_BUDGET_MS, enforced by scanDomain for every caller.
 export const maxDuration = 60
 
 const FORMATS = ['json', 'sarif', 'agent'] as const
@@ -61,10 +63,14 @@ export async function POST(request: Request) {
     })
   }
 
+  // A CI step reading this has no scorecard page to look at, so the truncation travels with
+  // the score rather than only being rendered: a partial scan must not read as a full one.
+  const { truncation } = scan.report.findings
   return NextResponse.json({
     id: scan.report.id,
     domain: scan.report.domain,
     scorecard: scan.report.scorecard,
     ...(scan.reused ? { reused: true } : {}),
+    ...(truncation ? { truncation } : {}),
   })
 }

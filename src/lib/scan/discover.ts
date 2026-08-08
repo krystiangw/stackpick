@@ -204,10 +204,15 @@ function pickLink(links: string[], hints: RegExp[], sameHostAs: string): string 
   return null
 }
 
-/** A fallback path only counts if it answers with real HTML, not an SPA shell 404. */
+/**
+ * A fallback path only counts if it answers with real HTML, not an SPA shell 404. All of them
+ * are asked at once and then read back in order, so the answer is the same one the old loop
+ * gave - the first path in the list that lives - without paying for the ones before it.
+ */
 async function firstLivePath(site: string, paths: string[]): Promise<string | null> {
-  for (const path of paths) {
-    const got = await fetchUrl(`${site}${path}`)
+  const pending = paths.map((path) => fetchUrl(`${site}${path}`))
+  for (const request of pending) {
+    const got = await request
     if (got.ok && looksLikeHtml(got) && visibleTextLength(got.body) > 200) return got.url
   }
   return null
@@ -230,12 +235,16 @@ function sameSite(url: string, domain: string): boolean {
  * A host that does not resolve costs one failed DNS lookup, not a timeout per path.
  */
 async function firstLiveSubdomain(domain: string, prefixes: string[], paths: string[]): Promise<string | null> {
-  const roots = await inParallel(prefixes, (prefix) => fetchUrl(`https://${prefix}.${domain}`))
+  // Read back in priority order while all of them are still in flight. Waiting for the whole
+  // set meant one guessed host that accepts no connection - api.payloadcms.com - held up a
+  // docs URL that docs.payloadcms.com had already answered, for the full request timeout.
+  const roots = prefixes.map((prefix) => fetchUrl(`https://${prefix}.${domain}`))
   // A subdomain that redirects off-site is not this vendor's page. docs.statuspage.io served
   // a dead Zendesk placeholder and we reported its 303 characters as their documentation.
   const onSite = (got: Fetched) => readsLikeAPage(got) && sameSite(got.url, domain)
 
-  for (const [index, root] of roots.entries()) {
+  for (const [index, pending] of roots.entries()) {
+    const root = await pending
     if (!root.ok) continue
     if (paths.length === 0) {
       if (onSite(root)) return root.url
@@ -724,87 +733,20 @@ async function preferUmbrella(names: string[], vendor: Vendor): Promise<string> 
   return scored[0].name
 }
 
-export async function discover(domain: string): Promise<Discovered> {
-  const site = `https://${domain}`
-  const home = await fetchUrl(site)
-  const html = home.ok ? home.body : ''
-  const base = home.url || site
-  const links = html ? extractLinks(html, base) : []
+type Attribution = {
+  npmPackage: string | null
+  npmSource: NpmSource | null
+  npmConfidence: 'strong' | null
+  githubRepo: string | null
+}
 
-  const llms = await fetchUrl(`${site}/llms.txt`, { accept: 'text/plain' })
-  const llmsBody = llms.ok && !looksLikeHtml(llms) ? llms.body : ''
-  const llmsEntries = llmsBody ? linksFromLlmsTxt(llmsBody, base) : []
-
-  const fromSiteDocs = pickLink(links, DOCS_HINTS, base)
-  const fromSiteDeveloper = pickLink(links, DEVELOPER_HINTS, base)
-  const onSiteLlms = llmsEntries.filter((entry) => sameSite(entry.url, domain))
-  const fromLlmsDocs = pickFromLlms(onSiteLlms, DOCS_HINTS, [/doc/, /guide/, /api reference/, /developer/])
-  const fromSubdomainDocs = await firstLiveSubdomain(domain, DOCS_SUBDOMAINS, [])
-  const fromPathDocs =
-    (fromSiteDocs ?? fromSiteDeveloper ?? fromLlmsDocs) ? null : await firstLivePath(site, DOCS_FALLBACKS)
-
-  // Whichever of these reads most like developer documentation wins; order in the HTML does not.
-  const chosen = await bestDocs([fromSiteDeveloper, fromSubdomainDocs, fromSiteDocs, fromLlmsDocs, fromPathDocs])
-  const docs = chosen?.url ?? null
-  const docsPage = chosen?.page ?? null
-
-  // An llms.txt label saying "Outcome-Based Pricing" sent us to a solutions page and the
-  // vendor failed the self-serve check on it, while its real /pricing says $0 three times.
-  const fromSitePricing = pickLink(links, PRICING_HINTS, base)
-  const fromLlmsPricing = pickFromLlms(onSiteLlms, PRICING_HINTS, [/pricing/, /plans/, /buy/, /cart/])
-  // plausible.io sells from an anchor on its home page, so there is no pricing page to find and
-  // "we could not fetch one" was the wrong sentence: the prices are right there, one fetch away.
-  const pricingOnHome = /href=["'][^"']*#(pricing|plans)\b/i.test(html) ? site : null
-  const chosenPricing = await bestPricing([
-    fromSitePricing,
-    `${site}/pricing`,
-    `${site}/plans`,
-    fromLlmsPricing,
-    pricingOnHome,
-  ])
-  const pricing = chosenPricing?.url ?? (await firstLivePath(site, PRICING_FALLBACKS))
-  const pricingPage = chosenPricing?.page ?? null
-  const pricesVisibleWithoutJs = chosenPricing?.pricesVisible ?? null
-
-  const fromSiteSignup = pickLink(links, SIGNUP_HINTS, base)
-  const fromLlmsSignup = pickFromLlms(onSiteLlms, SIGNUP_HINTS, [/sign ?up/, /register/, /get started/, /free trial/])
-  const fromPathSignup = (fromSiteSignup ?? fromLlmsSignup) ? null : await firstLivePath(site, SIGNUP_FALLBACKS)
-  const fromSubdomainSignup =
-    (fromSiteSignup ?? fromLlmsSignup ?? fromPathSignup)
-      ? null
-      : await firstLiveSubdomain(domain, SIGNUP_SUBDOMAINS, ['/signup', '/register'])
-  const signup = fromSiteSignup ?? fromLlmsSignup ?? fromPathSignup ?? fromSubdomainSignup
-
-  const sourceOf = (
-    onSite: string | null,
-    inLlms: string | null,
-    atPath: string | null,
-    onSubdomain: string | null,
-  ): LinkSource | null =>
-    onSite ? 'site' : inLlms ? 'llms-txt' : atPath ? 'fallback-path' : onSubdomain ? 'subdomain' : null
-
-  const linkSources = {
-    docs:
-      docs === fromSiteDocs || docs === fromSiteDeveloper
-        ? ('site' as const)
-        : docs === fromLlmsDocs
-          ? ('llms-txt' as const)
-          : docs === fromSubdomainDocs
-            ? ('subdomain' as const)
-            : docs
-              ? ('fallback-path' as const)
-              : null,
-    pricing:
-      pricing === fromSitePricing
-        ? ('site' as const)
-        : pricing === fromLlmsPricing
-          ? ('llms-txt' as const)
-          : pricing
-            ? ('fallback-path' as const)
-            : null,
-    signup: sourceOf(fromSiteSignup, fromLlmsSignup, fromPathSignup, fromSubdomainSignup),
-  }
-
+/** Which package on the registry is this vendor's, and how sure we are of it. */
+async function attributePackage(
+  domain: string,
+  html: string,
+  llmsBody: string,
+  docsPage: Fetched | null,
+): Promise<Attribution> {
   const vendor = vendorOf(domain)
   let npmPackage = await pickNamedPackage(namedPackages(html), vendor)
   let npmSource: NpmSource | null = npmPackage ? 'site' : null
@@ -812,14 +754,12 @@ export async function discover(domain: string): Promise<Discovered> {
 
   // Home pages sell; docs pages install. Look there too when the home page is silent.
   if ((!npmPackage || !githubRepo) && docsPage?.ok) {
-    {
-      const fromDocs = await pickNamedPackage(namedPackages(docsPage.body), vendor)
-      if (!npmPackage && fromDocs) {
-        npmPackage = fromDocs
-        npmSource = 'docs'
-      }
-      githubRepo ??= findGithubRepo(docsPage.body)
+    const fromDocs = await pickNamedPackage(namedPackages(docsPage.body), vendor)
+    if (!npmPackage && fromDocs) {
+      npmPackage = fromDocs
+      npmSource = 'docs'
     }
+    githubRepo ??= findGithubRepo(docsPage.body)
   }
 
   if (!npmPackage && llmsBody) {
@@ -866,6 +806,107 @@ export async function discover(domain: string): Promise<Discovered> {
     }
   }
 
+  return { npmPackage, npmSource, npmConfidence, githubRepo }
+}
+
+export async function discover(domain: string): Promise<Discovered> {
+  const site = `https://${domain}`
+  const [home, llms] = await Promise.all([fetchUrl(site), fetchUrl(`${site}/llms.txt`, { accept: 'text/plain' })])
+  const html = home.ok ? home.body : ''
+  const base = home.url || site
+  const links = html ? extractLinks(html, base) : []
+
+  const llmsBody = llms.ok && !looksLikeHtml(llms) ? llms.body : ''
+  const llmsEntries = llmsBody ? linksFromLlmsTxt(llmsBody, base) : []
+
+  const fromSiteDocs = pickLink(links, DOCS_HINTS, base)
+  const fromSiteDeveloper = pickLink(links, DEVELOPER_HINTS, base)
+  const onSiteLlms = llmsEntries.filter((entry) => sameSite(entry.url, domain))
+  const fromLlmsDocs = pickFromLlms(onSiteLlms, DOCS_HINTS, [/doc/, /guide/, /api reference/, /developer/])
+  const fromSitePricing = pickLink(links, PRICING_HINTS, base)
+  const fromLlmsPricing = pickFromLlms(onSiteLlms, PRICING_HINTS, [/pricing/, /plans/, /buy/, /cart/])
+  const fromSiteSignup = pickLink(links, SIGNUP_HINTS, base)
+  const fromLlmsSignup = pickFromLlms(onSiteLlms, SIGNUP_HINTS, [/sign ?up/, /register/, /get started/, /free trial/])
+
+  // Documentation, pricing and signup are three searches over the same home page that share
+  // nothing but the page itself, and they used to run one after another. Only the package
+  // hunt has a real dependency, on whichever page turns out to be the documentation.
+  const docsPending = (async () => {
+    const [fromSubdomainDocs, fromPathDocs] = await Promise.all([
+      firstLiveSubdomain(domain, DOCS_SUBDOMAINS, []),
+      (fromSiteDocs ?? fromSiteDeveloper ?? fromLlmsDocs) ? null : firstLivePath(site, DOCS_FALLBACKS),
+    ])
+    // Whichever of these reads most like developer documentation wins; order in the HTML does not.
+    const chosen = await bestDocs([fromSiteDeveloper, fromSubdomainDocs, fromSiteDocs, fromLlmsDocs, fromPathDocs])
+    return { chosen, fromSubdomainDocs }
+  })()
+
+  const pricingPending = (async () => {
+    // An llms.txt label saying "Outcome-Based Pricing" sent us to a solutions page and the
+    // vendor failed the self-serve check on it, while its real /pricing says $0 three times.
+    // plausible.io sells from an anchor on its home page, so there is no pricing page to find and
+    // "we could not fetch one" was the wrong sentence: the prices are right there, one fetch away.
+    const pricingOnHome = /href=["'][^"']*#(pricing|plans)\b/i.test(html) ? site : null
+    const chosenPricing = await bestPricing([
+      fromSitePricing,
+      `${site}/pricing`,
+      `${site}/plans`,
+      fromLlmsPricing,
+      pricingOnHome,
+    ])
+    return { chosenPricing, pricing: chosenPricing?.url ?? (await firstLivePath(site, PRICING_FALLBACKS)) }
+  })()
+
+  const signupPending = (async () => {
+    const fromPathSignup = (fromSiteSignup ?? fromLlmsSignup) ? null : await firstLivePath(site, SIGNUP_FALLBACKS)
+    const fromSubdomainSignup =
+      (fromSiteSignup ?? fromLlmsSignup ?? fromPathSignup)
+        ? null
+        : await firstLiveSubdomain(domain, SIGNUP_SUBDOMAINS, ['/signup', '/register'])
+    return { fromPathSignup, fromSubdomainSignup }
+  })()
+
+  const npmPending = docsPending.then(({ chosen }) => attributePackage(domain, html, llmsBody, chosen?.page ?? null))
+
+  const [{ chosen, fromSubdomainDocs }, { chosenPricing, pricing }, { fromPathSignup, fromSubdomainSignup }, npm] =
+    await Promise.all([docsPending, pricingPending, signupPending, npmPending])
+
+  const docs = chosen?.url ?? null
+  const docsPage = chosen?.page ?? null
+  const pricingPage = chosenPricing?.page ?? null
+  const pricesVisibleWithoutJs = chosenPricing?.pricesVisible ?? null
+  const signup = fromSiteSignup ?? fromLlmsSignup ?? fromPathSignup ?? fromSubdomainSignup
+
+  const sourceOf = (
+    onSite: string | null,
+    inLlms: string | null,
+    atPath: string | null,
+    onSubdomain: string | null,
+  ): LinkSource | null =>
+    onSite ? 'site' : inLlms ? 'llms-txt' : atPath ? 'fallback-path' : onSubdomain ? 'subdomain' : null
+
+  const linkSources = {
+    docs:
+      docs === fromSiteDocs || docs === fromSiteDeveloper
+        ? ('site' as const)
+        : docs === fromLlmsDocs
+          ? ('llms-txt' as const)
+          : docs === fromSubdomainDocs
+            ? ('subdomain' as const)
+            : docs
+              ? ('fallback-path' as const)
+              : null,
+    pricing:
+      pricing === fromSitePricing
+        ? ('site' as const)
+        : pricing === fromLlmsPricing
+          ? ('llms-txt' as const)
+          : pricing
+            ? ('fallback-path' as const)
+            : null,
+    signup: sourceOf(fromSiteSignup, fromLlmsSignup, fromPathSignup, fromSubdomainSignup),
+  }
+
   return {
     site,
     home,
@@ -875,11 +916,11 @@ export async function discover(domain: string): Promise<Discovered> {
     pricingPage,
     pricesVisibleWithoutJs,
     signup,
-    npmPackage,
-    npmSource,
-    npmConfidence,
-    npmEntryShape: npmPackage ? looksLikeEntryPackage(npmPackage, domain) : null,
-    githubRepo,
+    npmPackage: npm.npmPackage,
+    npmSource: npm.npmSource,
+    npmConfidence: npm.npmConfidence,
+    npmEntryShape: npm.npmPackage ? looksLikeEntryPackage(npm.npmPackage, domain) : null,
+    githubRepo: npm.githubRepo,
     linkSources,
   }
 }

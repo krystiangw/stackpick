@@ -45,17 +45,35 @@ export async function scanMachineContext(site: string, docs: string | null): Pro
     locations.docs_path_llms_txt = `${docsBase}/llms.txt`
   }
 
-  const llmsEntries = await inParallel(Object.entries(locations), async ([label, url]) => {
-    const got = await fetchUrl(url, { accept: 'text/plain' })
-    const present = isRealTextFile(got)
-    const file: LlmsFile = {
-      present,
-      bytes: present ? got.body.length : 0,
-      links: present ? (got.body.match(/\]\(http/g) ?? []).length : 0,
-      truncated: present && got.truncated,
-    }
-    return [label, file, present ? got.body : ''] as const
-  })
+  const docsUrl = docs ?? site
+
+  // Four independent probe sets. Run one after another they cost four waves, each ending at
+  // its own slowest request; the per-host cap in fetchUrl keeps the load the same either way.
+  const [llmsEntries, wellKnownEntries, openapiHits, viaAccept, viaSuffix] = await Promise.all([
+    inParallel(Object.entries(locations), async ([label, url]) => {
+      const got = await fetchUrl(url, { accept: 'text/plain' })
+      const present = isRealTextFile(got)
+      const file: LlmsFile = {
+        present,
+        bytes: present ? got.body.length : 0,
+        links: present ? (got.body.match(/\]\(http/g) ?? []).length : 0,
+        truncated: present && got.truncated,
+      }
+      return [label, file, present ? got.body : ''] as const
+    }),
+    inParallel(Object.entries(WELL_KNOWN_PATHS), async ([label, path]) => {
+      const got = await fetchUrl(`${site}${path}`, { accept: 'application/json, text/plain' })
+      return [label, isRealTextFile(got, 10)] as const
+    }),
+    inParallel(OPENAPI_PATHS, async (path) => {
+      const got = await fetchUrl(`${site}${path}`, { accept: 'application/json' })
+      const head = got.body.slice(0, 2000).toLowerCase()
+      const isSpec = isRealTextFile(got, 20) && (head.includes('openapi') || head.includes('swagger'))
+      return isSpec ? path : null
+    }),
+    fetchUrl(docsUrl, { accept: 'text/markdown' }),
+    fetchUrl(`${docsUrl.replace(/\/$/, '')}.md`, { accept: 'text/markdown' }),
+  ])
 
   const llms: Record<string, LlmsFile> = {}
   let corpus = ''
@@ -66,24 +84,6 @@ export async function scanMachineContext(site: string, docs: string | null): Pro
 
   const mcpUrls = [...corpus.matchAll(/https?:\/\/[^\s)"']*mcp[^\s)"']*/gi)].map((m) => m[0])
   const uniqueMcpUrls = [...new Set(mcpUrls)].slice(0, 5)
-
-  const wellKnownEntries = await inParallel(Object.entries(WELL_KNOWN_PATHS), async ([label, path]) => {
-    const got = await fetchUrl(`${site}${path}`, { accept: 'application/json, text/plain' })
-    return [label, isRealTextFile(got, 10)] as const
-  })
-
-  const openapiHits = await inParallel(OPENAPI_PATHS, async (path) => {
-    const got = await fetchUrl(`${site}${path}`, { accept: 'application/json' })
-    const head = got.body.slice(0, 2000).toLowerCase()
-    const isSpec = isRealTextFile(got, 20) && (head.includes('openapi') || head.includes('swagger'))
-    return isSpec ? path : null
-  })
-
-  const docsUrl = docs ?? site
-  const [viaAccept, viaSuffix] = await Promise.all([
-    fetchUrl(docsUrl, { accept: 'text/markdown' }),
-    fetchUrl(`${docsUrl.replace(/\/$/, '')}.md`, { accept: 'text/markdown' }),
-  ])
 
   return {
     llms,

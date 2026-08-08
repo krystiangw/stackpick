@@ -1,9 +1,37 @@
 import { discover, normalizeDomain, searchNpmForDomain, type Discovered } from './discover'
-import { AGENT_UA, fetchUrl, fetchWithRetries, inParallel, visibleTextLength, type Fetched } from './http'
+import {
+  AGENT_UA,
+  fetchUrl,
+  fetchWithRetries,
+  inParallel,
+  inPhase,
+  ranOutOfTime,
+  SCAN_BUDGET_MS,
+  visibleTextLength,
+  withScanBudget,
+  type Fetched,
+} from './http'
 import { scanFunnel, type FunnelFindings } from './funnel'
 import { scanMachineContext, type MachineFindings } from './machine'
 import { checkNpm, type NpmFindings } from './npm'
 import { scanRobots, type RobotsFindings } from './robots'
+
+/**
+ * Set only when the scan hit its wall-clock budget with work still outstanding, and never on a
+ * scan that finished. Every check named here has no evidence behind it, so it has to be
+ * reported as unmeasured: a truncated scan that reads like a complete one is a worse product
+ * than the 503 this budget replaces, because a measured zero is an accusation.
+ */
+export type ScanTruncation = {
+  budgetMs: number
+  elapsedMs: number
+  /** The phases that were still fetching when time ran out, in the words the report uses. */
+  incompletePhases: string[]
+  /** Check ids from score.ts whose only evidence is one of those phases. */
+  unmeasuredChecks: string[]
+  /** The sentence to show in place of a measured result. */
+  detail: string
+}
 
 export type ScanFindings = {
   domain: string
@@ -46,6 +74,8 @@ export type ScanFindings = {
   machine: MachineFindings
   funnel: FunnelFindings
   npm: NpmFindings
+  /** Null on a scan that finished inside its budget, which is nearly all of them. */
+  truncation: ScanTruncation | null
 }
 
 export class UnreachableDomainError extends Error {}
@@ -189,74 +219,145 @@ export type ScanProgress = (step: { label: string; done: number; total: number }
 
 const STEPS = 5
 
+type Phase = 'discovery' | 'door' | 'docs' | 'robots' | 'machine' | 'funnel' | 'npm'
+
+/**
+ * What each phase is the sole evidence for. A phase that never finished cannot support a
+ * verdict on any of its checks, and score.ts has to read them off this list rather than
+ * scoring the empty findings the phase left behind.
+ */
+const PHASE_EVIDENCE: Record<Phase, { doing: string; checks: string[] }> = {
+  discovery: {
+    doing: 'finding your documentation, pricing and signup pages',
+    checks: [
+      'docs_without_js',
+      'programmatic_provisioning',
+      'self_serve',
+      'signup_no_captcha',
+      'signup_reachable',
+      'typed_package',
+    ],
+  },
+  door: { doing: 'testing what you answer an agent user-agent', checks: ['answers_plain_request'] },
+  docs: { doing: 'reading your documentation pages', checks: ['programmatic_provisioning'] },
+  robots: { doing: 'reading robots.txt', checks: ['user_agents_allowed', 'no_crawl_delay'] },
+  machine: {
+    doing: 'probing llms.txt, .well-known and OpenAPI',
+    checks: ['llms_txt', 'machine_readable_api', 'mcp_present'],
+  },
+  funnel: {
+    doing: 'probing agent entry points, MCP, OAuth, signup and pricing',
+    checks: [
+      'agent_entry_point',
+      'oauth_dcr',
+      'mcp_present',
+      'signup_no_captcha',
+      'signup_reachable',
+      'self_serve',
+    ],
+  },
+  npm: { doing: 'reading the package registry', checks: ['typed_package'] },
+}
+
+function truncationOf(incomplete: Set<Phase>, budgetMs: number, elapsedMs: number): ScanTruncation | null {
+  if (incomplete.size === 0) return null
+  const phases = [...incomplete].map((phase) => PHASE_EVIDENCE[phase])
+  return {
+    budgetMs,
+    elapsedMs,
+    incompletePhases: phases.map((phase) => phase.doing),
+    unmeasuredChecks: [...new Set(phases.flatMap((phase) => phase.checks))],
+    // Read once per check, so it says what happened to that check rather than reciting the
+    // whole list of what else was still running. The list is above, for the report to show once.
+    detail: `Unmeasurable: the scan ran out of time after ${Math.round(elapsedMs / 1000)} seconds and this was never tested. It is not a finding about you, and a rescan usually completes.`,
+  }
+}
+
 export async function scanDomain(input: string, onProgress?: ScanProgress): Promise<ScanFindings> {
-  const startedAt = Date.now()
   const domain = normalizeDomain(input)
+  return withScanBudget(SCAN_BUDGET_MS, () => scanWithinBudget(domain, onProgress))
+}
+
+async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Promise<ScanFindings> {
+  const startedAt = Date.now()
   const report = (label: string, done: number) => onProgress?.({ label, done, total: STEPS })
 
-  report(`Resolving ${normalizeDomain(input)}`, 0)
-  const found: Discovered = await discover(domain)
+  const incomplete = new Set<Phase>()
+  /** Runs a phase and remembers whether the deadline took any of its evidence with it. */
+  const phase = async <T>(name: Phase, run: () => Promise<T>): Promise<T> => {
+    const { value, lostEvidence } = await inPhase(run)
+    if (lostEvidence > 0) incomplete.add(name)
+    return value
+  }
+
+  report(`Resolving ${domain}`, 0)
+  const found: Discovered = await phase('discovery', () => discover(domain))
 
   // A 403 to a plain request is not a failed scan, it is the strongest finding this tool
   // can produce: the site turns agents away at the door. Only a dead name is an error.
   if (found.home.status === 0) {
     throw new UnreachableDomainError(
-      found.home.error?.startsWith('Blocked:')
-        ? found.home.error.replace('Blocked: ', '')
-        : `${domain} did not respond. Check the spelling, or the site may be down.`,
+      ranOutOfTime(found.home)
+        ? `${domain} did not answer within the ${Math.round(SCAN_BUDGET_MS / 1000)} seconds we allow for a scan.`
+        : found.home.error?.startsWith('Blocked:')
+          ? found.home.error.replace('Blocked: ', '')
+          : `${domain} did not respond. Check the spelling, or the site may be down.`,
     )
   }
-
-  // The door test, run as the thing being tested. Three tries, because bot gates answer
-  // inconsistently and one 403 out of three is a different finding from three out of three.
-  const asAgent = await fetchWithRetries(found.site, { ua: AGENT_UA })
-  const rateLimitedUs = asAgent.statusesSeen.some((status) => status === 429)
 
   report(found.docs ? `Reading ${new URL(found.docs).pathname}` : 'Looking for documentation', 1)
   const docsPage = found.docsPage
   const docsText = docsPage?.ok ? docsPage.body : ''
+
+  // Nothing below this line depends on anything else below it, and running the six of them
+  // one after another was most of a scan: the door test waited on nobody and went third.
+  const doorPending = phase('door', () => fetchWithRetries(found.site, { ua: AGENT_UA }))
   // One documentation page is a lottery: cloudinary describes its Provisioning API on a page
   // we never opened, then failed the check for not describing it. Follow the pages an agent
   // hunting for credentials would follow.
-  const deeperDocs = docsPage?.ok && found.docs ? await readDeeper(domain, found.docs, docsPage.body) : []
-
-  report('Checking robots.txt against 13 AI crawlers', 2)
-  const robots = await scanRobots(found.site)
-
-  report('Probing llms.txt, .well-known and OpenAPI', 3)
-  const [machine, scraped] = await Promise.all([
-    scanMachineContext(found.site, found.docs),
-    checkNpm(found.npmPackage),
-  ])
-
-  // A name lifted from a page that the registry has never heard of is our parsing error
-  // far more often than it is a missing SDK, so we ask the registry before scoring a zero.
-  let npm = scraped
-  if (found.npmPackage && !scraped.found && found.npmSource !== 'registry-search') {
-    const searched = await searchNpmForDomain(domain, found.githubRepo)
-    if (searched && searched.name !== found.npmPackage) {
-      const retried = await checkNpm(searched.name)
-      if (retried.found) {
-        npm = retried
-        found.npmPackage = searched.name
-        found.npmSource = 'registry-search'
-        found.npmConfidence = searched.confidence
-      }
-    }
-  }
-
-  // The funnel greps documentation prose, so the corpus is every docs page we read plus home.
-  report('Testing signup and agent entry points', 4)
-  const corpus = [docsText, ...deeperDocs.map((page) => page.body), found.home.body].join('\n')
-  const funnel = await scanFunnel(
-    domain,
-    found.site,
-    corpus,
-    found.pricing,
-    found.signup,
-    found.pricingPage,
-    found.pricesVisibleWithoutJs,
+  const docsPending = phase('docs', async () =>
+    docsPage?.ok && found.docs ? readDeeper(domain, found.docs, docsPage.body) : [],
   )
+  const robotsPending = phase('robots', () => scanRobots(found.site))
+  const machinePending = phase('machine', () => scanMachineContext(found.site, found.docs))
+  const npmPending = phase('npm', () => resolvePackage(domain, found))
+  const funnelPending = phase('funnel', () =>
+    scanFunnel({
+      domain,
+      site: found.site,
+      // The funnel greps documentation prose, so the corpus is every docs page we read plus
+      // home. It is handed over unresolved: the grep is the last thing it does.
+      corpus: docsPending.then((deeper) =>
+        [docsText, ...deeper.map((page) => page.body), found.home.body].join('\n'),
+      ),
+      pricingUrl: found.pricing,
+      signupUrl: found.signup,
+      alreadyFetchedPricing: found.pricingPage,
+      pricesVisibleWithoutJs: found.pricesVisibleWithoutJs,
+    }),
+  )
+
+  // Reported in a fixed order so the bar never runs backwards, and awaited in the same
+  // expression as the work so a phase that rejects has a handler before anything is awaited.
+  const progress = (async () => {
+    await robotsPending
+    report('Checking robots.txt against 13 AI crawlers', 2)
+    await machinePending
+    report('Probing llms.txt, .well-known and OpenAPI', 3)
+    await funnelPending
+    report('Testing signup and agent entry points', 4)
+  })()
+
+  const [asAgent, deeperDocs, robots, machine, npm, funnel] = await Promise.all([
+    doorPending,
+    docsPending,
+    robotsPending,
+    machinePending,
+    npmPending,
+    funnelPending,
+    progress,
+  ])
+  const rateLimitedUs = asAgent.statusesSeen.some((status) => status === 429)
   report('Scoring', STEPS)
 
   return {
@@ -299,7 +400,27 @@ export async function scanDomain(input: string, onProgress?: ScanProgress): Prom
     machine,
     funnel,
     npm,
+    truncation: truncationOf(incomplete, SCAN_BUDGET_MS, Date.now() - startedAt),
   }
+}
+
+/**
+ * A name lifted from a page that the registry has never heard of is our parsing error far more
+ * often than it is a missing SDK, so we ask the registry before scoring a zero.
+ */
+async function resolvePackage(domain: string, found: Discovered): Promise<NpmFindings> {
+  const scraped = await checkNpm(found.npmPackage)
+  if (!found.npmPackage || scraped.found || found.npmSource === 'registry-search') return scraped
+
+  const searched = await searchNpmForDomain(domain, found.githubRepo)
+  if (!searched || searched.name === found.npmPackage) return scraped
+  const retried = await checkNpm(searched.name)
+  if (!retried.found) return scraped
+
+  found.npmPackage = searched.name
+  found.npmSource = 'registry-search'
+  found.npmConfidence = searched.confidence
+  return retried
 }
 
 export { normalizeDomain }

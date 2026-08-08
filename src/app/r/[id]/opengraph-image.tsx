@@ -1,8 +1,29 @@
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { ImageResponse } from 'next/og'
 import { buildComparison } from '@/lib/compare'
 import { pickHeadline } from '@/lib/headline'
 import { buildMark, fillHeight, hasUnmeasured, MARK_PALETTE, scoreTone } from '@/lib/mark'
 import { getStore } from '@/lib/store'
+
+/**
+ * Without a font, satori falls back to its own typeface and the card that represents the brand at
+ * the moment somebody shares it is the one asset not set in the brand's face. Read once per
+ * process rather than per render, and OFL-licensed so it can sit in the repository.
+ */
+let brandFonts: Promise<{ name: string; data: Buffer; weight: 400 | 600; style: 'normal' }[]> | null = null
+
+function loadFonts() {
+  brandFonts ??= Promise.all(
+    ([400, 600] as const).map(async (weight) => ({
+      name: 'IBM Plex Sans',
+      data: await readFile(join(process.cwd(), 'public', 'fonts', `ibm-plex-sans-${weight}.ttf`)),
+      weight,
+      style: 'normal' as const,
+    })),
+  )
+  return brandFonts
+}
 
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
@@ -16,7 +37,7 @@ const BRASS = '#7d5c10'
 
 export default async function Image({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const report = await getStore().getReport(id)
+  const [report, fonts] = await Promise.all([getStore().getReport(id), loadFonts()])
 
   if (!report) {
     return new ImageResponse(
@@ -25,7 +46,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
           StackPick
         </div>
       ),
-      size,
+      { ...size, fonts },
     )
   }
 
@@ -109,6 +130,6 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         </div>
       </div>
     ),
-    size,
+    { ...size, fonts },
   )
 }

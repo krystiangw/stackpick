@@ -1,0 +1,6 @@
+IBM Plex Sans is licensed under the SIL Open Font License 1.1.
+Copyright IBM Corp. 2017. https://github.com/IBM/plex
+
+The two files here are the 400 and 600 weights, bundled so the Open Graph card
+renders in the same typeface as the site. Satori cannot read woff2, which is why
+these are TrueType.
