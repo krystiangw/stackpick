@@ -192,6 +192,23 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </section>
       )}
 
+      {/* A scan the clock cut short must never read like a complete one, and the per-check
+          sentences alone are too quiet: the number at the top is what people quote. */}
+      {findings.truncation && (
+        <section className="border-b border-rule py-8">
+          <div className="border-l-2 border-warn bg-surface p-6">
+            <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">This scan ran out of time</h2>
+            <p className="mt-3 max-w-2xl leading-relaxed">
+              Your site took longer to read than the {Math.round(findings.truncation.budgetMs / 1000)} seconds a
+              scan is allowed, so {findings.truncation.unmeasuredChecks.length} of the{' '}
+              {scorecard.checks.length} checks never got their evidence and are marked unmeasurable rather than
+              scored. The number above is out of what we did measure, so it is not a worse result, it is a
+              smaller one. Scanning again usually finishes.
+            </p>
+          </div>
+        </section>
+      )}
+
       {findings.blocksPlainRequests && (
         <section className="border-b border-rule py-8">
           <div className="border-l-2 border-fail bg-surface p-6">
