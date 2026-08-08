@@ -36,6 +36,7 @@ export default async function IndustryReportPage() {
   const entryPoint = tallyFor(report.checks, 'agent_entry_point')
   const provisioning = tallyFor(report.checks, 'programmatic_provisioning')
   const mcp = tallyFor(report.checks, 'mcp_present')
+  const oauth = tallyFor(report.checks, 'oauth_dcr')
   const window = [report.scannedFrom, report.scannedTo].map((at) => at.slice(0, 10))
 
   return (
@@ -127,6 +128,15 @@ export default async function IndustryReportPage() {
               describe no way to obtain a credential without a human opening a dashboard, across every
               documentation page we could read. The remaining {provisioning.unmeasurable} gave us too little
               documentation to judge.
+            </li>
+          )}
+          {oauth && oauth.pass + oauth.zero > 0 && (
+            <li className="border-l-2 border-fail pl-4 leading-relaxed">
+              <span className="font-mono tabular-nums">
+                {oauth.zero} of {oauth.pass + oauth.zero + oauth.partial}
+              </span>{' '}
+              publish no OAuth metadata with a registration endpoint on any host we could follow, so an agent
+              cannot register itself as a client. RFC 7591 is the only standard by which it could.
             </li>
           )}
           {mcp && (
