@@ -31,6 +31,7 @@ export type FixPlan = {
   from: number
   to: number
   max: number
+  unmeasured: number
   /** Peers currently above the subject that the quick wins would put it past. */
   overtakes: string[]
 }
@@ -161,6 +162,7 @@ export function buildFixPlan(
   const counted = quickWins.length > 0 ? quickWins : steps.slice(0, 1)
   const gain = counted.reduce((sum, step) => sum + step.gain, 0)
   const to = scorecard.total + gain
+  const measurable = scorecard.measurable ?? scorecard.max
 
   const overtakes = (comparison?.peers ?? [])
     .filter((peer) => !peer.isSubject && peer.total > scorecard.total && peer.total < to)
@@ -174,7 +176,9 @@ export function buildFixPlan(
     gain,
     from: scorecard.total,
     to,
-    max: scorecard.max,
+    max: measurable,
+    /** Points locked behind checks we could not evaluate, so the list has a visible ceiling. */
+    unmeasured: scorecard.max - measurable,
     overtakes,
   }
 }
@@ -188,8 +192,8 @@ function claimFor(
 ): string {
   const opener =
     counted.length === 1
-      ? `Fix one thing, ${lower(counted[0].label)}, and ${scorecard.total}/${scorecard.max} becomes ${to}/${scorecard.max}`
-      : `Fix the ${counted.length} cheapest ${plural(counted.length, 'item', 'items')} below and ${scorecard.total}/${scorecard.max} becomes ${to}/${scorecard.max}`
+      ? `Fix one thing, ${lower(counted[0].label)}, and ${scorecard.total}/${measurableOf(scorecard)} becomes ${to}/${measurableOf(scorecard)}`
+      : `Fix the ${counted.length} cheapest ${plural(counted.length, 'item', 'items')} below and ${scorecard.total}/${measurableOf(scorecard)} becomes ${to}/${measurableOf(scorecard)}`
 
   if (overtakes.length > 0) {
     return `${opener}, past ${listOf(overtakes)}.`
@@ -201,6 +205,8 @@ function claimFor(
   if (counted.every((step) => step.effort !== 'a project')) return `${opener}. None of it needs a rewrite.`
   return `${opener}.`
 }
+
+const measurableOf = (scorecard: Scorecard) => scorecard.measurable ?? scorecard.max
 
 const lower = (label: string) => label.charAt(0).toLowerCase() + label.slice(1)
 

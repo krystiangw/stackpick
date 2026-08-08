@@ -17,16 +17,19 @@ export function FunnelMark({
   return (
     <div className="flex items-end gap-1.5" role="img" aria-label="Points earned at each of the five funnel stages">
       {stages.map((stage) => {
-        const share = stage.max > 0 ? stage.points / stage.max : 0
+        const measurable = stage.measurable ?? stage.max
+        const share = measurable > 0 ? stage.points / measurable : 0
         const tone = share >= 0.67 ? 'bg-pass' : share >= 0.34 ? 'bg-warn' : 'bg-fail'
         return (
           <div key={stage.stage} className="flex flex-col items-center gap-1">
             <div className="relative w-4 bg-sunken sm:w-5" style={{ height }}>
               {/* A stage with nothing still gets a tick at the floor, so zero is visibly zero. */}
-              <div
-                className={`absolute bottom-0 left-0 right-0 ${share === 0 ? 'bg-fail' : tone}`}
-                style={{ height: share === 0 ? 2 : `${Math.max(share * 100, 6)}%` }}
-              />
+              {measurable > 0 && (
+                <div
+                  className={`absolute bottom-0 left-0 right-0 ${share === 0 ? 'bg-fail' : tone}`}
+                  style={{ height: share === 0 ? 2 : `${Math.max(share * 100, 6)}%` }}
+                />
+              )}
             </div>
             {showLetters && <span className="font-mono text-[0.65rem] text-ink-faint">{stage.letter}</span>}
           </div>

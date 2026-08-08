@@ -189,7 +189,7 @@ export default async function IndustryReportPage() {
                       {item.domain}
                     </Link>
                     <span className={`font-mono text-sm tabular-nums ${column.tone}`}>
-                      {item.total}/{report.max}
+                      {item.total}/{item.measurable}
                     </span>
                   </li>
                 ))}
@@ -198,8 +198,9 @@ export default async function IndustryReportPage() {
           ))}
         </div>
         <p className="mt-6 max-w-2xl text-sm leading-relaxed text-ink-soft">
-          Median {report.median}/{report.max}, mean {report.mean.toFixed(1)}. Every one of these links is the
-          full scorecard, with the HTTP observation behind each line.
+          Scores are out of the points we could measure on each domain, not out of {report.max}. A site that
+          refuses our requests scores against a smaller denominator, not a worse number. Every one of these
+          links is the full scorecard, with the HTTP observation behind each line.
         </p>
       </section>
 

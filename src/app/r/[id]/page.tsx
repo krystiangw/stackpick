@@ -22,14 +22,22 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   const headline = pickHeadline(report.findings, report.scorecard)
   return {
-    title: `${report.domain}: agent readiness ${report.scorecard.total}/${report.scorecard.max}`,
+    title: `${report.domain}: agent readiness ${report.scorecard.total}/${report.scorecard.measurable ?? report.scorecard.max}`,
     description: headline.claim,
     openGraph: {
-      title: `${report.domain} · ${report.scorecard.total}/${report.scorecard.max}`,
+      title: `${report.domain} · ${report.scorecard.total}/${report.scorecard.measurable ?? report.scorecard.max}`,
       description: headline.claim,
     },
     twitter: { card: 'summary_large_image' },
   }
+}
+
+type Stage = { points: number; max: number; measurable?: number }
+
+/** Null when nothing at this stage could be measured, which is not the same as zero. */
+function stageShare(stage: Stage): number | null {
+  const measurable = stage.measurable ?? stage.max
+  return measurable === 0 ? null : stage.points / measurable
 }
 
 function scaleAnchor(comparison: Awaited<ReturnType<typeof buildComparison>>, total: number): string | null {
@@ -63,7 +71,9 @@ function withSource(url: string | null, source: string | null): string | null {
 
 function verdictTone(check: ScoredCheck) {
   if (check.points === check.max) return { label: 'PASS', className: 'text-pass' }
-  if (check.inconclusive) return { label: 'N/A', className: 'text-ink-faint' }
+  // Three states, not two: we could not measure it, or it does not apply to this product.
+  if (check.notApplicable) return { label: 'N/A', className: 'text-ink-faint' }
+  if (check.inconclusive) return { label: 'UNMEASURED', className: 'text-ink-faint' }
   if (check.points > 0) return { label: 'PART', className: 'text-warn' }
   return { label: 'FAIL', className: 'text-fail' }
 }
@@ -87,6 +97,10 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   // A number with no scale is not a finding. The anchor answers "is 8 bad?" above the fold,
   // from data this page already loaded, instead of 1,900px down the page.
   const anchor = scaleAnchor(comparison, scorecard.total)
+  // Charging a vendor for our blind spots is the rule the industry report already refuses to
+  // apply to the market, and this is the page the vendor actually reads.
+  const measurable = scorecard.measurable ?? scorecard.max
+  const unmeasured = scorecard.max - measurable
   // Built from the request when no base URL is configured, so a copied link is never relative.
   const host = (await headers()).get('host') ?? 'localhost:3000'
   const origin = process.env.STACKPICK_BASE_URL ?? `${host.startsWith('localhost') ? 'http' : 'https'}://${host}`
@@ -111,12 +125,12 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           <div className="flex items-baseline gap-2 font-mono">
             <span
               className={`text-6xl font-semibold tracking-tighter tabular-nums ${
-                scorecard.total <= scorecard.max / 3 ? 'text-fail' : scorecard.total >= (scorecard.max * 2) / 3 ? 'text-pass' : 'text-warn'
+                scorecard.total <= measurable / 3 ? 'text-fail' : scorecard.total >= (measurable * 2) / 3 ? 'text-pass' : 'text-warn'
               }`}
             >
               {scorecard.total}
             </span>
-            <span className="text-lg text-ink-faint">/ {scorecard.max}</span>
+            <span className="text-lg text-ink-faint">/ {measurable}</span>
           </div>
           <FunnelMark stages={scorecard.stages} />
           <dl className="flex flex-wrap gap-x-8 gap-y-2 font-mono text-xs">
@@ -125,15 +139,27 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                 <dt className="text-ink-faint">{stage.letter} · {stage.title}</dt>
                 <dd
                   className={`tabular-nums ${
-                    stage.points / stage.max >= 0.67 ? 'text-pass' : stage.points / stage.max >= 0.34 ? 'text-warn' : 'text-fail'
+                    stageShare(stage) === null
+                      ? 'text-ink-faint'
+                      : stageShare(stage)! >= 0.67
+                        ? 'text-pass'
+                        : stageShare(stage)! >= 0.34
+                          ? 'text-warn'
+                          : 'text-fail'
                   }`}
                 >
-                  {stage.points}/{stage.max}
+                  {stage.measurable === 0 ? 'n/m' : `${stage.points}/${stage.measurable}`}
                 </dd>
               </div>
             ))}
           </dl>
         </div>
+
+        <p className="mt-3 font-mono text-xs text-ink-faint">
+          {unmeasured > 0
+            ? `of the ${measurable} points we could measure · ${unmeasured} of ${scorecard.max} were not measurable on this domain`
+            : `all ${scorecard.max} points were measurable on this domain`}
+        </p>
 
         {anchor && (
           <p className="mt-4 font-mono text-xs text-ink-soft">
@@ -201,17 +227,17 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                 {/* One track for every row. Zero gets a tick at the origin, because a filled
                     track for zero made 0/4 look fuller than 3/5. */}
                 <div className="relative h-1.5 w-24 bg-sunken sm:w-40">
-                  {stage.points === 0 ? (
+                  {stageShare(stage) === null ? null : stage.points === 0 ? (
                     <div className="absolute inset-y-0 left-0 w-0.5 bg-fail" />
                   ) : (
                     <div
-                      className={`h-full ${stage.points / stage.max >= 0.67 ? 'bg-pass' : stage.points / stage.max >= 0.34 ? 'bg-warn' : 'bg-fail'}`}
-                      style={{ width: `${(stage.points / stage.max) * 100}%` }}
+                      className={`h-full ${stageShare(stage)! >= 0.67 ? 'bg-pass' : stageShare(stage)! >= 0.34 ? 'bg-warn' : 'bg-fail'}`}
+                      style={{ width: `${stageShare(stage)! * 100}%` }}
                     />
                   )}
                 </div>
-                <span className="w-12 text-right font-mono text-sm tabular-nums">
-                  {stage.points}/{stage.max}
+                <span className="w-14 text-right font-mono text-sm tabular-nums">
+                  {stage.measurable === 0 ? 'not measured' : `${stage.points}/${stage.measurable}`}
                 </span>
               </div>
             </div>
@@ -246,9 +272,10 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                         <div className="flex flex-col gap-1">
                           <span className="text-sm font-medium">{check.label}</span>
                           <span className="font-mono text-xs text-ink-soft">{check.detail}</span>
-                          {check.points < check.max && !check.inconclusive && (
+                          {check.points < check.max && !check.inconclusive && !check.notApplicable && (
                             <span className="text-xs italic text-ink-faint">{check.why}</span>
                           )}
+                          {check.unblock && <span className="text-xs italic text-ink-faint">{check.unblock}</span>}
 
                         </div>
                       </li>

@@ -26,6 +26,14 @@ export function FixFirst({ plan }: { plan: FixPlan }) {
         </span>
       </div>
 
+      {plan.unmeasured > 0 && (
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          This is the whole list: everything we could measure and you do not pass. Another {plan.unmeasured}{' '}
+          {plan.unmeasured === 1 ? 'point sits' : 'points sit'} behind checks we could not evaluate on your
+          domain, and each of those lines below says what would make it measurable.
+        </p>
+      )}
+
       <ol className="mt-8 flex flex-col">
         {plan.quickWins.map((step, index) => (
           <li key={step.checkId} className="grid grid-cols-[1.6rem_1fr] gap-4 border-t border-rule py-4">

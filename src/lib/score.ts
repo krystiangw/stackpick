@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '3.1'
+export const FORMULA_VERSION = '3.2'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -20,6 +20,10 @@ export type CheckResult = {
   detail: string
   /** Zero because we could not find the thing, not because it is absent. Shown differently. */
   inconclusive?: boolean
+  /** The check does not apply to this kind of product: a library has no signup to gate. */
+  notApplicable?: boolean
+  /** What would make an unmeasured check measurable. Never a claim, always a next step. */
+  unblock?: string
 }
 
 export type Check = {
@@ -88,7 +92,8 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       // Zero characters we never fetched is not thin documentation, it is no measurement.
       if (!f.discovered.docs) {
-        return { points: 0, detail: 'Unmeasurable: no documentation page could be found to read', inconclusive: true }
+        return { points: 0, detail: 'Unmeasurable: no documentation page could be found to read',
+          unblock: 'Link your documentation from your home page or list it in llms.txt.', inconclusive: true }
       }
       if (f.docsTextChars === 0) {
         return {
@@ -189,6 +194,7 @@ export const CHECKS: Check[] = [
         return {
           points: 0,
           detail: 'Unmeasurable: no OAuth metadata on the apex, and no authorization host we could follow',
+          unblock: 'Publish /.well-known/oauth-authorization-server on the host that issues your tokens, or send us that host and we will rescan.',
           inconclusive: true,
         }
       }
@@ -230,7 +236,12 @@ export const CHECKS: Check[] = [
     max: 1,
     evaluate: (f) => {
       if (!f.funnel.signup.url) {
-        return { points: 0, detail: 'No signup page linked from the site we could follow', inconclusive: true }
+        return {
+          points: 0,
+          detail: 'Not applicable: nothing on the site links to an account signup, so there is no gate to measure',
+          notApplicable: true,
+          unblock: 'If accounts are created somewhere else, tell us where and we will rescan.',
+        }
       }
       if (f.funnel.signup.captcha.length > 0) {
         return yes(0, `CAPTCHA detected: ${f.funnel.signup.captcha.join(', ')}`)
@@ -239,6 +250,7 @@ export const CHECKS: Check[] = [
         return {
           points: 0,
           detail: 'Unmeasurable: the signup form is not in the server HTML, so its gates are not either',
+          unblock: 'Server-render the form, or tell us the endpoint it posts to, and the gates become visible to us and to an agent.',
           inconclusive: true,
         }
       }
@@ -254,7 +266,12 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       const signup = f.funnel.signup
       if (!signup.url) {
-        return { points: 0, detail: 'No signup page linked from the site we could follow', inconclusive: true }
+        return {
+          points: 0,
+          detail: 'Not applicable: nothing on the site links to an account signup',
+          notApplicable: true,
+          unblock: 'A product with no accounts cannot fail this. If yours has them elsewhere, point us at the page.',
+        }
       }
       if (!signup.reachable) {
         const seen = signup.consistent ? `${signup.status}` : `${signup.statusesSeen.join(', ')}`
@@ -287,6 +304,7 @@ export const CHECKS: Check[] = [
           points: 0,
           detail: `Unmeasurable: only ${pages} documentation ${pages === 1 ? 'page' : 'pages'} could be read, which is too little to conclude anything`,
           inconclusive: true,
+          unblock: 'Link your API reference from your docs index or from llms.txt and this becomes measurable.',
         }
       }
       return yes(0, `No programmatic credential creation described in the ${pages} documentation pages we read`)
@@ -301,7 +319,8 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       if (f.funnel.provisioning.selfServeSignals.length > 0) return yes(1, 'Free tier or no-card signals on pricing')
       if (!f.funnel.pricingFetched) {
-        return { points: 0, detail: 'Unmeasurable: no pricing page could be fetched', inconclusive: true }
+        return { points: 0, detail: 'Unmeasurable: no pricing page could be fetched',
+          unblock: 'Link a pricing page from your home page, or list one in llms.txt.', inconclusive: true }
       }
       return yes(0, 'No self-serve signal found on the pricing page')
     },
@@ -314,7 +333,12 @@ export const CHECKS: Check[] = [
     max: 1,
     evaluate: (f) => {
       if (!f.npm.package) {
-        return { points: 0, detail: 'No npm package found on the site or in the registry', inconclusive: true }
+        return {
+          points: 0,
+          detail: 'Not applicable: nothing on your site, in your docs or in the registry names a package of yours',
+          notApplicable: true,
+          unblock: 'Name your package once in your docs and this becomes measurable. If you do not ship one, this check does not apply to you.',
+        }
       }
       // A registry name that only shares a GitHub org with the site is a hypothesis. Scoring
       // it gave allegro.pl a point for an internal utility it does not publish as an SDK.
@@ -323,6 +347,7 @@ export const CHECKS: Check[] = [
           points: 0,
           detail: `Unmeasurable: nothing on the site names a package, and the closest registry match (${f.npm.package}) is not clearly yours`,
           inconclusive: true,
+          unblock: 'Name your package once in your docs and we stop guessing.',
         }
       }
       if (!f.npm.found) return yes(0, `Package ${f.npm.package} not found on the registry`)
@@ -355,7 +380,8 @@ export const CHECKS: Check[] = [
         }
       }
       if (f.blocksPlainRequests) {
-        return { points: 0, detail: 'Unmeasurable behind the WAF', inconclusive: true }
+        return { points: 0, detail: 'Unmeasurable behind the WAF',
+          unblock: 'Let ordinary HTTP through to your public pages and this becomes measurable.', inconclusive: true }
       }
       // "Not found on your domain" is what we measured. "Does not exist" is not.
       return yes(0, 'No OpenAPI spec and no markdown negotiation found on this domain')
@@ -370,9 +396,25 @@ export type Scorecard = {
   formulaVersion: string
   total: number
   max: number
-  stages: { stage: Stage; letter: string; title: string; question: string; points: number; max: number }[]
+  /**
+   * Points we could actually evaluate. Scoring out of `max` charged a vendor for our own
+   * blind spots, which is the rule the industry report already refuses to apply to the
+   * market: froala.com read as 3/16 when eight of those points were never measured.
+   */
+  measurable: number
+  stages: {
+    stage: Stage
+    letter: string
+    title: string
+    question: string
+    points: number
+    max: number
+    measurable: number
+  }[]
   checks: ScoredCheck[]
 }
+
+const counts = (check: ScoredCheck) => !check.inconclusive && !check.notApplicable
 
 export function scoreFindings(findings: ScanFindings): Scorecard {
   const checks: ScoredCheck[] = CHECKS.map((check) => ({ ...check, ...check.evaluate(findings) }))
@@ -386,6 +428,7 @@ export function scoreFindings(findings: ScanFindings): Scorecard {
       question: stage.question,
       points: inStage.reduce((sum, check) => sum + check.points, 0),
       max: inStage.reduce((sum, check) => sum + check.max, 0),
+      measurable: inStage.filter(counts).reduce((sum, check) => sum + check.max, 0),
     }
   })
 
@@ -393,6 +436,7 @@ export function scoreFindings(findings: ScanFindings): Scorecard {
     formulaVersion: FORMULA_VERSION,
     total: checks.reduce((sum, check) => sum + check.points, 0),
     max: MAX_SCORE,
+    measurable: checks.filter(counts).reduce((sum, check) => sum + check.max, 0),
     stages,
     checks,
   }

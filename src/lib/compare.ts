@@ -3,6 +3,9 @@ import { getStore, type Report } from './store'
 
 export type Peer = { domain: string; total: number; max: number; isSubject: boolean }
 
+/** Ranking on the paper maximum punished vendors whose sites we could not fully read. */
+const share = (peer: { total: number; max: number }) => (peer.max === 0 ? 0 : peer.total / peer.max)
+
 export type Comparison = {
   category: Category | null
   /** Ranked peers we have actually scanned. Never padded with assumptions. */
@@ -34,7 +37,11 @@ export async function buildComparison(subject: Report): Promise<Comparison> {
   const percentile =
     scanned.length >= SAMPLE_FLOOR
       ? {
-          betterThan: scanned.filter((report) => report.scorecard.total < subject.scorecard.total).length,
+          betterThan: scanned.filter(
+            (report) =>
+              report.scorecard.total / (report.scorecard.measurable ?? report.scorecard.max) <
+              subject.scorecard.total / (subject.scorecard.measurable ?? subject.scorecard.max),
+          ).length,
           outOf: scanned.length,
         }
       : null
@@ -49,10 +56,10 @@ export async function buildComparison(subject: Report): Promise<Comparison> {
     .map((report) => ({
       domain: report.domain,
       total: report.scorecard.total,
-      max: report.scorecard.max,
+      max: report.scorecard.measurable ?? report.scorecard.max,
       isSubject: report.domain === subject.domain,
     }))
-    .sort((a, b) => b.total - a.total || a.domain.localeCompare(b.domain))
+    .sort((a, b) => share(b) - share(a) || b.total - a.total || a.domain.localeCompare(b.domain))
 
   const position = peers.findIndex((peer) => peer.isSubject) + 1
   const rankInCategory = position > 0 && peers.length >= 3 ? { position, outOf: peers.length } : null

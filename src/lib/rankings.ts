@@ -22,10 +22,13 @@ export async function loadRankings(): Promise<RankedCategory[]> {
       .map((report) => ({
         domain: report.domain,
         total: report.scorecard.total,
-        max: report.scorecard.max,
+        max: report.scorecard.measurable ?? report.scorecard.max,
         reportId: report.id,
       }))
-      .sort((a, b) => b.total - a.total || a.domain.localeCompare(b.domain))
+      // A site that refuses our requests scores against a smaller denominator, not a worse
+      // number. Publishing a name next to a number we did not fully measure is the one place
+      // this tool could do real damage.
+      .sort((a, b) => b.total / b.max - a.total / a.max || b.total - a.total || a.domain.localeCompare(b.domain))
 
     const totals = entries.map((entry) => entry.total).sort((a, b) => a - b)
     const median = totals.length === 0 ? 0 : totals[Math.floor(totals.length / 2)]

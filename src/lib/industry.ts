@@ -39,8 +39,8 @@ export type IndustryReport = {
     measuredOn: number
   }[]
   checks: CheckTally[]
-  best: { domain: string; total: number; reportId: string }[]
-  worst: { domain: string; total: number; reportId: string }[]
+  best: { domain: string; total: number; measurable: number; reportId: string }[]
+  worst: { domain: string; total: number; measurable: number; reportId: string }[]
 }
 
 const MINIMUM_SAMPLE = 20
@@ -60,6 +60,7 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
   if (reports.length < MINIMUM_SAMPLE) return null
 
   const totals = reports.map((report) => report.scorecard.total).sort((a, b) => a - b)
+  const measurableOf = (report: Report) => report.scorecard.measurable ?? report.scorecard.max
   const middle = Math.floor(totals.length / 2)
   const median = totals.length % 2 === 0 ? (totals[middle - 1] + totals[middle]) / 2 : totals[middle]
   const mean = totals.reduce((sum, total) => sum + total, 0) / totals.length
@@ -98,10 +99,13 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
     return tally
   })
 
-  const ranked = [...reports].sort((a, b) => b.scorecard.total - a.scorecard.total)
+  const ranked = [...reports].sort(
+    (a, b) => b.scorecard.total / measurableOf(b) - a.scorecard.total / measurableOf(a) || b.scorecard.total - a.scorecard.total,
+  )
   const asEntry = (report: Report) => ({
     domain: report.domain,
     total: report.scorecard.total,
+    measurable: measurableOf(report),
     reportId: report.id,
   })
   const scanTimes = reports.map((report) => report.scannedAt).sort()

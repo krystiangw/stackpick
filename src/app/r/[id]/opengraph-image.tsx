@@ -37,7 +37,8 @@ export default async function Image({ params }: { params: Promise<{ id: string }
   const standing = rank
     ? `${rank.position} of ${rank.outOf} · ${comparison.category?.label ?? ''}`
     : `Agent readiness · formula v${scorecard.formulaVersion}`
-  const tone = scorecard.total <= scorecard.max / 3 ? FAIL : scorecard.total >= (scorecard.max * 2) / 3 ? PASS : WARN
+  const measurable = scorecard.measurable ?? scorecard.max
+  const tone = scorecard.total <= measurable / 3 ? FAIL : scorecard.total >= (measurable * 2) / 3 ? PASS : WARN
 
   return new ImageResponse(
     (
@@ -69,12 +70,13 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', borderTop: `2px solid ${RULE}`, paddingTop: 28 }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14 }}>
             {scorecard.stages.map((stage) => {
-              const share = stage.max > 0 ? stage.points / stage.max : 0
+              const stageMax = stage.measurable ?? stage.max
+              const share = stageMax > 0 ? stage.points / stageMax : 0
               const fill = share >= 0.67 ? PASS : share >= 0.34 ? WARN : FAIL
               return (
                 <div key={stage.stage} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                   <div style={{ display: 'flex', width: 34, height: 96, background: '#e3dfd4', alignItems: 'flex-end' }}>
-                    <div style={{ display: 'flex', width: '100%', height: share === 0 ? 3 : Math.max(share * 96, 8), background: fill }} />
+                    <div style={{ display: 'flex', width: '100%', height: stageMax === 0 ? 0 : share === 0 ? 3 : Math.max(share * 96, 8), background: fill }} />
                   </div>
                   <div style={{ display: 'flex', fontSize: 20, color: '#8a8b8f', letterSpacing: 2 }}>{stage.letter}</div>
                 </div>
@@ -85,7 +87,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
             <div style={{ display: 'flex', fontSize: 96, fontWeight: 700, color: tone, letterSpacing: -5 }}>
               {scorecard.total}
             </div>
-            <div style={{ display: 'flex', fontSize: 30, color: '#8a8b8f' }}>/ {scorecard.max}</div>
+            <div style={{ display: 'flex', fontSize: 30, color: '#8a8b8f' }}>/ {measurable}</div>
           </div>
         </div>
       </div>
