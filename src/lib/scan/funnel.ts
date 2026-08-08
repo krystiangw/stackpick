@@ -45,13 +45,31 @@ const PROVISIONING_PATTERNS = [
 /** Only signals that actually mean "an agent can finish without a human or a card". */
 const SELF_SERVE_PATTERNS = [
   /no credit card/i,
+  /\bno card\b/i,
   /(?<!no )free tier/i,
   /(?<!no )free plan/i,
+  // A number in front of it is a claim about a trial; "Start Free Trial" on its own is the
+  // button in the navigation bar of a site that has no free tier at all.
+  /\b\d+[- ]day free trial\b/i,
+  /\bfree account\b/i,
   /start for free/i,
   /free forever/i,
+  /forever free/i,
   /\$0(?:\.00)?(?![.\d])/,
   /\bget started free\b/i,
   /\btry (?:it )?free\b/i,
+  // A recurring allowance is a free tier by another name: agora.io grants the first 10,000
+  // minutes free every month and was published as having no free tier.
+  /\bfree every month\b/i,
+  // Substance rather than chrome: openrouter.ai's tier is a row of free models, and no button
+  // anywhere says "free credits".
+  /\bfree\s+(?:models|credits|usage|allowance|minutes|requests)\b/i,
+  /free and open[- ]source/i,
+  // The row of a pricing table, where the tier is named and the price is the word Free.
+  // polar.sh writes "Starter Free", saleor.io "Sandboxes Forever Free", pusher.com
+  // "Sandbox Free", and none of them says the words "free tier" anywhere on the page.
+  /\b(?:starter|sandbox|hobby|developer|basic|community|open[- ]source)\b[^.\n]{0,24}\bfree\b/i,
+  /\bfree\s+\w+\s+plan\b/i,
 ]
 
 /**
@@ -60,7 +78,7 @@ const SELF_SERVE_PATTERNS = [
  * generous, because the check is about whether the file was written for a machine at all.
  */
 const PROCEDURE_SIGNALS =
-  /api[- ]?key|api[- ]?token|access[- ]token|bearer|authorization|endpoint|curl |POST https?:|sign[- ]?up|register|base[- ]?url/i
+  /api[- ]?key|api[- ]?token|access[- ]token|service[- ]token|service[- ]account|credential|bearer|authorization|endpoint|curl |POST https?:|sign[- ]?up|register|base[- ]?url/i
 
 function describesAProcedure(body: string): boolean {
   return body.trim().length >= 400 && PROCEDURE_SIGNALS.test(body)
@@ -471,7 +489,7 @@ export async function scanFunnel({
   // The entry probes are the one thing that has to wait: on a site that answers every unknown
   // path they prove nothing, and firing them anyway would be nine requests spent to learn that.
   const catchAll = await catchAllPending
-  const entriesPending = inParallel(AGENT_ENTRY_PATHS, async (path) => {
+  const probeEntry = inParallel(AGENT_ENTRY_PATHS, async (path) => {
     // Judged against the namespace the path is in: /ai.txt is not discredited by a .md catch-all.
     const namespace = path.endsWith('.json') ? catchAll.json : path.endsWith('.txt') ? catchAll.text : catchAll.markdown
     if (namespace) return [path, false, false] as const
@@ -483,7 +501,24 @@ export async function scanFunnel({
         : catchAll.bodyLengths?.markdown
     const sameAsNonsense = controlLength !== undefined && controlLength > 0 && got.body.length === controlLength
     const present = !sameAsNonsense && isRealTextFile(got, 30)
-    return [path, present, present && describesAProcedure(got.body)] as const
+    return [path, present, present && describesAProcedure(got.body), got.body] as const
+  })
+
+  /**
+   * A body served at more than one of these paths is the site's shell, whatever the control
+   * probe happened to land on. sentry.io answers /ai.txt and every other path with the same 976
+   * byte markdown page, and returns it or a 20 kB HTML page depending on the request, so a
+   * single control sample can miss it. Two of our own probes agreeing is proof by itself.
+   */
+  const entriesPending = probeEntry.then((probed) => {
+    const seenBodies = new Map<string, number>()
+    for (const [, present, , body] of probed) {
+      if (present) seenBodies.set(body, (seenBodies.get(body) ?? 0) + 1)
+    }
+    return probed.map(([path, present, procedure, body]) => {
+      const shared = present && (seenBodies.get(body) ?? 0) > 1
+      return [path, present && !shared, procedure && !shared] as const
+    })
   })
 
   const mcpEndpoints = await mcpPending

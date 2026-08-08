@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '5.7'
+export const FORMULA_VERSION = '5.8'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -220,10 +220,17 @@ export const CHECKS: Check[] = [
     why: 'A markdown file written for a machine turns a guessing game into a procedure it can follow.',
     max: 2,
     evaluate: (f) => {
-      if (f.funnel.servesCatchAll) {
+      // Per namespace, not globally. sentry.io answers any .md path with an app shell, and the
+      // whole check bailed on that: its /.well-known/mcp.json is 106 bytes of real JSON against
+      // a 20,402 byte control, and the same scan read that file to find their MCP server.
+      const catchAll = f.funnel.catchAll
+      const everyNamespaceFakes = catchAll
+        ? catchAll.markdown && catchAll.json && catchAll.text
+        : f.funnel.servesCatchAll
+      if (everyNamespaceFakes) {
         return {
           points: 0,
-          detail: 'Unmeasurable: the site answers unknown paths with real text, so any hit here proves nothing',
+          detail: 'Unmeasurable: the site answers unknown paths in every format with real text, so any hit here proves nothing',
           inconclusive: true,
         }
       }
@@ -246,7 +253,9 @@ export const CHECKS: Check[] = [
       if (f.funnel.entryPointsFound.length > 0) {
         return yes(1, `Only service descriptors: ${at(f.funnel.entryPointsFound)}. No procedure written for a machine.`)
       }
-      return yes(0, 'None of the 9 known agent entry paths answer')
+      // "None of them answer" was false on every site that serves its app shell for unknown
+      // paths, which is most of them: all nine answer 200, and none of them answers with a file.
+      return yes(0, 'None of the 9 known agent entry paths returns a file rather than your page shell')
     },
   },
   {
