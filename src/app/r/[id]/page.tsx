@@ -224,10 +224,10 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
-            href="/audit/froala-editors"
+            href="/audit"
             className="bg-ink px-5 py-3 font-mono text-sm text-ground transition-opacity hover:opacity-85"
           >
-            Read that audit in full
+            Read the audits in full
           </Link>
           <Link
             href="/pricing"

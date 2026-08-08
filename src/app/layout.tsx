@@ -46,8 +46,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/findings" className="hover:text-ink">
                 Findings
               </Link>
-              <Link href="/audit/froala-editors" className="hover:text-ink">
-                Audit
+              <Link href="/audit" className="hover:text-ink">
+                Audits
               </Link>
               <Link href="/pricing" className="hover:text-ink">
                 Pricing
