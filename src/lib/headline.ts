@@ -75,8 +75,10 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
   // Zero characters can mean thin docs or a page we never got. Only the first is a finding.
   if (findings.docsTextChars > 0 && findings.docsTextChars < 2000 && discovered.docs) {
     return {
-      claim: `Your documentation renders ${findings.docsTextChars.toLocaleString('en-US')} characters without JavaScript. Agents read that, not your bundle.`,
-      evidence: `${discovered.docs} served ${findings.docsTextChars.toLocaleString('en-US')} characters of text to a plain fetch.`,
+      // Stating the number without stating that it is too little read as a compliment: the same
+      // 1,778 characters headlined resend.com's scorecard while the check below it scored zero.
+      claim: `Only ${findings.docsTextChars.toLocaleString('en-US')} characters of your documentation survive without JavaScript, and that is the version an agent reads.`,
+      evidence: `${discovered.docs} served ${findings.docsTextChars.toLocaleString('en-US')} characters of text to a plain fetch. The check passes at 2,000, which is about one screen of prose.`,
       severity: 'serious',
     }
   }
