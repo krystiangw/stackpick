@@ -118,6 +118,12 @@ data: {"id":"example-com-202608072143","total":9,"max":${MAX_SCORE}}`}</Code>
           listed separately and marked as not failures.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          Every scan we publish is downloadable as one dataset: <span className="font-mono text-xs">/corpus.json</span>{' '}
+          and <span className="font-mono text-xs">/corpus.csv</span>, one row per domain and check, with the
+          verdict and the sentence it was measured from. Free to use and quote with attribution, which makes it
+          the fastest way to disagree with us.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           Machine-readable descriptions of all of this live at{' '}
           <Link href="/openapi.json" className="text-brass underline underline-offset-4">
             /openapi.json

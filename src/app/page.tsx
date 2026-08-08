@@ -155,15 +155,29 @@ export default async function Home() {
             </p>
             <p className="text-sm leading-relaxed text-ink-soft">
               This is the part no scanner can give you, because it is a measurement of behaviour, not of files.
+              One brief costs $2,900 and a full study $11,000, both scoped before you pay.
             </p>
             <Link
               href="/pricing"
               className="mt-2 w-fit border border-ink px-5 py-2.5 font-mono text-sm transition-colors hover:bg-ink hover:text-ground"
             >
-              See what an audit costs
+              What the audit includes
             </Link>
           </div>
         </div>
+      </section>
+
+      {/* A price and a name were both two clicks down a page of rankings, and a buyer who wants to
+          know who is behind a four-figure invoice should not have to hunt for it. */}
+      <section className="border-t border-rule py-10">
+        <p className="max-w-2xl leading-relaxed text-ink-soft">
+          Run by Krystian Gwizdała. The scanner, the formula, the agent runs and every number on this site are
+          mine, and an audit is run by me rather than by a team you never meet.{' '}
+          <Link href="/audit" className="text-brass underline underline-offset-4">
+            Four audits are published in full
+          </Link>{' '}
+          so you can see the work before deciding whether it is worth anything to you.
+        </p>
       </section>
     </main>
   )

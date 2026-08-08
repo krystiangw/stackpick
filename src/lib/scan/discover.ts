@@ -282,9 +282,12 @@ async function pickNamedPackage(names: string[], vendor: Vendor): Promise<string
   if (names.length === 0) return null
   if (names.length === 1) return names[0]
 
+  // Coarser than the registry path on purpose. Both `supabase` and `@supabase/supabase-js` are
+  // named in Supabase's docs and both read like an entry package; only usage says the first is
+  // their command line tool. A description would say so too, at a registry request per name.
   const ranked = await inParallel(names.slice(0, 6), async (name) => ({
     name,
-    rank: shapeRank(name, vendor),
+    rank: Math.max(shapeRank(name, vendor) - 2, 0),
     downloads: await weeklyDownloads(name),
   }))
   ranked.sort((a, b) => a.rank - b.rank || b.downloads - a.downloads)
@@ -401,8 +404,8 @@ function orgIsVendor(org: string | null, vendor: Vendor): boolean {
 /** Whether a searched name can carry a point. Anything we cannot attribute is not returned at all. */
 export type NpmMatch = { name: string; confidence: 'strong' }
 
-async function searchRegistry(text: string): Promise<NpmSearchHit[]> {
-  const got = await fetchUrl(`https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(text)}&size=20`, {
+async function searchRegistry(text: string, size = 20): Promise<NpmSearchHit[]> {
+  const got = await fetchUrl(`https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(text)}&size=${size}`, {
     accept: 'application/json',
   })
   if (!got.ok) return []
@@ -449,9 +452,12 @@ function afterVendorName(part: string, vendor: Vendor): string | null {
  * are coarse on purpose: ranking by how much of the brand a name carries once picked
  * froala-pages over froala-editor, so within a tier real usage still decides.
  */
-export function shapeRank(name: string, vendor: Vendor): number {
+export function shapeRank(name: string, vendor: Vendor, description = ''): number {
   const part = bareName(name)
   if (NOT_AN_SDK.test(part) || NOT_AN_SDK.test(name.toLowerCase())) return 5
+  // The package named exactly after the vendor is not always the SDK: `storyblok` is
+  // Storyblok's command line tool, and only its own description says so.
+  if (/\b(cli|command[- ]line)\b/i.test(description)) return 5
   const rest = afterVendorName(part, vendor)
   if (rest === '') return 0
   // launchdarkly-js-client-sdk is what LaunchDarkly ships; launchdarkly-eventsource is what it
@@ -511,13 +517,17 @@ export function maintainedByVendor(candidate: Pick<Candidate, 'maintainers'>, ve
 }
 
 export function publishedByVendor(
-  candidate: Pick<Candidate, 'maintainers' | 'links'>,
+  candidate: Pick<Candidate, 'name' | 'maintainers' | 'links'>,
   vendor: Vendor,
   siteOrg: string | null,
 ): boolean {
   if (maintainedByVendor(candidate, vendor)) return true
   const orgs = candidate.links.map(githubOrg)
-  return orgs.some((org) => orgIsVendor(org, vendor) || (siteOrg !== null && org === siteOrg))
+  if (orgs.some((org) => orgIsVendor(org, vendor))) return true
+  // The org a page links to first is whatever the page links to first: honeybadger.io's docs
+  // link github.com/org/repo and betterstack.com links Algolia's DocSearch. It is the weakest
+  // proof we have, so it only counts for a package that already reads like the vendor's own.
+  return siteOrg !== null && orgs.includes(siteOrg) && shapeRank(candidate.name, vendor) <= 3
 }
 
 const monthsSince = (at: number) => (at === 0 ? 0 : (Date.now() - at) / (1000 * 60 * 60 * 24 * 30.44))
@@ -535,12 +545,16 @@ const isProvisional = (candidate: Candidate) => candidate.version.includes('-') 
  */
 const MIN_WEEKLY_DOWNLOADS = 1000
 
+function saysItIsAboutTheVendor(what: { description: string; keywords: string[] }, vendor: Vendor): boolean {
+  return (
+    mentionsVendorName(what.description, vendor) ||
+    what.keywords.some((keyword) => mentionsVendorName(keyword, vendor))
+  )
+}
+
 function looksLikeTheirProduct(candidate: Candidate, vendor: Vendor, downloads: number): boolean {
-  if (shapeRank(candidate.name, vendor) < 4) return true
-  const mentioned =
-    mentionsVendorName(candidate.description, vendor) ||
-    candidate.keywords.some((keyword) => mentionsVendorName(keyword, vendor))
-  return mentioned && downloads >= MIN_WEEKLY_DOWNLOADS
+  if (shapeRank(candidate.name, vendor, candidate.description) < 4) return true
+  return saysItIsAboutTheVendor(candidate, vendor) && downloads >= MIN_WEEKLY_DOWNLOADS
 }
 
 /**
@@ -549,13 +563,16 @@ function looksLikeTheirProduct(candidate: Candidate, vendor: Vendor, downloads: 
  * neither the brand nor the domain: highlight.io's SDK is `highlight.run`, which no search for
  * "highlight" returns within twenty results.
  */
-function vendorMaintainer(candidates: Candidate[], vendor: Vendor): string | null {
+function vendorMaintainers(candidates: Candidate[], vendor: Vendor): string[] {
+  const handles = new Set<string>()
   for (const candidate of candidates) {
     for (const maintainer of candidate.maintainers) {
-      if (maintainer.name && handleMentionsVendor(maintainer.name, vendor)) return maintainer.name
+      if (maintainer.name && handleMentionsVendor(maintainer.name, vendor)) handles.add(maintainer.name)
     }
   }
-  return null
+  // More than one, because a company's packages are split across its people: the account that
+  // publishes highlight.io's framework bindings does not publish highlight.run.
+  return [...handles].slice(0, 3)
 }
 
 /**
@@ -589,26 +606,27 @@ export async function searchNpmForDomain(domain: string, githubRepo: string | nu
 
   let owned = [...byName.values()].filter(isTheirs)
 
-  const handle = vendorMaintainer(owned, vendor)
-  if (handle) {
-    for (const hit of await searchRegistry(`maintainer:${handle}`)) {
-      if (isPlaceholder(hit.package.name) || byName.has(hit.package.name)) continue
-      const candidate = candidateOf(hit.package)
-      byName.set(candidate.name, candidate)
-      if (isTheirs(candidate)) owned.push(candidate)
-    }
+  const handles = vendorMaintainers(owned, vendor)
+  const shelves = await inParallel(handles, (handle) => searchRegistry(`maintainer:${handle}`, 50))
+  for (const hit of shelves.flat()) {
+    if (isPlaceholder(hit.package.name) || byName.has(hit.package.name)) continue
+    const candidate = candidateOf(hit.package)
+    byName.set(candidate.name, candidate)
+    if (isTheirs(candidate)) owned.push(candidate)
   }
 
   // A CLI or a framework binding is the vendor's own and still not what a developer installs
   // to use them, so it does not stand in for an SDK we could not find.
-  owned = owned.filter((candidate) => shapeRank(candidate.name, vendor) < 5)
+  owned = owned.filter((candidate) => shapeRank(candidate.name, vendor, candidate.description) < 5)
   if (owned.length === 0) return null
 
   // Everything the cheap signals cannot separate goes to the download check together. Taking a
   // fixed number instead dropped launchdarkly-js-client-sdk, which sorts late alphabetically
   // and by length among the twenty packages LaunchDarkly publishes.
   const cheapRank = (candidate: Candidate) =>
-    Number(isDormant(candidate)) * 100 + shapeRank(candidate.name, vendor) * 10 + Number(isProvisional(candidate))
+    Number(isDormant(candidate)) * 100 +
+    shapeRank(candidate.name, vendor, candidate.description) * 10 +
+    Number(isProvisional(candidate))
   const best = Math.min(...owned.map(cheapRank))
   const shortlist = owned
     .filter((candidate) => cheapRank(candidate) === best)
@@ -644,6 +662,24 @@ export async function searchNpmForDomain(domain: string, githubRepo: string | nu
  * Only ever asked of candidates the cheap signals could not separate, so it cannot promote a
  * plugin over an SDK.
  */
+/** What one manifest read says about a name we found on the vendor's own page. */
+async function readScrapedPackage(
+  name: string,
+  vendor: Vendor,
+  githubRepo: string | null,
+): Promise<{ theirs: boolean; aboutThem: boolean }> {
+  const facts = await fetchPackageFacts(name)
+  if (!facts) return { theirs: false, aboutThem: false }
+  return {
+    theirs: publishedByVendor(
+      { name, maintainers: facts.maintainers, links: [facts.repository, facts.homepage].filter(Boolean) },
+      vendor,
+      githubRepo?.split('/')[0].toLowerCase() ?? null,
+    ),
+    aboutThem: saysItIsAboutTheVendor(facts, vendor),
+  }
+}
+
 async function preferUmbrella(names: string[], vendor: Vendor): Promise<string> {
   if (names.length < 2) return names[0]
   const facts = await inParallel(names, (name) => fetchPackageFacts(name))
@@ -760,23 +796,26 @@ export async function discover(domain: string): Promise<Discovered> {
 
   let npmConfidence: 'strong' | null = null
 
-  // A scraped name that carries neither the vendor's name nor their maintainers is usually a
-  // dependency the docs told you to install alongside theirs: htmx.org's install idiomorph.
-  // Asking the registry who publishes the scraped package answers that without guessing, and
-  // it is what keeps froala-editor - scraped, and published by accounts@froala.com - from
-  // being swapped for whichever of froala.com's other packages a search happens to rank first.
-  if (npmPackage && !carriesVendorName(bareName(npmPackage), vendor)) {
-    const facts = await fetchPackageFacts(npmPackage)
-    const theirs =
-      facts !== null &&
-      publishedByVendor(
-        { maintainers: facts.maintainers, links: [facts.repository, facts.homepage].filter(Boolean) },
-        vendor,
-        githubRepo?.split('/')[0].toLowerCase() ?? null,
-      )
-    if (!theirs) {
+  // A scraped name goes wrong two ways. It can belong to somebody else - a dependency the docs
+  // told you to install alongside theirs - which the registry answers by naming who publishes
+  // it. Or it can be the vendor's own and still not the package you install to use them:
+  // htmx.org's docs install idiomorph, which its authors publish too, so ownership clears it
+  // and its shape does not. Either way the search only wins if what it finds reads more like
+  // an entry package, which is what keeps froala.com on the froala-editor its llms.txt names.
+  if (npmPackage) {
+    const scrapedRank = shapeRank(npmPackage, vendor)
+    const { theirs, aboutThem } =
+      scrapedRank === 0
+        ? { theirs: true, aboutThem: true }
+        : await readScrapedPackage(npmPackage, vendor, githubRepo)
+    // @amplitude/analytics-browser is named after nothing but what it does, and calls itself
+    // the official Amplitude SDK for Web. idiomorph, on the same shape, is "an id-based DOM
+    // morphing library" and never mentions htmx. Only the second is worth looking past.
+    if (!theirs || (scrapedRank >= 4 && !aboutThem)) {
+      // A name that is not theirs loses to an equal shape; one that is theirs has to be beaten.
+      const ceiling = theirs ? scrapedRank : scrapedRank + 1
       const searched = await searchNpmForDomain(domain, githubRepo)
-      if (searched) {
+      if (searched && shapeRank(searched.name, vendor) < ceiling) {
         npmPackage = searched.name
         npmSource = 'registry-search'
         npmConfidence = 'strong'

@@ -25,7 +25,12 @@ export default function MethodologyPage() {
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
           Scanners in this category derive a score from a single call to a language model. That number does
           not reproduce, and asking a vendor to act on it is asking them to trust a coin flip. Every check
-          below is an HTTP request with a fixed rule. {CHECKS.length} checks, {MAX_SCORE} points.
+          below is an HTTP request with a fixed rule. {CHECKS.length} checks, {MAX_SCORE} points. Every result
+          we publish is downloadable at{' '}
+          <a href="/corpus.json" className="text-brass underline underline-offset-4">
+            /corpus.json
+          </a>
+          , because arguing with a formula is easier with the data than with the prose.
         </p>
       </section>
 

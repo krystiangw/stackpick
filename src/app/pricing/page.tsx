@@ -132,6 +132,35 @@ export default function PricingPage() {
         </div>
       </section>
 
+      {/* The objection a sceptical buyer arrives with, answered before they have to ask it. */}
+      <section className="border-b border-rule py-12">
+        <h2 className="text-lg font-semibold tracking-tight">Why one run of an agent proves nothing</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          Ask a model the same question twice and it will not answer the same way. The best public measurement
+          of this ran 2,961 prompts and found the same set of brands came back in fewer than one attempt in a
+          hundred. Anyone selling you a position in an AI ranking from a single run is selling noise, and they
+          should be treated that way.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          So we do not sell a position. Every cell is repeated, every run is recorded separately, and what you
+          get is the spread rather than a number: how many runs chose you, how many named you at all, and the
+          words each one used. Where runs disagree, the disagreement is the finding and it is printed as one.
+          The four published audits are written that way, and you can check that before paying us anything:
+          each one names the models, the number of runs, the scaffold, and what a different scaffold would
+          have changed.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          The honest limit is the sample size. Four to six runs per cell is enough to see a wall every run hits
+          and not enough to rank two vendors that finish close together. We report which of those two a finding
+          is, every time.
+        </p>
+        <p className="mt-5">
+          <Link href="/audit" className="font-mono text-sm text-brass underline underline-offset-4">
+            Read the four published audits, which are the sample of the deliverable
+          </Link>
+        </p>
+      </section>
+
       <section className="border-b border-rule py-12">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">After the findings</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
