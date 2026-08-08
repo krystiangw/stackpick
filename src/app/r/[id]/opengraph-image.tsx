@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
 import { buildComparison } from '@/lib/compare'
 import { pickHeadline } from '@/lib/headline'
-import { buildMark, fillHeight, MARK_PALETTE, scoreTone } from '@/lib/mark'
+import { buildMark, fillHeight, hasUnmeasured, MARK_PALETTE, scoreTone } from '@/lib/mark'
 import { getStore } from '@/lib/store'
 
 export const size = { width: 1200, height: 630 }
@@ -12,6 +12,7 @@ const INK = MARK_PALETTE.ink
 const GROUND = MARK_PALETTE.ground
 const RULE = MARK_PALETTE.rule
 const TRACK = 96
+const BRASS = '#7d5c10'
 
 export default async function Image({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -55,7 +56,12 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <div style={{ display: 'flex', fontSize: 30, fontWeight: 600, letterSpacing: -0.5 }}>{report.domain}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', fontSize: 17, color: BRASS, letterSpacing: 4, textTransform: 'uppercase' }}>
+              StackPick
+            </div>
+            <div style={{ display: 'flex', fontSize: 30, fontWeight: 600, letterSpacing: -0.5 }}>{report.domain}</div>
+          </div>
           <div style={{ display: 'flex', fontSize: 20, color: '#6b6d72', letterSpacing: 2, textTransform: 'uppercase' }}>
             {standing}
           </div>
@@ -68,6 +74,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         </div>
 
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', borderTop: `2px solid ${RULE}`, paddingTop: 28 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14 }}>
             {segments.map((segment) => (
               <div key={segment.letter} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
@@ -86,6 +93,12 @@ export default async function Image({ params }: { params: Promise<{ id: string }
                 <div style={{ display: 'flex', fontSize: 20, color: '#8a8b8f', letterSpacing: 2 }}>{segment.letter}</div>
               </div>
             ))}
+          </div>
+          {hasUnmeasured(segments) && (
+            <div style={{ display: 'flex', fontSize: 17, color: '#8a8b8f' }}>
+              Dashed: nothing here could be measured
+            </div>
+          )}
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
             <div style={{ display: 'flex', fontSize: 96, fontWeight: 700, color: tone, letterSpacing: -5 }}>
