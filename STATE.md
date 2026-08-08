@@ -257,8 +257,17 @@ wszystkiego, a płatny audyt zamyka właśnie tę lukę.
    klienta), sposób umówienia się inny niż `mailto` (kalendarz), model kosztu utraconych szans
    przeliczający "16% punktów za drzwi" na pieniądze. Pierwszych dwóch nie da się uczciwie
    wyprodukować przed pierwszym klientem.
-3. **Trzeci pomiar w innej kategorii** (auth albo płatności), żeby sprawdzić, czy bariera
-   "klucz wymaga człowieka" trzyma się poza edytorami i storage.
+3. ~~Trzeci pomiar w innej kategorii~~ **zrobiony: auth** (`/audit/workos-auth`, N=4,
+   `ai-audit/runs/auth-round1.md`). Bariera trzyma się trzeci raz z rzędu: 4/4 napisały działający
+   login, 4/4 stanęły na tenancie. Dwa nowe znaleziska, oba mocniejsze niż sam wybór dostawcy:
+   **(a) dostawcy są eliminowani na podstawie streszczeń wyszukiwarki, których nikt nie otworzył**
+   (WorkOS odrzucony jako "the most attractive on price" na podstawie niezweryfikowanego
+   twierdzenia; Auth0 odrzucony za kartę kredytową przez agregator, gdy inny przebieg otworzył
+   ich cennik i ustalił, że karta nie jest wymagana); **(b) agent odmawia decyzji własnościowych**
+   ("an account-ownership decision I should not make unilaterally"), więc ścieżka bezobsługowa
+   musi być **prowizoryczna**, nie tylko łatwa. Do tego: w auth bariera terminalna należy do
+   Google (własny klient OAuth), nie do dostawcy.
+4. **Czwarta kategoria** (płatności albo analytics), gdyby potrzebny był czwarty punkt pomiarowy.
 
 ## Stan zweryfikowany 2026-08-08 (noc)
 
