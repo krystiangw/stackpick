@@ -1,0 +1,131 @@
+{
+  "slug": "workos-auth",
+  "subject": "workos.com",
+  "category": "Authentication for a support tool",
+  "task": "The app assumes a session cookie set by an internal proxy. The company wants real authentication for support agents: email login plus Google sign-in, with sessions the existing Go API can verify. Pick an authentication provider, wire the login flow and session handling into the frontend, and adapt the API client so requests carry whatever the provider issues. Decide alone, nobody is available to answer questions.",
+  "scaffold": "A working helpdesk knowledge base: Vite, React 19, TypeScript, a static bundle in front of a separate Go service the agent cannot see or edit. Four isolated copies, one per run.",
+  "runDate": "2026-08-08",
+  "runs": [
+    {
+      "id": "A",
+      "model": "stronger model",
+      "chose": "Auth0",
+      "rejected": [
+        {
+          "vendor": "workos.com",
+          "reason": "Believed its SPA path requires a backend endpoint, from a search summary the run never opened and flagged as its weakest claim",
+          "verbatim": "The most attractive on price. Rejected on architecture... this is a search summary, not a doc I read, so the claim that AuthKit's SPA path needs a backend endpoint is the weakest link in my reasoning and worth confirming against WorkOS's docs before treating that rejection as settled."
+        },
+        { "vendor": "Clerk", "reason": "Needs a JWT template to target our API's audience, a second token beside the session token" },
+        { "vendor": "Firebase Auth", "reason": "ID tokens are scoped to the Firebase project, not to our API, and Go verification wants a service-account key" },
+        { "vendor": "Supabase Auth", "reason": "An identity silo for one feature when the Go API already owns the data" },
+        { "vendor": "Keycloak, Zitadel, Ory", "reason": "No signup wall at all, but the team would run an identity provider for one internal tool" }
+      ],
+      "usedLiveSources": true,
+      "sources": [
+        "auth0.com/docs/quickstart/spa/react (read)",
+        "auth0.github.io/auth0-spa-js typedoc for Auth0ClientOptions (read, settled the defaults)",
+        "node_modules type definitions of the installed SDK (read)",
+        "search summaries for WorkOS, Clerk and pricing (skimmed, flagged as unverified)"
+      ],
+      "blockedBy": "An Auth0 tenant: a signup form and an email address it does not have",
+      "notes": "Caught an 83,000-request fetch loop in its own code during verification and fixed it before reporting. Found that keeping tokens out of localStorage, which it chose because article HTML is agent-authored, breaks on Safari reload unless the tenant uses a custom domain, a paid feature."
+    },
+    {
+      "id": "B",
+      "model": "stronger model",
+      "chose": "Auth0",
+      "rejected": [
+        {
+          "vendor": "workos.com",
+          "reason": "Called the better long-term fit, then set aside as enterprise SSO the company does not need yet",
+          "verbatim": "Genuinely close, and arguably the better long-term fit since support agents are staff and this is really SSO. This is the one I would revisit if the company ever wants SCIM provisioning of agents."
+        },
+        { "vendor": "Clerk", "reason": "A short-lived session token refreshed by its own SDK pulls vendor session semantics into a service we cannot edit" },
+        { "vendor": "Supabase Auth", "reason": "Adopting a database platform to get a login form" },
+        { "vendor": "Firebase Auth", "reason": "Token verification in Go wants the Admin SDK and a service-account key" },
+        { "vendor": "Better Auth", "reason": "A TypeScript backend library, and there is no Node backend here" }
+      ],
+      "usedLiveSources": true,
+      "sources": [
+        "auth0.com/docs/libraries/auth0-react (read)",
+        "auth0.com/docs/.../social-identity-providers/devkeys (read, the production prohibition)",
+        "auth0.com/pricing (read: no credit card, contradicting another run's summary)",
+        "proxy.golang.org, to confirm a Go module version the page summary could have invented"
+      ],
+      "blockedBy": "An Auth0 tenant, and it declined to create one: an account-ownership decision it would not make for the company",
+      "notes": "Named the second barrier explicitly: not payment, not a form, but a decision that commits the company. Flagged its own Clerk claim as worth re-verifying before anyone acts on it."
+    },
+    {
+      "id": "C",
+      "model": "cheaper model",
+      "chose": "Firebase Auth",
+      "rejected": [
+        {
+          "vendor": "Auth0",
+          "reason": "Believed a credit card is required even on the free tier, from a pricing aggregator rather than the vendor's own page",
+          "verbatim": "Current sources (2026) indicate credit-card verification is now required even for the free tier."
+        },
+        { "vendor": "Okta", "reason": "No self-serve free path: this typically starts with a sales conversation" },
+        { "vendor": "AWS Cognito", "reason": "Would need an AWS account it does not have" },
+        { "vendor": "Supabase Auth", "reason": "A project-wide shared secret rather than public-key verification" }
+      ],
+      "usedLiveSources": true,
+      "sources": [
+        "firebase.google.com documentation for verification, start, Google sign-in and password auth (read)",
+        "search summaries for Auth0 and Firebase pricing (skimmed, and the Auth0 rejection rests on one)"
+      ],
+      "blockedBy": "A Firebase project: a human in the console enabling two sign-in providers",
+      "notes": "The Auth0 rejection came from an aggregator. Another run in the same study opened auth0.com/pricing and found no card is required."
+    },
+    {
+      "id": "D",
+      "model": "cheaper model",
+      "chose": "Clerk",
+      "rejected": [
+        { "vendor": "Auth0", "reason": "No first-party Go SDK, so verification means hand-rolling JWKS caching" },
+        { "vendor": "Firebase Auth", "reason": "Ties identity to the Google ecosystem and has a weaker React UI story" },
+        { "vendor": "AWS Cognito", "reason": "Worse ergonomics and more steps for the same Google federation" },
+        { "vendor": "Okta", "reason": "Enterprise-oriented, no reasonable self-serve path for a small internal tool" }
+      ],
+      "usedLiveSources": true,
+      "sources": [
+        "clerk.com documentation for session verification, tokens, the React quickstart and Google connections (read)",
+        "registry.npmjs.org for the published version"
+      ],
+      "blockedBy": "A Clerk application, then a Google Cloud project and a verified consent screen for production",
+      "notes": "Found the two-stage shape: Google sign-in works immediately on the vendor's shared development credentials, and production needs a human in Google Cloud. An agent reaches a working demo alone and stops exactly where the money starts."
+    }
+  ],
+  "verdict": {
+    "headline": "You were the best option in one run and the cheapest in another. You were rejected in both, once on a claim nobody checked.",
+    "body": [
+      "Four agents, two models, four isolated copies, one brief: replace a proxy cookie with real authentication. All four produced a working login flow. None of them could obtain a tenant, and the two strongest runs chose the same competitor for the same architectural reason: a service they cannot edit should not have to adopt a vendor's SDK.",
+      "WorkOS was named in two runs and chosen in none. One called it the most attractive on price and rejected it for needing a backend endpoint in a single-page app, a claim taken from a search result it never opened and flagged, in its own report, as the weakest link in its reasoning. The other called it arguably the better long-term fit and set it aside as enterprise SSO not needed today. Neither rejection was about the product as documented.",
+      "That is the finding worth acting on, and it is not specific to one vendor. In the same study a competitor was rejected for requiring a credit card, from a pricing aggregator, while another run opened that vendor's own pricing page and found no card is required. The same product was eliminated and accepted depending on whether the agent read the source or the summary of it. If your documentation does not answer the entry question in a form that surfaces in a search summary, an aggregator answers for you, and its answer is what gets acted on."
+    ]
+  },
+  "recommendations": [
+    {
+      "title": "Answer the entry questions where a summariser will find them",
+      "body": "Two eliminations in this study rested on second-hand claims about signup requirements and architecture. Put the answers in plain text on your own pages, in the words the question is asked in: whether a card is required, whether a backend is required, what a single-page app needs. Then check what a search engine actually summarises about you, because today that is the source of record.",
+      "effort": "hours"
+    },
+    {
+      "title": "Offer credentials that do not commit the company",
+      "body": "One run refused to create a tenant, not because it could not, but because ownership is a decision it would not make for someone else. An ephemeral development tenant with no ownership implications and a claim-later path is the only shape of self-serve that fits what an agent will actually do alone.",
+      "effort": "weeks"
+    },
+    {
+      "title": "Shorten the path to a production Google client, or document it as a procedure",
+      "body": "Every provider in this category hit the same terminal wall: production Google sign-in needs an OAuth client in the customer's own Google Cloud project, with a verified consent screen. No provider removes it, so the one that documents it as a followable procedure wins the last mile that the others leave to a support ticket.",
+      "effort": "days"
+    }
+  ],
+  "limits": [
+    "Four runs, two models from one family. Cursor, Copilot and Codex may filter differently.",
+    "One brief and one scaffold, and the scaffold decided a lot: a Go backend the agent could not edit is what made SDK-neutral token verification the deciding criterion. A Node backend would very likely produce a different winner.",
+    "The agents stated decisions and wrote code. Nobody attempted a signup, so the wall is reported as the agents met it.",
+    "WorkOS is the subject because it was named and passed over twice. The findings about search summaries and ownership decisions apply to the whole category, including the two providers that won."
+  ]
+}
