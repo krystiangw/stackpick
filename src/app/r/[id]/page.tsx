@@ -11,7 +11,7 @@ import { buildFixPlan } from '@/lib/fixfirst'
 import { getStore } from '@/lib/store'
 import { pickHeadline } from '@/lib/headline'
 import { ShareRow } from '@/components/share-row'
-import { STAGES, type ScoredCheck } from '@/lib/score'
+import { CHECKS, STAGES, type ScoredCheck } from '@/lib/score'
 
 export const dynamic = 'force-dynamic'
 
@@ -165,7 +165,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           <p className="mt-4 font-mono text-xs text-ink-soft">
             {anchor} ·{' '}
             <Link href="/methodology" className="text-brass underline underline-offset-4">
-              14 deterministic HTTP checks, published formula
+              {CHECKS.length} deterministic HTTP checks, published formula
             </Link>
           </p>
         )}

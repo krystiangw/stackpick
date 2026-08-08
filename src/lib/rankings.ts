@@ -1,21 +1,50 @@
 import { CATEGORIES, CURATED_DOMAINS, type Category } from './categories'
 import { getStore, type Report } from './store'
 
-export type RankedEntry = { domain: string; total: number; max: number; reportId: string }
+export type RankedEntry = {
+  domain: string
+  total: number
+  max: number
+  reportId: string
+  stages: Report['scorecard']['stages']
+}
 export type RankedCategory = { category: Category; entries: RankedEntry[]; median: number }
+
+/**
+ * How much of the formula we can actually reach from outside. It is the honest footnote under
+ * every "16 points" claim on the site, and it is also the argument for the paid audit: the gap
+ * between the paper maximum and what a scanner can see is the part somebody has to run agents for.
+ */
+export type CorpusCoverage = { domains: number; max: number; averageMeasurable: number; fullyMeasurable: number }
+
+export type RankingsView = { categories: RankedCategory[]; coverage: CorpusCoverage }
 
 /**
  * Rendered on the landing page as proof rather than as a claim: a ranking of real domains
  * is harder to dismiss than an adjective about what the scanner can do.
  */
-export async function loadRankings(): Promise<RankedCategory[]> {
+export async function loadRankings(): Promise<RankingsView> {
   const latest = new Map(
     (await getStore().latestPerDomain(500))
       .filter((report) => CURATED_DOMAINS.has(report.domain))
       .map((report) => [report.domain, report]),
   )
 
-  return CATEGORIES.map((category) => {
+  const scanned = [...latest.values()]
+  const coverage: CorpusCoverage = {
+    domains: scanned.length,
+    max: scanned[0]?.scorecard.max ?? 0,
+    averageMeasurable:
+      scanned.length === 0
+        ? 0
+        : scanned.reduce((sum, report) => sum + (report.scorecard.measurable ?? report.scorecard.max), 0) /
+          scanned.length,
+    fullyMeasurable: scanned.filter(
+      (report) => (report.scorecard.measurable ?? report.scorecard.max) === report.scorecard.max,
+    ).length,
+  }
+
+  const categories = CATEGORIES.map((category) => {
     const entries = category.domains
       .map((domain) => latest.get(domain))
       .filter((report): report is Report => Boolean(report))
@@ -24,6 +53,7 @@ export async function loadRankings(): Promise<RankedCategory[]> {
         total: report.scorecard.total,
         max: report.scorecard.measurable ?? report.scorecard.max,
         reportId: report.id,
+        stages: report.scorecard.stages,
       }))
       // A site that refuses our requests scores against a smaller denominator, not a worse
       // number. Publishing a name next to a number we did not fully measure is the one place
@@ -40,4 +70,6 @@ export async function loadRankings(): Promise<RankedCategory[]> {
   })
     .filter((ranked) => ranked.entries.length >= 4)
     .sort((a, b) => b.entries.length - a.entries.length)
+
+  return { categories, coverage }
 }

@@ -25,7 +25,8 @@ const TIERS: readonly Tier[] = [
     cadence: 'instant, no account',
     pitch: 'What a machine can see from outside.',
     includes: [
-      `${CHECKS.length} deterministic checks across five funnel stages, ${MAX_SCORE} points`,
+      `${CHECKS.length} deterministic checks across five funnel stages, ${MAX_SCORE} points on paper`,
+      'A score out of the points we could actually measure on your domain, with the rest named rather than counted against you',
       'A permanent link you can forward',
       'The published formula, so the number can be argued with',
     ],
@@ -39,7 +40,7 @@ const TIERS: readonly Tier[] = [
     includes: [
       'Three real agent runs on one brief we design with you, recorded',
       'Whether you are in the candidate set at all, or absent from it',
-      'The words used to reject you, quoted',
+      'The words used to reject you, quoted where the run left a quotable sentence and labelled as our summary where it did not',
       'Sixty minutes to walk through it with whoever owns the fix',
     ],
     note: 'Credited in full against a Full audit booked within 90 days.',

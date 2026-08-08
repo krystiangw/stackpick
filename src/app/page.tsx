@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { FunnelMark } from '@/components/funnel-mark'
 import { Rankings } from '@/components/rankings'
 import { ScanForm } from '@/components/scan-form'
 import { loadRankings } from '@/lib/rankings'
@@ -38,7 +39,10 @@ const EVIDENCE = [
 ]
 
 export default async function Home() {
-  const rankings = await loadRankings()
+  const { categories, coverage } = await loadRankings()
+  // The stage list is abstract until it has a shape next to it, and the shape has to come from
+  // a domain anyone can open and check rather than from an invented example.
+  const example = categories[0]?.entries[0] ?? null
 
   return (
     <main className="mx-auto max-w-5xl px-6">
@@ -81,7 +85,7 @@ export default async function Home() {
         </p>
       </section>
 
-      <Rankings rankings={rankings} />
+      <Rankings rankings={categories} />
 
       <section className="border-b border-rule py-14">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">The five stages</h2>
@@ -89,6 +93,26 @@ export default async function Home() {
           Most scanners stop at whether you publish a file. The interesting failures happen further down the
           funnel, where an agent has already chosen you and still cannot finish.
         </p>
+        {example && (
+          <div className="mt-8 flex flex-wrap items-end gap-6 border border-rule p-6">
+            <FunnelMark stages={example.stages} height={72} showLegend />
+            <div className="flex flex-col gap-1">
+              <p className="font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">
+                What the five stages look like on one real domain
+              </p>
+              <p className="font-mono text-sm">
+                <Link href={`/r/${example.reportId}`} className="text-brass underline underline-offset-4">
+                  {example.domain}
+                </Link>{' '}
+                <span className="tabular-nums text-ink-soft">
+                  {example.total} / {example.max}
+                </span>{' '}
+                <span className="text-ink-faint">· current leader in {categories[0].category.label.toLowerCase()}</span>
+              </p>
+            </div>
+          </div>
+        )}
+
         <ol className="mt-8 flex flex-col">
           {STAGES.map((stage) => (
             <li key={stage.id} className="grid grid-cols-[2rem_1fr] gap-4 border-t border-rule py-4 sm:grid-cols-[3rem_12rem_1fr]">
@@ -106,9 +130,18 @@ export default async function Home() {
             <h3 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Free scan</h3>
             <p className="text-2xl font-semibold tracking-tight">What a machine can see</p>
             <p className="text-sm leading-relaxed text-ink-soft">
-              {CHECKS.length} deterministic checks across the five stages, {MAX_SCORE} points. Published formula,
-              reproducible result, no model involved. Runs in under a minute.
+              {CHECKS.length} deterministic checks across the five stages, {MAX_SCORE} points on paper. Published
+              formula, reproducible result, no model involved. Runs in under a minute.
             </p>
+            {/* The paper maximum on its own reads as a promise we do not keep: almost no domain
+                can be measured in full from outside, and the page says so 300px higher up. */}
+            {coverage.domains > 0 && (
+              <p className="text-sm leading-relaxed text-ink-soft">
+                You are scored out of what we could measure on your domain, not out of {MAX_SCORE}. Across the{' '}
+                {coverage.domains} domains scanned here that averages {coverage.averageMeasurable.toFixed(0)} points,
+                and only {coverage.fullyMeasurable} could be measured in full.
+              </p>
+            )}
             <div className="mt-2 max-w-sm">
               <ScanForm />
             </div>
