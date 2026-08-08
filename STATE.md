@@ -252,12 +252,16 @@ wszystkiego, a płatny audyt zamyka właśnie tę lukę.
    domenie:** to prywatny adres na publicznej stronie, świadomy wybór, bo adres, który odbija
    przy CTA za 11 000 USD, jest gorszy. Sam adres `stackpick-f12d13a227ea.herokuapp.com` też
    pracuje przeciwko cenie.
-2. **Czego kupujący szuka i nie znajdzie** (z audytu wartości, wymaga rzeczy, których nie mamy):
+2. **Pierwszy kontakt: szkice gotowe, wysyłka zablokowana.** `outreach/first-contact-drafts.md`
+   ma trzy szkice na trzy realne sytuacje: vendor wyeliminowany w przebiegach, vendor z tanią
+   poprawką i konkretną deltą, oraz zwycięzca kategorii. Zgodnie z regułą globalną to **wyłącznie
+   szkice do przejrzenia przez Krystiana**, a wysyłka i tak czeka na domenę.
+3. **Czego kupujący szuka i nie znajdzie** (z audytu wartości, wymaga rzeczy, których nie mamy):
    przykładowy deliverable Diagnostica, jakikolwiek dowód, że ktoś to kupił (case study, cytat
    klienta), sposób umówienia się inny niż `mailto` (kalendarz), model kosztu utraconych szans
    przeliczający "16% punktów za drzwi" na pieniądze. Pierwszych dwóch nie da się uczciwie
    wyprodukować przed pierwszym klientem.
-3. ~~Trzeci pomiar w innej kategorii~~ **zrobiony: auth** (`/audit/workos-auth`, N=4,
+4. ~~Trzeci pomiar w innej kategorii~~ **zrobiony: auth** (`/audit/workos-auth`, N=4,
    `ai-audit/runs/auth-round1.md`). Bariera trzyma się trzeci raz z rzędu: 4/4 napisały działający
    login, 4/4 stanęły na tenancie. Dwa nowe znaleziska, oba mocniejsze niż sam wybór dostawcy:
    **(a) dostawcy są eliminowani na podstawie streszczeń wyszukiwarki, których nikt nie otworzył**
@@ -267,7 +271,7 @@ wszystkiego, a płatny audyt zamyka właśnie tę lukę.
    ("an account-ownership decision I should not make unilaterally"), więc ścieżka bezobsługowa
    musi być **prowizoryczna**, nie tylko łatwa. Do tego: w auth bariera terminalna należy do
    Google (własny klient OAuth), nie do dostawcy.
-4. **Czwarta kategoria** (płatności albo analytics), gdyby potrzebny był czwarty punkt pomiarowy.
+5. **Czwarta kategoria** (płatności albo analytics), gdyby potrzebny był czwarty punkt pomiarowy.
 
 ## Runda 2026-08-08 (szósta): teza z trzech kategorii, korekta własnych twierdzeń
 
