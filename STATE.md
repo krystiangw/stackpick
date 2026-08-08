@@ -593,3 +593,47 @@ o 50 domenach zamiast o 14: **14 wystawia dynamiczną rejestrację klienta, 36 m
 **Lekcja procesowa:** publikowanie własnych danych jako danych opłaciło się w ciągu godziny, i to
 nie na zewnątrz, tylko do środka. Następne pytania do tego samego zbioru: `signup_no_captcha`
 (22 niemierzalne) i `typed_package` (19).
+
+## Runda 2026-08-08 (szesnasta): druga ślepa plama, i dwa własne przestrzelenia po drodze
+
+Ten sam ruch co w rundzie 15, na drugim checku ze szczytu listy. **`typed_package` niemierzalny
+na 20 z 51 domen**, a 14 z tych przypadków miało już znaleziony dopasowany pakiet, który sami
+odrzucaliśmy: `@ckeditor/ckeditor5`, `@logto/js`, `@pinecone-database/*`, `@uploadcare/*`.
+
+**Przyczyna:** reguła kształtu nazwy, którą wprowadziliśmy po wpadce z htmx (docsy htmx instalują
+`idiomorph`, a my ocenialiśmy htmx po nim), była za ostra. **Scope na npm jest własnością tego, kto
+go zarejestrował**, więc `@ckeditor/...` to CKEditor mówiący "to nasze". Scope liczy się teraz jako
+dowód własności.
+
+**Przestrzelenie pierwsze, złapane przed wdrożeniem:** uznałem też, że link do domeny vendora
+dowodzi własności. Nie dowodzi: **każdy klient trzeciej strony linkuje do usługi, którą opakowuje**,
+i dokładnie tak `statuspage.io-api` został kiedyś przypisany Atlassianowi. Sam dowód linkiem wymaga
+teraz dodatkowo repo w organizacji vendora.
+
+**Przestrzelenie drugie, złapane po wdrożeniu na własnym korpusie:** widząc, że scope przypisał
+`@transloadit/prettier-bytes` (formater bajtów jadący jako zależność Uppy) i
+`@workos/radar-signals@0.0.1`, zablokowałem punkt dla pakietów, których nazwa nie wygląda na SDK.
+To odebrało punkt `chromadb` i `@amplitude/analytics-browser`, czyli **dokładnie tym pakietom,
+które deweloper instaluje**. Nazwa jest za grubym klasyfikatorem na to pytanie. Punkt wraca, a
+zdanie niesie własne zastrzeżenie: *"published under your npm scope. If this is not the package you
+want evaluated, name that one in your docs"*. Vendor poprawia nas jedną linijką zamiast tracić
+punkt za naszą heurystykę.
+
+Po drodze jeszcze jeden regres własny: ranking "im więcej marki w nazwie, tym lepiej" wybrał
+`froala-pages` zamiast `froala-editor`, czyli ten sam błąd co historyczne `angular-froala` w innym
+przebraniu. Rozstrzyganie kształtem jest binarne, resztę decydują pobrania.
+
+**Stan korpusu po obu rundach (3.3 → 3.7, wszystkie 51 domen przeskanowane, 0 błędów):**
+
+| | 3.3 | 3.7 |
+|---|---|---|
+| `oauth_dcr` niemierzalny | 37 | **1** |
+| `typed_package` niemierzalny | 20 | **8** |
+| Średnio punktów mierzalnych | 13,10 | **14,04** |
+| Domen zmierzonych w całości | 3 | **10** |
+| Domen ze zmienionym wynikiem | - | 18, **żadna w dół** |
+
+Zostały trzy ślepe plamy i wszystkie trzy są **problemem discovery, nie projektu checku**:
+`signup_no_captcha` (22, formularz nie istnieje w HTML-u serwera), `programmatic_provisioning`
+(14, za mało stron docsów do przeczytania), `self_serve` (10, nie udało się pobrać cennika).
+Pierwsza jest nienaprawialna bez przeglądarki, dwie kolejne to jakość wyszukiwania stron.
