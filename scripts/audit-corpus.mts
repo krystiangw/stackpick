@@ -45,7 +45,6 @@ for (const row of corpus.rows) {
 }
 
 console.log(`\n${corpus.rows.length} rows on formula ${corpus.formulaVersion}, ${bad} contradiction${bad === 1 ? '' : 's'}`)
-process.exit(bad === 0 ? 0 : 1)
 
 /**
  * The other half of the same job: a page that states a number the data has moved past. Every
@@ -76,4 +75,4 @@ for (const claim of stated) {
   }
 }
 console.log(`${stated.length} stated numbers checked against the data, ${drift} adrift`)
-if (drift > 0) process.exit(1)
+process.exit(bad === 0 && drift === 0 ? 0 : 1)
