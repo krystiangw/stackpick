@@ -352,3 +352,34 @@ przebiegi i blokady **z danych**, nie z wpisanych liczb, więc nie rozjedzie si�
 Przegląd regresyjny po kilkunastu wdrożeniach: 15 publicznych tras zwraca 200, świeży skan
 (`clerk.com`) przechodzi całą ścieżkę, karta OG się renderuje, mail dociera (`delivered: true`),
 konsola bez tokenu daje 404. Formuła **3.2**, korpus 51 domen na jednej wersji.
+
+## Runda 2026-08-08 (dziewiąta): audyt weryfikacyjny cytatów i liczb
+
+Subagent adwersaryjny sprawdzał świeżo opublikowany audyt płatności przeciwko trwałemu archiwum.
+**Trzy z czterech cytatów oznaczonych jako `verbatim` nie miały pokrycia**: dwa były rekonstrukcjami
+z pamięci, jeden tłumaczeniem polskiej wypowiedzi. Stały na stronie nazywającej `paddle.com` z
+nazwiskiem modelu przy każdym. To dokładnie ten błąd, przed którym ostrzegamy vendorów.
+
+**Naprawa jest procesowa, nie tekstowa:** w `ai-audit/runs/payments-round1.md` powstała sekcja
+**Archiwum cytatów**, z dosłownym brzmieniem każdego zdania, które wolno postawić na stronie, i
+jawnym wpisem "przebieg C: brak cytatu". Cytat bez wpisu w archiwum nie idzie na produkcję.
+Ta sekcja jest kontraktem dla następnych kategorii.
+
+**Sprzeczności między stronami, wszystkie usunięte:**
+- Przebieg B blokował się na *wygenerowaniu nowego* klucza tajnego (kod z maila), nie na "kluczu
+  Stripe'a w ogóle" - przebieg A na tej samej stronie użył klucza publicznego i dostał token karty.
+- "18 z 18 wyprodukowało działający kod" było przybliżeniem podanym jako pomiar. Teraz rozbite:
+  **8 zweryfikowanych na uruchomionej aplikacji, 10 potwierdzonych z artefaktów**, plus zdanie o
+  tym, że jeden z tych dziesięciu miał zielony build z wyciętym interfejsem płatności.
+- "0 z 12 zdobyło poświadczenie" → "poświadczenie **własne**", bo jeden przebieg użył publicznego
+  klucza przykładowego dostawcy.
+- Karta wyniku twierdziła, że izolowana runda skreśliła vendora w czterech słowach. Ten cytat
+  pochodzi z odrzuconej rundy dzielącej katalog; izolowana runda **nie nazwała go wcale**.
+- Froala: dziesięć alternatyw, nie jedenaście (policzone z danych).
+
+**Liczby na `/audit` liczone z danych**, także kategorie i nagłówek. `blockedBy !== null` przepuszczał
+brak pola jako blokadę, sortowanie po równej dacie było niestabilne.
+
+**Wzór, czwarty raz z rzędu:** każda runda audytu **odejmuje**, nigdy nie dodaje. Tu odjęła trzy
+cytaty i dwie liczby. Najgroźniejsza kategoria znalezisk to nadal **sprzeczność między stronami**:
+zdanie na jednej stronie obalone naszym własnym późniejszym pomiarem na drugiej.
