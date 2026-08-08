@@ -64,7 +64,13 @@ export type McpEndpoint = { url: string; status: number; evidence: 'challenges' 
 export type FunnelFindings = {
   entryPaths: Record<string, boolean>
   entryPointsFound: string[]
-  oauth: { metadataPublished: boolean; dynamicClientRegistration: boolean; probedHosts: number }
+  oauth: {
+    metadataPublished: boolean
+    dynamicClientRegistration: boolean
+    probedHosts: number
+    /** Named so the vendor can rerun exactly what we ran instead of taking "we looked" on trust. */
+    probedOrigins?: string[]
+  }
   /** Live MCP endpoints, as opposed to documentation that mentions MCP. */
   mcpEndpoints: McpEndpoint[]
   signup: SignupFindings
@@ -81,13 +87,39 @@ const OAUTH_METADATA_PATHS = [
 ]
 
 /**
+ * Authorization servers live on their own host, and until the corpus was published as data we
+ * could not see how much that cost us: this check was unmeasurable on 37 of 51 domains, every
+ * one of them a domain with no MCP endpoint to follow. Probing one origin is not a search.
+ */
+const AUTH_SUBDOMAINS = ['auth', 'login', 'accounts', 'id', 'oauth']
+const RESOURCE_SUBDOMAINS = ['api']
+
+/**
  * Probing only the apex told Linear to build an RFC 7591 endpoint it already runs, at
  * mcp.linear.app. The authorization server for an agent almost never lives on the marketing
  * host, so we follow the MCP host too, and admit it when we simply did not find one.
  */
-async function probeOauthDcr(site: string, mcpHosts: string[]) {
-  const origins = [site, ...mcpHosts]
-  const probes = origins.flatMap((origin) => OAUTH_METADATA_PATHS.map((path) => `${origin}${path}`))
+async function probeOauthDcr(domain: string, site: string, mcpHosts: string[], signupUrl: string | null) {
+  const signupOrigin = signupUrl ? new URL(signupUrl).origin : null
+  const full = [...new Set([site, ...mcpHosts, ...(signupOrigin ? [signupOrigin] : [])])]
+  // Cheaper on the subdomains we are guessing at: an auth host publishes authorization-server
+  // metadata, a resource host publishes protected-resource metadata, and neither publishes both.
+  const guessed: { origin: string; paths: string[] }[] = [
+    ...AUTH_SUBDOMAINS.map((prefix) => ({
+      origin: `https://${prefix}.${domain}`,
+      paths: ['/.well-known/oauth-authorization-server', '/.well-known/openid-configuration'],
+    })),
+    ...RESOURCE_SUBDOMAINS.map((prefix) => ({
+      origin: `https://${prefix}.${domain}`,
+      paths: ['/.well-known/oauth-protected-resource', '/.well-known/oauth-authorization-server'],
+    })),
+  ].filter((candidate) => !full.includes(candidate.origin))
+
+  const origins = [...full, ...guessed.map((candidate) => candidate.origin)]
+  const probes = [
+    ...full.flatMap((origin) => OAUTH_METADATA_PATHS.map((path) => `${origin}${path}`)),
+    ...guessed.flatMap((candidate) => candidate.paths.map((path) => `${candidate.origin}${path}`)),
+  ]
   const results = await inParallel(probes, (url) => fetchUrl(url, { accept: 'application/json' }))
 
   let metadataPublished = false
@@ -102,13 +134,18 @@ async function probeOauthDcr(site: string, mcpHosts: string[]) {
       if (!metadata.issuer && !metadata.authorization_endpoint) continue
       metadataPublished = true
       if (metadata.registration_endpoint) {
-        return { metadataPublished: true, dynamicClientRegistration: true, probedHosts: origins.length }
+        return {
+          metadataPublished: true,
+          dynamicClientRegistration: true,
+          probedHosts: origins.length,
+          probedOrigins: origins,
+        }
       }
     } catch {
       /* a JSON body that is not JSON tells us nothing */
     }
   }
-  return { metadataPublished, dynamicClientRegistration: false, probedHosts: origins.length }
+  return { metadataPublished, dynamicClientRegistration: false, probedHosts: origins.length, probedOrigins: origins }
 }
 
 async function inspectSignup(url: string | null): Promise<SignupFindings> {
@@ -210,7 +247,7 @@ export async function scanFunnel(
 
   const mcpEndpoints = await probeMcpEndpoints(domain, site)
   const [oauth, signup, pricingPage] = await Promise.all([
-    probeOauthDcr(site, [...new Set(mcpEndpoints.map((endpoint) => new URL(endpoint.url).origin))]),
+    probeOauthDcr(domain, site, [...new Set(mcpEndpoints.map((endpoint) => new URL(endpoint.url).origin))], signupUrl),
     inspectSignup(signupUrl),
     alreadyFetchedPricing ?? (pricingUrl ? fetchUrl(pricingUrl) : Promise.resolve(null)),
   ])

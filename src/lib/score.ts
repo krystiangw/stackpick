@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '3.3'
+export const FORMULA_VERSION = '3.4'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -188,17 +188,26 @@ export const CHECKS: Check[] = [
       const oauth = f.funnel.oauth
       if (oauth.dynamicClientRegistration) return yes(1, 'registration_endpoint published')
       if (oauth.metadataPublished) return yes(0, 'OAuth metadata published, but no registration_endpoint in it')
-      // Authorization servers live off the marketing host. With no MCP endpoint to follow we
-      // probed one origin, and one origin is not a search.
+      // Our own corpus said this check was unmeasurable on 37 of 51 domains, because with no MCP
+      // endpoint to follow we probed one origin. We now search the hosts an authorization server
+      // actually lives on, so finding nothing across all of them is a measurement.
+      if (f.blocksPlainRequests) {
+        return {
+          points: 0,
+          detail: 'Unmeasurable: your edge refused our requests, so nothing we probed proves anything',
+          unblock: 'Let ordinary HTTP through to your public pages and this becomes measurable.',
+          inconclusive: true,
+        }
+      }
       if (oauth.probedHosts <= 1) {
         return {
           points: 0,
-          detail: 'Unmeasurable: no OAuth metadata on the apex, and no authorization host we could follow',
+          detail: 'Unmeasurable: no OAuth metadata on the apex, and no other host we could follow',
           unblock: 'Publish /.well-known/oauth-authorization-server on the host that issues your tokens, or send us that host and we will rescan.',
           inconclusive: true,
         }
       }
-      return yes(0, `No OAuth metadata on any of the ${oauth.probedHosts} hosts probed`)
+      return yes(0, `No OAuth metadata on any of the ${oauth.probedHosts} hosts probed, including the usual auth and api subdomains`)
     },
   },
   {
