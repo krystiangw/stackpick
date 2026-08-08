@@ -269,6 +269,22 @@ wszystkiego, a płatny audyt zamyka właśnie tę lukę.
    Google (własny klient OAuth), nie do dostawcy.
 4. **Czwarta kategoria** (płatności albo analytics), gdyby potrzebny był czwarty punkt pomiarowy.
 
+## Runda 2026-08-08 (szósta): teza z trzech kategorii, korekta własnych twierdzeń
+
+`/findings` prowadzi teraz **wynikiem z trzech kategorii**, nie pojedynczym badaniem: 14 przebiegów
+w izolacji, 14/14 napisały działający kod, **0/8 zdobyło poświadczenie tam, gdzie było potrzebne**,
+a w trzeciej kategorii bariera pojawiła się mimo braku poświadczenia, tylko wcześniej. Kształt
+tezy: **wszędzie, gdzie istnieje krok wymagający człowieka, albo zatrzymuje agenta na końcu, albo
+usuwa dostawcę z listy na starcie.**
+
+**Skorygowaliśmy własne twierdzenie na dwóch stronach.** Landing i `/findings` głosiły, że czytanie
+dokumentacji zależy od modelu (10/10 vs 0/10 z badania storage). Runda edytorów to obaliła: tam
+sięgnęły po źródła **wszystkie przebiegi, łącznie z Sonnetami**, bo licencji nie da się odpowiedzieć
+z pamięci. Oba pomiary są prawdziwe, ale użyteczna jest wersja zawężona: **decyzja, której nie da
+się rozstrzygnąć z pamięci modelu, jest tym, co powoduje przeczytanie twojej dokumentacji.**
+To jest ta sama klasa błędu, którą wyłapywały audyty: twierdzenie, które przestało być prawdziwe,
+a zostało na stronie.
+
 ## Stan zweryfikowany 2026-08-08 (noc)
 
 Przegląd regresyjny po kilkunastu wdrożeniach: 15 publicznych tras zwraca 200, świeży skan
