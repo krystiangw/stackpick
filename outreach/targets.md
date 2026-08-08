@@ -1,70 +1,112 @@
 # Target list, generated from the corpus
 
-Rebuilt 2026-08-08 from `/corpus.json` at formula 4.3, 103 domains in 15 categories, after four
-systemic scanner errors were found and fixed. The previous version of this file was built on
-verdicts that were wrong about MCP servers and npm packages, so it is superseded, not amended.
+Rebuilt 2026-08-08 from `/corpus.json` at formula **4.8**, 156 domains in 24 categories.
 
-Rows the corpus flags as `rateLimited` are excluded: they are thinner than the site deserves.
+Every earlier version of this file is superseded, not amended. The 4.3 version ranked 23 vendors as
+"runs an MCP server, documents no way to get a key" on MCP verdicts that were **false for 18 of 49**
+rows: a 405 to a POST at /mcp is what almost every site answers at a path it does not route. The
+control probe now asks an unrouted path on the same origin, so every endpoint below answered
+differently from the rest of its own site, or challenged for OAuth with a WWW-Authenticate header.
 
-**95 of 101 have a hook.** That is too many to be useful as a list, so the order below is the
-order worth sending, and the last group is deliberately marked as not worth sending one at a time.
+Rows the corpus flags as `rateLimited` are excluded (defer.run, pandadoc.com): thinner than the site deserves.
 
-## 1. Runs an MCP server, documents no way to get a key (23)
 
-The strongest finding we have ever produced, and it did not exist yesterday: it only became
-countable when the scan started following the endpoint vendors name in their own card, which took
-the count of live MCP servers from 27 to 49.
+## 1. Runs an MCP server, documents no way to get a key (36)
 
-clerk.com · inngest.com · tiptap.dev · betterstack.com · highlight.io · raygun.com · sentry.io ·
-flagsmith.com · growthbook.io · supabase.com · transloadit.com · uploadcare.com · vercel.com ·
-directus.io · payloadcms.com · replicate.com · stripe.com · amplitude.com · posthog.com ·
-loops.so · qdrant.tech · agora.io · mux.com
+The strongest finding in the corpus, and the only one where the vendor has already agreed with our
+premise: they built a door for a machine. Lead with their own endpoint URL, because we have it and
+it proves we looked. The sentence is not an insult: **you built a door for a machine, and the
+machine cannot get a key to walk through it.**
 
-The sentence writes itself and it is not an insult: **you built a door for a machine, and the
-machine cannot get a key to walk through it.** These are companies who have already decided agents
-matter, which makes them the warmest audience in the corpus and the least likely to argue with the
-premise. Lead with their own MCP endpoint URL, because we have it and it proves we looked.
+- `algolia.com` · https://mcp.algolia.com/mcp · provisioning partial
+- `amplitude.com` · https://mcp.amplitude.com/mcp · provisioning partial
+- `apify.com` · https://mcp.apify.com · provisioning fail
+- `axiom.co` · https://mcp.axiom.co/mcp · provisioning partial
+- `betterstack.com` · https://mcp.betterstack.com · provisioning fail
+- `bitmovin.com` · https://mcp.bitmovin.com · provisioning partial
+- `cal.com` · https://mcp.cal.com · provisioning partial
+- `calendly.com` · https://mcp.calendly.com · provisioning fail
+- `chargebee.com` · https://mcp.chargebee.com · provisioning partial
+- `clerk.com` · https://mcp.clerk.com/mcp · provisioning partial
+- `courier.com` · https://mcp.courier.com · provisioning fail
+- `firecrawl.dev` · https://mcp.firecrawl.dev · provisioning partial
+- `flagsmith.com` · https://mcp.flagsmith.com · provisioning fail
+- `grafana.com` · https://mcp.grafana.com/mcp · provisioning fail
+- `honeybadger.io` · https://mcp.honeybadger.io · provisioning partial
+- `hygraph.com` · https://mcp.hygraph.com/mcp · provisioning partial
+- `inngest.com` · https://api.inngest.com/mcp · provisioning fail
+- `loops.so` · https://mcp.loops.so · provisioning partial
+- `mux.com` · https://mcp.mux.com · provisioning partial
+- `neon.tech` · https://mcp.neon.tech/mcp · provisioning partial
+- `newrelic.com` · https://mcp.newrelic.com/mcp · provisioning fail
+- `novu.co` · https://mcp.novu.co · provisioning fail
+- `paddle.com` · https://mcp.paddle.com/mcp · provisioning partial
+- `posthog.com` · https://mcp.posthog.com · provisioning fail
+- `qdrant.tech` · https://mcp.qdrant.tech/mcp · provisioning fail
+- `replicate.com` · https://mcp.replicate.com/mcp · provisioning partial
+- `resend.com` · https://mcp.resend.com · provisioning partial
+- `sanity.io` · https://mcp.sanity.io · provisioning partial
+- `savvycal.com` · https://api.savvycal.com/mcp · provisioning fail
+- `scrapingbee.com` · https://mcp.scrapingbee.com · provisioning fail
+- `sentry.io` · https://mcp.sentry.dev/mcp · provisioning fail
+- `stripe.com` · https://mcp.stripe.com · provisioning fail
+- `transloadit.com` · https://api.transloadit.com/mcp · provisioning fail
+- `turso.tech` · https://api.turso.tech/mcp · provisioning partial
+- `vercel.com` · https://mcp.vercel.com · provisioning partial
+- `weglot.com` · https://mcp.weglot.com · provisioning fail
 
-## 2. The door is shut (3)
+## 2. The signup gate answers an agent with a refusal (10)
 
-froala.com · vonage.com · bitmovin.com
+This is the stage nobody else measures. Lighthouse and Cloudflare both stop at documentation and
+protocol files; neither asks whether an unattended client can register. Note the first row.
 
-Their edge answers 403 to a plain request from a data centre. An agent integrating them runs in a
-data centre. Everything else we measured is a floor rather than a score, and we say so on the card.
+- `anvil.co` · Signup answers 404 to a request identifying itself as an agent
+- `baseten.co` · Signup answers 403 to a request identifying itself as an agent
+- `cloudflare.com` · Signup answers 403 to a request identifying itself as an agent
+- `froala.com` · Signup answers 404, 403, 403 to a request identifying itself as an age
+- `liveblocks.io` · Signup answers 403 to a request identifying itself as an agent
+- `nylas.com` · Signup answers 429 to a request identifying itself as an agent
+- `shopify.com` · Signup answers 403 to a request identifying itself as an agent
+- `vonage.com` · Signup answers 403 to a request identifying itself as an agent
+- `workos.com` · Signup answers 403 to a request identifying itself as an agent
+- `zenrows.com` · Signup answers 403 to a request identifying itself as an agent
 
-Note on bitmovin.com: its edge is inconsistent, the same path answering 200 and 403 on different
-attempts. If it comes up in conversation, say that plainly rather than defending the number.
+## 3. Docs that render nothing without JavaScript (5)
 
-## 3. The documentation needs JavaScript (11)
+- `crowdin.com` · Only 38 characters render without JS
+- `filestack.com` · Only 41 characters render without JS
+- `prosemirror.net` · Only 647 characters render without JS
+- `saleor.io` · Only 1,635 characters render without JS, on https://docs.sal
+- `signoz.io` · Only 1,315 characters render without JS
 
-upstash.com · prosemirror.net · bugsnag.com · bunny.net · filestack.com · imagekit.io ·
-chargebee.com · june.so · algolia.com · mailgun.com · resend.com
+## 4. The front door is shut (1)
 
-Two are worth leading with because the number is absurd: **chargebee.com serves 14 characters** and
-**filestack.com serves 41** to a plain fetch of their documentation. resend.com is the friendliest
-first email in the whole corpus: 14/16 overall, one specific gap, nothing to be defensive about.
+- `postmark.com` · Answered 429 to StackPick/1.0 (+https://stackpick-f12d13a227ea.herokua
 
-## 4. Below their category median, with a named leader above (1)
+## 5. Signup form needs JavaScript (52)
 
-Only one domain now clears this bar, because the corpus got more accurate and the spread narrowed.
-Keep the shape of the hook for later rather than forcing it today.
+Real, but too common to be a story on its own. Use it as a second line, never as the opening.
 
-## 5. No agent entry point (57)
+agora.io · bunny.net · cloudinary.com · configcat.com · daily.co · datadoghq.com
+dropboxsign.com · elastic.co · groq.com · growthbook.io · hatchet.run · here.com
+highlight.io · honeycomb.io · june.so · kinde.com · knock.app · launchdarkly.com
+logto.io · lokalise.com · mailgun.com · mapbox.com · maptiler.com · medusajs.com
+meilisearch.com · mixpanel.com · modal.com · onesignal.com · openrouter.ai · pdfmonkey.io
+pinecone.io · plaid.com · plivo.com · radar.com · sendgrid.com · sinch.com
+split.io · statsig.com · storyblok.com · strapi.io · telnyx.com · temporal.io
+tigrisdata.com · tiny.cloud · tolgee.io · trychroma.com · twilio.com · uploadcare.com
+upstash.com · usefathom.com · xata.io · zilliz.com
 
-Fifty-seven domains publish none of the nine known entry paths. That is most of the market, which
-makes it a finding about the category rather than about any one company. Send it as one piece of
-writing about the category, or fold it into a conversation that started with a hook above. One
-email per domain saying "you are like everyone else" is not worth anyone's two minutes.
+## 6. No agent entry point at all (46)
 
-## What this list still cannot tell you
+Not worth sending one at a time: the finding is the same sentence for all of them and it reads as
+a form letter, which is what it would be.
 
-Whether an agent chose them. Every hook here comes from the free scan, which measures files. The
-paid audit is the only thing that measures the choice, and no email should blur the two.
-
-## How it was built
-
-Group by category, take the median share per category, then for each domain take the first hook
-that applies in this order: door refused, documentation needs JavaScript, MCP server with no
-documented credential path, more than twelve points of share below the category median while a
-named leader sits above, then no agent entry point. First match wins, so nobody appears twice, and
-a domain with no match gets no email.
+api.video · auth0.com · bigcommerce.com · browserless.io · bugsnag.com · ckeditor.com
+cockroachlabs.com · commercetools.com · contentful.com · cronofy.com · deepl.com · directus.io
+documenso.com · docuseal.com · editorjs.io · fireworks.ai · getunleash.io · imagekit.io
+lemonsqueezy.com · lexical.dev · livekit.io · locationiq.com · magicbell.com · oramasearch.com
+payloadcms.com · phrase.com · plausible.io · polar.sh · pusher.com · quilljs.com
+raygun.com · rollbar.com · searchkit.co · sendlayer.com · slatejs.org · stytch.com
+supabase.com · supertokens.com · swell.is · tiptap.dev · together.ai · tomtom.com
+trigger.dev · turbopuffer.com · typesense.org · uploadthing.com
