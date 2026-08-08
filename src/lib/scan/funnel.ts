@@ -1,4 +1,4 @@
-import { AGENT_UA, fetchUrl, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, visibleTextLength, type Fetched } from './http'
+import { AGENT_UA, BROWSER_UA, fetchUrl, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, visibleTextLength, type Fetched } from './http'
 
 export const AGENT_ENTRY_PATHS = [
   '/agent-signup.md',
@@ -92,6 +92,14 @@ export type SignupFindings = {
   rendersFormWithoutJs: boolean
   captcha: string[]
   behindCloudflare: boolean
+  /**
+   * What a browser user-agent got at the same URL, asked only when the agent was refused. The
+   * finding is that agents are treated worse than browsers, and without this number it was not
+   * a comparison: anvil.co/signup is a 404 to everybody, their signup lives on another host, and
+   * we published "answers 404 to a request identifying itself as an agent" about a page that
+   * answers 200 to one.
+   */
+  browserStatus: number | null
 }
 
 export type McpEndpoint = { url: string; status: number; evidence: 'challenges' | 'rejects-get' | 'answers-json' }
@@ -219,15 +227,19 @@ async function inspectSignup(url: string | null): Promise<SignupFindings> {
       rendersFormWithoutJs: false,
       captcha: [],
       behindCloudflare: false,
+      browserStatus: null,
     }
   }
   // As the agent, because that is what the finding says. Sending Chrome and then publishing
   // "the signup answers N to a non-browser request" was a claim about a request we never made,
   // and it cost liveblocks.io a point on a page that answers 200 with a real form to StackPick/1.0.
   const got = await fetchWithRetries(url, { ua: AGENT_UA })
+  // One request, and only when there is a difference worth measuring.
+  const asBrowser = got.ok ? null : await fetchUrl(url, { ua: BROWSER_UA })
   const body = got.body.toLowerCase()
   return {
     url,
+    browserStatus: asBrowser === null ? null : asBrowser.status,
     status: got.status,
     statusesSeen: got.statusesSeen,
     consistent: got.consistent,

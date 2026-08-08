@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '5.0'
+export const FORMULA_VERSION = '5.1'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -364,7 +364,36 @@ export const CHECKS: Check[] = [
       }
       if (!signup.reachable) {
         const seen = signup.consistent ? `${signup.status}` : `${signup.statusesSeen.join(', ')}`
-        return yes(0, `Signup answers ${seen} to a request identifying itself as an agent`)
+        const tried = signup.statusesSeen.length > 0 ? signup.statusesSeen : [signup.status]
+        // Our own rule everywhere else: a 429 is us asking too often, never a finding about them.
+        if (tried.every((status) => status === 429)) {
+          return {
+            points: 0,
+            detail: `Unmeasurable: ${signup.url} answered ${seen}, which is a limit we triggered rather than a rule about agents`,
+            inconclusive: true,
+            unblock: 'Nothing for you to do. We will rescan later and this becomes measurable.',
+          }
+        }
+        // A page that is missing for everybody is our discovery being wrong about where your
+        // signup lives. anvil.co/signup is a 404 to Chrome too; theirs is on another host and
+        // answers 200 to an agent, and we published the opposite as a finding about them.
+        const browser = signup.browserStatus
+        if (browser !== null && browser === signup.status) {
+          return {
+            points: 0,
+            detail:
+              browser === 404
+                ? `Unmeasurable: ${signup.url} answers 404 to a browser as well, so this is where we looked being wrong rather than a door closed on agents`
+                : `Unmeasurable: ${signup.url} answers ${seen} to an agent and ${browser} to a Chrome user-agent, so the refusal is about where we ask from, not about agents`,
+            inconclusive: true,
+            unblock:
+              browser === 404
+                ? 'Link your real signup page from your home page, or tell us the URL and we will rescan.'
+                : 'Nothing for you to do here. It becomes measurable from a network your edge admits.',
+          }
+        }
+        const contrast = browser === null ? '' : `, where a Chrome user-agent gets ${browser}`
+        return yes(0, `Signup answers ${seen} to a request identifying itself as an agent${contrast}`)
       }
       return signup.rendersFormWithoutJs
         ? yes(1, 'Form renders in server HTML')
@@ -547,6 +576,19 @@ export const CHECKS: Check[] = [
     },
   },
 ]
+
+/**
+ * A signup that turns an agent away and lets a browser through. The two numbers on the landing
+ * page are this, not "the signup was not reachable": a 429 is our own traffic, and a 404 to
+ * everybody is our discovery being wrong about where the page lives.
+ */
+export function refusesAgentsAtSignup(findings: ScanFindings): boolean {
+  const signup = findings.funnel.signup
+  if (!signup.url || signup.reachable) return false
+  const tried = signup.statusesSeen.length > 0 ? signup.statusesSeen : [signup.status]
+  if (tried.every((status) => status === 429)) return false
+  return signup.browserStatus !== null && signup.browserStatus !== signup.status
+}
 
 export const MAX_SCORE = CHECKS.reduce((total, check) => total + check.max, 0)
 

@@ -1,5 +1,5 @@
 import { publishedCorpus } from './published'
-import { CHECKS, STAGES, type Stage } from './score'
+import { CHECKS, refusesAgentsAtSignup, STAGES, type Stage } from './score'
 import type { Report } from './store'
 
 /**
@@ -136,7 +136,7 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
   // Read off the findings rather than off the verdict sentence, so the two numbers stay true
   // when the wording changes.
   const withSignup = reports.filter((report) => report.findings.funnel.signup.url !== null)
-  const signupRefusesAgents = withSignup.filter((report) => !report.findings.funnel.signup.reachable).length
+  const signupRefusesAgents = withSignup.filter((report) => refusesAgentsAtSignup(report.findings)).length
   const signupNeedsJavaScript = withSignup.filter(
     (report) => report.findings.funnel.signup.reachable && !report.findings.funnel.signup.rendersFormWithoutJs,
   ).length
