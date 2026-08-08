@@ -46,3 +46,34 @@ for (const row of corpus.rows) {
 
 console.log(`\n${corpus.rows.length} rows on formula ${corpus.formulaVersion}, ${bad} contradiction${bad === 1 ? '' : 's'}`)
 process.exit(bad === 0 ? 0 : 1)
+
+/**
+ * The other half of the same job: a page that states a number the data has moved past. Every
+ * corpus figure on the site is supposed to be computed, and this proves it rather than trusting
+ * it, because the recurring bug of this project is prose written under an older dataset.
+ */
+const origin = new URL(url).origin
+const pageText = async (path: string) =>
+  (await (await fetch(`${origin}${path}`)).text())
+    .replace(/<script[\s\S]*?<\/script>/g, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+
+const stated: { page: string; pattern: RegExp; expected: number; what: string }[] = [
+  { page: '/report', pattern: /(\d+) domains · formula/, expected: corpus.rows.length, what: 'corpus size' },
+  { page: '/findings', pattern: /it now covers (\d+) vendors/, expected: corpus.rows.length, what: 'corpus size' },
+]
+
+let drift = 0
+for (const claim of stated) {
+  const found = (await pageText(claim.page)).match(claim.pattern)
+  if (!found) {
+    drift++
+    console.log(`${claim.page}: could not find the ${claim.what} sentence at all`)
+  } else if (Number(found[1]) !== claim.expected) {
+    drift++
+    console.log(`${claim.page}: says ${found[1]} for ${claim.what}, data says ${claim.expected}`)
+  }
+}
+console.log(`${stated.length} stated numbers checked against the data, ${drift} adrift`)
+if (drift > 0) process.exit(1)

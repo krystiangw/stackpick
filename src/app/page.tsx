@@ -13,7 +13,7 @@ const EVIDENCE = [
     against: '0 / 12',
     claim: 'Every run shipped an integration. Not one got a credential of its own where the work needed one.',
     detail:
-      'Eighteen runs in isolated copies of a real application, across four categories. In the three that need an account, every run stopped at the signup form and said so in its own words. In the fourth no account was needed and the barrier still appeared, earlier: a required licence key struck vendors off during dependency research, before their product was opened.',
+      'Eighteen runs in isolated copies of a real application, across the four categories we have run agents in. In the three that need an account, every run stopped at the signup form and said so in its own words. In the fourth no account was needed and the barrier still appeared, earlier: a required licence key struck vendors off during dependency research, before their product was opened.',
   },
   {
     figure: '0 / 10',

@@ -20,7 +20,7 @@ type Result = {
 const RESULTS: Result[] = [
   {
     id: 'wall',
-    heading: 'Four categories, eighteen runs, one wall in four disguises',
+    heading: 'Four agent studies, eighteen runs, one wall in four disguises',
     numbers: [
       ['Runs verified running, with the integration exercised', '8 of 8'],
       ['Further runs whose shipped code we confirmed from their artefacts', '10'],
