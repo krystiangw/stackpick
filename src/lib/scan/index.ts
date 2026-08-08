@@ -44,6 +44,37 @@ const CREDENTIAL_PAGE_HINTS =
   /(api[-_ ]?key|authentication|auth(\/|$)|credential|token|management|provisioning|admin|account|getting[-_ ]?started|quickstart|reference)/i
 
 /**
+ * We read three documentation pages out of what can be hundreds, so which three decides the
+ * verdict. Taking them in the order the page or the sitemap happens to list them made that a
+ * lottery: amplitude.com scored 1 of 7 provisioning phrases on one scan and 0 on the next, from
+ * a different three. Ranking by how directly a path promises credentials makes the sample the
+ * same every time, and makes it the sample most likely to answer the question.
+ */
+const HINT_PRIORITY = [
+  /api[-_ ]?key/i,
+  /credential/i,
+  /provisioning/i,
+  /token/i,
+  /management/i,
+  /admin/i,
+  /authentication|auth(\/|$)/i,
+  /account/i,
+  /getting[-_ ]?started|quickstart/i,
+  /reference/i,
+]
+
+function hintRank(pathname: string): number {
+  const index = HINT_PRIORITY.findIndex((pattern) => pattern.test(pathname))
+  return index === -1 ? HINT_PRIORITY.length : index
+}
+
+/** Ties break on the shorter path: /docs/api-keys is the page, /docs/api-keys/rotating is a detail. */
+const byHint = (a: string, b: string) => {
+  const ranked = hintRank(new URL(a).pathname) - hintRank(new URL(b).pathname)
+  return ranked !== 0 ? ranked : new URL(a).pathname.length - new URL(b).pathname.length
+}
+
+/**
  * Documentation navigation is assembled by JavaScript on most of the sites that have the most
  * documentation, so the served HTML carries no links and we read one page and concluded nothing:
  * auth0.com, supabase.com and workos.com all failed the provisioning check that way. A sitemap is
@@ -78,7 +109,14 @@ async function sitemapCandidates(domain: string, docsUrl: string, seen: Set<stri
       if (child.ok) pages.push(...[...child.body.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((match) => match[1]))
     }
 
-    for (const page of pages) {
+    const ranked = [...pages].sort((a, b) => {
+      try {
+        return byHint(a, b)
+      } catch {
+        return 0
+      }
+    })
+    for (const page of ranked) {
       if (found.length >= want) break
       let url: URL
       try {
@@ -116,8 +154,9 @@ async function readDeeper(domain: string, docsUrl: string, html: string): Promis
     if (!CREDENTIAL_PAGE_HINTS.test(absolute.pathname)) continue
     seen.add(url)
     candidates.push(url)
-    if (candidates.length === 3) break
   }
+  candidates.sort(byHint)
+  candidates.splice(3)
 
   if (candidates.length < 3) {
     candidates.push(...(await sitemapCandidates(domain, docsUrl, seen, 3 - candidates.length)))
