@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '3.5'
+export const FORMULA_VERSION = '3.6'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -382,6 +382,21 @@ export const CHECKS: Check[] = [
           detail: 'Unmeasurable: we could not identify a package as yours from your site, your docs or a registry search',
           inconclusive: true,
           unblock: 'Name your package once in your docs, or link it from your repository, and we stop guessing.',
+        }
+      }
+      // Owning the scope proves the vendor published it, not that it is the package a developer
+      // installs. @transloadit/prettier-bytes is a byte formatter that rides along as an Uppy
+      // dependency, and awarding a point for it would answer a question nobody asked.
+      if (
+        f.discovered.npmSource === 'registry-search' &&
+        f.discovered.npmConfidence === 'strong' &&
+        f.discovered.npmEntryShape === false
+      ) {
+        return {
+          points: 0,
+          detail: `Unmeasurable: ${f.npm.package} is published under your npm scope, but nothing about it says it is the package a developer installs`,
+          inconclusive: true,
+          unblock: 'Name your SDK once in your docs and we will score that instead of guessing from the registry.',
         }
       }
       // A registry name that only shares a GitHub org with the site is a hypothesis. Scoring

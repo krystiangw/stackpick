@@ -15,6 +15,8 @@ export type Discovered = {
   npmSource: NpmSource | null
   /** Set only for a registry search: whether the match is evidence or a hypothesis. */
   npmConfidence: 'strong' | 'weak' | null
+  /** Whether the matched package looks like the one a developer installs. */
+  npmEntryShape: boolean | null
   githubRepo: string | null
   /** Where each URL came from, so a report can admit when it guessed. */
   linkSources: { docs: LinkSource | null; pricing: LinkSource | null; signup: LinkSource | null }
@@ -340,6 +342,14 @@ function scopeIsBrand(name: string, brand: string): boolean {
   return scope === brand || scope.startsWith(`${brand}-`) || scope.replace(/-/g, '') === brand
 }
 
+const SDK_SHAPE = /(^|[-.])(sdk|client|node|js|api|core)([-.]|$)/
+
+/** Is this the package a developer installs, or just something the vendor happens to publish? */
+export function looksLikeEntryPackage(name: string, brand: string): boolean {
+  const part = (name.startsWith('@') ? (name.split('/')[1] ?? '') : name).toLowerCase()
+  return part === brand || part.startsWith(brand) || SDK_SHAPE.test(part)
+}
+
 function matchStrength(name: string, domain: string, brand: string): 'strong' | 'weak' {
   const lower = name.toLowerCase()
   if (scopeIsBrand(lower, brand)) return 'strong'
@@ -415,11 +425,10 @@ export async function searchNpmForDomain(domain: string, githubRepo: string | nu
   // the SDK. Downloads alone answered @transloadit/prettier-bytes, a byte formatter that ships
   // as an Uppy dependency, and @workos/radar-signals@0.0.1. Shape decides that much and no more:
   // ranking by how much of the brand a name carries once picked froala-pages over froala-editor.
-  const SDK_WORDS = /(^|[-.])(sdk|client|node|js|api|core)([-.]|$)/
   const entryRank = (name: string) => {
     const part = (name.startsWith('@') ? (name.split('/')[1] ?? '') : name).toLowerCase()
     if (part === brand) return 0
-    return SDK_WORDS.test(part) ? 1 : 2
+    return SDK_SHAPE.test(part) ? 1 : 2
   }
   ranked.sort(
     (a, b) =>
@@ -547,5 +556,19 @@ export async function discover(domain: string): Promise<Discovered> {
     }
   }
 
-  return { site, home, docs, docsPage, pricing, pricingPage, signup, npmPackage, npmSource, npmConfidence, githubRepo, linkSources }
+  return {
+    site,
+    home,
+    docs,
+    docsPage,
+    pricing,
+    pricingPage,
+    signup,
+    npmPackage,
+    npmSource,
+    npmConfidence,
+    npmEntryShape: npmPackage ? looksLikeEntryPackage(npmPackage, brand) : null,
+    githubRepo,
+    linkSources,
+  }
 }

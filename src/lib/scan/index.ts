@@ -24,6 +24,7 @@ export type ScanFindings = {
     npmPackage: string | null
     npmSource: 'site' | 'docs' | 'llms' | 'registry-search' | null
     npmConfidence: 'strong' | 'weak' | null
+    npmEntryShape: boolean | null
     githubRepo: string | null
     linkSources: { docs: string | null; pricing: string | null; signup: string | null }
   }
@@ -149,6 +150,7 @@ export async function scanDomain(input: string, onProgress?: ScanProgress): Prom
       npmPackage: found.npmPackage,
       npmSource: found.npmSource,
       npmConfidence: found.npmConfidence,
+      npmEntryShape: found.npmEntryShape,
       githubRepo: found.githubRepo,
       linkSources: found.linkSources,
     },
