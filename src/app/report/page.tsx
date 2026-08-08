@@ -144,8 +144,9 @@ export default async function IndustryReportPage() {
               <span className="font-mono tabular-nums">
                 {mcp.pass} of {report.sampleSize}
               </span>{' '}
-              answer at <span className="font-mono text-sm">mcp.&lt;domain&gt;</span> or publish a server card.
-              Talking about MCP is common; running one is not.
+              run an MCP server that answers a handshake. That is the one part of this funnel the market
+              has moved on, and it stops there: a server an agent can call is not a credential an agent can
+              get, and the two stages below this one say so.
             </li>
           )}
         </ul>
