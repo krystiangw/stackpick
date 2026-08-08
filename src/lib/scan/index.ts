@@ -357,7 +357,11 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     funnelPending,
     progress,
   ])
-  const rateLimitedUs = asAgent.statusesSeen.some((status) => status === 429)
+  // Only when a 429 is all we ever got. postmark.com answered 200, 429, 200 and the whole door
+  // test went unmeasurable with the sentence "Unmeasurable: answered 200", which is nonsense: two
+  // of three tries told us exactly what we asked.
+  const rateLimitedUs =
+    asAgent.statusesSeen.length > 0 && asAgent.statusesSeen.every((status) => status === 429)
   report('Scoring', STEPS)
 
   return {
