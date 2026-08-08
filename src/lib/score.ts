@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '3.7'
+export const FORMULA_VERSION = '3.8'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -363,6 +363,17 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       if (f.funnel.provisioning.selfServeSignals.length > 0) return yes(1, 'Free tier or no-card signals on pricing')
       if (!f.funnel.pricingFetched) {
+        // A library with nothing to buy has no free tier to state, and marking that unmeasurable
+        // implied we had failed to find something that does not exist. The signup checks already
+        // draw this line; this one was still charging open-source projects for our confusion.
+        if (!f.discovered.pricing && !f.discovered.signup && !f.blocksPlainRequests) {
+          return {
+            points: 0,
+            detail: 'Not applicable: nothing on the site links to pricing or to an account, so there is no tier to state',
+            notApplicable: true,
+            unblock: 'If there is a paid tier, link its pricing from your home page and we will rescan.',
+          }
+        }
         return { points: 0, detail: 'Unmeasurable: no pricing page could be fetched',
           unblock: 'Link a pricing page from your home page, or list one in llms.txt.', inconclusive: true }
       }

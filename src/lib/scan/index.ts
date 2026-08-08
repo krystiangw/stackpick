@@ -43,8 +43,63 @@ export class UnreachableDomainError extends Error {}
 const CREDENTIAL_PAGE_HINTS =
   /(api[-_ ]?key|authentication|auth(\/|$)|credential|token|management|provisioning|admin|account|getting[-_ ]?started|quickstart|reference)/i
 
+/**
+ * Documentation navigation is assembled by JavaScript on most of the sites that have the most
+ * documentation, so the served HTML carries no links and we read one page and concluded nothing:
+ * auth0.com, supabase.com and workos.com all failed the provisioning check that way. A sitemap is
+ * static, so it survives the same rendering that hides the nav.
+ */
+async function sitemapCandidates(domain: string, docsUrl: string, seen: Set<string>, want: number): Promise<string[]> {
+  const base = new URL(docsUrl)
+  // The docs section usually has its own sitemap under its first path segment. Trying the whole
+  // documentation path instead sent us to /docs/get-started/sitemap.xml, which nobody publishes.
+  const section = base.pathname.split('/').filter(Boolean)[0]
+  // The page a home page links to as "developers" is not always the documentation: auth0.com
+  // links a developer portal whose sitemap is events and newsletters, so the reference we
+  // needed was never in the corpus. Fall back to where documentation conventionally lives.
+  const roots = [
+    ...(section ? [`${base.origin}/${section}/sitemap.xml`] : []),
+    `${base.origin}/sitemap.xml`,
+    `https://${domain}/docs/sitemap.xml`,
+    `https://docs.${domain}/sitemap.xml`,
+  ]
+  const found: string[] = []
+
+  for (const root of [...new Set(roots)]) {
+    const got = await fetchUrl(root, { accept: 'application/xml, text/xml' })
+    if (!got.ok) continue
+    const locs = [...got.body.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((match) => match[1])
+
+    // A sitemap index points at more sitemaps. Follow one, and only one that looks like docs.
+    const nested = locs.find((loc) => loc.endsWith('.xml') && /doc|guide|reference/i.test(loc))
+    const pages = nested ? [...locs.filter((loc) => !loc.endsWith('.xml'))] : locs
+    if (nested) {
+      const child = await fetchUrl(nested, { accept: 'application/xml, text/xml' })
+      if (child.ok) pages.push(...[...child.body.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((match) => match[1]))
+    }
+
+    for (const page of pages) {
+      if (found.length >= want) break
+      let url: URL
+      try {
+        url = new URL(page)
+      } catch {
+        continue
+      }
+      const clean = url.toString().split('#')[0]
+      // Same site rather than same host, because the fallback roots are deliberately elsewhere.
+      if (!url.hostname.endsWith(domain) || seen.has(clean)) continue
+      if (!CREDENTIAL_PAGE_HINTS.test(url.pathname)) continue
+      seen.add(clean)
+      found.push(clean)
+    }
+    if (found.length >= want) break
+  }
+  return found
+}
+
 /** Follows a few same-host documentation links that look like they discuss credentials. */
-async function readDeeper(docsUrl: string, html: string): Promise<Fetched[]> {
+async function readDeeper(domain: string, docsUrl: string, html: string): Promise<Fetched[]> {
   const base = new URL(docsUrl)
   const seen = new Set<string>([docsUrl])
   const candidates: string[] = []
@@ -62,6 +117,10 @@ async function readDeeper(docsUrl: string, html: string): Promise<Fetched[]> {
     seen.add(url)
     candidates.push(url)
     if (candidates.length === 3) break
+  }
+
+  if (candidates.length < 3) {
+    candidates.push(...(await sitemapCandidates(domain, docsUrl, seen, 3 - candidates.length)))
   }
 
   const pages = await inParallel(candidates, (url) => fetchUrl(url))
@@ -100,7 +159,7 @@ export async function scanDomain(input: string, onProgress?: ScanProgress): Prom
   // One documentation page is a lottery: cloudinary describes its Provisioning API on a page
   // we never opened, then failed the check for not describing it. Follow the pages an agent
   // hunting for credentials would follow.
-  const deeperDocs = docsPage?.ok && found.docs ? await readDeeper(found.docs, docsPage.body) : []
+  const deeperDocs = docsPage?.ok && found.docs ? await readDeeper(domain, found.docs, docsPage.body) : []
 
   report('Checking robots.txt against 13 AI crawlers', 2)
   const robots = await scanRobots(found.site)
