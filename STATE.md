@@ -1312,3 +1312,26 @@ dokumentacji, ręcznie potwierdzone, że na przeczytanych stronach frazy nie ma)
 
 **Stan:** korpus 156/156 na formule 5.0, `npm run audit` czysty (0 sprzeczności, 0 liczb
 rozjechanych ze stroną), 54 domeny z żywym serwerem MCP.
+
+## Zablokowane na Krystianie, stan 2026-08-08 wieczorem
+
+Produkt jest technicznie gotowy: korpus 156 domen na formule 5.0, audyt czysty, każdy werdykt
+nazywa adres, który da się odpalić curl-em. **Do startu w poniedziałek brakuje wyłącznie rzeczy,
+których agent nie ma prawa rozstrzygnąć sam.**
+
+1. **Domena `stackpick.ai`** (albo inna). Wszystko na stronie pokazuje dziś
+   `stackpick-f12d13a227ea.herokuapp.com`, łącznie z `helpUri` w SARIF i adresami w `/corpus.json`.
+2. **Zweryfikowany nadawca w Resend.** Bez tego dostarczanie scorecardów mailem jest wyłączone,
+   a to jedyny mechanizm zbierania leadów, jaki mamy.
+3. **Ścieżka zakupu inna niż `mailto:` na prywatnego Gmaila.** Za 11 000 USD nikt nie napisze na
+   adres z gmail.com.
+4. **Licencja korpusu.** Terms mówią dziś „free to use, quote and republish with attribution",
+   co jest treściowo CC BY 4.0, ale **nienazwane**. Research pokazuje, że nazwana licencja plus
+   stały identyfikator to dokładnie to, co odróżnia zbiór cytowany od zbioru czytanego (OpenSSF
+   Scorecard: CDLA Permissive 2.0, Web Almanac: CC BY 4.0 z DOI na rozdział). **Nie nazywam jej
+   sam**, bo CC BY 4.0 jest nieodwołalna dla każdej pobranej kopii, a to jest decyzja o cudzej
+   własności, nie o kodzie.
+5. **Model sprzedaży.** Dowody z rynku mówią, że pieniądze są w powtarzalnym pomiarze, nie
+   w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
+   Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
+   11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
