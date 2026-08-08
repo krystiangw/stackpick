@@ -953,3 +953,19 @@ registry przy atrybucji) zbliżyły reszcie domen do progu.
 w 30 sekundach**, przy którym skan **nadal zwraca kartę**: co zmierzone zostaje zmierzone, a każdy
 check bez dowodu wraca jako **niemierzalny ze zdaniem, że zabrakło czasu**, nigdy jako zmierzone
 zero. Ucięty skan nie może wyglądać jak kompletny.
+
+## Runda 2026-08-08 (dwudziesta czwarta): własne pliki dla agentów były najbardziej nieaktualną rzeczą, jaką publikujemy
+
+Ironiczne, bo dokładnie to grillujemy u innych. `agents.md` i `agent-signup.md` mówiły agentowi,
+że skan **„can reach a minute"**, co jest nie tylko nieprawdą, ale i szkodliwe: zwykły endpoint
+umiera na timeoucie bramy, a odpowiedzią jest strumieniowy. Opisywały `inconclusive` i nie
+opisywały `notApplicable`, **nie wspominały o `measurable`**, czyli o mianowniku, który jest całym
+sensem wyniku, i milczały o serwerze MCP, formatach `sarif` i `agent` oraz o zbiorze danych.
+
+Poprawione: agent czytający `agents.md` dostaje teraz wprost, że ma czytać `measurable`, a nie
+`max`, że są dwa różne stany „nie policzone" i czym się różnią, że ten sam skan jest narzędziem
+MCP, i że wszystko opublikowane leży w `/corpus.json`.
+
+Drobne z audytu UI: tabela na `/report` przewija się w bok, a na telefonie kolumna
+**Unmeasurable**, czyli ta, o którą cała strona się spiera, leżała poza krawędzią bez żadnej
+informacji. Teraz jest o tym zdanie, widoczne tylko na wąskim ekranie.
