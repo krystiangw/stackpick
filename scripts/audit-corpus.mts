@@ -68,9 +68,45 @@ const pageText = async (path: string) =>
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
 
+/** Recomputed from the published rows, so a sentence can only pass by matching the data. */
+const verdictOf = (row: Row, id: string) => row.checks.find((check) => check.id === id)
+const needsJavaScript = corpus.rows.filter((row) => {
+  const signup = verdictOf(row, 'signup_reachable')
+  return signup?.verdict === 'fail' && /JavaScript/i.test(signup.detail)
+}).length
+const mcpWithoutKeys = corpus.rows.filter((row) => {
+  const mcp = verdictOf(row, 'mcp_present')
+  const provisioning = verdictOf(row, 'programmatic_provisioning')
+  return mcp?.verdict === 'pass' && provisioning?.verdict === 'fail'
+}).length
+
 const stated: { page: string; pattern: RegExp; expected: number; what: string }[] = [
   { page: '/report', pattern: /(\d+) domains · formula/, expected: corpus.rows.length, what: 'corpus size' },
   { page: '/findings', pattern: /it now covers (\d+) vendors/, expected: corpus.rows.length, what: 'corpus size' },
+  {
+    page: '/',
+    pattern: /Of (\d+) vendors we have scanned/,
+    expected: corpus.rows.length,
+    what: 'corpus size in the hero',
+  },
+  {
+    page: '/',
+    pattern: /vendors we have scanned, (\d+) serve a signup form/,
+    expected: needsJavaScript,
+    what: 'signup forms needing JavaScript',
+  },
+  {
+    page: '/findings',
+    pattern: /(\d+) more serve a form that renders nothing without JavaScript/,
+    expected: needsJavaScript,
+    what: 'signup forms needing JavaScript',
+  },
+  {
+    page: '/findings',
+    pattern: /(\d+) of them run an MCP server and document/,
+    expected: mcpWithoutKeys,
+    what: 'MCP servers with no documented key',
+  },
 ]
 
 let drift = 0
