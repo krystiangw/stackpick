@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Findings — StackPick',
-  description: 'Twenty agent runs, two models, two conditions. What agents pick when nobody is watching.',
+  description: 'Thirty-eight runs, five studies, two models. What agents pick when nobody is watching, and where every one of them stops.',
 }
 
 const RESULTS = [

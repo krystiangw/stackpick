@@ -2,6 +2,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { listAudits, tally } from '@/lib/audit'
 
+const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']
+const spell = (n: number) => WORDS[n] ?? String(n)
+
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
@@ -24,7 +27,7 @@ export default async function AuditIndexPage() {
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Full agent audits</p>
         <h1 className="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-tight tracking-tight">
-          What agents do when nobody is watching, across {categories} categories
+          What agents do when nobody is watching, across {spell(categories)} categories
         </h1>
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
           Each audit is the same instrument pointed at one category: agents given a brief and nothing else, in
