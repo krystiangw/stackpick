@@ -335,6 +335,18 @@ trzech stanów werdyktu**, więc vendor nie mógł odtworzyć pokazywanej mu lic
 **Korpus na 3.3:** 51 domen, średnio 56,8% punktów mierzalnych, **zero wyników przekraczających
 własny mianownik**, średnio 2,12 checka niezmierzonego i 0,51 nieadekwatnego na domenę.
 
+## Runda 2026-08-08 (ósma): czwarta kategoria i indeks audytów
+
+**Płatności zmierzone** (`/audit/paddle-payments`). Szczegóły w punkcie 5 listy otwartych powyżej.
+
+**`/audit` istnieje.** Cztery audyty były głównym materiałem sprzedażowym, a trzy z nich dało się
+znaleźć wyłącznie znając URL: nawigacja prowadziła do jednego, `/audit` dawało 404, a karta wyniku
+linkowała do jednej kategorii niezależnie od tego, co czytelnik przed chwilą skanował. Indeks liczy
+przebiegi i blokady **z danych**, nie z wpisanych liczb, więc nie rozjedzie się z audytami.
+
+**Liczby spójne na trzech stronach** (sprawdzone na produkcji): 18 przebiegów w izolacji,
+0 z 12 zdobytych poświadczeń, 38 przebiegów łącznie w pięciu badaniach.
+
 ## Stan zweryfikowany 2026-08-08 (noc)
 
 Przegląd regresyjny po kilkunastu wdrożeniach: 15 publicznych tras zwraca 200, świeży skan
