@@ -882,3 +882,36 @@ Przy okazji zdanie w raporcie branżowym przestało być prawdziwe w chwili, gdy
 *„Talking about MCP is common; running one is not"* przy 49 na 103. Teraz raport mówi, że to
 jedyny etap lejka, który rynek ruszył, i że serwer, który agent może wywołać, to nie poświadczenie,
 które agent może zdobyć.
+
+## Runda 2026-08-08 (dwudziesta druga): odpowiedź na zarzut, który decyduje o zakupie
+
+Z audytu wartości i badania rynku wynikało to samo: kupujący przychodzi z jedną obiekcją, która
+przesądza wszystko, a strona jej nie dotykała.
+
+**„Jeden przebieg agenta niczego nie dowodzi".** Najlepszy publiczny pomiar tego zjawiska to 2961
+wykonań promptów, w których ten sam zestaw marek wracał rzadziej niż raz na sto prób. Kto sprzedaje
+pozycję w rankingu AI z jednego przebiegu, sprzedaje szum. `/pricing` ma teraz sekcję, która mówi
+to wprost **i mówi, czego nasza próbka nie potrafi**: cztery do sześciu przebiegów na komórkę
+wystarczą, by zobaczyć ścianę, w którą uderza każdy przebieg, i nie wystarczą, by uszeregować
+dwóch dostawców kończących blisko siebie. Za każdym razem mówimy, którym z tych dwóch jest dane
+znalezisko.
+
+**Cztery opublikowane audyty stały się próbką deliverable'u**, bo nią są, a leżały wyłącznie za
+linkiem w menu. Sekcja o powtórzeniach kończy się linkiem do nich ze zdaniem, że można je
+sprawdzić przed zapłaceniem czegokolwiek.
+
+**Cena i nazwisko wróciły na landing.** Oba były dwa kliknięcia w dół strony pełnej rankingów, więc
+VP z LinkedIna nie dowiadywał się ani ile to kosztuje, ani kto wystawia fakturę na cztery cyfry.
+
+**Korpus podlinkowany z `/docs` i `/methodology`**, nie tylko z dołu raportu. To jedyny asset
+zdolny przyciągać ruch bez outboundu, a na stronie o metodologii jest dodatkowo argumentem:
+kłócić się z formułą łatwiej danymi niż prozą.
+
+### Zostało z listy audytu wartości
+
+1. **Brak ścieżki zakupu innej niż `mailto` na prywatny adres.** Kalendarz i firmowy adres to
+   decyzja Krystiana, tak samo jak domena.
+2. **Darmowa warstwa oddaje wiedzę, płatna sprzedaje jej potwierdzenie.** Strukturalne i
+   najtrudniejsze: scorecard oddaje priorytetyzowaną roadmapę, `/findings` oddaje wnioski
+   wszystkich pięciu badań, a strony audytów oddają rekomendacje kategorialne. Do przemyślenia,
+   nie do załatania jednym akapitem.

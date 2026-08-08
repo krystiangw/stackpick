@@ -667,10 +667,11 @@ async function readScrapedPackage(
   name: string,
   vendor: Vendor,
   githubRepo: string | null,
-): Promise<{ theirs: boolean; aboutThem: boolean }> {
+): Promise<{ theirs: boolean; aboutThem: boolean; draft: boolean }> {
   const facts = await fetchPackageFacts(name)
-  if (!facts) return { theirs: false, aboutThem: false }
+  if (!facts) return { theirs: false, aboutThem: false, draft: false }
   return {
+    draft: facts.version.startsWith('0.0.') || facts.version.includes('-'),
     theirs: publishedByVendor(
       { name, maintainers: facts.maintainers, links: [facts.repository, facts.homepage].filter(Boolean) },
       vendor,
@@ -804,14 +805,16 @@ export async function discover(domain: string): Promise<Discovered> {
   // an entry package, which is what keeps froala.com on the froala-editor its llms.txt names.
   if (npmPackage) {
     const scrapedRank = shapeRank(npmPackage, vendor)
-    const { theirs, aboutThem } =
+    const { theirs, aboutThem, draft } =
       scrapedRank === 0
-        ? { theirs: true, aboutThem: true }
+        ? { theirs: true, aboutThem: true, draft: false }
         : await readScrapedPackage(npmPackage, vendor, githubRepo)
     // @amplitude/analytics-browser is named after nothing but what it does, and calls itself
     // the official Amplitude SDK for Web. idiomorph, on the same shape, is "an id-based DOM
     // morphing library" and never mentions htmx. Only the second is worth looking past.
-    if (!theirs || (scrapedRank >= 4 && !aboutThem)) {
+    // @workos/radar-signals is WorkOS's and says so, and it is at 0.0.1: a version number is
+    // the vendor telling us this is not the package they want a developer to reach for.
+    if (!theirs || (scrapedRank >= 4 && (!aboutThem || draft))) {
       // A name that is not theirs loses to an equal shape; one that is theirs has to be beaten.
       const ceiling = theirs ? scrapedRank : scrapedRank + 1
       const searched = await searchNpmForDomain(domain, githubRepo)
