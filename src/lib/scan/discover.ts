@@ -539,17 +539,31 @@ function publishedByVendor(
 ): boolean {
   if (maintainedByVendor(candidate, vendor)) return true
   const orgs = candidate.links.map(githubOrg)
-  if (orgs.some((org) => orgIsVendor(org, vendor))) return true
+  // A fork keeps the upstream repository URL. @boundstate/editorjs-attaches points at
+  // github.com/editor-js/attaches and is maintained by two people with no connection to
+  // editorjs.io, so a repo in the vendor's org only counts when the package is not published
+  // under somebody else's scope.
+  const scope = candidate.name.startsWith('@') ? candidate.name.slice(1).split('/')[0] : null
+  const foreignScope = scope !== null && !carriesVendorName(scope, vendor)
+  if (!foreignScope && orgs.some((org) => orgIsVendor(org, vendor))) return true
   // The org a page links to first is whatever the page links to first: honeybadger.io's docs
   // link github.com/org/repo and betterstack.com links Algolia's DocSearch. It is the weakest
   // proof we have, so it only counts for a package that already reads like the vendor's own.
-  return siteOrg !== null && orgs.includes(siteOrg) && shapeRank(candidate.name, vendor) <= 3
+  return !foreignScope && siteOrg !== null && orgs.includes(siteOrg) && shapeRank(candidate.name, vendor) <= 3
 }
 
 const monthsSince = (at: number) => (at === 0 ? 0 : (Date.now() - at) / (1000 * 60 * 60 * 24 * 30.44))
 
 /** Years without a publish, or a version that is still a draft, is the vendor telling us it is not the one. */
 const isDormant = (candidate: Candidate) => monthsSince(candidate.publishedAt) >= 24
+
+/**
+ * `agora` has no repository, no description and no keywords, and is published by agora.build,
+ * a different company from agora.io. A package that says nothing about itself is not an SDK
+ * anyone could install on purpose.
+ */
+const saysNothing = (candidate: Candidate) =>
+  candidate.description.trim() === '' && candidate.keywords.length === 0
 const isProvisional = (candidate: Candidate) => candidate.version.includes('-') || candidate.version.startsWith('0.')
 
 const MIN_WEEKLY_DOWNLOADS = 1000
@@ -618,7 +632,9 @@ export async function searchNpmForDomain(domain: string, githubRepo: string | nu
   // unrelated company whose upload-client last shipped in 2019, and betterstack.com would have
   // been handed it as their SDK.
   const isTheirs = (candidate: Candidate) =>
-    publishedByVendor(candidate, vendor, siteOrg) && (!isDormant(candidate) || maintainedByVendor(candidate, vendor))
+    publishedByVendor(candidate, vendor, siteOrg) &&
+    !saysNothing(candidate) &&
+    (!isDormant(candidate) || maintainedByVendor(candidate, vendor))
 
   let owned = [...byName.values()].filter(isTheirs)
 
