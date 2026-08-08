@@ -637,3 +637,43 @@ Zostały trzy ślepe plamy i wszystkie trzy są **problemem discovery, nie proje
 `signup_no_captcha` (22, formularz nie istnieje w HTML-u serwera), `programmatic_provisioning`
 (14, za mało stron docsów do przeczytania), `self_serve` (10, nie udało się pobrać cennika).
 Pierwsza jest nienaprawialna bez przeglądarki, dwie kolejne to jakość wyszukiwania stron.
+
+## Runda 2026-08-08 (siedemnasta): trzecia ślepa plama i wybór właściwej dokumentacji
+
+Trzeci przebieg tej samej pętli: pytanie do korpusu, poprawka, przeskanowanie, porównanie.
+
+**`programmatic_provisioning` niemierzalny na 14 domenach, bo czytaliśmy jedną stronę docsów.**
+Przyczyna jest ładna: **strony z największą dokumentacją renderują nawigację JavaScriptem**, więc
+w HTML-u nie ma żadnych linków do pójścia dalej. Dotyczyło to auth0.com, chargebee.com,
+supabase.com, workos.com i zilliz.com. **Sitemapa przeżywa dokładnie ten rendering, który chowa
+nawigację**, więc gdy w HTML-u brakuje kandydatów, dobieramy je z `sitemap.xml` (sekcja docsów,
+apex, `/docs/`, `docs.<domena>`), filtrując po tych samych wzorcach ścieżek co wcześniej.
+
+**Znalezisko przy okazji, poważniejsze od samego licznika: czytaliśmy nie tę stronę.**
+Dla `auth0.com` discovery wybrało `developer.auth0.com`, bo strona główna tak linkuje "developers",
+a **sitemapa tego portalu to eventy i newslettery**. Referencja, której szukaliśmy, nigdy nie
+trafiła do korpusu. To znaczy, że przez cały czas oceniałiśmy Auth0 po niewłaściwym serwisie.
+
+**Biblioteka bez cennika dostaje N/A, nie "nie dało się zmierzyć".** `self_serve` mówiło
+open-source'owym projektom, że nie umieliśmy znaleźć czegoś, czego nie ma. Tę linię checki
+rejestracyjne rysowały już wcześniej.
+
+**Korpus po trzech rundach (3.3 → 3.8, 51 domen, 0 błędów):**
+
+| | 3.3 | 3.7 | 3.8 |
+|---|---|---|---|
+| `oauth_dcr` niemierzalny | 37 | 1 | 1 |
+| `typed_package` niemierzalny | 20 | 8 | 8 |
+| `programmatic_provisioning` niemierzalny | 14 | 14 | **8** |
+| `self_serve` niemierzalny | 10 | 10 | **3** (7 jako N/A) |
+| Średnio punktów mierzalnych | 13,10 | 14,04 | **14,27** |
+| Domen zmierzonych w całości | 3 | 10 | **13** |
+
+**Jedyny spadek okazał się szumem, nie regresem.** `supertokens.com` spadł 7 → 6 na `self_serve`;
+dwa natychmiastowe przeskanowania wróciły do 7. **Ich strona cennika odpowiada niedeterministycznie**,
+a my pobieramy ją raz. To jest ta sama klasa problemu, dla której sondy rejestracji uruchamiamy
+trzy razy, i **to jest następna pozycja**: pobranie cennika też powinno być powtarzane, a rozjazd
+między próbami raportowany, tak jak przy drzwiach.
+
+Zostająca ślepa plama numer jeden: `signup_no_captcha` (22), gdzie formularz nie istnieje w HTML-u
+serwera. Bez przeglądarki nienaprawialne, i tak ma zostać opisane.
