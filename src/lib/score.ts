@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '3.6'
+export const FORMULA_VERSION = '3.7'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -384,19 +384,6 @@ export const CHECKS: Check[] = [
           unblock: 'Name your package once in your docs, or link it from your repository, and we stop guessing.',
         }
       }
-      // Owning the scope proves the vendor published it, not that it is the package a developer
-      // installs. @transloadit/prettier-bytes is a byte formatter that rides along as an Uppy
-      // dependency, and awarding a point for it would answer a question nobody asked.
-      // Applies whatever the source was: workos.com's own pages led us to a 0.0.1 package whose
-      // name says nothing about being an SDK, and scoring it would answer a question nobody asked.
-      if (f.discovered.npmEntryShape === false) {
-        return {
-          points: 0,
-          detail: `Unmeasurable: the closest package we could tie to you is ${f.npm.package}, and nothing about its name says it is the one a developer installs`,
-          inconclusive: true,
-          unblock: 'Name your SDK once in your docs and we will score that instead of guessing.',
-        }
-      }
       // A registry name that only shares a GitHub org with the site is a hypothesis. Scoring
       // it gave allegro.pl a point for an internal utility it does not publish as an SDK.
       if (f.discovered.npmSource === 'registry-search' && f.discovered.npmConfidence === 'weak') {
@@ -413,8 +400,17 @@ export const CHECKS: Check[] = [
       if (stale !== undefined && stale >= 24) {
         return yes(0, `${f.npm.package} is typed but last published ${stale} months ago`)
       }
-      const guessed = f.discovered.npmSource === 'registry-search' ? ', matched from the registry rather than a link on the site' : ''
-      return yes(1, `${f.npm.package}@${f.npm.version} ships types${guessed}`)
+      // Withholding the point when the name did not look like an SDK cost chromadb and
+      // @amplitude/analytics-browser, both of which are exactly the package a developer
+      // installs. A name is too crude a classifier for that, so the point stands and the
+      // sentence says what the match rests on instead of overstating it.
+      const basis =
+        f.discovered.npmSource !== 'registry-search'
+          ? ''
+          : f.discovered.npmEntryShape === false
+            ? ', published under your npm scope. If this is not the package you want evaluated, name that one in your docs'
+            : ', matched from the registry rather than a link on the site'
+      return yes(1, `${f.npm.package}@${f.npm.version} ships types${basis}`)
     },
   },
   {
