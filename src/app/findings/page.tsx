@@ -41,7 +41,7 @@ const RESULTS = [
     quote: {
       text: 'Last published 2.0.2 on 2023-03-06, so over three years without a release despite 1.5 million weekly downloads. Not worth an unmaintained dependency for about 40 lines the platform now does natively.',
       caption:
-        'The stronger model rejecting a package the cheaper model recommended in three runs. We verified the registry independently: version 2.0.2, published 6 March 2023, 1,527,048 weekly downloads.',
+        'The stronger model rejecting a package the cheaper model recommended in three runs. We verified the registry independently on 7 August 2026: version 2.0.2, published 6 March 2023, 1,527,048 downloads that week.',
     },
   },
   {

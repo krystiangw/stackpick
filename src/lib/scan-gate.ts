@@ -1,4 +1,5 @@
 import { checkRateLimit, clientKey, recordUse } from './rate-limit'
+import { CURATED_DOMAINS } from './categories'
 import { normalizeDomain } from './scan/discover'
 import { getStore, type Report } from './store'
 
@@ -39,16 +40,22 @@ export type Gate =
 
 /** The best scorecard we hold, so a refusal can still show what good looks like. */
 export async function bestExample(): Promise<ExampleReport | null> {
-  const reports = await getStore().listReports(200)
+  // From the curated corpus only, and out of the same denominator as everywhere else.
+  const reports = (await getStore().latestPerDomain(200)).filter((report) => CURATED_DOMAINS.has(report.domain))
   const best = reports.reduce<Report | null>((held, report) => {
     if (!held) return report
-    if (report.scorecard.total !== held.scorecard.total) {
-      return report.scorecard.total > held.scorecard.total ? report : held
-    }
+    const share = (candidate: Report) =>
+      candidate.scorecard.total / (candidate.scorecard.measurable ?? candidate.scorecard.max)
+    if (share(report) !== share(held)) return share(report) > share(held) ? report : held
     return report.scannedAt > held.scannedAt ? report : held
   }, null)
   if (!best) return null
-  return { id: best.id, domain: best.domain, total: best.scorecard.total, max: best.scorecard.max }
+  return {
+    id: best.id,
+    domain: best.domain,
+    total: best.scorecard.total,
+    max: best.scorecard.measurable ?? best.scorecard.max,
+  }
 }
 
 export async function gateScan(request: Request, rawDomain: string, bypass = false): Promise<Gate> {

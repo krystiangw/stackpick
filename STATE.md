@@ -285,6 +285,39 @@ się rozstrzygnąć z pamięci modelu, jest tym, co powoduje przeczytanie twojej
 To jest ta sama klasa błędu, którą wyłapywały audyty: twierdzenie, które przestało być prawdziwe,
 a zostało na stronie.
 
+## Runda 2026-08-08 (siódma): czwarty audyt, formuła 3.3
+
+Audyt sprawdzał głównie **sprzeczności między stronami** i znalazł ich kilkanaście. Najgorsze:
+poprzednią poprawkę (mianownik z punktów mierzalnych) zastosowałem w jednym miejscu, a nie we
+wszystkich. Plan naprawczy oferował froali **siedem punktów przy pięciu brakujących**, kończąc na
+7/8. `/report` nadal liczył `notApplicable` jako porażkę rynku, na stronie, która obiecuje, że tego
+nie robi (etap C: było 20% przy n=51, jest **27% przy n=37**). Zdanie tłumaczące trzy stany opisywało
+niewłaściwy stan.
+
+**Nasz własny wynik spadł z 12/12 na 9/10** i to jest dowód, że poprawki są prawdziwe: straciliśmy
+punkt za MCP (publikujemy `mcp.json`, a pod wskazanym adresem nic nie odpowiada, czyli karta to nie
+serwer) oraz punkty za provisioning, bo grep trafiał w nasze własne zdanie mówiące, że **nie mamy**
+klucza API. Do tego zniknęła asymetria zawyżająca: jedna strona docsów wystarczała do przyznania
+dwóch punktów, ale przy zerze trafień była "za mało, żeby cokolwiek wnioskować".
+
+**Dwa checki myliły w drugą stronę:** stronie odrzucającej nas przez WAF mówiliśmy "rejestracja nie
+dotyczy twojego produktu" zamiast "nie umieliśmy jej znaleźć", a prosemirror.net dostawał zdanie, że
+żaden rejestr nie zna ich pakietu, choć publikują trzy.
+
+**Strona audytu Froali przepisana na czystą rundę 2** (sześć izolowanych przebiegów, Froala nazwana
+zero razy). Wcześniej pokazywała sześć przebiegów przy werdykcie mówiącym o dwunastu i opisywała
+dane z rundy dzielącej katalog jako "isolated copies".
+
+Reszta: pliki maszynowe reklamowały 13 checków i "ten scans per hour" wbrew kodowi, `$schema`
+prowadził w 404, landing twierdził "clean context" dla badania, które samo raportuje skażenie,
+"won every greenfield run" przy własnym 5 z 8, obietnica prywatności skanu kłóciła się z obietnicą
+publikowania na dwóch innych stronach, `/pricing` porównywało dwa różne modele nazywając to efektem
+zadania, a `/methodology` (linkowane z karty jako "See the formula") **nie opisywało mianownika ani
+trzech stanów werdyktu**, więc vendor nie mógł odtworzyć pokazywanej mu liczby.
+
+**Korpus na 3.3:** 51 domen, średnio 56,8% punktów mierzalnych, **zero wyników przekraczających
+własny mianownik**, średnio 2,12 checka niezmierzonego i 0,51 nieadekwatnego na domenę.
+
 ## Stan zweryfikowany 2026-08-08 (noc)
 
 Przegląd regresyjny po kilkunastu wdrożeniach: 15 publicznych tras zwraca 200, świeży skan
