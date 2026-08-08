@@ -266,21 +266,22 @@ function namedPackages(html: string): string[] {
 /**
  * The first install snippet on a page is not the main SDK. tiny.cloud names its premium
  * bundle first and htmx.org names a dependency, and each time we scored the vendor against
- * a package they do not consider their entry point. Name shape decides, then real usage.
+ * a package they do not consider their entry point. Shape decides, then real usage.
+ *
+ * A name the vendor wrote on their own page needs no ownership proof, so nothing is dropped
+ * here: an integration or a stray dependency only ranks last. Dropping the single name a page
+ * offers would trade a wrong package for no package.
  */
-async function pickNamedPackage(names: string[], domain: string, brand: string): Promise<string | null> {
+async function pickNamedPackage(names: string[], vendor: Vendor): Promise<string | null> {
   if (names.length === 0) return null
   if (names.length === 1) return names[0]
 
-  const named = names.filter((name) => matchStrength(name, domain, brand) === 'strong')
-  if (named.length === 1) return named[0]
-
-  const pool = named.length > 1 ? named : names
-  const ranked = await inParallel(pool.slice(0, 6), async (name) => ({
+  const ranked = await inParallel(names.slice(0, 6), async (name) => ({
     name,
+    rank: shapeRank(name, vendor),
     downloads: await weeklyDownloads(name),
   }))
-  ranked.sort((a, b) => b.downloads - a.downloads)
+  ranked.sort((a, b) => a.rank - b.rank || b.downloads - a.downloads)
   return ranked[0].name
 }
 
@@ -311,25 +312,76 @@ function findGithubRepo(html: string): string | null {
 }
 
 type NpmSearchHit = {
-  package: { name: string; links?: { homepage?: string; repository?: string }; description?: string }
+  package: {
+    name: string
+    version?: string
+    date?: string
+    description?: string
+    keywords?: string[]
+    links?: { homepage?: string; repository?: string }
+    maintainers?: { username?: string; name?: string; email?: string }[]
+  }
 }
 
 /**
- * Ranks survivors by how much the name looks like the product's main entry package.
- * Downloads would be the obvious tie-break and it is wrong: internal dependencies
- * (@supabase/storage-js) outrank the umbrella package that pulls them in.
+ * The names a vendor can plausibly answer to. Domains buy a prefix when the bare word is
+ * taken, and the packages keep the bare word: getunleash.io publishes unleash-client and
+ * trychroma.com publishes chromadb, so a search for the brand alone finds neither.
  */
-function nameAffinity(packageName: string, brand: string): number {
-  const name = packageName.toLowerCase()
-  if (name === `@${brand}/${brand}-js` || name === `@${brand}/${brand}`) return 5
-  if (name === brand) return 4
-  if ([`${brand}-js`, `${brand}-sdk`, `${brand}-node`, `${brand}-client`].includes(name)) return 3
-  if (name.startsWith(`@${brand}/`)) return 2
-  return 1
+type Vendor = { domain: string; brand: string; aliases: string[]; flatDomain: string }
+
+const flatten = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '')
+
+function vendorOf(domain: string): Vendor {
+  const brand = domain.split('.')[0].toLowerCase()
+  const bare = brand.replace(/^(get|try|use|join|go|my)(?=[a-z]{4,})/, '')
+  return {
+    domain,
+    brand,
+    aliases: bare === brand ? [brand] : [brand, bare],
+    flatDomain: flatten(domain),
+  }
 }
 
-/** Whether a searched name can carry a point, or only a hypothesis. */
-export type NpmMatch = { name: string; confidence: 'strong' | 'weak' }
+/**
+ * Whether a name is built out of the vendor's own name. Short brands match only as a whole
+ * word: api.video's brand is "api", and every package on the registry contains it.
+ */
+function carriesVendorName(text: string, vendor: Vendor): boolean {
+  const flat = flatten(text)
+  if (!flat) return false
+  if (flat.startsWith(vendor.flatDomain)) return true
+  return vendor.aliases.some((alias) =>
+    alias.length >= 4
+      ? flat.startsWith(alias) || (alias.startsWith(flat) && flat.length >= 4)
+      : text.toLowerCase().split(/[^a-z0-9]+/).includes(alias),
+  )
+}
+
+/** Whether prose names the vendor, which a name-shaped test cannot see: "Better Stack Node.js logger". */
+function mentionsVendorName(text: string, vendor: Vendor): boolean {
+  const words = text.toLowerCase().split(/[^a-z0-9.]+/)
+  if (words.some((word) => flatten(word) === vendor.flatDomain || vendor.aliases.includes(flatten(word)))) return true
+  return flatten(text).includes(vendor.flatDomain)
+}
+
+const githubOrg = (url: string): string | null => url.match(/github\.com[/:]([a-z0-9._-]+)/i)?.[1]?.toLowerCase() ?? null
+
+/**
+ * An org that is the vendor's name, allowing for the suffix a company adds when the plain one
+ * is taken: honeybadger.io ships from github.com/honeybadger-io, split.io from splitio. "js"
+ * is deliberately not in the list, because github.com/highlightjs is a different project than
+ * highlight.io.
+ */
+function orgIsVendor(org: string | null, vendor: Vendor): boolean {
+  if (!org) return false
+  const flat = flatten(org)
+  if (flat === vendor.flatDomain || vendor.aliases.includes(flat)) return true
+  return vendor.aliases.some((alias) => /^(labs|hq|inc|team|official|tech)$/.test(flat.slice(alias.length)) && flat.startsWith(alias))
+}
+
+/** Whether a searched name can carry a point. Anything we cannot attribute is not returned at all. */
+export type NpmMatch = { name: string; confidence: 'strong' }
 
 async function searchRegistry(text: string): Promise<NpmSearchHit[]> {
   const got = await fetchUrl(`https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(text)}&size=20`, {
@@ -343,117 +395,183 @@ async function searchRegistry(text: string): Promise<NpmSearchHit[]> {
   }
 }
 
-/**
- * A name that only shares a GitHub org with the site is a hypothesis, not a finding.
- * allegro.pl has no JS SDK, and the org filter alone happily returned worker-nodes, an
- * internal utility, which then scored a point for shipping types.
- */
-/**
- * An npm scope is owned by whoever registered it, so a scope that is the brand is the vendor
- * claiming the package. Bare names get no such rule: anyone can publish `polaroid-sdk`.
- */
-function scopeIsBrand(name: string, brand: string): boolean {
-  const scope = name.startsWith('@') ? name.slice(1).split('/')[0].toLowerCase() : null
-  if (!scope) return false
-  return scope === brand || scope.startsWith(`${brand}-`) || scope.replace(/-/g, '') === brand
-}
-
+const SDK_WORD = /^(sdk|client|node|js|api|core|browser|server)$/
 const SDK_SHAPE = /(^|[-.])(sdk|client|node|js|api|core)([-.]|$)/
 
-/** Is this the package a developer installs, or just something the vendor happens to publish? */
-export function looksLikeEntryPackage(name: string, brand: string): boolean {
-  const part = (name.startsWith('@') ? (name.split('/')[1] ?? '') : name).toLowerCase()
-  return part === brand || part.startsWith(brand) || SDK_SHAPE.test(part)
+/**
+ * Names that announce the package is something other than the thing you install to use the
+ * product: a command line tool, a build step, a framework binding, or the vendor's own
+ * plumbing. @algolia/cli, @sinch/node-red-sinch-utility and @basetenlabs/n8n-nodes-baseten are
+ * all genuinely the vendor's, and none of them is the SDK we were reporting them as.
+ */
+const NOT_AN_SDK =
+  /(^|[-/])(cli|n8n|node-red|mcp|plugins?|preset|loader|codemod|webpack|vite|rollup|esbuild|babel|eslint|prettier|docs?|examples?|demo|starter|template|tests?|testing|mocks?|fixtures|internal|tools|utils|utility|utilities|types|config|react|vue|angular|svelte|next|nuxt|remix|nest|hono|express|koa|fastify|gatsby|astro|ember|jquery|wordpress|drupal|laravel|rails|django|flutter|ionic|electron)([-/]|$)/
+
+/** The package part of a name, without the scope: @daily-co/daily-js is a daily-js. */
+const bareName = (name: string) => (name.startsWith('@') ? (name.split('/')[1] ?? '') : name).toLowerCase()
+
+/**
+ * How much a name reads like the package a developer installs. Low is better. Ranking by how
+ * much of the brand a name carries once picked froala-pages over froala-editor, so the brand
+ * only opens the first tier; usage still breaks ties inside it.
+ */
+function shapeRank(name: string, vendor: Vendor): number {
+  const part = bareName(name)
+  if (NOT_AN_SDK.test(part) || NOT_AN_SDK.test(name.toLowerCase())) return 4
+  if (carriesVendorName(part, vendor)) return 0
+  if (SDK_WORD.test(part)) return 1
+  if (SDK_SHAPE.test(part)) return 2
+  return 3
 }
 
-function matchStrength(name: string, domain: string, brand: string): 'strong' | 'weak' {
-  const lower = name.toLowerCase()
-  if (scopeIsBrand(lower, brand)) return 'strong'
-  // A bare @brand/ scope is not enough: @allegro/convert-description is an internal library,
-  // and calling it the SDK turned "we do not know" into a failed check.
-  const entryNames = [
-    domain,
-    brand,
-    `${brand}-js`,
-    `${brand}-sdk`,
-    `${brand}-node`,
-    `${brand}-client`,
-    `@${brand}/${brand}`,
-    `@${brand}/${brand}-js`,
-    `@${brand}/sdk`,
-    `@${brand}/client`,
-    `@${brand}/api`,
-    `@${brand}/node`,
-  ]
-  // A homepage link is what every unofficial client publishes too: statuspage.io picked up a
-  // third-party GPL wrapper this way and we told Atlassian to ship types for it.
-  return entryNames.includes(lower) ? 'strong' : 'weak'
+/** Is this the package a developer installs, or just something the vendor happens to publish? */
+export function looksLikeEntryPackage(name: string, domain: string): boolean {
+  return shapeRank(name, vendorOf(domain)) <= 2
+}
+
+type Candidate = {
+  name: string
+  version: string
+  publishedAt: number
+  description: string
+  keywords: string[]
+  maintainers: { name: string; email: string }[]
+  links: string[]
+}
+
+/** The registry's own npm links point a package at itself, so they prove nothing about anyone. */
+const candidateOf = (hit: NpmSearchHit['package']): Candidate => ({
+  name: hit.name,
+  version: hit.version ?? '',
+  publishedAt: Date.parse(hit.date ?? '') || 0,
+  description: hit.description ?? '',
+  keywords: hit.keywords ?? [],
+  maintainers: (hit.maintainers ?? []).map((one) => ({ name: one.username ?? one.name ?? '', email: one.email ?? '' })),
+  links: Object.values(hit.links ?? {}).filter(
+    (link): link is string => Boolean(link) && !/^https?:\/\/(www\.)?npmjs\.com\//i.test(link),
+  ),
+})
+
+/**
+ * Who publishes this. The maintainer list arrives with every search result and is the only
+ * field on it a stranger cannot set to whatever they like: @utdk/launchdarkly is maintained by
+ * an unrelated person, the third party behind the `statuspage.io` package links to Atlassian's
+ * domain because it wraps it, and @betterstack/upload-client sits in a scope registered by a
+ * different company altogether. A repo in the vendor's own GitHub org counts too, because
+ * founders often publish from personal accounts: searchkit.co and typesense.org both do.
+ */
+export function publishedByVendor(
+  candidate: Pick<Candidate, 'maintainers' | 'links'>,
+  vendor: Vendor,
+  siteOrg: string | null,
+): boolean {
+  for (const maintainer of candidate.maintainers) {
+    if (carriesVendorName(maintainer.name, vendor)) return true
+    const host = maintainer.email.split('@')[1] ?? ''
+    if (!host) continue
+    if (flatten(host) === vendor.flatDomain || host.toLowerCase().endsWith(`.${vendor.domain}`)) return true
+    // hello@raygun.io maintains raygun.com's packages: a company mails from more than one tld.
+    if (carriesVendorName(host.split('.')[0], vendor)) return true
+    if (carriesVendorName(maintainer.email.split('@')[0], vendor)) return true
+  }
+  const orgs = candidate.links.map(githubOrg)
+  if (orgs.some((org) => orgIsVendor(org, vendor))) return true
+  return siteOrg !== null && orgs.some((org) => org === siteOrg)
+}
+
+const monthsSince = (at: number) => (at === 0 ? 0 : (Date.now() - at) / (1000 * 60 * 60 * 24 * 30.44))
+
+/** Years without a publish, or a version that is still a draft, is the vendor telling us it is not the one. */
+const isDormant = (candidate: Candidate) => monthsSince(candidate.publishedAt) >= 24
+const isProvisional = (candidate: Candidate) => candidate.version.includes('-') || candidate.version.startsWith('0.')
+
+/**
+ * A package whose name says nothing about the vendor can still be the SDK - chromadb is
+ * trychroma.com's and @amplitude/analytics-browser is Amplitude's - but so is every internal
+ * library a company open-sources. allegro.pl publishes worker-nodes, a thread pool, and
+ * convert-description, a helper used by 351 installs a week. What separates them is whether
+ * the package presents itself as being about the product, and whether anyone installs it.
+ */
+const MIN_WEEKLY_DOWNLOADS = 1000
+
+function looksLikeTheirProduct(candidate: Candidate, vendor: Vendor, downloads: number): boolean {
+  if (shapeRank(candidate.name, vendor) < 3) return true
+  const mentioned =
+    mentionsVendorName(candidate.description, vendor) ||
+    candidate.keywords.some((keyword) => mentionsVendorName(keyword, vendor))
+  return mentioned && downloads >= MIN_WEEKLY_DOWNLOADS
+}
+
+/**
+ * A maintainer whose own name carries the vendor's is a handle for the rest of the vendor's
+ * shelf, and the registry will list it. It is the only way to reach a package named after
+ * neither the brand nor the domain: highlight.io's SDK is `highlight.run`, which no search for
+ * "highlight" returns within twenty results.
+ */
+function vendorMaintainer(candidates: Candidate[], vendor: Vendor): string | null {
+  for (const candidate of candidates) {
+    for (const maintainer of candidate.maintainers) {
+      if (maintainer.name && carriesVendorName(maintainer.name, vendor)) return maintainer.name
+    }
+  }
+  return null
 }
 
 /**
  * Last resort when no install snippet is on the site. Searches the domain as well as the
  * brand, because the package is often named after the site (htmx.org) and a bare brand
  * query returns a squatted namesake instead.
+ *
+ * Everything it returns has been shown to be the vendor's. When nothing can be shown, it
+ * returns nothing: a package we cannot attribute is not a weaker finding about the vendor,
+ * it is an absence of one about us.
  */
 export async function searchNpmForDomain(domain: string, githubRepo: string | null): Promise<NpmMatch | null> {
-  const brand = domain.split('.')[0]
-  const org = githubRepo?.split('/')[0].toLowerCase() ?? null
+  const vendor = vendorOf(domain)
+  const siteOrg = githubRepo?.split('/')[0].toLowerCase() ?? null
 
-  const [byDomain, byBrand] = await Promise.all([searchRegistry(domain), searchRegistry(brand)])
-  const seen = new Set<string>()
-  const candidates: { name: string; confidence: 'strong' | 'weak' }[] = []
+  const queries = [domain, ...vendor.aliases]
+  const searches = await inParallel([...new Set(queries)], (query) => searchRegistry(query))
 
-  for (const hit of [...byDomain, ...byBrand]) {
-    const name = hit.package.name
-    if (seen.has(name) || isPlaceholder(name)) continue
-    // The registry link is the package's own URL, so for a package named after the domain it
-    // matched the ownership test against itself: statuspage.io, a third party's GPL client,
-    // was attributed to Atlassian this way and failed for missing types.
-    const links = (Object.values(hit.package.links ?? {}).filter(Boolean) as string[]).filter(
-      (link) => !/^https?:\/\/(www\.)?npmjs\.com\//i.test(link),
-    )
-    // Linking to the vendor's domain is not ownership: every third-party client links to the
-    // service it wraps, which is how statuspage.io-api was once attributed to Atlassian. The
-    // proofs that hold are an npm scope the vendor registered, or a repo in their own org that
-    // also points back at their domain.
-    const claimsDomain = links.some((link) => link.includes(domain))
-    const sharesOrg = org !== null && links.some((link) => new RegExp(`github\\.com/${org}/`, 'i').test(link))
-    if (!claimsDomain && !sharesOrg) continue
-    seen.add(name)
-    const owned = matchStrength(name, domain, brand) === 'strong' || (claimsDomain && sharesOrg)
-    candidates.push({ name, confidence: owned ? 'strong' : 'weak' })
+  const byName = new Map<string, Candidate>()
+  for (const hit of searches.flat()) {
+    if (isPlaceholder(hit.package.name) || byName.has(hit.package.name)) continue
+    byName.set(hit.package.name, candidateOf(hit.package))
   }
-  if (candidates.length === 0) return null
 
-  // Name shape alone picked angular-froala (1.7k weekly, last published 2023) over
-  // froala-editor (327k weekly, current). Real usage decides; the name only breaks ties.
-  const ranked = await inParallel(candidates.slice(0, 10), async (candidate) => ({
-    ...candidate,
+  let owned = [...byName.values()].filter((candidate) => publishedByVendor(candidate, vendor, siteOrg))
+
+  const handle = vendorMaintainer(owned, vendor)
+  if (handle) {
+    for (const hit of await searchRegistry(`maintainer:${handle}`)) {
+      if (isPlaceholder(hit.package.name) || byName.has(hit.package.name)) continue
+      const candidate = candidateOf(hit.package)
+      byName.set(candidate.name, candidate)
+      if (publishedByVendor(candidate, vendor, siteOrg)) owned.push(candidate)
+    }
+  }
+
+  // A CLI or a framework binding is the vendor's own and still not what a developer installs
+  // to use them, so it does not stand in for an SDK we could not find.
+  owned = owned.filter((candidate) => shapeRank(candidate.name, vendor) < 4)
+  if (owned.length === 0) return null
+
+  // Downloads are fetched for a shortlist rather than for everything the vendor publishes, so
+  // the cheap signals order the field first and usage only settles what is left.
+  const cheapRank = (candidate: Candidate) =>
+    Number(isDormant(candidate)) * 100 + shapeRank(candidate.name, vendor) * 10 + Number(isProvisional(candidate))
+  owned.sort((a, b) => cheapRank(a) - cheapRank(b) || a.name.length - b.name.length)
+
+  const ranked = await inParallel(owned.slice(0, 8), async (candidate) => ({
+    candidate,
     downloads: await weeklyDownloads(candidate.name),
   }))
 
-  // Ownership decides first, then which package inside that ownership is the entry point.
-  // A scope proves the vendor published it; it does not say @pinecone-database/connect is the
-  // SDK when @pinecone-database/pinecone exists. Downloads alone got that wrong in the other
-  // direction once, picking angular-froala over froala-editor, so shape breaks the tie only
-  // among names that actually carry the brand.
-  // A scope proves the vendor published it and says nothing about which of their packages is
-  // the SDK. Downloads alone answered @transloadit/prettier-bytes, a byte formatter that ships
-  // as an Uppy dependency, and @workos/radar-signals@0.0.1. Shape decides that much and no more:
-  // ranking by how much of the brand a name carries once picked froala-pages over froala-editor.
-  const entryRank = (name: string) => {
-    const part = (name.startsWith('@') ? (name.split('/')[1] ?? '') : name).toLowerCase()
-    if (part === brand) return 0
-    return SDK_SHAPE.test(part) ? 1 : 2
-  }
-  ranked.sort(
-    (a, b) =>
-      Number(b.confidence === 'strong') - Number(a.confidence === 'strong') ||
-      entryRank(a.name) - entryRank(b.name) ||
-      b.downloads - a.downloads ||
-      nameAffinity(b.name, brand) - nameAffinity(a.name, brand),
-  )
-  return { name: ranked[0].name, confidence: ranked[0].confidence }
+  const plausible = ranked.filter((entry) => looksLikeTheirProduct(entry.candidate, vendor, entry.downloads))
+  if (plausible.length === 0) return null
+
+  plausible.sort((a, b) => cheapRank(a.candidate) - cheapRank(b.candidate) || b.downloads - a.downloads)
+  return { name: plausible[0].candidate.name, confidence: 'strong' }
 }
 
 export async function discover(domain: string): Promise<Discovered> {

@@ -23,6 +23,52 @@ type Manifest = {
   exports?: unknown
   repository?: unknown
   homepage?: string
+  description?: string
+  keywords?: string[]
+  maintainers?: { name?: string; email?: string }[]
+}
+
+/** Who publishes a package and how it describes itself, from the manifest we already read. */
+export type PackageFacts = {
+  name: string
+  version: string
+  description: string
+  keywords: string[]
+  maintainers: { name: string; email: string }[]
+  repository: string
+  homepage: string
+}
+
+const repositoryUrl = (repository: unknown): string => {
+  if (typeof repository === 'string') return repository
+  const url = (repository as { url?: unknown } | null)?.url
+  return typeof url === 'string' ? url : ''
+}
+
+/**
+ * The maintainer list is the registry's own answer to "whose package is this", and it costs
+ * nothing extra: it arrives in the manifest we already fetch. Reading a name, a scope or a
+ * homepage instead is reading what the publisher chose to call themselves.
+ */
+export async function fetchPackageFacts(packageName: string): Promise<PackageFacts | null> {
+  const got = await fetchUrl(`https://registry.npmjs.org/${encodeURIComponent(packageName)}/latest`, {
+    accept: 'application/json',
+  })
+  if (!got.ok) return null
+  try {
+    const meta = JSON.parse(got.body) as Manifest
+    return {
+      name: packageName,
+      version: meta.version ?? '',
+      description: meta.description ?? '',
+      keywords: meta.keywords ?? [],
+      maintainers: (meta.maintainers ?? []).map((one) => ({ name: one.name ?? '', email: one.email ?? '' })),
+      repository: repositoryUrl(meta.repository),
+      homepage: meta.homepage ?? '',
+    }
+  } catch {
+    return null
+  }
 }
 
 export async function checkNpm(packageName: string | null): Promise<NpmFindings> {

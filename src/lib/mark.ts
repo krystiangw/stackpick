@@ -56,8 +56,12 @@ export function buildMark(stages: Scorecard['stages']): MarkSegment[] {
  */
 export function fillHeight(segment: MarkSegment, track: number): number {
   if (segment.state === 'unmeasured') return 0
-  if (segment.state === 'zero') return Math.max(Math.round(track * 0.03), 2)
-  return Math.max(Math.round(segment.share * track), Math.round(track * 0.08))
+  // Three percent of the track is two pixels, and a stage you failed then looks exactly like one
+  // we could not measure. Zero has to be visible as zero, which is the whole point of the mark.
+  if (segment.state === 'zero') return Math.max(Math.round(track * 0.1), 5)
+  // The floor for anything above zero has to clear the zero mark, or a stage that earned a point
+  // draws shorter than one that earned none.
+  return Math.max(Math.round(segment.share * track), Math.round(track * 0.2))
 }
 
 export function scoreTone(total: number, measurable: number): string {

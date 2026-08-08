@@ -186,7 +186,7 @@ export default function PricingPage() {
             ],
             [
               'Why is the free scan actually free?',
-              'It is HTTP requests. No language model runs, so it costs bandwidth and nothing else. Charging for it would be charging for a script, and the script is published.',
+              'It is HTTP requests. No language model runs, so it costs bandwidth and nothing else. Charging for it would be charging for a script whose every rule is published, which you can reproduce with curl.',
             ],
             [
               'Will you publish what you find about us?',

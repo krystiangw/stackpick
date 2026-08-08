@@ -7,6 +7,14 @@ function tone(total: number, max: number): string {
   return 'bg-warn'
 }
 
+/**
+ * Every entry of every category used to render. At 103 domains in 15 categories that was 5,339px
+ * of a 10,002px page on a phone, six and a half screens of list before the reader reached what
+ * the five stages are. The corpus is the proof, not the argument, so the page shows the shape of
+ * each category and sends anyone who wants all of it to the data.
+ */
+const SHOWN_PER_CATEGORY = 5
+
 export function Rankings({ rankings }: { rankings: RankedCategory[] }) {
   if (rankings.length === 0) return null
 
@@ -37,7 +45,7 @@ export function Rankings({ rankings }: { rankings: RankedCategory[] }) {
               </span>
             </div>
             <ol className="flex flex-col">
-              {entries.map((entry, index) => (
+              {entries.slice(0, SHOWN_PER_CATEGORY).map((entry, index) => (
                 <li key={entry.domain} className="grid grid-cols-[1.4rem_1fr_auto] items-center gap-3 border-b border-rule py-2">
                   <span className="font-mono text-xs tabular-nums text-ink-faint">{index + 1}</span>
                   <Link
@@ -57,6 +65,15 @@ export function Rankings({ rankings }: { rankings: RankedCategory[] }) {
                 </li>
               ))}
             </ol>
+            {entries.length > SHOWN_PER_CATEGORY && (
+              <p className="mt-2 font-mono text-xs text-ink-faint">
+                {entries.length - SHOWN_PER_CATEGORY} more in this category, all of them in{' '}
+                <a href="/corpus.json" className="text-brass underline underline-offset-4">
+                  the data
+                </a>
+                .
+              </p>
+            )}
           </div>
         ))}
       </div>

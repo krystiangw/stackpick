@@ -69,7 +69,7 @@ export const CHECKS: Check[] = [
     id: 'llms_txt',
     stage: 'discovery',
     label: 'llms.txt published',
-    why: 'A curated map of your docs is the cheapest way to control what an agent reads first.',
+    why: 'A curated map of your docs is the cheapest way to control what an agent reads first. Worth one point and not more: in eighteen isolated agent runs across four categories, not one cited llms.txt among its sources, and an independent measurement over ninety days found it served 84 requests against 62,100 AI-bot visits.',
     max: 1,
     evaluate: (f) => {
       if (f.machine.hasLlmsTxt) {

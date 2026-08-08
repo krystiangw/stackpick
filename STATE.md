@@ -782,3 +782,81 @@ niemierzalne.
 **Pięć audytów puszczonych równolegle** (bezpieczeństwo, wartość dla kupującego, poprawność
 werdyktów na nowych kategoriach, UI/UX przy 15 kategoriach, badanie problemów rynku). Wyniki
 i decyzje w następnej rundzie.
+
+## Runda 2026-08-08 (dwudziesta pierwsza): pięć audytów, i większość znalezisk była o nas
+
+Pięć równoległych audytów subagentami: bezpieczeństwo, wartość dla kupującego, poprawność
+werdyktów na nowych kategoriach, UI/UX przy 103 domenach, badanie rynku. Wszystkie wróciły
+z dowodami, nie z opiniami. Poniżej to, co już wdrożone, i to, co zostało.
+
+### Najdroższe: formularz mailowy kłamał
+
+`/api/lead` zwraca 200 z `delivered: false`, gdy Resend odrzuca wysyłkę, a komponent uznawał
+każde 200 za sukces i pisał **„The scorecard is in your inbox"**. Każdy odwiedzający, który
+dotarł najgłębiej, czyli wpisał firmowy adres na własnej karcie wyniku, był tracony i dostawał
+nieprawdę. Teraz osobny stan mówi, co się stało, i przypomina, że karta ma trwały URL.
+
+### Bezpieczeństwo: rdzeń SSRF wytrzymał atak, reszta nie
+
+Audytor próbował obejść `assertPublicHost` i walidujący `connect.lookup` (DNS rebinding,
+przekierowania, kodowanie dziesiętne i ósemkowe, IPv6, userinfo) i **nie złamał tego**. Naprawione
+natomiast: `/api/lead` sprawdzał dwa limity i **nie naliczał żadnego**, dopóki wysyłka się nie
+powiodła; ten sam endpoint przyjmował żądania cross-origin z ciałem `text/plain`, które nie
+wymaga preflightu, więc dowolna strona mogła kazać przeglądarkom gości wysyłać nasz mail na
+wybrany adres; `endsWith(domain)` bez granicy etykiety (skan `ank.com` poszedłby na `mybank.com`);
+sortowanie wrogiej sitemapy budujące trzy obiekty URL na porównanie; IPv6 link-local jako literał
+`fe80` zamiast zakresu `fe80::/10`; brak neutralizacji formuł w CSV; zaufanie do
+`x-forwarded-host` lądujące w każdym `helpUri`.
+
+### Poprawność werdyktów: dwie przyczyny systemowe naprawione, jedna w toku
+
+**Karta MCP nazywa serwer, a my zgadywaliśmy.** Sentry i Telnyx publikują `/.well-known/mcp.json`
+z polem `endpoint`, którego nigdy nie odpytaliśmy, i dostali FAIL ze zdaniem *„karta to deklaracja
+o serwerze, a nie serwer"*, podczas gdy ich serwery kończą handshake. Sentry ma go na innej domenie.
+Teraz: dereferencja karty, `api.<domena>`, kombinacje host plus ścieżka, prawdziwe `initialize`
+po POST zamiast GET, a **ukończony handshake bije sondę wildcardową**, bo adres podany przez
+vendora nie jest zgadywaniem. Telnyx 0 → **1/1**, Sentry 0 → **1/1** plus `oauth_dcr` 1/1.
+
+**Zamknięte drzwi frontowe traktowaliśmy jak ślepotę na całą witrynę.** Vonage odpowiada 403 na
+hoście marketingowym, a w tym samym skanie przeczytaliśmy jego llms.txt, dokumentację i paczkę,
+i mimo to **pięć checków wypadało z mianownika** ze zdaniem „każde żądanie zostało odrzucone".
+Wygaszenie wymaga teraz, żebyśmy naprawdę niczego nie przeczytali (`readAnything`).
+Vonage 4/10 → **5/13**, Bitmovin 8/12 → **9/14**.
+
+**W toku:** atrybucja npm, błędna w 19 z 52 wierszy w trzech odmianach, w tym oskarżenie
+*„is not clearly yours"* rzucane paczkom, których maintainerem jest vendor, w tej samej odpowiedzi
+registry, którą już pobieramy.
+
+### UI: dwie naprawy
+
+Sekcja rankingu na landingu miała **5 339 z 10 002 pikseli** strony na telefonie, czyli sześć
+i pół ekranu listy, zanim czytelnik dotarł do opisu pięciu etapów. Pokazujemy pięć pozycji na
+kategorię i odsyłamy po resztę do danych. Druga: **etap oblany rysował się jako 2 piksele**, więc
+przy pobieżnym spojrzeniu wyglądał jak etap niemierzalny, co niszczy cały sens znaku. Teraz zero
+ma 10% toru, a każdy wynik powyżej zera co najmniej 20%, więc kolejność jest zawsze czytelna.
+
+### Rynek: dwie rzeczy przeciwko nam
+
+**llms.txt prawdopodobnie nie działa.** Niezależny pomiar przez 90 dni: 84 żądania na 62 100
+wizyt botów AI. Cloudflare celowo nie wlicza go do wyniku. Sprawdziłem nasze własne dane:
+**w 18 izolowanych przebiegach żaden agent nie zacytował llms.txt wśród źródeł.** Nie usunąłem
+punktu, bo nasz dowód jest słabszy, niż brzmi (przebieg może pobrać plik i go nie wymienić), ale
+**opublikowałem to jako limit i w opisie samego checku**. Jeśli ktoś wybiera, co robić najpierw,
+to nie to.
+
+**Jednorazowy pomiar to szum, i rynek już to mówi głośno.** Rand Fishkin na 2961 wykonaniach
+promptów: te same marki wracały w mniej niż 1 na 100 powtórzeń. To jest zarzut wycelowany
+w **płatny audyt**, nie w skaner, a jedyna obrona to powtórzenia i rozkład zamiast pojedynczego
+wyniku. **To musi trafić do metodologii płatnego audytu, zanim ktoś zapyta** i jest to następna
+pozycja merytoryczna.
+
+### Zostało z audytu wartości, w kolejności straty
+
+1. Brak ścieżki zakupu: jedyny mechanizm to `mailto` na prywatnego Gmaila.
+2. Brak próbki deliverable'u za 11 000 USD. Cztery opublikowane audyty są nią i leżą za linkiem
+   w menu.
+3. Cena i nazwisko nie występują na landingu ani razu.
+4. Darmowa warstwa oddaje wiedzę, płatna sprzedaje potwierdzenie tej wiedzy. To odwrotnie, niż
+   powinno być.
+5. Korpus 103 vendorów jest wspomniany na jednej stronie, na dole. Jako jedyny asset zdolny
+   przyciągać ruch bez outboundu, powinien być na `/docs`, `/methodology` i karcie wyniku.
