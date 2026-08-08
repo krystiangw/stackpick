@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '5.1'
+export const FORMULA_VERSION = '5.2'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -378,13 +378,14 @@ export const CHECKS: Check[] = [
         // signup lives. anvil.co/signup is a 404 to Chrome too; theirs is on another host and
         // answers 200 to an agent, and we published the opposite as a finding about them.
         const browser = signup.browserStatus
-        if (browser !== null && browser === signup.status) {
+        const browserGotThrough = browser !== null && browser >= 200 && browser < 400
+        if (browser !== null && !browserGotThrough) {
           return {
             points: 0,
             detail:
               browser === 404
                 ? `Unmeasurable: ${signup.url} answers 404 to a browser as well, so this is where we looked being wrong rather than a door closed on agents`
-                : `Unmeasurable: ${signup.url} answers ${seen} to an agent and ${browser} to a Chrome user-agent, so the refusal is about where we ask from, not about agents`,
+                : `Unmeasurable: ${signup.url} answers ${seen} to an agent and ${browser} to a Chrome user-agent, so nothing gets in from here and the difference we test for cannot be seen`,
             inconclusive: true,
             unblock:
               browser === 404
@@ -587,7 +588,11 @@ export function refusesAgentsAtSignup(findings: ScanFindings): boolean {
   if (!signup.url || signup.reachable) return false
   const tried = signup.statusesSeen.length > 0 ? signup.statusesSeen : [signup.status]
   if (tried.every((status) => status === 429)) return false
-  return signup.browserStatus !== null && signup.browserStatus !== signup.status
+  // The browser has to actually get through. A 404 to an agent and a 403 to Chrome is two
+  // different refusals, not a door held open for one of them, and it was two of the two rows
+  // left standing after the first pass at this rule.
+  const browser = signup.browserStatus
+  return browser !== null && browser >= 200 && browser < 400
 }
 
 export const MAX_SCORE = CHECKS.reduce((total, check) => total + check.max, 0)

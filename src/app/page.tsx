@@ -59,11 +59,13 @@ export default async function Home() {
           machine readable. Neither asks the next question, which is the one all eighteen of our agent runs
           died on: can an unattended client register and get a key?
         </p>
-        {coverage.signupRefusesAgents > 0 && (
+        {coverage.signupNeedsJavaScript > 0 && (
           <p className="mt-4 max-w-2xl font-mono text-sm leading-relaxed text-ink-soft">
-            Of {coverage.domains} vendors we have scanned, {coverage.signupRefusesAgents} answer an agent at
-            the signup form with a refusal rather than a form, and {coverage.signupNeedsJavaScript} more serve
-            a form that renders nothing without JavaScript.
+            Of {coverage.domains} vendors we have scanned, {coverage.signupNeedsJavaScript} serve a signup form
+            that renders nothing without JavaScript
+            {coverage.signupRefusesAgents > 0
+              ? `, and ${coverage.signupRefusesAgents} answer an agent with a refusal where a browser gets through.`
+              : '. Outright refusals aimed at agents are rarer than the noise around them suggests, and we say so rather than counting every 403 our data centre collects.'}
           </p>
         )}
         <div className="mt-8 max-w-xl">
