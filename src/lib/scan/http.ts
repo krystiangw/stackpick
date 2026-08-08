@@ -162,14 +162,19 @@ async function takeSiteSlot(state: ScanState, hostname: string): Promise<() => v
   const key = siteKey(hostname)
   const slots = state.slots.get(key) ?? { active: 0, waiting: [] }
   state.slots.set(key, slots)
+  // A freed slot is handed to the next waiter without passing through the count. Releasing it
+  // first and letting the waiter retake it leaves a gap a newly arriving request can take,
+  // which puts the site one over the cap for as long as the queue is busy.
   if (slots.active >= MAX_PER_SITE) await new Promise<void>((resolve) => slots.waiting.push(resolve))
-  slots.active++
+  else slots.active++
+
   let released = false
   return () => {
     if (released) return
     released = true
-    slots.active--
-    slots.waiting.shift()?.()
+    const next = slots.waiting.shift()
+    if (next) next()
+    else slots.active--
   }
 }
 

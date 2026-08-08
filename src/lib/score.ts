@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '4.2'
+export const FORMULA_VERSION = '4.3'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -513,7 +513,22 @@ const blindedBy = (f: ScanFindings) => f.blocksPlainRequests && !f.readAnything
 const counts = (check: ScoredCheck) => !check.inconclusive && !check.notApplicable
 
 export function scoreFindings(findings: ScanFindings): Scorecard {
-  const checks: ScoredCheck[] = CHECKS.map((check) => ({ ...check, ...check.evaluate(findings) }))
+  // A phase the deadline cut off leaves nothing behind, and evaluate() cannot tell that from a
+  // site that publishes nothing: a robots.txt we never fetched reads as "no robots.txt, so
+  // nothing is disallowed for anyone" and is handed a point. Points are not a safe signal for
+  // whether evidence arrived, because several checks award points for a documented absence, so
+  // every check the scan did not reach is demoted whatever it scored.
+  const missed = new Set(findings.truncation?.unmeasuredChecks ?? [])
+  const checks: ScoredCheck[] = CHECKS.map((check) => {
+    if (!missed.has(check.id)) return { ...check, ...check.evaluate(findings) }
+    return {
+      ...check,
+      points: 0,
+      detail: findings.truncation?.detail ?? 'Unmeasurable: the scan ran out of time before this check',
+      inconclusive: true,
+      unblock: 'Nothing for you to do. Scan again and this becomes measurable.',
+    }
+  })
 
   const stages = STAGES.map((stage) => {
     const inStage = checks.filter((check) => check.stage === stage.id)
