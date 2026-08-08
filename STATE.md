@@ -1413,3 +1413,35 @@ szerszej niż nasza, `user_agents_allowed` poprawny na wszystkich 156.
   bajta z wierszem twilio.com;
 - `llms_txt` przy zaliczeniu nie podaje URL-a, a na `deepl.com` i `mixpanel.com` plik jest tylko
   na subdomenie.
+
+## Runda 2026-08-09 (trzydziesta piąta): domknięcie listy z audytu adwersaryjnego
+
+Wersje 5.4, 5.5 i 5.6, każda po jednym reseedzie i sprawdzeniu diffa.
+
+**5.4 - jedna definicja liczby.** Nowy niezmiennik audytu wyłapał, że strona mówi **72**, a dane
+**71**. Różnicą był `telnyx.com`: jego skan wyczerpał budżet, więc korpus odmawia oceny jego
+rejestracji, a landing liczył go i tak, bo brał surowe findings zamiast ocenionego werdyktu.
+Publikowana statystyka czyta teraz dokładnie to, co czyta audyt. Przy okazji: moja własna naprawa
+OAuth (host `mcp.<domena>`) **zagłodziła telnyx o cztery checki** przez 21-sekundowy budżet, więc
+sonda zeszła z dwóch ścieżek do jednej, tej, na której datadog i contentful faktycznie publikują
+`registration_endpoint`.
+
+**5.5 - trzy zdania, które mówiły więcej, niż zmierzyliśmy.**
+- „last published N months ago" czytaliśmy z `Last-Modified` rekordu w rejestrze, który przesuwa
+  się przy każdym zapisie metadanych. `june.so`: 28 miesięcy wobec 35,6 faktycznych, i publikowaliśmy
+  tę **mniejszą** liczbę jako datę wydania. Zdanie mówi teraz o rekordzie, czyli o tym, co mierzymy.
+- `llms_txt` zaliczaliśmy bez podania pliku, a `deepl.com` i `mixpanel.com` publikują go **tylko na
+  subdomenie**, więc vendor sprawdzający apex dostawał 404.
+- `cal.com` dostawał punkt za `@calcom/cal-sans-ui`, czyli firmowy **font** na licencji OFL-1.1.
+
+**5.6 - marka na cudzej witrynie.** `sendgrid.com` przekierowuje na `twilio.com`, a każda strona,
+którą czytaliśmy, dotyczyła Twilio Chat albo Authy. Liczba `docs_without_js` w wierszu SendGrida
+była **identyczna co do bajta** z wierszem Twilio, bo to była ta sama strona. Teraz discovery szuka
+sekcji tej marki (`twilio.com/docs/sendgrid`), a głębszy czytnik chodzi tylko po ścieżkach z jej
+nazwą. SendGrid czyta własną stronę o kluczach API.
+
+**Z listy audytu została jedna pozycja:** `statsig.com` wskazuje wygenerowany stub `statsig@0.0.2`
+zamiast `@statsig/js-client`, choć zdanie o nim jest już prawdziwe (mówi o rekordzie w rejestrze,
+nie o dacie publikacji).
+
+**Stan:** korpus 156/156 na 5.6 po reseedzie, `npm run audit` czysty w obu wymiarach.
