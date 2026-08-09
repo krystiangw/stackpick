@@ -1,7 +1,11 @@
 import { MongoClient, type Collection, type Db } from 'mongodb'
+import { REGISTRY_TTL_MS, installSharedCache, type SharedCache } from './scan/http'
+import type { Fetched } from './scan/http'
 import type { Lead, Report, Store } from './store'
 
 type ReportDoc = Report & { _id: string }
+/** One npm registry answer, kept so a deploy does not send us back to asking npm for all of it. */
+type CachedAnswer = { _id: string; at: Date; answer: Fetched }
 
 let clientPromise: Promise<MongoClient> | null = null
 let indexesReady: Promise<void> | null = null
@@ -19,24 +23,48 @@ async function db(): Promise<Db> {
   return client.db(process.env.MONGODB_DB ?? 'stackpick')
 }
 
-async function collections(): Promise<{ reports: Collection<ReportDoc>; leads: Collection<Lead> }> {
+async function collections(): Promise<{
+  reports: Collection<ReportDoc>
+  leads: Collection<Lead>
+  answers: Collection<CachedAnswer>
+}> {
   const database = await db()
   const reports = database.collection<ReportDoc>('reports')
   const leads = database.collection<Lead>('leads')
+  const answers = database.collection<CachedAnswer>('registryAnswers')
 
   indexesReady ??= Promise.all([
     reports.createIndex({ domain: 1, scannedAt: -1 }),
     reports.createIndex({ scannedAt: -1 }),
     leads.createIndex({ createdAt: -1 }),
+    // Mongo expires them, so nothing here has to remember to.
+    answers.createIndex({ at: 1 }, { expireAfterSeconds: REGISTRY_TTL_MS / 1000 }),
   ]).then(() => undefined)
   await indexesReady
 
-  return { reports, leads }
+  return { reports, leads, answers }
+}
+
+const registryAnswers: SharedCache = {
+  async get(key) {
+    const { answers } = await collections()
+    const held = await answers.findOne({ _id: key })
+    return held ? held.answer : null
+  },
+  async set(key, answer) {
+    const { answers } = await collections()
+    await answers.updateOne({ _id: key }, { $set: { at: new Date(), answer } }, { upsert: true })
+  },
 }
 
 const withoutId = { projection: { _id: 0 } } as const
 
 export class MongoStore implements Store {
+  constructor() {
+    // The scanner cannot import the database, so the database hands itself over.
+    installSharedCache(registryAnswers)
+  }
+
   async saveReport(report: Report) {
     const { reports } = await collections()
     await reports.updateOne({ _id: report.id }, { $set: report }, { upsert: true })

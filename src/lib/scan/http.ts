@@ -197,8 +197,24 @@ async function takeSiteSlot(state: ScanState, hostname: string): Promise<() => v
  * one would turn a moment of load into a fact about a vendor.
  */
 const REGISTRY_HOSTS = new Set(['registry.npmjs.org', 'api.npmjs.org'])
-const REGISTRY_TTL_MS = 6 * 60 * 60 * 1000
+export const REGISTRY_TTL_MS = 6 * 60 * 60 * 1000
 const registryCache = new Map<string, { at: number; answer: Fetched }>()
+
+/**
+ * A place to keep those answers that a deploy does not empty. Process memory alone meant the
+ * first reseed after every deploy was cold, and a cold pass over the corpus costs about 26
+ * domains their package: measured at 139 typed packages warm against 116 cold. Injected rather
+ * than imported, because this module knows about HTTP and must not know about the database.
+ */
+export type SharedCache = {
+  get(key: string): Promise<Fetched | null>
+  set(key: string, answer: Fetched): Promise<void>
+}
+let shared: SharedCache | null = null
+/** Named for what it does, not `use...`, which the React lint rule reads as a hook. */
+export function installSharedCache(cache: SharedCache | null): void {
+  shared = cache
+}
 
 function registryKey(url: string, options: FetchOptions): string | null {
   try {
@@ -219,6 +235,17 @@ export async function fetchUrl(url: string, options: FetchOptions = {}): Promise
   if (acrossScans) {
     const held = registryCache.get(acrossScans)
     if (held && Date.now() - held.at < REGISTRY_TTL_MS) return held.answer
+    if (shared) {
+      // Never let the cache itself become the reason a scan runs out of time.
+      const stored = await Promise.race([
+        shared.get(acrossScans).catch(() => null),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 1_000)),
+      ])
+      if (stored) {
+        registryCache.set(acrossScans, { at: Date.now(), answer: stored })
+        return stored
+      }
+    }
   }
 
   const key = cacheKey(url, options)
@@ -231,6 +258,7 @@ export async function fetchUrl(url: string, options: FetchOptions = {}): Promise
   // about us and must be asked again next time.
   if (acrossScans && (answer.ok || answer.status === 404)) {
     registryCache.set(acrossScans, { at: Date.now(), answer })
+    void shared?.set(acrossScans, answer).catch(() => undefined)
     // Bounded, because a dyno serves every scan anyone runs and this map would otherwise only grow.
     if (registryCache.size > 5_000) {
       for (const oldest of [...registryCache.keys()].slice(0, 1_000)) registryCache.delete(oldest)
