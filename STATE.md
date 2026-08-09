@@ -7,10 +7,11 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 
 ## Stan na teraz, w dziesięciu liniach
 
-- Formuła **7.2**, korpus **156 domen w 24 kategoriach**, reseed 156/156 bez błędów.
+- Formuła **7.3**, korpus **156 domen w 24 kategoriach**, reseed 155/156 (`storyblok.com` nie
+  odpowiada dyno, z tej maszyny odpowiada 200: to nasz własny ruch, nie fakt o dostawcy).
 - `npm run audit`: **0 sprzeczności w wierszach, 10 liczb ze stron zgodnych z danymi**.
-- Cztery przebiegi adwersaryjne przeciw realnym żądaniom: **16,7 → 2,2 → 3,9 → 2,0 procent
-  błędu**. Wszystkie ich znaleziska zamknięte poza pozycjami z listy niżej.
+- Pięć przebiegów adwersaryjnych przeciw realnym żądaniom: **16,7 → 2,2 → 3,9 → 2,0 → 0,94
+  procent błędu** (6 na 640). Wszystkie ich znaleziska zamknięte poza pozycjami z listy niżej.
 - Znalezisko rynkowe: **41 z 54 vendorów z żywym MCP publikuje RFC 7591**, poza tą grupą 23 ze 102.
   DCR przyszło z wymogu specyfikacji MCP, nie z decyzji o wpuszczeniu agentów. **36 z 54 nadal
   nie dokumentuje żadnej drogi do klucza.**
@@ -147,10 +148,18 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
 
 ## Następne kroki merytoryczne
 
-- **Piąty przebieg adwersaryjny** po zestawie 7.2 (wyzwanie kontra limit, wzorce darmowego progu,
-  atrybucja npm po dwóch korektach, dowody MCP, nazywanie adresu, który odpowiedział). Baseline do
-  pobicia: **2,0 procent**. Szczególnie warta ataku jest reguła `orgCouldBeVendor`, bo jest nowa
-  i już raz przestrzeliła.
+- ~~**Piąty przebieg adwersaryjny**~~ **zrobione 2026-08-09: 0,94 procent** (6 na 640). Dowiedzione:
+  ściana wyzwania (156/156), dowody MCP (63 endpointy odtworzone, 465 sond, zero wymyślonych zdań),
+  arytmetyka koniunkcji. Niedowiedzione: **selekcja pakietu npm** (zero błędnych przypisań na 141,
+  ale publikujemy CLI, serwer i niskopoziomowego klienta jako odpowiedź dostawcy) i **twierdzenie**
+  koniunkcji, patrz runda 51.
+- **Szósty przebieg adwersaryjny** po 7.3. Baseline: **0,94 procent**. Warte ataku: nowa noga
+  CAPTCHA w koniunkcji, `rendersUsableForm` (próg dwóch pól jest arbitralny), i `onlyChrome`
+  w `self_serve`, bo to trzecia z rzędu zmiana w tym samym checku.
+- **Selekcja pakietu npm, nie własność.** `directus.io` dostaje `directus` (serwer) zamiast
+  `@directus/sdk`, `xata.io` dostaje `@xata.io/api@0.1.7` zamiast `@xata.io/client@0.30.1`, oba
+  we własnym scope dostawcy i oba otypowane. `betterstack.com` gubi `@logtail/node` przez
+  `pointsAtAnotherCompany`. Zdanie jest dosłownie prawdziwe i odpowiada na złe pytanie.
 - ~~**Bramka mailowa na wyniku skanu.**~~ **zrobione 2026-08-09.** Audyt cenowy twierdził, że
   nie zbieramy maila. Zbieraliśmy, tylko formularz był **ostatnią sekcją strony**, po dziesięciu
   sekcjach i całej tabeli dowodów, czyli w miejscu, w którym intencja, której potrzebuje, już
@@ -233,6 +242,38 @@ siostrzanej, a nie skracania własnej.
 **Trzy audyty strategii cenowej** (komparatory rynkowe, badge, ICP i marża) opisane w sekcji
 „Decyzje po stronie Krystiana". Najtwardszy wniosek: problem, który mierzy darmowy skan, jest
 **jednorazowy**, więc retainer za ponowny pomiar tych samych checków nie jest uczciwy.
+
+## Runda 2026-08-09 (51): piąty przebieg i twierdzenie, któremu przeczyły nasze dane
+
+**0,94 procent błędu, 6 na 640**, wobec 2,0 na 7.1. Ale najważniejsze znalezisko nie było błędem
+werdyktu: **sekcja koniunkcji opublikowana tego ranka twierdziła rzecz, której przeczył sąsiedni
+check w tym samym wierszu JSON-a.** Nagłówek mówił „14 dostawców, z których nienadzorowany agent
+mógłby faktycznie skorzystać", a pięciu z tych czternastu ma CAPTCHĘ w serwowanym HTML-u
+rejestracji: browserbase, chargebee, firecrawl, phrase (recaptcha) i polar.sh (turnstile). Noga
+„rejestracja, do której agent dotrze" używała `signup_reachable` i **nigdy nie pytała o
+`signup_no_captcha`**, czyli o check mierzący dokładnie tę barierę, od której wzięła nazwę.
+Naprawiona noga, nie nagłówek.
+
+Drugi błąd w tej samej sekcji: `rendersFormWithoutJs` sprawdzało `body.includes('<form')`, a
+`app.hygraph.com/signup` serwuje `<form method="post" action="/login"></form>`, pusty element z
+zerem pól. Teraz wymagane są dwa pola, bo samotny ukryty token CSRF nie jest polem.
+
+**Liczba spadła z 14 na 6, nie na 8, jak szacowałem:** próg dwóch pól wyrzucił też `auth0.com`
+i `deepl.com`. Wszystkie sześć zweryfikowane niezależnie z maszyny, która ich nigdy nie dotykała
+(`api.video`, `browserless.io`, `contentful.com`, `honeybadger.io`, `resend.com`, `supabase.com`:
+formularz, pola, zero CAPTCHY). Największa grupa „o jeden krok" urosła z 40 na **48 na samej
+rejestracji**.
+
+Trzy pozostałe naprawy: przycisk „Get started for free" z nawigacji przestał bić zmierzoną
+nieobecność cen (`here.com` serwuje 850 znaków nawigacji i Contact Us); zdanie „nie udało się
+zidentyfikować pakietu" przestało twierdzić, że wyszukiwanie wróciło puste, kiedy wróciło z CLI
+(`pdfmonkey.io` publikuje `@pdfmonkey/cli` z adresu `@pdfmonkey.io`); odmowa MCP nazywa teraz
+wszystkie **pięć** sondowanych adresów zamiast dwóch, bo na `kinde.com` pominięty
+`api.kinde.com/mcp` jest tym, który odpowiada.
+
+**Wzorzec po raz piąty, tym razem najczystszy:** naprawa atrybucji npm przeniosła błąd z własności
+na selekcję, poszerzenie wzorców darmowego progu przeniosło go z gubienia trialów na liczenie
+nawigacji, a koniunkcja naprawiła gaming progu i pominęła check mierzący własną barierę.
 
 ## Stare notatki badawcze (historyczne, sprzed rundy 12)
 
