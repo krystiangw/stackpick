@@ -131,9 +131,12 @@ i opisane w dzienniku rund niżej.
 
 **Zrobione i nieaktualne pozycje z tej sekcji przeniesione do dziennika rund. Aktualne:**
 
-- **Trzeci przebieg adwersaryjny** po najbliższym zestawie zmian. Wzorzec z tego projektu jest
-  twardy: każda naprawa wprowadza błąd przeciwny, a znajduje go diff korpusu albo przebieg
-  adwersaryjny, nigdy build ani test.
+- ~~**Trzeci przebieg adwersaryjny**~~ **uruchomiony 2026-08-09 rano** przeciw formule 6.3, na
+  sześciu zmianach wprowadzonych po 5.7 (rozszerzone dopasowanie free tier, punkt wejścia,
+  `llms.txt` na `docs.`, kanoniczna ścieżka cennika, łańcuch OAuth, budżet 25 s plus szkice npm).
+  Baza porównawcza: 16,7 procent na 5.2, 2,2 procent na 5.7. **Wynik do wpisania po powrocie.**
+  Wzorzec z tego projektu jest twardy: każda naprawa wprowadza błąd przeciwny, a znajduje go diff
+  korpusu albo przebieg adwersaryjny, nigdy build ani test.
 - **Reguła, którą trzeba pamiętać przy każdym nowym checku czytającym cudzy serwer:** tylko 404
   znaczy „nie ma", każda inna odmowa znaczy „nie przeczytaliśmy". Musiała zostać dopisana osobno
   przy `robots.txt`, przy stronach dokumentacji i przy ścieżkach wejścia.
