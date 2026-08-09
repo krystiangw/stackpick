@@ -1782,3 +1782,17 @@ routera. Zweryfikowane na produkcji: sentry kończy w **11,4 s bez obcięcia i w
 **Wzorzec, już czwarty raz dziś:** naprawa dokłada żądania, a żądania zjadają budżet, który
 odbiera punkty gdzie indziej. Przy każdej kolejnej naprawie dokładającej ruch trzeba pytać nie
 tylko „czy to poprawne", ale „co przez to wypadnie".
+
+## Runda 2026-08-09 (czterdziesta szósta): najlepszy stan korpusu w całym dniu
+
+Reseed 6.8: **żaden wiersz nie kończy się na ścianie czasu**, `sentry.io` wraca z 5 na 10,
+`postmark.com` z 7 na 10, średnia **9,22**, audyt czysty w obu wymiarach. Limit fazy npm nie
+kosztuje atrybucji: niemierzalnych `typed_package` jest 8, dokładnie tyle, ile raportował
+subagent po przepisaniu.
+
+Trzy spadki sprawdzone i uczciwe: `anvil.co` (bramka bota), `honeycomb.io` na `libhoney` i
+`imagekit.io` na pakiecie UI. Dwa ostatnie to nie błąd atrybucji, tylko **niestabilność
+wyszukiwania w rejestrze**: `mapbox.com` trafił raz na `mapbox-gl-draw`, raz na `mapbox-gl`,
+a `imagekit.io` raz na `@imagekit/javascript`, raz na `imagekit-ui-kit`. Ten sam kod, inny dzień,
+inna kolejność wyników npm. **Do rozstrzygnięcia jako osobna pozycja: wynik nie powinien zależeć
+od kolejności odpowiedzi rejestru.**
