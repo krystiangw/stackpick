@@ -466,6 +466,19 @@ export function visibleTextLength(html: string): number {
 }
 
 /**
+ * A 429 is our own traffic everywhere else in this scan, and that rule was laundering the most
+ * agent-hostile configuration in the corpus. pandadoc.com answers every request with 429,
+ * `x-vercel-mitigated: challenge`, a challenge token and no Retry-After: that is Vercel Attack
+ * Challenge Mode, a wall the vendor switched on, and excluding it from the denominator scored
+ * the wall as if we had never asked. Only an explicit challenge marker counts, so an edge that
+ * is genuinely rate limiting us still reads as our fault rather than as a finding about them.
+ */
+export function isBotChallenge(fetched: Fetched): boolean {
+  const mitigated = `${fetched.headers['x-vercel-mitigated'] ?? ''} ${fetched.headers['cf-mitigated'] ?? ''}`
+  return /challenge/i.test(mitigated) || 'x-vercel-challenge-token' in fetched.headers
+}
+
+/**
  * Bot gates answer inconsistently: the same Cloudflare signup returned 200 once and 403
  * four times during research. Report the majority status, and say so when tries disagree.
  */

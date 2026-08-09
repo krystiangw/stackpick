@@ -1047,6 +1047,39 @@ const githubRepoOf = (url: string): string | null =>
 const linksToVendorSite = (candidate: Pick<Candidate, 'links'>, vendor: Vendor): boolean =>
   candidate.links.some((link) => sameSite(link, vendor.domain))
 
+/** Code hosts say who wrote it, never which company sells it, so they cannot contradict anything. */
+const CODE_HOSTS = /^(?:www\.)?(?:github\.com|gitlab\.com|bitbucket\.org|npmjs\.com|codeberg\.org)$/i
+
+/**
+ * A suggestion that points somewhere else is not a suggestion. `fathom-typescript` is published
+ * by the handle `fathomai` and describes itself as "Fathom's official TypeScript SDK", two
+ * mentions of a brand token that two companies share: its own homepage is fathom.ai, the meeting
+ * notetaker, while the domain we were asked about is usefathom.com, an analytics product that
+ * never names it. Weak signals about a shared name do not add up to proof, and a package naming
+ * a stranger's product site outvotes both of them.
+ */
+function pointsAtAnotherCompany(candidate: Pick<Candidate, 'links'>, vendor: Vendor): boolean {
+  const productSites = candidate.links.filter((link) => {
+    try {
+      return !CODE_HOSTS.test(new URL(link).hostname)
+    } catch {
+      return false
+    }
+  })
+  if (productSites.length === 0) return false
+  return !productSites.some((link) => sameSite(link, vendor.domain) || isVendorHost(link, vendor))
+}
+
+/** A company keeps more than one name: livekit.io serves livekit.com, and both are theirs. */
+function isVendorHost(url: string, vendor: Vendor): boolean {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, '').toLowerCase()
+    return isVendorName(registrableDomain(host).split('.')[0], vendor)
+  } catch {
+    return false
+  }
+}
+
 /**
  * Whose package this is, and how much of it we can show. What settles it is a signal that names
  * the publisher: the account, a repo in the vendor's GitHub org, or the repo the vendor links
@@ -1093,7 +1126,8 @@ function ownershipOf(
     (!foreignScope &&
       repos.some((repo) => siteOrgs.includes(repo.split('/')[0])) &&
       shapeRank(candidate.name, vendor) <= 3)
-  return nearVendor && saysWhose ? 'suggested' : 'none'
+  if (!nearVendor || !saysWhose) return 'none'
+  return pointsAtAnotherCompany(candidate, vendor) ? 'none' : 'suggested'
 }
 
 const monthsSince = (at: number) => (at === 0 ? 0 : (Date.now() - at) / (1000 * 60 * 60 * 24 * 30.44))

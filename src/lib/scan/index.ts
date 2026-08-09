@@ -12,6 +12,7 @@ import {
   fetchWithRetries,
   inParallel,
   inPhase,
+  isBotChallenge,
   looksLikeHtml,
   ranOutOfTime,
   SCAN_BUDGET_MS,
@@ -60,6 +61,12 @@ export type ScanFindings = {
   readAnything: boolean
   /** 429 is us asking too often, not the site refusing agents. Never a finding about them. */
   rateLimitedUs: boolean
+  /**
+   * The edge answered with a JavaScript challenge rather than a limit. This is the opposite of
+   * rateLimitedUs and has to be scored, not excused: a challenge a browser solves invisibly is
+   * one no HTTP client can solve at all, which is precisely the difference this scan measures.
+   */
+  botChallenge: boolean
   /**
    * Set when the domain we were asked about serves another company's site, so every measurement
    * below is off that other site and says so. Null on nearly every scan.
@@ -507,11 +514,17 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     funnelPending,
     progress,
   ])
+  // A 429 carrying a challenge marker is the vendor's wall, not our load, and the two have to be
+  // told apart before either is scored: pandadoc.com answers every request this way and was
+  // getting six checks lifted out of its denominator for it.
+  const botChallenge = isBotChallenge(asAgent)
   // Only when a 429 is all we ever got. postmark.com answered 200, 429, 200 and the whole door
   // test went unmeasurable with the sentence "Unmeasurable: answered 200", which is nonsense: two
   // of three tries told us exactly what we asked.
   const rateLimitedUs =
-    asAgent.statusesSeen.length > 0 && asAgent.statusesSeen.every((status) => status === 429)
+    !botChallenge &&
+    asAgent.statusesSeen.length > 0 &&
+    asAgent.statusesSeen.every((status) => status === 429)
   report('Scoring', STEPS)
 
   const readable = docsWithoutJs(found.docs, [...(docsPage ? [docsPage] : []), ...deeperDocs.pages])
@@ -541,6 +554,7 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
       Boolean(found.pricingPage?.ok) ||
       Boolean(funnel.signup.url),
     rateLimitedUs,
+    botChallenge,
     resolvedElsewhere: found.resolvedElsewhere,
     durationMs: Date.now() - startedAt,
     discovered: {

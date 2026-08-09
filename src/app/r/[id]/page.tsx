@@ -238,9 +238,26 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </section>
       )}
 
+      {findings.botChallenge && (
+        <section className="border-b border-rule py-8">
+          <div className="border-l-2 border-fail bg-surface p-6">
+            <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-fail">A challenge, not a limit</h2>
+            <p className="mt-3 max-w-2xl leading-relaxed">
+              Your edge answered <span className="font-mono">{findings.agentStatus}</span> and asked the caller to
+              run JavaScript to prove it is a browser. A person never sees it. No agent can pass it, because an
+              agent is an HTTP client, so this is the one wall on this page that stops the funnel before any of it
+              starts. We score it rather than excusing it as our own traffic: everything below was measured
+              through it and is a floor, not a ceiling.
+            </p>
+          </div>
+        </section>
+      )}
+
       {/* Not when we were rate limited: that box accuses the vendor of refusing agents, and the
-          box above it says the opposite about the same 429. One page cannot hold both. */}
-      {findings.blocksPlainRequests && !findings.rateLimitedUs && (
+          box above it says the opposite about the same 429. One page cannot hold both. And not
+          on a challenge, which has its own box saying something the generic one gets backwards:
+          a Chrome user-agent is refused too, and that is the mechanism rather than a network rule. */}
+      {findings.blocksPlainRequests && !findings.rateLimitedUs && !findings.botChallenge && (
         <section className="border-b border-rule py-8">
           <div className="border-l-2 border-fail bg-surface p-6">
             <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-fail">Blocked at the door</h2>

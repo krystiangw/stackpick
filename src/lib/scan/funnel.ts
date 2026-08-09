@@ -48,15 +48,19 @@ const SELF_SERVE_PATTERNS = [
   /\bno card\b/i,
   /(?<!no )free tier/i,
   /(?<!no )free plan/i,
-  // A number in front of it is a claim about a trial; "Start Free Trial" on its own is the
-  // button in the navigation bar of a site that has no free tier at all.
-  /\b\d+[- ]day free trial\b/i,
+  // A trial an agent can start is an answer to this check whether or not the page states its
+  // length. Demanding the day count read as "no free tier" on four vendors that offer one:
+  // elastic.co says "Start free trial" and sendlayer.com "free trial (send up to 200 emails)",
+  // and both let an agent finish in the session it started.
+  /\bfree trial\b/i,
   /\bfree account\b/i,
-  /start for free/i,
+  // Separator-tolerant, because the wording varies and the meaning does not: signoz.io writes
+  // "Get Started - Free", here.com and elastic.co "get started for free".
+  /\bget started\b[\s-]*(?:for\s+)?free\b/i,
+  /\bstarted? for free\b/i,
   /free forever/i,
   /forever free/i,
   /\$0(?:\.00)?(?![.\d])/,
-  /\bget started free\b/i,
   /\btry (?:it )?free\b/i,
   // A recurring allowance is a free tier by another name: agora.io grants the first 10,000
   // minutes free every month and was published as having no free tier.

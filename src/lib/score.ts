@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '7.1'
+export const FORMULA_VERSION = '7.2'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -48,6 +48,15 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       const seen = f.agentStatusesSeen?.length && new Set(f.agentStatusesSeen).size > 1
       const tries = seen ? ` across three tries (${f.agentStatusesSeen.join(', ')})` : ''
+      // A challenge is not a limit. The edge is asking the caller to run JavaScript, which every
+      // browser does invisibly and no HTTP client does at all, so it is the sharpest possible
+      // answer to this check rather than an excuse for skipping it.
+      if (f.botChallenge) {
+        return yes(
+          0,
+          `Answered ${f.agentStatus} to ${AGENT_UA}${tries} with a JavaScript challenge from your edge, so no agent reaches the site at all`,
+        )
+      }
       if (f.rateLimitedUs) {
         return {
           points: 0,
