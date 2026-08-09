@@ -328,6 +328,9 @@ export type ScanProgress = (step: { label: string; done: number; total: number }
 
 const STEPS = 5
 
+/** Well inside the scan budget, so a slow registry cannot take the rest of the scan with it. */
+const NPM_PHASE_BUDGET_MS = 9_000
+
 type Phase = 'discovery' | 'door' | 'docs' | 'robots' | 'machine' | 'funnel' | 'npm'
 
 /**
@@ -453,7 +456,18 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
       docsPending.then((deeper) => deeper.pages.map((page) => page.url)),
     ),
   )
-  const npmPending = phase('npm', () => resolvePackage(domain, found))
+  // Capped on its own, because it is the phase that grew: attribution went from 7.8 to 14.2
+  // registry requests per domain and sentry.io then spent the whole scan budget, losing six
+  // checks that had nothing to do with npm. One check coming back unmeasured is a far better
+  // failure than six, and the registry is the one host we can give up on without a finding.
+  const npmPending = phase('npm', () =>
+    Promise.race([
+      resolvePackage(domain, found),
+      new Promise<NpmFindings>((resolve) =>
+        setTimeout(() => resolve({ package: null, found: false }), NPM_PHASE_BUDGET_MS),
+      ),
+    ]),
+  )
   const funnelPending = phase('funnel', () =>
     scanFunnel({
       domain,
