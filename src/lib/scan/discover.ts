@@ -321,18 +321,26 @@ async function bestPricing(
   const unique = [...new Set(candidates.filter((url): url is string => Boolean(url)))].slice(0, 4)
   if (unique.length === 0) return null
   const pages = await inParallel(unique, (url) => fetchUrl(url))
-  let best: { url: string; page: Fetched; weight: number; canonical: boolean } | null = null
+  // The page at /pricing is the pricing page whether or not it prints a number. plaid.com's
+  // renders 7,671 characters and no price at all, and ranking on how many prices a page carries
+  // sent us to a docs billing reference instead, which is a worse answer to give Plaid than
+  // "your pricing page answers a plain request with no prices in it". zenrows.com went to
+  // /solutions/pricing-intelligence the same way, a product page about competitors' prices.
+  const canonical = pages
+    .map((page, index) => ({ url: unique[index], page }))
+    .filter((entry) => entry.page.ok && isCanonicalPricingPath(entry.url))
+    .sort((a, b) => pricingWeight(b.page) - pricingWeight(a.page))[0]
+  if (canonical) {
+    return { url: canonical.url, page: canonical.page, pricesVisible: pricingWeight(canonical.page) > 0 }
+  }
+
+  let best: { url: string; page: Fetched; weight: number } | null = null
   let fallback: { url: string; page: Fetched } | null = null
   for (const [index, page] of pages.entries()) {
     if (!page.ok) continue
     const weight = pricingWeight(page)
-    // The page at /pricing beats a deeper one that merely mentions money. zenrows.com was
-    // scored on /solutions/pricing-intelligence, a product page about monitoring competitors'
-    // prices, and plaid.com on a docs billing reference, while both publish a plain /pricing.
-    const canonical = isCanonicalPricingPath(unique[index])
     if (weight > 0) {
-      const better = !best || (canonical && !best.canonical) || (canonical === best.canonical && weight > best.weight)
-      if (better) best = { url: unique[index], page, weight, canonical }
+      if (!best || weight > best.weight) best = { url: unique[index], page, weight }
     } else if (!fallback) {
       fallback = { url: unique[index], page }
     }
