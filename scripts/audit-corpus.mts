@@ -84,7 +84,39 @@ const liveMcp = corpus.rows.filter((row) => verdictOf(row, 'mcp_present')?.verdi
 const registration = (rows: Row[]) => rows.filter((row) => verdictOf(row, 'oauth_dcr')?.verdict === 'pass').length
 const withoutMcp = corpus.rows.filter((row) => verdictOf(row, 'mcp_present')?.verdict !== 'pass')
 
+/**
+ * The conjunction the findings page reports, recomputed here from the rows so the two can only
+ * agree. Three legs rather than a threshold on the score, because an unmeasurable check leaves
+ * the denominator and a threshold would therefore reward being unreadable.
+ */
+const legsMet = (row: Row) => {
+  const at = (id: string) => row.checks.find((check) => check.id === id)
+  const full = (id: string) => {
+    const check = at(id)
+    return check !== undefined && check.points === check.max
+  }
+  return [
+    full('agent_entry_point') || full('oauth_dcr') || full('mcp_present'),
+    full('signup_reachable'),
+    (at('programmatic_provisioning')?.points ?? 0) >= 1,
+  ]
+}
+const usable = corpus.rows.filter((row) => legsMet(row).every(Boolean)).length
+const oneAway = corpus.rows.filter((row) => legsMet(row).filter((met) => !met).length === 1).length
+
 const stated: { page: string; pattern: RegExp; expected: number; what: string }[] = [
+  {
+    page: '/findings',
+    pattern: /(\d+) of \d+ vendors an unattended agent could actually use/,
+    expected: usable,
+    what: 'vendors meeting all three legs',
+  },
+  {
+    page: '/findings',
+    pattern: /and (\d+) that are one requirement away/,
+    expected: oneAway,
+    what: 'vendors one requirement away',
+  },
   {
     page: '/findings',
     pattern: /(\d+) of the \d+ vendors running a live MCP server/,

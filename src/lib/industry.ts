@@ -63,7 +63,16 @@ export type IndustryReport = {
   signupNeedsJavaScript: number
   best: { domain: string; total: number; measurable: number; reportId: string }[]
   worst: { domain: string; total: number; measurable: number; reportId: string }[]
+  /**
+   * The funnel read as a conjunction rather than a score: a door a machine can use, a signup it
+   * can reach, and a documented way to get a credential. Three legs, because a total hides which
+   * one is missing, and the missing one is the whole finding. Everything a vendor needs is in the
+   * corpus already; this only says how many are one requirement away and which one it is.
+   */
+  usable: { domains: string[]; oneAway: { leg: UsableLeg; domains: string[] }[] }
 }
+
+export type UsableLeg = 'a door a machine can use' | 'a signup an agent can reach' | 'a documented credential path'
 
 const MINIMUM_SAMPLE = 20
 
@@ -164,7 +173,45 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
     return oauth !== undefined && oauth.points === oauth.max
   }).length
 
+  // Deliberately not a threshold on the score. A threshold rewards being unreadable, because an
+  // unmeasurable check leaves the denominator; a conjunction cannot be met by hiding anything,
+  // since hiding a leg removes a leg you need.
+  const legsOf = (report: Report) => {
+    const at = (id: string) => verdict(report, id)
+    const entry = at('agent_entry_point')
+    const provisioning = at('programmatic_provisioning')
+    return [
+      {
+        leg: 'a door a machine can use' as UsableLeg,
+        met:
+          (entry !== undefined && entry.points === entry.max) ||
+          at('oauth_dcr')?.points === at('oauth_dcr')?.max ||
+          at('mcp_present')?.points === at('mcp_present')?.max,
+      },
+      {
+        leg: 'a signup an agent can reach' as UsableLeg,
+        met: at('signup_reachable')?.points === at('signup_reachable')?.max,
+      },
+      {
+        leg: 'a documented credential path' as UsableLeg,
+        met: provisioning !== undefined && provisioning.points >= 1,
+      },
+    ]
+  }
+  const withLegs = reports.map((report) => ({ report, missing: legsOf(report).filter((leg) => !leg.met) }))
+  const oneAwayBy = new Map<UsableLeg, string[]>()
+  for (const { report, missing } of withLegs) {
+    if (missing.length !== 1) continue
+    oneAwayBy.set(missing[0].leg, [...(oneAwayBy.get(missing[0].leg) ?? []), report.domain])
+  }
+
   return {
+    usable: {
+      domains: withLegs.filter((entry) => entry.missing.length === 0).map((entry) => entry.report.domain).sort(),
+      oneAway: [...oneAwayBy.entries()]
+        .map(([leg, domains]) => ({ leg, domains: [...domains].sort() }))
+        .sort((a, b) => b.domains.length - a.domains.length),
+    },
     mcpWithoutKeys,
     mcpServers: live.length,
     mcpWithRegistration,

@@ -162,6 +162,67 @@ export default async function FindingsPage() {
         </section>
       ))}
 
+      {/* Read as a conjunction rather than a score, deliberately. A threshold on the score rewards
+          being unreadable, because an unmeasurable check leaves the denominator; three legs cannot
+          be met by hiding anything, since hiding a leg removes one you need. */}
+      {corpus && corpus.usable.oneAway.length > 0 && (
+        <section className="border-b border-rule py-12">
+          <h2 className="max-w-2xl text-balance text-2xl font-semibold leading-snug tracking-tight">
+            {corpus.usable.domains.length} of {corpus.sampleSize} vendors an unattended agent could actually
+            use, and {corpus.usable.oneAway.reduce((sum, group) => sum + group.domains.length, 0)} that are one
+            requirement away
+          </h2>
+          <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
+            Not a score and not a ranking. Three things have to be true at once for an agent working alone to
+            get from your home page to a first call: a door built for a machine, a signup it can reach without a
+            browser, and a documented way to get a credential. A total hides which one is missing, and the
+            missing one is the whole finding.
+          </p>
+          <dl className="mt-8 flex flex-col">
+            <div className="flex items-baseline justify-between gap-6 border-t border-rule py-2.5">
+              <dt className="text-sm">All three</dt>
+              <dd className="font-mono text-sm font-semibold tabular-nums">
+                {corpus.usable.domains.length} / {corpus.sampleSize}
+              </dd>
+            </div>
+            {corpus.usable.oneAway.map((group) => (
+              <div
+                key={group.leg}
+                className="flex items-baseline justify-between gap-6 border-t border-rule py-2.5"
+              >
+                <dt className="text-sm text-ink-soft">Missing only {group.leg}</dt>
+                <dd className="font-mono text-sm font-semibold tabular-nums">{group.domains.length}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-8 max-w-2xl leading-relaxed text-ink-soft">
+            The vendors that meet all three today:{' '}
+            <span className="font-mono text-sm text-ink">{corpus.usable.domains.join(', ')}</span>.
+          </p>
+          <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+            The largest near-miss group is worth stating on its own, because it is the same barrier the agent
+            runs above kept dying at, and it is the most expensive one to fix:{' '}
+            <span className="font-mono">{corpus.usable.oneAway[0].domains.length}</span> vendors meet every
+            other requirement and fail on {corpus.usable.oneAway[0].leg}.{' '}
+            <span className="font-mono text-sm text-ink">
+              {corpus.usable.oneAway[0].domains.slice(0, 12).join(', ')}
+            </span>
+            {corpus.usable.oneAway[0].domains.length > 12 &&
+              `, and ${corpus.usable.oneAway[0].domains.length - 12} more.`}
+          </p>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-faint">
+            Every name here is recomputed from the published corpus on each request, so you can check it
+            yourself rather than take it from us. We sell implementation work, and the cheapest of these fixes
+            is an afternoon you should not pay anybody for.
+          </p>
+          <p className="mt-6">
+            <Link href="/report" className="font-mono text-sm text-brass underline underline-offset-4">
+              The full corpus, and the data behind it
+            </Link>
+          </p>
+        </section>
+      )}
+
       <section className="py-12">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Limits we will not hide</h2>
         <ol className="mt-5 flex max-w-2xl flex-col gap-4">
