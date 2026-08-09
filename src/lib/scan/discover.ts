@@ -1026,13 +1026,14 @@ function maintainerOwnership(candidate: Pick<Candidate, 'maintainers'>, vendor: 
       // hello@raygun.io maintains raygun.com's packages: a company mails from more than one
       // tld. packages@bunny-launcher.com does not maintain bunny.net's, so what sits in front
       // of the tld has to be the vendor's whole name rather than the start of somebody else's.
-      if (
-        flatten(host) === vendor.flatDomain ||
-        host.toLowerCase().endsWith(`.${vendor.domain}`) ||
-        isVendorName(host.split('.')[0], vendor)
-      ) {
+      if (flatten(host) === vendor.flatDomain || host.toLowerCase().endsWith(`.${vendor.domain}`)) {
         return 'proved'
       }
+      // The same name on a different registration is a name, not a proof. usefathom.com is
+      // Fathom the analytics product and fathom.video is Fathom the meeting notetaker, and a
+      // rule that reads the label in front of the tld hands one company the other's SDK. It
+      // still counts as a suggestion, which is what the corroboration below is there to weigh.
+      if (isVendorName(host.split('.')[0], vendor)) best = 'suggested'
       if (handleMentionsVendor(local, vendor)) best = 'suggested'
     }
     if (handleMentionsVendor(maintainer.name, vendor)) best = 'suggested'
