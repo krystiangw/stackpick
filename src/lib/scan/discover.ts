@@ -1053,12 +1053,15 @@ const CODE_HOSTS = /^(?:www\.)?(?:github\.com|gitlab\.com|bitbucket\.org|npmjs\.
 /**
  * A suggestion that points somewhere else is not a suggestion. `fathom-typescript` is published
  * by the handle `fathomai` and describes itself as "Fathom's official TypeScript SDK", two
- * mentions of a brand token that two companies share: its own homepage is fathom.ai, the meeting
- * notetaker, while the domain we were asked about is usefathom.com, an analytics product that
- * never names it. Weak signals about a shared name do not add up to proof, and a package naming
- * a stranger's product site outvotes both of them.
+ * mentions of a brand token that two companies share. Its code sits in github.com/fathom-video,
+ * the meeting notetaker, while the domain we were asked about is usefathom.com, an analytics
+ * product that never names it. Weak signals about a shared name do not add up to proof, and the
+ * one place the code actually lives outvotes both of them.
+ *
+ * Only ever consulted to demote a suggestion. A package whose account or repository already
+ * proved the vendor owns it is not second-guessed by this.
  */
-function pointsAtAnotherCompany(candidate: Pick<Candidate, 'links'>, vendor: Vendor): boolean {
+function pointsAtAnotherCompany(candidate: Pick<Candidate, 'links'>, vendor: Vendor, siteRepos: string[]): boolean {
   const productSites = candidate.links.filter((link) => {
     try {
       return !CODE_HOSTS.test(new URL(link).hostname)
@@ -1066,8 +1069,16 @@ function pointsAtAnotherCompany(candidate: Pick<Candidate, 'links'>, vendor: Ven
       return false
     }
   })
-  if (productSites.length === 0) return false
-  return !productSites.some((link) => sameSite(link, vendor.domain) || isVendorHost(link, vendor))
+  if (productSites.length > 0 && !productSites.some((link) => sameSite(link, vendor.domain) || isVendorHost(link, vendor))) {
+    return true
+  }
+  const orgs = candidate.links
+    .map(githubRepoOf)
+    .filter((repo): repo is string => repo !== null)
+    .map((repo) => repo.split('/')[0])
+  if (orgs.length === 0) return false
+  const siteOrgs = siteRepos.map((repo) => repo.split('/')[0])
+  return !orgs.some((org) => orgIsVendor(org, vendor) || siteOrgs.includes(org))
 }
 
 /** A company keeps more than one name: livekit.io serves livekit.com, and both are theirs. */
@@ -1127,7 +1138,7 @@ function ownershipOf(
       repos.some((repo) => siteOrgs.includes(repo.split('/')[0])) &&
       shapeRank(candidate.name, vendor) <= 3)
   if (!nearVendor || !saysWhose) return 'none'
-  return pointsAtAnotherCompany(candidate, vendor) ? 'none' : 'suggested'
+  return pointsAtAnotherCompany(candidate, vendor, siteRepos) ? 'none' : 'suggested'
 }
 
 const monthsSince = (at: number) => (at === 0 ? 0 : (Date.now() - at) / (1000 * 60 * 60 * 24 * 30.44))
