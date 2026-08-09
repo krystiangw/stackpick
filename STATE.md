@@ -1666,3 +1666,31 @@ opublikowana reguła musiała to odzwierciedlić.
 **Audyt korpusu pilnuje teraz dziesięciu liczb ze stron** zamiast sześciu, w tym czterech nowych
 o rejestracji. Liczba rejestracji zmieniła się ośmiokrotnie w jednym deployu, a proza pisana pod
 starszy zbiór danych jest powracającym błędem tego projektu.
+
+## Runda 2026-08-09 (czterdziesta druga): bomba dekompresyjna, którą sam wprowadziłem
+
+Krystian zapytał o ryzyko łańcucha dostaw i ingestii. Sprawdziłem i znalazłem **realną dziurę
+wprowadzoną tego samego ranka** przez naprawę gzipowanych sitemap.
+
+**Limitowaliśmy bajty czytane z gniazda i nie mówiliśmy nic o tym, do czego się rozprężają.**
+Zmierzone: **389 kB gzipowanych zer rozpręża się do 400 MB** w jednym **synchronicznym** wywołaniu,
+na wątku, który obsługuje każde inne żądanie. Dyno ma 512 MB.
+
+Wektor jest publiczny w obie strony: każda skanowana domena wybiera własne `Content-Encoding`,
+a każdy może wskazać publicznemu endpointowi skanu host, który kontroluje. Czyli **zdalny OOM na
+żądanie**, do odpalenia przez dowolnego odwiedzającego i do odpalenia przez przypadek przez
+dowolnego vendora z korpusu.
+
+Naprawa: `maxOutputLength` równe temu samemu limitowi 400 kB, który czytnik już stosuje.
+Zweryfikowane prawdziwą bombą: `ERR_BUFFER_TOO_LARGE`, **zero przyrostu pamięci rezydentnej**,
+a legalna gzipowana sitemapa dalej dekoduje się do swoich 2 000 URL-i. Na produkcji
+`launchdarkly.com` i `datadoghq.com` dalej znajdują `llms.txt`.
+
+**Powierzchnia ataku, spisana przy okazji:**
+- **Co instalujemy:** 5 bezpośrednich zależności produkcyjnych (`mongodb`, `next`, `react`,
+  `react-dom`, `undici`), `pnpm audit --prod` czysty. Skan nie wykonuje niczego, co pobierze.
+- **Co przyjmujemy:** HTML, JSON, XML, markdown i teraz strumienie skompresowane ze 156 obcych
+  domen. To jest nasza prawdziwa powierzchnia i tu wpadła ta bomba.
+- **Co już broni:** guard SSRF (potwierdzony przy okazji własnym testem: żądanie na 127.0.0.1
+  zostało odrzucone), limit 400 kB na odczyt, przepisany `stripCodeBlocks` przeciw
+  katastrofalnemu nawrotowi regexa, zero LLM w ścieżce skanu.
