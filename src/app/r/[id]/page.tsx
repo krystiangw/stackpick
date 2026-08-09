@@ -276,6 +276,16 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
       {fixPlan && <FixFirst plan={fixPlan} />}
 
+      {/* Directly under the fix list, which is the only moment on this page where the reader is
+          holding something they would forward to somebody else. It used to sit last, after ten
+          sections and the whole evidence table, which is a form placed where the intent it needs
+          has already gone. The score and every piece of evidence stay ungated above and below it:
+          the corpus is public and the formula is published, so gating the number would cost us
+          the thing that makes it worth reading and buy nothing. */}
+      <section className="border-b border-rule py-12">
+        <EmailGate domain={report.domain} reportId={report.id} failingCount={failing.length} />
+      </section>
+
       {/* The one sentence that separates a scan from an audit, at the only moment the reader
           is holding a list of things to do and wondering whether any of it changes behaviour. */}
       <section className="border-b border-rule py-10">
@@ -454,9 +464,6 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         )}
       </section>
 
-      <section className="py-12">
-        <EmailGate domain={report.domain} reportId={report.id} failingCount={failing.length} />
-      </section>
     </main>
   )
 }

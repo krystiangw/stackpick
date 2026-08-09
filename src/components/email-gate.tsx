@@ -77,8 +77,8 @@ export function EmailGate({
           : `${domain} passes every deterministic check. The interesting question is what agents do anyway.`}
       </p>
       <p className="mt-3 max-w-xl leading-relaxed text-ink-soft">
-        Send yourself the scorecard with the checks that cost the most, and a permanent link you can
-        forward to whoever owns the fix.
+        Send yourself the list above with the checks that cost the most, and a permanent link. Whoever
+        owns the fix is usually not the person who ran the scan.
       </p>
 
       <form onSubmit={submit} className="mt-6 flex max-w-xl flex-col gap-2 sm:flex-row">
