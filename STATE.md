@@ -1566,3 +1566,29 @@ nie dokumentuje żadnej drogi do poświadczenia**. Zbudowali drzwi dla maszyny i
 rejestrację klienta, a agent i tak nie ma jak zdobyć klucza.
 
 **Stan:** korpus 156/156 na 6.2, audyt czysty w obu wymiarach, średnia 9,09.
+
+## Runda 2026-08-09 (czterdziesta): materiały wyjściowe przepisane na to, co przeżyło weryfikację
+
+**Na `/findings` doszło znalezisko o dynamicznej rejestracji**, liczone na żywo: 41 z 54 vendorów
+z żywym serwerem MCP publikuje RFC 7591, a poza tą grupą prawie nikt. Zdanie mówi wprost, co
+z tego wynika: DCR nie przyszło z decyzji o wpuszczeniu agentów, tylko z wymogu specyfikacji MCP,
+w tym samym commicie co serwer. Klucz nie przyjechał z żadnym z nich.
+
+**Lista outreachowa przebudowana na korpusie 6.2** i podzielona po tej osi. Grupa pierwsza, 28
+vendorów: **żywy serwer MCP + rejestracja klienta + brak udokumentowanej drogi do klucza**. To
+najłatwiejsza rozmowa, jaką mamy, bo trudną część zrobili i nie trzeba ich przekonywać do premisy.
+W nagłówku listy zapisane, ile przeszła: dwa przebiegi adwersaryjne, 23 obalone twierdzenia ze 138
+i 15 z 675, a wszystko, co zostało, przeżyło ten drugi.
+
+**Szkic B przepisany, bo stał na twierdzeniu, które sami obaliliśmy.** Otwierał się zdaniem
+„odpowiadacie 403 agentowi i 200 Chrome'owi", a po zamienieniu tego checku w prawdziwe porównanie
+okazało się, że jest to prawdą dla **zera** ze 156 domen. Teraz otwiera się formularzem rejestracji,
+którego nie ma w serwowanym HTML-u, co jest prawdą dla **72** i co adresat sprawdza jednym
+`curl | grep -c "<form"`.
+
+**Nowy szkic D** dla grupy pierwszej: otwiera się tym, co zrobili dobrze, a znalezisko jest luką
+między dwiema rzeczami, które już mają, a nie krytyką którejkolwiek z nich. Nazywa też ich własny
+endpoint, co dowodzi, że patrzyliśmy, zamiast robić mail merge. Z ostrzeżeniem, żeby nie wysyłać
+go do grupy drugiej, bo dla nich zdanie „agent może się sam zarejestrować" jest fałszywe.
+
+**Wszystko dalej jako szkice.** Wysyłka i tak czeka na domenę i zweryfikowanego nadawcę.
