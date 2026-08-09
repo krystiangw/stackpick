@@ -1726,3 +1726,38 @@ wracają, tiptap, temporal, configcat i postmark zostają poza.
 fetcher i mimo to wypada. Trzy wyjaśnienia okazały się błędne (kontrolka wildcard, kontrolka
 ścieżkowa, brak nagłówka), więc **nie zgaduję czwarty raz**: do zbadania osobno, prawdopodobnie
 memo o zdrowiu hosta po nieudanej sondzie gołego `mcp.datadoghq.com`.
+
+## Runda 2026-08-09 (czterdziesta czwarta): atrybucja npm przepisana, 6.6
+
+Podsystem, w którym siedziało **18 z 29 błędów trzeciego audytu**, oddany subagentowi z pełną
+listą dowodów. Przyczyna była jedna i tłumaczyła **obie połowy** awarii: własność rozstrzygał
+**substring w nicku maintainera**, bez niczego, co by go potwierdzało.
+
+- **Za luźno:** „here" w `michal-pichlinski-here` dawało `here.com` pakiet OpenFina, `xatadev`
+  dawało `xata.io` blockchainowe SDK Circle, `bunny.net` dostawało paczkę prywatnej osoby.
+- **Za ciasno, z tego samego testu:** `datadog` nie zawiera `datadoghq`, więc **własne konto npm
+  Datadoga oblewało własny test Datadoga**.
+
+**Własność jest teraz stopniowana** (`proved | suggested | none`). Dowód: nick, który *jest*
+firmą, adres w domenie vendora, repo w jego organizacji, repo linkowane z jego strony. Sugestia:
+nick tylko zawierający markę albo scope, i sugestia wskazuje właściciela **dopiero gdy pakiet się
+z tym zgadza**. Obcy scope przebija wszystko, chyba że pakiet mówi, czyj jest.
+
+**Ruszyło 19 domen**, każda z uzasadnieniem z rejestru. Cztery zweryfikowane przeze mnie
+niezależnie. `here.com` daje teraz `null`, co jest uczciwą odpowiedzią, gdy nic nie ustala
+właściciela. Bilans: przejścia **135 → 142**, domeny bez pakietu **12 → 8**, **137 ze 156 wierszy
+bit w bit bez zmian**. Dwie regresje własnej roboty złapane na korpusie przed wdrożeniem.
+
+**Koszt zmierzony:** 7,8 → 14,2 żądania do rejestru na domenę, **bez mierzalnego wzrostu czasu**,
+bo jadą w istniejących falach równoległych na hostach, których nic innego nie używa.
+
+**Świadomie niezmienione, z uzasadnieniem:** `newrelic.com` zostaje na `newrelic`, a
+`honeycomb.io` na `libhoney`, bo oba są dowiedzione i oba są tym, co deweloper instaluje;
+przełączenie na scoped SDK byłoby wybraniem pakietu **pod odpowiedź, którą chcemy opublikować**.
+`directus.io` zostaje na `directus`, bo jedyna ogólna reguła, która degraduje pakiet w kształcie
+aplikacji, psuła jednocześnie `payload`, `@strapi/strapi` i `sanity`.
+
+**Otwarte:** `mapbox.com` przy moim sprawdzeniu trafił na `@mapbox/mapbox-gl-draw` (wtyczka do
+rysowania) zamiast na `mapbox-gl`, więc wiersz jest niedeterministyczny. Do tego `datadoghq.com`
+w checku MCP (opisane w rundzie 43) i limitowanie przez npm przy skali korpusu, o czym trzeba
+pamiętać przed każdym pełnym reseedem.
