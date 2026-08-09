@@ -119,13 +119,23 @@ zrobione i opisane w dzienniku rund.
    nieuzasadniona: oba mają prawdziwe endpointy na `api.<domena>` i je zachowują. `sentry.io`
    schodzi z czterech endpointów do jednego, tego z własnej karty, a `cloudinary.com` przestaje
    przechodzić na blokadzie bota.
-3. **Cache rejestru npm żyje w pamięci dyno, więc każdy deploy go kasuje.** Zmierzone dwukrotnie:
-   zimny przebieg po korpusie daje **114-116 przejść `typed_package`**, ciepły **139-140**. Od
-   2026-08-09 `npm run reseed` robi **dwa przebiegi i publikuje drugi**, co zamyka problem
-   w danych, ale nie u odwiedzającego, który trafi na świeżo zdeployowane dyno. **Docelowo cache
-   powinien siedzieć w Mongo, nie w pamięci procesu.** Osobno: przy odmowie rejestru pojedyncze
-   domeny dalej zwracają uczciwe „nie wiemy" zamiast pakietu; zamknięcie tego wymaga mniejszego
-   ruchu na domenę (dziś ~19 żądań) albo tokenu do rejestru. **Decyzja o tokenie jest Krystiana.**
+3. ~~**Cache rejestru npm żyje w pamięci dyno**~~ **zrobione 2026-08-09:** odpowiedzi idą teraz
+   do Mongo z indeksem wygasającym po sześciu godzinach, więc **deploy ani restart go nie kasuje**.
+   Zweryfikowane `heroku restart` plus skany: `mapbox.com`, `statsig.com`, `commercetools.com`
+   i `uploadcare.com` rozwiązują się natychmiast po restarcie. Pomiar całego korpusu:
+
+   ```
+   pamięć, zimny      typed 116  unmeasured 35  avg 9.06
+   pamięć, ciepły     typed 139  unmeasured 11  avg 9.20
+   Mongo, przebieg 1  typed 120  unmeasured 31  avg 9.10   <- zapełnia cache
+   Mongo, przebieg 2  typed 142  unmeasured  8  avg 9.22   <- najlepszy wynik dnia
+   ```
+
+   **Pułapka pomiarowa do zapamiętania:** przebieg, który cache dopiero zapełnia, wygląda jak
+   dowód, że cache nie działa. Przy każdej zmianie dotyczącej cache mierzy się dopiero drugi.
+   Zostaje mniejsza sprawa: przy odmowie rejestru pojedyncze domeny zwracają uczciwe „nie wiemy"
+   zamiast pakietu. Zamknięcie wymaga mniejszego ruchu na domenę (~19 żądań) albo tokenu do
+   rejestru. **Decyzja o tokenie jest Krystiana.**
 4. **`typed_package` dla `newrelic.com`, `honeycomb.io` i `directus.io`** wskazuje pakiet
    flagowy zamiast scoped SDK z typami. Świadoma decyzja subagenta, opisana w rundzie 44:
    przełączenie byłoby wybraniem pakietu pod odpowiedź, którą chcemy opublikować. Do rewizji
