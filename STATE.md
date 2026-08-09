@@ -159,10 +159,17 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   **Świadoma decyzja: wynik i dowody zostają bez bramki.** Korpus jest publiczny, a formuła
   opublikowana, więc bramkowanie liczby kosztowałoby to, co czyni ją wartą przeczytania, i nic
   by nie kupiło. Do rewizji tylko z twardymi danymi o konwersji.
-- **Pole własności w korpusie** (independent / acquired / PE / OSS / public). Z audytu ICP:
-  wynik nie koreluje z wielkością (57 większych vendorów ma średnią 0,688 przy średniej korpusu
-  0,637), tylko z własnością i fazą życia. Osiem przejętych lub pod PE ma 0,472, pięć bez
-  roadmapy 0,378. Bez tego pola lista targetów prowadzi prosto do wygaszanych produktów.
+- ~~**Pole własności w korpusie**~~ **zrobione 2026-08-09**: `src/data/ownership.ts` plus
+  `npm run targets`, który generuje `outreach/targets.md` z żywego korpusu. Lista była pisana
+  ręcznie i **stała dwie wersje formuły za danymi**, na które się powoływała, czyli nazywała
+  vendorów na werdyktach, które od tego czasu poprawiliśmy. Zapisane jest **tylko to, co
+  sprawdziłem z pierwszej ręki**, ze zdaniem źródłowym: `june.so` i `highlight.io` (przejęcia,
+  cytat z ich własnych stron), `pusher.com` (MessageBird, cytat), `defer.run` (301 na
+  `digger.tools`), `searchkit.co` (projekt OSS w organizacji GitHuba). Reszta korpusu zostaje
+  **nieznana, nie „niezależna"**: brak wpisu to luka w naszym researchu, nie fakt o firmie.
+  **Pole nigdy nie trafia na stronę**: każda liczba, którą publikujemy, jest odtwarzalna jednym
+  żądaniem, a twierdzenie o tym, kto jest właścicielem firmy, nie jest.
+  Zostaje do uzupełnienia reszta wpisów, w tempie „tylko zweryfikowane".
 - ~~**Raport „jedna rzecz dzieli was od drzwi"**~~ **zrobione 2026-08-09**, sekcja na `/findings`.
   Lejek czytany jako **koniunkcja, nie próg na wyniku**, i to jest cała pointa: check nieoznaczalny
   wypada z mianownika, więc próg **nagradza bycie nieczytelnym**, a nogi koniunkcji nie da się
