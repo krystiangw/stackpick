@@ -141,6 +141,12 @@ export type FunnelFindings = {
    * how to get in. Existence of a file was never the thing worth two points.
    */
   entryPointsWithProcedure: string[]
+  /**
+   * How many of the nine paths answered with a refusal rather than a 200 or a 404. A WAF that
+   * turns our data centre away cannot produce "you publish none of these": bitmovin.com serves
+   * a real 9.6 kB skill.md and answers 403 to most of our requests, intermittently.
+   */
+  entryPathsRefused?: number
   oauth: {
     metadataPublished: boolean
     dynamicClientRegistration: boolean
@@ -501,7 +507,8 @@ export async function scanFunnel({
         : catchAll.bodyLengths?.markdown
     const sameAsNonsense = controlLength !== undefined && controlLength > 0 && got.body.length === controlLength
     const present = !sameAsNonsense && isRealTextFile(got, 30)
-    return [path, present, present && describesAProcedure(got.body), got.body] as const
+    const refused = got.status >= 400 && got.status !== 404
+    return [path, present, present && describesAProcedure(got.body), got.body, refused] as const
   })
 
   /**
@@ -515,9 +522,9 @@ export async function scanFunnel({
     for (const [, present, , body] of probed) {
       if (present) seenBodies.set(body, (seenBodies.get(body) ?? 0) + 1)
     }
-    return probed.map(([path, present, procedure, body]) => {
+    return probed.map(([path, present, procedure, body, refused]) => {
       const shared = present && (seenBodies.get(body) ?? 0) > 1
-      return [path, present && !shared, procedure && !shared] as const
+      return [path, present && !shared, procedure && !shared, refused] as const
     })
   })
 
@@ -542,6 +549,7 @@ export async function scanFunnel({
   const pricingRetry = pricingPage?.ok && pricingUrl ? await fetchUrl(pricingUrl, { fresh: true }) : null
 
   const entryPaths = Object.fromEntries(entries.map(([path, hit]) => [path, hit]))
+  const entryPathsRefused = entries.filter(([, , , refused]) => refused).length
   const firstPricingText = pricingPage?.ok && visibleTextLength(pricingPage.body) > 0 ? pricingPage.body : ''
   const retryText = pricingRetry?.ok && visibleTextLength(pricingRetry.body) > 0 ? pricingRetry.body : ''
   const pricingText = retryText ? `${firstPricingText}\n${retryText}` : firstPricingText
@@ -551,6 +559,7 @@ export async function scanFunnel({
     entryPaths,
     entryPointsFound: entries.filter(([, hit]) => hit).map(([path]) => path),
     entryPointsWithProcedure: entries.filter(([, , procedure]) => procedure).map(([path]) => path),
+    entryPathsRefused,
     oauth,
     mcpEndpoints,
     signup,

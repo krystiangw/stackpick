@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '5.9'
+export const FORMULA_VERSION = '6.0'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -252,6 +252,18 @@ export const CHECKS: Check[] = [
       }
       if (f.funnel.entryPointsFound.length > 0) {
         return yes(1, `Only service descriptors: ${at(f.funnel.entryPointsFound)}. No procedure written for a machine.`)
+      }
+      // A refusal is not an absence, the same rule robots.txt already follows. bitmovin.com
+      // publishes a real 9.6 kB skill.md and answers 403 to our data centre on most requests,
+      // so on the runs where it refuses this path we were publishing "you have none of these".
+      const refused = f.funnel.entryPathsRefused ?? 0
+      if (refused > 0) {
+        return {
+          points: 0,
+          detail: `Unmeasurable: ${refused} of the 9 known agent entry paths answered with a refusal rather than a file or a 404, so what you publish there is not something we measured`,
+          inconclusive: true,
+          unblock: 'Let ordinary HTTP reach these paths and this becomes measurable.',
+        }
       }
       // "None of them answer" was false on every site that serves its app shell for unknown
       // paths, which is most of them: all nine answer 200, and none of them answers with a file.
