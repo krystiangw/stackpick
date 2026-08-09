@@ -151,10 +151,14 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   atrybucja npm po dwóch korektach, dowody MCP, nazywanie adresu, który odpowiedział). Baseline do
   pobicia: **2,0 procent**. Szczególnie warta ataku jest reguła `orgCouldBeVendor`, bo jest nowa
   i już raz przestrzeliła.
-- **Bramka mailowa na wyniku skanu.** Z audytu cenowego: jedyny czysty precedens darmowego
-  punktowanego audytu zasilającego płatny biznes (HubSpot Website Grader) bramkuje wynik mailem.
-  Grader'y, które nie zbierają nic (SSL Labs, Mozilla Observatory), są jawnie niekomercyjne.
-  Żadna cena nie skonwertuje leada, którego nie złapaliśmy. **To jest po stronie agenta.**
+- ~~**Bramka mailowa na wyniku skanu.**~~ **zrobione 2026-08-09.** Audyt cenowy twierdził, że
+  nie zbieramy maila. Zbieraliśmy, tylko formularz był **ostatnią sekcją strony**, po dziesięciu
+  sekcjach i całej tabeli dowodów, czyli w miejscu, w którym intencja, której potrzebuje, już
+  wyparowała. Teraz stoi bezpośrednio pod listą napraw, jedynym punktem, w którym czytelnik trzyma
+  coś, co komuś przekaże. Zmierzone na produkcji: znak 1792 z 6954 widocznych, wcześniej ostatni.
+  **Świadoma decyzja: wynik i dowody zostają bez bramki.** Korpus jest publiczny, a formuła
+  opublikowana, więc bramkowanie liczby kosztowałoby to, co czyni ją wartą przeczytania, i nic
+  by nie kupiło. Do rewizji tylko z twardymi danymi o konwersji.
 - **Pole własności w korpusie** (independent / acquired / PE / OSS / public). Z audytu ICP:
   wynik nie koreluje z wielkością (57 większych vendorów ma średnią 0,688 przy średniej korpusu
   0,637), tylko z własnością i fazą życia. Osiem przejętych lub pod PE ma 0,472, pięć bez
