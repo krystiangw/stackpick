@@ -1823,3 +1823,34 @@ z nich dostało odpowiedź.
 **Zostawione świadomie:** `mcp.sentry.io` odpowiada 403 ścianą bota Cloudflare (6 698 bajtów HTML,
 bit w bit jak apex), a wyjątek dla dedykowanego hosta ufa każdemu 401/403 na `mcp.` niezależnie od
 ciała. Zaostrzenie tego przewróciłoby `cloudinary.com`, `baseten.co` i `telnyx.com`, więc czeka.
+
+## Runda 2026-08-09 (czterdziesta ósma): 28 domen straconych na własnym obciążeniu, odzyskane
+
+Reseed 6.9 pokazał **28 domen w dół i `typed_package` ze 140 na 114 przejść**. 6.9 miało rację,
+przestając zamieniać odmowę rejestru w zero, ale odsłoniło, **ile tych odmów sami produkujemy**:
+atrybucja czyta ~19 dokumentów z rejestru na domenę, a reseed pyta o te same popularne pakiety
+156 razy pod rząd.
+
+**7.0: rejestr npm cachowany między skanami przez sześć godzin.** Dwie decyzje celowe:
+- **Odmowa nigdy nie jest cachowana**, bo zapisanie 429 zamieniłoby chwilę naszego obciążenia
+  w trwały fakt o vendorze.
+- **404 jest cachowane**, bo pakiet, którego nie ma, dalej go nie ma.
+
+**Pomiar, który to rozstrzygnął** (bo pierwszy przebieg po wdrożeniu cache dopiero go zapełnia,
+a nakładek w obrębie jednego przejścia po korpusie jest mało):
+
+```
+6.8        typed pass 140  unmeasured   8  avg 9.22
+6.9        typed pass 114  unmeasured  37  avg 9.06
+7.0 zimny  typed pass 115  unmeasured  34  avg 9.06
+7.0 ciepły typed pass 140  unmeasured  10  avg 9.24
+```
+
+**115 było artefaktem naszego ruchu, nie stanem rynku.** Ciepły przebieg wraca do 140 przejść
+przy **zachowanej ostrzejszej uczciwości 6.9**: nieoceniony kandydat, który mógł wygrać, dalej
+daje `null` zamiast zgadywania. Średnia 9,24, najwyższa w całym dniu, audyt czysty w obu
+wymiarach.
+
+**Reguła do zapamiętania:** naprawa, która zamienia zły pomiar na brak pomiaru, jest poprawna, ale
+**dopiero pomiar na ciepłym cache pokazuje, ile brakującego pomiaru wyprodukowaliśmy sami**. Jeden
+przebieg po takiej zmianie nie jest dowodem na nic.
