@@ -27,6 +27,17 @@ import { CURATED_DOMAINS } from './src/lib/categories'
 console.log([...CURATED_DOMAINS].join('\n'))
 ") || { echo "could not read the curated list" >&2; exit 1; }
 
+# Two passes, and the second is the one that counts. The registry cache lives in the dyno's
+# memory, so every deploy empties it, and a cold pass asks npm about nineteen documents per
+# domain across 156 domains. npm then refuses, and since a refusal is honestly "we do not know"
+# rather than a guess, a cold reseed costs about 26 domains their package: measured at 140
+# passes warm against 114 cold. The second pass runs against a full cache and is what gets
+# published. Set PASSES=1 if you only want to see what a visitor gets on a cold dyno.
+PASSES="${PASSES:-2}"
+
+for pass in $(seq 1 "$PASSES"); do
+[ "$PASSES" -gt 1 ] && echo "== pass $pass of $PASSES"
+
 ok=0
 fail=0
 failed=""
@@ -66,3 +77,4 @@ if [ -n "$failed" ]; then
     printf '%s' "$out" | grep -q '"scorecard"' && printf '%-24s recovered\n' "$domain" || printf '%-24s STILL FAILING\n' "$domain"
   done
 fi
+done
