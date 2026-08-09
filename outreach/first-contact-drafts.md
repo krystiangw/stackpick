@@ -65,26 +65,33 @@ email costs more than the quote is worth. Keep it for the reply if they ask.
 
 # The same shape, applied to the other two situations
 
-## B. A vendor with a cheap fix and a real delta
+## B. A vendor whose signup form is not in the HTML
 
-For domains where the free scan alone gives a specific, checkable finding.
+For domains where the free scan alone gives a specific, checkable finding. Revised 2026-08-09:
+the earlier version of this draft opened with "answers 403 to an agent and 200 to Chrome", and
+after we made that check a real comparison it turned out to be true of **zero** of 156 domains.
+Refusals aimed at agents are rarer than the noise around them suggests. This one is true of 72.
 
-**Subject:** <domain> answers 403 to an agent and 200 to Chrome
+**Subject:** your signup form is not in the HTML <domain> serves
 
 Hi <name>,
 
-The same request to <domain> twice, one header different. Sent as Chrome: 200. Sent as something
-identifying itself as an agent: 403.
+We fetched <signup url> the way an agent does, with no browser and no JavaScript. The page came
+back 200 and there is no form in it. Whatever renders the form runs after the response, so a
+client that reads HTML sees a page with no way in.
 
-Every check behind that is one HTTP request with a published rule, so you can reproduce the whole
-thing before you believe any of it: <link to /methodology>
+You can check it in one line before you believe any of it:
 
-The part I would find most annoying in your seat: everything else we measured is a floor, not a
-score. We measured you through that wall, so your real number is probably higher and neither of
-us can see it from here.
+    curl -s <signup url> | grep -c "<form"
 
-<x> of <y> measurable points, and the report says which two fixes are minutes rather than
-weeks: <link to scorecard>
+72 of the 156 vendors we have scanned are in the same position, so this is not a criticism of
+your stack. It is the most common way a funnel ends for a client that is not a browser.
+
+The part I would find most annoying in your seat: we cannot tell you what it costs you, and
+neither can your analytics, because the client that gave up never appeared in them.
+
+<x> of <y> measurable points, and the report says which fixes are minutes rather than weeks:
+<link to scorecard>
 
 Krystian
 
@@ -197,3 +204,41 @@ warm up on replies before it carries outbound.
 **Consent.** Unsolicited commercial email to individuals is regulated here, and a first contact
 that only reports a finding sits differently from one that sells. That is another reason the
 pitch stays out of email one, but it is worth a proper check before any volume.
+
+
+## D. The vendor who built the door and left no key
+
+The strongest group in the corpus: 28 vendors run a live MCP server, publish RFC 7591 client
+registration, and document no way for an agent to obtain a credential. They have already agreed
+with the premise, so the email does not have to argue for it.
+
+**Subject:** <domain> lets an agent register itself and not get a key
+
+Hi <name>,
+
+Your MCP server at <endpoint> answered a JSON-RPC initialize, and <auth host> publishes a
+registration_endpoint, so an agent can register itself as a client without a human touching it.
+That is the hard part and most of the market has not done it.
+
+Then it stops. We read <n> of your documentation pages looking for any of seven ways a vendor
+says an agent can create its own credential, a management API, a provisioning API, a documented
+POST to /v1/api_keys, and found <what we found>. So the client you let register cannot get a key
+to use.
+
+Both halves are one HTTP request each with a published rule, so you can rerun them before you
+take my word for it: <link to /methodology>
+
+The part I would find most annoying in your seat: we cannot see whether this costs you anything.
+An agent that gives up at the key step never reaches your signup, so it is not in your funnel and
+not in your logs.
+
+Your scorecard, with the check that produced each sentence: <link to scorecard>
+
+Krystian
+
+**Why this one is different from A and B:** it opens with something they did right, and the
+finding is a gap between two things they already own rather than a criticism of either. It also
+names their own endpoint back to them, which proves we looked rather than mail-merged.
+
+**Do not send this to anyone in group 2 of the target list.** Those vendors run a server without
+registration, and the sentence "an agent can register itself" is false for them.
