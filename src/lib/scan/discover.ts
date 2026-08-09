@@ -1009,7 +1009,12 @@ function vendorMaintainers(candidates: Candidate[], vendor: Vendor): string[] {
  * returns nothing: a package we cannot attribute is not a weaker finding about the vendor,
  * it is an absence of one about us.
  */
-export async function searchNpmForDomain(domain: string, githubRepo: string | null): Promise<NpmMatch | null> {
+export async function searchNpmForDomain(
+  domain: string,
+  githubRepo: string | null,
+  /** A name we already rejected, so the search cannot hand back the same draft it was called to beat. */
+  reject: string | null = null,
+): Promise<NpmMatch | null> {
   const vendor = vendorOf(domain)
   const siteOrg = githubRepo?.split('/')[0].toLowerCase() ?? null
 
@@ -1018,6 +1023,7 @@ export async function searchNpmForDomain(domain: string, githubRepo: string | nu
 
   const byName = new Map<string, Candidate>()
   for (const hit of searches.flat()) {
+    if (hit.package.name === reject) continue
     if (isPlaceholder(hit.package.name) || byName.has(hit.package.name)) continue
     byName.set(hit.package.name, candidateOf(hit.package))
   }
@@ -1175,7 +1181,9 @@ async function attributePackage(
       // A name that is not theirs loses to an equal shape; one that is theirs has to be beaten.
       // A draft has to be beaten by anything at all, including a name of the same shape.
       const ceiling = draft ? shapeRank(npmPackage, vendor) + 1 : theirs ? scrapedRank : scrapedRank + 1
-      const searched = await searchNpmForDomain(domain, githubRepo)
+      // statsig.com publishes `statsig`, a generated stub at 0.0.2, and the search kept handing
+      // it straight back because its name is the vendor's own. A draft has to lose to something.
+      const searched = await searchNpmForDomain(domain, githubRepo, draft ? npmPackage : null)
       if (searched && shapeRank(searched.name, vendor) < ceiling) {
         npmPackage = searched.name
         npmSource = 'registry-search'
