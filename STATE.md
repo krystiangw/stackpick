@@ -120,9 +120,12 @@ i opisane w dzienniku rund niżej.
    nie może już oddać z powrotem tego samego pakietu.
 3. **`plaid.com` oceniany na `plaid.com/docs/account/billing/index.html.md`** zamiast na cenniku.
    Werdykt jest poprawny i zdanie nazywa stronę, więc to najniższa waga z całej listy.
-4. **Nasz własny ruch zanieczyszcza dane.** `postmark.com` odpowiada 429 przy prawie każdym
-   reseedzie. Checki zgłaszają to uczciwie jako niemierzalne, ale warto rozważyć odstęp między
-   reseedami albo rotację kolejności domen.
+4. ~~**Nasz własny ruch zanieczyszcza dane.**~~ **częściowo zrobione 2026-08-09:** reseed jest
+   teraz w repo (`scripts/reseed.sh`, `npm run reseed`), ma sekundę przerwy między żądaniami
+   (`PAUSE=`), ponawia domeny, które padły, i niesie w komentarzu powód istnienia przerwy.
+   Do rozstrzygnięcia zostaje **częstotliwość**: reseed raz na zestaw zmian, nie po każdej.
+   Skrypt mieszkał cały dzień w `/tmp`, czyli jedyne narzędzie produkujące nasz główny materiał
+   dowodowy było niewersjonowane.
 
 ## Następne kroki merytoryczne
 
