@@ -496,6 +496,15 @@ async function cardEndpoints(site: string): Promise<string[]> {
  */
 type McpProbe = { endpoints: McpEndpoint[]; answered: boolean }
 
+/** Whether the handshake was forwarded to another origin, which no MCP server does to its own POST. */
+function leftTheEndpoint(asked: string, landed: string): boolean {
+  try {
+    return new URL(asked).origin !== new URL(landed).origin
+  } catch {
+    return false
+  }
+}
+
 async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe> {
   const fromCard = await cardEndpoints(site)
   const candidates = [
@@ -595,8 +604,16 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
       // as running a server at a marketing or docs page on that 405, while their real endpoint
       // was one path away. An unrouted path 404s and a landing page 405s, so "different from the
       // control" can never separate the two on status alone.
+      //
+      // The third shape is the one that survived both those rules: mcp.firecrawl.dev sends the
+      // handshake on to docs.firecrawl.dev/mcp-server, which answers 405 as JSON and carries no
+      // Allow header at all. A server does not forward its own JSON-RPC POST to somebody else's
+      // origin, so a probe that ended up on another origin is reading a documentation page.
       const wrongMethod =
-        got.status === 405 && !looksLikeHtml(got) && !/\bGET\b/i.test(got.headers['allow'] ?? '')
+        got.status === 405 &&
+        !looksLikeHtml(got) &&
+        !/\bGET\b/i.test(got.headers['allow'] ?? '') &&
+        !leftTheEndpoint(candidates[index], got.url)
       const speaksJson = got.ok && (got.headers['content-type'] ?? '').includes('json')
       // A 401 that an unrouted path on the same origin does not get. contentful.com and
       // datadoghq.com both answer their MCP path with {"error":"invalid_token"} and answer a
