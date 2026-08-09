@@ -1537,3 +1537,32 @@ znaczy „nie ma".** Trzeci raz dziś ta sama lekcja w innym miejscu kodu.
 reseedzie, `launchdarkly.com` odmawiał stron dokumentacji. Przepuściłem korpus przez te same hosty
 kilkanaście razy w jedną dobę i część wierszy mówi teraz więcej o naszym obciążeniu niż o vendorze.
 Checki zgłaszają to uczciwie jako niemierzalne, ale reseed od teraz raz na zestaw zmian.
+
+## Runda 2026-08-09 (trzydziesta dziewiąta): łańcuch OAuth i liczba, która sama się znalazła
+
+**6.1: kanoniczna ścieżka cennika wygrywa** ze stroną, która tylko wspomina o pieniądzach.
+`zenrows.com` był oceniany na `/solutions/pricing-intelligence`, czyli stronie o **monitorowaniu
+cen konkurencji**, a `planetscale.com` na pliku markdown z dokumentacji. Oba wygrywały, bo ranking
+liczył wystąpienia cen, a strona o cenach konkurencji ma ich mnóstwo.
+
+**6.2: nie podążaliśmy za wskaźnikiem, który protokół każe napisać.** RFC 9728 każe chronionemu
+zasobowi nazwać serwery, które go pilnują. `chargebee.com` i `logto.io` publikują ten wskaźnik na
+`mcp.<domena>`, a my pytaliśmy ten host o **jeden** dokument i nigdy o ten ze wskaźnikiem, więc
+mówiliśmy dwóm firmom tożsamościowym, że **nie publikują żadnych metadanych OAuth**. Dwie
+konwencje są żywe i pytamy o obie: chargebee trzyma ścieżkę **za** segmentem well-known, logto
+**przed** nim. `polar.sh` publikuje `registration_endpoint` pod `api.polar.sh/.well-known/openid-configuration`
+i dostaje punkt, który mu się należał.
+
+### Znalezisko rynkowe, którego nie szukaliśmy
+
+Po naprawie łańcucha **64 ze 156 vendorów publikuje `registration_endpoint`**, czyli standardową
+drogę, którą agent rejestruje się sam, bez człowieka. Wcześniej korpus widział ich osiem.
+Rozkład tłumaczy wszystko: **54 domeny mają żywy serwer MCP, z czego 41 ma DCR**, a tylko 23
+domeny mają DCR bez serwera MCP. Innymi słowy **dynamiczna rejestracja klienta przyszła na rynek
+razem z MCP**, jako produkt uboczny specyfikacji, a nie jako decyzja o otwarciu się na agenty.
+
+To jest mocniejsza wersja naszej głównej tezy, nie słabsza: **36 z 54 vendorów z żywym MCP nadal
+nie dokumentuje żadnej drogi do poświadczenia**. Zbudowali drzwi dla maszyny i standardową
+rejestrację klienta, a agent i tak nie ma jak zdobyć klucza.
+
+**Stan:** korpus 156/156 na 6.2, audyt czysty w obu wymiarach, średnia 9,09.
