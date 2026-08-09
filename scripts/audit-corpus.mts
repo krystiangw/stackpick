@@ -80,7 +80,35 @@ const mcpWithoutKeys = corpus.rows.filter((row) => {
   return mcp?.verdict === 'pass' && provisioning?.verdict === 'fail'
 }).length
 
+const liveMcp = corpus.rows.filter((row) => verdictOf(row, 'mcp_present')?.verdict === 'pass')
+const registration = (rows: Row[]) => rows.filter((row) => verdictOf(row, 'oauth_dcr')?.verdict === 'pass').length
+const withoutMcp = corpus.rows.filter((row) => verdictOf(row, 'mcp_present')?.verdict !== 'pass')
+
 const stated: { page: string; pattern: RegExp; expected: number; what: string }[] = [
+  {
+    page: '/findings',
+    pattern: /(\d+) of the \d+ vendors running a live MCP server/,
+    expected: registration(liveMcp),
+    what: 'MCP servers that also publish client registration',
+  },
+  {
+    page: '/findings',
+    pattern: /of the (\d+) vendors running a live MCP server/,
+    expected: liveMcp.length,
+    what: 'live MCP servers',
+  },
+  {
+    page: '/findings',
+    pattern: /Outside that group it is (\d+) of/,
+    expected: registration(withoutMcp),
+    what: 'client registration without an MCP server',
+  },
+  {
+    page: '/findings',
+    pattern: /Outside that group it is \d+ of\s*(\d+)/,
+    expected: withoutMcp.length,
+    what: 'vendors without an MCP server',
+  },
   { page: '/report', pattern: /(\d+) domains · formula/, expected: corpus.rows.length, what: 'corpus size' },
   { page: '/findings', pattern: /it now covers (\d+) vendors/, expected: corpus.rows.length, what: 'corpus size' },
   {
