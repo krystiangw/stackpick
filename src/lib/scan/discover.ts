@@ -1079,7 +1079,20 @@ function pointsAtAnotherCompany(candidate: Pick<Candidate, 'links'>, vendor: Ven
     .map((repo) => repo.split('/')[0])
   if (orgs.length === 0) return false
   const siteOrgs = siteRepos.map((repo) => repo.split('/')[0])
-  return !orgs.some((org) => orgIsVendor(org, vendor) || siteOrgs.includes(org))
+  return !orgs.some((org) => orgCouldBeVendor(org, vendor) || siteOrgs.includes(org))
+}
+
+/**
+ * An org that could be the company's own, read as loosely as the names companies actually use and
+ * no looser. Only the shortening direction: dropboxsign.com publishes out of github.com/dropbox,
+ * which is its own name with the product dropped. The lengthening direction is the one that costs
+ * us, because a name plus another word is how a sibling company is named rather than how a company
+ * abbreviates itself, and github.com/fathom-video is a different company from usefathom.com.
+ */
+function orgCouldBeVendor(org: string, vendor: Vendor): boolean {
+  if (orgIsVendor(org, vendor)) return true
+  const flat = flatten(org)
+  return flat.length >= 5 && [vendor.flatDomain, ...vendor.aliases].some((name) => name.startsWith(flat))
 }
 
 /** A company keeps more than one name: livekit.io serves livekit.com, and both are theirs. */
@@ -1139,6 +1152,9 @@ function ownershipOf(
       repos.some((repo) => siteOrgs.includes(repo.split('/')[0])) &&
       shapeRank(candidate.name, vendor) <= 3)
   if (!nearVendor || !saysWhose) return 'none'
+  // Never against a package sitting in the vendor's own scope. A scope is registered once and
+  // held by one account, so where its code is mirrored says nothing we did not already know.
+  if (ownScope) return 'suggested'
   return pointsAtAnotherCompany(candidate, vendor, siteRepos) ? 'none' : 'suggested'
 }
 
