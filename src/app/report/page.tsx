@@ -136,7 +136,9 @@ export default async function IndustryReportPage() {
                 {oauth.zero} of {oauth.pass + oauth.zero + oauth.partial}
               </span>{' '}
               publish no OAuth metadata with a registration endpoint on any host we could follow, so an agent
-              cannot register itself as a client. RFC 7591 is the only standard by which it could.
+              cannot register itself as a client. RFC 7591 is the only standard by which it could. The other
+              side of that number is worth as much: where a vendor does publish one, it almost always sits on
+              the MCP host and arrived with the server, because the specification asks for it.
             </li>
           )}
           {report.mcpWithoutKeys > 0 && (

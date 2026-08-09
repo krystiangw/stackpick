@@ -51,6 +51,9 @@ export type IndustryReport = {
    */
   mcpServers: number
   mcpWithRegistration: number
+  /** The same count for everyone else, so the comparison is stated rather than implied. */
+  registrationWithoutMcp: number
+  withoutMcp: number
   /**
    * The stage nobody else grades. Lighthouse ships an agentic browsing category and Cloudflare
    * ships a readiness scanner, and both stop at documentation and protocol files: neither asks
@@ -155,10 +158,18 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
     return oauth !== undefined && oauth.points === oauth.max
   }).length
 
+  const others = reports.filter((report) => !live.includes(report))
+  const registrationWithoutMcp = others.filter((report) => {
+    const oauth = verdict(report, 'oauth_dcr')
+    return oauth !== undefined && oauth.points === oauth.max
+  }).length
+
   return {
     mcpWithoutKeys,
     mcpServers: live.length,
     mcpWithRegistration,
+    registrationWithoutMcp,
+    withoutMcp: others.length,
     signupRefusesAgents,
     signupNeedsJavaScript: needsJavaScript,
     sampleSize: reports.length,

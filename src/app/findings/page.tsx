@@ -195,9 +195,11 @@ export default async function FindingsPage() {
               <span className="font-mono">{corpus.mcpWithRegistration}</span> of the{' '}
               <span className="font-mono">{corpus.mcpServers}</span> vendors running a live MCP server also
               publish RFC 7591 client registration, the one standard way an agent registers itself without a
-              human. Almost nobody outside that group does. Dynamic registration did not arrive because
-              anybody decided to let agents in: it arrived because the MCP specification asks for it, and it
-              came in the same commit as the server. The key that would make it useful did not.
+              human. Outside that group it is{' '}
+              <span className="font-mono">{corpus.registrationWithoutMcp}</span> of{' '}
+              <span className="font-mono">{corpus.withoutMcp}</span>. Dynamic registration did not arrive
+              because anybody decided to let agents in: it arrived because the MCP specification asks for it,
+              and it came in the same commit as the server. The key that would make it useful did not.
             </p>
             <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
               One stage further down, where nobody else is looking:{' '}
