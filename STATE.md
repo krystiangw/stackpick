@@ -1796,3 +1796,35 @@ wyszukiwania w rejestrze**: `mapbox.com` trafił raz na `mapbox-gl-draw`, raz na
 a `imagekit.io` raz na `@imagekit/javascript`, raz na `imagekit-ui-kit`. Ten sam kod, inny dzień,
 inna kolejność wyników npm. **Do rozstrzygnięcia jako osobna pozycja: wynik nie powinien zależeć
 od kolejności odpowiedzi rejestru.**
+
+## Runda 2026-08-09 (czterdziesta siódma): kontrolka pytająca inaczej niż to, co ocenia
+
+**6.9, dwa defekty, oba znalezione instrumentacją, nie czwartą hipotezą.**
+
+**`datadoghq.com` czytany jako brak serwera MCP, choć odpowiada.** Kontrolka wildcard szła jako
+**GET**, podczas gdy każdy kandydat szedł jako **POST z JSON-RPC `initialize`**, a edge Datadoga
+odpowiada na niezarejestrowaną subdomenę **401 na GET i 404 na ten POST**. Czyli „ta domena
+odpowiada na wszystko" brało się z żądania, którego **żaden kandydat nigdy nie wysłał**, i
+odrzucało wszystkie pięć, zanim reguły, które by je utrzymały, w ogóle się uruchomiły. To ta sama
+klasa błędu co w 6.7, tylko warstwę niżej: **kontrolka musi wysyłać to samo żądanie, które ocenia.**
+Do tego wildcard dyskwalifikuje teraz tylko kandydata, który odpowiedział **tym samym statusem**,
+bo samo wyrównanie kształtu gubiło `mcp.chargebee.com`. Korpus: 151 bez zmian, **4 zyskane, 0
+straconych**, a trzy z czterech to prawdziwe serwery, które ten sam błąd ukrywał (`auth0.com`,
+`kinde.com`, `crowdin.com`).
+
+**Odpowiedź npm zależała od kolejności odmów rejestru.** `weeklyDownloads` zamieniało **każdą
+odmowę na 0**, czyli tę samą wartość co pakiet, którego nikt nie instaluje, a liczba instalacji
+jest rozstrzygnięciem remisu. Odrzucone wyszukiwanie zwracało pustą półkę, co czyta się jako
+„ten vendor nic nie publikuje". Rejestr teraz **albo odpowiada, albo nie**: 200 i 404 to
+odpowiedzi, wszystko inne to niewiadoma, kandydaci bez ceny idą na bok, a gdy któryś z nich mógł
+wygrać, odpowiedzią jest `null`, nie zgadywanie. Zmierzone pięć przebiegów na żywo: `mapbox.com`,
+`imagekit.io`, `resend.com`, `stripe.com`, `froala.com` i `statsig.com` lądują za każdym razem na
+tym samym pakiecie.
+
+**Ponawianie po odmowie sprawdzone i odrzucone pomiarem:** 429 biorą się z utrzymującego się
+obciążenia, więc dziesięć skanów `mapbox.com` poszło z 8 odrzuconych żądań na **182**, i mniej
+z nich dostało odpowiedź.
+
+**Zostawione świadomie:** `mcp.sentry.io` odpowiada 403 ścianą bota Cloudflare (6 698 bajtów HTML,
+bit w bit jak apex), a wyjątek dla dedykowanego hosta ufa każdemu 401/403 na `mcp.` niezależnie od
+ciała. Zaostrzenie tego przewróciłoby `cloudinary.com`, `baseten.co` i `telnyx.com`, więc czeka.
