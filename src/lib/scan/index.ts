@@ -564,7 +564,7 @@ async function resolvePackage(domain: string, found: Discovered): Promise<NpmFin
   const scraped = await checkNpm(found.npmPackage)
   if (!found.npmPackage || scraped.found || found.npmSource === 'registry-search') return scraped
 
-  const searched = await searchNpmForDomain(domain, found.githubRepo)
+  const searched = await searchNpmForDomain(domain, found.githubRepo ? [found.githubRepo] : [])
   if (!searched || searched.name === found.npmPackage) return scraped
   const retried = await checkNpm(searched.name)
   if (!retried.found) return scraped
