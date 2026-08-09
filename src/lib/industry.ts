@@ -45,6 +45,13 @@ export type IndustryReport = {
    */
   mcpWithoutKeys: number
   /**
+   * Live MCP servers, and how many of those also publish RFC 7591 client registration. The two
+   * arrived together: dynamic registration is what the MCP specification asks for, so it is a
+   * side effect of shipping a server rather than a decision to let agents in.
+   */
+  mcpServers: number
+  mcpWithRegistration: number
+  /**
    * The stage nobody else grades. Lighthouse ships an agentic browsing category and Cloudflare
    * ships a readiness scanner, and both stop at documentation and protocol files: neither asks
    * whether an unattended client can get an account. These two numbers are that question.
@@ -139,8 +146,19 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
   const signupRefusesAgents = withSignup.filter((report) => refusesAgentsAtSignup(report.findings)).length
   const needsJavaScript = withSignup.filter(signupNeedsJavaScript).length
 
+  const live = reports.filter((report) => {
+    const mcp = verdict(report, 'mcp_present')
+    return mcp !== undefined && mcp.points === mcp.max
+  })
+  const mcpWithRegistration = live.filter((report) => {
+    const oauth = verdict(report, 'oauth_dcr')
+    return oauth !== undefined && oauth.points === oauth.max
+  }).length
+
   return {
     mcpWithoutKeys,
+    mcpServers: live.length,
+    mcpWithRegistration,
     signupRefusesAgents,
     signupNeedsJavaScript: needsJavaScript,
     sampleSize: reports.length,
