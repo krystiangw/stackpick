@@ -176,6 +176,8 @@ export type FunnelFindings = {
   }
   /** Live MCP endpoints, as opposed to documentation that mentions MCP. */
   mcpEndpoints: McpEndpoint[]
+  /** Whether the endpoint probe got an answer, as opposed to never reaching a host. */
+  mcpProbed: boolean
   signup: SignupFindings
   provisioning: { programmatic: string[]; selfServeSignals: string[] }
   /** True when the site answers unknown paths with real text, making entry probes meaningless. */
@@ -486,7 +488,15 @@ async function cardEndpoints(site: string): Promise<string[]> {
   }
 }
 
-async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpoint[]> {
+/**
+ * Whether the probe reached an answer at all, kept separately from what it found. Silence about
+ * MCP inside a file we had to cut short only matters when nothing else settled the question, and
+ * on eleven of the twelve rows that published that excuse the probe had already settled it: the
+ * host does not resolve, or it answers a path nobody registered exactly the same way.
+ */
+type McpProbe = { endpoints: McpEndpoint[]; answered: boolean }
+
+async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe> {
   const fromCard = await cardEndpoints(site)
   const candidates = [
     ...fromCard,
@@ -566,7 +576,7 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpo
   const controls = await inParallel(needsControl, (origin) => fetchUrl(`${origin}${controlPath}`, handshake))
   const nonsenseStatus = new Map(needsControl.map((origin, index) => [origin, controls[index].status]))
 
-  return results
+  const endpoints = results
     .map((got, index) => {
       if (completesHandshake(got.body)) {
         return { url: candidates[index], status: got.status, evidence: 'answers-json' as const }
@@ -580,7 +590,13 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpo
       // OAuth is what an MCP server looks like, and mcp.sentry.dev is exactly that, while its
       // WWW-Authenticate header is something a marketing site's 405 never carries.
       if (!authenticating && !dedicatedHostChallenge(got, candidates[index]) && got.status === nonsenseStatus.get(new URL(candidates[index]).origin)) return null
-      const wrongMethod = got.status === 405
+      // A page that only serves GET says so in Allow, and it answers a POST with its own HTML
+      // error. firecrawl.dev, honeybadger.io, posthog.com and scrapingbee.com were all published
+      // as running a server at a marketing or docs page on that 405, while their real endpoint
+      // was one path away. An unrouted path 404s and a landing page 405s, so "different from the
+      // control" can never separate the two on status alone.
+      const wrongMethod =
+        got.status === 405 && !looksLikeHtml(got) && !/\bGET\b/i.test(got.headers['allow'] ?? '')
       const speaksJson = got.ok && (got.headers['content-type'] ?? '').includes('json')
       // A 401 that an unrouted path on the same origin does not get. contentful.com and
       // datadoghq.com both answer their MCP path with {"error":"invalid_token"} and answer a
@@ -611,6 +627,9 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpo
       }
     })
     .filter((endpoint): endpoint is McpEndpoint => endpoint !== null)
+  // A status of zero is a host that never answered, which is the one case where we genuinely
+  // found nothing out rather than found nothing.
+  return { endpoints, answered: results.some((got) => got.status !== 0) }
 }
 
 export type FunnelInput = {
@@ -680,7 +699,8 @@ export async function scanFunnel({
     })
   })
 
-  const mcpEndpoints = await mcpPending
+  const mcp = await mcpPending
+  const mcpEndpoints = mcp.endpoints
   const mcpOrigins = [...new Set(mcpEndpoints.map((endpoint) => new URL(endpoint.url).origin))]
   const alreadyProbed = new Set((await oauthKnownPending).origins)
   const [oauthKnown, oauthFromMcp, entries, signup, pricingPage] = await Promise.all([
@@ -714,6 +734,7 @@ export async function scanFunnel({
     entryPathsRefused,
     oauth,
     mcpEndpoints,
+    mcpProbed: mcp.answered,
     signup,
     provisioning: {
       programmatic: matching(PROVISIONING_PATTERNS, await corpus, PROVISIONING_PATTERN_LABELS),

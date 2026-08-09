@@ -337,7 +337,11 @@ export const CHECKS: Check[] = [
           `/.well-known/mcp.json is published, but nothing answered at mcp.${f.domain} or /mcp. A card is a claim about a server, not a server.`,
         )
       }
-      if (f.machine.mcp.mentions === 0 && f.machine.mcp.mentionsTruncated) {
+      // Only when the probe itself found nothing out. Eleven of the twelve rows that published
+      // this sentence had a decisive probe behind them: mcp.<domain> does not resolve, or it
+      // answers a path nobody registered exactly the same way. A file we had to cut short cannot
+      // un-know that, and saying so named a cause that had nothing to do with the measurement.
+      if (f.machine.mcp.mentions === 0 && f.machine.mcp.mentionsTruncated && !f.funnel.mcpProbed) {
         return {
           points: 0,
           detail: 'Unmeasurable: one of your machine-readable files was larger than we read, so silence about MCP in it proves nothing',
