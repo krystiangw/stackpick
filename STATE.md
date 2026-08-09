@@ -163,9 +163,13 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   wynik nie koreluje z wielkością (57 większych vendorów ma średnią 0,688 przy średniej korpusu
   0,637), tylko z własnością i fazą życia. Osiem przejętych lub pod PE ma 0,472, pięć bez
   roadmapy 0,378. Bez tego pola lista targetów prowadzi prosto do wygaszanych produktów.
-- **Raport „jedna rzecz dzieli was od drzwi"** na 61 dostawcach (40 oblewa wyłącznie rejestrację).
-  Z audytu badge'a: to lepsza dystrybucja niż znaczek i nie wymaga licencji, wygasania ani
-  cofania marki.
+- ~~**Raport „jedna rzecz dzieli was od drzwi"**~~ **zrobione 2026-08-09**, sekcja na `/findings`.
+  Lejek czytany jako **koniunkcja, nie próg na wyniku**, i to jest cała pointa: check nieoznaczalny
+  wypada z mianownika, więc próg **nagradza bycie nieczytelnym**, a nogi koniunkcji nie da się
+  spełnić chowając cokolwiek, bo schowanie nogi ją usuwa. Wynik: **14 ze 156** spełnia wszystkie
+  trzy, **61 jest o jeden wymóg od tego**, z czego **40 oblewa wyłącznie rejestrację**, 11 drzwi
+  dla maszyny, 10 udokumentowaną drogę po klucz. Obie liczby przeliczane przy każdym żądaniu i
+  **pilnowane przez audyt** (12 liczb zamiast 10), więc zdanie i dane nie mogą się rozjechać.
 - **Trzy reguły, które ten projekt wypracował bólem i które trzeba stosować przy każdym nowym
   checku czytającym cudzy serwer:**
   1. Tylko **404** znaczy „nie ma". Każda inna odmowa znaczy „nie przeczytaliśmy". Musiała być
