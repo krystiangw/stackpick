@@ -110,9 +110,14 @@ i opisane w dzienniku rund niżej.
 1. **Blokery po stronie Krystiana, nie do rozstrzygnięcia przez agenta** (pełny opis w sekcji
    „Zablokowane na Krystianie"): domena, zweryfikowany nadawca w Resend, ścieżka zakupu inna niż
    `mailto:` na prywatnego Gmaila, nazwanie licencji korpusu, decyzja o modelu sprzedaży.
-2. **`statsig.com` dopasowuje `statsig@0.0.2`**, wygenerowany stub, zamiast `@statsig/js-client`.
-   Zdanie o nim jest już prawdziwe (mówi o rekordzie w rejestrze, nie o dacie wydania), więc to
-   kwestia trafności dopasowania, nie fałszywego twierdzenia. Ostatnia pozycja z audytu.
+2. ~~**`statsig.com` dopasowuje `statsig@0.0.2`**~~ **zbadane 2026-08-09 i zamknięte jako niefixowalne
+   tanio.** Nazwa nie pochodzi ze strony (na `statsig.com` nie ma żadnej wzmianki o pakiecie, tylko
+   nazwy funkcji JS), tylko z wyszukiwania w rejestrze. Wymuszenie odrzucenia stuba zwraca
+   `@oai-statsig/js-client`, czyli **cudzy fork**, a `@statsig/js-client` w wynikach nie występuje
+   w ogóle. Prawdziwy stub vendora jest lepszą odpowiedzią niż fork obcej firmy, a zdanie o nim
+   jest prawdziwe (mówi o rekordzie w rejestrze, nie o dacie wydania). Naprawiony został natomiast
+   przypadek, w którym nazwę **zeskrobaliśmy ze strony** i okazała się szkicem: tam wyszukiwanie
+   nie może już oddać z powrotem tego samego pakietu.
 3. **`plaid.com` oceniany na `plaid.com/docs/account/billing/index.html.md`** zamiast na cenniku.
    Werdykt jest poprawny i zdanie nazywa stronę, więc to najniższa waga z całej listy.
 4. **Nasz własny ruch zanieczyszcza dane.** `postmark.com` odpowiada 429 przy prawie każdym
