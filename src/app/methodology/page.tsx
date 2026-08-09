@@ -133,6 +133,17 @@ export default function MethodologyPage() {
         </p>
       </section>
 
+      <section className="border-b border-rule py-12">
+        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">We are scored by this too</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          This site is in the scanner like anybody else, and it fails a check we publish. There is no OAuth
+          metadata on any host we run, so an agent cannot register itself as a client with us. The reason is
+          that our MCP server needs no account at all, which makes the check inapplicable in spirit and
+          failing in fact, and we would rather show the failing row than write ourselves an exemption nobody
+          else gets. Scan the domain in the box on any page and you will get the same card a vendor gets.
+        </p>
+      </section>
+
       <section className="py-12">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Known limits</h2>
         <ol className="mt-5 flex flex-col gap-4">
