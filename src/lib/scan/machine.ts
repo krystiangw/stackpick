@@ -81,6 +81,16 @@ export async function scanMachineContext(
     root_llms_txt: `${site}/llms.txt`,
     root_llms_full_txt: `${site}/llms-full.txt`,
   }
+  // Where documentation conventionally lives, asked whether or not discovery went there.
+  // launchdarkly.com/llms.txt is a 228 kB HTML shell and docs.launchdarkly.com/llms.txt is a
+  // 200 kB text file, so on the runs where discovery settled on the apex we published "no
+  // llms.txt at any of the locations probed" about a vendor who publishes one.
+  try {
+    const conventional = `https://docs.${new URL(site).hostname.replace(/^www\./, '')}`
+    if (conventional !== site) locations.docs_subdomain_llms_txt = `${conventional}/llms.txt`
+  } catch {
+    /* site is always a URL we built ourselves */
+  }
   if (docs) {
     // The standard location is the origin root. Appending to the docs page path missed
     // docs.stripe.com/llms.txt (93 KB) while probing a 404 one level deeper.
