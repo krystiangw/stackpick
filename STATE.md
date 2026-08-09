@@ -1,6 +1,25 @@
-# StackPick: stan na 2026-08-08 (noc)
+# StackPick: stan na 2026-08-09 (rano)
 
 Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
+**Dwie sekcje na dole tego bloku, "Co zostało z audytów" i "Następne kroki merytoryczne", są
+kontraktem dla watchdoga. Aktualizuj je przy każdej zamkniętej pozycji, inaczej watchdog czyta
+listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, nie listą zadań.
+
+## Stan na teraz, w dziesięciu liniach
+
+- Formuła **6.2**, korpus **156 domen w 24 kategoriach**, reseed 156/156 bez błędów.
+- `npm run audit`: **0 sprzeczności w wierszach, 10 liczb ze stron zgodnych z danymi**.
+- Dwa przebiegi adwersaryjne przeciw realnym żądaniom: **16,7 procent błędu na 5.2, 2,2 procent
+  na 5.7**. Wszystkie ich znaleziska zamknięte poza jednym (`statsig.com` dopasowuje stub npm).
+- Znalezisko rynkowe: **41 z 54 vendorów z żywym MCP publikuje RFC 7591**, poza tą grupą 23 ze 102.
+  DCR przyszło z wymogu specyfikacji MCP, nie z decyzji o wpuszczeniu agentów. **36 z 54 nadal
+  nie dokumentuje żadnej drogi do klucza.**
+- Odmowy rejestracji wymierzone w agenty: **0 udowodnionych na 156**. Bariera, którą umiemy
+  udowodnić, to **72 ze 156** formularzy rejestracji nieobecnych w serwowanym HTML-u.
+- Materiały wyjściowe (`outreach/`) przebudowane na 6.2, wszystko dalej **jako szkice**.
+- Skanujemy sami siebie: **12 z 13 mierzalnych**, oblewamy `oauth_dcr` i piszemy o tym wprost.
+- Budżet skanu **25 s** (Heroku zabija po 30). Reseed **raz na zestaw zmian**, nie po każdej:
+  nasz własny ruch zaczął produkować 429 u `postmark.com` i odmowy u `launchdarkly.com`.
 
 ## Gdzie to żyje
 
@@ -83,14 +102,38 @@ resend.com 14/14/14, cloudinary.com 8/8/8, tiptap.dev 9/9/9. Zero niestabilnych 
 Uwaga: resend spadł z 15 na 14 przez próg `docs_without_js` (1 778 znaków przy progu 2 000) -
 to zmiana po ich stronie, nie nasza, ale pokazuje, że próg jest ostry.
 
-## Co zostało z audytów
+## Co zostało z audytów, w kolejności wagi
 
-1. ~~Wynik nie ma własnej formy wizualnej~~ **zrobione 2026-08-08 (runda 11)**: znak scorecardu
-   ma jedną definicję (`src/lib/mark.ts`) i rysują go trzy powierzchnie.
-2. Wyniki audytów wartości/poprawności i designu z rundy 2026-08-08 (agenty puszczone po
-   deployu) - do przerobienia.
+Stan 2026-08-09 rano, po dwóch przebiegach adwersaryjnych. Wszystko powyżej tej listy jest zamknięte
+i opisane w dzienniku rund niżej.
+
+1. **Blokery po stronie Krystiana, nie do rozstrzygnięcia przez agenta** (pełny opis w sekcji
+   „Zablokowane na Krystianie"): domena, zweryfikowany nadawca w Resend, ścieżka zakupu inna niż
+   `mailto:` na prywatnego Gmaila, nazwanie licencji korpusu, decyzja o modelu sprzedaży.
+2. **`statsig.com` dopasowuje `statsig@0.0.2`**, wygenerowany stub, zamiast `@statsig/js-client`.
+   Zdanie o nim jest już prawdziwe (mówi o rekordzie w rejestrze, nie o dacie wydania), więc to
+   kwestia trafności dopasowania, nie fałszywego twierdzenia. Ostatnia pozycja z audytu.
+3. **`plaid.com` oceniany na `plaid.com/docs/account/billing/index.html.md`** zamiast na cenniku.
+   Werdykt jest poprawny i zdanie nazywa stronę, więc to najniższa waga z całej listy.
+4. **Nasz własny ruch zanieczyszcza dane.** `postmark.com` odpowiada 429 przy prawie każdym
+   reseedzie. Checki zgłaszają to uczciwie jako niemierzalne, ale warto rozważyć odstęp między
+   reseedami albo rotację kolejności domen.
 
 ## Następne kroki merytoryczne
+
+**Zrobione i nieaktualne pozycje z tej sekcji przeniesione do dziennika rund. Aktualne:**
+
+- **Trzeci przebieg adwersaryjny** po najbliższym zestawie zmian. Wzorzec z tego projektu jest
+  twardy: każda naprawa wprowadza błąd przeciwny, a znajduje go diff korpusu albo przebieg
+  adwersaryjny, nigdy build ani test.
+- **Reguła, którą trzeba pamiętać przy każdym nowym checku czytającym cudzy serwer:** tylko 404
+  znaczy „nie ma", każda inna odmowa znaczy „nie przeczytaliśmy". Musiała zostać dopisana osobno
+  przy `robots.txt`, przy stronach dokumentacji i przy ścieżkach wejścia.
+- **Druga reguła:** kontrola przez bool nie wystarcza tam, gdzie witryna serwuje szkielet.
+  Test istnienia i test tożsamości to dwie różne rzeczy, i tylko porównanie ciała odpowiedzi
+  z nierutowaną ścieżką chroni przed catch-allem.
+
+## Stare notatki badawcze (historyczne, sprzed rundy 12)
 
 - Runda 2 przebiegów w izolacji, żeby zmierzyć **stabilność** i wpływ skażenia.
 - Hipoteza do potwierdzenia: zadanie wymagające weryfikacji licencji **zmusza** model do sięgnięcia
