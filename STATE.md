@@ -104,45 +104,40 @@ to zmiana po ich stronie, nie nasza, ale pokazuje, że próg jest ostry.
 
 ## Co zostało z audytów, w kolejności wagi
 
-Stan 2026-08-09 rano, po dwóch przebiegach adwersaryjnych. Wszystko powyżej tej listy jest zamknięte
-i opisane w dzienniku rund niżej.
+Stan 2026-08-09 po trzech przebiegach adwersaryjnych (16,7 → 2,2 → 3,9 procent błędu) i po
+zamknięciu wszystkiego, co one znalazły poza pozycjami niżej. Wszystko powyżej tej listy jest
+zrobione i opisane w dzienniku rund.
 
-1. **Blokery po stronie Krystiana, nie do rozstrzygnięcia przez agenta** (pełny opis w sekcji
-   „Zablokowane na Krystianie"): domena, zweryfikowany nadawca w Resend, ścieżka zakupu inna niż
-   `mailto:` na prywatnego Gmaila, nazwanie licencji korpusu, decyzja o modelu sprzedaży.
-2. ~~**`statsig.com` dopasowuje `statsig@0.0.2`**~~ **zbadane 2026-08-09 i zamknięte jako niefixowalne
-   tanio.** Nazwa nie pochodzi ze strony (na `statsig.com` nie ma żadnej wzmianki o pakiecie, tylko
-   nazwy funkcji JS), tylko z wyszukiwania w rejestrze. Wymuszenie odrzucenia stuba zwraca
-   `@oai-statsig/js-client`, czyli **cudzy fork**, a `@statsig/js-client` w wynikach nie występuje
-   w ogóle. Prawdziwy stub vendora jest lepszą odpowiedzią niż fork obcej firmy, a zdanie o nim
-   jest prawdziwe (mówi o rekordzie w rejestrze, nie o dacie wydania). Naprawiony został natomiast
-   przypadek, w którym nazwę **zeskrobaliśmy ze strony** i okazała się szkicem: tam wyszukiwanie
-   nie może już oddać z powrotem tego samego pakietu.
-3. **`plaid.com` oceniany na `plaid.com/docs/account/billing/index.html.md`** zamiast na cenniku.
-   Werdykt jest poprawny i zdanie nazywa stronę, więc to najniższa waga z całej listy.
-4. ~~**Nasz własny ruch zanieczyszcza dane.**~~ **częściowo zrobione 2026-08-09:** reseed jest
-   teraz w repo (`scripts/reseed.sh`, `npm run reseed`), ma sekundę przerwy między żądaniami
-   (`PAUSE=`), ponawia domeny, które padły, i niesie w komentarzu powód istnienia przerwy.
-   Do rozstrzygnięcia zostaje **częstotliwość**: reseed raz na zestaw zmian, nie po każdej.
-   Skrypt mieszkał cały dzień w `/tmp`, czyli jedyne narzędzie produkujące nasz główny materiał
-   dowodowy było niewersjonowane.
+1. **Blokery po stronie Krystiana** (pełny opis w sekcji „Zablokowane na Krystianie"): domena,
+   zweryfikowany nadawca w Resend, ścieżka zakupu inna niż `mailto:` na prywatnego Gmaila,
+   nazwanie licencji korpusu, decyzja o modelu sprzedaży. **Agent tego nie rozstrzyga.**
+2. **Ściana bota czytana jako wyzwanie OAuth.** `mcp.sentry.io` odpowiada 403 stroną Cloudflare
+   (6 698 bajtów HTML, bit w bit jak apex), a wyjątek dla hosta `mcp.*` ufa każdemu 401/403
+   niezależnie od ciała odpowiedzi. Zaostrzenie (wymóg nie-HTML-owego ciała, gdy nie ma
+   `WWW-Authenticate`) przewróciłoby `cloudinary.com`, `baseten.co` i `telnyx.com`, więc wymaga
+   sprawdzenia każdego z osobna, nie jednej reguły.
+3. **Dwie domeny nadal potrafią zwrócić „brak pakietu" zamiast pakietu** (`supabase.com`,
+   `launchdarkly.com`), gdy rejestr npm odmówi. Po 6.9 nie ma już **błędnej** odpowiedzi, jest
+   uczciwe „nie wiemy", ale to wciąż różnica między przebiegami. Zamknięcie wymaga mniejszego
+   ruchu na domenę (dziś ~19 żądań) albo tokenu do rejestru. **Decyzja o tokenie jest Krystiana.**
+4. **`typed_package` dla `newrelic.com`, `honeycomb.io` i `directus.io`** wskazuje pakiet
+   flagowy zamiast scoped SDK z typami. Świadoma decyzja subagenta, opisana w rundzie 44:
+   przełączenie byłoby wybraniem pakietu pod odpowiedź, którą chcemy opublikować. Do rewizji
+   tylko wtedy, gdy vendor to zakwestionuje.
 
 ## Następne kroki merytoryczne
 
-**Zrobione i nieaktualne pozycje z tej sekcji przeniesione do dziennika rund. Aktualne:**
-
-- ~~**Trzeci przebieg adwersaryjny**~~ **uruchomiony 2026-08-09 rano** przeciw formule 6.3, na
-  sześciu zmianach wprowadzonych po 5.7 (rozszerzone dopasowanie free tier, punkt wejścia,
-  `llms.txt` na `docs.`, kanoniczna ścieżka cennika, łańcuch OAuth, budżet 25 s plus szkice npm).
-  Baza porównawcza: 16,7 procent na 5.2, 2,2 procent na 5.7. **Wynik do wpisania po powrocie.**
-  Wzorzec z tego projektu jest twardy: każda naprawa wprowadza błąd przeciwny, a znajduje go diff
-  korpusu albo przebieg adwersaryjny, nigdy build ani test.
-- **Reguła, którą trzeba pamiętać przy każdym nowym checku czytającym cudzy serwer:** tylko 404
-  znaczy „nie ma", każda inna odmowa znaczy „nie przeczytaliśmy". Musiała zostać dopisana osobno
-  przy `robots.txt`, przy stronach dokumentacji i przy ścieżkach wejścia.
-- **Druga reguła:** kontrola przez bool nie wystarcza tam, gdzie witryna serwuje szkielet.
-  Test istnienia i test tożsamości to dwie różne rzeczy, i tylko porównanie ciała odpowiedzi
-  z nierutowaną ścieżką chroni przed catch-allem.
+- **Czwarty przebieg adwersaryjny** po zestawie zmian 6.4 do 6.9 (punkt wejścia, kontrolka MCP,
+  atrybucja npm, limit fazy npm, budżet 27 s). Nic z tego nie było jeszcze atakowane niezależnie.
+- **Trzy reguły, które ten projekt wypracował bólem i które trzeba stosować przy każdym nowym
+  checku czytającym cudzy serwer:**
+  1. Tylko **404** znaczy „nie ma". Każda inna odmowa znaczy „nie przeczytaliśmy". Musiała być
+     dopisana osobno przy `robots.txt`, stronach dokumentacji i ścieżkach wejścia.
+  2. **Kontrolka musi wysyłać dokładnie to żądanie, które ocenia**, i pytać tak samo jak check,
+     który z niej korzysta. Złamane trzy razy: nagłówek `Accept`, metoda HTTP, dwa checki na
+     jednym boolu.
+  3. **Naprawa dokładająca żądania zabiera budżet gdzie indziej.** Pytaj nie tylko „czy to
+     poprawne", ale „co przez to wypadnie". `sentry.io` stracił sześć checków na naprawie npm.
 
 ## Stare notatki badawcze (historyczne, sprzed rundy 12)
 
