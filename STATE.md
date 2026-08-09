@@ -1694,3 +1694,35 @@ a legalna gzipowana sitemapa dalej dekoduje się do swoich 2 000 URL-i. Na produ
 - **Co już broni:** guard SSRF (potwierdzony przy okazji własnym testem: żądanie na 127.0.0.1
   zostało odrzucone), limit 400 kB na odczyt, przepisany `stripCodeBlocks` przeciw
   katastrofalnemu nawrotowi regexa, zero LLM w ścieżce skanu.
+
+## Runda 2026-08-09 (czterdziesta trzecia): trzeci audyt, 3,9 procent i jeden podsystem
+
+**743 twierdzenia, 29 obalonych, 3,9 procent** wobec 2,2 na 5.7. **18 z 29 siedzi w atrybucji npm**;
+pozostałe pięć zmian razem daje 1,9 procent, czyli lepiej niż baza. Atrybucja oddana subagentowi
+z pełną listą dowodów (3 fałszywi właściciele, 8 porażek u vendorów z typowanym SDK, 7 fałszywych
+„nie umiemy wskazać pakietu"), bo ten podsystem spalił każde dotychczasowe podejście.
+
+**6.4: prosiliśmy o catch-all, po czym karaliśmy za catch-all.** Dwa z dziewięciu błędów punktu
+wejścia to było **nasze własne żądanie**, nie odpowiedź vendora.
+- `plausible.io` odpowiada **406**, a `savvycal.com` **500** na gołą listę typów w `Accept`.
+  Zapisywaliśmy to jako dziewięć odrzuconych ścieżek; przy `Accept` z wagami oba oddają dziewięć
+  czystych 404. Siedem wierszy było z tego powodu „niemierzalnych".
+- `sentry.io` negocjuje treść: **poproszony o markdown oddaje tę samą stronę 976 bajtów na każdej
+  ścieżce**, łącznie z `/.well-known/mcp.json`, który naprawdę ma **106 bajtów JSON-a**. Nagłówek
+  idzie teraz za rozszerzeniem, a **sondy kontrolne wysyłają ten sam nagłówek co właściwe**, co
+  przestały robić: kontrolka prosząca o `text/plain` widziała wariant HTML 20 kB, a `/ai.txt`
+  prosząc o markdown widziało wariant 976 bajtów, więc kontrolka nie rozpoznawała strony, dla
+  której istnieje, i przyznała za nią dwa punkty.
+
+**6.5: żądanie poświadczeń na dedykowanym hoście MCP to żywy serwer.** Nasz własny check OAuth
+czytał metadane z `mcp.contentful.com`, podczas gdy `mcp_present` w tym samym wierszu publikował
+„nic nie odpowiada pod mcp.contentful.com". Host odpowiada `{"error":"invalid_token"}` na każdej
+ścieżce i **nie wysyła `WWW-Authenticate`**, więc wyjątek trzymający `mcp.sentry.dev` do niego nie
+sięgał. Host nazwany `mcp.<domena>` istnieje, bo ktoś go zbudował. Doszło też sondowanie
+`mcp.<domena>/v1/mcp`, gdzie odpowiada `deepl.com`. Sprawdzone w obie strony: contentful i deepl
+wracają, tiptap, temporal, configcat i postmark zostają poza.
+
+**Otwarte:** `datadoghq.com` odpowiada 401 pod `mcp.datadoghq.com/v1/mcp` przez nasz własny
+fetcher i mimo to wypada. Trzy wyjaśnienia okazały się błędne (kontrolka wildcard, kontrolka
+ścieżkowa, brak nagłówka), więc **nie zgaduję czwarty raz**: do zbadania osobno, prawdopodobnie
+memo o zdrowiu hosta po nieudanej sondzie gołego `mcp.datadoghq.com`.
