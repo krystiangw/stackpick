@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '6.6'
+export const FORMULA_VERSION = '6.7'
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -225,7 +225,7 @@ export const CHECKS: Check[] = [
       // a 20,402 byte control, and the same scan read that file to find their MCP server.
       const catchAll = f.funnel.catchAll
       const everyNamespaceFakes = catchAll
-        ? catchAll.markdown && catchAll.json && catchAll.text
+        ? catchAll.markdown && catchAll.json && (catchAll.entryText ?? catchAll.text)
         : f.funnel.servesCatchAll
       if (everyNamespaceFakes) {
         return {

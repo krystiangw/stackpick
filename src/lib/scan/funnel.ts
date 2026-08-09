@@ -139,7 +139,10 @@ export type McpEndpoint = { url: string; status: number; evidence: 'challenges' 
 export type CatchAll = {
   markdown: boolean
   json: boolean
+  /** Asked as text/plain, which is how llms.txt is fetched. */
   text: boolean
+  /** Asked the way the entry probes ask, which is markdown first. */
+  entryText?: boolean
   /** What an unregistered path in each namespace answered with, in bytes. */
   bodyLengths?: { markdown: number; json: number; text: number }
 }
@@ -418,21 +421,30 @@ async function servesCatchAllText(site: string): Promise<CatchAll> {
   // The same Accept the entry probes send, per suffix. They diverged, and that is how a control
   // asking for text/plain saw sentry.io's 20 kB HTML while /ai.txt asking for markdown saw their
   // 976 byte catch-all, so the control did not recognise the page it exists to recognise.
-  const [markdown, json, plain] = await Promise.all([
+  const [markdown, json, plain, plainAsEntry] = await Promise.all([
     fetchUrl(`${site}/stackpick-control-probe-8f3a1c.md`, { accept: entryAccept('.md') }),
     fetchUrl(`${site}/.well-known/stackpick-control-probe-8f3a1c.json`, { accept: entryAccept('.json') }),
-    // The .txt arm covers llms.txt, which is scored elsewhere and was unguarded.
+    // Twice, because two checks read this arm and they do not ask the same way. llms.txt is
+    // fetched as text/plain, and agora.io answers an unknown .txt path with 240 kB of HTML to
+    // that header and 26 kB of markdown to the entry probe's header. One boolean for both
+    // suppressed a genuine 8,857 byte llms.txt on the strength of a page it is nothing like.
+    fetchUrl(`${site}/stackpick-control-probe-8f3a1c.txt`, { accept: 'text/plain' }),
     fetchUrl(`${site}/stackpick-control-probe-8f3a1c.txt`, { accept: entryAccept('.txt') }),
   ])
   return {
     markdown: isRealTextFile(markdown, 30),
     json: isRealTextFile(json, 30),
     text: isRealTextFile(plain, 30),
+    entryText: isRealTextFile(plainAsEntry, 30),
     // Kept for a direct comparison, because the boolean above is not enough on its own:
     // sentry.io answers every .md path with the same 20,402 byte HTML page, which our control
     // correctly discards as HTML and which then discredits nothing. A file that comes back the
     // same size as a path nobody registered is that page, whatever its content type says.
-    bodyLengths: { markdown: markdown.body.length, json: json.body.length, text: plain.body.length },
+    bodyLengths: {
+      markdown: markdown.body.length,
+      json: json.body.length,
+      text: plainAsEntry.body.length,
+    },
   }
 }
 
