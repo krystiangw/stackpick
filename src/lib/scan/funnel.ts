@@ -588,7 +588,7 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
   const endpoints = results
     .map((got, index) => {
       if (completesHandshake(got.body)) {
-        return { url: candidates[index], status: got.status, evidence: 'answers-json' as const }
+        return { url: got.url, status: got.status, evidence: 'answers-json' as const }
       }
       // The wildcard probe only discredits addresses we guessed. An address the vendor named in
       // its own card is not a guess, and sentry.io's card points at another domain entirely.
@@ -633,7 +633,10 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
         (dedicatedHost || got.status !== nonsenseStatus.get(origin))
       if (!authenticating && !wrongMethod && !speaksJson && !demandsCredentials) return null
       return {
-        url: candidates[index],
+        // The address that answered, not the one we asked. pinecone.io/mcp is a redirect stub
+        // and www.pinecone.io/mcp is the server, and a vendor checking our sentence has to be
+        // able to send the same request we did.
+        url: got.url,
         status: got.status,
         evidence:
           authenticating || demandsCredentials
@@ -644,9 +647,15 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
       }
     })
     .filter((endpoint): endpoint is McpEndpoint => endpoint !== null)
+  // The bare host first was naming a gateway's generic 401 as the server: mcp.newrelic.com
+  // answers 401 at the root and the routed endpoint is one path down. A path somebody had to
+  // register is better evidence than a host somebody had to point at us.
+  const routedFirst = [...endpoints].sort(
+    (a, b) => Number(new URL(a.url).pathname === '/') - Number(new URL(b.url).pathname === '/'),
+  )
   // A status of zero is a host that never answered, which is the one case where we genuinely
   // found nothing out rather than found nothing.
-  return { endpoints, answered: results.some((got) => got.status !== 0) }
+  return { endpoints: routedFirst, answered: results.some((got) => got.status !== 0) }
 }
 
 export type FunnelInput = {
