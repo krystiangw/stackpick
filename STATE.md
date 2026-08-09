@@ -119,9 +119,12 @@ zrobione i opisane w dzienniku rund.
    nieuzasadniona: oba mają prawdziwe endpointy na `api.<domena>` i je zachowują. `sentry.io`
    schodzi z czterech endpointów do jednego, tego z własnej karty, a `cloudinary.com` przestaje
    przechodzić na blokadzie bota.
-3. **Dwie domeny nadal potrafią zwrócić „brak pakietu" zamiast pakietu** (`supabase.com`,
-   `launchdarkly.com`), gdy rejestr npm odmówi. Po 6.9 nie ma już **błędnej** odpowiedzi, jest
-   uczciwe „nie wiemy", ale to wciąż różnica między przebiegami. Zamknięcie wymaga mniejszego
+3. **Cache rejestru npm żyje w pamięci dyno, więc każdy deploy go kasuje.** Zmierzone dwukrotnie:
+   zimny przebieg po korpusie daje **114-116 przejść `typed_package`**, ciepły **139-140**. Od
+   2026-08-09 `npm run reseed` robi **dwa przebiegi i publikuje drugi**, co zamyka problem
+   w danych, ale nie u odwiedzającego, który trafi na świeżo zdeployowane dyno. **Docelowo cache
+   powinien siedzieć w Mongo, nie w pamięci procesu.** Osobno: przy odmowie rejestru pojedyncze
+   domeny dalej zwracają uczciwe „nie wiemy" zamiast pakietu; zamknięcie tego wymaga mniejszego
    ruchu na domenę (dziś ~19 żądań) albo tokenu do rejestru. **Decyzja o tokenie jest Krystiana.**
 4. **`typed_package` dla `newrelic.com`, `honeycomb.io` i `directus.io`** wskazuje pakiet
    flagowy zamiast scoped SDK z typami. Świadoma decyzja subagenta, opisana w rundzie 44:
@@ -1857,3 +1860,19 @@ wymiarach.
 **Reguła do zapamiętania:** naprawa, która zamienia zły pomiar na brak pomiaru, jest poprawna, ale
 **dopiero pomiar na ciepłym cache pokazuje, ile brakującego pomiaru wyprodukowaliśmy sami**. Jeden
 przebieg po takiej zmianie nie jest dowodem na nic.
+
+## Runda 2026-08-09 (czterdziesta dziewiąta): 7.1 i zimny start, który kosztuje 26 domen
+
+**7.1 działa i jest zweryfikowane na ciepłym przebiegu:** `typed_package` 139, średnia 9,20,
+audyt czysty. Sześć spadków wobec ciepłego 7.0, z czego `cloudinary.com` jest **zamierzoną
+korektą** (przestaje przechodzić na ścianie bota Cloudflare), a reszta to znane wahania
+(`postmark.com` z 429, `telnyx.com`, `split.io`, `hygraph.com`, `hatchet.run`).
+
+**Nowa, zmierzona prawidłowość:** cache rejestru npm żyje w pamięci dyno, więc **każdy deploy go
+kasuje**, a pierwszy przebieg po wdrożeniu jest zawsze zimny i kosztuje ~26 domen ich pakiet.
+Zmierzone dwa razy niezależnie: **zimny 114-116 przejść, ciepły 139-140**.
+
+`npm run reseed` robi teraz **dwa przebiegi i publikuje drugi**, z liczbami w komentarzu skryptu,
+żeby nikt nie usunął tego jako zbędnego spowolnienia. To zamyka problem w **publikowanych danych**,
+ale nie u odwiedzającego, który trafi na świeżo zdeployowane dyno: on dostanie uczciwe „nie umiemy
+wskazać pakietu". Docelowo cache powinien siedzieć w Mongo, nie w pamięci procesu.
