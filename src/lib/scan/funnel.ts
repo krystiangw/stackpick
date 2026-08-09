@@ -213,7 +213,13 @@ const RESOURCE_SUBDOMAINS = ['api']
 const MCP_OAUTH_PATHS = ['/.well-known/oauth-authorization-server', '/.well-known/oauth-protected-resource']
 
 type OauthTarget = { origin: string; paths: string[] }
-type OauthProbe = { metadataPublished: boolean; dynamicClientRegistration: boolean; origins: string[] }
+type OauthProbe = {
+  metadataPublished: boolean
+  dynamicClientRegistration: boolean
+  origins: string[]
+  /** The document that carried the registration endpoint, so the verdict can name it. */
+  registrationAt?: string
+}
 
 /**
  * RFC 9728 makes a protected resource point at the authorization servers that guard it, and both
@@ -283,7 +289,12 @@ async function probeOauthOrigins(targets: OauthTarget[]): Promise<OauthProbe> {
       if (!metadata.issuer && !metadata.authorization_endpoint) continue
       metadataPublished = true
       if (metadata.registration_endpoint) {
-        return { metadataPublished: true, dynamicClientRegistration: true, origins }
+        return {
+          metadataPublished: true,
+          dynamicClientRegistration: true,
+          origins,
+          registrationAt: metadata.registration_endpoint,
+        }
       }
     } catch {
       /* a JSON body that is not JSON tells us nothing */
@@ -465,6 +476,11 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpo
     ...fromCard,
     `https://mcp.${domain}`,
     `https://mcp.${domain}/mcp`,
+    // Versioned, because three vendors answer only there and we published all three as having
+    // no server: contentful.com, datadoghq.com and deepl.com all challenge with a
+    // WWW-Authenticate header at mcp.<domain>/v1/mcp while the bare host 404s. On two of them
+    // the OAuth check was reading metadata off the very host this one called dead.
+    `https://mcp.${domain}/v1/mcp`,
     `https://api.${domain}/mcp`,
     `${site}/mcp`,
   ].filter((url, index, all) => all.indexOf(url) === index)
@@ -492,6 +508,10 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpo
 
   // A handshake that comes back with a protocol version is proof no wildcard can fake, so it
   // outranks the control probe. Without it, contentful.com's wildcard hid a server that answers.
+  /** Kept separate so the discard rule above and the evidence rule below cannot drift apart. */
+  const dedicatedHostChallenge = (got: Fetched, url: string) =>
+    (got.status === 401 || got.status === 403) && new URL(url).hostname.startsWith('mcp.')
+
   const completesHandshake = (body: string) =>
     /"protocolVersion"|"serverInfo"/.test(body) && /"jsonrpc"|"result"/.test(body)
 
@@ -525,14 +545,34 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpo
       // MCP. Exempting the auth challenge is deliberate: a host that gates every path behind
       // OAuth is what an MCP server looks like, and mcp.sentry.dev is exactly that, while its
       // WWW-Authenticate header is something a marketing site's 405 never carries.
-      if (!authenticating && got.status === nonsenseStatus.get(new URL(candidates[index]).origin)) return null
+      if (!authenticating && !dedicatedHostChallenge(got, candidates[index]) && got.status === nonsenseStatus.get(new URL(candidates[index]).origin)) return null
       const wrongMethod = got.status === 405
       const speaksJson = got.ok && (got.headers['content-type'] ?? '').includes('json')
-      if (!authenticating && !wrongMethod && !speaksJson) return null
+      // A 401 that an unrouted path on the same origin does not get. contentful.com and
+      // datadoghq.com both answer their MCP path with {"error":"invalid_token"} and answer a
+      // path nobody registered with 404, which is a routed endpoint asking for credentials,
+      // but neither sends WWW-Authenticate, so all three shapes above missed them.
+      const origin = new URL(candidates[index]).origin
+      // A host called mcp.<domain> exists because somebody built one. When every path on it
+      // demands credentials, that is what an MCP server behind OAuth looks like, which is the
+      // exemption mcp.sentry.dev already had through its WWW-Authenticate header. contentful.com
+      // answers {"error":"invalid_token"} on every path of mcp.contentful.com and sends no such
+      // header, and we published them as having no server while our own OAuth check was reading
+      // metadata off that very host.
+      const dedicatedHost = new URL(origin).hostname.startsWith('mcp.')
+      const demandsCredentials =
+        (got.status === 401 || got.status === 403) &&
+        (dedicatedHost || got.status !== nonsenseStatus.get(origin))
+      if (!authenticating && !wrongMethod && !speaksJson && !demandsCredentials) return null
       return {
         url: candidates[index],
         status: got.status,
-        evidence: authenticating ? ('challenges' as const) : wrongMethod ? ('rejects-get' as const) : ('answers-json' as const),
+        evidence:
+          authenticating || demandsCredentials
+            ? ('challenges' as const)
+            : wrongMethod
+              ? ('rejects-get' as const)
+              : ('answers-json' as const),
       }
     })
     .filter((endpoint): endpoint is McpEndpoint => endpoint !== null)
