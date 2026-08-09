@@ -291,15 +291,25 @@ function decoded(bytes: Uint8Array, encoding: string | undefined): Uint8Array {
   const how = (encoding ?? '').toLowerCase()
   // Sync flush rather than a finished stream: we cap what we read, so a large sitemap arrives
   // cut in the middle, and a strict inflate throws away everything we did receive.
-  const partial = { finishFlush: zlibConstants.Z_SYNC_FLUSH }
+  //
+  // maxOutputLength is the part that matters for safety. Capping the bytes we read off the
+  // socket says nothing about what they expand to: 389 kB of gzipped zeros expands to 400 MB,
+  // measured, in one synchronous call on the thread that serves every other request. Every
+  // domain we scan chooses its own Content-Encoding, and anyone can point the public scan
+  // endpoint at a host they control, so this was a remote out-of-memory anybody could fire.
+  const limits = { finishFlush: zlibConstants.Z_SYNC_FLUSH, maxOutputLength: MAX_BYTES }
   try {
-    if (how.includes('gzip')) return gunzipSync(bytes, partial)
-    if (how.includes('deflate')) return inflateSync(bytes, partial)
+    if (how.includes('gzip')) return gunzipSync(bytes, limits)
+    if (how.includes('deflate')) return inflateSync(bytes, limits)
     if (how.includes('br')) {
-      return brotliDecompressSync(bytes, { finishFlush: zlibConstants.BROTLI_OPERATION_FLUSH })
+      return brotliDecompressSync(bytes, {
+        finishFlush: zlibConstants.BROTLI_OPERATION_FLUSH,
+        maxOutputLength: MAX_BYTES,
+      })
     }
   } catch {
-    // Not decompressible at all, which is what a mislabelled body looks like.
+    // Either not decompressible at all, which is what a mislabelled body looks like, or over
+    // the cap, which is a body we would have truncated anyway. Both end as bytes we cannot read.
   }
   return bytes
 }
