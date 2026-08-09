@@ -675,19 +675,23 @@ async function pickNamedPackage(names: string[], vendor: Vendor): Promise<string
     rank: Math.max(shapeRank(name, vendor) - 2, 0),
     downloads: await weeklyDownloads(name),
   }))
-  ranked.sort((a, b) => a.rank - b.rank || b.downloads - a.downloads)
+  // Usage only decides when every name was priced. With one lookup refused, the counts in hand
+  // are not comparable with the ones missing, so shape alone settles it and the page's own order
+  // holds the rest, which is the same answer whether or not the registry refuses again.
+  const priced = ranked.every((entry) => entry.downloads !== null)
+  ranked.sort((a, b) => a.rank - b.rank || (priced ? (b.downloads ?? 0) - (a.downloads ?? 0) : 0))
   return ranked[0].name
 }
 
-async function weeklyDownloads(name: string): Promise<number> {
-  const stats = await fetchUrl(`https://api.npmjs.org/downloads/point/last-week/${encodeURIComponent(name)}`, {
-    accept: 'application/json',
-  })
+/** Null when the registry refused the lookup. A 404 here is a package with no downloads recorded. */
+async function weeklyDownloads(name: string): Promise<number | null> {
+  const stats = await askRegistry(`https://api.npmjs.org/downloads/point/last-week/${encodeURIComponent(name)}`)
+  if (stats === null) return null
   if (!stats.ok) return 0
   try {
     return (JSON.parse(stats.body) as { downloads?: number }).downloads ?? 0
   } catch {
-    return 0
+    return null
   }
 }
 
@@ -859,17 +863,45 @@ function orgIsVendor(org: string, vendor: Vendor): boolean {
 /** Whether a searched name can carry a point. Anything we cannot attribute is not returned at all. */
 export type NpmMatch = { name: string; confidence: 'strong' }
 
-async function searchRegistry(text: string, size = 20): Promise<NpmSearchHit[]> {
-  const got = await fetchUrl(`https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(text)}&size=${size}`, {
-    accept: 'application/json',
-  })
-  if (!got.ok) return []
+/**
+ * A registry answer we never got, told apart from an answer of nothing. Attribution fires up to
+ * two dozen requests at npmjs.org inside one phase and the registry rate limits the burst, so
+ * `!ok` on this host is routinely us rather than the vendor: a refused search used to arrive as
+ * a shelf with no packages on it and a refused download lookup as a package nobody installs.
+ *
+ * Asked once. Retrying a refusal was the obvious answer and it is the wrong one: the refusals
+ * come from sustained load rather than from one burst, so a second and third ask feed the thing
+ * that is refusing. Two retries with backoff took ten scans of mapbox.com from 8 refused
+ * requests to 182, measured, and answered fewer of them.
+ */
+async function askRegistry(url: string): Promise<Fetched | null> {
+  const got = await fetchUrl(url, { accept: 'application/json' })
+  // 404 is the registry answering: no such package, or no downloads recorded for it.
+  return got.ok || got.status === 404 ? got : null
+}
+
+/** Null when the registry refused to answer, which is not the same as a query with no hits. */
+async function searchRegistry(text: string, size = 20): Promise<NpmSearchHit[] | null> {
+  const got = await askRegistry(`https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(text)}&size=${size}`)
+  if (!got?.ok) return null
   try {
     return (JSON.parse(got.body) as { objects?: NpmSearchHit[] }).objects ?? []
   } catch {
-    return []
+    return null
   }
 }
+
+/**
+ * The tiebreak for the two places below whose input arrives in whatever order the registry
+ * answered in. Everything downstream of them is sorted from an order that is already total, and
+ * a stable sort keeps it: adding a name key there overrides real signal rather than a coin toss,
+ * and it moved mapbox.com onto @mapbox/mapbox-gl-supported, which loses to mapbox-gl on installs
+ * and only wins on the '@' sorting before an 'm'.
+ *
+ * Codepoint order rather than localeCompare: package names are ASCII and the answer must not
+ * depend on the machine's locale.
+ */
+const compareNames = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0)
 
 const SDK_WORD = /^(sdk|client|node|js|api|core|browser|server)$/
 const SDK_SHAPE = /(^|[-.])(sdk|client|node|js|api|core)([-.]|$)/
@@ -1128,8 +1160,10 @@ function vendorMaintainers(candidates: Candidate[], vendor: Vendor): string[] {
     }
   }
   // More than one, because a company's packages are split across its people: the account that
-  // publishes highlight.io's framework bindings does not publish highlight.run.
-  return [...handles].slice(0, 3)
+  // publishes highlight.io's framework bindings does not publish highlight.run. Sorted, because
+  // which three shelves get read decides the candidate pool, and unsorted they arrive in the
+  // order the registry answered the searches in.
+  return [...handles].sort(compareNames).slice(0, 3)
 }
 
 /**
@@ -1154,9 +1188,12 @@ export async function searchNpmForDomain(
 
   const queries = [domain, ...vendor.aliases, ...shorterNamesInRepos(siteRepos, vendor)]
   const searches = await inParallel([...new Set(queries)], (query) => searchRegistry(query))
+  // Ranking what did come back would answer off part of the shelf, and which part is whichever
+  // request the registry chose to refuse. That is not a weaker finding about the vendor.
+  if (searches.some((hits) => hits === null)) return null
 
   const byName = new Map<string, Candidate>()
-  for (const hit of searches.flat()) {
+  for (const hit of searches.flatMap((hits) => hits ?? [])) {
     if (hit.package.name === reject) continue
     if (isPlaceholder(hit.package.name) || byName.has(hit.package.name)) continue
     byName.set(hit.package.name, candidateOf(hit.package))
@@ -1174,7 +1211,8 @@ export async function searchNpmForDomain(
 
   const handles = vendorMaintainers(owned, vendor)
   const shelves = await inParallel(handles, (handle) => searchRegistry(`maintainer:${handle}`, 50))
-  for (const hit of shelves.flat()) {
+  if (shelves.some((hits) => hits === null)) return null
+  for (const hit of shelves.flatMap((hits) => hits ?? [])) {
     if (isPlaceholder(hit.package.name) || byName.has(hit.package.name)) continue
     const candidate = candidateOf(hit.package)
     byName.set(candidate.name, candidate)
@@ -1198,7 +1236,7 @@ export async function searchNpmForDomain(
   // developer installs is sometimes a step down the name ranking from a sibling nobody
   // installs, and the download counts are the only thing that says so.
   const shortlist = [...owned]
-    .sort((a, b) => cheapRank(a) - cheapRank(b) || a.name.length - b.name.length)
+    .sort((a, b) => cheapRank(a) - cheapRank(b) || a.name.length - b.name.length || compareNames(a.name, b.name))
     .slice(0, MOST_DOWNLOAD_LOOKUPS)
 
   const ranked = await inParallel(shortlist, async (candidate) => ({
@@ -1206,7 +1244,10 @@ export async function searchNpmForDomain(
     downloads: await weeklyDownloads(candidate.name),
   }))
 
-  const plausible = ranked.filter((entry) => looksLikeTheirProduct(entry.candidate, vendor, entry.downloads))
+  const priced = ranked.filter(
+    (entry): entry is { candidate: Candidate; downloads: number } => entry.downloads !== null,
+  )
+  const plausible = priced.filter((entry) => looksLikeTheirProduct(entry.candidate, vendor, entry.downloads))
   if (plausible.length === 0) return null
 
   // The cheap signals decide and real usage breaks their ties. Ranking on installs first hands
@@ -1217,6 +1258,13 @@ export async function searchNpmForDomain(
     (a, b) => cheapRank(a.candidate) - cheapRank(b.candidate) || b.downloads - a.downloads,
   )
   const winner = (await settledOnUsage(ordered, vendor)) ?? ordered[0]
+  // A candidate the registry would not price could have won: the only thing between it and the
+  // winner is a request that was refused. mapbox.com was published as @mapbox/mapbox-gl-supported
+  // on the scan where mapbox-gl's own lookup came back 429 and as mapbox-gl on the scan before
+  // it, off the same page, because a refused lookup counted as a package nobody installs.
+  if (ranked.some((entry) => entry.downloads === null && cheapRank(entry.candidate) <= cheapRank(winner.candidate))) {
+    return null
+  }
   const contenders = ordered
     .filter(
       (entry) =>

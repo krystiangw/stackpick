@@ -11,6 +11,13 @@
  *
  *   pnpm attribution snapshot <dir>
  *   pnpm attribution replay <dir> [out.json]
+ *
+ * ONLY=a.com,b.com restricts either pass to those domains.
+ *
+ * REPLAY_SHUFFLE=<seed> permutes the hit list inside every registry search answer without
+ * touching its content, which is the one thing REGISTRY_CACHE otherwise hides: the registry
+ * returns the same packages in a different order per call, and two replays that agree only
+ * because they were handed the same order prove nothing about the answer being stable.
  */
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -27,8 +34,12 @@ type Snapshot = {
   docsPage: Fetched | null
 }
 
-const domains = [...new Set(CATEGORIES.flatMap((category) => category.domains))]
+const only = new Set((process.env.ONLY ?? '').split(',').filter(Boolean))
+const domains = [...new Set(CATEGORIES.flatMap((category) => category.domains))].filter(
+  (domain) => only.size === 0 || only.has(domain),
+)
 const gapMs = Number(process.env.REPLAY_GAP_MS ?? 0)
+const shuffleSeed = process.env.REPLAY_SHUFFLE ?? ''
 const [mode, dir, out] = process.argv.slice(2)
 if (!mode || !dir) {
   console.error('usage: pnpm attribution snapshot|replay <dir> [out.json]')
@@ -51,6 +62,26 @@ const REGISTRY_HOSTS = /^https:\/\/(registry\.npmjs\.org|api\.npmjs\.org|data\.j
 /** What the corpus asked the registry for, which is the cost of attribution however fast it is. */
 let registryRequests = 0
 
+/** Same packages, different arrival order, and the same order every time for a given seed. */
+function shuffledSearch(url: string, body: string): string {
+  if (!shuffleSeed || !url.includes('/-/v1/search')) return body
+  let parsed: { objects?: unknown[] }
+  try {
+    parsed = JSON.parse(body) as { objects?: unknown[] }
+  } catch {
+    return body
+  }
+  if (!Array.isArray(parsed.objects)) return body
+  // Keyed on the seed and the query, so one seed permutes every query differently and a rerun
+  // of that seed reproduces the run exactly.
+  const keyed = parsed.objects.map((object, index) => ({
+    object,
+    key: createHash('sha1').update(`${shuffleSeed}|${url}|${index}`).digest('hex'),
+  }))
+  keyed.sort((a, b) => a.key.localeCompare(b.key))
+  return JSON.stringify({ ...parsed, objects: keyed.map((entry) => entry.object) })
+}
+
 /**
  * Every registry request is counted, and answers are kept on disk when REGISTRY_CACHE names a
  * directory. The registry answers 429 to a replay of the whole corpus however slowly it is
@@ -70,7 +101,7 @@ function watchRegistryTraffic(dir: string | null): void {
     const file = dir === null ? null : join(dir, `${createHash('sha1').update(`${method} ${url}`).digest('hex')}.json`)
     if (file !== null && existsSync(file)) {
       const held = JSON.parse(readFileSync(file, 'utf8')) as { status: number; headers: Record<string, string>; body: string }
-      return new Response(held.body, { status: held.status, headers: held.headers })
+      return new Response(shuffledSearch(url, held.body), { status: held.status, headers: held.headers })
     }
     // Without the caller's abort signal: waiting out a 429 takes longer than the 8 s a scan
     // allows one request, and an aborted retry reads as a vendor with no package again.
@@ -89,7 +120,7 @@ function watchRegistryTraffic(dir: string | null): void {
         [...answer.headers].filter(([name]) => name !== 'content-encoding' && name !== 'content-length'),
       )
       if (file !== null) writeFileSync(file, JSON.stringify({ status: answer.status, headers, body }))
-      return new Response(body, { status: answer.status, headers })
+      return new Response(shuffledSearch(url, body), { status: answer.status, headers })
     }
   }
 }

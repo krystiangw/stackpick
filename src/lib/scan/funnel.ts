@@ -512,11 +512,20 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpo
       // read a live server as absent when its GET handler differed from its POST handler.
       fetchUrl(url, handshake),
     ),
-    fetchUrl(`https://mcp-stackpick-control-8f3a1c.${domain}`, { accept: 'application/json' }),
+    // The handshake, not a GET, because a control only discredits a candidate it was asked the
+    // same way as. datadoghq.com's edge answers an unregistered subdomain 401 to a GET and 404
+    // to this POST, so the GET arm declared a wildcard that the candidates never met and threw
+    // away the 401 at mcp.datadoghq.com/v1/mcp, a live server, on the strength of it.
+    fetchUrl(`https://mcp-stackpick-control-8f3a1c.${domain}`, handshake),
   ])
   // A wildcard host behind an auth proxy answers 401 to anything, including a name nobody
   // registered. Then every domain would "run an MCP server".
-  const answersAnything = control.status === 401 || control.status === 405 || control.ok
+  const wildcardAnswers = control.status === 401 || control.status === 405 || control.ok
+  // Only against candidates that answered the same way it did. As one boolean over every status
+  // it discarded mcp.chargebee.com, which challenges with a WWW-Authenticate Bearer naming its
+  // own oauth-protected-resource, because an unregistered host on the same domain answered a
+  // POST with 405. A wildcard proves nothing about a status it did not itself return.
+  const discreditedByWildcard = (got: Fetched) => wildcardAnswers && got.status === control.status
 
   // A handshake that comes back with a protocol version is proof no wildcard can fake, so it
   // outranks the control probe. Without it, contentful.com's wildcard hid a server that answers.
@@ -536,7 +545,7 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpo
         .filter((url, index) => {
           const got = results[index]
           if (got.status === 0 || completesHandshake(got.body)) return false
-          return !answersAnything || fromCard.includes(url)
+          return !discreditedByWildcard(got) || fromCard.includes(url)
         })
         .map((url) => new URL(url).origin),
     ),
@@ -551,7 +560,7 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpo
       }
       // The wildcard probe only discredits addresses we guessed. An address the vendor named in
       // its own card is not a guess, and sentry.io's card points at another domain entirely.
-      if (answersAnything && !fromCard.includes(candidates[index])) return null
+      if (discreditedByWildcard(got) && !fromCard.includes(candidates[index])) return null
       const authenticating = got.status === 401 && Boolean(got.headers['www-authenticate'])
       // An unrouted path answering the same way means the answer was about the site, not about
       // MCP. Exempting the auth challenge is deliberate: a host that gates every path behind
