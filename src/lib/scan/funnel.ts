@@ -192,19 +192,71 @@ const AUTH_SUBDOMAINS = ['auth', 'login', 'accounts', 'id', 'oauth']
 // there, so the host that had the answer was the one host we never asked.
 const RESOURCE_SUBDOMAINS = ['api']
 /**
- * One path, not the usual two: adding this host cost telnyx.com four checks to the 21 second
- * budget. The authorization-server document is where datadoghq.com and contentful.com publish
- * the registration_endpoint we were missing, so it is the one worth the request.
+ * The authorization-server document is where datadoghq.com and contentful.com publish the
+ * registration_endpoint we were missing, and the protected-resource document is where
+ * chargebee.com and logto.io name the server that actually holds it. Asking only the first
+ * left two identity vendors reading that they publish no OAuth metadata anywhere.
  */
-const MCP_OAUTH_PATH = '/.well-known/oauth-authorization-server'
+const MCP_OAUTH_PATHS = ['/.well-known/oauth-authorization-server', '/.well-known/oauth-protected-resource']
 
 type OauthTarget = { origin: string; paths: string[] }
 type OauthProbe = { metadataPublished: boolean; dynamicClientRegistration: boolean; origins: string[] }
 
+/**
+ * RFC 9728 makes a protected resource point at the authorization servers that guard it, and both
+ * chargebee.com and logto.io publish that pointer on mcp.<domain> while the server itself is
+ * somewhere else entirely. Following it is the difference between "no OAuth metadata anywhere",
+ * which is what we told two identity vendors, and reading the document they wrote for us.
+ */
+function serversNamedIn(body: string): string[] {
+  try {
+    const named = (JSON.parse(body) as { authorization_servers?: unknown }).authorization_servers
+    if (!Array.isArray(named)) return []
+    return named.filter((url): url is string => typeof url === 'string' && /^https:\/\//.test(url)).slice(0, 3)
+  } catch {
+    return []
+  }
+}
+
+/**
+ * An issuer with a path keeps its metadata under a path-suffixed well-known, not at the root of
+ * the host: chargebee's sits at /.well-known/oauth-authorization-server/mcp. Both forms are
+ * asked because deployments in the wild use both.
+ */
+function metadataUrlsFor(issuer: string): string[] {
+  try {
+    const url = new URL(issuer)
+    const path = url.pathname.replace(/\/$/, '')
+    const roots = ['/.well-known/oauth-authorization-server', '/.well-known/openid-configuration']
+    return [
+      ...roots.map((root) => `${url.origin}${root}`),
+      // Both conventions are in the wild: chargebee keeps the path after the well-known segment
+      // and logto keeps it before, at auth.logto.io/oidc/.well-known/openid-configuration.
+      ...(path ? roots.map((root) => `${url.origin}${root}${path}`) : []),
+      ...(path ? roots.map((root) => `${url.origin}${path}${root}`) : []),
+    ]
+  } catch {
+    return []
+  }
+}
+
 async function probeOauthOrigins(targets: OauthTarget[]): Promise<OauthProbe> {
   const origins = targets.map((target) => target.origin)
   const probes = targets.flatMap((target) => target.paths.map((path) => `${target.origin}${path}`))
-  const results = await inParallel(probes, (url) => fetchUrl(url, { accept: 'application/json' }))
+  const firstPass = await inParallel(probes, (url) => fetchUrl(url, { accept: 'application/json' }))
+
+  const followed = [
+    ...new Set(
+      firstPass
+        .filter((got) => got.ok && !looksLikeHtml(got))
+        .flatMap((got) => serversNamedIn(got.body))
+        .flatMap(metadataUrlsFor),
+    ),
+  ].filter((url) => !probes.includes(url))
+  const results = [
+    ...firstPass,
+    ...(followed.length > 0 ? await inParallel(followed, (url) => fetchUrl(url, { accept: 'application/json' })) : []),
+  ]
 
   let metadataPublished = false
   for (const got of results) {
@@ -249,14 +301,22 @@ function oauthTargetsKnownUpFront(domain: string, site: string, signupUrl: strin
     })),
     ...RESOURCE_SUBDOMAINS.map((prefix) => ({
       origin: `https://${prefix}.${domain}`,
-      paths: ['/.well-known/oauth-protected-resource', '/.well-known/oauth-authorization-server'],
+      // openid-configuration too: polar.sh publishes its registration_endpoint there and
+      // nowhere else, and we told them they publish no OAuth metadata at all.
+      paths: [
+        '/.well-known/oauth-protected-resource',
+        '/.well-known/oauth-authorization-server',
+        '/.well-known/openid-configuration',
+      ],
     })),
   ].filter((candidate) => !named.includes(candidate.origin))
 
   return [
     ...named.map((origin) => ({ origin, paths: OAUTH_METADATA_PATHS })),
     ...guessed,
-    ...(named.includes(`https://mcp.${domain}`) ? [] : [{ origin: `https://mcp.${domain}`, paths: [MCP_OAUTH_PATH] }]),
+    ...(named.includes(`https://mcp.${domain}`)
+      ? []
+      : [{ origin: `https://mcp.${domain}`, paths: MCP_OAUTH_PATHS }]),
   ]
 }
 
