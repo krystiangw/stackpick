@@ -7,10 +7,10 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 
 ## Stan na teraz, w dziesięciu liniach
 
-- Formuła **6.2**, korpus **156 domen w 24 kategoriach**, reseed 156/156 bez błędów.
+- Formuła **7.2**, korpus **156 domen w 24 kategoriach**, reseed 156/156 bez błędów.
 - `npm run audit`: **0 sprzeczności w wierszach, 10 liczb ze stron zgodnych z danymi**.
-- Dwa przebiegi adwersaryjne przeciw realnym żądaniom: **16,7 procent błędu na 5.2, 2,2 procent
-  na 5.7**. Wszystkie ich znaleziska zamknięte poza jednym (`statsig.com` dopasowuje stub npm).
+- Cztery przebiegi adwersaryjne przeciw realnym żądaniom: **16,7 → 2,2 → 3,9 → 2,0 procent
+  błędu**. Wszystkie ich znaleziska zamknięte poza pozycjami z listy niżej.
 - Znalezisko rynkowe: **41 z 54 vendorów z żywym MCP publikuje RFC 7591**, poza tą grupą 23 ze 102.
   DCR przyszło z wymogu specyfikacji MCP, nie z decyzji o wpuszczeniu agentów. **36 z 54 nadal
   nie dokumentuje żadnej drogi do klucza.**
@@ -104,9 +104,9 @@ to zmiana po ich stronie, nie nasza, ale pokazuje, że próg jest ostry.
 
 ## Co zostało z audytów, w kolejności wagi
 
-Stan 2026-08-09 po trzech przebiegach adwersaryjnych (16,7 → 2,2 → 3,9 procent błędu) i po
-zamknięciu wszystkiego, co one znalazły poza pozycjami niżej. Wszystko powyżej tej listy jest
-zrobione i opisane w dzienniku rund.
+Stan 2026-08-09 po **czterech** przebiegach adwersaryjnych (16,7 → 2,2 → 3,9 → **2,0 procent
+błędu**, 11 błędów na 547 werdyktów) i po zamknięciu wszystkiego, co one znalazły poza pozycjami
+niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
 
 1. **Blokery po stronie Krystiana** (pełny opis w sekcji „Zablokowane na Krystianie"): domena,
    zweryfikowany nadawca w Resend, ścieżka zakupu inna niż `mailto:` na prywatnego Gmaila,
@@ -140,11 +140,28 @@ zrobione i opisane w dzienniku rund.
    flagowy zamiast scoped SDK z typami. Świadoma decyzja subagenta, opisana w rundzie 44:
    przełączenie byłoby wybraniem pakietu pod odpowiedź, którą chcemy opublikować. Do rewizji
    tylko wtedy, gdy vendor to zakwestionuje.
+5. ~~**Czwarty przebieg adwersaryjny.**~~ **zrobione 2026-08-09 (7.2), 2,0 procent błędu.**
+   Dowiedzione: sondowanie punktu wejścia (156/156 w obie strony) i kanoniczna ścieżka cennika
+   (11/11). Niedowiedziona: atrybucja npm, cztery z czterech jej błędów w logice, którą
+   przepisywaliśmy. Wszystkie jedenaście naprawione, patrz runda 50.
 
 ## Następne kroki merytoryczne
 
-- **Czwarty przebieg adwersaryjny** po zestawie zmian 6.4 do 6.9 (punkt wejścia, kontrolka MCP,
-  atrybucja npm, limit fazy npm, budżet 27 s). Nic z tego nie było jeszcze atakowane niezależnie.
+- **Piąty przebieg adwersaryjny** po zestawie 7.2 (wyzwanie kontra limit, wzorce darmowego progu,
+  atrybucja npm po dwóch korektach, dowody MCP, nazywanie adresu, który odpowiedział). Baseline do
+  pobicia: **2,0 procent**. Szczególnie warta ataku jest reguła `orgCouldBeVendor`, bo jest nowa
+  i już raz przestrzeliła.
+- **Bramka mailowa na wyniku skanu.** Z audytu cenowego: jedyny czysty precedens darmowego
+  punktowanego audytu zasilającego płatny biznes (HubSpot Website Grader) bramkuje wynik mailem.
+  Grader'y, które nie zbierają nic (SSL Labs, Mozilla Observatory), są jawnie niekomercyjne.
+  Żadna cena nie skonwertuje leada, którego nie złapaliśmy. **To jest po stronie agenta.**
+- **Pole własności w korpusie** (independent / acquired / PE / OSS / public). Z audytu ICP:
+  wynik nie koreluje z wielkością (57 większych vendorów ma średnią 0,688 przy średniej korpusu
+  0,637), tylko z własnością i fazą życia. Osiem przejętych lub pod PE ma 0,472, pięć bez
+  roadmapy 0,378. Bez tego pola lista targetów prowadzi prosto do wygaszanych produktów.
+- **Raport „jedna rzecz dzieli was od drzwi"** na 61 dostawcach (40 oblewa wyłącznie rejestrację).
+  Z audytu badge'a: to lepsza dystrybucja niż znaczek i nie wymaga licencji, wygasania ani
+  cofania marki.
 - **Trzy reguły, które ten projekt wypracował bólem i które trzeba stosować przy każdym nowym
   checku czytającym cudzy serwer:**
   1. Tylko **404** znaczy „nie ma". Każda inna odmowa znaczy „nie przeczytaliśmy". Musiała być
@@ -154,6 +171,53 @@ zrobione i opisane w dzienniku rund.
      jednym boolu.
   3. **Naprawa dokładająca żądania zabiera budżet gdzie indziej.** Pytaj nie tylko „czy to
      poprawne", ale „co przez to wypadnie". `sentry.io` stracił sześć checków na naprawie npm.
+  4. **Zacieśnienie mierzy się na całym korpusie, nie na przypadku, który je wywołał.** Reguła
+     o organizacji na GitHubie wyrzuciła cztery prawdziwe pakiety, żeby złapać jeden fałszywy,
+     i widać to było dopiero w diffie 156 wierszy. Dotyczy każdej reguły dopasowującej nazwy.
+  5. **Werdykt może być dobry, a zdanie fałszywe.** Czwarty przebieg znalazł sześć takich przy
+     MCP. Nic w liczbach nie wygląda źle, więc łapie to tylko czytanie zdań obok dowodów.
+
+## Runda 2026-08-09 (50): czwarty przebieg adwersaryjny i formuła 7.2
+
+**2,0 procent błędu, 11 na 547 werdyktów**, wobec 3,9 na 6.3. Dowiedzione: sondowanie punktu
+wejścia (156/156, obie strony ataku) i kanoniczna ścieżka cennika (11/11). Niedowiedziona:
+atrybucja npm, bo cztery z czterech jej błędów siedzą w logice, którą ten przebieg miał
+sprawdzić.
+
+**Najważniejsze znalezisko nie było błędem werdyktu, tylko naszą metodologią.** Reguła „429 to
+zawsze nasz ruch" prała najbardziej wrogą agentom konfigurację w korpusie: `pandadoc.com` i
+`defer.run` odpowiadają 429 z `x-vercel-mitigated: challenge`, tokenem wyzwania i bez
+`Retry-After`, czyli Vercel Attack Challenge Mode. Wyjmowaliśmy im za to sześć checków z
+mianownika. Rozróżnienie idzie teraz po znaczniku wyzwania, nie po statusie: przeglądarka
+rozwiązuje je niewidocznie, klient HTTP nigdy, więc to najostrzejsza odpowiedź na pytanie,
+które ten skan zadaje. Prawdziwy rate limit dalej czyta się jako nasza wina.
+
+Reszta naprawiona: cztery firmy czytane jako „brak darmowego progu", bo wzorzec wymagał liczby
+dni przy „free trial"; `usefathom.com` z cudzym pakietem (`fathom-typescript` należy do
+fathom.video); i sześć zdań o MCP opisujących pomiar, którego nie było (wymówka o rozmiarze
+pliku zasłaniająca rozstrzygniętą sondę, 405 ze strony marketingowej, nazywanie adresu, o który
+pytaliśmy, zamiast tego, który odpowiedział).
+
+**Diff korpusu 7.1 → 7.2, i to on złapał moje własne przestrzelenie:**
+
+```
+ 12  mcp_present            unmeasured -> fail    <- wymówka zdjęta z 12 wierszy
+  3  answers_plain_request  unmeasured -> fail    <- ściany wyzwań policzone
+  4  self_serve             fail/unmeas -> pass   <- wzorce darmowego progu
+  3  typed_package          pass -> unmeasured    <- REGRESJA, moja
+  1  typed_package          pass -> fail          <- REGRESJA, moja
+```
+
+Reguła o organizacji na GitHubie wyrzuciła `@dropbox/sign`, `@lemonsqueezy/lemonsqueezy.js`,
+`@savvycal/appointments-core` i `@statsig/js-client`, żeby złapać jeden fałszywy `fathom-typescript`.
+Poprawka: pakiet we własnym scope dostawcy nigdy nie jest kwestionowany tym, gdzie kod jest
+lustrzany, a organizacja liczy się tylko w kierunku **skrócenia** nazwy (`dropboxsign` publikuje
+z `github.com/dropbox`), nigdy wydłużenia, bo nazwa plus drugie słowo to sposób nazywania firmy
+siostrzanej, a nie skracania własnej.
+
+**Trzy audyty strategii cenowej** (komparatory rynkowe, badge, ICP i marża) opisane w sekcji
+„Decyzje po stronie Krystiana". Najtwardszy wniosek: problem, który mierzy darmowy skan, jest
+**jednorazowy**, więc retainer za ponowny pomiar tych samych checków nie jest uczciwy.
 
 ## Stare notatki badawcze (historyczne, sprzed rundy 12)
 
