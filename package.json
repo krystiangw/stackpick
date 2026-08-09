@@ -10,7 +10,8 @@
     "scan": "tsx scripts/scan-cli.ts",
     "audit": "tsx scripts/audit-corpus.mts",
     "attribution": "tsx scripts/npm-attribution.mts",
-    "reseed": "bash scripts/reseed.sh"
+    "reseed": "bash scripts/reseed.sh",
+    "targets": "tsx scripts/targets.mts"
   },
   "dependencies": {
     "mongodb": "^7.5.0",
