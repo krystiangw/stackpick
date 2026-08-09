@@ -529,9 +529,18 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpo
 
   // A handshake that comes back with a protocol version is proof no wildcard can fake, so it
   // outranks the control probe. Without it, contentful.com's wildcard hid a server that answers.
-  /** Kept separate so the discard rule above and the evidence rule below cannot drift apart. */
+  /**
+   * Kept separate so the discard rule above and the evidence rule below cannot drift apart.
+   *
+   * An HTML body is the tell. Without a WWW-Authenticate header, mcp.sentry.io answers 6,698
+   * bytes of Cloudflare interstitial and mcp.cloudinary.com 372 bytes of the same shape, while
+   * a server that wants credentials answers in the protocol it speaks: contentful.com sends 79
+   * bytes of JSON and datadoghq.com 27. We were reading a bot wall as an invitation.
+   */
   const dedicatedHostChallenge = (got: Fetched, url: string) =>
-    (got.status === 401 || got.status === 403) && new URL(url).hostname.startsWith('mcp.')
+    (got.status === 401 || got.status === 403) &&
+    new URL(url).hostname.startsWith('mcp.') &&
+    (Boolean(got.headers['www-authenticate']) || !looksLikeHtml(got))
 
   const completesHandshake = (body: string) =>
     /"protocolVersion"|"serverInfo"/.test(body) && /"jsonrpc"|"result"/.test(body)
@@ -580,9 +589,10 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpEndpo
       // answers {"error":"invalid_token"} on every path of mcp.contentful.com and sends no such
       // header, and we published them as having no server while our own OAuth check was reading
       // metadata off that very host.
-      const dedicatedHost = new URL(origin).hostname.startsWith('mcp.')
+      const dedicatedHost = dedicatedHostChallenge(got, candidates[index])
       const demandsCredentials =
         (got.status === 401 || got.status === 403) &&
+        !looksLikeHtml(got) &&
         (dedicatedHost || got.status !== nonsenseStatus.get(origin))
       if (!authenticating && !wrongMethod && !speaksJson && !demandsCredentials) return null
       return {
