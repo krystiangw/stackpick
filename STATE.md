@@ -1472,3 +1472,45 @@ zachowują prawdziwe pliki, pozostałe ruchy to znane wahania (rejestr npm, bram
 **Stan:** korpus 156/156 na 5.7, audyt czysty w obu wymiarach. Puszczony **drugi przebieg
 adwersaryjny** na sześć napraw z pierwszego, z pytaniem wprost, które z nich są udowodnione,
 a które nie, i z bazą porównawczą 16,7 procent błędu.
+
+## Runda 2026-08-09 (trzydziesta siódma): drugi przebieg adwersaryjny, 16,7 → 2,2 procent
+
+Subagent przetestował **675 twierdzeń na formule 5.7 i obalił 15**. Trzy naprawy z pierwszego
+audytu uznał za **udowodnione** (`robots.txt` odrzucony kontra nieobecny: 156 na 156 z pełnym
+spisem i własnym parserem; brzmienie `Crawl-delay`: 152 na 152, w tym trzy pliki z dyrektywą
+przed pierwszym `User-agent`, która nie należy do żadnej grupy; marka na cudzej witrynie: 13 na
+13 po sprawdzeniu 12 innych przejętych albo przemianowanych vendorów). Dwie za nieudowodnione.
+
+**Dziewięć z piętnastu błędów siedziało w jednym checku.**
+
+- **Jedna przestrzeń nazw wyłączała cały check punktu wejścia.** `sentry.io` ma
+  `/.well-known/mcp.json` o rozmiarze **106 bajtów prawdziwego JSON-a** przy kontrolce 20 402
+  bajtów, a ten sam skan czytał ten plik, żeby znaleźć ich serwer MCP.
+- **Kontrolka nie wystarcza w żadną stronę.** `sentry.io` przy zwykłym `Accept` oddaje 20 402
+  bajty HTML, a przy `text/markdown` **tę samą stronę 976 bajtów na każdą ścieżkę**, więc
+  pojedyncza próbka może trafić w inny wariant niż sondy. Ciało serwowane pod **więcej niż jedną
+  z naszych dziewięciu ścieżek jest z definicji szkieletem**, niezależnie od kontrolki.
+- **„None of the 9 known agent entry paths answer" było fałszem** na każdej witrynie serwującej
+  szkielet na nieznane ścieżki, czyli na większości. Wszystkie dziewięć odpowiada; żadna nie
+  odpowiada plikiem.
+- **Dopasowanie free tier szukało słów „free tier"** zamiast tego, co pisze tabela cennika.
+  Siedem prawdziwych darmowych poziomów opisywaliśmy jako nieistniejące: „Starter Free"
+  (polar.sh), „Forever Free" (saleor.io), „Sandbox Free" (pusher.com), pierwsze 10 000 minut
+  za darmo co miesiąc (agora.io), „free and open source" (oramasearch), darmowe modele
+  (openrouter.ai), 14-dniowy trial (crowdin.com). **Świadomie nie liczymy** samych „Start Free
+  Trial" i „Get started for free": to przycisk w nawigacji witryn bez darmowego poziomu, i
+  `here.com` oraz `commercetools.com` zostają na porażce dokładnie na tym rozróżnieniu.
+
+Reseed 5.8: **17 domen w górę, 3 w dół**, średnia 9,08.
+
+**Budżet skanu 21 → 25 s.** `telnyx.com` kończy tu w 17 sekund i regularnie kończył się na ścianie
+na dyno, tracąc cztery checki z powodu muru, a nie czegokolwiek o vendorze. Ta sama ściana
+zamieniała odpytania rejestru npm w „nie umiemy wskazać waszego pakietu" na domenach, których
+pakiet znaliśmy godzinę wcześniej (shopify, bigcommerce, workos, axiom). Heroku zabija ciche
+żądanie po 30 s, a ocenienie raportu trwa dziesiątki milisekund. Zweryfikowane na produkcji:
+telnyx 15,6 s bez obcięcia.
+
+**Zostało z drugiego audytu:** `zenrows.com` oceniany na stronie o monitorowaniu cen konkurencji
+i `plaid.com` na dokumentacyjnej stronie o rozliczeniach (oba to discovery, nie treść), oraz
+łańcuch OAuth: nie podążamy za wskaźnikiem `authorization_servers` i nie próbujemy ścieżkowej
+formy `/.well-known/oauth-authorization-server/<path>`, gdzie leży dokument Chargebee.
