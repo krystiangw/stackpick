@@ -1514,3 +1514,26 @@ telnyx 15,6 s bez obcięcia.
 i `plaid.com` na dokumentacyjnej stronie o rozliczeniach (oba to discovery, nie treść), oraz
 łańcuch OAuth: nie podążamy za wskaźnikiem `authorization_servers` i nie próbujemy ścieżkowej
 formy `/.well-known/oauth-authorization-server/<path>`, gdzie leży dokument Chargebee.
+
+## Runda 2026-08-09 (trzydziesta ósma): odmowa to nie nieobecność, po raz trzeci
+
+Budżet 25 s zadziałał: **żaden wiersz nie kończy się już na ścianie czasu**, telnyx wrócił z 9 na
+14, shopify i bigcommerce odzyskały pakiet. Ale diff pokazał dwa kolejne błędy tej samej rodziny.
+
+**5.9: `llms.txt` szukany zależnie od tego, gdzie wylądowało wykrywanie dokumentacji.**
+`launchdarkly.com/llms.txt` to 228 kB szkieletu HTML, a `docs.launchdarkly.com/llms.txt` to
+**200 kB prawdziwego pliku tekstowego**. Ten sam vendor dostawał punkt na jednym skanie i „nie ma
+w żadnej z 5 lokalizacji" na następnym. Konwencjonalna subdomena dokumentacji jest teraz zawsze
+jedną z lokalizacji, czyli ma to samo zabezpieczenie co czytnik sitemap.
+
+**6.0: odmowa na ścieżce punktu wejścia liczyła się jako brak pliku.** `bitmovin.com` publikuje
+prawdziwy `skill.md` o rozmiarze 9,6 kB, a ich edge odpowiada nam 403 na większość żądań,
+niedeterministycznie. Korpus wahał się więc między znalezieniem pliku a zdaniem „żadna z 9
+znanych ścieżek nie zwraca pliku". Check liczy teraz odmowy i wraca jako niemierzalny, gdy
+którakolwiek z dziewięciu została odrzucona. **To ta sama reguła co przy `robots.txt`: tylko 404
+znaczy „nie ma".** Trzeci raz dziś ta sama lekcja w innym miejscu kodu.
+
+**Nasz własny ruch zaczyna zanieczyszczać dane.** `postmark.com` odpowiada 429 przy prawie każdym
+reseedzie, `launchdarkly.com` odmawiał stron dokumentacji. Przepuściłem korpus przez te same hosty
+kilkanaście razy w jedną dobę i część wierszy mówi teraz więcej o naszym obciążeniu niż o vendorze.
+Checki zgłaszają to uczciwie jako niemierzalne, ale reseed od teraz raz na zestaw zmian.
