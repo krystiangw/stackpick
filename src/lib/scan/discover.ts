@@ -306,19 +306,33 @@ function pricingWeight(fetched: Fetched): number {
  * all have one. What they do not have is a price an agent can read from the served HTML, and that
  * is a finding about them rather than a gap in us, so the page comes back either way.
  */
+/** The path a buyer would type, as opposed to one that happens to carry the word. */
+function isCanonicalPricingPath(url: string): boolean {
+  try {
+    return /^\/(pricing|plans)\/?$/i.test(new URL(url).pathname)
+  } catch {
+    return false
+  }
+}
+
 async function bestPricing(
   candidates: (string | null)[],
 ): Promise<{ url: string; page: Fetched; pricesVisible: boolean } | null> {
   const unique = [...new Set(candidates.filter((url): url is string => Boolean(url)))].slice(0, 4)
   if (unique.length === 0) return null
   const pages = await inParallel(unique, (url) => fetchUrl(url))
-  let best: { url: string; page: Fetched; weight: number } | null = null
+  let best: { url: string; page: Fetched; weight: number; canonical: boolean } | null = null
   let fallback: { url: string; page: Fetched } | null = null
   for (const [index, page] of pages.entries()) {
     if (!page.ok) continue
     const weight = pricingWeight(page)
+    // The page at /pricing beats a deeper one that merely mentions money. zenrows.com was
+    // scored on /solutions/pricing-intelligence, a product page about monitoring competitors'
+    // prices, and plaid.com on a docs billing reference, while both publish a plain /pricing.
+    const canonical = isCanonicalPricingPath(unique[index])
     if (weight > 0) {
-      if (!best || weight > best.weight) best = { url: unique[index], page, weight }
+      const better = !best || (canonical && !best.canonical) || (canonical === best.canonical && weight > best.weight)
+      if (better) best = { url: unique[index], page, weight, canonical }
     } else if (!fallback) {
       fallback = { url: unique[index], page }
     }
