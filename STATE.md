@@ -111,11 +111,14 @@ zrobione i opisane w dzienniku rund.
 1. **Blokery po stronie Krystiana** (pełny opis w sekcji „Zablokowane na Krystianie"): domena,
    zweryfikowany nadawca w Resend, ścieżka zakupu inna niż `mailto:` na prywatnego Gmaila,
    nazwanie licencji korpusu, decyzja o modelu sprzedaży. **Agent tego nie rozstrzyga.**
-2. **Ściana bota czytana jako wyzwanie OAuth.** `mcp.sentry.io` odpowiada 403 stroną Cloudflare
-   (6 698 bajtów HTML, bit w bit jak apex), a wyjątek dla hosta `mcp.*` ufa każdemu 401/403
-   niezależnie od ciała odpowiedzi. Zaostrzenie (wymóg nie-HTML-owego ciała, gdy nie ma
-   `WWW-Authenticate`) przewróciłoby `cloudinary.com`, `baseten.co` i `telnyx.com`, więc wymaga
-   sprawdzenia każdego z osobna, nie jednej reguły.
+2. ~~**Ściana bota czytana jako wyzwanie OAuth.**~~ **zrobione 2026-08-09 (7.1).** Zmierzone
+   przed zmianą, nie założone: ściany to HTML (`mcp.sentry.io` 6 698 B, `mcp.cloudinary.com`
+   372 B), a serwery odpowiadają w protokole, którym mówią (`contentful.com` 79 B JSON,
+   `datadoghq.com` 27 B, `stripe.com` 81 B z `WWW-Authenticate`). Bez tego nagłówka ciało HTML
+   jest teraz ścianą, nie wyzwaniem. Obawa subagenta o `baseten.co` i `telnyx.com` była
+   nieuzasadniona: oba mają prawdziwe endpointy na `api.<domena>` i je zachowują. `sentry.io`
+   schodzi z czterech endpointów do jednego, tego z własnej karty, a `cloudinary.com` przestaje
+   przechodzić na blokadzie bota.
 3. **Dwie domeny nadal potrafią zwrócić „brak pakietu" zamiast pakietu** (`supabase.com`,
    `launchdarkly.com`), gdy rejestr npm odmówi. Po 6.9 nie ma już **błędnej** odpowiedzi, jest
    uczciwe „nie wiemy", ale to wciąż różnica między przebiegami. Zamknięcie wymaga mniejszego
