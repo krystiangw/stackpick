@@ -31,8 +31,14 @@ const MAX_BYTES = 400_000
  * that runs past it produces nothing at all: not a low score, a dead connection. This is the
  * scan's whole wall-clock allowance, and it leaves room to score, store and serialise inside
  * the 30. `maxDuration` in a route file is a Vercel directive and does nothing on this host.
+ *
+ * 25 rather than 21: telnyx.com finishes in 17 seconds here and repeatedly ran out on the dyno,
+ * losing four checks to a wall rather than to anything about the vendor, and the same wall was
+ * turning npm registry lookups into "we could not identify a package as yours" on domains whose
+ * package we had found an hour earlier. Scoring and serialising a report takes tens of
+ * milliseconds, so the remaining five seconds are ample.
  */
-export const SCAN_BUDGET_MS = Number(process.env.SCAN_BUDGET_MS ?? 21_000)
+export const SCAN_BUDGET_MS = Number(process.env.SCAN_BUDGET_MS ?? 25_000)
 
 /**
  * The error prefix that means "we never found out", as opposed to a site answering us. A
