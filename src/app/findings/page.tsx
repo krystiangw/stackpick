@@ -175,8 +175,8 @@ export default async function FindingsPage() {
           <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
             Not a score and not a ranking. Three things have to be true at once for an agent working alone to
             get from your home page to a first call: a door built for a machine, a signup it can reach without a
-            browser, and a documented way to get a credential. A total hides which one is missing, and the
-            missing one is the whole finding.
+            browser and without solving a CAPTCHA, and a documented way to get a credential. A total hides which
+            one is missing, and the missing one is the whole finding.
           </p>
           <dl className="mt-8 flex flex-col">
             <div className="flex items-baseline justify-between gap-6 border-t border-rule py-2.5">

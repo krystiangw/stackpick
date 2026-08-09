@@ -97,7 +97,7 @@ const legsMet = (row: Row) => {
   }
   return [
     full('agent_entry_point') || full('oauth_dcr') || full('mcp_present'),
-    full('signup_reachable'),
+    full('signup_reachable') && full('signup_no_captcha'),
     (at('programmatic_provisioning')?.points ?? 0) >= 1,
   ]
 }

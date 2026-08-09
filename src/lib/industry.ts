@@ -72,7 +72,7 @@ export type IndustryReport = {
   usable: { domains: string[]; oneAway: { leg: UsableLeg; domains: string[] }[] }
 }
 
-export type UsableLeg = 'a door a machine can use' | 'a signup an agent can reach' | 'a documented credential path'
+export type UsableLeg = 'a door a machine can use' | 'a signup an agent can reach and submit' | 'a documented credential path'
 
 const MINIMUM_SAMPLE = 20
 
@@ -189,8 +189,14 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
           at('mcp_present')?.points === at('mcp_present')?.max,
       },
       {
-        leg: 'a signup an agent can reach' as UsableLeg,
-        met: at('signup_reachable')?.points === at('signup_reachable')?.max,
+        // The CAPTCHA belongs in this leg, and leaving it out published a claim our own data
+        // contradicted: five of the fourteen named vendors carry a CAPTCHA in the same row a
+        // reader opens next. An unattended agent does not solve a Turnstile, so "reachable"
+        // without it is a sentence about the page rather than about the agent.
+        leg: 'a signup an agent can reach and submit' as UsableLeg,
+        met:
+          at('signup_reachable')?.points === at('signup_reachable')?.max &&
+          at('signup_no_captcha')?.points === at('signup_no_captcha')?.max,
       },
       {
         leg: 'a documented credential path' as UsableLeg,

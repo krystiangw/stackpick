@@ -3,7 +3,16 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '7.2'
+export const FORMULA_VERSION = '7.3'
+
+/**
+ * Every address the probe actually tries. The sentence used to name two of the five, and on
+ * kinde.com the one it left out is the one that answers: api.kinde.com/mcp challenges with a
+ * WWW-Authenticate naming its own protected-resource document. Naming fewer addresses than we
+ * ask makes a vendor unable to reproduce our own denial.
+ */
+const MCP_ADDRESSES = (domain: string) =>
+  `mcp.${domain}, mcp.${domain}/mcp, mcp.${domain}/v1/mcp, api.${domain}/mcp or /mcp`
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -350,9 +359,9 @@ export const CHECKS: Check[] = [
         }
       }
       if (f.machine.mcp.mentions > 0) {
-        return yes(0, `MCP mentioned ${f.machine.mcp.mentions}x in your own files, but nothing answers at mcp.${f.domain} or /mcp`)
+        return yes(0, `MCP mentioned ${f.machine.mcp.mentions}x in your own files, but nothing answered at ${MCP_ADDRESSES(f.domain)}`)
       }
-      return yes(0, `No MCP surface: nothing answers at mcp.${f.domain} or /mcp, and no file mentions MCP`)
+      return yes(0, `No MCP surface: nothing answered at ${MCP_ADDRESSES(f.domain)}, and no file mentions MCP`)
     },
   },
   {
@@ -538,7 +547,13 @@ export const CHECKS: Check[] = [
       // redirects to a login screen, and groq.com/pricing answers 308 to the home page.
       const page = f.discovered.pricing ?? f.funnel.signup ?? null
       const at = page ? ` at ${page}` : ''
-      if (f.funnel.provisioning.selfServeSignals.length > 0) {
+      // A page that states no price at all states no tier either, so anything matched on it came
+      // from navigation or a footer. here.com/pricing serves 850 characters of nav, a Contact Us
+      // and a "Get started for free" button, and that button was outranking the measured finding
+      // one branch below: nothing about your tiers survives without JavaScript. This is the chrome
+      // the old day-count rule existed to stop, and widening the wording brought it back.
+      const onlyChrome = f.funnel.pricingFetched && f.funnel.pricesVisibleWithoutJs === false
+      if (f.funnel.provisioning.selfServeSignals.length > 0 && !onlyChrome) {
         // Saying it once out of two tries still means you say it, and hiding the disagreement
         // would leave a vendor unable to explain why the number moved between two scans.
         return yes(
@@ -604,7 +619,12 @@ export const CHECKS: Check[] = [
       if (!f.npm.package) {
         return {
           points: 0,
-          detail: 'Unmeasurable: we could not identify a package as yours from your site, your docs or a registry search',
+          // Not "we found nothing", which was false. pdfmonkey.io publishes @pdfmonkey/cli from
+          // an @pdfmonkey.io address, and we identified it and then dropped it because a command
+          // line tool is not what this check asks about. The sentence claimed a search had come
+          // back empty when it had come back with the wrong shape of answer.
+          detail:
+            'Unmeasurable: we could not identify the package a developer installs to use you, from your site, your docs or a registry search',
           inconclusive: true,
           unblock: 'Name your package once in your docs, or link it from your repository, and we stop guessing.',
         }

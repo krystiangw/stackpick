@@ -137,6 +137,19 @@ export type SignupFindings = {
   browserStatus: number | null
 }
 
+/**
+ * A form an agent could actually fill in, rather than the tag. app.hygraph.com/signup serves
+ * `<form method="post" action="/login"></form>`: an empty element with no field in it, and the
+ * whole check is whether an agent finds something to submit. Testing for the opening tag scored
+ * that as a signup rendering without JavaScript, on the one page where being wrong is worst.
+ */
+function rendersUsableForm(body: string): boolean {
+  if (!body.includes('<form')) return false
+  const fields = body.match(/<(?:input|select|textarea)\b/gi) ?? []
+  // Two, because a lone hidden CSRF token is not a field a caller fills in.
+  return fields.length >= 2
+}
+
 export type McpEndpoint = { url: string; status: number; evidence: 'challenges' | 'rejects-get' | 'answers-json' }
 
 /** Whether unknown paths answer with a real document, asked once per file type we probe. */
@@ -391,7 +404,7 @@ async function inspectSignup(url: string | null): Promise<SignupFindings> {
     statusesSeen: got.statusesSeen,
     consistent: got.consistent,
     reachable: got.ok,
-    rendersFormWithoutJs: body.includes('<form'),
+    rendersFormWithoutJs: rendersUsableForm(body),
     captcha: Object.entries(CAPTCHA_SIGNATURES)
       .filter(([, pattern]) => pattern.test(body))
       .map(([name]) => name),
