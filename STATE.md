@@ -1592,3 +1592,23 @@ endpoint, co dowodzi, że patrzyliśmy, zamiast robić mail merge. Z ostrzeżeni
 go do grupy drugiej, bo dla nich zdanie „agent może się sam zarejestrować" jest fałszywe.
 
 **Wszystko dalej jako szkice.** Wysyłka i tak czeka na domenę i zweryfikowanego nadawcę.
+
+## Runda 2026-08-09 (czterdziesta pierwsza): moje własne przesadzone zdanie
+
+Publikując znalezisko o dynamicznej rejestracji napisałem „poza tą grupą prawie nikt tego nie ma".
+**Sprawdziłem własne dane i to była przesada:** 23 ze 102 vendorów bez serwera MCP publikuje
+rejestrację klienta, czyli 22 procent, a nie „prawie nikt". Obie liczby są teraz liczone i
+drukowane, więc porównanie jest **powiedziane, a nie zasugerowane**. Ten sam błąd, który tępię od
+rana u skanera, popełniłem w prozie w ciągu godziny od zobaczenia danych.
+
+`/report` mówił tylko połowę: ilu vendorów **nie** publikuje endpointu rejestracji. Druga połowa
+jest warta tyle samo i teraz tam jest: gdzie ktoś go publikuje, prawie zawsze stoi on na hoście
+MCP i przyjechał razem z serwerem.
+
+Metodologia opisywała check rejestracji, który **zatrzymuje się na hostach**. Po 6.2 podąża za
+wskaźnikiem z dokumentu protected-resource i czyta obie konwencje układu well-known, więc
+opublikowana reguła musiała to odzwierciedlić.
+
+**Audyt korpusu pilnuje teraz dziesięciu liczb ze stron** zamiast sześciu, w tym czterech nowych
+o rejestracji. Liczba rejestracji zmieniła się ośmiokrotnie w jednym deployu, a proza pisana pod
+starszy zbiór danych jest powracającym błędem tego projektu.
