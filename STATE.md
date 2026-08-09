@@ -160,10 +160,11 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   `@directus/sdk`, `xata.io` dostaje `@xata.io/api@0.1.7` zamiast `@xata.io/client@0.30.1`, oba
   we własnym scope dostawcy i oba otypowane. `betterstack.com` gubi `@logtail/node` przez
   `pointsAtAnotherCompany`. Zdanie jest dosłownie prawdziwe i odpowiada na złe pytanie.
-  **Jedna próba naprawy zmierzona i odrzucona 2026-08-10, patrz runda 52. Nie powtarzaj jej.**
-  Następne podejście ma iść przez **dowód niezależny od odpowiedzi**: pakiet nazwany w docsach
-  dostawcy (`npmSource: 'docs'`), a nie przez cechę, którą check akurat mierzy. Warunkowanie na
-  „ma typy" byłoby wybraniem pakietu pod odpowiedź, którą chcemy opublikować.
+  **Dwie próby naprawy zmierzone i odrzucone 2026-08-10, rundy 52 i 53. Nie powtarzaj żadnej:**
+  filtr „pakiet deklarujący się SDK bije nosiciela marki" ruszył 32 wiersze zamiast 2, a
+  ekstrakcja nazw z instrukcji importu dołożyła dwie fałszywe atrybucje i nie naprawiła żadnej.
+  Dowód nadal musi być **niezależny od mierzonej cechy** (nie „ma typy"), ale ani ranking, ani
+  ekstrakcja nie są dźwignią. Trzecia próba bez nowego rodzaju dowodu jest stratą czasu.
 - ~~**Bramka mailowa na wyniku skanu.**~~ **zrobione 2026-08-09.** Audyt cenowy twierdził, że
   nie zbieramy maila. Zbieraliśmy, tylko formularz był **ostatnią sekcją strony**, po dziesięciu
   sekcjach i całej tabeli dowodów, czyli w miejscu, w którym intencja, której potrzebuje, już
@@ -317,6 +318,37 @@ typy, więc wybieranie pakietu po typach jest wybieraniem pakietu pod odpowiedź
 opublikować. Dowód musi być niezależny od mierzonej cechy, czyli: pakiet **nazwany w dokumentacji
 dostawcy**. Docsy directusa nazywają `@directus/sdk` trzy razy, a mimo to nie wygrał, więc
 prawdziwy błąd może siedzieć w scrapowaniu docsów, nie w rankingu.
+
+## Runda 2026-08-10 (53): druga próba selekcji npm, też odrzucona pomiarem
+
+Hipoteza z rundy 52 („czytamy docsy za płytko") **sprawdzona i obalona**: podanie atrybucji
+głębokiej strony SDK Directusa, z siedemnastoma wystąpieniami `@directus/sdk`, nie zmieniło
+wyniku. Dalej `directus` przez `registry-search`.
+
+Prawdziwa przyczyna okazała się inna i jest ogólna: `namedPackages` rozpoznaje **tylko** linki
+`npmjs.com/package/...` i `npm install X`. Strona SDK Directusa nie ma ani jednego snippetu
+instalacyjnego, jedyne linki do npmjs prowadzą do `node-fetch`, `ofetch` i `whatwg-fetch`, czyli
+zależności tego SDK, a wszystkie wystąpienia `@directus/sdk` siedzą w instrukcjach `import`.
+Skala w baseline: **dokumentacja dostawcy rozstrzyga 5 wierszy na 156, a rejestr 125.**
+
+Próba: dodać ekstrakcję z `import ... from '...'`, `require('...')` oraz `pnpm add`, `yarn add`,
+`bun add`. Zmierzone tym samym replayem. **Ruszyły 2 wiersze i oba w złą stronę:**
+
+```
+betterstack.com   None -> routes           (nazwa z importu, nie pakiet dostawcy)
+calendly.com      None -> usabilla_live    (cudzy widget analityczny)
+```
+
+Zamiana uczciwego „nie zidentyfikowaliśmy pakietu" na fałszywe twierdzenie o nazwanej firmie jest
+gorsza niż problem, który miała naprawić. Zrewertowane, nic nie poszło na produkcję.
+
+**Konkretny trop dla następnego podejścia:** `pickNamedPackage` zwraca `names[0]` bezwarunkowo,
+gdy nazwa jest jedna. To zamienia jeden przypadkowy import w atrybucję. Dopóki ekstrakcja jest
+szeroka, ta gałąź musi wymagać, żeby nazwa niosła markę dostawcy.
+
+**Stan pozycji: problem realny, dwie hipotezy obalone pomiarem, żadnej zmiany w kodzie.**
+Zdania o `directus.io` i `xata.io` są dosłownie prawdziwe o pakiecie, który nazywają, więc
+publikowanie ich dalej jest tańsze niż trzecia próba na wyczucie.
 
 ## Stare notatki badawcze (historyczne, sprzed rundy 12)
 
