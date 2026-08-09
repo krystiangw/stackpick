@@ -160,6 +160,10 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   `@directus/sdk`, `xata.io` dostaje `@xata.io/api@0.1.7` zamiast `@xata.io/client@0.30.1`, oba
   we własnym scope dostawcy i oba otypowane. `betterstack.com` gubi `@logtail/node` przez
   `pointsAtAnotherCompany`. Zdanie jest dosłownie prawdziwe i odpowiada na złe pytanie.
+  **Jedna próba naprawy zmierzona i odrzucona 2026-08-10, patrz runda 52. Nie powtarzaj jej.**
+  Następne podejście ma iść przez **dowód niezależny od odpowiedzi**: pakiet nazwany w docsach
+  dostawcy (`npmSource: 'docs'`), a nie przez cechę, którą check akurat mierzy. Warunkowanie na
+  „ma typy" byłoby wybraniem pakietu pod odpowiedź, którą chcemy opublikować.
 - ~~**Bramka mailowa na wyniku skanu.**~~ **zrobione 2026-08-09.** Audyt cenowy twierdził, że
   nie zbieramy maila. Zbieraliśmy, tylko formularz był **ostatnią sekcją strony**, po dziesięciu
   sekcjach i całej tabeli dowodów, czyli w miejscu, w którym intencja, której potrzebuje, już
@@ -274,6 +278,45 @@ wszystkie **pięć** sondowanych adresów zamiast dwóch, bo na `kinde.com` pomi
 **Wzorzec po raz piąty, tym razem najczystszy:** naprawa atrybucji npm przeniosła błąd z własności
 na selekcję, poszerzenie wzorców darmowego progu przeniosło go z gubienia trialów na liczenie
 nawigacji, a koniunkcja naprawiła gaming progu i pominęła check mierzący własną barierę.
+
+## Runda 2026-08-10 (52): naprawa selekcji npm zmierzona i odrzucona
+
+Wynik negatywny, i wart zapisania dokładnie dlatego. Reguła brzmiała: **pakiet deklarujący się
+jako SDK albo klient bije taki, który tylko nosi markę**, dopasowanie po nazwie zawsze, po opisie
+tylko przy opisie krótszym niż 120 znaków (bo `@xata.io/api` ma tam wklejony README). Wyglądała
+na wąską i celną.
+
+Zmierzona przez `npm run attribution snapshot` plus dwa `replay` na tych samych 156 zrzutach,
+żeby to, co się ruszy, było kodem, a nie pogodą w rejestrze. **Ruszyły 32 domeny, z czego dwie
+w dobrą stronę.**
+
+```
+directus.io   directus            -> @directus/sdk           typed False -> True   <- cel
+xata.io       @xata.io/api        -> @xata.io/codegen        typed False -> True   <- i tak zły brat
+stripe.com    stripe              -> @stripe/extensibility-sdk
+resend.com    resend              -> @resend/chat-sdk-adapter
+twilio.com    twilio              -> twilio-sync
+posthog.com   posthog-js          -> @posthog/agent
+mapbox.com    mapbox-gl           -> @mapbox/mapbox-sdk      typed True -> False
+mux.com       @mux/mux-node       -> mux-embed               typed True -> False
+algolia.com   algoliasearch       -> None
+... 23 więcej
+typed 142 -> 141, „nie zidentyfikowano pakietu" 9 -> 10
+```
+
+Przyczyna jest oczywista po fakcie i nie była przed: to **twardy filtr**, więc odrzuca prawdziwy
+pakiet wejściowy zawsze, gdy jakikolwiek brat ma w nazwie „sdk" albo „client", a duzi dostawcy
+mają takich braci dziesiątki. Zrewertowane, nic nie poszło na produkcję.
+
+**Czego to uczy poza tym jednym przypadkiem:** naprawa celowała w dwa wiersze i dotknęła 32.
+Harness replayu jest jedynym powodem, dla którego to widać przed deployem, i kosztuje dwa
+przebiegi po ~25 minut. To jest tańsze niż jeden zły reseed.
+
+**Czego NIE robić przy następnym podejściu:** nie warunkować na tym, że brat ma typy. Check mierzy
+typy, więc wybieranie pakietu po typach jest wybieraniem pakietu pod odpowiedź, którą chcemy
+opublikować. Dowód musi być niezależny od mierzonej cechy, czyli: pakiet **nazwany w dokumentacji
+dostawcy**. Docsy directusa nazywają `@directus/sdk` trzy razy, a mimo to nie wygrał, więc
+prawdziwy błąd może siedzieć w scrapowaniu docsów, nie w rankingu.
 
 ## Stare notatki badawcze (historyczne, sprzed rundy 12)
 
