@@ -1761,3 +1761,24 @@ aplikacji, psuła jednocześnie `payload`, `@strapi/strapi` i `sanity`.
 rysowania) zamiast na `mapbox-gl`, więc wiersz jest niedeterministyczny. Do tego `datadoghq.com`
 w checku MCP (opisane w rundzie 43) i limitowanie przez npm przy skali korpusu, o czym trzeba
 pamiętać przed każdym pełnym reseedem.
+
+## Runda 2026-08-09 (czterdziesta piąta): dwie regresje z własnych naprawek, obie z diffa
+
+**6.7: jedna kontrolka nie odpowie za dwa checki, które pytają inaczej.** Wyrównanie kontrolki
+z sondami punktu wejścia (6.4) było słuszne dla punktu wejścia i **błędne dla `llms.txt`**, który
+pobierany jest jako `text/plain`. `agora.io` odpowiada na nieznaną ścieżkę `.txt` **240 kB HTML-a
+przy `text/plain` i 26 kB markdownu przy nagłówku sond wejściowych**, więc wspólny bool kasował
+**prawdziwy plik 8 857 bajtów** na podstawie strony, do której jest zupełnie niepodobny. Kontrolka
+`.txt` jest teraz pytana obiema drogami, a każdy check czyta ramię pasujące do tego, jak sam pyta.
+
+**6.8: rejestr npm nie może zabrać ze sobą reszty skanu.** Atrybucja urosła w 6.6 z 7,8 do 14,2
+żądań na domenę i na ciężkiej domenie to wystarczyło, żeby zjeść cały budżet: `sentry.io` stracił
+**sześć checków na ścianie czasu**, z których żaden nie dotyczył npm (test drzwi, punkt wejścia,
+OAuth, MCP, rejestracja, free tier), na skanie, który przeczytał witrynę bez problemu. Faza npm ma
+teraz **własny limit 9 sekund** i degraduje się do „nie umiemy wskazać pakietu", czyli **jeden
+uczciwy niemierzalny check zamiast sześciu**. Budżet skanu 25 → 27 s, trzy przed timeoutem
+routera. Zweryfikowane na produkcji: sentry kończy w **11,4 s bez obcięcia i wraca z 5 na 11**.
+
+**Wzorzec, już czwarty raz dziś:** naprawa dokłada żądania, a żądania zjadają budżet, który
+odbiera punkty gdzie indziej. Przy każdej kolejnej naprawie dokładającej ruch trzeba pytać nie
+tylko „czy to poprawne", ale „co przez to wypadnie".
