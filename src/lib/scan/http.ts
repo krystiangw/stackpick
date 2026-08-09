@@ -188,18 +188,55 @@ async function takeSiteSlot(state: ScanState, hostname: string): Promise<() => v
   }
 }
 
+/**
+ * The npm registry is the one host we ask about the same thing across scans: attribution reads
+ * roughly nineteen documents per domain, and a corpus reseed asks for the same popular packages
+ * over and over. That load is what made npm start refusing us, and since 6.9 a refusal is
+ * honestly "we do not know" rather than a wrong answer, so it cost 28 domains their package in
+ * one reseed. Answers are cached across scans for six hours; refusals never are, because caching
+ * one would turn a moment of load into a fact about a vendor.
+ */
+const REGISTRY_HOSTS = new Set(['registry.npmjs.org', 'api.npmjs.org'])
+const REGISTRY_TTL_MS = 6 * 60 * 60 * 1000
+const registryCache = new Map<string, { at: number; answer: Fetched }>()
+
+function registryKey(url: string, options: FetchOptions): string | null {
+  try {
+    if (!REGISTRY_HOSTS.has(new URL(url).hostname)) return null
+  } catch {
+    return null
+  }
+  return cacheKey(url, options)
+}
+
 export async function fetchUrl(url: string, options: FetchOptions = {}): Promise<Fetched> {
   const state = scanState.getStore()
   if (!state) return runFetch(url, options, null)
   if (Date.now() >= state.deadlineAt) return countIfLost(state, empty(url, outOfTimeBefore))
   if (options.fresh) return countIfLost(state, await runFetch(url, options, state))
 
+  const acrossScans = registryKey(url, options)
+  if (acrossScans) {
+    const held = registryCache.get(acrossScans)
+    if (held && Date.now() - held.at < REGISTRY_TTL_MS) return held.answer
+  }
+
   const key = cacheKey(url, options)
   const held = state.responses.get(key)
   if (held) return countIfLost(state, await held)
   const started = runFetch(url, options, state)
   state.responses.set(key, started)
-  return countIfLost(state, await started)
+  const answer = await countIfLost(state, await started)
+  // 404 is an answer about a package that does not exist and is worth keeping; a 429 is a fact
+  // about us and must be asked again next time.
+  if (acrossScans && (answer.ok || answer.status === 404)) {
+    registryCache.set(acrossScans, { at: Date.now(), answer })
+    // Bounded, because a dyno serves every scan anyone runs and this map would otherwise only grow.
+    if (registryCache.size > 5_000) {
+      for (const oldest of [...registryCache.keys()].slice(0, 1_000)) registryCache.delete(oldest)
+    }
+  }
+  return answer
 }
 
 async function runFetch(url: string, options: FetchOptions, state: ScanState | null): Promise<Fetched> {
