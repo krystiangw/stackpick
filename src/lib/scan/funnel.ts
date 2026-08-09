@@ -72,6 +72,19 @@ const SELF_SERVE_PATTERNS = [
   /\bfree\s+\w+\s+plan\b/i,
 ]
 
+// Weighted rather than a bare list of types, which reads to a strict server as a demand:
+// plausible.io answers 406 to "text/markdown, application/json, text/plain" and savvycal.com
+// answers 500, and we counted both as refusals of nine paths that return nine clean 404s. With
+// a catch-all at lower weight both answer honestly and a real file still arrives as markdown.
+// Per suffix, because asking for markdown is how we stopped seeing a JSON file. sentry.io
+// content-negotiates: ask it for text/markdown and every path answers with the same 976 byte
+// markdown page, including /.well-known/mcp.json, which is really 106 bytes of JSON naming
+// their MCP server. We were handed a catch-all because we asked for one.
+const entryAccept = (path: string) =>
+  path.endsWith('.json')
+    ? 'application/json;q=1, text/plain;q=0.8, */*;q=0.5'
+    : 'text/markdown, text/plain;q=0.9, */*;q=0.5'
+
 /**
  * What separates a file an agent can act on from one that only states a policy: something to
  * authenticate with, somewhere to send a request, or a way to get an account. Deliberately
@@ -391,11 +404,14 @@ function matching(patterns: RegExp[], html: string, labels?: string[]): string[]
  * Same for agora.io. Both earned a point and both were told the file proved nothing.
  */
 async function servesCatchAllText(site: string): Promise<CatchAll> {
+  // The same Accept the entry probes send, per suffix. They diverged, and that is how a control
+  // asking for text/plain saw sentry.io's 20 kB HTML while /ai.txt asking for markdown saw their
+  // 976 byte catch-all, so the control did not recognise the page it exists to recognise.
   const [markdown, json, plain] = await Promise.all([
-    fetchUrl(`${site}/stackpick-control-probe-8f3a1c.md`, { accept: 'text/markdown, text/plain' }),
-    fetchUrl(`${site}/.well-known/stackpick-control-probe-8f3a1c.json`, { accept: 'application/json' }),
+    fetchUrl(`${site}/stackpick-control-probe-8f3a1c.md`, { accept: entryAccept('.md') }),
+    fetchUrl(`${site}/.well-known/stackpick-control-probe-8f3a1c.json`, { accept: entryAccept('.json') }),
     // The .txt arm covers llms.txt, which is scored elsewhere and was unguarded.
-    fetchUrl(`${site}/stackpick-control-probe-8f3a1c.txt`, { accept: 'text/plain' }),
+    fetchUrl(`${site}/stackpick-control-probe-8f3a1c.txt`, { accept: entryAccept('.txt') }),
   ])
   return {
     markdown: isRealTextFile(markdown, 30),
@@ -556,10 +572,11 @@ export async function scanFunnel({
   // path they prove nothing, and firing them anyway would be nine requests spent to learn that.
   const catchAll = await catchAllPending
   const probeEntry = inParallel(AGENT_ENTRY_PATHS, async (path) => {
-    // Judged against the namespace the path is in: /ai.txt is not discredited by a .md catch-all.
-    const namespace = path.endsWith('.json') ? catchAll.json : path.endsWith('.txt') ? catchAll.text : catchAll.markdown
-    if (namespace) return [path, false, false] as const
-    const got = await fetchUrl(`${site}${path}`, { accept: 'text/markdown, application/json, text/plain' })
+    // The namespace verdict no longer short-circuits the probe. sentry.io publishes a real 106
+    // byte /.well-known/mcp.json and answers unknown paths in that namespace with a 20,402 byte
+    // page shell, so "this namespace serves everything" threw away a file that is nothing like
+    // what it serves. The body comparison below is the test that can tell them apart.
+    const got = await fetchUrl(`${site}${path}`, { accept: entryAccept(path) })
     const controlLength = path.endsWith('.json')
       ? catchAll.bodyLengths?.json
       : path.endsWith('.txt')
