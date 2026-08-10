@@ -579,6 +579,25 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-10 (73): ta sama klasa bledu w trzech kolejnych radach
+
+Recenzent znalazl dwie rady sprzeczne z dowodami. Zamiast zalatac te dwie, przejrzalem **wszystkie
+czternascie** i znalazlem trzy kolejne. Ta sama przyczyna za kazdym razem: rada zalozona na jednej
+przyczynie porazki, podczas gdy check ma ich dwie albo trzy.
+
+- **`user_agents_allowed`, najgorszy z trzech.** Kazal usunac wpis z `robots.txt` takze wtedy, gdy
+  robots.txt jest **poprawny**, a odmawia edge (ClaudeBot dostaje 403 tam, gdzie przegladarka 200).
+  Wlasne zdanie checka mowilo to wprost („robots.txt permits them, but your edge answered..."),
+  a rada obok kazala edytowac plik, ktory nic nie zmieni.
+- **`oauth_dcr`.** Kazal dodac `registration_endpoint` „do twoich metadanych OAuth" rowniez tym,
+  ktorzy zadnych metadanych nie publikuja.
+- **`self_serve`.** Jeden tekst i jeden koszt („a project") na dwie rozne sytuacje. Strona, ktorej
+  cale slowo „free" siedzi w przycisku, to zmiana copy na minuty, a nie decyzja cenowa, i przez ten
+  jeden `effort` tania poprawka ladowala na dole planu.
+
+Wniosek do noszenia: **`REMEDIES` musi rozgalezic sie tam, gdzie rozgalezia sie `evaluate`.** Jesli
+check ma trzy branze porazki, a rada jedna, to dwie trzecie vendorow dostaje rade nie na swoj problem.
+
 ## Runda 2026-08-10 (72): recenzja naszego raportu przez cudzego agenta, formula 7.6
 
 Krystian przepuscil raport dla swojej innej strony przez agenta, ktory ten raport zrecenzowal.
