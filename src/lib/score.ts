@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '7.3'
+export const FORMULA_VERSION = '7.4'
 
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on
@@ -11,6 +11,9 @@ export const FORMULA_VERSION = '7.3'
  * WWW-Authenticate naming its own protected-resource document. Naming fewer addresses than we
  * ask makes a vendor unable to reproduce our own denial.
  */
+/** Below this, a served pricing page is navigation and a button rather than a statement of tiers. */
+const CHROME_ONLY_CHARS = 1_500
+
 const MCP_ADDRESSES = (domain: string) =>
   `mcp.${domain}, mcp.${domain}/mcp, mcp.${domain}/v1/mcp, api.${domain}/mcp or /mcp`
 
@@ -547,12 +550,15 @@ export const CHECKS: Check[] = [
       // redirects to a login screen, and groq.com/pricing answers 308 to the home page.
       const page = f.discovered.pricing ?? f.funnel.signup ?? null
       const at = page ? ` at ${page}` : ''
-      // A page that states no price at all states no tier either, so anything matched on it came
-      // from navigation or a footer. here.com/pricing serves 850 characters of nav, a Contact Us
-      // and a "Get started for free" button, and that button was outranking the measured finding
-      // one branch below: nothing about your tiers survives without JavaScript. This is the chrome
-      // the old day-count rule existed to stop, and widening the wording brought it back.
-      const onlyChrome = f.funnel.pricingFetched && f.funnel.pricesVisibleWithoutJs === false
+      // Chrome is a page with almost nothing on it, not a page without a printed number. The
+      // first version of this guard suppressed the signal wherever no price matched, and that
+      // denied a stated free tier on qdrant.tech (four named tiers and a quantified forever-free
+      // one in 6,934 characters), daily.co, split.io and crowdin.com. here.com/pricing is 850
+      // characters of navigation and one button, which is the thing worth suppressing.
+      const onlyChrome =
+        f.funnel.pricingFetched &&
+        f.funnel.pricesVisibleWithoutJs === false &&
+        f.funnel.pricingTextLength < CHROME_ONLY_CHARS
       if (f.funnel.provisioning.selfServeSignals.length > 0 && !onlyChrome) {
         // Saying it once out of two tries still means you say it, and hiding the disagreement
         // would leave a vendor unable to explain why the number moved between two scans.
@@ -576,9 +582,12 @@ export const CHECKS: Check[] = [
       // A pricing page that needs JavaScript to show a price is one an agent cannot read either,
       // so this is a measured finding about the page rather than a gap in the scan.
       if (f.funnel.pricingFetched && f.funnel.pricesVisibleWithoutJs === false) {
+        // Says what was measured. The old sentence claimed nothing about the tiers survived, and
+        // that was false on nine of the twelve rows carrying it: plaid.com serves three named
+        // tiers with their feature lists and simply has no free one, which is an honest fail.
         return yes(
           0,
-          `${page ?? 'Your pricing page'} answers a plain request with no prices in it, so nothing about your tiers survives without JavaScript`,
+          `${page ?? 'Your pricing page'} answers a plain request with no price and no free-tier wording in the ${f.funnel.pricingTextLength.toLocaleString('en-US')} characters it serves`,
         )
       }
       // A path we guessed and that carries no pricing signal is far more likely to be the wrong

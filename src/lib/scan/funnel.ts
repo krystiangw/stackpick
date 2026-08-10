@@ -144,10 +144,24 @@ export type SignupFindings = {
  * that as a signup rendering without JavaScript, on the one page where being wrong is worst.
  */
 function rendersUsableForm(body: string): boolean {
-  if (!body.includes('<form')) return false
-  const fields = body.match(/<(?:input|select|textarea)\b/gi) ?? []
-  // Two, because a lone hidden CSRF token is not a field a caller fills in.
-  return fields.length >= 2
+  for (const form of body.matchAll(/<form\b[^>]*>([\s\S]*?)<\/form>/gi)) {
+    const fields = [...form[1].matchAll(/<(?:input|select|textarea)\b[^>]*>/gi)].map((field) => field[0])
+    if (fields.filter(isFillable).length >= 2) return true
+  }
+  return false
+}
+
+/**
+ * A field a caller could put a value in. Counting every input tag on the page, rather than the
+ * ones inside a form and available, passed a site search box (commercetools.com/get-started), a
+ * footer newsletter box with a disabled submit (payloadcms.com) and a form whose only input is
+ * itself disabled while the consent checkbox sits outside it (dashboard.api.video/register).
+ * A hidden CSRF token and a submit button are not fields anyone fills in either.
+ */
+function isFillable(tag: string): boolean {
+  if (/\bdisabled\b/i.test(tag)) return false
+  const type = tag.match(/\btype\s*=\s*["']?([a-z]+)/i)?.[1]?.toLowerCase()
+  return type === undefined || !['hidden', 'submit', 'button', 'image', 'reset'].includes(type)
 }
 
 export type McpEndpoint = { url: string; status: number; evidence: 'challenges' | 'rejects-get' | 'answers-json' }
@@ -202,6 +216,13 @@ export type FunnelFindings = {
   pricingTriesDisagreed: boolean
   /** Null when no pricing page was found, false when one exists and shows no prices to a plain fetch. */
   pricesVisibleWithoutJs: boolean | null
+  /**
+   * Visible characters the pricing page served. What separates a page of navigation from a page
+   * that states its tiers in words: here.com/pricing is 850 characters of nav and a button, while
+   * qdrant.tech/pricing is 6,934 characters naming four tiers and a quantified forever-free one,
+   * and neither page prints a number our price pattern recognises.
+   */
+  pricingTextLength: number
   /**
    * True when the pricing page was larger than we read. posthog.com/pricing and cal.com/pricing
    * both exceed the cap and carry their tiers past it, so "no free tier wording" was a claim
@@ -783,6 +804,7 @@ export async function scanFunnel({
     catchAll,
     pricingFetched: Boolean(pricingPage?.ok),
     pricesVisibleWithoutJs,
+    pricingTextLength: firstPricingText ? visibleTextLength(firstPricingText) : 0,
     pricingTruncated,
     pricingTriesDisagreed:
       retryText.length > 0 &&

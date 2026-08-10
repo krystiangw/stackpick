@@ -107,13 +107,13 @@ const oneAway = corpus.rows.filter((row) => legsMet(row).filter((met) => !met).l
 const stated: { page: string; pattern: RegExp; expected: number; what: string }[] = [
   {
     page: '/findings',
-    pattern: /(\d+) of \d+ vendors an unattended agent could actually use/,
+    pattern: /(\d+) of \d+ vendors clear all three barriers we can measure/,
     expected: usable,
     what: 'vendors meeting all three legs',
   },
   {
     page: '/findings',
-    pattern: /and (\d+) that are one requirement away/,
+    pattern: /and (\d+) are one requirement away/,
     expected: oneAway,
     what: 'vendors one requirement away',
   },

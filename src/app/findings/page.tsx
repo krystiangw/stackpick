@@ -168,15 +168,15 @@ export default async function FindingsPage() {
       {corpus && corpus.usable.oneAway.length > 0 && (
         <section className="border-b border-rule py-12">
           <h2 className="max-w-2xl text-balance text-2xl font-semibold leading-snug tracking-tight">
-            {corpus.usable.domains.length} of {corpus.sampleSize} vendors an unattended agent could actually
-            use, and {corpus.usable.oneAway.reduce((sum, group) => sum + group.domains.length, 0)} that are one
+            {corpus.usable.domains.length} of {corpus.sampleSize} vendors clear all three barriers we can
+            measure, and {corpus.usable.oneAway.reduce((sum, group) => sum + group.domains.length, 0)} are one
             requirement away
           </h2>
           <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
             Not a score and not a ranking. Three things have to be true at once for an agent working alone to
             get from your home page to a first call: a door built for a machine, a signup it can reach without a
-            browser and without solving a CAPTCHA, and a documented way to get a credential. A total hides which
-            one is missing, and the missing one is the whole finding.
+            browser and with no CAPTCHA in the served HTML, and a documented way to get a credential. A total
+            hides which one is missing, and the missing one is the whole finding.
           </p>
           <dl className="mt-8 flex flex-col">
             <div className="flex items-baseline justify-between gap-6 border-t border-rule py-2.5">
@@ -209,6 +209,13 @@ export default async function FindingsPage() {
             </span>
             {corpus.usable.oneAway[0].domains.length > 12 &&
               `, and ${corpus.usable.oneAway[0].domains.length - 12} more.`}
+          </p>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-faint">
+            Clearing all three is not the same as being usable, and the gap is one we can name precisely: we
+            read served HTML, so a CAPTCHA that JavaScript mounts after the page loads is invisible to us.
+            Supabase and Contentful are on this list and both gate signup with an hCaptcha their bundle loads
+            later. That is a limit of the instrument, not a hedge, and it is the reason the paid audit runs real
+            agents instead of counting files.
           </p>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-faint">
             Every name here is recomputed from the published corpus on each request, so you can check it
