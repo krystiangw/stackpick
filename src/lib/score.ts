@@ -335,7 +335,21 @@ export const CHECKS: Check[] = [
     max: 1,
     evaluate: (f) => {
       const oauth = f.funnel.oauth
-      if (oauth.dynamicClientRegistration) return yes(1, 'registration_endpoint published')
+      if (oauth.dynamicClientRegistration) {
+        // The point is for the registration endpoint and stays there, because that is what this
+        // check has always measured and moving it would silently rescore the corpus. The sentence
+        // is what was wrong: an agent that may introduce itself still cannot get a token if every
+        // advertised grant puts a person at a browser. namecheap.com and dynadot.com publish the
+        // same shaped door and only one of them opens without a human.
+        const grants = oauth.grantTypes
+        if (!grants || grants.length === 0) return yes(1, 'registration_endpoint published')
+        return yes(
+          1,
+          oauth.unattendedGrant
+            ? `registration_endpoint published, and client_credentials is among the ${grants.length} advertised grants, so an unattended agent has a documented path to a token`
+            : `registration_endpoint published, but none of the ${grants.length} advertised grants (${grants.slice(0, 3).join(', ')}) finishes without a person at a browser`,
+        )
+      }
       if (oauth.metadataPublished) return yes(0, 'OAuth metadata published, but no registration_endpoint in it')
       // Our own corpus said this check was unmeasurable on 37 of 51 domains, because with no MCP
       // endpoint to follow we probed one origin. We now search the hosts an authorization server

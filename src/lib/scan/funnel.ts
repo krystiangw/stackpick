@@ -289,6 +289,15 @@ export type FunnelFindings = {
   oauth: {
     metadataPublished: boolean
     dynamicClientRegistration: boolean
+    /**
+     * Whether any advertised grant finishes without a person. A registration endpoint says an
+     * agent may introduce itself, not that it may get a token: namecheap.com publishes one and
+     * offers only authorization_code and refresh_token, both of which put a human at a browser,
+     * while dynadot.com offers client_credentials on the same shaped door. device_code is not
+     * counted, because approving on another screen is still a person.
+     */
+    unattendedGrant: boolean
+    grantTypes?: string[]
     probedHosts: number
     /** Named so the vendor can rerun exactly what we ran instead of taking "we looked" on trust. */
     probedOrigins?: string[]
@@ -351,6 +360,7 @@ type OauthTarget = { origin: string; paths: string[] }
 type OauthProbe = {
   metadataPublished: boolean
   dynamicClientRegistration: boolean
+  grantTypes?: string[]
   origins: string[]
   /** The document that carried the registration endpoint, so the verdict can name it. */
   registrationAt?: string
@@ -420,6 +430,7 @@ async function probeOauthOrigins(targets: OauthTarget[]): Promise<OauthProbe> {
         registration_endpoint?: string
         issuer?: string
         authorization_endpoint?: string
+        grant_types_supported?: string[]
       }
       if (!metadata.issuer && !metadata.authorization_endpoint) continue
       metadataPublished = true
@@ -427,6 +438,7 @@ async function probeOauthOrigins(targets: OauthTarget[]): Promise<OauthProbe> {
         return {
           metadataPublished: true,
           dynamicClientRegistration: true,
+          grantTypes: metadata.grant_types_supported,
           origins,
           registrationAt: metadata.registration_endpoint,
         }
@@ -481,9 +493,12 @@ function oauthTargetsKnownUpFront(domain: string, site: string, signupUrl: strin
 
 function mergeOauthProbes(first: OauthProbe, second: OauthProbe): FunnelFindings['oauth'] {
   const origins = [...new Set([...first.origins, ...second.origins])]
+  const grantTypes = [...new Set([...(first.grantTypes ?? []), ...(second.grantTypes ?? [])])]
   return {
     metadataPublished: first.metadataPublished || second.metadataPublished,
     dynamicClientRegistration: first.dynamicClientRegistration || second.dynamicClientRegistration,
+    unattendedGrant: grantTypes.includes('client_credentials'),
+    ...(grantTypes.length > 0 ? { grantTypes } : {}),
     probedHosts: origins.length,
     probedOrigins: origins,
   }
