@@ -579,6 +579,26 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (74): moja wlasna godzinna poprawka wprodukowala falszywy pozytyw
+
+Dodanie `/api/mcp` do sondowanych adresow (7.6) zmienilo w calym korpusie **dokladnie jeden
+wiersz**: `njal.la`, fail → pass, „Live MCP endpoint at https://njal.la/api/mcp/, answers JSON".
+Zamiast to przyjac, sprawdzilem endpoint recznie i to byl blad, nie sukces.
+
+`njal.la/api/mcp/` odpowiada **200 z koperta JSON-RPC**, ale w srodku jest
+`CSRF Failed: Referer checking failed - no Referer`. To serwer, ktory mowi protokolem i odmawia
+wszystkiemu, co nie wysyla naglowka przegladarki. **Daliśmy punkt za dokladnie te sciane, ktora
+ten produkt istnieje po to, zeby znajdowac.**
+
+Nowy ksztalt `browser-only` w `McpEndpoint`, wlasna galaz w `mcp_present`, zdanie nazywa mechanizm.
+Zweryfikowane, ze nie lamie prawdziwych serwerow: `supabase.com` (401 z wyzwaniem) i strona
+recenzenta (`/api/mcp`, 401) dalej przechodza. **Formula 7.6 → 7.7.**
+
+Wzorzec, ktory ta baza kodu potwierdza po raz dziesiaty: **kazda poprawka wprowadza przeciwny blad
+w nowym miejscu.** Tym razem odstep miedzy wprowadzeniem a wykryciem wyniosl **jedna godzine**, i
+tylko dlatego, ze reguła kazala sprawdzic recznie jedyny wiersz, ktory sie ruszyl. Gdyby ruszylo
+sie piecdziesiat, przeszlyby bez sprawdzenia.
+
 ## Runda 2026-08-10 (73): ta sama klasa bledu w trzech kolejnych radach
 
 Recenzent znalazl dwie rady sprzeczne z dowodami. Zamiast zalatac te dwie, przejrzalem **wszystkie
