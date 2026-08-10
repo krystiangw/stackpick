@@ -664,6 +664,10 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
     `https://mcp.${domain}/v1/mcp`,
     `https://api.${domain}/mcp`,
     `${site}/mcp`,
+    // The framework convention, and the one that cost us a correct verdict: a Next.js app puts
+    // its route at app/api/mcp/route.ts, so the server answers at /api/mcp and nowhere we asked.
+    // Reported by a reader whose server we called absent while it answered 200 one path away.
+    `${site}/api/mcp`,
   ].filter((url, index, all) => all.indexOf(url) === index)
   const handshake = {
     accept: 'application/json, text/event-stream',

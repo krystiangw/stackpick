@@ -748,7 +748,8 @@ export const CHECKS: Check[] = [
           detail:
             'Unmeasurable: we could not identify the package a developer installs to use you, from your site, your docs or a registry search',
           inconclusive: true,
-          unblock: 'Name your package once in your docs, or link it from your repository, and we stop guessing.',
+          unblock:
+            'Name your package once in your docs, or link it from your repository, and we stop guessing. If your product is not something a developer installs, this check does not apply to you: unmeasured is out of the score and out of the denominator, so it costs you nothing.',
         }
       }
       if (!f.npm.found) return yes(0, `Package ${f.npm.package} not found on the registry`)

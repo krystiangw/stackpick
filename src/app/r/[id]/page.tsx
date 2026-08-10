@@ -50,7 +50,10 @@ function scaleAnchor(comparison: Awaited<ReturnType<typeof buildComparison>>, to
     return `You ${total} · category median ${median} · best ${best.domain} ${best.total}`
   }
   if (comparison.percentile) {
-    return `Higher than ${comparison.percentile.betterThan} of the ${comparison.percentile.outOf} domains scanned here`
+    // Named, because unnamed it reads as a rank in your market and is not one. A reader whose
+    // product is a SaaS for equity analysts was told he was ahead of 1 of 168, where all 168 are
+    // developer tools we picked. That sentence sells; it does not diagnose.
+    return `Higher than ${comparison.percentile.betterThan} of the ${comparison.percentile.outOf} domains we have scanned, which are developer tools we curated rather than your market`
   }
   return null
 }

@@ -49,9 +49,21 @@ const REMEDIES: Record<string, Remedy> = {
       `Your public pages answer ${f.browserStatus} to Chrome and ${f.agentStatus} to an agent user-agent. Exempt them from that rule and rate limit instead of refusing.`,
   },
   llms_txt: {
+    // Keyed on why the check failed, not on which check failed. It used to tell a vendor whose
+    // llms.txt we had just read, and quoted dead links out of, to publish an llms.txt. A reader
+    // caught it: the report contradicted itself and the promised gain was inflated by a point
+    // for work already done.
     effort: 'minutes',
-    how: () =>
-      'Publish /llms.txt: a markdown list linking your quickstart, API reference, pricing and package name. It is the cheapest file on this list.',
+    how: (f) => {
+      const links = f.machine.llmsLinks
+      if (f.machine.hasLlmsTxt && links && links.dead > 0) {
+        return `Your llms.txt is already there. ${links.dead} of the ${links.sampled} links we sampled are gone, starting with ${links.firstDead}. Fix those and this passes: a map an agent follows into a 404 costs it the budget it came with.`
+      }
+      if (f.machine.hasLlmsTxt) {
+        return 'Your llms.txt is already there. This check is failing on its contents rather than its absence, so read the line above for what we could not follow.'
+      }
+      return 'Publish /llms.txt: a markdown list linking your quickstart, API reference, pricing and package name. It is the cheapest file on this list.'
+    },
   },
   docs_without_js: {
     effort: 'a project',
@@ -90,9 +102,12 @@ const REMEDIES: Record<string, Remedy> = {
   },
   mcp_present: {
     effort: 'a project',
+    // We know it did not answer at the addresses we tried, which is not the same as knowing it
+    // does not exist. A reader's server was at /api/mcp, answered 200, and this line told them
+    // to ship the thing they had shipped.
     how: (f) =>
       f.machine.mcp.mentions > 0
-        ? 'You already talk about MCP. Ship the server and declare it at /.well-known/mcp.json so an agent finds it without reading marketing copy.'
+        ? 'You already talk about MCP, and nothing answered at the addresses named above. If your server is at another path, declare it at /.well-known/mcp.json: that file is what an agent reads first, and it is what makes the path stop mattering.'
         : 'Wrap your top three API calls in an MCP server and declare it at /.well-known/mcp.json.',
   },
   signup_no_captcha: {
