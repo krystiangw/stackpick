@@ -41,7 +41,59 @@ their own endpoint URL.
 - `useanvil.com` · https://mcp.useanvil.com
 - `weglot.com` · https://mcp.weglot.com/mcp
 
-## 2. Everything else in place, signup unreachable without a browser (43)
+## 2. Publishes RFC 7591 registration, and no grant an agent can finish (45)
+
+They implemented the standard an agent uses to introduce itself, then advertised only grants
+that need a person at a browser. Lead with their own metadata document: the fix is a grant type,
+not a project, and they can check it in one request.
+
+- `algolia.com`
+- `amplitude.com`
+- `apify.com`
+- `axiom.co`
+- `betterstack.com`
+- `bird.com`
+- `browserless.io`
+- `bugsnag.com`
+- `cal.com`
+- `cloudflare.com`
+- `contentful.com`
+- `crowdin.com`
+- `datadoghq.com`
+- `deepl.com`
+- `firecrawl.dev`
+- `flagsmith.com`
+- `grafana.com`
+- `honeybadger.io`
+- `honeycomb.io`
+- `knock.app`
+- `lokalise.com`
+- `mapbox.com`
+- `mixpanel.com`
+- `mux.com`
+- `namecheap.com`
+- `newrelic.com`
+- `novu.co`
+- `onesignal.com`
+- `openrouter.ai`
+- `paddle.com`
+- `pandadoc.com`
+- `polar.sh`
+- `posthog.com`
+- `replicate.com`
+- `resend.com`
+- `sanity.io`
+- `savvycal.com`
+- `sentry.io`
+- `statsig.com`
+- `storyblok.com`
+- `stripe.com`
+- `supabase.com`
+- `turso.tech`
+- `useanvil.com`
+- `workos.com`
+
+## 3. Everything else in place, signup unreachable without a browser (43)
 
 The barrier our own agent runs kept dying at, and the most expensive one here to fix: it crosses
 auth, fraud and billing. Never the opening line, always the second.
