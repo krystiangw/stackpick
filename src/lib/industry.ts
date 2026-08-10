@@ -246,15 +246,17 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
     oneAwayBy.set(missing[0].leg, [...(oneAwayBy.get(missing[0].leg) ?? []), report.domain])
   }
 
-  const llmsDetail = (report: Report) => verdict(report, 'llms_txt')?.detail ?? ''
-  const llmsStale = reports.filter((report) => /links we sampled are gone/.test(llmsDetail(report)))
-  const llmsLive = reports.filter((report) => /links we sampled all answer/.test(llmsDetail(report)))
+  // Off the measurement, not off the sentence. Matching prose meant that rewording the sentence
+  // silently zeroed the count and hid the whole section, which the audit caught and a reader
+  // would not have: the numbers on this page have to survive an edit to the words.
+  const sampled = (report: Report) => report.findings.machine.llmsLinks
+  const llmsStale = reports.filter((report) => (sampled(report)?.dead ?? 0) > 0)
+  const llmsLive = reports.filter((report) => sampled(report) !== undefined && sampled(report)!.dead === 0)
 
   return {
     llmsChecked: llmsStale.length + llmsLive.length,
     llmsStale: llmsStale.length,
-    cloaked: reports.filter((report) => /percent less text/.test(verdict(report, 'docs_without_js')?.detail ?? ''))
-      .length,
+    cloaked: reports.filter((report) => report.findings.docsThinnerForAgents !== null).length,
     usable: {
       domains: withLegs
         .filter((entry) => entry.missing.length === 0 && entry.unknown === 0)

@@ -118,7 +118,7 @@ const oneAway = corpus.rows.filter((row) => {
 }).length
 
 const staleLlms = corpus.rows.filter((row) =>
-  /links we sampled are gone/.test(row.checks.find((check) => check.id === 'llms_txt')?.detail ?? ''),
+  /links we sampled[^.]*are gone/.test(row.checks.find((check) => check.id === 'llms_txt')?.detail ?? ''),
 ).length
 const cloaked = corpus.rows.filter((row) =>
   /percent less text/.test(row.checks.find((check) => check.id === 'docs_without_js')?.detail ?? ''),
