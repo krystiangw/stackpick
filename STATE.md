@@ -579,6 +579,22 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-10 (69): trzeci raz ten sam blad i pelny przeglad powierzchni
+
+`public/robots.txt` i `public/llms.txt` zachowaly stara nazwe, bo glob obejmowal `.ts .tsx .json
+.md` i **nie obejmowal `.txt`**. To akurat pliki adresowane do agentow, czyli te, ktorych ten
+produkt dotyczy.
+
+Trzy porazki tego samego przemianowania, wszystkie o tym samym ksztalcie: **warunek wyszukiwania
+byl wezszy niz rzeczywistosc.** Wielkosc liter (`tackpick` wobec `StackPick`), znaczniki
+rozbijajace wordmark (`Stack<span>Pick</span>`), filtr rozszerzen (`.txt`). Zapisane do wspolnej
+bazy: `clad-kb show zmiana-nazwy-produktu-w-kodzie-trzy-sposoby-na-ktore-grep-kl`.
+
+**Przeglad calej powierzchni, po tokenach i z osobna kolumna na znany host:** 20 tras plus
+scorecard. Po poprawce jedyne wystapienia to `stackpick-f12d13a227ea.herokuapp.com`, czyli nazwa
+hosta, ktora zostaje swiadomie do czasu kupienia domeny. `/audit` ma cztery trafienia na `Pick`,
+ale to prawdziwe copy („Picked instead"), wiec zostaja.
+
 ## Runda 2026-08-10 (68): nowy wymiar w korpusie i najostrzejsza sekcja listy targetow
 
 `unattendedGrant` jest teraz **polem w opublikowanym korpusie**, a nie tylko zdaniem: `true` gdy
