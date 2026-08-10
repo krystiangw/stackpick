@@ -579,6 +579,30 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-10 (66): zmierzona podloga szumu calego korpusu, 0,64 procent
+
+Dwa reseedy produkcji, **zadnej zmiany reguly miedzy nimi**, porownanie kazdego werdyktu:
+**15 zmian na 2338, czyli 0,64 procent.** Pierwszy raz mamy te liczbe z calego korpusu, a nie z
+dziesieciu domen lokalnie. Opublikowana na `/methodology`, bo czytelnik potrzebuje jej, zanim
+wyciagnie wniosek z jednego wiersza, ktory sie ruszyl.
+
+**Moja poranna hipoteza o `typed_package` upadla.** Lokalnie to sprawdzenie skakalo miedzy
+przebiegami i wzialem to za podloge szumu skanera. W produkcyjnym porownaniu `typed_package`
+**nie wystepuje ani razu**. Przyczyna: lokalnie nie ma cieplego cache rejestru npm, wiec
+`discover()` nie znajduje pakietow, ktore na produkcji znajduje. Zmierzone przy okazji:
+`resolvePackage` potrzebuje maksymalnie 863 ms wobec budzetu 9000 ms, wiec faza npm nie byla
+winna niczemu, co jej przypisalem.
+
+**Ryzyko zmiany user-agenta sprawdzone i nie zmaterializowalo sie.** `name.com` przeskoczyl trzy
+sprawdzenia z niezmierzonych na pass, co wygladalo dokladnie jak skutek nowej nazwy. Odpowiada 200
+staremu i nowemu UA oraz Chrome, po trzy razy kazdemu: zmiana byla ich i przejsciowa.
+`froala.com` odpowiada 403, 200, 403 w tym samym naprzemiennym wzorcu przegladarce co nam.
+
+**Konsekwencja, ktora trzeba nosic dalej:** nasz wskaznik bledu z audytow adwersaryjnych wynosi
+0,39 procent i jest **ponizej wlasnej podlogi szumu korpusu**. To sa dwa rozne pomiary (zla
+regula wobec niestabilnej sieci), ale znaczy to, ze **pojedynczy wiersz nigdy nie jest dowodem
+sam z siebie** i ze przebieg adwersaryjny raportujacy jedno znalezisko moze raportowac pogode.
+
 ## Runda 2026-08-10 (65): produkt nazywa sie Let Agents In
 
 Nazwa zmieniona w kodzie i w tekscie, wdrozona i zweryfikowana na produkcji. Domena jeszcze nie
