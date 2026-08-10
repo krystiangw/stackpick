@@ -181,10 +181,12 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
 - **Ograniczenia subskrypcji, zmierzone:** Cursor free pozwala tylko na model `auto` (nazwany model
   = `ActionRequiredError`), a `auto` **nie zapisuje, który model odpowiedział**, co samo w sobie
   jest confoundem. Gemini spada na darmowy próg API (20 żądań dziennie) i nie kończy przebiegu.
-- **Ósmy przebieg adwersaryjny** po naprawach z rundy 55. Baseline: **1,4 procent**. Warte ataku:
-  przebudowana `rendersUsableForm` (pole „kim jesteś" plus cel wysyłki, oba progi nowe),
-  trójstanowe nogi koniunkcji i to, czy wykluczenie 38 wierszy z nieznaną rejestracją jest
-  poprawne, oraz `self_serve` po **piątej** zmianie w pięć dni.
+- ~~**Ósmy przebieg adwersaryjny**~~ **zrobione 2026-08-10: 1,29 procent** (4 na 311), runda 56.
+- **Dziewiąty przebieg adwersaryjny.** Baseline: **1,29 procent**. Warte ataku: **dwa nowe checki**
+  (żywotność linków llms.txt po poprawce HEAD/GET, cloaking na docsach z progiem 50 procent, oba
+  nieatakowane), narzędzie **`find_providers`** (czy kubełek „niemierzalny" jest liczony poprawnie
+  i czy dopasowanie kategorii po słowach nie zwraca cudzej kategorii), oraz `self_serve` po
+  **szóstej** zmianie.
 - **`auth0.com` serwuje dyno inne ciało niż nam.** Z tej maszyny `auth0.com/signup` daje 200 i
   formularz z dwoma polami, a skan widzi „form needs JavaScript". To fakt o tym, skąd pytamy, i
   ta sama klasa co `storyblok.com`. Nie jest to błąd reguły i nie da się naprawić kodem skanera.
@@ -462,6 +464,60 @@ rejestracją poprawnie wyłączonych.
 `auth0.com` przechodzi teraz `signup_reachable`, co **obala** wcześniejszą diagnozę „to kwestia
 tego, skąd pytamy": to była reguła, nie punkt obserwacyjny. `storyblok.com` nadal wypada, przy
 piątym reseedzie z rzędu, i to zostaje faktem o naszym ruchu.
+
+## Runda 2026-08-10 (56): ósmy przebieg, konkurencja i indeks dla agentów
+
+**Ósmy przebieg: 1,29 procent** (4 na 311), ten sam poziom co siódmy, bez regresji. Sześć znalezisk
+zamkniętych, ale dwie rzeczy ważniejsze od wskaźnika.
+
+**Pomiar przed wdrożeniem uratował poprawkę drugi raz z rzędu.** Chciałem zaostrzyć `self_serve` tak,
+żeby wzmianka złożona wyłącznie z przycisku zawsze oblewała. Przeliczyłem na 116 przechodzących
+cennikach: takich wierszy są trzy, i **dwa mają prawdziwy darmowy próg** (algolia.com „Free to start",
+calendly.com „Always free"), tylko tych sformułowań nie było w liście wzorców. Bez dopisania ich
+zamieniłbym jeden błąd na dwa.
+
+**Klasa błędu do zapamiętania: `[].every()` zwraca `true`.** Strona **bez ani jednej wzmianki o
+„free"** wchodziła w gałąź mówiącą „twoja jedyna wzmianka to przycisk". `anvil.co` i `radar.com`
+zawierają to słowo zero razy.
+
+Reszta ósmego przebiegu: `input type=submit` to trzeci sposób wysłania formularza (kosztował
+`flagsmith.com` rejestrację z sześcioma polami); `cockroachlabs.com` i `swell.is` przeniosły
+rejestrację na **własną markę pod innym TLD** i były publikowane jako niemające do niej linku, co
+wyrzucało je z lejka i z mianownika.
+
+**Odrzucone zgłoszenie przebiegu:** rzekomy „cross-tenant leak" na agora.io okazał się ich własnym
+endpointem zbudowanym na produkcie MCP Algolii. **Trzeci raz w tym projekcie zgłoszona przyczyna
+była zmyślona.**
+
+### Konkurencja, zbadana
+
+`agent-ready.dev`: 70 checków plus 23 dostępnościowe, REST API, serwer MCP, GitHub Action, badge,
+płatność x402, Pro za 19 USD. Zbudowane wokół Vercel Agent Readability Spec. **Zero z ich checków nie
+pyta o rejestrację, klucz ani CAPTCHĘ** (sprawdzone w ich `llms-full.txt`: `signup` 0, `provisioning`
+0, `captcha` 0). Ich własny opis: Discovery, Structure, Context. Robią 70 checków na etapie, który
+nasz korpus mierzy jako rozwiązany w 95 procentach.
+
+`kodustech/agent-readiness`: ocenia **cudze repozytorium** (linting, testy, CI), oś do wewnątrz.
+Nie konkurencja.
+
+**Wzięte od nich dwa checki**, oba wdrożone: żywotność linków w llms.txt i cloaking na dokumentacji.
+**Nie wzięte:** P1-P23, bo to checki SEO (canonical, meta, JSON-LD) na etapie, który i tak wszyscy
+zaliczają.
+
+**Pierwsze liczby z nowych checków, i pierwsza wpadka:** check linków wskazał 8 nieaktualnych map, ale
+`play.honeycomb.io` odpowiada **404 na HEAD i 200 na GET**. Kandydat jest teraz potwierdzany GET-em.
+Cloaking na docsach: **0 na 155**, czyli wynik zerowy wart opublikowania.
+
+### Indeks dla agentów (`find_providers`)
+
+Nowe narzędzie MCP odpowiadające na pytanie **wołającego**, nie dostawcy: „z kim faktycznie skończę".
+Świadomie **eliminacja, nie rekomendacja**: nie mierzymy, czy dostawca pasuje do zadania, a sprzedajemy
+tym samym firmom naprawę, więc ranking od nas byłby osądem, którego nie zrobiliśmy, sprzedawanym przez
+zainteresowanego. Trzy kubełki: przeszedł / zatrzymuje się / niemierzalny. Zmierzone na produkcji:
+upload plików 1 z 10, e-mail transakcyjny 1 z 6, feature flags **0 z 7**.
+
+To odwraca problem sprzedaży: dostawca dowiaduje się, że **agent zapytał o jego kategorię i go nie
+dostał**, czyli premisa rozmowy jest jego, nie nasza.
 
 ## Stare notatki badawcze (historyczne, sprzed rundy 12)
 
