@@ -160,8 +160,12 @@ function rendersUsableForm(body: string): boolean {
   for (const form of body.matchAll(/<form\b([^>]*)>([\s\S]*?)<\/form>/gi)) {
     const fields = [...form[2].matchAll(/<(?:input|select|textarea)\b[^>]*>/gi)].map((field) => field[0])
     const asksWhoYouAre = fields.filter(isFillable).some(identifiesTheCaller)
+    // A React form posts from an onSubmit handler and carries no action, so the button is the
+    // only evidence it goes anywhere. Availability is the whole test on a button: asking
+    // isFillable rejected every one of them, because a submit control is by definition not a
+    // field, and that dropped supabase.com, resend.com and contentful.com.
     const canBeSubmitted =
-      /\saction\s*=/i.test(form[1]) || [...form[2].matchAll(/<button\b[^>]*>/gi)].some((button) => isFillable(button[0]))
+      /\saction\s*=/i.test(form[1]) || [...form[2].matchAll(/<button\b[^>]*>/gi)].some(isAvailable)
     if (asksWhoYouAre && canBeSubmitted) return true
   }
   return false
@@ -187,13 +191,21 @@ function identifiesTheCaller(tag: string): boolean {
  * itself disabled while the consent checkbox sits outside it (dashboard.api.video/register).
  * A hidden CSRF token and a submit button are not fields anyone fills in either.
  */
+/** Whether the control is offered rather than greyed out. Attribute names only: Tailwind writes
+ * `disabled:opacity-50` inside a class value, and reading the bare word there marked every styled
+ * control as unavailable, which cost supabase.com, resend.com and browserless.io real forms. */
+function isAvailable(tag: string | RegExpMatchArray): boolean {
+  const text = typeof tag === 'string' ? tag : tag[0]
+  const attributes = text.replace(/=\s*"[^"]*"/g, '=""').replace(/=\s*'[^']*'/g, "=''")
+  return !/(?:^|\s)disabled(?=[\s=>/])/i.test(attributes)
+}
+
 function isFillable(tag: string): boolean {
   // Attribute names only. Tailwind writes `disabled:opacity-50` inside a class value, and reading
   // the bare word there marked every styled input as unavailable: supabase.com, resend.com and
   // browserless.io all lost real signup forms to it, which is worse than the false positives the
   // rule exists to stop.
-  const attributes = tag.replace(/=\s*"[^"]*"/g, '=""').replace(/=\s*'[^']*'/g, "=''")
-  if (/(?:^|\s)disabled(?=[\s=>/])/i.test(attributes)) return false
+  if (!isAvailable(tag)) return false
   const type = tag.match(/\btype\s*=\s*["']?([a-z]+)/i)?.[1]?.toLowerCase()
   return type === undefined || !['hidden', 'submit', 'button', 'image', 'reset'].includes(type)
 }
