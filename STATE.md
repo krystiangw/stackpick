@@ -7,11 +7,13 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 
 ## Stan na teraz, w dziesięciu liniach
 
-- Formuła **7.3**, korpus **156 domen w 24 kategoriach**, reseed 155/156 (`storyblok.com` nie
-  odpowiada dyno, z tej maszyny odpowiada 200: to nasz własny ruch, nie fakt o dostawcy).
+- Formuła **7.4**, korpus **155 domen w 24 kategoriach**. `storyblok.com` nie odpowiada dyno przy
+  trzech reseedach z rzędu, a z tej maszyny odpowiada 200 przez Netlify: to fakt o naszym ruchu,
+  nie o dostawcy, i dlatego wypadł z korpusu zamiast dostać zerowy wiersz.
 - `npm run audit`: **0 sprzeczności w wierszach, 10 liczb ze stron zgodnych z danymi**.
-- Pięć przebiegów adwersaryjnych przeciw realnym żądaniom: **16,7 → 2,2 → 3,9 → 2,0 → 0,94
-  procent błędu** (6 na 640). Wszystkie ich znaleziska zamknięte poza pozycjami z listy niżej.
+- Sześć przebiegów adwersaryjnych: **16,7 → 2,2 → 3,9 → 2,0 → 0,94 → 7,9 procent błędu**.
+  Szósty jest skokiem w górę i to jest prawdziwy wynik: zaatakował trzy zmiany napisane w jedną
+  noc i wszystkie trzy się posypały. Naprawione w rundzie 54.
 - Znalezisko rynkowe: **41 z 54 vendorów z żywym MCP publikuje RFC 7591**, poza tą grupą 23 ze 102.
   DCR przyszło z wymogu specyfikacji MCP, nie z decyzji o wpuszczeniu agentów. **36 z 54 nadal
   nie dokumentuje żadnej drogi do klucza.**
@@ -153,9 +155,15 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   arytmetyka koniunkcji. Niedowiedzione: **selekcja pakietu npm** (zero błędnych przypisań na 141,
   ale publikujemy CLI, serwer i niskopoziomowego klienta jako odpowiedź dostawcy) i **twierdzenie**
   koniunkcji, patrz runda 51.
-- **Szósty przebieg adwersaryjny** po 7.3. Baseline: **0,94 procent**. Warte ataku: nowa noga
-  CAPTCHA w koniunkcji, `rendersUsableForm` (próg dwóch pól jest arbitralny), i `onlyChrome`
-  w `self_serve`, bo to trzecia z rzędu zmiana w tym samym checku.
+- ~~**Szósty przebieg adwersaryjny**~~ **zrobione 2026-08-10: 7,9 procent** (17 na 216). Wszystkie
+  trzy zmiany z nocy obalone lub niedowiedzione, naprawione w rundzie 54.
+- **Siódmy przebieg adwersaryjny** po 7.4. Baseline: **7,9 procent**, czyli tym razem celem jest
+  pokazanie, że naprawy działają. Warte ataku: `CTA_WORDING` (podział na przycisk i zdanie jest
+  nowy i arbitralny), `isFillable` po naprawie parsowania atrybutów, i nowe zdanie `self_serve`,
+  bo to **czwarta** zmiana w tym checku w cztery dni.
+- **`auth0.com` serwuje dyno inne ciało niż nam.** Z tej maszyny `auth0.com/signup` daje 200 i
+  formularz z dwoma polami, a skan widzi „form needs JavaScript". To fakt o tym, skąd pytamy, i
+  ta sama klasa co `storyblok.com`. Nie jest to błąd reguły i nie da się naprawić kodem skanera.
 - **Selekcja pakietu npm, nie własność.** `directus.io` dostaje `directus` (serwer) zamiast
   `@directus/sdk`, `xata.io` dostaje `@xata.io/api@0.1.7` zamiast `@xata.io/client@0.30.1`, oba
   we własnym scope dostawcy i oba otypowane. `betterstack.com` gubi `@logtail/node` przez
@@ -349,6 +357,46 @@ szeroka, ta gałąź musi wymagać, żeby nazwa niosła markę dostawcy.
 **Stan pozycji: problem realny, dwie hipotezy obalone pomiarem, żadnej zmiany w kodzie.**
 Zdania o `directus.io` i `xata.io` są dosłownie prawdziwe o pakiecie, który nazywają, więc
 publikowanie ich dalej jest tańsze niż trzecia próba na wyczucie.
+
+## Runda 2026-08-10 (54): szósty przebieg wywrócił wszystko, co napisałem w nocy
+
+**7,9 procent (17 na 216)** wobec 0,94 na 7.2. Skok w górę jest prawdziwy i pokazuje, na czym
+polega ryzyko pracy w jednym ciągu: trzy zmiany napisane w jedną noc, żadna nie atakowana
+niezależnie, wszystkie trzy wadliwe.
+
+**Obalona: strażnik cennika.** Tłumienie sygnału darmowego progu wszędzie tam, gdzie nie dopasowała
+się cena, zaprzeczyło podanemu wprost progowi na `qdrant.tech` (cztery nazwane progi i „Free Tier
+Free forever" w 6 934 znakach), `daily.co`, `split.io` i `crowdin.com`. Zdanie „nothing about your
+tiers survives without JavaScript" było fałszywe na **9 z 12** wierszy, które je nosiły.
+
+Naprawiane **dwa razy**, bo pierwsza poprawka wzięła złe kryterium. Progiem była długość tekstu, a
+`here.com` ma 850 znaków i `daily.co` 1 230, więc długość ich nie rozdziela. **Rozdziela je to, co
+się dopasowało:** „Get started for free" to przycisk, „10 000 darmowych minut miesięcznie" to zdanie
+o produkcie. Stąd `CTA_WORDING` i reguła: tłum tylko wtedy, gdy **każdy** sygnał jest wołaniem do akcji.
+
+**Niedowiedziona: reguła formularza.** Próg dwóch pól, który sam nazwałem arbitralnym, nie był
+problemem. Problemem było liczenie inputów w całej stronie: przechodziło pole wyszukiwarki
+(`commercetools.com`), newsletter ze zablokowanym submitem (`payloadcms.com`) i formularz
+`api.video`, którego jedyny input jest `disabled`, a checkbox zgody leży poza formularzem.
+
+**I ta naprawa też miała buga, złapany dopiero na liczbie po reseedzie.** Nagłówek spadł z 6 na 3,
+bo `\bdisabled\b` dopasowywało **`disabled:opacity-50` w klasie Tailwinda**, więc każdy ostylowany
+input czytał się jako niedostępny i wypadły `supabase.com`, `resend.com` i `browserless.io`.
+Wartości atrybutów są teraz usuwane, zanim szukamy słowa.
+
+**Twierdzenie na `/findings` obniżone do tego, co mierzymy.** Nagłówek mówił „an unattended agent
+could actually use", a `supabase.com` i `contentful.com` bramkują rejestrację hCaptchą montowaną
+przez JavaScript. Nasze własne zdanie w wierszu to przyznaje, nagłówek zapominał. Teraz brzmi
+„clear all three barriers we can measure", a pod listą stoi nazwana ślepa plamka instrumentu.
+
+**Jedno znalezisko przebiegu sprawdzone i FAŁSZYWE.** Rzekome 44 wiersze fałszywie twierdzące o
+`llms-full.txt`: agent testował wyłącznie apeks, a pliki leżą na subdomenie docs, dokładnie tam,
+gdzie patrzy nasza sonda (`docs.kinde.com/llms-full.txt` to 2,7 MB `text/plain`,
+`docs.honeybadger.io` 2,1 MB, `docs.growthbook.io` i `docs.knock.app` po ~2,1 MB). Przyjęcie tego
+na wiarę zepsułoby 44 poprawne wiersze. **Raport subagenta falsyfikuje się przed użyciem, zawsze.**
+
+Stan po naprawach: **5 ze 155** spełnia wszystkie trzy nogi (`browserless.io`, `contentful.com`,
+`honeybadger.io`, `resend.com`, `supabase.com`), 56 jest o jeden krok, 50 z nich na rejestracji.
 
 ## Stare notatki badawcze (historyczne, sprzed rundy 12)
 
