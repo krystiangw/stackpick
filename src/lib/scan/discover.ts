@@ -426,6 +426,21 @@ const vendorSiteOf = (domain: string, homeUrl: string): VendorSite => ({
 const onVendorSite = (url: string, vendor: VendorSite): boolean =>
   vendor.hosts.some((host) => sameSite(url, host))
 
+/**
+ * The vendor's own name on a different top level domain. cockroachlabs.com sends you to
+ * cockroachlabs.cloud/signup and swell.is to swell.store/signup, and both were published as having
+ * nothing on the site that links to an account signup, which dropped them out of the funnel report
+ * for a reason that is not true.
+ *
+ * Only ever consulted for a link the vendor wrote on their own page. The same name on another
+ * registration proves nothing by itself, which is why an npm package is not attributed this way,
+ * but a company pointing its own "Sign up" button somewhere is telling us where its signup is.
+ */
+function isSiblingBrand(url: string, vendor: VendorSite): boolean {
+  const brand = hostLabel(vendor.hosts[0])
+  return brand.length >= 4 && hostLabel(url) === brand
+}
+
 /** Where the home page landed, when that is a different company's registrable name. */
 function resolvedElsewhereFrom(domain: string, home: Fetched): ResolvedElsewhere | null {
   const landed = hostOf(home.url)
@@ -550,7 +565,7 @@ function looksLikeSignup(got: Fetched, homeUrl: string): boolean {
  */
 function signupLinksOn(html: string, base: string, vendor: VendorSite): string[] {
   const links = extractLinks(html, base).filter(
-    (link) => onVendorSite(link, vendor) || isAuthenticationHost(link),
+    (link) => onVendorSite(link, vendor) || isAuthenticationHost(link) || isSiblingBrand(link, vendor),
   )
   // Keyed on the page rather than on the whole URL, keeping the shortest way of writing it: the
   // same registration is linked six times from elastic.co's home page, five of them carrying a
