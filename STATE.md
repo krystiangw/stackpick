@@ -579,6 +579,28 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-10 (67): drzwi, do ktorych agent moze zapukac, to nie to samo co drzwi, ktore sie otworza
+
+Wyszlo z weryfikacji listy targetow, a nie z audytu. Dwa rejestratory trafily do najostrzejszej
+sekcji jako serwery MCP, wiec sprawdzilem endpointy przed wpuszczeniem ich do maila: oba prawdziwe,
+oba z poprawnym odkrywaniem zasobu chronionego (RFC 9728), oba z rejestracja dynamiczna (RFC 7591).
+Korpus mowil o obu to samo: `registration_endpoint published`.
+
+**A to nie jest to samo.** `dynadot.com` ogłasza `client_credentials`, wiec nieobsługiwany agent
+ma udokumentowana sciezke do tokenu. `namecheap.com` oglasza wylacznie `authorization_code` i
+`refresh_token`, czyli **oba stawiaja czlowieka przed przegladarka**. Ten sam ksztalt drzwi,
+przeciwny wynik dla agenta. `sentry.io` ma to samo co namecheap, wiec to nie jest ciekawostka
+o rejestratorach.
+
+Zdanie mowi to teraz wprost, **punkt zostaje tam, gdzie byl**. Przesuniecie punktu po cichu
+przescoringowaloby caly korpus, a check od poczatku mierzy istnienie endpointu rejestracji.
+To ten sam wzorzec co poranne `llms-full.txt`: werdykt dobry, zdanie niepelne.
+`device_code` **nie liczy sie** jako bezobsługowy: zatwierdzenie na innym ekranie to nadal czlowiek.
+
+Dotyczy **68 wierszy** (kazdy z `oauth_dcr` = pass). Przeskanowane punktowo zamiast czwartego
+pelnego reseeda w jeden dzien, bo wlasny komentarz w `reseed.sh` ostrzega, ze powtarzane walenie
+w te same hosty w ciagu doby wywolywalo 429.
+
 ## Runda 2026-08-10 (66): zmierzona podloga szumu calego korpusu, 0,64 procent
 
 Dwa reseedy produkcji, **zadnej zmiany reguly miedzy nimi**, porownanie kazdego werdyktu:
