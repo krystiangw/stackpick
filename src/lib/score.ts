@@ -121,11 +121,11 @@ export const CHECKS: Check[] = [
         if (links && links.dead > 0) {
           return yes(
             0,
-            `llms.txt present${at}, but ${links.dead} of the ${links.sampled} links we sampled are gone, starting with ${links.firstDead}`,
+            `llms.txt present${at}, but ${links.dead} of the ${links.sampled} links we sampled across the file are gone, starting with ${links.firstDead}`,
           )
         }
         const files = f.machine.hasLlmsFullTxt ? 'llms.txt and llms-full.txt present' : 'llms.txt present'
-        const checked = links ? `, and the ${links.sampled} links we sampled all answer` : ''
+        const checked = links ? `, and the ${links.sampled} links we sampled across the file all answer` : ''
         return yes(1, `${files}${at}${checked}`)
       }
       if (blindedBy(f)) {
@@ -199,6 +199,17 @@ export const CHECKS: Check[] = [
         return blindedBy(f)
           ? { points: 0, detail: 'Unmeasurable: the site refuses agent requests before robots.txt matters', inconclusive: true }
           : yes(1, 'No robots.txt, so nothing is disallowed for anyone')
+      }
+      // What robots.txt permits and what the edge does are two different measurements, and only
+      // one of them is what a crawler experiences. algolia.com's file blocks nobody while its edge
+      // answers 403 to any agent whose name contains "Bot", and amplitude.com answers ClaudeBot
+      // and GPTBot 404 at a documentation page it serves a browser in full.
+      const refused = f.crawlersRefused ?? []
+      if (refused.length > 0) {
+        return yes(
+          0,
+          `robots.txt permits them, but your edge answered ${refused.map((crawler) => `${crawler.name} ${crawler.status}`).join(' and ')} at ${f.discovered.docs}, which a browser is served`,
+        )
       }
       const explicitlyAllowed = AI_CRAWLERS.filter(
         (crawler) => crawler.class === 'user' && f.robots.crawlers[crawler.name] === 'allowed_explicit',

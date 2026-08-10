@@ -16,6 +16,17 @@ export const BROWSER_UA =
  */
 // The URL a vendor sees in their logs has to resolve, or the traffic reads as an anonymous
 // scanner. stackpick.ai is not registered yet, so this points at where the product lives.
+/**
+ * The user agents an edge actually has rules for. Ours is a string nobody has ever written a rule
+ * against, which made a clean measurement of a question nobody asked: amplitude.com answers 404 to
+ * ClaudeBot and GPTBot at a documentation URL it serves us in full, and algolia.com answers 403 to
+ * any agent whose name contains "Bot". Asking only as ourselves made both invisible.
+ */
+export const NAMED_CRAWLERS = [
+  { name: 'ClaudeBot', ua: 'Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)' },
+  { name: 'GPTBot', ua: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.1; +https://openai.com/gptbot' },
+] as const
+
 export const AGENT_UA = `StackPick/1.0 (+${process.env.STACKPICK_BASE_URL ?? 'https://stackpick-f12d13a227ea.herokuapp.com'}/methodology)`
 
 /**

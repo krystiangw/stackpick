@@ -14,6 +14,7 @@ import {
   inPhase,
   isBotChallenge,
   looksLikeHtml,
+  NAMED_CRAWLERS,
   ranOutOfTime,
   SCAN_BUDGET_MS,
   visibleTextLength,
@@ -59,6 +60,12 @@ export type ScanFindings = {
    * was refused outright, because a refusal is a different finding and already has its own check.
    */
   docsThinnerForAgents: number | null
+  /**
+   * Named AI crawlers refused at a documentation URL a browser is served. Separate from the door
+   * test, which asks as us: robots.txt can permit ClaudeBot while the edge in front of it does not,
+   * and only one of those two is what a crawler experiences.
+   */
+  crawlersRefused: { name: string; status: number }[]
   /**
    * Whether anything substantive was read despite the door being shut. vonage.com answered 403 on
    * its marketing host while we successfully read its llms.txt, its documentation and its package,
@@ -470,6 +477,16 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
   const docsAsAgentPending = phase('docs', async () =>
     found.docs ? fetchUrl(found.docs, { ua: AGENT_UA, fresh: true }) : null,
   )
+  // The same page asked as the crawlers an edge has heard of. Our own user agent is a string
+  // nobody has a rule for, which is a clean measurement of a question nobody asked.
+  const namedCrawlersPending = phase('docs', async () =>
+    found.docs
+      ? inParallel([...NAMED_CRAWLERS], async (crawler) => ({
+          name: crawler.name,
+          got: await fetchUrl(found.docs as string, { ua: crawler.ua, fresh: true }),
+        }))
+      : [],
+  )
   // One documentation page is a lottery: cloudinary describes its Provisioning API on a page
   // we never opened, then failed the check for not describing it. Follow the pages an agent
   // hunting for credentials would follow.
@@ -531,9 +548,10 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     report('Testing signup and agent entry points', 4)
   })()
 
-  const [asAgent, docsAsAgent, deeperDocs, robots, machine, npm, funnel] = await Promise.all([
+  const [asAgent, docsAsAgent, namedCrawlers, deeperDocs, robots, machine, npm, funnel] = await Promise.all([
     doorPending,
     docsAsAgentPending,
+    namedCrawlersPending,
     docsPending,
     robotsPending,
     machinePending,
@@ -575,6 +593,10 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     // times in a row while testing repeatability, and calling that a WAF would be an accusation.
     blocksPlainRequests: !asAgent.ok,
     docsThinnerForAgents: thinnerForAgents(docsPage, docsAsAgent),
+    // Only when the browser was served: a page nobody can read is not a page that discriminates.
+    crawlersRefused: docsPage?.ok
+      ? namedCrawlers.filter(({ got }) => got.status >= 400).map(({ name, got }) => ({ name, status: got.status }))
+      : [],
     readAnything:
       docsText.length > 0 ||
       machine.findings.hasLlmsTxt ||

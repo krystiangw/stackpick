@@ -56,7 +56,7 @@ export type MachineFindings = {
 export type MachineScan = { findings: MachineFindings; llmsCorpus: string; llmsUrls: string[] }
 
 /** Enough to catch a stale map, few enough that checking one costs nobody a phase. */
-const MOST_LLMS_LINKS_SAMPLED = 5
+const MOST_LLMS_LINKS_SAMPLED = 12
 
 /**
  * Whether the map leads anywhere. Only markdown links, only http, and only a handful: the point
@@ -66,7 +66,11 @@ const MOST_LLMS_LINKS_SAMPLED = 5
 async function sampleLlmsLinks(corpus: string): Promise<MachineFindings['llmsLinks']> {
   const links = [...new Set([...corpus.matchAll(/\]\((https?:\/\/[^\s)]+)\)/g)].map((match) => match[1]))]
   if (links.length === 0) return undefined
-  const sample = links.slice(0, MOST_LLMS_LINKS_SAMPLED)
+  // Spread across the file rather than the first N, which is what "sampled" has to mean if we are
+  // going to print the word. Taking the head found dead links in 7 files and missed them in 8 more,
+  // because a maintained top and a rotten tail is what an unmaintained map actually looks like.
+  const step = Math.max(1, Math.floor(links.length / MOST_LLMS_LINKS_SAMPLED))
+  const sample = links.filter((_, index) => index % step === 0).slice(0, MOST_LLMS_LINKS_SAMPLED)
   const gone = (answer: { status: number }) => answer.status === 404 || answer.status === 410
   const heads = await inParallel(sample, (url) => fetchUrl(url, { method: 'HEAD' }))
   // A HEAD that 404s is not a dead page. play.honeycomb.io answers 404 to HEAD and 200 to GET,
