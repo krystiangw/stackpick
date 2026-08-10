@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '7.6'
+export const FORMULA_VERSION = '7.7'
 
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on
@@ -429,7 +429,18 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       // A live endpoint beats any amount of prose about MCP, and a docs page named mcp.md
       // is not a server, which is what the old URL pattern kept scoring.
-      const live = f.funnel.mcpEndpoints
+      const all = f.funnel.mcpEndpoints
+      // A server that answers only a browser is a wall with a protocol behind it, and the point
+      // is for a surface an agent can reach. Reported precisely rather than as "nothing answered",
+      // which would be false: something answered, and it said why it would not talk to us.
+      const browserOnly = all.filter((endpoint) => endpoint.evidence === 'browser-only')
+      const live = all.filter((endpoint) => endpoint.evidence !== 'browser-only')
+      if (live.length === 0 && browserOnly.length > 0) {
+        return yes(
+          0,
+          `${browserOnly[0].url} speaks JSON-RPC and then refuses any request without a browser Referer or Origin header, which no unattended agent sends`,
+        )
+      }
       if (live.length > 0) {
         const first = live[0]
         const how =

@@ -256,7 +256,21 @@ function isFillable(tag: string): boolean {
   return type === undefined || !['hidden', 'submit', 'button', 'image', 'reset'].includes(type)
 }
 
-export type McpEndpoint = { url: string; status: number; evidence: 'challenges' | 'rejects-get' | 'answers-json' }
+export type McpEndpoint = {
+  url: string
+  status: number
+  /**
+   * `browser-only` is a server that speaks the protocol and then refuses anything without a
+   * browser header. njal.la answers a JSON-RPC initialize at /api/mcp/ with 200 and a body of
+   * `CSRF Failed: Referer checking failed - no Referer`, which no unattended agent sends. It is
+   * a server, and it is not one an agent can use, and scoring it as live would hand a point to
+   * exactly the wall this scanner exists to find.
+   */
+  evidence: 'challenges' | 'rejects-get' | 'answers-json' | 'browser-only'
+}
+
+/** A refusal that names the browser mechanism doing it, rather than a credential we could get. */
+const BROWSER_ONLY_REFUSAL = /csrf|referer checking|referrer checking|origin header/i
 
 /** Whether unknown paths answer with a real document, asked once per file type we probe. */
 export type CatchAll = {
@@ -739,6 +753,9 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
     .map((got, index) => {
       if (completesHandshake(got.body)) {
         return { url: got.url, status: got.status, evidence: 'answers-json' as const }
+      }
+      if (got.ok && !looksLikeHtml(got) && BROWSER_ONLY_REFUSAL.test(got.body)) {
+        return { url: got.url, status: got.status, evidence: 'browser-only' as const }
       }
       // The wildcard probe only discredits addresses we guessed. An address the vendor named in
       // its own card is not a guess, and sentry.io's card points at another domain entirely.
