@@ -1,4 +1,4 @@
-# StackPick
+# Let Agents In
 
 Measures whether an AI coding agent will find, register with and integrate a product.
 

@@ -78,7 +78,7 @@ export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus 
     domains: rows.length,
     max: MAX_SCORE,
     methodology: `${baseUrl}/methodology`,
-    terms: 'Free to use, quote and republish with attribution to StackPick and a link to the methodology.',
+    terms: 'Free to use, quote and republish with attribution to Let Agents In and a link to the methodology.',
     notes: [
       'One row per domain, the most recent scan we hold, scored under a single formula version.',
       'share is total divided by measurable, not by max. A domain that refused our requests has a smaller denominator, not a worse number, so ranking on total alone would be wrong.',

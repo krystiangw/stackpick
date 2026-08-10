@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   // Without this Next resolves the file-based OG image against localhost, so every
   // scorecard forwarded to Slack or LinkedIn arrived as a bare link with no card.
   metadataBase: new URL(process.env.STACKPICK_BASE_URL ?? 'http://localhost:3000'),
-  title: 'StackPick: will an AI agent pick your product?',
+  title: 'Let Agents In: can an AI agent get through your product?',
   description:
     'Measures whether an AI coding agent can find, register with and integrate your product. Deterministic checks, published formula, reproducible score.',
 }
@@ -59,7 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="mt-24 border-t border-rule">
           <div className="mx-auto flex max-w-5xl flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-6 py-8 font-mono text-xs text-ink-faint">
             <p className="max-w-2xl">
-              StackPick measures agent behaviour, not marketing. Every check on the free scan is an HTTP
+              Let Agents In measures agent behaviour, not marketing. Every check on the free scan is an HTTP
               request with a published rule.
             </p>
             {/* One person does the work, and a buyer weighing a five-figure engagement with a stranger

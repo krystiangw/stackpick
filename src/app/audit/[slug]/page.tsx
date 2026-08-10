@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const audit = await getAudit(slug)
-  if (!audit) return { title: 'Audit not found: StackPick' }
+  if (!audit) return { title: 'Audit not found: Let Agents In' }
   return {
     title: `${audit.subject}: what agents actually did`,
     description: audit.verdict.headline,

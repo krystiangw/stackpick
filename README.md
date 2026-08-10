@@ -1,4 +1,4 @@
-# StackPick
+# Let Agents In
 
 Measures whether an AI coding agent can find, register with and integrate a product.
 
@@ -17,7 +17,7 @@ VERBOSE=1 pnpm scan vercel.com
 
 ```bash
 git push heroku main
-heroku logs -a stackpick --tail
+heroku logs -a letagentsin --tail
 ```
 
 Config lives in Heroku config vars, see `.env.example` for the list. The console at `/app`

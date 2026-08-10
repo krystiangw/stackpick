@@ -505,7 +505,7 @@ async function inspectSignup(url: string | null): Promise<SignupFindings> {
   }
   // As the agent, because that is what the finding says. Sending Chrome and then publishing
   // "the signup answers N to a non-browser request" was a claim about a request we never made,
-  // and it cost liveblocks.io a point on a page that answers 200 with a real form to StackPick/1.0.
+  // and it cost liveblocks.io a point on a page that answers 200 with a real form to LetAgentsIn/1.0.
   const got = await fetchWithRetries(url, { ua: AGENT_UA })
   // One request, and only when there is a difference worth measuring.
   const asBrowser = got.ok ? null : await fetchUrl(url, { ua: BROWSER_UA })
@@ -559,14 +559,14 @@ async function servesCatchAllText(site: string): Promise<CatchAll> {
   // asking for text/plain saw sentry.io's 20 kB HTML while /ai.txt asking for markdown saw their
   // 976 byte catch-all, so the control did not recognise the page it exists to recognise.
   const [markdown, json, plain, plainAsEntry] = await Promise.all([
-    fetchUrl(`${site}/stackpick-control-probe-8f3a1c.md`, { accept: entryAccept('.md') }),
-    fetchUrl(`${site}/.well-known/stackpick-control-probe-8f3a1c.json`, { accept: entryAccept('.json') }),
+    fetchUrl(`${site}/letagentsin-control-probe-8f3a1c.md`, { accept: entryAccept('.md') }),
+    fetchUrl(`${site}/.well-known/letagentsin-control-probe-8f3a1c.json`, { accept: entryAccept('.json') }),
     // Twice, because two checks read this arm and they do not ask the same way. llms.txt is
     // fetched as text/plain, and agora.io answers an unknown .txt path with 240 kB of HTML to
     // that header and 26 kB of markdown to the entry probe's header. One boolean for both
     // suppressed a genuine 8,857 byte llms.txt on the strength of a page it is nothing like.
-    fetchUrl(`${site}/stackpick-control-probe-8f3a1c.txt`, { accept: 'text/plain' }),
-    fetchUrl(`${site}/stackpick-control-probe-8f3a1c.txt`, { accept: entryAccept('.txt') }),
+    fetchUrl(`${site}/letagentsin-control-probe-8f3a1c.txt`, { accept: 'text/plain' }),
+    fetchUrl(`${site}/letagentsin-control-probe-8f3a1c.txt`, { accept: entryAccept('.txt') }),
   ])
   return {
     markdown: isRealTextFile(markdown, 30),
@@ -653,13 +653,13 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
   const handshake = {
     accept: 'application/json, text/event-stream',
     method: 'POST' as const,
-    body: '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"StackPick","version":"1.0"}}}',
+    body: '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"LetAgentsIn","version":"1.0"}}}',
   }
   // Nearly every site answers 405 to a POST at a path it does not route, so "405 at /mcp" was
   // evidence of nothing and we published it as a live server on 18 domains. The control is the
   // same request at a path nobody registered, on the same origin, so the only thing that counts
   // is /mcp answering differently from the rest of the site.
-  const controlPath = '/mcp-stackpick-control-8f3a1c'
+  const controlPath = '/mcp-letagentsin-control-8f3a1c'
   const [results, control] = await Promise.all([
     inParallel(candidates, (url) =>
       // An MCP server speaks JSON-RPC over POST; a GET tells us far less and is what made us
@@ -670,7 +670,7 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
     // same way as. datadoghq.com's edge answers an unregistered subdomain 401 to a GET and 404
     // to this POST, so the GET arm declared a wildcard that the candidates never met and threw
     // away the 401 at mcp.datadoghq.com/v1/mcp, a live server, on the strength of it.
-    fetchUrl(`https://mcp-stackpick-control-8f3a1c.${domain}`, handshake),
+    fetchUrl(`https://mcp-letagentsin-control-8f3a1c.${domain}`, handshake),
   ])
   // A wildcard host behind an auth proxy answers 401 to anything, including a name nobody
   // registered. Then every domain would "run an MCP server".

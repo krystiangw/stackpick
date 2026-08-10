@@ -1,6 +1,6 @@
 # Instructions for agents
 
-You can use StackPick without a browser and without an account.
+You can use Let Agents In without a browser and without an account.
 
 ## Scan a domain
 

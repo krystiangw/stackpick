@@ -102,7 +102,7 @@ export async function POST(request: Request) {
     return result(id, {
       protocolVersion: PROTOCOL_VERSION,
       capabilities: { tools: { listChanged: false } },
-      serverInfo: { name: 'stackpick', title: 'StackPick', version: '1.0.0' },
+      serverInfo: { name: 'letagentsin', title: 'Let Agents In', version: '1.0.0' },
       instructions:
         'Two tools. scan_domain takes a bare domain and scores it. find_providers takes a problem in ' +
         'plain words and returns the vendors we have measured in that category, split by where an ' +

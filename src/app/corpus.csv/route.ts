@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   return new NextResponse(corpusToCsv(corpus), {
     headers: {
       'content-type': 'text/csv; charset=utf-8',
-      'content-disposition': `attachment; filename="stackpick-corpus-v${corpus.formulaVersion}.csv"`,
+      'content-disposition': `attachment; filename="letagentsin-corpus-v${corpus.formulaVersion}.csv"`,
       'cache-control': 'public, max-age=3600',
       'access-control-allow-origin': '*',
     },

@@ -21,7 +21,7 @@ if (!category) {
   process.exit(2)
 }
 
-const runsDir = join(process.env.STACKPICK_RUNS ?? join(homedir(), '.stackpick-runs'), category)
+const runsDir = join(process.env.LETAGENTSIN_RUNS ?? join(homedir(), '.letagentsin-runs'), category)
 if (!existsSync(runsDir)) {
   console.error(`no runs at ${runsDir}. Seed them first.`)
   process.exit(1)

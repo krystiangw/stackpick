@@ -106,14 +106,14 @@ export function toSarif(report: Report, baseUrl: string): unknown {
       {
         tool: {
           driver: {
-            name: 'StackPick',
-            fullName: 'StackPick agent readiness scanner',
+            name: 'Let Agents In',
+            fullName: 'Let Agents In agent readiness scanner',
             version: FORMULA_VERSION,
             informationUri: `${baseUrl}/methodology`,
             rules,
           },
         },
-        automationDetails: { id: `stackpick/${report.domain}/${report.id}` },
+        automationDetails: { id: `letagentsin/${report.domain}/${report.id}` },
         invocations: [{ startTimeUtc: report.scannedAt, executionSuccessful: true }],
         results,
         properties: {
@@ -166,7 +166,7 @@ export function toAgentInstructions(report: Report, baseUrl: string): string {
   return [
     `# Make ${report.domain} readable to an AI agent`,
     '',
-    `Measured by StackPick on ${report.scannedAt.slice(0, 10)}, formula v${scorecard.formulaVersion}: ` +
+    `Measured by Let Agents In on ${report.scannedAt.slice(0, 10)}, formula v${scorecard.formulaVersion}: ` +
       `${scorecard.total} of ${measurable} points we could measure. Full scorecard: ${baseUrl}/r/${report.id}`,
     '',
     'Each task below is one thing to change, with the measurement that produced it and a link to the rule. ' +

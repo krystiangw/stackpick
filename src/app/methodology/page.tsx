@@ -4,7 +4,7 @@ import { AI_CRAWLERS } from '@/lib/scan/robots'
 import { CHECKS, FORMULA_VERSION, MAX_SCORE, STAGES } from '@/lib/score'
 
 export const metadata: Metadata = {
-  title: 'Methodology: StackPick',
+  title: 'Methodology: Let Agents In',
   description: 'Every check, its rule and why it costs a vendor money. The formula is published so the score can be reproduced.',
 }
 
@@ -193,7 +193,7 @@ export default function MethodologyPage() {
             'A soft 404 is treated as absence. Sites that answer 200 with an app shell for unknown paths are read as not having the file, which is also how an agent reads them.',
             `The provisioning check reads the documentation landing page, at most three more chosen by how directly a path promises credentials, and any llms.txt files you publish, which is why the scorecard often says more than four documents. It looks for these seven phrases and names the ones it found: ${PROVISIONING_PATTERN_LABELS.join('; ')}. A sample of a large documentation set is still a sample, so a vendor whose credential page was not among them can tell us and we will rescan.`,
             'A control probe runs before the agent-entry checks: we ask for a nonsense path first, and if the site answers it with a real document, every hit in that namespace is suppressed and the check is marked unmeasurable. Sentry answers any .md path with the same 976-byte page, which would otherwise have scored full marks on nine files that do not exist. The MCP check runs the same control, because almost every site answers 405 to a POST at a path it does not route: an address only counts when it answers the handshake differently from an unrouted one, or challenges for OAuth with a WWW-Authenticate header.',
-            'The door test sends StackPick/1.0 three times and reports what came back next to what a Chrome user-agent got, so a site that serves browsers and refuses agents shows both numbers. Every other request in the scan is sent as a browser, because we are measuring the content, not the gate.',
+            'The door test sends LetAgentsIn/1.0 three times and reports what came back next to what a Chrome user-agent got, so a site that serves browsers and refuses agents shows both numbers. Every other request in the scan is sent as a browser, because we are measuring the content, not the gate.',
           ].map((limit, index) => (
             <li key={limit} className="grid grid-cols-[2rem_1fr] gap-4">
               <span className="font-mono text-xs text-ink-faint">{String(index + 1).padStart(2, '0')}</span>

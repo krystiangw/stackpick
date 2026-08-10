@@ -43,7 +43,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
     return new ImageResponse(
       (
         <div style={{ display: 'flex', width: '100%', height: '100%', background: GROUND, alignItems: 'center', justifyContent: 'center', color: INK, fontSize: 44 }}>
-          StackPick
+          Let Agents In
         </div>
       ),
       { ...size, fonts },
@@ -79,7 +79,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <div style={{ display: 'flex', fontSize: 17, color: BRASS, letterSpacing: 4, textTransform: 'uppercase' }}>
-              StackPick
+              Let Agents In
             </div>
             <div style={{ display: 'flex', fontSize: 30, fontWeight: 600, letterSpacing: -0.5 }}>{report.domain}</div>
           </div>

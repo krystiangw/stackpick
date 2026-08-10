@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { CHECKS, MAX_SCORE } from '@/lib/score'
 
 export const metadata: Metadata = {
-  title: 'Pricing: StackPick',
+  title: 'Pricing: Let Agents In',
   description: 'What the free scan covers, what a real agent audit costs, and what happens after the findings.',
 }
 

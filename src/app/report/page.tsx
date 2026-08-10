@@ -5,7 +5,7 @@ import { buildIndustryReport, type CheckTally } from '@/lib/industry'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'The agent readiness of developer tooling: StackPick',
+  title: 'The agent readiness of developer tooling: Let Agents In',
   description:
     'Every domain we have scanned, aggregated. The market has solved being read by agents and has not solved being joined by them.',
 }
@@ -49,7 +49,7 @@ export default async function IndustryReportPage() {
           The market solved being read by agents. It has not solved being joined by one.
         </h1>
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
-          Every domain StackPick has scanned, aggregated. Documentation is reachable, parseable and mostly
+          Every domain Let Agents In has scanned, aggregated. Documentation is reachable, parseable and mostly
           open to AI crawlers. Then the funnel stops: almost nothing on this list can take an agent from
           reading about the product to holding a working credential.
         </p>

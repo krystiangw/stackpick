@@ -1,5 +1,5 @@
 {
-  "name": "StackPick",
+  "name": "Let Agents In",
   "summary": "Measures whether an AI coding agent can find, register with and integrate a product.",
   "signup_required": false,
   "why_no_signup": "The scan reads only public pages, so there is nothing to authenticate. An account would be a gate with nothing behind it.",

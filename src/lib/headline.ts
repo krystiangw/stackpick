@@ -27,12 +27,12 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
     return browserGotThrough
       ? {
           claim: `An agent asking for your home page gets ${findings.agentStatus}. A browser gets ${findings.browserStatus}.`,
-          evidence: `GET https://${findings.domain}/ answered ${findings.agentStatus} to StackPick/1.0 and ${findings.browserStatus} to a Chrome user-agent. The user-agent was the only difference between the two requests.`,
+          evidence: `GET https://${findings.domain}/ answered ${findings.agentStatus} to LetAgentsIn/1.0 and ${findings.browserStatus} to a Chrome user-agent. The user-agent was the only difference between the two requests.`,
           severity: 'critical',
         }
       : {
           claim: `Your edge refuses ordinary HTTP from a data centre, agent or not.`,
-          evidence: `GET https://${findings.domain}/ answered ${findings.agentStatus} to StackPick/1.0 and ${findings.browserStatus} to a Chrome user-agent. Both were refused, so this is your WAF rejecting the network we scan from rather than a rule about agents. Everything below was measured through that wall.`,
+          evidence: `GET https://${findings.domain}/ answered ${findings.agentStatus} to LetAgentsIn/1.0 and ${findings.browserStatus} to a Chrome user-agent. Both were refused, so this is your WAF rejecting the network we scan from rather than a rule about agents. Everything below was measured through that wall.`,
           severity: 'critical',
         }
   }

@@ -35,7 +35,7 @@ reason we know is that the artefacts disagreed with the report.
 harness/
   scaffolds/<category>/     the application every run starts from, committed
   briefs/<category>.md      the brief every run receives, verbatim, one file
-  (runs live OUTSIDE the repo, at ~/.stackpick-runs/<category>/run-N, see below)
+  (runs live OUTSIDE the repo, at ~/.letagentsin-runs/<category>/run-N, see below)
   docs/method.md            what stays human, and what the numbers may not be built from
 ```
 
@@ -59,7 +59,7 @@ finding about the tool rather than the model, and nobody publishes that.
 ## Why the runs are not in this repository
 
 Measured 2026-08-10, on the first real cell. Seeded inside `harness/runs/`, one of three runs
-walked up to the StackPick git root, read the harness documentation, **decided its task was to
+walked up to the Let Agents In git root, read the harness documentation, **decided its task was to
 re-measure a published audit**, and shipped nothing. Its transcript is a competent report about
 running `seed` and `cell`. Its artefacts show an untouched scaffold.
 
@@ -67,7 +67,7 @@ That is worse than the shared-directory contamination of round one, because the 
 behaved from every angle: exit 0, a coherent write-up, and artefacts that read as an honest
 refusal rather than as a run that answered a question it found lying around.
 
-So `seed` writes to `$STACKPICK_RUNS` or `~/.stackpick-runs`, and gives every copy its own
+So `seed` writes to `$LETAGENTSIN_RUNS` or `~/.letagentsin-runs`, and gives every copy its own
 `git init` so an agent looking for the project boundary finds the scaffold and stops there.
 **Never seed a run inside a repository that is about measuring agents.**
 

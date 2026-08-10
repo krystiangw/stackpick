@@ -25,11 +25,11 @@ const root = new URL('.', import.meta.url).pathname
 const scaffold = join(root, 'scaffolds', category)
 const brief = join(root, 'briefs', `${category}.md`)
 // Outside this repository, and this is not tidiness. Seeded inside it, a run walked up to the
-// StackPick git root, read the harness documentation, decided its task was to re-measure an
+// Let Agents In git root, read the harness documentation, decided its task was to re-measure an
 // audit, and shipped nothing: it answered a question it had found rather than the brief it was
 // given. That is worse than the shared-directory contamination of round one, because the run
 // looks well behaved and its artefacts look like an honest refusal.
-const target = join(process.env.STACKPICK_RUNS ?? join(homedir(), '.stackpick-runs'), category)
+const target = join(process.env.LETAGENTSIN_RUNS ?? join(homedir(), '.letagentsin-runs'), category)
 
 function listCategories(): string[] {
   try {

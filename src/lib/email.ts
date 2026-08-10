@@ -3,7 +3,7 @@ import { pickHeadline } from './headline'
 import { buildMark, fillHeight, hasUnmeasured, MARK_PALETTE, scoreTone, UNMEASURED_LEGEND } from './mark'
 import type { Report } from './store'
 
-const FROM = process.env.STACKPICK_FROM ?? 'StackPick <onboarding@resend.dev>'
+const FROM = process.env.LETAGENTSIN_FROM ?? 'Let Agents In <onboarding@resend.dev>'
 const BASE_URL = process.env.STACKPICK_BASE_URL ?? 'http://localhost:3000'
 
 export type SendResult = { delivered: boolean; detail: string }
@@ -66,7 +66,7 @@ export function scorecardEmail(report: Report): { subject: string; text: string;
 <table role="presentation" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #dedbd2">
   <tr><td style="padding:32px 32px 0">
     <div style="font:12px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:2px;text-transform:uppercase;color:#9a7318">
-      StackPick &middot; agent readiness &middot; ${escape(domain)}
+      Let Agents In &middot; agent readiness &middot; ${escape(domain)}
     </div>
     <h1 style="margin:20px 0 0;font:600 26px/1.25 ui-sans-serif,system-ui,sans-serif;color:#16181c;letter-spacing:-0.5px">
       ${escape(headline.claim)}

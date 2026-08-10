@@ -1,5 +1,5 @@
 {
-  "name": "stackpick",
+  "name": "letagentsin",
   "description": "Agent readiness scanning: score a domain on whether an agent can find, register with and integrate it.",
   "version": "1.0.0",
   "documentation": "https://stackpick-f12d13a227ea.herokuapp.com/docs",
