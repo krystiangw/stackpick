@@ -579,6 +579,18 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (75): weryfikacja 7.7, ruch ponizej podlogi szumu
+
+Korpus: **167 wierszy, formula 7.7, max 17, 0 bledow skanu.** Porownanie z poprzednim zrzutem:
+**9 zmian na 2505 werdyktow, czyli 0,36 procent**, przy zmierzonej wczoraj podlodze szumu 0,64.
+Innymi slowy zmiana zrobila dokladnie to, co miala, i **nic poza tym**.
+
+`mcp_present`: jedna zmiana, `njal.la` pass → fail, ta zamierzona. Pozostale osiem rozklada sie
+po szesciu roznych checkach po jednej albo trzy, czyli ma sygnature szumu, a nie zmiany reguly.
+
+To pierwszy raz, kiedy podloga szumu z wczoraj **zarobila na siebie**: bez niej 9 ruszonych
+wierszy wygladaloby jak skutek uboczny do sledzenia, a jest po prostu pogoda.
+
 ## Runda 2026-08-11 (74): moja wlasna godzinna poprawka wprodukowala falszywy pozytyw
 
 Dodanie `/api/mcp` do sondowanych adresow (7.6) zmienilo w calym korpusie **dokladnie jeden
