@@ -48,7 +48,7 @@ export type RobotsFindings = {
    * Measured 2026-08-10 across the corpus: 9 of 34 concrete Allow paths answer 404, and six of
    * the nine are sendgrid.com pointing an agent at SDK reference pages that do not exist.
    */
-  allowPaths: { checked: number; dead: string[] } | null
+  allowPaths: { checked: number; dead: string[]; unanswered: { path: string; status: number }[] } | null
 }
 
 export function parseRobots(body: string): Map<string, Rules> {
@@ -151,15 +151,34 @@ export async function scanRobots(site: string): Promise<RobotsFindings> {
 /** At most six, spread over the file, because this is a courtesy check and not a crawl. */
 const MOST_ALLOW_PATHS = 6
 
+/**
+ * WordPress writes `Allow: /wp-admin/admin-ajax.php` into robots.txt on every install, and it is
+ * a POST endpoint that answers a GET with 400 by design. It is boilerplate rather than a claim
+ * about a page, so counting it made three vendors carry a sentence saying their one allowed path
+ * answers when it had just refused us. Same category error as a wildcard, one layer down.
+ */
+const BOILERPLATE_ALLOW = /\/wp-admin\/admin-ajax\.php$/i
+
 async function checkAllowPaths(site: string, body: string): Promise<RobotsFindings['allowPaths']> {
   const paths = [...new Set([...body.matchAll(/^\s*allow:\s*(\S+)/gim)].map((match) => match[1]))].filter(
-    (path) => path.startsWith('/') && path.length > 1 && !path.includes('*') && !path.includes('$') && !path.endsWith('/'),
+    (path) =>
+      path.startsWith('/') &&
+      path.length > 1 &&
+      !path.includes('*') &&
+      !path.includes('$') &&
+      !path.endsWith('/') &&
+      !BOILERPLATE_ALLOW.test(path),
   )
   if (paths.length === 0) return null
   const sample = paths.slice(0, MOST_ALLOW_PATHS)
   const answers = await inParallel(sample, (path) => fetchUrl(`${site}${path}`))
-  // Only 404 and 410 count, for the same reason as the llms.txt sampler: a 403 is their edge
-  // refusing us and a 429 is our own load, and neither is a fact about the path existing.
+  // Only 404 and 410 count as gone, for the same reason as the llms.txt sampler: a 403 is their
+  // edge refusing us and a 429 is our own load, and neither is a fact about the path existing.
   const dead = sample.filter((_, index) => answers[index].status === 404 || answers[index].status === 410)
-  return { checked: sample.length, dead }
+  // Everything else that is not a success. Not counted against them, and not called an answer
+  // either: name.com allows /account/create and refuses us 403 there, which "all answer" hid.
+  const unanswered = sample
+    .map((path, index) => ({ path, status: answers[index].status }))
+    .filter((entry) => !dead.includes(entry.path) && (entry.status < 200 || entry.status >= 400))
+  return { checked: sample.length, dead, unanswered }
 }

@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '7.7'
+export const FORMULA_VERSION = '7.8'
 
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on
@@ -279,6 +279,15 @@ export const CHECKS: Check[] = [
         }
       }
       if (allow.dead.length === 0) {
+        // "All answer" was untrue on four rows whose allowed path refused us with 403 or 400.
+        // Nothing is gone, so the point stands, and the sentence now says what happened.
+        const refused = allow.unanswered ?? []
+        if (refused.length > 0) {
+          return yes(
+            1,
+            `none of the ${allow.checked} concrete path${allow.checked === 1 ? '' : 's'} your robots.txt allows is gone, though ${refused[0].path} answered us ${refused[0].status}`,
+          )
+        }
         return yes(1, `the ${allow.checked} concrete path${allow.checked === 1 ? '' : 's'} your robots.txt allows all answer`)
       }
       return yes(
