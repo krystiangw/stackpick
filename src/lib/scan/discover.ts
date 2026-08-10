@@ -443,6 +443,26 @@ function isSiblingBrand(url: string, vendor: VendorSite): boolean {
 }
 
 /** Where the home page landed, when that is a different company's registrable name. */
+/**
+ * Where the site actually lives, which is not always where we knocked. 66 of the 167 domains in
+ * the corpus redirect their apex to www, and every probe after the home page then pays the extra
+ * hop: measured 1248ms against 346ms for the same nine entry paths on hover.com, whose scan then
+ * ran out of budget at 27 seconds and published seven checks that measured our limit.
+ *
+ * This cannot change a verdict. Redirects are followed either way and a result carries the URL it
+ * finally answered on, so the only difference is where the request starts.
+ *
+ * Same registrable domain only. A home page that lands on somebody else's host is
+ * `resolvedElsewhere`, which is a finding about the vendor rather than a base to keep probing.
+ */
+function canonicalSite(domain: string, home: Fetched): string {
+  const apex = `https://${domain}`
+  const landed = hostOf(home.url)
+  if (home.status === 0 || !landed) return apex
+  if (registrableDomain(landed) !== registrableDomain(domain)) return apex
+  return new URL(home.url).origin
+}
+
 function resolvedElsewhereFrom(domain: string, home: Fetched): ResolvedElsewhere | null {
   const landed = hostOf(home.url)
   if (home.status === 0 || !landed) return null
@@ -1539,6 +1559,7 @@ export async function discover(domain: string): Promise<Discovered> {
   const [home, llms] = await Promise.all([fetchUrl(site), fetchUrl(`${site}/llms.txt`, { accept: 'text/plain' })])
   const html = home.ok ? home.body : ''
   const base = home.url || site
+  const canonical = canonicalSite(domain, home)
   const links = html ? extractLinks(html, base) : []
 
   const llmsBody = llms.ok && !looksLikeHtml(llms) ? llms.body : ''
@@ -1559,7 +1580,7 @@ export async function discover(domain: string): Promise<Discovered> {
     const named = [fromSiteDeveloper, fromSiteDocs, fromLlmsDocs].filter((url): url is string => Boolean(url))
     const [hosts, fromPathDocs] = await Promise.all([
       liveDocsHosts(domain, vendor),
-      named.length > 0 ? null : firstLivePath(site, DOCS_FALLBACKS),
+      named.length > 0 ? null : firstLivePath(canonical, DOCS_FALLBACKS),
     ])
     // Only the hosts that could be the documentation are asked for an index, and only the two
     // best-placed of them, because each one that is not there is a request spent finding out.
@@ -1575,7 +1596,7 @@ export async function discover(domain: string): Promise<Discovered> {
     // more round trip before telling a vendor we could not find their documentation at all:
     // storyblok.com links a landing page at /lp/developers and serves its documentation at /docs.
     if (!chosen && named.length > 0) {
-      chosen = await bestDocs([await firstLivePath(site, DOCS_FALLBACKS)], vendor, confirmedDocsOrigins)
+      chosen = await bestDocs([await firstLivePath(canonical, DOCS_FALLBACKS)], vendor, confirmedDocsOrigins)
     }
     return { chosen, hosts }
   })()
@@ -1593,7 +1614,7 @@ export async function discover(domain: string): Promise<Discovered> {
       fromLlmsPricing,
       pricingOnHome,
     ])
-    return { chosenPricing, pricing: chosenPricing?.url ?? (await firstLivePath(site, PRICING_FALLBACKS)) }
+    return { chosenPricing, pricing: chosenPricing?.url ?? (await firstLivePath(canonical, PRICING_FALLBACKS)) }
   })()
 
   // Each source is asked in turn and its candidates have to survive the same test, so a link the
@@ -1666,7 +1687,7 @@ export async function discover(domain: string): Promise<Discovered> {
   }
 
   return {
-    site,
+    site: canonical,
     home,
     resolvedElsewhere: resolvedElsewhereFrom(domain, home),
     docs,
