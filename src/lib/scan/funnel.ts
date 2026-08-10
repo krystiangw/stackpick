@@ -73,6 +73,18 @@ const SELF_SERVE_PATTERNS = [
   // anywhere says "free credits".
   /\bfree\s+(?:models|credits|usage|allowance|minutes|requests)\b/i,
   /free and open[- ]source/i,
+  // A tier you start on and pay for later, which is a statement about pricing and not a button.
+  // pinecone.io was published as having no free tier while its page says "Create your first index
+  // for free, then pay as you go" and its Starter row's price is the word Free.
+  //
+  // The tenth pass blamed the imperative rule for that failure, and reproducing it says otherwise:
+  // the only two matches on the whole page were "Free Trial" after "Start ", and both substantive
+  // signals matched no pattern at all. The plan-row pattern below wants the tier name within 24
+  // characters of "free" and pinecone puts a full sentence between them. Widening it to 80 and
+  // across sentence boundaries also fixes this row and nothing else in the corpus, which is a
+  // reason to distrust it rather than to ship it: it would let a tier name in one sentence pair
+  // with a "free" in an unrelated one.
+  /\bfree\b[^.]{0,40}\bpay as you go\b/i,
   // The row of a pricing table, where the tier is named and the price is the word Free.
   // polar.sh writes "Starter Free", saleor.io "Sandboxes Forever Free", pusher.com
   // "Sandbox Free", and none of them says the words "free tier" anywhere on the page.
