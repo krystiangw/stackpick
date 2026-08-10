@@ -579,6 +579,34 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-10 (61): kategoria Domeny i DNS, najgorsza w korpusie
+
+Pomysł Krystiana, i okazał się mocniejszy niż większość tego, co już mamy. 12 rejestratorów
+(`namecheap`, `porkbun`, `dynadot`, `name.com`, `gandi`, `dnsimple`, `godaddy`, `hover`,
+`opensrs`, `inwx`, `netim`, `njal.la`), korpus rośnie do **167 wierszy w 25 kategoriach**.
+
+**Wynik: 46,2 procent punktów wobec 62,8 dla reszty korpusu, czyli najgorsza kategoria, jaką
+zmierzyliśmy.** Druga jest Commerce z 47,7. Mocniejsza liczba: **`agent_entry_point` przechodzi
+0 razy na 12**. Ani jeden rejestrator nie ma drzwi zbudowanych dla maszyny, w kategorii, której
+całym zadaniem jest sprzedanie rzeczy, którą agent musi kupić przed wszystkim innym. Przez
+`find_providers` zero z dwunastu przechodzi wszystkie bariery, dziesięć zatrzymuje się na pierwszej.
+
+Średnia liczba **mierzalnych** sprawdzeń to 10,8 z 16 wobec 14,4 dla reszty. Czyli te strony
+odmawiają, zanim w ogóle dojdzie do pytania o API: `answers_plain_request` ma 2 porażki i 2
+niezmierzone na 12, a w reszcie korpusu to rzadkość.
+
+**To pierwsza kategoria, w której ścianą są pieniądze, a nie formularz**, więc `self_serve` jest
+`notApplicable` albo niemierzalne w 8 wierszach na 12. To jest pierwszy prawdziwy test, czy
+mianownik mierzalny jest uczciwy, czy tylko wygodny, i przeszedł: żaden wiersz nie dostaje kary
+za brak darmowego progu, którego w tej branży nie ma.
+
+Kontekst, dla którego to trafiło do korpusu akurat teraz: sami kupujemy domenę. **Cloudflare
+wystawia `POST /accounts/{id}/registrar/registrations`, operację płatną obciążającą kartę konta**,
+czyli pełną ścieżkę zakupu przez API. Namecheap wymaga 50 dolarów salda albo 20 domen plus IP na
+białej liście, GoDaddy co najmniej 10 domen na koncie. Ten rozrzut jest argumentem sprzedażowym:
+rejestrator, którego agent potrafi użyć, zostaje domyślnym rejestratorem każdej strony zbudowanej
+przez agenta.
+
 ## Runda 2026-08-10 (60): wszystko, co znalazł dziesiąty przebieg
 
 **Dziesiąty przebieg adwersaryjny: 0,39 procent błędu** (1 na 256), wobec 0,77. Dowiedzione:
