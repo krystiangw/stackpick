@@ -75,6 +75,16 @@ const REMEDIES: Record<string, Remedy> = {
   user_agents_allowed: {
     effort: 'minutes',
     how: (f) => {
+      // The check has two failure modes and only one of them is robots.txt. When a named crawler
+      // is refused at a page a browser is served, the file is already correct and editing it
+      // changes nothing: the rule is at the edge. Telling those vendors to fix robots.txt is the
+      // same error a reader caught in the llms.txt advice.
+      const refused = f.crawlersRefused ?? []
+      if (refused.length > 0) {
+        return `Your robots.txt already permits them, so this is not a robots.txt fix. Your edge answered ${refused
+          .map((crawler) => `${crawler.name} ${crawler.status}`)
+          .join(' and ')} at a page it serves to a browser. Find the rule doing that, in the WAF or the bot manager, and exempt on-demand agents.`
+      }
       const blocked = f.robots.blockedByClass.user
       return blocked.length > 0
         ? `Remove ${blocked.join(' and ')} from the disallow group in robots.txt. They fetch for a person who asked about you, not for a training set.`
@@ -97,8 +107,13 @@ const REMEDIES: Record<string, Remedy> = {
   },
   oauth_dcr: {
     effort: 'a project',
-    how: () =>
-      'Expose an RFC 7591 registration_endpoint in your OAuth metadata. It is the only standard way an agent registers itself without a human.',
+    // Two failure modes again: no OAuth metadata anywhere, or metadata that exists and omits the
+    // one field. Telling the first group to add a field to a document they do not publish reads
+    // as advice from someone who did not look.
+    how: (f) =>
+      f.funnel.oauth.metadataPublished
+        ? 'Your OAuth metadata is already published and has no registration_endpoint in it. Adding that one field is the whole change: RFC 7591 is the only standard way an agent registers itself without a human.'
+        : 'Publish OAuth authorization server metadata with an RFC 7591 registration_endpoint in it. It is the only standard way an agent registers itself without a human.',
   },
   mcp_present: {
     effort: 'a project',
@@ -128,9 +143,13 @@ const REMEDIES: Record<string, Remedy> = {
       'Document how a key is created without opening a dashboard: management API, service account or CLI. If no such path exists, that gap is the finding, not the docs.',
   },
   self_serve: {
-    effort: 'a project',
-    how: () =>
-      'If you have a free tier or a no-card trial, say so in text on the pricing page rather than in an image or a button. If you are usage-priced with no free tier, this check is one an agent will read as a cost, not a defect.',
+    // A page whose only free wording is a button is a copy change, not a pricing decision, and
+    // calling both of them "a project" sent the cheap fix to the bottom of the plan.
+    effort: (f) => (f.funnel.provisioning.selfServeIsButtonOnly ? 'minutes' : 'a project'),
+    how: (f) =>
+      f.funnel.provisioning.selfServeIsButtonOnly
+        ? 'Every mention of free on your pricing page sits inside a button. An agent reads text, not chrome, so state the tier in a sentence or a price cell: what is free, what it is limited to, and whether a card is needed.'
+        : 'If you have a free tier or a no-card trial, say so in text on the pricing page rather than in an image or a button. If you are usage-priced with no free tier, this check is one an agent will read as a cost, not a defect.',
   },
   typed_package: {
     effort: 'an afternoon',
