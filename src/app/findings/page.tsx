@@ -162,6 +162,34 @@ export default async function FindingsPage() {
         </section>
       ))}
 
+      {/* The one thing this market did publish, checked for whether it still works. Two numbers,
+          both computed per request, and one of them is a null we would have had no way to state
+          without asking: nobody serves an agent a thinner page than a browser. */}
+      {corpus && corpus.llmsChecked > 0 && (
+        <section className="border-b border-rule py-12">
+          <h2 className="max-w-2xl text-balance text-2xl font-semibold leading-snug tracking-tight">
+            {corpus.llmsStale} of {corpus.llmsChecked} llms.txt files point at pages that are gone
+          </h2>
+          <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
+            llms.txt is the one thing this market did adopt, so the sharper question is whether it is
+            maintained. We sample five links from each file and follow them. A file that lists pages which
+            have moved is worse than no file at all: an agent reads it first, follows the links, gets
+            nothing, and has spent that much of its budget before it learns anything about the product.
+          </p>
+          <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+            Only a 404 or a 410 counts, and only after a second request confirms it. A refusal says nothing
+            about the page, and a framework that routes GET and not HEAD answers 404 to the cheap check while
+            serving the page perfectly well, which is a mistake we published to ourselves before catching it.
+          </p>
+          <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+            The companion measurement is a null result and worth the same words:{' '}
+            <span className="font-mono">{corpus.cloaked}</span> of {corpus.sampleSize} vendors serve an agent
+            user-agent measurably less text than they serve a browser at the same URL. Cloaking against agents
+            is a reasonable thing to fear and, in this sample, it is not happening.
+          </p>
+        </section>
+      )}
+
       {/* Read as a conjunction rather than a score, deliberately. A threshold on the score rewards
           being unreadable, because an unmeasurable check leaves the denominator; three legs cannot
           be met by hiding anything, since hiding a leg removes one you need. */}

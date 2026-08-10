@@ -70,6 +70,14 @@ export type IndustryReport = {
    * corpus already; this only says how many are one requirement away and which one it is.
    */
   usable: { domains: string[]; oneAway: { leg: UsableLeg; domains: string[] }[] }
+  /**
+   * llms.txt files whose own links we sampled, and how many of those led somewhere gone. The file
+   * is the one thing this market did publish, so whether it is maintained is the sharper question.
+   */
+  llmsChecked: number
+  llmsStale: number
+  /** Sites serving an agent user-agent less than a browser at the same URL. A null result so far. */
+  cloaked: number
 }
 
 export type UsableLeg = 'a door a machine can use' | 'a signup an agent can reach and submit' | 'a documented credential path'
@@ -238,7 +246,15 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
     oneAwayBy.set(missing[0].leg, [...(oneAwayBy.get(missing[0].leg) ?? []), report.domain])
   }
 
+  const llmsDetail = (report: Report) => verdict(report, 'llms_txt')?.detail ?? ''
+  const llmsStale = reports.filter((report) => /links we sampled are gone/.test(llmsDetail(report)))
+  const llmsLive = reports.filter((report) => /links we sampled all answer/.test(llmsDetail(report)))
+
   return {
+    llmsChecked: llmsStale.length + llmsLive.length,
+    llmsStale: llmsStale.length,
+    cloaked: reports.filter((report) => /percent less text/.test(verdict(report, 'docs_without_js')?.detail ?? ''))
+      .length,
     usable: {
       domains: withLegs
         .filter((entry) => entry.missing.length === 0 && entry.unknown === 0)

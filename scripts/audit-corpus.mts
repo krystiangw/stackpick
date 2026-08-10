@@ -117,7 +117,26 @@ const oneAway = corpus.rows.filter((row) => {
   return legs.every((leg) => leg.known) && legs.filter((leg) => !leg.met).length === 1
 }).length
 
+const staleLlms = corpus.rows.filter((row) =>
+  /links we sampled are gone/.test(row.checks.find((check) => check.id === 'llms_txt')?.detail ?? ''),
+).length
+const cloaked = corpus.rows.filter((row) =>
+  /percent less text/.test(row.checks.find((check) => check.id === 'docs_without_js')?.detail ?? ''),
+).length
+
 const stated: { page: string; pattern: RegExp; expected: number; what: string }[] = [
+  {
+    page: '/findings',
+    pattern: /(\d+) of \d+ llms.txt files point at pages that are gone/,
+    expected: staleLlms,
+    what: 'llms.txt files with dead links',
+  },
+  {
+    page: '/findings',
+    pattern: /(\d+) of \d+ vendors serve an agent user-agent measurably less text/,
+    expected: cloaked,
+    what: 'vendors cloaking against agents',
+  },
   {
     page: '/findings',
     pattern: /(\d+) of \d+ vendors clear all three barriers we can measure/,
