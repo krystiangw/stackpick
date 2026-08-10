@@ -249,14 +249,16 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
   // Off the measurement, not off the sentence. Matching prose meant that rewording the sentence
   // silently zeroed the count and hid the whole section, which the audit caught and a reader
   // would not have: the numbers on this page have to survive an edit to the words.
-  const sampled = (report: Report) => report.findings.machine.llmsLinks
+  // Null, not undefined: Mongo stores an absent optional as null, so `!== undefined` passed and
+  // the property read threw, which took /findings and /report to a 500 for four minutes.
+  const sampled = (report: Report) => report.findings.machine.llmsLinks ?? null
   const llmsStale = reports.filter((report) => (sampled(report)?.dead ?? 0) > 0)
-  const llmsLive = reports.filter((report) => sampled(report) !== undefined && sampled(report)!.dead === 0)
+  const llmsLive = reports.filter((report) => sampled(report)?.dead === 0)
 
   return {
     llmsChecked: llmsStale.length + llmsLive.length,
     llmsStale: llmsStale.length,
-    cloaked: reports.filter((report) => report.findings.docsThinnerForAgents !== null).length,
+    cloaked: reports.filter((report) => (report.findings.docsThinnerForAgents ?? null) !== null).length,
     usable: {
       domains: withLegs
         .filter((entry) => entry.missing.length === 0 && entry.unknown === 0)
