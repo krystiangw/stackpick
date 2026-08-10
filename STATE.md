@@ -579,6 +579,38 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-10 (65): produkt nazywa sie Let Agents In
+
+Nazwa zmieniona w kodzie i w tekscie, wdrozona i zweryfikowana na produkcji. Domena jeszcze nie
+kupiona, wiec **adres zostaje na herokuapp**: URL to infrastruktura, nazwa to marka, i te dwie
+rzeczy nie musza sie zmieniac razem.
+
+**Trzy rzeczy swiadomie zamrozone**, bo slepa podmiana by je zepsula:
+- `MONGODB_DB ?? 'stackpick'` to nazwa bazy w Atlasie. Przemianowanie wskazaloby produkcje na
+  **pusta baze**. To byla najgrozniejsza pulapka tej zmiany.
+- `stackpick_console` (ciasteczko) i `STACKPICK_BASE_URL` / `STACKPICK_CONSOLE_TOKEN` (zmienne
+  srodowiskowe): instalacja, nie marka. Do przemianowania razem z przenosinami na domene, bo
+  wtedy i tak trzeba ruszyc konfiguracje Heroku.
+- Historia w `STATE.md` i `docs/naming-audit.md`. Przemianowanie wpisu, ktory argumentuje **za**
+  zmiana nazwy, zniszczyloby jego sens.
+
+**User-agent to `LetAgentsIn/1.0`.** To jest zmiana widoczna dla vendorow: przedstawiamy sie
+kazdemu skanowanemu hostowi innym ciagiem niz przez ostatnie tygodnie. Dziesiaty przebieg pokazal,
+ze regula na krawedzi potrafi kluczowac na samej nazwie (algolia odmawia kazdemu UA zawierajacemu
+„bot"), wiec **kazda roznica w wynikach po tej dacie moze byc skutkiem nazwy, a nie zmiany u
+vendora**. Data: 2026-08-10.
+
+**Blad, ktory warto zapamietac.** Pierwsze przejscie pominelo polowe plikow, bo warunek szukal
+`tackpick`, a `StackPick` ma wielkie P. Znalazlem to dopiero, gdy skrypt powiedzial „0 plikow", a
+grep w tej samej sekundzie pokazywal dziesiec trafien. Przy podmianach nazw wlasnych **warunek
+wejscia musi byc case-insensitive, nawet jesli same podmiany nie sa.**
+
+Naglowek strony byl kalamburem na starej nazwie („StackPick: will an AI agent **pick** your
+product?"), wiec zostal przepisany na `can an AI agent get through your product?`, co jest zgodne
+z tym, co darmowy skan naprawde mierzy. Czasownik „pick" w reszcie copy zostaje: agenci naprawde
+wybieraja dostawce i to mierzymy w platnych audytach. Problemem nigdy nie byl czasownik, tylko
+nazwa obiecujaca, ze to **my** wybieramy.
+
 ## Runda 2026-08-10 (64): sondujemy tam, gdzie strona mieszka, a nie gdzie zapukalismy
 
 `found.site` zostawal na apeksie, choc **66 ze 167 domen (40 procent) przekierowuje apeks na www**,
