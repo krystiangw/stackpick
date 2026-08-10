@@ -579,6 +579,21 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-10 (68): nowy wymiar w korpusie i najostrzejsza sekcja listy targetow
+
+`unattendedGrant` jest teraz **polem w opublikowanym korpusie**, a nie tylko zdaniem: `true` gdy
+`client_credentials` jest wsrod ogloszonych grantow, `false` gdy kazdy wymaga czlowieka, `null`
+gdy vendor nie publikuje endpointu rejestracji albo listy grantow. Rozklad na 167 wierszach:
+**20 true, 45 false, 102 null.**
+
+Pole zamiast parsowania zdania **swiadomie**: `industry.ts` juz raz liczyl z regexa po prozie i
+przeformulowanie zdania po cichu wyzerowalo liczniki. Lista targetow czyta teraz dane, nie tekst.
+
+`outreach/targets.md` ma z tego **nowa sekcje na 45 vendorow**: „publikuje RFC 7591 i zaden
+ogloszony grant nie konczy sie bez czlowieka". To ostrzejszy pitch niz door-no-key, bo przeslanka
+jest nie tylko ich, ale juz w polowie zbudowana, a luka to jeden grant type, ktory sprawdza sie
+jednym zadaniem. Podzial listy: 26 door-no-key, **45 door-wont-open**, 43 signup-only, 4 wykluczone.
+
 ## Runda 2026-08-10 (67): drzwi, do ktorych agent moze zapukac, to nie to samo co drzwi, ktore sie otworza
 
 Wyszlo z weryfikacji listy targetow, a nie z audytu. Dwa rejestratory trafily do najostrzejszej
