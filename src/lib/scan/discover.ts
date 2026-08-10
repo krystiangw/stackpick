@@ -437,7 +437,8 @@ const onVendorSite = (url: string, vendor: VendorSite): boolean =>
  * but a company pointing its own "Sign up" button somewhere is telling us where its signup is.
  */
 function isSiblingBrand(url: string, vendor: VendorSite): boolean {
-  const brand = hostLabel(vendor.hosts[0])
+  // vendor.domain is a bare hostname, not a URL, so hostLabel cannot parse it.
+  const brand = vendor.domain.replace(/^www\./i, '').split('.')[0].toLowerCase()
   return brand.length >= 4 && hostLabel(url) === brand
 }
 
