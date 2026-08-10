@@ -172,7 +172,12 @@ function rendersUsableForm(body: string): boolean {
  * A hidden CSRF token and a submit button are not fields anyone fills in either.
  */
 function isFillable(tag: string): boolean {
-  if (/\bdisabled\b/i.test(tag)) return false
+  // Attribute names only. Tailwind writes `disabled:opacity-50` inside a class value, and reading
+  // the bare word there marked every styled input as unavailable: supabase.com, resend.com and
+  // browserless.io all lost real signup forms to it, which is worse than the false positives the
+  // rule exists to stop.
+  const attributes = tag.replace(/=\s*"[^"]*"/g, '=""').replace(/=\s*'[^']*'/g, "=''")
+  if (/(?:^|\s)disabled(?=[\s=>/])/i.test(attributes)) return false
   const type = tag.match(/\btype\s*=\s*["']?([a-z]+)/i)?.[1]?.toLowerCase()
   return type === undefined || !['hidden', 'submit', 'button', 'image', 'reset'].includes(type)
 }
