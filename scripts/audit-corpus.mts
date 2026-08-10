@@ -105,7 +105,9 @@ const legsMet = (row: Row) => {
     { met: full('agent_entry_point') || full('oauth_dcr') || full('mcp_present'),
       known: measured('agent_entry_point') || measured('oauth_dcr') || measured('mcp_present') },
     { met: full('signup_reachable') && full('signup_no_captcha'),
-      known: measured('signup_reachable') && measured('signup_no_captcha') },
+      // A form we could not reach is a failed leg; the CAPTCHA is unmeasured because of that
+      // failure, not independently of it.
+      known: measured('signup_reachable') && (!full('signup_reachable') || measured('signup_no_captcha')) },
     { met: (at('programmatic_provisioning')?.points ?? 0) >= 1, known: measured('programmatic_provisioning') },
   ]
 }

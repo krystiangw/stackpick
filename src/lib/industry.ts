@@ -207,7 +207,13 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
         met:
           at('signup_reachable')?.points === at('signup_reachable')?.max &&
           at('signup_no_captcha')?.points === at('signup_no_captcha')?.max,
-        known: measured('signup_reachable') && measured('signup_no_captcha'),
+        // The CAPTCHA is unmeasured precisely because the form is not in the served HTML, so
+        // requiring both to be measured made every failed signup unknown and cut the near-miss
+        // group from 48 to 7. A form an agent cannot reach is a failed leg whether or not we
+        // could then look for a gate inside it; only an unmeasured signup is genuinely unknown.
+        known:
+          measured('signup_reachable') &&
+          (at('signup_reachable')?.points !== at('signup_reachable')?.max || measured('signup_no_captcha')),
       },
       {
         leg: 'a documented credential path' as UsableLeg,
