@@ -31,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="border-b border-rule">
           <div className="mx-auto flex max-w-5xl flex-wrap items-baseline justify-between gap-x-4 gap-y-2 px-6 py-4">
             <Link href="/" className="font-mono text-base font-semibold tracking-tight">
-              Stack<span className="text-brass">Pick</span>
+              Let Agents <span className="text-brass">In</span>
             </Link>
             <nav className="flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs uppercase tracking-widest text-ink-faint">
               <Link href="/docs" className="hover:text-ink">
