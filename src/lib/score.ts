@@ -1,4 +1,4 @@
-import { PROVISIONING_PATTERN_COUNT } from './scan/funnel'
+import { CTA_WORDING, PROVISIONING_PATTERN_COUNT } from './scan/funnel'
 import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
@@ -11,9 +11,6 @@ export const FORMULA_VERSION = '7.4'
  * WWW-Authenticate naming its own protected-resource document. Naming fewer addresses than we
  * ask makes a vendor unable to reproduce our own denial.
  */
-/** Below this, a served pricing page is navigation and a button rather than a statement of tiers. */
-const CHROME_ONLY_CHARS = 1_500
-
 const MCP_ADDRESSES = (domain: string) =>
   `mcp.${domain}, mcp.${domain}/mcp, mcp.${domain}/v1/mcp, api.${domain}/mcp or /mcp`
 
@@ -550,15 +547,14 @@ export const CHECKS: Check[] = [
       // redirects to a login screen, and groq.com/pricing answers 308 to the home page.
       const page = f.discovered.pricing ?? f.funnel.signup ?? null
       const at = page ? ` at ${page}` : ''
-      // Chrome is a page with almost nothing on it, not a page without a printed number. The
-      // first version of this guard suppressed the signal wherever no price matched, and that
-      // denied a stated free tier on qdrant.tech (four named tiers and a quantified forever-free
-      // one in 6,934 characters), daily.co, split.io and crowdin.com. here.com/pricing is 850
-      // characters of navigation and one button, which is the thing worth suppressing.
+      // Chrome is a button, not a short page. Suppressing wherever no price matched denied a
+      // stated free tier on qdrant.tech, split.io and crowdin.com; suppressing by page length
+      // then denied daily.co, which states "10,000 free minutes a month" in 1,230 characters.
+      // What actually separates them is whether anything beyond the call to action matched.
       const onlyChrome =
         f.funnel.pricingFetched &&
         f.funnel.pricesVisibleWithoutJs === false &&
-        f.funnel.pricingTextLength < CHROME_ONLY_CHARS
+        f.funnel.provisioning.selfServeSignals.every((signal) => CTA_WORDING.has(signal))
       if (f.funnel.provisioning.selfServeSignals.length > 0 && !onlyChrome) {
         // Saying it once out of two tries still means you say it, and hiding the disagreement
         // would leave a vendor unable to explain why the number moved between two scans.

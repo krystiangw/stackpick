@@ -76,6 +76,19 @@ const SELF_SERVE_PATTERNS = [
   /\bfree\s+\w+\s+plan\b/i,
 ]
 
+/**
+ * The subset of the wording above that is a button rather than a statement. "Get started for
+ * free" is what a navigation bar says; "10,000 free minutes a month" and "Free Tier Free forever"
+ * are what a page says about its tiers. The distinction decides one thing only: whether a hit on
+ * a page that prints no price is evidence about the vendor or about their navigation. here.com
+ * serves the first kind and nothing else, daily.co and qdrant.tech serve the second.
+ */
+export const CTA_WORDING = new Set(
+  [/\bget started\b[\s-]*(?:for\s+)?free\b/i, /\bstarted? for free\b/i, /\btry (?:it )?free\b/i].map(
+    (pattern) => pattern.source,
+  ),
+)
+
 // Weighted rather than a bare list of types, which reads to a strict server as a demand:
 // plausible.io answers 406 to "text/markdown, application/json, text/plain" and savvycal.com
 // answers 500, and we counted both as refusals of nine paths that return nine clean 404s. With
