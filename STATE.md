@@ -579,6 +579,27 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-10 (59): audyt nazwy
+
+`docs/naming-audit.md`. Wniosek: zmienić nazwę teraz, zanim kupimy domenę, bo koszt jest dziś
+zerowy (brak domeny, klientów, backlinków), a za trzy miesiące korpus zacznie zbierać linki.
+
+Najmocniejszy argument nie jest SEO, tylko pozycjonowanie: **„Pick" obiecuje rekomendację, której
+produkt świadomie odmawia** (`src/lib/lookup.ts` mówi to wprost). Do tego `stack` to najbardziej
+zatłoczony prefiks w narzędziach dla devów, `stackpick.com` stoi zaparkowany na BrandBuckecie
+(broker domen), a `.dev` i `.io` są cudze.
+
+Sprawdzone RDAP-em ~110 domen, wolnych 16. **Cała opisowa przestrzeń nazw jest wykupiona**:
+każdy `agent*` i `machine*` compound, każde jednowyrazowe angielskie słowo. Głównie parkingi.
+Wybieramy nie najlepszą nazwę w języku angielskim, tylko najlepszą, którą da się dziś
+zarejestrować za cenę rejestracji.
+
+Rekomendacja: **MachineReadiness / machinereadiness.com** (jedyna wolna opisowa `.com`; omija
+pułapkę nazw z „agent", które brzmią jak observability agentów, czyli audyt cudzego agenta zamiast
+naszego produktu). Alternatywa o wyższej wariancji: `letagentsin.com`. Do sprawdzenia, gdy wróci
+budżet wyszukiwarki: jak wygląda pierwsza strona wyników na „machine readiness" (kolizja z
+terminem produkcyjnym / OEE).
+
 ## Runda 2026-08-10 (58b): audyt tonu opublikowanej prozy
 
 Skill `human-tone` na siedmiu żywych stronach: **mediana 21,0 → 4,6, maksimum 21,0 → 9,7**, przy
