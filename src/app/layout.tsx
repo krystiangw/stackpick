@@ -57,9 +57,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </header>
         {children}
         <footer className="mt-24 border-t border-rule">
-          <div className="mx-auto max-w-5xl px-6 py-8 font-mono text-xs text-ink-faint">
-            StackPick measures agent behaviour, not marketing. Every check on the free scan is an HTTP
-            request with a published rule.
+          <div className="mx-auto flex max-w-5xl flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-6 py-8 font-mono text-xs text-ink-faint">
+            <p className="max-w-2xl">
+              StackPick measures agent behaviour, not marketing. Every check on the free scan is an HTTP
+              request with a published rule.
+            </p>
+            {/* One person does the work, and a buyer weighing a five-figure engagement with a stranger
+                asks who that is before anything else. Naming him costs nothing and hiding him is what
+                reads as evasive. */}
+            <p>
+              Built by{' '}
+              <a
+                href="https://krystiangw.github.io/krystiangw/"
+                className="text-brass underline underline-offset-4 hover:text-ink"
+              >
+                Krystian Gwizdała
+              </a>
+            </p>
           </div>
         </footer>
       </body>
