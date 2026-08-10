@@ -579,6 +579,36 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-10 (62): audyt podmiotowy nowej kategorii i diagnoza `hover.com`
+
+Nowa kategoria dostała to sprawdzenie, którego korpus nie miał, dopóki nie ugryzły nas `anvil.co`,
+`defer.run` i `messagebird.com`. **Przemiecione wszystkie 12 apeksów pod kątem przekierowań
+międzydomenowych: zero.** Wszystkie to apeks na www w obrębie tej samej marki, czyli przypadek
+łagodny, którego pełno w reszcie korpusu.
+
+**Jeden wiersz jest zły i wiadomo dlaczego.** `hover.com` ma 2/4, bo skan wyczerpał budżet 27
+sekund, więc siedem sprawdzeń mierzy nasz limit, a nie ich stronę. Powtarzalne trzy razy na
+produkcji i lokalnie, zawsze dokładnie 27009 ms.
+
+Sprawdzone i **obalone** hipotezy, po kolei, bo każda brzmiała rozsądnie:
+apeks nie jest wolny (3 pobrania = 2,1 s z dyno), głosowanie na trzech próbach nie kosztuje,
+kara za przekierowanie apeks→www jest realna, ale to 0,9 s na 9 ścieżek, żadna z 40 sond nie wisi,
+nie ma tarpita na nasz user-agent (Chrome 349 ms, ClaudeBot 329 ms, nasz pełny UA 2844 ms, wszystkie
+200), a wyszukiwanie w rejestrze npm zajmuje 170 ms.
+
+**Przyczyna: `SCAN_BUDGET_MS=150000` kończy skan w 37,3 s z `truncation: null`.** Nic nie jest
+zepsute, strona jest po prostu 1,4 raza wolniejsza niż nasz limit, który istnieje, bo router Heroku
+zabija ciche żądanie po 30 sekundach.
+
+Wpływ na opublikowane liczby jest żaden: **1 wiersz na 167 jest ucięty budżetem**, a bez niego
+kategoria to 46,0 zamiast 46,2 procent, więc teza „najgorsza kategoria" nie stoi na artefakcie.
+
+**Nie naprawione świadomie.** Naprawa, która ma sens, to zapamiętanie kanonicznego hosta po
+pierwszym przekierowaniu i sondowanie www zamiast apeksu (zmierzone 1248 ms wobec 346 ms na 9
+ścieżkach). To zmienia to, **co** mierzymy u każdego vendora z apeksem na www, czyli u dużej części
+korpusu, więc wymaga pełnego pomiaru przed i po, a nie wdrożenia w nocy bez przebiegu adwersaryjnego.
+Do wzięcia jako osobna pozycja.
+
 ## Runda 2026-08-10 (61): kategoria Domeny i DNS, najgorsza w korpusie
 
 Pomysł Krystiana, i okazał się mocniejszy niż większość tego, co już mamy. 12 rejestratorów
