@@ -7,9 +7,11 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 
 ## Stan na teraz, w dziesięciu liniach
 
-- Formuła **7.4**, korpus **155 domen w 24 kategoriach**. `storyblok.com` nie odpowiada dyno przy
-  trzech reseedach z rzędu, a z tej maszyny odpowiada 200 przez Netlify: to fakt o naszym ruchu,
-  nie o dostawcy, i dlatego wypadł z korpusu zamiast dostać zerowy wiersz.
+- Formuła **7.4**, korpus **155 domen w 24 kategoriach**, `npm run audit` pilnuje **14 liczb**.
+  `storyblok.com` nie odpowiada dyno przy siedmiu reseedach z rzędu, a z tej maszyny odpowiada 200
+  przez Netlify: to fakt o naszym ruchu, nie o dostawcy, i dlatego wypadł z korpusu.
+- Opublikowane liczby: **5 ze 155** przechodzi wszystkie trzy bariery, **7 ze 129** plików llms.txt
+  wskazuje na strony, których nie ma, **0 ze 155** serwuje agentom mniej tekstu niż przeglądarce.
 - `npm run audit`: **0 sprzeczności w wierszach, 10 liczb ze stron zgodnych z danymi**.
 - Siedem przebiegów adwersaryjnych: **16,7 → 2,2 → 3,9 → 2,0 → 0,94 → 7,9 → 1,4 procent błędu**
   (4 na 290). Szósty był skokiem w górę, bo zaatakował trzy zmiany napisane w jedną noc i

@@ -8,7 +8,7 @@ the data it claimed to come from.
 Everything else is included, including vendors we know nothing about, because absence of a
 record is a gap in our research rather than a fact about them.
 
-## 1. Runs an MCP server and documents no way to get a key (22)
+## 1. Runs an MCP server and documents no way to get a key (23)
 
 The sharpest row we have. They spent engineering time on a door for a machine, so the budget and
 the internal champion both already exist, and an agent still cannot get a credential. Lead with
@@ -17,6 +17,7 @@ their own endpoint URL.
 - `apify.com` · https://mcp.apify.com
 - `betterstack.com` · https://betterstack.com/mcp
 - `calendly.com` · https://mcp.calendly.com
+- `contentful.com` · https://mcp.contentful.com/mcp
 - `courier.com` · https://mcp.courier.com/mcp
 - `crowdin.com` · https://mcp.crowdin.com/mcp
 - `docuseal.com` · https://docuseal.com/mcp
