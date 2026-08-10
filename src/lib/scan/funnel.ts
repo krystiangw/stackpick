@@ -78,6 +78,11 @@ const SELF_SERVE_PATTERNS = [
   // "Sandbox Free", and none of them says the words "free tier" anywhere on the page.
   /\b(?:starter|sandbox|hobby|developer|basic|community|open[- ]source)\b[^.\n]{0,24}\bfree\b/i,
   /\bfree\s+\w+\s+plan\b/i,
+  // How a pricing table names a tier that costs nothing, in the two spellings our list missed.
+  // calendly.com writes "Free For personal use Always free" and algolia.com "Free to start, then
+  // pay as you go", and neither of them says "free tier" or "free plan" anywhere.
+  /\balways free\b/i,
+  /\bfree to start\b/i,
 ]
 
 /**
@@ -172,8 +177,12 @@ function rendersUsableForm(body: string): boolean {
     // only evidence it goes anywhere. Availability is the whole test on a button: asking
     // isFillable rejected every one of them, because a submit control is by definition not a
     // field, and that dropped supabase.com, resend.com and contentful.com.
+    // `input type=submit` is the third way and it cost flagsmith.com a real signup: six fields,
+    // method="post", and a submit control that is an input rather than a button.
     const canBeSubmitted =
-      /\saction\s*=/i.test(form[1]) || [...form[2].matchAll(/<button\b[^>]*>/gi)].some(isAvailable)
+      /\saction\s*=/i.test(form[1]) ||
+      [...form[2].matchAll(/<button\b[^>]*>/gi)].some(isAvailable) ||
+      fields.some((field) => /\btype\s*=\s*["']?submit/i.test(field) && isAvailable(field))
     if (asksWhoYouAre && canBeSubmitted) return true
   }
   return false

@@ -551,10 +551,12 @@ export const CHECKS: Check[] = [
       // stated free tier on qdrant.tech, split.io and crowdin.com; suppressing by page length
       // then denied daily.co, which states "10,000 free minutes a month" in 1,230 characters.
       // What actually separates them is whether anything beyond the call to action matched.
-      const onlyChrome =
-        f.funnel.pricingFetched &&
-        f.funnel.pricesVisibleWithoutJs === false &&
-        f.funnel.provisioning.selfServeSignals.every((signal) => CTA_WORDING.has(signal))
+      // A page whose free wording is a button and nothing else, wherever it prints its prices.
+      // replicate.com prints its rates and says "Try for free" only in the header and the mobile
+      // menu, and passing it while sinch.com fails on the same evidence made the rule disagree
+      // with itself over whether a nav link is a tier.
+      const chrome = f.funnel.provisioning.selfServeSignals
+      const onlyChrome = chrome.length > 0 && chrome.every((signal) => CTA_WORDING.has(signal))
       if (f.funnel.provisioning.selfServeSignals.length > 0 && !onlyChrome) {
         // Saying it once out of two tries still means you say it, and hiding the disagreement
         // would leave a vendor unable to explain why the number moved between two scans.
@@ -580,10 +582,13 @@ export const CHECKS: Check[] = [
       // Says which words were found and why they were not enough, because the sentence below
       // told here.com, sinch.com and replicate.com that no free wording was on a page that
       // carries it. A vendor reads their own page before they read us.
+      // Only claims the wording exists when it does. `[].every()` is true, so a page with no free
+      // wording at all took this branch and was told its only free wording was a button:
+      // anvil.co and radar.com contain the word "free" zero times.
       if (onlyChrome) {
         return yes(
           0,
-          `${page ?? 'Your pricing page'} prints no price without JavaScript, and its only free wording is a call to action rather than a stated tier`,
+          `${page ?? 'Your pricing page'} carries a "start for free" style link and nothing else about a free tier, so what we found is a button rather than a stated price`,
         )
       }
       if (f.funnel.pricingFetched && f.funnel.pricesVisibleWithoutJs === false) {
