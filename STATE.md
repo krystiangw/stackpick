@@ -167,7 +167,10 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   `npm run seed -- <kategoria> <n>` robi izolowane kopie i **odmawia startu bez pliku briefu**;
   `npm run collect -- <kategoria>` czyta, co przebieg zainstalował i zaimportował, **nigdy jego
   własnego raportu**. `harness/docs/method.md` zapisuje, co zostaje ludzkie i dlaczego.
-  Zostaje: scaffoldy dla `storage`, `auth` i `payments` (jest tylko `editors`).
+  Scaffoldy dla wszystkich czterech kategorii są w repo (`editors`, `storage`, `auth`,
+  `payments`), każdy z ograniczeniem, które dało najostrzejsze znalezisko: statyczny bundle przed
+  serwisem w Go, którego przebieg nie widzi i nie edytuje, a tożsamość przychodzi jako ciasteczko
+  ustawione przez proxy.
 - **Ósmy przebieg adwersaryjny** po naprawach z rundy 55. Baseline: **1,4 procent**. Warte ataku:
   przebudowana `rendersUsableForm` (pole „kim jesteś" plus cel wysyłki, oba progi nowe),
   trójstanowe nogi koniunkcji i to, czy wykluczenie 38 wierszy z nieznaną rejestracją jest
