@@ -579,6 +579,41 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-10 (60): wszystko, co znalazł dziesiąty przebieg
+
+**Dziesiąty przebieg adwersaryjny: 0,39 procent błędu** (1 na 256), wobec 0,77. Dowiedzione:
+sonda nazwanego crawlera (109 na 109), reguła 429 (53 na 53), kuracja (155 apeksów przemiecionych
+pod kątem przekierowań). Wszystkie cztery znaleziska zamknięte.
+
+**1. `find_providers` trasował 23 procent pytań źle.** Zbudowany stały zestaw 61 pytań
+(`scripts/routing.mts`): 21,3 procent błędu przed zmianą, 0 po. **To była iluzja.** Zestaw 20
+pytań, których nie widziałem podczas poprawiania, dał **45 procent**. Naprawione dopiero to, co
+jest błędem w zasadzie: nasza własna proza trasowała sama z siebie („experimentation platform"
+szło do Commerce, bo nasza linia kończy się na „platforms"), `store` w słowniku commerce to w
+dziewięciu pytaniach na dziesięć czasownik, `session` w auth to session replay, a odmiana nie
+sięgała do rdzenia („uploaded files" nie trafiało w „upload" i „file"). Holdout **45 → 35
+procent, ale złe trasowania 4 → 1**: reszta zamieniła się w uczciwe „nie wiem", które teraz
+zwraca agentowi katalog 24 kategorii zamiast odsyłać go na stronę WWW.
+
+**Lekcja, którą trzeba zapamiętać:** 61/61 na zestawie, do którego się dostrajało, nie znaczy nic.
+Każda następna zmiana trasowania wymaga świeżych pytań, bo oba obecne zestawy są już spalone.
+
+**2. Fałszywy fail `pinecone.io`.** Zbudowany harness offline na 128 zapisanych stronach cennika,
+który odtwarza **wszystkie 128 opublikowanych werdyktów co do jednego**, więc każdy wzorzec da się
+zmierzyć bez reseeda. Dodany wzorzec „free ... pay as you go" rusza dokładnie jeden wiersz.
+**Przyczyna zgłoszona przez audytora była nie ta, która zadziałała:** obwinił regułę trybu
+rozkazującego, a reprodukcja pokazała, że na całej stronie były tylko dwa trafienia („Free Trial"
+po „Start ") i oba merytoryczne sygnały nie pasowały do żadnego wzorca. Piąty raz z rzędu, kiedy
+przebieg nazywa przyczynę, która nie jest tą, która wystrzeliła.
+
+**3. Zdanie o llms.txt nie nazywało `llms-full.txt`** w gałęzi porażki, choć próbka biegnie po
+konkatenacji wszystkich plików. `pdfmonkey.io` to udowodnił: cytowany martwy link nie występuje w
+jego llms.txt w ogóle, tylko w linii 4700 llms-full.txt. Obie gałęzie mówią teraz to samo.
+
+**4. `messagebird.com` 301 na `bird.com` na każdej ścieżce**, więc każdy pomiar w tym wierszu był
+pomiarem bird.com pod cudzą etykietą. Wiersz przemianowany (ta sama firma po rebrandzie, więc
+przemianowanie a nie usunięcie, jak przy `anvil.co` → `useanvil.com`).
+
 ## Runda 2026-08-10 (59): audyt nazwy
 
 `docs/naming-audit.md`. Wniosek: zmienić nazwę teraz, zanim kupimy domenę, bo koszt jest dziś
