@@ -125,9 +125,18 @@ export async function POST(request: Request) {
       }
       const found = await lookup(job)
       if (!found) {
+        // Routing a job description is the part of this tool that is worst: measured on twenty
+        // questions it had never seen, it placed twelve and declined eight. Declining is the safe
+        // half, but sending the caller to a web page to read a list costs it another turn, so the
+        // list goes here and it can pick a category itself.
         return toolFailure(
           id,
-          `No category we have measured matches "${job}". We hold ${CATEGORIES.length} categories, listed at ${publicBaseUrl(request)}/report, and silence here means we have not measured it rather than that nobody does it.`,
+          [
+            `No category we hold matches "${job}" confidently enough to answer, and guessing would hand you the wrong vendors.`,
+            'Ask again with one of these, or with the product noun for it:',
+            ...CATEGORIES.map((category) => `  ${category.label}: ${category.jobToBeDone}`),
+            'Silence here means we have not measured it, not that nobody does it.',
+          ].join('\n'),
         )
       }
       const line = (entry: { domain: string; barriers: string[]; measuredAt: string; evidence: string }) =>

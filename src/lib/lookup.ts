@@ -88,37 +88,61 @@ function reachabilityOf(report: Report): Reachability {
  */
 const NO_INFORMATION = new Set([
   'the', 'and', 'for', 'you', 'your', 'with', 'without', 'that', 'this', 'from', 'into', 'over',
-  'use', 'user', 'users', 'app', 'apps', 'add', 'need', 'want', 'let', 'make', 'get', 'put', 'run',
-  'own', 'real', 'inside', 'people', 'customer', 'customers', 'product', 'service', 'data', 'api',
+  'use', 'user', 'app', 'add', 'need', 'want', 'let', 'make', 'get', 'put', 'run',
+  'own', 'real', 'inside', 'people', 'customer', 'product', 'service', 'data', 'api', 'platform',
+  'something', 'anything', 'best', 'good', 'provider', 'team', 'company', 'site', 'website',
 ])
+
+/**
+ * A caller writes "uploaded files" and we filed the term as "upload" and "file". Two of the
+ * eleven misroutes in the tenth pass were nothing but that: "where do I store uploaded files"
+ * tied commerce against file storage because neither inflected word reached its own vocabulary.
+ * Both sides of every comparison go through here, so the rule is symmetric.
+ */
+function stem(word: string): string {
+  if (/(?:s|x|z|ch|sh)es$/.test(word) && word.length > 4) return word.slice(0, -2)
+  if (word.endsWith('s') && !word.endsWith('ss') && word.length > 3) return word.slice(0, -1)
+  if (word.endsWith('ing') && word.length > 6) return word.slice(0, -3)
+  if (word.endsWith('ed') && word.length > 5) return word.slice(0, -2)
+  return word
+}
+
+/** "geocoding" stems to "geocod" and we filed "geocode". Both stems, either side missing its e. */
+function sameTerm(word: string, term: string): boolean {
+  return word === term || `${word}e` === term || word === `${term}e`
+}
 
 /** What a caller says, mapped to what we filed it under. Only terms our own prose does not carry. */
 const VOCABULARY: Record<string, string[]> = {
-  'file-storage': ['upload', 'file', 'files', 'image', 'images', 'photo', 'screenshot', 'attachment', 'cdn', 'bucket', 's3', 'media'],
-  auth: ['login', 'log', 'signin', 'sign', 'sso', 'oauth', 'identity', 'password', 'session', 'google', 'saml'],
-  'transactional-email': ['email', 'emails', 'mail', 'smtp', 'inbox', 'deliverability'],
-  'product-analytics': ['analytics', 'track', 'tracking', 'funnel', 'retention', 'behaviour', 'behavior', 'events'],
-  'vector-search': ['vector', 'embedding', 'embeddings', 'semantic', 'rag', 'retrieval', 'similarity'],
-  payments: ['payment', 'payments', 'charge', 'billing', 'subscription', 'subscriptions', 'checkout', 'invoice', 'card', 'money', 'pay'],
-  'error-monitoring': ['error', 'errors', 'exception', 'exceptions', 'crash', 'stacktrace', 'bug'],
-  'feature-flags': ['flag', 'flags', 'toggle', 'rollout', 'experiment', 'experiments', 'ab'],
-  search: ['search', 'searching', 'index', 'autocomplete', 'typeahead', 'facet'],
+  'file-storage': ['upload', 'file', 'image', 'photo', 'avatar', 'screenshot', 'attachment', 'cdn', 'bucket', 's3', 'media'],
+  auth: ['login', 'signin', 'sign', 'authentication', 'authenticate', 'sso', 'oauth', 'identity', 'password', 'google', 'saml'],
+  'transactional-email': ['email', 'mail', 'smtp', 'inbox', 'deliverability'],
+  'product-analytics': ['analytics', 'track', 'funnel', 'retention', 'behaviour', 'behavior', 'event', 'click', 'replay', 'conversion', 'cohort'],
+  'vector-search': ['vector', 'embedding', 'semantic', 'rag', 'retrieval', 'similarity', 'similar', 'meaning'],
+  payments: ['payment', 'charge', 'billing', 'subscription', 'checkout', 'invoice', 'card', 'money', 'pay'],
+  'error-monitoring': ['error', 'exception', 'crash', 'stacktrace', 'bug'],
+  'feature-flags': ['flag', 'toggle', 'rollout', 'experiment', 'experimentation'],
+  search: ['search', 'index', 'autocomplete', 'typeahead', 'facet'],
   // Not "call" or "calls": a video call is not telephony and an API call is neither.
-  communications: ['sms', 'voice', 'whatsapp', 'phone', 'telephony', 'messaging'],
+  communications: ['sms', 'voice', 'whatsapp', 'phone', 'telephony', 'messaging', 'otp', 'passcode'],
   // Not "editor": somebody asking for an editor wants the component, and a CMS is asked for by name.
-  'headless-cms': ['cms', 'content', 'blog', 'article', 'articles', 'page', 'pages'],
-  'background-jobs': ['job', 'jobs', 'queue', 'worker', 'workers', 'cron', 'workflow', 'workflows', 'async', 'background'],
-  'llm-infrastructure': ['llm', 'model', 'models', 'inference', 'gpu', 'prompt', 'completion', 'openai'],
-  video: ['video', 'videos', 'stream', 'streaming', 'encode', 'transcode', 'player', 'playback'],
-  'browser-infrastructure': ['scrape', 'scraping', 'crawl', 'crawler', 'headless', 'browser', 'puppeteer', 'playwright', 'proxy'],
-  notifications: ['notification', 'notifications', 'notify', 'push', 'slack', 'alerting', 'webhook'],
-  scheduling: ['calendar', 'schedule', 'scheduling', 'booking', 'book', 'meeting', 'appointment', 'availability'],
-  'maps-geo': ['map', 'maps', 'geocode', 'geocoding', 'address', 'coordinates', 'location', 'geo', 'routing'],
+  'headless-cms': ['cms', 'content', 'blog', 'article', 'page', 'homepage', 'copywriter'],
+  'background-jobs': ['job', 'queue', 'worker', 'cron', 'workflow', 'async', 'background', 'nightly', 'batch', 'durable'],
+  'llm-infrastructure': ['llm', 'model', 'inference', 'gpu', 'prompt', 'completion', 'openai'],
+  video: ['video', 'stream', 'livestream', 'webinar', 'broadcast', 'encode', 'transcode', 'player', 'playback'],
+  'browser-infrastructure': ['scrape', 'crawl', 'crawler', 'headless', 'browser', 'puppeteer', 'playwright', 'proxy'],
+  // Not "alerting": an alert about an exception is error monitoring and an alert about latency is
+  // observability, so the word decided nothing and tied all three.
+  notifications: ['notification', 'notify', 'push', 'slack', 'webhook', 'bell', 'unread'],
+  scheduling: ['calendar', 'schedule', 'booking', 'book', 'meeting', 'appointment', 'availability'],
+  'maps-geo': ['map', 'geocode', 'address', 'coordinate', 'location', 'geo', 'route', 'routing'],
   databases: ['database', 'postgres', 'postgresql', 'mysql', 'sql', 'sqlite', 'db'],
-  observability: ['observability', 'logs', 'logging', 'metrics', 'trace', 'tracing', 'monitor', 'monitoring', 'uptime', 'apm'],
-  'documents-signature': ['document', 'documents', 'signature', 'sign', 'signing', 'pdf', 'contract', 'esign'],
-  commerce: ['commerce', 'ecommerce', 'shop', 'store', 'cart', 'catalog', 'storefront'],
-  localization: ['translate', 'translation', 'localization', 'localisation', 'i18n', 'language', 'languages', 'locale'],
+  observability: ['observability', 'log', 'metric', 'trace', 'tracing', 'monitor', 'uptime', 'apm', 'latency', 'dashboard', 'p99', 'slow'],
+  'documents-signature': ['document', 'signature', 'sign', 'signing', 'pdf', 'contract', 'esign'],
+  // Not "store": in nine questions out of ten it is the verb, and it sent both "store user
+  // avatars" and "where do I store uploaded files" to commerce.
+  commerce: ['commerce', 'ecommerce', 'shop', 'cart', 'catalog', 'storefront'],
+  localization: ['translate', 'translation', 'localization', 'localisation', 'i18n', 'language', 'locale'],
   'rich-text-editors': ['wysiwyg', 'richtext', 'editor', 'formatting', 'markdown'],
 }
 
@@ -131,10 +155,18 @@ const VOCABULARY: Record<string, string[]> = {
 const PHRASES: [RegExp, string][] = [
   [/\bsemantic search\b/, 'vector-search'],
   [/\bvector search\b/, 'vector-search'],
+  [/\bvector (?:database|db|store)\b/, 'vector-search'],
   [/\bfull[- ]text search\b/, 'search'],
   [/\bvideo call/, 'video'],
   [/\brich text\b/, 'rich-text-editors'],
   [/\btext editor\b/, 'rich-text-editors'],
+  // "A/B" tokenises to two single letters and is dropped by the length filter, so the question
+  // was decided by "checkout" and went to payments.
+  [/\ba\/b\b/, 'feature-flags'],
+  [/\broll(?:ing)? out\b/, 'feature-flags'],
+  [/\bonline store\b/, 'commerce'],
+  // The channel decides: a passcode is auth, a passcode by text is the thing that carries it.
+  [/\bby (?:text|sms)\b/, 'communications'],
   // Only when nothing else in the question is louder: "send emails when they sign up" is a
   // question about email that happens to mention signing up.
   [/\bsign in with\b|\bsingle sign[- ]?on\b|\blog in\b/, 'auth'],
@@ -142,28 +174,54 @@ const PHRASES: [RegExp, string][] = [
 ]
 
 export function categoryForJob(job: string): Category | null {
-  const asked = job.toLowerCase()
+  const asked = job.toLowerCase().replace(/\bsign(?:s|ed|ing)? ?up\b/g, ' ')
   const phrase = PHRASES.find(([pattern]) => pattern.test(asked))
   if (phrase) return CATEGORIES.find((category) => category.id === phrase[1]) ?? null
 
-  const words = job
-    .toLowerCase()
+  const words = asked
     .split(/[^a-z0-9]+/)
+    .map(stem)
     .filter((word) => word.length > 2 && !NO_INFORMATION.has(word))
   if (words.length === 0) return null
   const scored = CATEGORIES.map((category) => {
-    const vocabulary = VOCABULARY[category.id] ?? []
+    const vocabulary = (VOCABULARY[category.id] ?? []).map(stem)
     // A term from the caller's vocabulary is worth more than an incidental word in our own prose,
     // which is what let a single shared word decide a category.
-    const strong = words.filter((word) => vocabulary.includes(word)).length * 10
-    const haystack = `${category.id} ${category.label} ${category.jobToBeDone}`.toLowerCase()
-    const weak = words.filter((word) => !vocabulary.includes(word) && haystack.includes(word)).length
-    return { category, score: strong + weak }
+    const strong = words.filter((word) => vocabulary.some((term) => sameTerm(word, term))).length * 10
+    const prose = proseWords(category)
+    const weak = words.filter(
+      (word) => !vocabulary.some((term) => sameTerm(word, term)) && prose.has(word),
+    ).length
+    return { category, strong, score: strong + weak }
   }).sort((a, b) => b.score - a.score)
+  // Our own prose is not the caller's vocabulary, and on its own it is noise: "experimentation
+  // platform" went to commerce because our commerce line ends in "platforms", and "something for
+  // my app" went there because the same line says "sell something". A prose hit now only breaks a
+  // tie between categories the caller's own words already reached.
+  if (scored[0].strong === 0) return null
   // A tie between two categories is a question we cannot route, and guessing would send a caller
   // a list of the wrong vendors with our name on it.
-  if (scored[0].score === 0 || scored[0].score === scored[1]?.score) return null
+  if (scored[0].score === scored[1]?.score) return null
   return scored[0].category
+}
+
+/** Words of ours that name exactly one category. A word we reuse across categories decides nothing. */
+let proseIndex: Map<string, Set<string>> | null = null
+function proseWords(category: Category): Set<string> {
+  if (!proseIndex) {
+    const seen = new Map<string, string[]>()
+    for (const entry of CATEGORIES) {
+      const words = `${entry.id} ${entry.label} ${entry.jobToBeDone}`.toLowerCase().split(/[^a-z0-9]+/)
+      for (const word of new Set(words.map(stem))) {
+        seen.set(word, [...(seen.get(word) ?? []), entry.id])
+      }
+    }
+    proseIndex = new Map(CATEGORIES.map((entry) => [entry.id, new Set<string>()]))
+    for (const [word, owners] of seen) {
+      if (owners.length === 1) proseIndex.get(owners[0])!.add(word)
+    }
+  }
+  return proseIndex.get(category.id) ?? new Set()
 }
 
 export async function lookup(job: string): Promise<Lookup | null> {
