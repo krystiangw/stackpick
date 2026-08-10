@@ -52,9 +52,42 @@ export const OWNERSHIP: Record<string, Ownership> = {
     shipping: false,
     checkedAt: '2026-08-09',
   },
+  'split.io': {
+    status: 'acquired',
+    evidence: 'Their own home page: "SPLIT IS NOW PART OF HARNESS". Still trading under its own name.',
+    shipping: true,
+    checkedAt: '2026-08-10',
+  },
+  'stytch.com': {
+    status: 'acquired',
+    evidence: 'Their own home page: "Stytch has joined Twilio to build the intelligent identity layer for the internet"',
+    shipping: true,
+    checkedAt: '2026-08-10',
+  },
+  'payloadcms.com': {
+    status: 'acquired',
+    evidence: 'Their own home page: "Payload is now part of Figma!"',
+    shipping: true,
+    checkedAt: '2026-08-10',
+  },
+  'lemonsqueezy.com': {
+    status: 'acquired',
+    evidence: 'Their own home page: "2026 Update: Lemon Squeezy + Stripe Managed Payments", and stripe.com is separately in the corpus',
+    shipping: true,
+    checkedAt: '2026-08-10',
+  },
+  'bugsnag.com': {
+    status: 'acquired',
+    evidence: 'Now a SmartBear brand, own site intact: "Debugging Smarter and Faster with BugSnag, SmartBear MCP"',
+    shipping: true,
+    checkedAt: '2026-08-10',
+  },
   'searchkit.co': {
     status: 'oss',
-    evidence: 'github.com/searchkit/searchkit is a GitHub organisation project, not archived, last push 2026-04-04',
+    evidence:
+      'github.com/searchkit/searchkit is a GitHub organisation project, not archived, last push 2026-04-04. ' +
+      'Its own site: "Searchkit is an open source library which helps you build a great search experience with ' +
+      'Elasticsearch", and the whole navigation is Docs, Demos, About: no pricing, no purchase path.',
     shipping: true,
     checkedAt: '2026-08-09',
   },

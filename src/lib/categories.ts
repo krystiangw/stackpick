@@ -18,6 +18,10 @@ export const CATEGORIES: Category[] = [
     domains: [
       'uploadthing.com',
       'uploadcare.com',
+      // Filed under managed databases until 2026-08-10, on the identity it had before it pivoted.
+      // Its own home page: "Bottomless object storage with zero egress fees", and the word
+      // database appears zero times.
+      'tigrisdata.com',
       'cloudinary.com',
       'imagekit.io',
       'bunny.net',
@@ -109,7 +113,7 @@ export const CATEGORIES: Category[] = [
     id: 'background-jobs',
     label: 'Background jobs and workflows',
     jobToBeDone: 'run work that must not happen inside a request',
-    domains: ['inngest.com', 'trigger.dev', 'temporal.io', 'upstash.com', 'hatchet.run', 'defer.run'],
+    domains: ['inngest.com', 'trigger.dev', 'temporal.io', 'upstash.com', 'hatchet.run'],
   },
   {
     id: 'llm-infrastructure',
@@ -151,7 +155,7 @@ export const CATEGORIES: Category[] = [
     id: 'databases',
     label: 'Managed databases',
     jobToBeDone: 'get a production database without running one',
-    domains: ['neon.tech', 'planetscale.com', 'turso.tech', 'cockroachlabs.com', 'xata.io', 'tigrisdata.com'],
+    domains: ['neon.tech', 'planetscale.com', 'turso.tech', 'cockroachlabs.com', 'xata.io'],
   },
   {
     id: 'observability',
