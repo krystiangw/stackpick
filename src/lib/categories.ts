@@ -101,7 +101,7 @@ export const CATEGORIES: Category[] = [
     id: 'communications',
     label: 'SMS, voice and messaging',
     jobToBeDone: 'send a message a person actually reads',
-    domains: ['twilio.com', 'vonage.com', 'plivo.com', 'telnyx.com', 'messagebird.com', 'sinch.com'],
+    domains: ['twilio.com', 'vonage.com', 'plivo.com', 'telnyx.com', 'bird.com', 'sinch.com'],
   },
   {
     id: 'headless-cms',
