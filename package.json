@@ -11,7 +11,9 @@
     "audit": "tsx scripts/audit-corpus.mts",
     "attribution": "tsx scripts/npm-attribution.mts",
     "reseed": "bash scripts/reseed.sh",
-    "targets": "tsx scripts/targets.mts"
+    "targets": "tsx scripts/targets.mts",
+    "seed": "tsx harness/seed.mts",
+    "collect": "tsx harness/collect.mts"
   },
   "dependencies": {
     "mongodb": "^7.5.0",

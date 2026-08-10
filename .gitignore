@@ -10,3 +10,6 @@ build/
 *.tsbuildinfo
 next-env.d.ts
 /data/
+
+# Generated per-run copies. The scaffold and the brief are committed; the runs are not.
+harness/runs/
