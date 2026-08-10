@@ -192,6 +192,10 @@ export const CATEGORIES: Category[] = [
     // balance and an IP allowlist, and GoDaddy behind a minimum number of domains already held.
     // An agent building a site has to buy a domain before anything else, so whichever registrar
     // it can actually drive becomes the default for every site an agent builds.
+    // opensrs.com was here until 2026-08-11 and is not a registrar an agent can use. Its own title
+    // tag reads "Reseller Platform for Domains, Email, and SSL" and its home page "the world's
+    // largest wholesale domain platform", so the product is sold to registrars rather than to
+    // whoever wants a domain. Right company, wrong shelf, like liveblocks.io under editors.
     id: 'domains-dns',
     label: 'Domain registration and DNS',
     jobToBeDone: 'register a domain and point it somewhere with nobody at the keyboard',
@@ -204,7 +208,6 @@ export const CATEGORIES: Category[] = [
       'dnsimple.com',
       'godaddy.com',
       'hover.com',
-      'opensrs.com',
       'inwx.com',
       'netim.com',
       'njal.la',

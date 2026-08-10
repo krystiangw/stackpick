@@ -82,6 +82,18 @@ export const OWNERSHIP: Record<string, Ownership> = {
     shipping: true,
     checkedAt: '2026-08-10',
   },
+  'name.com': {
+    status: 'acquired',
+    evidence: 'Their own about page: "part of Identity Digital, a leading domain name services company"',
+    shipping: true,
+    checkedAt: '2026-08-11',
+  },
+  'netim.com': {
+    status: 'independent',
+    evidence: 'Their own about page states the company is "owned by its founders"',
+    shipping: true,
+    checkedAt: '2026-08-11',
+  },
   'searchkit.co': {
     status: 'oss',
     evidence:
