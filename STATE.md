@@ -579,6 +579,36 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-10 (63): audyt UI i cztery etykiety, ktore nazywaly cudzy host
+
+**Kuracja.** Przemiecenie 167 apeksow pod katem przekierowan znalazlo piec wierszy klasy
+`messagebird`, czyli etykiete nazywajaca host, ktorego nie mierzy. Cztery przemianowane:
+`directus.io` → `directus.com`, `livekit.io` → `livekit.com`, `neon.tech` → `neon.com`,
+`postmark.com` → `postmarkapp.com`. Kazdy stary apeks odpowiada 301 albo 308 na kazdej sciezce,
+wiec **pomiar sie nie zmienia** (przekierowania byly zawsze podazane), zmienia sie tylko to, ze
+etykieta przestaje klamac.
+
+**Piaty zostaje i to jest wazniejsze od czterech pozostalych.** `oramasearch.com` wyglada na ten
+sam przypadek i nie jest: jego HTML przekierowuje na orama.com, ale `oramasearch.com/llms.txt`
+odpowiada 200, a `orama.com/llms.txt` daje 404. Przemianowanie po cichu zabra loby plik, ktory
+vendor naprawde publikuje.
+
+**Audyt UI (`human-touch`).** Kod: mediana 6,0, maksimum 12,0, w calym projekcie zero promieni,
+zero cieni, zero czasow animacji. Runtime: landing **8/74**, cennik **8/74**, oba w pasmie
+„decyzje wlasne" (0-18). Jedyny marker na obu stronach to systemowy kroj, i **Krystian
+zdecydowal go zostawic**: strona o czytelnosci maszynowej i szybkosci nie laduje webfontu po to,
+zeby zbic metryke o 8 punktow.
+
+Znaleziony i naprawiony blad w samym narzedziu (`~/.claude`, `c4009b6`): sprawdzalo rownosc
+kolumn siatki przez porownanie stringow pikseli, a te roznia sie o 0,016 px przez zaokraglenie
+podpikselowe, wiec **zadna prawdziwa siatka trzech kart nigdy nie zostala wykryta**.
+
+**Do wziecia, zmierzone i nie zrobione.** 66 ze 167 domen (40 procent) przekierowuje apeks na
+www, a `found.site` zostaje na apeksie, wiec placimy dodatkowy skok przy kazdym zadaniu do tych
+vendorow (zmierzone 1248 ms wobec 346 ms na dziewieciu sciezkach). Poniewaz przekierowania sa
+podazane, a wynik niesie URL koncowy, **zmiana bazy nie moze zmienic tego, co mierzymy**, tylko
+od czego zaczynamy. Ryzyko jest wiec mniejsze, niz zakladalem w rundzie 62.
+
 ## Runda 2026-08-10 (62): audyt podmiotowy nowej kategorii i diagnoza `hover.com`
 
 Nowa kategoria dostała to sprawdzenie, którego korpus nie miał, dopóki nie ugryzły nas `anvil.co`,
