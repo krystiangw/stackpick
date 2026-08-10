@@ -157,11 +157,27 @@ export type SignupFindings = {
  * that as a signup rendering without JavaScript, on the one page where being wrong is worst.
  */
 function rendersUsableForm(body: string): boolean {
-  for (const form of body.matchAll(/<form\b[^>]*>([\s\S]*?)<\/form>/gi)) {
-    const fields = [...form[1].matchAll(/<(?:input|select|textarea)\b[^>]*>/gi)].map((field) => field[0])
-    if (fields.filter(isFillable).length >= 2) return true
+  for (const form of body.matchAll(/<form\b([^>]*)>([\s\S]*?)<\/form>/gi)) {
+    const fields = [...form[2].matchAll(/<(?:input|select|textarea)\b[^>]*>/gi)].map((field) => field[0])
+    const asksWhoYouAre = fields.filter(isFillable).some(identifiesTheCaller)
+    const canBeSubmitted =
+      /\saction\s*=/i.test(form[1]) || [...form[2].matchAll(/<button\b[^>]*>/gi)].some((button) => isFillable(button[0]))
+    if (asksWhoYouAre && canBeSubmitted) return true
   }
   return false
+}
+
+/**
+ * A field that asks who is signing up, as opposed to one that asks anything at all. Counting
+ * fillable fields was not an approximation of a signup: browserless.io's only form is a cookie
+ * banner whose two consent checkboxes cleared the count while its email input sits outside every
+ * form element, and payloadcms.com's is a footer newsletter box.
+ */
+function identifiesTheCaller(tag: string): boolean {
+  const type = tag.match(/\btype\s*=\s*["']?([a-z]+)/i)?.[1]?.toLowerCase()
+  if (type === 'email' || type === 'password') return true
+  if (type !== undefined && type !== 'text') return false
+  return /\b(?:name|id)\s*=\s*["']?[^"'>]*(?:email|e-mail|user|login|password)/i.test(tag)
 }
 
 /**
