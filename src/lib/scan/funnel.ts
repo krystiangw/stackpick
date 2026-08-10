@@ -60,8 +60,12 @@ const SELF_SERVE_PATTERNS = [
   /\bstarted? for free\b/i,
   /free forever/i,
   /forever free/i,
-  /\$0(?:\.00)?(?![.\d])/,
-  /\btry (?:it )?free\b/i,
+  // A decimal comma is a decimal point. strapi.io lists "+$0,60 per GB" and was published as
+  // having a free tier because of it, while its cheapest plan is $35 a project a month.
+  /\$0(?:\.00)?(?![.,\d])/,
+  // "Try for free" is the commonest phrasing of all and matched nothing: replicate.com says it
+  // four times and sinch.com three, and both were published as having no free-tier wording.
+  /\btry (?:it |out )?(?:for )?free\b/i,
   // A recurring allowance is a free tier by another name: agora.io grants the first 10,000
   // minutes free every month and was published as having no free tier.
   /\bfree every month\b/i,
@@ -84,7 +88,11 @@ const SELF_SERVE_PATTERNS = [
  * serves the first kind and nothing else, daily.co and qdrant.tech serve the second.
  */
 export const CTA_WORDING = new Set(
-  [/\bget started\b[\s-]*(?:for\s+)?free\b/i, /\bstarted? for free\b/i, /\btry (?:it )?free\b/i].map(
+  [
+    /\bget started\b[\s-]*(?:for\s+)?free\b/i,
+    /\bstarted? for free\b/i,
+    /\btry (?:it |out )?(?:for )?free\b/i,
+  ].map(
     (pattern) => pattern.source,
   ),
 )

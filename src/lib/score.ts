@@ -577,6 +577,15 @@ export const CHECKS: Check[] = [
       }
       // A pricing page that needs JavaScript to show a price is one an agent cannot read either,
       // so this is a measured finding about the page rather than a gap in the scan.
+      // Says which words were found and why they were not enough, because the sentence below
+      // told here.com, sinch.com and replicate.com that no free wording was on a page that
+      // carries it. A vendor reads their own page before they read us.
+      if (onlyChrome) {
+        return yes(
+          0,
+          `${page ?? 'Your pricing page'} prints no price without JavaScript, and its only free wording is a call to action rather than a stated tier`,
+        )
+      }
       if (f.funnel.pricingFetched && f.funnel.pricesVisibleWithoutJs === false) {
         // Says what was measured. The old sentence claimed nothing about the tiers survived, and
         // that was false on nine of the twelve rows carrying it: plaid.com serves three named
