@@ -1,4 +1,4 @@
-import { CTA_WORDING, PROVISIONING_PATTERN_COUNT } from './scan/funnel'
+import { PROVISIONING_PATTERN_COUNT } from './scan/funnel'
 import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
@@ -589,7 +589,10 @@ export const CHECKS: Check[] = [
       // menu, and passing it while sinch.com fails on the same evidence made the rule disagree
       // with itself over whether a nav link is a tier.
       const chrome = f.funnel.provisioning.selfServeSignals
-      const onlyChrome = chrome.length > 0 && chrome.every((signal) => CTA_WORDING.has(signal))
+      // Decided on the words in context rather than on which pattern matched: june.so's page is
+      // one unpriced plan and a "Start free trial" button, and `free trial` is a statement
+      // pattern, so no list of button phrases could catch it without catching every real trial.
+      const onlyChrome = chrome.length > 0 && f.funnel.provisioning.selfServeIsButtonOnly === true
       if (f.funnel.provisioning.selfServeSignals.length > 0 && !onlyChrome) {
         // Saying it once out of two tries still means you say it, and hiding the disagreement
         // would leave a vendor unable to explain why the number moved between two scans.

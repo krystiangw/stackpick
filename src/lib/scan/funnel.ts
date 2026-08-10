@@ -92,16 +92,33 @@ const SELF_SERVE_PATTERNS = [
  * a page that prints no price is evidence about the vendor or about their navigation. here.com
  * serves the first kind and nothing else, daily.co and qdrant.tech serve the second.
  */
-export const CTA_WORDING = new Set(
-  [
-    /\bget started\b[\s-]*(?:for\s+)?free\b/i,
-    /\bstarted? for free\b/i,
-    /\btry (?:it |out )?(?:for )?free\b/i,
-  ].map(
-    (pattern) => pattern.source,
-  ),
-)
+/**
+ * Whether every free-tier signal on the page is a button rather than a statement, decided by what
+ * precedes the words rather than by which pattern matched. A phrase list could not do it: june.so
+ * says "Start free trial" once and nothing else, and `free trial` is a statement pattern, so no
+ * list of button phrases could mark that page as chrome without also marking every real trial.
+ *
+ * An imperative in front of the words is what makes them a control. "Start free trial" is a
+ * button; "14 day free trial, no card required" is a fact about the product.
+ */
+const IMPERATIVE_BEFORE = /(?:start|try|get|sign\s*up|signup|create|begin|launch|claim)\s+(?:your\s+|a\s+|it\s+|out\s+|for\s+)*$/i
 
+/** Some patterns carry the verb themselves, so the match is the button and nothing precedes it. */
+const IMPERATIVE_LEADS = /^(?:start|try|get|sign\s*up|signup|create|begin|launch|claim)\b/i
+
+export function everyFreeSignalIsAButton(patterns: RegExp[], text: string): boolean {
+  let sawAny = false
+  for (const pattern of patterns) {
+    const global = new RegExp(pattern.source, `${pattern.flags.replace('g', '')}g`)
+    for (const match of text.matchAll(global)) {
+      sawAny = true
+      if (IMPERATIVE_LEADS.test(match[0])) continue
+      const before = text.slice(Math.max(0, (match.index ?? 0) - 24), match.index)
+      if (!IMPERATIVE_BEFORE.test(before)) return false
+    }
+  }
+  return sawAny
+}
 // Weighted rather than a bare list of types, which reads to a strict server as a demand:
 // plausible.io answers 406 to "text/markdown, application/json, text/plain" and savvycal.com
 // answers 500, and we counted both as refusals of nine paths that return nine clean 404s. With
@@ -269,7 +286,7 @@ export type FunnelFindings = {
   /** Whether the endpoint probe got an answer, as opposed to never reaching a host. */
   mcpProbed: boolean
   signup: SignupFindings
-  provisioning: { programmatic: string[]; selfServeSignals: string[] }
+  provisioning: { programmatic: string[]; selfServeSignals: string[]; selfServeIsButtonOnly?: boolean }
   /** True when the site answers unknown paths with real text, making entry probes meaningless. */
   servesCatchAll: boolean
   /** The same question per namespace, because one does not imply another. */
@@ -501,10 +518,15 @@ async function inspectSignup(url: string | null): Promise<SignupFindings> {
  * Returns the matched rule in the words it is published in, not its regex source. The verdict
  * quotes these back to the vendor, and one of the seven is an alternation forty characters long.
  */
-function matching(patterns: RegExp[], html: string, labels?: string[]): string[] {
-  const text = stripCodeBlocks(html)
+/** The same reduction `matching` uses, exposed so a caller can look at the words in context. */
+function visibleText(html: string): string {
+  return stripCodeBlocks(html)
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
+}
+
+function matching(patterns: RegExp[], html: string, labels?: string[]): string[] {
+  const text = visibleText(html)
   return patterns
     .map((pattern, index) => (pattern.test(text) ? (labels?.[index] ?? pattern.source) : null))
     .filter((label): label is string => label !== null)
@@ -862,6 +884,7 @@ export async function scanFunnel({
     provisioning: {
       programmatic: matching(PROVISIONING_PATTERNS, await corpus, PROVISIONING_PATTERN_LABELS),
       selfServeSignals: matching(SELF_SERVE_PATTERNS, pricingText),
+      selfServeIsButtonOnly: everyFreeSignalIsAButton(SELF_SERVE_PATTERNS, visibleText(pricingText)),
     },
     servesCatchAll: catchAll.markdown || catchAll.json || catchAll.text,
     catchAll,
