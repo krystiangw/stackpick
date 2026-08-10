@@ -37,7 +37,7 @@ their own endpoint URL.
 - `transloadit.com` · https://api.transloadit.com/mcp
 - `weglot.com` · https://mcp.weglot.com/mcp
 
-## 2. Everything else in place, signup unreachable without a browser (44)
+## 2. Everything else in place, signup unreachable without a browser (42)
 
 The barrier our own agent runs kept dying at, and the most expensive one here to fix: it crosses
 auth, fraud and billing. Never the opening line, always the second.
@@ -46,15 +46,14 @@ auth, fraud and billing. Never the opening line, always the second.
 - `algolia.com` · Unmeasurable: https://dashboard.algolia.com/users/sign_up answers 403 to an agent and 403 to a Chrome user-agent, so nothing gets in from here and the difference we test for cannot be seen
 - `amplitude.com` · Reachable, but the form needs JavaScript
 - `api.video` · Reachable, but the form needs JavaScript
-- `auth0.com` · Reachable, but the form needs JavaScript
 - `axiom.co` · Reachable, but the form needs JavaScript
 - `baseten.co` · Unmeasurable: https://login.baseten.co/sign-up answers 403 to an agent and 403 to a Chrome user-agent, so nothing gets in from here and the difference we test for cannot be seen
 - `bitmovin.com` · Unmeasurable: https://bitmovin.com/signup answers 403 to an agent and 403 to a Chrome user-agent, so nothing gets in from here and the difference we test for cannot be seen
+- `browserless.io` · Reachable, but the form needs JavaScript
 - `cal.com` · Reachable, but the form needs JavaScript
 - `clerk.com` · Reachable, but the form needs JavaScript
 - `cloudflare.com` · Unmeasurable: https://dash.cloudflare.com/sign-up answers 403 to an agent and 403 to a Chrome user-agent, so nothing gets in from here and the difference we test for cannot be seen
 - `datadoghq.com` · Reachable, but the form needs JavaScript
-- `deepl.com` · Reachable, but the form needs JavaScript
 - `elastic.co` · Reachable, but the form needs JavaScript
 - `growthbook.io` · Reachable, but the form needs JavaScript
 - `honeycomb.io` · Reachable, but the form needs JavaScript
@@ -73,7 +72,6 @@ auth, fraud and billing. Never the opening line, always the second.
 - `pandadoc.com` · Unmeasurable: https://pandadoc.com/signup answered 429, which is a limit we triggered rather than a rule about agents
 - `pinecone.io` · Reachable, but the form needs JavaScript
 - `plivo.com` · Reachable, but the form needs JavaScript
-- `polar.sh` · Reachable, but the form needs JavaScript
 - `replicate.com` · Not applicable: nothing on the site links to an account signup
 - `sanity.io` · Reachable, but the form needs JavaScript
 - `sinch.com` · Reachable, but the form needs JavaScript

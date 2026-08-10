@@ -11,9 +11,10 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
   trzech reseedach z rzędu, a z tej maszyny odpowiada 200 przez Netlify: to fakt o naszym ruchu,
   nie o dostawcy, i dlatego wypadł z korpusu zamiast dostać zerowy wiersz.
 - `npm run audit`: **0 sprzeczności w wierszach, 10 liczb ze stron zgodnych z danymi**.
-- Sześć przebiegów adwersaryjnych: **16,7 → 2,2 → 3,9 → 2,0 → 0,94 → 7,9 procent błędu**.
-  Szósty jest skokiem w górę i to jest prawdziwy wynik: zaatakował trzy zmiany napisane w jedną
-  noc i wszystkie trzy się posypały. Naprawione w rundzie 54.
+- Siedem przebiegów adwersaryjnych: **16,7 → 2,2 → 3,9 → 2,0 → 0,94 → 7,9 → 1,4 procent błędu**
+  (4 na 290). Szósty był skokiem w górę, bo zaatakował trzy zmiany napisane w jedną noc i
+  wszystkie trzy się posypały; siódmy potwierdził naprawy i znalazł cztery nowe. Wszystkie
+  zamknięte w rundzie 55.
 - Znalezisko rynkowe: **41 z 54 vendorów z żywym MCP publikuje RFC 7591**, poza tą grupą 23 ze 102.
   DCR przyszło z wymogu specyfikacji MCP, nie z decyzji o wpuszczeniu agentów. **36 z 54 nadal
   nie dokumentuje żadnej drogi do klucza.**
@@ -157,10 +158,13 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   koniunkcji, patrz runda 51.
 - ~~**Szósty przebieg adwersaryjny**~~ **zrobione 2026-08-10: 7,9 procent** (17 na 216). Wszystkie
   trzy zmiany z nocy obalone lub niedowiedzione, naprawione w rundzie 54.
-- **Siódmy przebieg adwersaryjny** po 7.4. Baseline: **7,9 procent**, czyli tym razem celem jest
-  pokazanie, że naprawy działają. Warte ataku: `CTA_WORDING` (podział na przycisk i zdanie jest
-  nowy i arbitralny), `isFillable` po naprawie parsowania atrybutów, i nowe zdanie `self_serve`,
-  bo to **czwarta** zmiana w tym checku w cztery dni.
+- ~~**Siódmy przebieg adwersaryjny**~~ **zrobione 2026-08-10: 1,4 procent** (4 na 290). Potwierdzone
+  niezależnie: reguła wyzwania bota, dowody MCP (16/16 z kontrolkami), własność npm (5/5 z
+  przypadkiem negatywnym), arytmetyka koniunkcji, poprawka Tailwinda, długość N w nowym zdaniu.
+- **Ósmy przebieg adwersaryjny** po naprawach z rundy 55. Baseline: **1,4 procent**. Warte ataku:
+  przebudowana `rendersUsableForm` (pole „kim jesteś" plus cel wysyłki, oba progi nowe),
+  trójstanowe nogi koniunkcji i to, czy wykluczenie 38 wierszy z nieznaną rejestracją jest
+  poprawne, oraz `self_serve` po **piątej** zmianie w pięć dni.
 - **`auth0.com` serwuje dyno inne ciało niż nam.** Z tej maszyny `auth0.com/signup` daje 200 i
   formularz z dwoma polami, a skan widzi „form needs JavaScript". To fakt o tym, skąd pytamy, i
   ta sama klasa co `storyblok.com`. Nie jest to błąd reguły i nie da się naprawić kodem skanera.
@@ -397,6 +401,47 @@ na wiarę zepsułoby 44 poprawne wiersze. **Raport subagenta falsyfikuje się pr
 
 Stan po naprawach: **5 ze 155** spełnia wszystkie trzy nogi (`browserless.io`, `contentful.com`,
 `honeybadger.io`, `resend.com`, `supabase.com`), 56 jest o jeden krok, 50 z nich na rejestracji.
+
+## Runda 2026-08-10 (55): siódmy przebieg, 1,4 procent, i cztery naprawy
+
+**1,4 procent (4 na 290)** wobec 7,9 na 7.3. Naprawy z rundy 54 potwierdzone niezależnie.
+Cztery nowe błędne werdykty, wszystkie zamknięte, i przy trzech z nich **przyczyna okazała się
+inna niż w raporcie przebiegu**, co jest tu regułą, a nie wyjątkiem.
+
+**Reguła formularza przebudowana od podstaw, bo liczenie pól nigdy nie było przybliżeniem
+rejestracji.** `browserless.io` przechodził na **banerze cookies**: jedyny `<form>` to widget zgód
+z dwoma checkboxami, a pole email leży poza jakimkolwiek formularzem, i ta firma była na
+opublikowanej liście. W drugą stronę `docuseal.com` i `betterstack.com` oblewały, mając działające
+rejestracje serwerowe z polem email i celem POST. Nowa reguła: formularz musi mieć **pole pytające,
+kim jesteś** (email, hasło, albo tekst o nazwie wskazującej to samo) **i dokąd to wysłać**
+(`action` albo niezablokowany przycisk).
+
+**Własny błąd po drodze:** użyłem `isFillable` do oceny przycisku, a ta funkcja z definicji odrzuca
+`type=submit`, więc wypadły `supabase.com`, `resend.com` i `contentful.com`, których formularze
+React-owe wysyłają z handlera i nie mają `action`. Rozdzielone na `isAvailable` (przyciski) i
+`isFillable` (pola).
+
+**`strapi.io` nie przechodził przez „Free updates for upcoming features", tylko przez `+$0,60 per
+GB`.** Wzorzec `\$0(?![.\d])` nie wykluczał **przecinka dziesiętnego**, więc europejski zapis czytał
+się jako darmowy próg, przy najtańszym planie 35 USD za projekt.
+
+**Luka, nie fałszywy pozytyw: „try for free" nie pasowało do żadnego z siedemnastu wzorców.**
+`replicate.com` pisze to cztery razy, `sinch.com` trzy, i obu mówiliśmy, że nie mają wzmianki o
+darmowym progu. Zdanie też poprawione: mówi teraz, że jedyna wzmianka jest wołaniem do akcji,
+zamiast twierdzić, że jej nie ma.
+
+**Koniunkcja: nieznana noga to nie porażka.** Grupa „o jeden krok" wymieniała 48 dostawców
+oblewających na rejestracji, a **dwunastu miało rejestrację, której nigdy nie zmierzyliśmy**.
+Metodologia mówi wprost, że raportowanie własnego ruchu jako odmowy byłoby oskarżeniem, a ten
+akapit robił to z nazwiskami. **I ta naprawa też przestrzeliła:** wymaganie, żeby obie kontrole
+rejestracji były zmierzone, wycięło grupę z 56 na 16, bo CAPTCHA jest nieoznaczalna **dokładnie
+dlatego**, że formularza nie ma. Agent nie dosięgnie formularza, którego nie ma. Po korekcie:
+**6 ze 155 przechodzi wszystko, 44 o jeden krok, 35 na rejestracji**, 38 wierszy z nieznaną
+rejestracją poprawnie wyłączonych.
+
+`auth0.com` przechodzi teraz `signup_reachable`, co **obala** wcześniejszą diagnozę „to kwestia
+tego, skąd pytamy": to była reguła, nie punkt obserwacyjny. `storyblok.com` nadal wypada, przy
+piątym reseedzie z rzędu, i to zostaje faktem o naszym ruchu.
 
 ## Stare notatki badawcze (historyczne, sprzed rundy 12)
 
