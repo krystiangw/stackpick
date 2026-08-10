@@ -12,6 +12,7 @@
  * inventing the most quotable part of the report.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { homedir } from 'node:os'
 import { join } from 'node:path'
 
 const [category] = process.argv.slice(2)
@@ -20,9 +21,9 @@ if (!category) {
   process.exit(2)
 }
 
-const runsDir = join(new URL('.', import.meta.url).pathname, 'runs', category)
+const runsDir = join(process.env.STACKPICK_RUNS ?? join(homedir(), '.stackpick-runs'), category)
 if (!existsSync(runsDir)) {
-  console.error(`no runs at harness/runs/${category}. Seed them first.`)
+  console.error(`no runs at ${runsDir}. Seed them first.`)
   process.exit(1)
 }
 

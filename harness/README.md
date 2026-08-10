@@ -35,7 +35,7 @@ reason we know is that the artefacts disagreed with the report.
 harness/
   scaffolds/<category>/     the application every run starts from, committed
   briefs/<category>.md      the brief every run receives, verbatim, one file
-  runs/<category>/run-N/    generated, gitignored, one isolated copy per run
+  (runs live OUTSIDE the repo, at ~/.stackpick-runs/<category>/run-N, see below)
   docs/method.md            what stays human, and what the numbers may not be built from
 ```
 
@@ -56,13 +56,28 @@ The one measurement that needs no extra spend: **the same model in two harnesses
 `cursor-agent` can run Opus, so a disagreement between it and Claude Code on the same brief is a
 finding about the tool rather than the model, and nobody publishes that.
 
+## Why the runs are not in this repository
+
+Measured 2026-08-10, on the first real cell. Seeded inside `harness/runs/`, one of three runs
+walked up to the StackPick git root, read the harness documentation, **decided its task was to
+re-measure a published audit**, and shipped nothing. Its transcript is a competent report about
+running `seed` and `cell`. Its artefacts show an untouched scaffold.
+
+That is worse than the shared-directory contamination of round one, because the run looks well
+behaved from every angle: exit 0, a coherent write-up, and artefacts that read as an honest
+refusal rather than as a run that answered a question it found lying around.
+
+So `seed` writes to `$STACKPICK_RUNS` or `~/.stackpick-runs`, and gives every copy its own
+`git init` so an agent looking for the project boundary finds the scaffold and stops there.
+**Never seed a run inside a repository that is about measuring agents.**
+
 ## The rules that are not negotiable
 
 1. **One brief, verbatim, to every run.** The brief decides whether documentation gets read at
    all: on the same cheaper model one brief produced 0 of 10 runs that fetched a live source and
    another produced 3 of 3, because the second turned on a licence. A brief edited between runs
    makes the cells incomparable and there is no way to detect it afterwards.
-2. **Isolation per run, always.** See round one above.
+2. **Isolation per run, always**, and from the surrounding repository too. See both cases above.
 3. **Pin the model version and record it.** A model change between the audit and the re-measure
    is a confound, and it has to be reported as one rather than as a result.
 4. **Artefacts decide what was shipped, never the run's own report.**

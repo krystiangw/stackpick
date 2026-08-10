@@ -16,6 +16,7 @@
  */
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { homedir } from 'node:os'
 import { join } from 'node:path'
 
 type Agent = {
@@ -68,10 +69,9 @@ if (!category || !agent || !Number.isInteger(runs) || runs < 1) {
   process.exit(2)
 }
 
-const root = new URL('.', import.meta.url).pathname
-const runsDir = join(root, 'runs', category)
+const runsDir = join(process.env.STACKPICK_RUNS ?? join(homedir(), '.stackpick-runs'), category)
 if (!existsSync(runsDir)) {
-  console.error(`no runs at harness/runs/${category}. Seed them first: npm run seed -- ${category} ${runs}`)
+  console.error(`no runs at ${runsDir}. Seed them first: npm run seed -- ${category} ${runs}`)
   process.exit(1)
 }
 

@@ -31,11 +31,16 @@ valuable sentence in that audit.
 **Recommend, with an effort estimate.** "Add an MCP server" is worthless without knowing what the
 client's engineering can ship this quarter. That requires the conversation, not the transcript.
 
-## Two traps this project already walked into
+## Three traps this project already walked into
 
 **A shared working directory is not a set of runs.** Round one of the editors study put six agents
 in one folder. They read each other's edits. The whole round was discarded and it is not in the
 published counts, which the audit page says out loud.
+
+**A scaffold inside a repository about agents is not a scaffold.** The first cell run on the new
+harness produced one run of three that read this documentation, concluded it was being asked to
+re-measure an audit, and reported doing so. Exit 0, coherent write-up, untouched artefacts. The
+only reason it was caught is that `collect` reads `package.json` rather than the report.
 
 **A green build is not a shipped feature.** One run produced a passing build whose payment
 interface the bundler had removed. It is reported in that audit as a finding rather than hidden,
