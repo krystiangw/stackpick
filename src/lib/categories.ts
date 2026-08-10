@@ -59,7 +59,7 @@ export const CATEGORIES: Category[] = [
     id: 'transactional-email',
     label: 'Transactional email APIs',
     jobToBeDone: 'send password resets and receipts that arrive',
-    domains: ['resend.com', 'postmark.com', 'sendgrid.com', 'mailgun.com', 'loops.so', 'sendlayer.com'],
+    domains: ['resend.com', 'postmarkapp.com', 'sendgrid.com', 'mailgun.com', 'loops.so', 'sendlayer.com'],
   },
   {
     id: 'product-analytics',
@@ -107,7 +107,7 @@ export const CATEGORIES: Category[] = [
     id: 'headless-cms',
     label: 'Headless CMS',
     jobToBeDone: 'let non-engineers edit content the product renders',
-    domains: ['contentful.com', 'sanity.io', 'strapi.io', 'storyblok.com', 'payloadcms.com', 'directus.io', 'hygraph.com'],
+    domains: ['contentful.com', 'sanity.io', 'strapi.io', 'storyblok.com', 'payloadcms.com', 'directus.com', 'hygraph.com'],
   },
   {
     id: 'background-jobs',
@@ -125,7 +125,7 @@ export const CATEGORIES: Category[] = [
     id: 'video',
     label: 'Video hosting and streaming',
     jobToBeDone: 'put video in a product without building an encoder',
-    domains: ['mux.com', 'api.video', 'daily.co', 'livekit.io', 'agora.io', 'bitmovin.com'],
+    domains: ['mux.com', 'api.video', 'daily.co', 'livekit.com', 'agora.io', 'bitmovin.com'],
   },
   {
     id: 'browser-infrastructure',
@@ -155,7 +155,7 @@ export const CATEGORIES: Category[] = [
     id: 'databases',
     label: 'Managed databases',
     jobToBeDone: 'get a production database without running one',
-    domains: ['neon.tech', 'planetscale.com', 'turso.tech', 'cockroachlabs.com', 'xata.io'],
+    domains: ['neon.com', 'planetscale.com', 'turso.tech', 'cockroachlabs.com', 'xata.io'],
   },
   {
     id: 'observability',
@@ -212,6 +212,15 @@ export const CATEGORIES: Category[] = [
   },
 ]
 
+/**
+ * Four rows were renamed on 2026-08-10 to the host they were already measuring. Each old apex
+ * answers 301 or 308 on every path, so nothing about the measurement changes: redirects were
+ * always followed. What changes is that the label stops naming a domain it does not read.
+ *
+ * `oramasearch.com` looks like the same case and is not, which is why it stays. Its HTML
+ * redirects to orama.com while `oramasearch.com/llms.txt` answers 200 and `orama.com/llms.txt`
+ * answers 404, so renaming it would silently drop a file the vendor really does publish.
+ */
 export function categoryFor(domain: string): Category | null {
   return CATEGORIES.find((category) => category.domains.includes(domain)) ?? null
 }
