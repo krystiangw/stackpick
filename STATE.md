@@ -171,6 +171,16 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   `payments`), każdy z ograniczeniem, które dało najostrzejsze znalezisko: statyczny bundle przed
   serwisem w Go, którego przebieg nie widzi i nie edytuje, a tożsamość przychodzi jako ciasteczko
   ustawione przez proxy.
+- ~~**Harness wieloagentowy i pierwsza komórka**~~ **zrobione 2026-08-10.** `npm run cell` obsługuje
+  `claude`, `codex`, `gemini`, `cursor` i zapisuje wersję CLI, model i tryb auth do każdego
+  przebiegu. **Kontaminacja złapana przy pierwszym użyciu:** przebieg zasiany w `harness/runs/`
+  wszedł do korzenia repo StackPicka, przeczytał dokumentację harnessu i uznał, że ma powtórzyć
+  audyt. Exit 0, spójny raport, scaffold nietknięty. Przebiegi idą teraz do `~/.stackpick-runs`,
+  każdy z własnym `git init`. **Nigdy nie zasiewaj przebiegu w repo o mierzeniu agentów.**
+  Wynik pierwszej komórki: `harness/results/editors-cursor-2026-08-10.md`.
+- **Ograniczenia subskrypcji, zmierzone:** Cursor free pozwala tylko na model `auto` (nazwany model
+  = `ActionRequiredError`), a `auto` **nie zapisuje, który model odpowiedział**, co samo w sobie
+  jest confoundem. Gemini spada na darmowy próg API (20 żądań dziennie) i nie kończy przebiegu.
 - **Ósmy przebieg adwersaryjny** po naprawach z rundy 55. Baseline: **1,4 procent**. Warte ataku:
   przebudowana `rendersUsableForm` (pole „kim jesteś" plus cel wysyłki, oba progi nowe),
   trójstanowe nogi koniunkcji i to, czy wykluczenie 38 wierszy z nieznaną rejestracją jest
