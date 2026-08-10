@@ -67,8 +67,16 @@ async function sampleLlmsLinks(corpus: string): Promise<MachineFindings['llmsLin
   const links = [...new Set([...corpus.matchAll(/\]\((https?:\/\/[^\s)]+)\)/g)].map((match) => match[1]))]
   if (links.length === 0) return undefined
   const sample = links.slice(0, MOST_LLMS_LINKS_SAMPLED)
-  const answers = await inParallel(sample, (url) => fetchUrl(url, { method: 'HEAD' }))
-  const dead = answers.filter((answer) => answer.status === 404 || answer.status === 410)
+  const gone = (answer: { status: number }) => answer.status === 404 || answer.status === 410
+  const heads = await inParallel(sample, (url) => fetchUrl(url, { method: 'HEAD' }))
+  // A HEAD that 404s is not a dead page. play.honeycomb.io answers 404 to HEAD and 200 to GET,
+  // and a framework that only routes GET is common enough that calling those links gone would
+  // have published a false sentence about six vendors on the first reseed.
+  const confirmed = await inParallel(
+    sample.filter((url, index) => gone(heads[index])),
+    (url) => fetchUrl(url),
+  )
+  const dead = confirmed.filter(gone)
   return { sampled: sample.length, dead: dead.length, firstDead: dead[0]?.url ?? null }
 }
 
