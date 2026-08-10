@@ -601,6 +601,17 @@ Dotyczy **68 wierszy** (kazdy z `oauth_dcr` = pass). Przeskanowane punktowo zami
 pelnego reseeda w jeden dzien, bo wlasny komentarz w `reseed.sh` ostrzega, ze powtarzane walenie
 w te same hosty w ciagu doby wywolywalo 429.
 
+**Liczba z calego korpusu, opublikowana na `/findings`: z 68 vendorow publikujacych endpoint
+rejestracji tylko 20 oglasza grant, ktory nieobslugiwany agent dokonczy.** 45 wymaga czlowieka
+przed przegladarka, 3 nie publikuja `grant_types_supported` w ogole (RFC 8414 mowi, ze pominiecie
+oznacza domyslnie `authorization_code`, ale zdanie zostaje przy tym, co zmierzylismy, zamiast
+dopisywac wniosek).
+
+To jest mocniejsza wersja tezy, ktora strona juz stawiala. Dotad mowilismy „drzwi sa, klucza nie
+ma". Teraz wiadomo, ze **u dwoch trzecich tych, ktorzy maja drzwi, sam mechanizm drzwi wymaga
+czlowieka**, wiec RFC 7591 przyszlo z serwerem MCP jako wymog specyfikacji, a nie jako decyzja
+o wpuszczeniu agentow.
+
 ## Runda 2026-08-10 (66): zmierzona podloga szumu calego korpusu, 0,64 procent
 
 Dwa reseedy produkcji, **zadnej zmiany reguly miedzy nimi**, porownanie kazdego werdyktu:
