@@ -18,6 +18,12 @@ export type MachineFindings = {
   llms: Record<string, LlmsFile>
   hasLlmsTxt: boolean
   hasLlmsFullTxt: boolean
+  /**
+   * A sample of the links inside llms.txt, fetched. The file existing is what we measured, and
+   * a curated map whose entries 404 is worse than none: an agent follows them, gets nothing, and
+   * has spent its budget. agent-ready.dev checks this and we did not.
+   */
+  llmsLinks?: { sampled: number; dead: number; firstDead: string | null }
   wellKnown: Record<string, boolean>
   openapi: string[]
   /** Which pages were asked, so a vendor can rerun the exact request behind the verdict. */
@@ -48,6 +54,23 @@ export type MachineFindings = {
  * scan had already read, and scored zero for not documenting it.
  */
 export type MachineScan = { findings: MachineFindings; llmsCorpus: string; llmsUrls: string[] }
+
+/** Enough to catch a stale map, few enough that checking one costs nobody a phase. */
+const MOST_LLMS_LINKS_SAMPLED = 5
+
+/**
+ * Whether the map leads anywhere. Only markdown links, only http, and only a handful: the point
+ * is to catch a file listing pages that have moved, not to crawl the vendor's documentation.
+ * A refusal is not a dead link, because a WAF that turns us away says nothing about the page.
+ */
+async function sampleLlmsLinks(corpus: string): Promise<MachineFindings['llmsLinks']> {
+  const links = [...new Set([...corpus.matchAll(/\]\((https?:\/\/[^\s)]+)\)/g)].map((match) => match[1]))]
+  if (links.length === 0) return undefined
+  const sample = links.slice(0, MOST_LLMS_LINKS_SAMPLED)
+  const answers = await inParallel(sample, (url) => fetchUrl(url, { method: 'HEAD' }))
+  const dead = answers.filter((answer) => answer.status === 404 || answer.status === 410)
+  return { sampled: sample.length, dead: dead.length, firstDead: dead[0]?.url ?? null }
+}
 
 /** Enough to tell a shell from a site, and few enough that a negotiating site pays nothing. */
 const MOST_NEGOTIATION_RETRIES = 2
@@ -155,6 +178,8 @@ export async function scanMachineContext(
     else countable += body
   }
 
+  const llmsLinks = await sampleLlmsLinks(corpus)
+
   const mcpUrls = [...corpus.matchAll(/https?:\/\/[^\s)"']*mcp[^\s)"']*/gi)].map((m) => m[0])
   const uniqueMcpUrls = [...new Set(mcpUrls)].slice(0, 5)
 
@@ -176,6 +201,7 @@ export async function scanMachineContext(
       hasLlmsTxt: Object.values(llms).some((f) => f.present),
       llmsUrls,
       hasLlmsFullTxt: Object.entries(llms).some(([label, f]) => label.includes('full') && f.present),
+      llmsLinks,
       wellKnown: Object.fromEntries(wellKnownEntries),
       openapi: openapiHits.filter((path): path is string => path !== null),
       markdownNegotiation: negotiation,

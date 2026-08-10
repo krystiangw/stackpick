@@ -115,7 +115,18 @@ export const CHECKS: Check[] = [
         // deepl.com and mixpanel.com publish theirs only on a documentation subdomain, so
         // "llms.txt present" sent a vendor to an apex that 404s and read as invented.
         const at = f.machine.llmsUrls?.[0] ? ` at ${f.machine.llmsUrls[0]}` : ''
-        return yes(1, f.machine.hasLlmsFullTxt ? `llms.txt and llms-full.txt present${at}` : `llms.txt present${at}`)
+        const links = f.machine.llmsLinks
+        // A curated map whose entries are gone is worse than no map: an agent follows them, gets
+        // nothing, and has spent its budget. The point is the file being useful, not present.
+        if (links && links.dead > 0) {
+          return yes(
+            0,
+            `llms.txt present${at}, but ${links.dead} of the ${links.sampled} links we sampled are gone, starting with ${links.firstDead}`,
+          )
+        }
+        const files = f.machine.hasLlmsFullTxt ? 'llms.txt and llms-full.txt present' : 'llms.txt present'
+        const checked = links ? `, and the ${links.sampled} links we sampled all answer` : ''
+        return yes(1, `${files}${at}${checked}`)
       }
       if (blindedBy(f)) {
         return { points: 0, detail: 'Unmeasurable: every request was refused', inconclusive: true }
