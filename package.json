@@ -13,7 +13,8 @@
     "reseed": "bash scripts/reseed.sh",
     "targets": "tsx scripts/targets.mts",
     "seed": "tsx harness/seed.mts",
-    "collect": "tsx harness/collect.mts"
+    "collect": "tsx harness/collect.mts",
+    "cell": "tsx harness/run.mts"
   },
   "dependencies": {
     "mongodb": "^7.5.0",
