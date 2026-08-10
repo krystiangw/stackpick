@@ -180,6 +180,14 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
     const at = (id: string) => verdict(report, id)
     const entry = at('agent_entry_point')
     const provisioning = at('programmatic_provisioning')
+    // Tri-state, because "we did not measure it" is not "they fail it". Publishing a vendor by
+    // name as failing on a signup we never reached is exactly the accusation the methodology page
+    // forbids, and twelve of the forty-eight named in the near-miss group were unmeasured or had
+    // no signup at all.
+    const measured = (id: string) => {
+      const check = at(id)
+      return check !== undefined && !check.inconclusive && !check.notApplicable
+    }
     return [
       {
         leg: 'a door a machine can use' as UsableLeg,
@@ -187,6 +195,8 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
           (entry !== undefined && entry.points === entry.max) ||
           at('oauth_dcr')?.points === at('oauth_dcr')?.max ||
           at('mcp_present')?.points === at('mcp_present')?.max,
+        // Any one of three ways in, so a single unmeasured arm does not make the leg unknown.
+        known: measured('agent_entry_point') || measured('oauth_dcr') || measured('mcp_present'),
       },
       {
         // The CAPTCHA belongs in this leg, and leaving it out published a claim our own data
@@ -197,23 +207,37 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
         met:
           at('signup_reachable')?.points === at('signup_reachable')?.max &&
           at('signup_no_captcha')?.points === at('signup_no_captcha')?.max,
+        known: measured('signup_reachable') && measured('signup_no_captcha'),
       },
       {
         leg: 'a documented credential path' as UsableLeg,
         met: provisioning !== undefined && provisioning.points >= 1,
+        known: measured('programmatic_provisioning'),
       },
     ]
   }
-  const withLegs = reports.map((report) => ({ report, missing: legsOf(report).filter((leg) => !leg.met) }))
+  const withLegs = reports.map((report) => {
+    const legs = legsOf(report)
+    return {
+      report,
+      missing: legs.filter((leg) => leg.known && !leg.met),
+      unknown: legs.filter((leg) => !leg.known).length,
+    }
+  })
   const oneAwayBy = new Map<UsableLeg, string[]>()
-  for (const { report, missing } of withLegs) {
-    if (missing.length !== 1) continue
+  for (const { report, missing, unknown } of withLegs) {
+    // One measured failure and nothing unmeasured. A row with an unknown leg is neither one away
+    // nor clear of anything, and saying which it is would be a guess printed next to a brand.
+    if (missing.length !== 1 || unknown > 0) continue
     oneAwayBy.set(missing[0].leg, [...(oneAwayBy.get(missing[0].leg) ?? []), report.domain])
   }
 
   return {
     usable: {
-      domains: withLegs.filter((entry) => entry.missing.length === 0).map((entry) => entry.report.domain).sort(),
+      domains: withLegs
+        .filter((entry) => entry.missing.length === 0 && entry.unknown === 0)
+        .map((entry) => entry.report.domain)
+        .sort(),
       oneAway: [...oneAwayBy.entries()]
         .map(([leg, domains]) => ({ leg, domains: [...domains].sort() }))
         .sort((a, b) => b.domains.length - a.domains.length),

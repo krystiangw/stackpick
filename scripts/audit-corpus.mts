@@ -95,14 +95,25 @@ const legsMet = (row: Row) => {
     const check = at(id)
     return check !== undefined && check.points === check.max
   }
+  // Tri-state on purpose: an unmeasured leg is unknown, never failed. Counting it as a failure
+  // publishes a named vendor as missing a requirement we never reached.
+  const measured = (id: string) => {
+    const verdict = at(id)?.verdict
+    return verdict !== undefined && verdict !== 'unmeasured' && verdict !== 'notApplicable'
+  }
   return [
-    full('agent_entry_point') || full('oauth_dcr') || full('mcp_present'),
-    full('signup_reachable') && full('signup_no_captcha'),
-    (at('programmatic_provisioning')?.points ?? 0) >= 1,
+    { met: full('agent_entry_point') || full('oauth_dcr') || full('mcp_present'),
+      known: measured('agent_entry_point') || measured('oauth_dcr') || measured('mcp_present') },
+    { met: full('signup_reachable') && full('signup_no_captcha'),
+      known: measured('signup_reachable') && measured('signup_no_captcha') },
+    { met: (at('programmatic_provisioning')?.points ?? 0) >= 1, known: measured('programmatic_provisioning') },
   ]
 }
-const usable = corpus.rows.filter((row) => legsMet(row).every(Boolean)).length
-const oneAway = corpus.rows.filter((row) => legsMet(row).filter((met) => !met).length === 1).length
+const usable = corpus.rows.filter((row) => legsMet(row).every((leg) => leg.known && leg.met)).length
+const oneAway = corpus.rows.filter((row) => {
+  const legs = legsMet(row)
+  return legs.every((leg) => leg.known) && legs.filter((leg) => !leg.met).length === 1
+}).length
 
 const stated: { page: string; pattern: RegExp; expected: number; what: string }[] = [
   {
