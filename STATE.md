@@ -579,6 +579,29 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-10 (70): formula 7.5, robots.txt jako mapa, ktora ma prowadzic gdzies
+
+Pomysl Krystiana. **Odrzucilem jego wersje literalna i mialem racje tylko w polowie**, wiec warto
+zapisac obie polowy.
+
+Racja: `Allow:` to wzorzec, nie strona. `Allow: /*.js$` jest regula i sondowanie go **wymyslaloby**
+porazke vendorowi. Wildcardy, `$` i prefiksy katalogow sa wykluczone.
+
+Nie racja: po ograniczeniu do sciezek konkretnych sygnal jest mocny. Zmierzone na calym korpusie
+**przed napisaniem czegokolwiek: 9 z 34 konkretnych `Allow` odpowiada 404, czyli 26 procent.**
+Szesc z dziewieciu to `sendgrid.com` wpuszczajacy agenta na strony referencji SDK, ktorych nie ma,
+czyli dokladnie tam, gdzie agent szukalby biblioteki.
+
+Nowy check `robots_paths_resolve`, **MAX_SCORE 16 → 17, formula 7.4 → 7.5**, wiec pelny reseed
+(z `PAUSE=3`, czwarty tej doby, wiec lagodniej). `notApplicable` dla ~141 domen, ktore zadnej
+konkretnej obietnicy nie skladaja: vendor nie placi za to, ze niczego nie obiecal, i po to jest
+mianownik mierzalny.
+
+**Odrzucone przy tej samej okazji, tez po pomiarze:** walidacja linii `Sitemap:`. 139 ze 158
+czytelnych robots.txt deklaruje sitemape i martwa jest **jedna** (`gandi.net`). Jeden wiersz na
+167 jest **ponizej zmierzonej dzis podlogi szumu 0,64 procent**, wiec check nie mialby czego
+mierzyc. Pomiar przed budowa oszczedzil check, ktory wygladalby madrze i nie mowilby nic.
+
 ## Runda 2026-08-10 (69): trzeci raz ten sam blad i pelny przeglad powierzchni
 
 `public/robots.txt` i `public/llms.txt` zachowaly stara nazwe, bo glob obejmowal `.ts .tsx .json
