@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '7.4'
+export const FORMULA_VERSION = '7.5'
 
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on
@@ -240,6 +240,53 @@ export const CHECKS: Check[] = [
         return yes(0, 'robots.txt permits them, but nothing we requested got through, so the rules never applied')
       }
       return yes(1, 'No on-demand agent is blocked')
+    },
+  },
+  {
+    /**
+     * Krystian's idea, and it survived a measurement that nearly killed it. The literal version,
+     * "is every Allow a real page", is a category error for wildcards: `Allow: /*.js$` is a rule
+     * and probing it would invent a failure. Restricted to concrete paths it holds up: 9 of the
+     * 34 in the corpus answer 404, which is 26 percent, and six belong to one vendor pointing
+     * agents at SDK reference pages that are gone.
+     *
+     * Not applicable to the 141 domains that make no concrete claim, which is what N/A is for:
+     * a vendor is not penalised for declining to promise anything.
+     */
+    id: 'robots_paths_resolve',
+    stage: 'discovery',
+    label: 'Paths robots.txt points at answer',
+    why: 'An Allow line is a claim that a path is worth fetching. An agent that follows it into a 404 has spent budget on your map being wrong.',
+    max: 1,
+    evaluate: (f) => {
+      if (!f.robots.present) {
+        if (f.robots.unreadable) {
+          return {
+            points: 0,
+            detail: 'Unmeasurable: robots.txt was refused rather than absent, so nothing in it could be followed',
+            inconclusive: true,
+            unblock: 'Serve robots.txt to ordinary HTTP clients and this becomes measurable.',
+          }
+        }
+        return { points: 0, detail: 'No robots.txt, so it points nowhere', notApplicable: true }
+      }
+      const allow = f.robots.allowPaths
+      if (!allow || allow.checked === 0) {
+        return {
+          points: 0,
+          detail: 'robots.txt names no concrete path, only patterns or nothing, so there is no claim to check',
+          notApplicable: true,
+        }
+      }
+      if (allow.dead.length === 0) {
+        return yes(1, `the ${allow.checked} concrete path${allow.checked === 1 ? '' : 's'} your robots.txt allows all answer`)
+      }
+      return yes(
+        0,
+        allow.checked === 1
+          ? `the one concrete path your robots.txt allows is gone: ${allow.dead[0]}`
+          : `${allow.dead.length} of the ${allow.checked} concrete paths your robots.txt allows are gone, starting with ${allow.dead[0]}`,
+      )
     },
   },
   {

@@ -1,4 +1,4 @@
-import { fetchUrl, looksLikeHtml } from './http'
+import { fetchUrl, inParallel, looksLikeHtml } from './http'
 
 export type CrawlerClass = 'training' | 'search' | 'user'
 export type CrawlerVerdict = 'blocked' | 'allowed_explicit' | 'unspecified'
@@ -39,6 +39,16 @@ export type RobotsFindings = {
   contentUsage: string | null
   declaresLlmsTxt: boolean
   sitemap: boolean
+  /**
+   * An Allow line naming a concrete path is a claim that the path is worth fetching, and it is
+   * the only part of robots.txt that names a resource rather than a pattern. Wildcards and
+   * directory prefixes are excluded on purpose: `Allow: /*.js$` is a rule, not a page, and
+   * probing it would invent a failure. Null when the vendor makes no such claim.
+   *
+   * Measured 2026-08-10 across the corpus: 9 of 34 concrete Allow paths answer 404, and six of
+   * the nine are sendgrid.com pointing an agent at SDK reference pages that do not exist.
+   */
+  allowPaths: { checked: number; dead: string[] } | null
 }
 
 export function parseRobots(body: string): Map<string, Rules> {
@@ -134,5 +144,22 @@ export async function scanRobots(site: string): Promise<RobotsFindings> {
     contentUsage: present ? directiveValue(robots.body, 'content-usage') : null,
     declaresLlmsTxt: present && robots.body.toLowerCase().includes('llms.txt'),
     sitemap: present && /^\s*sitemap\s*:/im.test(robots.body),
+    allowPaths: present ? await checkAllowPaths(site, robots.body) : null,
   }
+}
+
+/** At most six, spread over the file, because this is a courtesy check and not a crawl. */
+const MOST_ALLOW_PATHS = 6
+
+async function checkAllowPaths(site: string, body: string): Promise<RobotsFindings['allowPaths']> {
+  const paths = [...new Set([...body.matchAll(/^\s*allow:\s*(\S+)/gim)].map((match) => match[1]))].filter(
+    (path) => path.startsWith('/') && path.length > 1 && !path.includes('*') && !path.includes('$') && !path.endsWith('/'),
+  )
+  if (paths.length === 0) return null
+  const sample = paths.slice(0, MOST_ALLOW_PATHS)
+  const answers = await inParallel(sample, (path) => fetchUrl(`${site}${path}`))
+  // Only 404 and 410 count, for the same reason as the llms.txt sampler: a 403 is their edge
+  // refusing us and a 429 is our own load, and neither is a fact about the path existing.
+  const dead = sample.filter((_, index) => answers[index].status === 404 || answers[index].status === 410)
+  return { checked: sample.length, dead }
 }
