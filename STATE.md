@@ -184,11 +184,14 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   = `ActionRequiredError`), a `auto` **nie zapisuje, który model odpowiedział**, co samo w sobie
   jest confoundem. Gemini spada na darmowy próg API (20 żądań dziennie) i nie kończy przebiegu.
 - ~~**Ósmy przebieg adwersaryjny**~~ **zrobione 2026-08-10: 1,29 procent** (4 na 311), runda 56.
-- **Dziewiąty przebieg adwersaryjny.** Baseline: **1,29 procent**. Warte ataku: **dwa nowe checki**
-  (żywotność linków llms.txt po poprawce HEAD/GET, cloaking na docsach z progiem 50 procent, oba
-  nieatakowane), narzędzie **`find_providers`** (czy kubełek „niemierzalny" jest liczony poprawnie
-  i czy dopasowanie kategorii po słowach nie zwraca cudzej kategorii), oraz `self_serve` po
-  **szóstej** zmianie.
+- ~~**Dziewiąty przebieg adwersaryjny**~~ **zrobione 2026-08-10: 0,77 procent** (4 na 523), runda 57.
+- **Dziesiąty przebieg adwersaryjny.** Baseline: **0,77 procent**. Warte ataku: **sonda nazwanymi
+  crawlerami** (jedna strona, nie serwis, i to jest opublikowany limit), **klasyfikacja CTA po
+  czasowniku** (siódma zmiana `self_serve`), **próbka llms.txt co N-ty link**, słownik
+  `find_providers`, i czy poprawka głosowania 429 nie zmieniła czegoś, czego nie sprawdziłem.
+- **Kuracja korpusu jest niesprawdzona.** `anvil.co` był w niej od początku i mierzył cudzą firmę
+  przez cały czas. Nikt nigdy nie zweryfikował, że pozostałe 154 domeny to firmy, o których
+  myślimy. To jest kolejna pozycja po dziesiątym przebiegu.
 - **`auth0.com` serwuje dyno inne ciało niż nam.** Z tej maszyny `auth0.com/signup` daje 200 i
   formularz z dwoma polami, a skan widzi „form needs JavaScript". To fakt o tym, skąd pytamy, i
   ta sama klasa co `storyblok.com`. Nie jest to błąd reguły i nie da się naprawić kodem skanera.
@@ -520,6 +523,51 @@ upload plików 1 z 10, e-mail transakcyjny 1 z 6, feature flags **0 z 7**.
 
 To odwraca problem sprzedaży: dostawca dowiaduje się, że **agent zapytał o jego kategorię i go nie
 dostał**, czyli premisa rozmowy jest jego, nie nasza.
+
+## Runda 2026-08-10 (57): dziewiąty przebieg, 0,77 procent, i nagłówek, którego nikt nie zna
+
+**0,77 procent (4 na 523), najlepszy wynik projektu.** Ale trzy znaleziska ważniejsze od wskaźnika.
+
+**Publikowaliśmy pełną kartę o niewłaściwej firmie.** `anvil.co` to producent części precyzyjnych
+z przyciskiem JOIN WAITLIST; firma od e-podpisów to `useanvil.com`. Zweryfikowane osobiście przed
+zmianą. Najgorsza klasa błędu w tym projekcie: twierdzenie faktograficzne o nazwanej firmie, która
+nie jest tą, o którą chodziło.
+
+**429 przegłosowywał 200, wbrew naszej własnej regule.** `deepl.com` odpowiedział 200, 429, 429, a
+głosowanie większościowe uczyniło 429 statusem reprezentatywnym, więc limit stał się **zmierzoną
+odmową**. Pociągnęło to cztery checki do „nieoznaczalne" i **wpuściło DeepL do kubełka
+„przeszedł wszystkie bariery"** w `find_providers`, czyli dwa z czterech błędów przebiegu z jednej
+przyczyny. 429 nie głosuje, chyba że każda próba nim była.
+
+**Pytaliśmy nagłówkiem, przeciwko któremu nikt nie napisał reguły.** To prawdopodobnie
+najważniejsza poprawka pomiarowa w projekcie. Zmierzone osobiście na tych samych URL-ach:
+
+```
+ClaudeBot   amplitude 404 (84 B)    algolia 403
+GPTBot      amplitude 404 (84 B)    algolia 403
+StackPick   amplitude 200 (263 kB)  algolia 308
+Chrome      amplitude 200 (263 kB)  algolia 308
+```
+
+Wiersz algolii mówił „No on-demand agent is blocked", co było **prawdą o robots.txt i fałszem na
+brzegu sieci**. Sondujemy teraz dokumentację także jako ClaudeBot i GPTBot. Testujemy **odmowę, nie
+cieńszą treść**: dziesięć serwisów na Mintlify serwuje Claude-Userowi czysty markdown zamiast
+480 kB powłoki JS, czyli mniej tekstu i przeciwieństwo problemu.
+
+**`find_providers` kierował 11 z 27 pytań źle**, bo dopasowywaliśmy gołe tokeny do **naszej własnej
+prozy**: „let users sign in with Google" trafiało do File upload, bo nasz opis storage zaczyna się
+od „let users". Jawny słownik terminów, których w naszej prozie nie ma, frazy bijące tokeny, remis
+zwracający nic. **20 na 20.**
+
+**Próbka llms.txt brała pierwsze pięć linków, a zdanie mówiło „sampled".** Teraz dwanaście
+rozłożonych po całym pliku, bo zgnilizna siedzi w ogonie: branie głowy przegapiało martwe linki
+w ośmiu plikach, które przechodziły.
+
+**`self_serve`, siódma zmiana: klasyfikacja po kontekście, nie po wzorcu.** `june.so` to jeden
+nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy `here.com` i
+`sinch.com` oblewały na tym samym kształcie. Lista fraz nie mogła tego naprawić, bo `free trial`
+jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
+trial, no credit card required" to fakt o produkcie.
 
 ## Stare notatki badawcze (historyczne, sprzed rundy 12)
 
