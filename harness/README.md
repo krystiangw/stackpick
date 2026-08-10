@@ -12,9 +12,13 @@ This directory is the reproducible half. It does not automate the reading, which
 ## What it does
 
 ```
-harness/seed.mts   <category> <n>     # n isolated copies of a scaffold, one per run
-harness/collect.mts <category>         # what each run actually installed, read from its own files
+npm run seed    -- <category> <n>              # n isolated copies, one per run
+npm run cell    -- <category> <agent> [model] <n>   # one brief, one agent, one model
+npm run collect -- <category>                  # what shipped, read from the files
 ```
+
+Agents: `claude`, `codex`, `gemini`, `cursor`. A cell is (agent x model x brief) and comparing
+cells is the whole experiment, so only one of the three may vary between them.
 
 `seed` writes `runs/<category>/run-1 .. run-n`, each a full copy with its own `node_modules`
 target and its own git history, so nothing an agent does in one is visible in another. Round one
@@ -34,6 +38,23 @@ harness/
   runs/<category>/run-N/    generated, gitignored, one isolated copy per run
   docs/method.md            what stays human, and what the numbers may not be built from
 ```
+
+## What each account actually allows, measured 2026-08-10
+
+Everything runs on subscriptions rather than API keys, which is cheaper and is a stated limit of
+any audit produced this way: **a stranger holding no accounts cannot reproduce the run.** Say so
+in the limits section of anything published from it.
+
+| CLI | state | note |
+|---|---|---|
+| `cursor-agent` | works | Free plan allows the `auto` model only. A named model answers `ActionRequiredError: Named models unavailable`, so a cell that pins a model needs a paid plan. `auto` gives no record of which model ran, which is itself a confound. |
+| `codex` | installed, untested here | `auth_mode: chatgpt`. Seven models listed. |
+| `gemini` | quota | Falls back to the free API tier: 20 requests a day on `gemini-3.5-flash`, exhausted before a run finishes. Needs a key or a paid plan. |
+| `claude` | works | The harness this project already runs in. |
+
+The one measurement that needs no extra spend: **the same model in two harnesses.**
+`cursor-agent` can run Opus, so a disagreement between it and Claude Code on the same brief is a
+finding about the tool rather than the model, and nobody publishes that.
 
 ## The rules that are not negotiable
 
