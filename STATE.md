@@ -579,6 +579,28 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (76): kuracja rejestratorow i korekta wlasnej tezy
+
+**`opensrs.com` usuniety z kategorii.** Jego wlasny tytul strony brzmi „Reseller Platform for
+Domains, Email, and SSL", a home page mowi „the world's largest wholesale domain platform". Produkt
+jest sprzedawany rejestratorom, a nie temu, kto chce domene, wiec agent nigdy go nie uzyje do
+zadania, ktore ta kategoria opisuje. Zla polka, ten sam ksztalt co `liveblocks.io` pod edytorami.
+
+**Wlasnosc zapisana tylko tam, gdzie jest dowod na ich wlasnej stronie:** `name.com` → „part of
+Identity Digital" (przejety, dziala), `netim.com` → „owned by its founders" (niezalezny). Dla
+pozostalych dziewieciu nic nie znalazlem i **nic nie wpisuje**, bo regula pliku mowi, ze brak
+wpisu to luka w naszym researchu, a nie stwierdzenie o vendorze.
+
+**KOREKTA TEZY Z RUNDY 61.** Napisalem tam i powiedzialem Krystianowi, ze Domeny i DNS to
+**najgorsza kategoria w korpusie**. Po usunieciu opensrs i po dwoch nowych checkach (7.5 i 7.7)
+**juz nia nie sa**: Commerce 47,7 procent, Domeny 49,6. Teza nie trafila na zadna opublikowana
+strone, wiec korekta jest tania, ale byla powiedziana i musi zostac odwolana tutaj.
+
+**Co sie broni bez zmian i bylo mocniejszym twierdzeniem od poczatku:** `agent_entry_point` ma
+**zero zaliczen na jedenascie** (6 fail, 5 niezmierzonych). Ani jeden rejestrator nie ma drzwi
+zbudowanych dla maszyny, w branzy, ktorej agent musi uzyc przed wszystkim innym. Srednia liczba
+mierzalnych sprawdzen 11,4 z 17.
+
 ## Runda 2026-08-11 (75): weryfikacja 7.7, ruch ponizej podlogi szumu
 
 Korpus: **167 wierszy, formula 7.7, max 17, 0 bledow skanu.** Porownanie z poprzednim zrzutem:
