@@ -133,6 +133,33 @@ export default function MethodologyPage() {
         </p>
       </section>
 
+      {/* The number a reader needs before they compare two of our own scans and conclude something
+          from a single row that moved. Measured rather than estimated, so it is printed. */}
+      <section className="border-b border-rule py-12">
+        <h2 className="text-lg font-semibold tracking-tight">How much the corpus moves on its own</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          On 10 August 2026 we rescanned all 167 domains twice, with no rule changed between the two runs,
+          and compared every verdict: 15 of 2,338 moved, which is 0.64 percent. That is the floor. A
+          difference smaller than it, in our numbers or in yours, is the internet being the internet rather
+          than something that changed.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          It is not evenly spread. Nine of the fifteen sit in the three checks that depend on a host
+          answering us at all, and the rest are single rows. We chased two of them rather than assume:
+          name.com went from refusing us to answering, and answers a browser and both of our user-agent
+          strings identically three times over, so the change was theirs and transient. froala.com answers
+          403, 200, 403 in the same alternating pattern to a browser as to us, so its row moving is froala
+          being froala.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          The uncomfortable consequence, printed because it is true: our own adversarial audits put the
+          error rate in these verdicts at 0.39 percent, which is below this floor. Those are different
+          measurements, a wrong rule against an unstable network, but it does mean no single row is
+          evidence on its own. Rescan before you act on one, and treat the checks above the fold as the
+          durable part.
+        </p>
+      </section>
+
       <section className="border-b border-rule py-12">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">We are scored by this too</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
