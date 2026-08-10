@@ -12,7 +12,7 @@ import { writeFileSync } from 'node:fs'
 import { couldBuy, OWNERSHIP } from '../src/data/ownership'
 
 type Check = { id: string; verdict: string; points: number; max: number; detail: string }
-type Row = { domain: string; total: number; measurable: number; max: number; checks: Check[] }
+type Row = { domain: string; total: number; measurable: number; max: number; unattendedGrant: boolean | null; checks: Check[] }
 
 const url = process.argv[2] ?? 'https://stackpick-f12d13a227ea.herokuapp.com/corpus.json'
 const corpus = (await (await fetch(url)).json()) as { formulaVersion: string; rows: Row[] }
@@ -39,6 +39,15 @@ const doorNoKey = buyers
   .filter((row) => full(row, 'mcp_present') && (at(row, 'programmatic_provisioning')?.points ?? 0) === 0)
   .sort((a, b) => a.domain.localeCompare(b.domain))
 
+/**
+ * The sharpest row after door-no-key, and newer: they built the RFC 7591 endpoint the MCP
+ * specification asks for, and every grant they advertise puts a person at a browser. The premise
+ * is not just theirs, it is already half-built, and the gap is one grant type.
+ */
+const doorWontOpen = buyers
+  .filter((row) => row.unattendedGrant === false)
+  .sort((a, b) => a.domain.localeCompare(b.domain))
+
 const oneAway = buyers
   .map((row) => ({ row, missing: legs(row).filter((met) => !met).length }))
   .filter((entry) => entry.missing === 1)
@@ -47,6 +56,17 @@ const oneAway = buyers
 const signupOnly = oneAway
   .filter((row) => !full(row, 'signup_reachable'))
   .sort((a, b) => a.domain.localeCompare(b.domain))
+
+const grantSection = [
+  '',
+  `## 2. Publishes RFC 7591 registration, and no grant an agent can finish (${doorWontOpen.length})`,
+  '',
+  'They implemented the standard an agent uses to introduce itself, then advertised only grants',
+  'that need a person at a browser. Lead with their own metadata document: the fix is a grant type,',
+  'not a project, and they can check it in one request.',
+  '',
+  ...doorWontOpen.map((row) => `- \`${row.domain}\``),
+]
 
 const lines = [
   '# Target list, generated from the corpus',
@@ -66,8 +86,9 @@ const lines = [
   'their own endpoint URL.',
   '',
   ...doorNoKey.map((row) => `- \`${row.domain}\` · ${urlIn(at(row, 'mcp_present')?.detail ?? '')}`),
+  ...grantSection,
   '',
-  `## 2. Everything else in place, signup unreachable without a browser (${signupOnly.length})`,
+  `## 3. Everything else in place, signup unreachable without a browser (${signupOnly.length})`,
   '',
   'The barrier our own agent runs kept dying at, and the most expensive one here to fix: it crosses',
   'auth, fraud and billing. Never the opening line, always the second.',
@@ -85,5 +106,5 @@ const lines = [
 
 writeFileSync(new URL('../outreach/targets.md', import.meta.url), `${lines.join('\n')}\n`)
 console.log(
-  `targets.md: ${doorNoKey.length} door-no-key, ${signupOnly.length} signup-only, ${excluded.length} excluded, formula ${corpus.formulaVersion}`,
+  `targets.md: ${doorNoKey.length} door-no-key, ${doorWontOpen.length} door-wont-open, ${signupOnly.length} signup-only, ${excluded.length} excluded, formula ${corpus.formulaVersion}`,
 )

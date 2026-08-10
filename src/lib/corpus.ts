@@ -21,6 +21,13 @@ export type CorpusRow = {
   scannedAt: string
   /** True when the host rate limited us during that scan, so the row is thinner than the site. */
   rateLimited: boolean
+  /**
+   * Whether any OAuth grant this vendor advertises finishes without a person. Null when they
+   * publish no registration endpoint, or publish one and no grant list. Separate from the
+   * oauth_dcr verdict on purpose: the point is for the endpoint existing, and 45 of the 68
+   * vendors that have one advertise nothing an unattended agent can complete.
+   */
+  unattendedGrant: boolean | null
   scorecardUrl: string
   checks: { id: string; verdict: CorpusVerdict; points: number; max: number; detail: string }[]
 }
@@ -60,6 +67,9 @@ export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus 
         share: measurable > 0 ? Number((report.scorecard.total / measurable).toFixed(4)) : null,
         scannedAt: report.scannedAt,
         rateLimited: Boolean(report.findings?.rateLimitedUs),
+        unattendedGrant: report.findings?.funnel?.oauth?.grantTypes
+          ? Boolean(report.findings.funnel.oauth.unattendedGrant)
+          : null,
         scorecardUrl: `${baseUrl}/r/${report.id}`,
         checks: report.scorecard.checks.map((check) => ({
           id: check.id,
@@ -83,6 +93,7 @@ export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus 
       'One row per domain, the most recent scan we hold, scored under a single formula version.',
       'share is total divided by measurable, not by max. A domain that refused our requests has a smaller denominator, not a worse number, so ranking on total alone would be wrong.',
       'A verdict of unmeasured means we could not evaluate the check, and notApplicable means it does not apply to a product of this kind. Neither is a failure and neither counts in measurable.',
+      'unattendedGrant is null when a vendor publishes no registration endpoint or no grant list, false when every advertised grant needs a person at a browser, true when client_credentials is among them. device_code counts as false: approving on another screen is still a person.',
       'rateLimited means the host answered 429 during that scan, so some checks are unmeasured for a reason that is ours and not theirs. Those rows are thinner than the site, and filtering them out is reasonable.',
       'These are vendors we have no relationship with. Every check is one HTTP request with a published rule, so any row here can be reproduced or disputed.',
     ],
