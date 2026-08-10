@@ -189,9 +189,19 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   crawlerami** (jedna strona, nie serwis, i to jest opublikowany limit), **klasyfikacja CTA po
   czasowniku** (siódma zmiana `self_serve`), **próbka llms.txt co N-ty link**, słownik
   `find_providers`, i czy poprawka głosowania 429 nie zmieniła czegoś, czego nie sprawdziłem.
-- **Kuracja korpusu jest niesprawdzona.** `anvil.co` był w niej od początku i mierzył cudzą firmę
-  przez cały czas. Nikt nigdy nie zweryfikował, że pozostałe 154 domeny to firmy, o których
-  myślimy. To jest kolejna pozycja po dziesiątym przebiegu.
+- ~~**Kuracja korpusu jest niesprawdzona**~~ **zrobione 2026-08-10**, przelot po wszystkich 156
+  wierszach z pytaniem, czy domena to firma, o której myślimy. **155 zweryfikowanych, 1 nieczytelny**
+  (`digger.tools`, 429). Znaleziska: `defer.run` **wypada z korpusu** (apex 301 na cudzą domenę na
+  każdej ścieżce, więc to, co skanowaliśmy, nigdy nie było ich stroną), `tigrisdata.com` przeniesiony
+  z baz danych do storage (własna strona: „Bottomless object storage", słowo database zero razy),
+  **siedmiu dostawców pisze na własnych stronach, że zostali przejęci** (june.so, highlight.io,
+  split.io, stytch.com, payloadcms.com, lemonsqueezy.com, bugsnag.com), z czego czterech nabywców
+  jest osobno w korpusie. Zapisane w `ownership.ts` ze zdaniem z ich strony.
+  **Zostaje do rozstrzygnięcia:** `sendgrid.com` przekierowuje na `twilio.com/en-us/sendgrid`, więc
+  **dwa wiersze mierzą ten sam serwis, ten sam robots.txt i ten sam llms.txt**. To nie jest błąd
+  werdyktu, tylko podwójne liczenie w każdej statystyce rynkowej, którą publikujemy.
+  `vercel.com` siedzi w file-storage i jego strona nie mówi o storage ani razu, ale **żadna z 24
+  kategorii do niego nie pasuje**, więc to decyzja o kuracji, nie przesunięcie.
 - **`auth0.com` serwuje dyno inne ciało niż nam.** Z tej maszyny `auth0.com/signup` daje 200 i
   formularz z dwoma polami, a skan widzi „form needs JavaScript". To fakt o tym, skąd pytamy, i
   ta sama klasa co `storyblok.com`. Nie jest to błąd reguły i nie da się naprawić kodem skanera.
@@ -568,6 +578,28 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 `sinch.com` oblewały na tym samym kształcie. Lista fraz nie mogła tego naprawić, bo `free trial`
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
+
+## Runda 2026-08-10 (58): audyt podmiotu i awaria, którą złapał własny audyt
+
+**Dziewięć przebiegów atakowało werdykty, żaden nie zapytał, czy podmiot jest właściwy.** Tak
+`anvil.co` przez tygodnie mierzył producenta części precyzyjnych. Przelot po 156 wierszach:
+155 zweryfikowanych, 1 nieczytelny, **trzy kolejne błędy tej samej klasy**.
+
+`defer.run` wypada: apex odpowiada 301 na `digger.tools` na **każdej** ścieżce, więc to, co
+skanowaliśmy, nigdy nie było ich stroną. `tigrisdata.com` był w bazach danych na tożsamości sprzed
+pivotu. Siedmiu dostawców ogłasza na własnych stronach przejęcie, z czego **czterech nabywców jest
+osobno w korpusie**.
+
+**Podwójne liczenie, jeszcze nierozstrzygnięte:** `sendgrid.com` przekierowuje na
+`twilio.com/en-us/sendgrid`, a `twilio.com` jest osobnym wierszem. Dwa wiersze, jeden serwis, jeden
+robots.txt, jeden llms.txt, i obydwa wchodzą do każdej statystyki, którą publikujemy.
+
+**Awaria produkcji na cztery minuty, złapana przez `npm run audit`, nie przez odwiedzającego.**
+Przepisałem liczenie z prozy na dane strukturalne i strona wstała: Mongo zapisuje nieobecne pole
+opcjonalne jako `null`, mój strażnik testował `!== undefined`, odczyt właściwości rzucił wyjątkiem
+i `/findings` oraz `/report` zwracały 500. Wcześniej ta sama zmiana **po cichu wyzerowała dwie
+liczby i ukryła całą sekcję**, bo `industry.ts` dopasowywał regexem starą prozę. Obie rzeczy
+złapał audyt liczb ze stron, i to jest dokładnie to, po co powstał.
 
 ## Stare notatki badawcze (historyczne, sprzed rundy 12)
 
