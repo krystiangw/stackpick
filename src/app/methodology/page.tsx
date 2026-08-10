@@ -4,7 +4,7 @@ import { AI_CRAWLERS } from '@/lib/scan/robots'
 import { CHECKS, FORMULA_VERSION, MAX_SCORE, STAGES } from '@/lib/score'
 
 export const metadata: Metadata = {
-  title: 'Methodology — StackPick',
+  title: 'Methodology: StackPick',
   description: 'Every check, its rule and why it costs a vendor money. The formula is published so the score can be reproduced.',
 }
 

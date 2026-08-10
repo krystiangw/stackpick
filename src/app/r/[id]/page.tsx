@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic'
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
   const report = await getStore().getReport(id)
-  if (!report) return { title: 'Scorecard not found — StackPick' }
+  if (!report) return { title: 'Scorecard not found: StackPick' }
 
   const headline = pickHeadline(report.findings, report.scorecard)
   return {

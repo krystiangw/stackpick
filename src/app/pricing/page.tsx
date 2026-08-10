@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { CHECKS, MAX_SCORE } from '@/lib/score'
 
 export const metadata: Metadata = {
-  title: 'Pricing — StackPick',
+  title: 'Pricing: StackPick',
   description: 'What the free scan covers, what a real agent audit costs, and what happens after the findings.',
 }
 
@@ -66,12 +66,12 @@ const TIERS: readonly Tier[] = [
 const AFTER = [
   {
     name: 'Fix sprint',
-    price: '$7,500 – $16,000',
+    price: '$7,500 to $16,000',
     body: 'Implementation, not advice: documentation that answers the question agents actually ask, llms.txt worth reading, an entry point built for a machine, a credential path that does not need a human.',
   },
   {
     name: 'MCP build',
-    price: '$14,000 – $28,000',
+    price: '$14,000 to $28,000',
     body: 'An MCP server for your API, scoped from the audit rather than from a wishlist. MVP or a standard build with OAuth and write access.',
   },
   {

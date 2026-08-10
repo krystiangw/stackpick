@@ -5,7 +5,7 @@ import { buildIndustryReport } from '@/lib/industry'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Findings — StackPick',
+  title: 'Findings: StackPick',
   description: 'Thirty-eight runs, five studies, two models. What agents pick when nobody is watching, and where every one of them stops.',
 }
 

@@ -5,7 +5,7 @@ import { buildIndustryReport, type CheckTally } from '@/lib/industry'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'The agent readiness of developer tooling — StackPick',
+  title: 'The agent readiness of developer tooling: StackPick',
   description:
     'Every domain we have scanned, aggregated. The market has solved being read by agents and has not solved being joined by them.',
 }

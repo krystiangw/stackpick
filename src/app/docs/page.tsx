@@ -4,7 +4,7 @@ import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR, REUSE_WINDOW_MS } from '@/lib
 import { CHECKS, FORMULA_VERSION, MAX_SCORE, STAGES } from '@/lib/score'
 
 export const metadata: Metadata = {
-  title: 'Docs — StackPick',
+  title: 'Docs: StackPick',
   description: 'How to scan a domain from code: endpoints, response shape, limits, and how to read a scorecard.',
 }
 

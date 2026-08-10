@@ -8,7 +8,7 @@ const spell = (n: number) => WORDS[n] ?? String(n)
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Agent audits — StackPick',
+  title: 'Agent audits: StackPick',
   description:
     'Every category we have measured, in isolated copies of a real application. What agents chose, what they rejected, and where each of them stopped.',
 }
