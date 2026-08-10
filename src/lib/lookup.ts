@@ -144,6 +144,9 @@ const VOCABULARY: Record<string, string[]> = {
   commerce: ['commerce', 'ecommerce', 'shop', 'cart', 'catalog', 'storefront'],
   localization: ['translate', 'translation', 'localization', 'localisation', 'i18n', 'language', 'locale'],
   'rich-text-editors': ['wysiwyg', 'richtext', 'editor', 'formatting', 'markdown'],
+  // Not "domain": it is the word for a scope, a model boundary and an email suffix long before
+  // it is the thing you buy. A caller shopping for one says registrar, or names the record type.
+  'domains-dns': ['registrar', 'nameserver', 'whois', 'tld', 'cname', 'subdomain', 'icann', 'zone'],
 }
 
 /**
@@ -167,6 +170,7 @@ const PHRASES: [RegExp, string][] = [
   [/\bonline store\b/, 'commerce'],
   // The channel decides: a passcode is auth, a passcode by text is the thing that carries it.
   [/\bby (?:text|sms)\b/, 'communications'],
+  [/\bregister a domain\b|\bbuy a domain\b|\bdomain name\b|\bdns record/, 'domains-dns'],
   // Only when nothing else in the question is louder: "send emails when they sign up" is a
   // question about email that happens to mention signing up.
   [/\bsign in with\b|\bsingle sign[- ]?on\b|\blog in\b/, 'auth'],

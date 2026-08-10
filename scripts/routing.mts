@@ -74,6 +74,10 @@ const QUESTIONS: Question[] = [
   { asked: 'why is production slow at 3am', expect: 'observability' },
   { asked: 'a database I do not have to run myself', expect: 'databases' },
 
+  { asked: 'register a domain for the site I just built', expect: 'domains-dns' },
+  { asked: 'point a CNAME at my app', expect: 'domains-dns' },
+  { asked: 'buy a domain name', expect: 'domains-dns' },
+
   { asked: 'something for my app', expect: null, note: 'no information at all' },
   { asked: 'the best provider', expect: null },
   { asked: 'search', expect: 'search', note: 'a bare category noun still routes' },

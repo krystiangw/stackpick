@@ -181,6 +181,35 @@ export const CATEGORIES: Category[] = [
     jobToBeDone: 'ship the same product in a language nobody on the team speaks',
     domains: ['deepl.com', 'lokalise.com', 'crowdin.com', 'phrase.com', 'weglot.com', 'tolgee.io'],
   },
+  {
+    // The first category where the wall is money rather than a form. Every other one measures
+    // whether an agent can reach a free tier, and a domain has none: the cheapest path to owning
+    // one is a card. So self_serve will be notApplicable across most of these rows, which is the
+    // first real test of whether the measurable denominator is honest or just convenient.
+    //
+    // Worth measuring because the barrier is documented and unequal. Cloudflare publishes a POST
+    // that registers a domain and charges the account's card. Namecheap gates its API behind a
+    // balance and an IP allowlist, and GoDaddy behind a minimum number of domains already held.
+    // An agent building a site has to buy a domain before anything else, so whichever registrar
+    // it can actually drive becomes the default for every site an agent builds.
+    id: 'domains-dns',
+    label: 'Domain registration and DNS',
+    jobToBeDone: 'register a domain and point it somewhere with nobody at the keyboard',
+    domains: [
+      'namecheap.com',
+      'porkbun.com',
+      'dynadot.com',
+      'name.com',
+      'gandi.net',
+      'dnsimple.com',
+      'godaddy.com',
+      'hover.com',
+      'opensrs.com',
+      'inwx.com',
+      'netim.com',
+      'njal.la',
+    ],
+  },
 ]
 
 export function categoryFor(domain: string): Category | null {
