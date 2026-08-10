@@ -144,6 +144,40 @@ export default function MethodologyPage() {
         </p>
       </section>
 
+      {/* A reader who has found the alternatives will trust us less for not naming them, and the
+          comparison is favourable in the only place it matters, so hiding it would cost more than
+          it buys. Their numbers, checked in their own published spec on 10 August 2026. */}
+      <section className="border-b border-rule py-12">
+        <h2 className="text-lg font-semibold tracking-tight">What the other scanners measure</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          <a href="https://agent-ready.dev" className="text-brass underline underline-offset-4">
+            agent-ready.dev
+          </a>{' '}
+          runs 70 checks against the Vercel Agent Readability Spec, llmstxt.org and a dozen protocol
+          manifests, plus 23 accessibility checks. On discovery and parsing it is more thorough than we are
+          and we would send you there for that: if you want to know whether your markdown mirrors, canonical
+          tags and structured data are right, they will tell you and we will not.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          Their published specification contains the words signup, provisioning and CAPTCHA zero times. Their
+          own summary is discovery, structure, context: can an agent find your pages, parse them, understand
+          them. That is the stage this corpus measures as 95 percent solved. Ours starts at the next one,
+          where the same corpus measures 26 percent, and the difference is not a disagreement about scoring:
+          they answer whether an agent can read you, we answer whether one can join you.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          Two of their checks were better than ours and are now in the scanner: whether the links inside
+          llms.txt still answer, and whether a site serves an agent user-agent less than it serves a browser.
+          We took neither of their per-page SEO checks, because a check nearly everybody passes moves a score
+          without deciding anything.{' '}
+          <a href="https://github.com/kodustech/agent-readiness" className="text-brass underline underline-offset-4">
+            kodustech/agent-readiness
+          </a>{' '}
+          is a different axis again: it grades your own repository for whether a coding agent can work inside
+          it, which is a question about your codebase rather than about your funnel.
+        </p>
+      </section>
+
       <section className="py-12">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Known limits</h2>
         <ol className="mt-5 flex flex-col gap-4">
