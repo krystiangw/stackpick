@@ -78,15 +78,92 @@ function reachabilityOf(report: Report): Reachability {
   } as Reachability & { unknown?: boolean }
 }
 
-/** Matches on the words a caller would use for the problem, not on our own category ids. */
+/**
+ * The words a caller uses for the problem, which are not the words we filed it under. Matching
+ * bare tokens against the label sent eleven of twenty-seven plausible questions to the wrong
+ * place: "let users sign in with Google" went to File upload because our storage line says "let
+ * users", and "I want a Postgres database" went to Vector databases because "app" and "database"
+ * both appear there. Two rules fix that class. Words that appear in half the entries carry no
+ * information, and the terms a caller actually reaches for are not in our prose at all.
+ */
+const NO_INFORMATION = new Set([
+  'the', 'and', 'for', 'you', 'your', 'with', 'without', 'that', 'this', 'from', 'into', 'over',
+  'use', 'user', 'users', 'app', 'apps', 'add', 'need', 'want', 'let', 'make', 'get', 'put', 'run',
+  'own', 'real', 'inside', 'people', 'customer', 'customers', 'product', 'service', 'data', 'api',
+])
+
+/** What a caller says, mapped to what we filed it under. Only terms our own prose does not carry. */
+const VOCABULARY: Record<string, string[]> = {
+  'file-storage': ['upload', 'file', 'files', 'image', 'images', 'photo', 'screenshot', 'attachment', 'cdn', 'bucket', 's3', 'media'],
+  auth: ['login', 'log', 'signin', 'sign', 'sso', 'oauth', 'identity', 'password', 'session', 'google', 'saml'],
+  'transactional-email': ['email', 'emails', 'mail', 'smtp', 'inbox', 'deliverability'],
+  'product-analytics': ['analytics', 'track', 'tracking', 'funnel', 'retention', 'behaviour', 'behavior', 'events'],
+  'vector-search': ['vector', 'embedding', 'embeddings', 'semantic', 'rag', 'retrieval', 'similarity'],
+  payments: ['payment', 'payments', 'charge', 'billing', 'subscription', 'subscriptions', 'checkout', 'invoice', 'card', 'money', 'pay'],
+  'error-monitoring': ['error', 'errors', 'exception', 'exceptions', 'crash', 'stacktrace', 'bug'],
+  'feature-flags': ['flag', 'flags', 'toggle', 'rollout', 'experiment', 'experiments', 'ab'],
+  search: ['search', 'searching', 'index', 'autocomplete', 'typeahead', 'facet'],
+  // Not "call" or "calls": a video call is not telephony and an API call is neither.
+  communications: ['sms', 'voice', 'whatsapp', 'phone', 'telephony', 'messaging'],
+  // Not "editor": somebody asking for an editor wants the component, and a CMS is asked for by name.
+  'headless-cms': ['cms', 'content', 'blog', 'article', 'articles', 'page', 'pages'],
+  'background-jobs': ['job', 'jobs', 'queue', 'worker', 'workers', 'cron', 'workflow', 'workflows', 'async', 'background'],
+  'llm-infrastructure': ['llm', 'model', 'models', 'inference', 'gpu', 'prompt', 'completion', 'openai'],
+  video: ['video', 'videos', 'stream', 'streaming', 'encode', 'transcode', 'player', 'playback'],
+  'browser-infrastructure': ['scrape', 'scraping', 'crawl', 'crawler', 'headless', 'browser', 'puppeteer', 'playwright', 'proxy'],
+  notifications: ['notification', 'notifications', 'notify', 'push', 'slack', 'alerting', 'webhook'],
+  scheduling: ['calendar', 'schedule', 'scheduling', 'booking', 'book', 'meeting', 'appointment', 'availability'],
+  'maps-geo': ['map', 'maps', 'geocode', 'geocoding', 'address', 'coordinates', 'location', 'geo', 'routing'],
+  databases: ['database', 'postgres', 'postgresql', 'mysql', 'sql', 'sqlite', 'db'],
+  observability: ['observability', 'logs', 'logging', 'metrics', 'trace', 'tracing', 'monitor', 'monitoring', 'uptime', 'apm'],
+  'documents-signature': ['document', 'documents', 'signature', 'sign', 'signing', 'pdf', 'contract', 'esign'],
+  commerce: ['commerce', 'ecommerce', 'shop', 'store', 'cart', 'catalog', 'storefront'],
+  localization: ['translate', 'translation', 'localization', 'localisation', 'i18n', 'language', 'languages', 'locale'],
+  'rich-text-editors': ['wysiwyg', 'richtext', 'editor', 'formatting', 'markdown'],
+}
+
+/**
+ * Two words together mean something neither means alone, and single tokens tied on exactly the
+ * questions where that is true: "semantic search" scored the same for search and vector databases,
+ * "video call" the same for video and telephony. A phrase is checked against the whole question,
+ * so it outranks any token.
+ */
+const PHRASES: [RegExp, string][] = [
+  [/\bsemantic search\b/, 'vector-search'],
+  [/\bvector search\b/, 'vector-search'],
+  [/\bfull[- ]text search\b/, 'search'],
+  [/\bvideo call/, 'video'],
+  [/\brich text\b/, 'rich-text-editors'],
+  [/\btext editor\b/, 'rich-text-editors'],
+  // Only when nothing else in the question is louder: "send emails when they sign up" is a
+  // question about email that happens to mention signing up.
+  [/\bsign in with\b|\bsingle sign[- ]?on\b|\blog in\b/, 'auth'],
+  [/\be[- ]?sign|\bsign a (?:document|contract)\b/, 'documents-signature'],
+]
+
 export function categoryForJob(job: string): Category | null {
-  const words = job.toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length > 2)
+  const asked = job.toLowerCase()
+  const phrase = PHRASES.find(([pattern]) => pattern.test(asked))
+  if (phrase) return CATEGORIES.find((category) => category.id === phrase[1]) ?? null
+
+  const words = job
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((word) => word.length > 2 && !NO_INFORMATION.has(word))
   if (words.length === 0) return null
   const scored = CATEGORIES.map((category) => {
+    const vocabulary = VOCABULARY[category.id] ?? []
+    // A term from the caller's vocabulary is worth more than an incidental word in our own prose,
+    // which is what let a single shared word decide a category.
+    const strong = words.filter((word) => vocabulary.includes(word)).length * 10
     const haystack = `${category.id} ${category.label} ${category.jobToBeDone}`.toLowerCase()
-    return { category, hits: words.filter((word) => haystack.includes(word)).length }
-  }).sort((a, b) => b.hits - a.hits)
-  return scored[0].hits > 0 ? scored[0].category : null
+    const weak = words.filter((word) => !vocabulary.includes(word) && haystack.includes(word)).length
+    return { category, score: strong + weak }
+  }).sort((a, b) => b.score - a.score)
+  // A tie between two categories is a question we cannot route, and guessing would send a caller
+  // a list of the wrong vendors with our name on it.
+  if (scored[0].score === 0 || scored[0].score === scored[1]?.score) return null
+  return scored[0].category
 }
 
 export async function lookup(job: string): Promise<Lookup | null> {

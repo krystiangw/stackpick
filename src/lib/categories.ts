@@ -163,7 +163,7 @@ export const CATEGORIES: Category[] = [
     id: 'documents-signature',
     label: 'Documents and e-signature',
     jobToBeDone: 'generate a document and get it signed',
-    domains: ['docuseal.com', 'documenso.com', 'dropboxsign.com', 'pandadoc.com', 'anvil.co', 'pdfmonkey.io'],
+    domains: ['docuseal.com', 'documenso.com', 'dropboxsign.com', 'pandadoc.com', 'useanvil.com', 'pdfmonkey.io'],
   },
   {
     id: 'commerce',

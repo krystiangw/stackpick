@@ -502,10 +502,17 @@ export async function fetchWithRetries(
     attempts.push(await fetchUrl(url, { ...options, fresh: true }))
   }
   const statuses = attempts.map((a) => a.status)
+  // A 429 is our own traffic by this project's own published rule, so it is not an answer about
+  // the vendor and must not win a vote about what the vendor answers. deepl.com replied 200, 429,
+  // 429 and the majority made it a measured refusal, which then drove four of its checks to
+  // unmeasured and handed it a "cleared every barrier" label it had not earned. Only when every
+  // try is a 429 does the limit become the finding, and that case is handled by the caller.
+  const answered = attempts.filter((a) => a.status !== 429 || isBotChallenge(a))
+  const voting = answered.length > 0 ? answered : attempts
   const counts = new Map<number, number>()
-  for (const status of statuses) counts.set(status, (counts.get(status) ?? 0) + 1)
+  for (const status of voting.map((a) => a.status)) counts.set(status, (counts.get(status) ?? 0) + 1)
   const [majority] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]
-  const representative = attempts.find((a) => a.status === majority) ?? attempts[0]
+  const representative = voting.find((a) => a.status === majority) ?? attempts[0]
   return {
     ...representative,
     statusesSeen: statuses,
