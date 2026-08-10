@@ -579,6 +579,21 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-10 (71): pozorna regresja prozy, ktora byla zmiana miary
+
+Po dopisaniu dzisiejszych akapitow przemierzylem opublikowana proze: findings **9,7 → 16,5**,
+metodologia **4,4 → 10,4**. Wygladalo na to, ze zepsulem tekst.
+
+Nie zepsulem. **`slopscore.py` zmienil ksztalt wyniku 2026-08-10 okolo 16:00**, czyli miedzy
+jednym pomiarem a drugim: wynik liczy teraz trzy wymiary zamiast pieciu, a „rejestr" jest
+raportowany osobno i **nie wchodzi do wyniku**. Wyciete do osobnego pliku dzisiejsze akapity
+dostaja **0,0 na wszystkich wymiarach** pod biezaca wersja narzedzia.
+
+Drugi raz tego samego dnia liczba, ktora sie ruszyla, okazala sie wlasnoscia pomiaru, a nie
+przedmiotu. Pierwszy raz to byl `typed_package` skaczacy lokalnie przez zimny cache npm.
+**Regula do noszenia: zanim zaczniesz naprawiac roznice, sprawdz, czy miernik jest ten sam.**
+Zapisane w KB: `clad-kb show human-tone-metryka-zmieniona-2026-08-10-stare-wyniki-nieporo`.
+
 ## Runda 2026-08-10 (70): formula 7.5, robots.txt jako mapa, ktora ma prowadzic gdzies
 
 Pomysl Krystiana. **Odrzucilem jego wersje literalna i mialem racje tylko w polowie**, wiec warto
