@@ -161,6 +161,13 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
 - ~~**Siódmy przebieg adwersaryjny**~~ **zrobione 2026-08-10: 1,4 procent** (4 na 290). Potwierdzone
   niezależnie: reguła wyzwania bota, dowody MCP (16/16 z kontrolkami), własność npm (5/5 z
   przypadkiem negatywnym), arytmetyka koniunkcji, poprawka Tailwinda, długość N w nowym zdaniu.
+- ~~**Harness audytowy w repo**~~ **zrobione 2026-08-10**, katalog `harness/`. Cztery opublikowane
+  audyty **nie dawały się powtórzyć**: scaffoldy, briefy i transkrypty leżały poza repozytorium.
+  Briefy odzyskane z opublikowanego rekordu, bo to było jedyne miejsce, gdzie przetrwały.
+  `npm run seed -- <kategoria> <n>` robi izolowane kopie i **odmawia startu bez pliku briefu**;
+  `npm run collect -- <kategoria>` czyta, co przebieg zainstalował i zaimportował, **nigdy jego
+  własnego raportu**. `harness/docs/method.md` zapisuje, co zostaje ludzkie i dlaczego.
+  Zostaje: scaffoldy dla `storage`, `auth` i `payments` (jest tylko `editors`).
 - **Ósmy przebieg adwersaryjny** po naprawach z rundy 55. Baseline: **1,4 procent**. Warte ataku:
   przebudowana `rendersUsableForm` (pole „kim jesteś" plus cel wysyłki, oba progi nowe),
   trójstanowe nogi koniunkcji i to, czy wykluczenie 38 wierszy z nieznaną rejestracją jest
