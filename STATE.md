@@ -672,6 +672,14 @@ ze regula na krawedzi potrafi kluczowac na samej nazwie (algolia odmawia kazdemu
 „bot"), wiec **kazda roznica w wynikach po tej dacie moze byc skutkiem nazwy, a nie zmiany u
 vendora**. Data: 2026-08-10.
 
+**Drugi blad tej samej zmiany, znaleziony przez Krystiana, nie przeze mnie.** Zweryfikowalem
+przemianowanie grepujac wyrenderowany HTML kazdej strony na napis `StackPick` i dostalem zero
+trafien na wszystkich. Nazwa przez caly czas byla w nagłowku, bo wordmark byl rozbity znacznikami:
+`Stack<span class="text-brass">Pick</span>`. **Weryfikacja przemianowania po ciaglym napisie nie
+dziala, jesli marka jest stylowana na czesci.** Sprawdza sie po tokenach: osobno `Stack`, osobno
+`Pick`. Po poprawce zero na wszystkich stronach, a cztery trafienia na `/audit` to prawdziwe copy
+(„Picked instead", czyli kogo agent wybral zamiast audytowanego), wiec zostaja.
+
 **Blad, ktory warto zapamietac.** Pierwsze przejscie pominelo polowe plikow, bo warunek szukal
 `tackpick`, a `StackPick` ma wielkie P. Znalazlem to dopiero, gdy skrypt powiedzial „0 plikow", a
 grep w tej samej sekundzie pokazywal dziesiec trafien. Przy podmianach nazw wlasnych **warunek
