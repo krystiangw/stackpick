@@ -579,6 +579,29 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-10 (64): sondujemy tam, gdzie strona mieszka, a nie gdzie zapukalismy
+
+`found.site` zostawal na apeksie, choc **66 ze 167 domen (40 procent) przekierowuje apeks na www**,
+wiec kazda sonda po stronie glownej placila dodatkowy skok. Teraz baza to origin, na ktorym strona
+glowna naprawde odpowiedziala, ale **tylko przy tej samej domenie rejestrowalnej**: lot na cudzy
+host to `resolvedElsewhere`, czyli znalezisko o vendorze, a nie baza do dalszego sondowania.
+
+**Zmierzone na dziesieciu domenach z przekierowaniem, przed i po: 114,5 s → 72,1 s, czyli 37
+procent szybciej.**
+
+**Zero zmian werdyktu, i to jest zmierzone, a nie zalozone.** Pierwsze porownanie pokazalo dwie
+roznice (`inngest.com` i `namecheap.com`, obie na `typed_package`), wiec zamiast je tlumaczyc
+uruchomilem **drugi przebieg tego samego kodu**: wyszly dokladnie te same dwie roznice, na tych
+samych dwoch sprawdzeniach. Podloga szumu wynosi 2 na 140, a zmiana odpowiada za zero.
+
+**Uboczne znalezisko wart zapamietania:** caly ten szum siedzi w `typed_package` i bierze sie z
+`Promise.race` na budzecie fazy npm. Przy porownywaniu czegokolwiek w tym skanerze `typed_package`
+jest niewiarygodny miedzy przebiegami i trzeba go liczyc osobno.
+
+Przypadek, ktory to wywolal, poprawil sie czesciowo: `hover.com` z 2/4 przy siedmiu timeoutach na
+**3/5 przy szesciu**. Nadal uciety, bo potrzebuje 37 s wobec budzetu 27 s, ktory istnieje przez
+router Heroku.
+
 ## Runda 2026-08-10 (63): audyt UI i cztery etykiety, ktore nazywaly cudzy host
 
 **Kuracja.** Przemiecenie 167 apeksow pod katem przekierowan znalazlo piec wierszy klasy
