@@ -51,6 +51,9 @@ export type IndustryReport = {
    */
   mcpServers: number
   mcpWithRegistration: number
+  /** Of the vendors publishing a registration endpoint, those advertising a grant with no human in it. */
+  registrationUnattended: number
+  registrationTotal: number
   /** The same count for everyone else, so the comparison is stated rather than implied. */
   registrationWithoutMcp: number
   withoutMcp: number
@@ -175,6 +178,17 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
     return oauth !== undefined && oauth.points === oauth.max
   }).length
 
+  // A registration endpoint says an agent may introduce itself. Whether it can then get a token
+  // is a different question, and the answer is in grant_types_supported, which we read but never
+  // counted: namecheap.com and dynadot.com publish the same door and only one of them opens.
+  const withRegistration = reports.filter((report) => {
+    const oauth = verdict(report, 'oauth_dcr')
+    return oauth !== undefined && oauth.points === oauth.max
+  })
+  const registrationUnattended = withRegistration.filter(
+    (report) => report.findings.funnel.oauth.unattendedGrant === true,
+  ).length
+
   const others = reports.filter((report) => !live.includes(report))
   const registrationWithoutMcp = others.filter((report) => {
     const oauth = verdict(report, 'oauth_dcr')
@@ -271,6 +285,8 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
     mcpWithoutKeys,
     mcpServers: live.length,
     mcpWithRegistration,
+    registrationUnattended,
+    registrationTotal: withRegistration.length,
     registrationWithoutMcp,
     withoutMcp: others.length,
     signupRefusesAgents,

@@ -298,6 +298,15 @@ export default async function FindingsPage() {
               and it came in the same commit as the server. The key that would make it useful did not.
             </p>
             <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+              And the door is narrower than the count suggests. Of the{' '}
+              <span className="font-mono">{corpus.registrationTotal}</span> vendors publishing a registration
+              endpoint, only <span className="font-mono">{corpus.registrationUnattended}</span> advertise a
+              grant an unattended agent can finish. The rest offer authorization_code, refresh_token, or a
+              device code, and every one of those puts a person at a browser before a token exists. Two
+              registrars make the point on their own: namecheap.com and dynadot.com publish the same shaped
+              door, and only dynadot.com offers client_credentials behind it.
+            </p>
+            <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
               One stage further down, where nobody else is looking:{' '}
               <span className="font-mono">{corpus.signupRefusesAgents}</span> of them answer an agent at the
               signup form with a refusal rather than a form, and{' '}
