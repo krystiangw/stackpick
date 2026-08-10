@@ -579,6 +579,21 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-10 (58b): audyt tonu opublikowanej prozy
+
+Skill `human-tone` na siedmiu żywych stronach: **mediana 21,0 → 4,6, maksimum 21,0 → 9,7**, przy
+niezmienionej długości. Cała publikowana proza jest teraz w paśmie „ludzkie" (ludzka mediana
+bazowa tego narzędzia to 9).
+
+Jedno znalezisko było systemowe i wstydliwe: **separator w tytule każdej strony**.
+„Pricing — StackPick" siedziało w zakładce przeglądarki, w wyniku wyszukiwania i w każdym
+udostępnionym linku, i łamało jedyną regułę typograficzną tego projektu **na każdej stronie od
+początku**. Layout i tak nazywa serwis, więc separator nie niósł informacji: dwukropek.
+Do tego dwa zakresy cen na en dashu, teraz „to".
+
+Reszta punktów to cudzysłowy i apostrofy typograficzne, czyli poprawna typografia, która jest
+jednocześnie markerem modelu. Zostawione: to jest fałszywe trafienie narzędzia, nie wada tekstu.
+
 ## Runda 2026-08-10 (58): audyt podmiotu i awaria, którą złapał własny audyt
 
 **Dziewięć przebiegów atakowało werdykty, żaden nie zapytał, czy podmiot jest właściwy.** Tak
