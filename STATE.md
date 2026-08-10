@@ -579,6 +579,31 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (77): atak na wlasny najnowszy check, formula 7.8
+
+`robots_paths_resolve` mial trzy godziny i nikt go nie atakowal, wiec zaatakowalem go sam:
+niezaleznie odtworzone **wszystkie 22 opublikowane werdykty**, kazda sciezka pobrana naszym
+user-agentem i przegladarka.
+
+**Trzy porazki potwierdzone co do jednej.** `sendgrid.com` okazal sie lepszym znaleziskiem, niz
+myslalem: te same szesc sciezek `/docs/libraries/reference/twilio-*/index.html` **serwuje
+twilio.com z kodem 200**, wiec sendgrid odziedziczyl robots.txt po wlascicielu, a pliki istnieja
+tylko po tamtej stronie. Wiersz twilio przechodzi, wiersz sendgrid nie, z tego samego pliku.
+
+**Ale trzy zaliczenia mialy zdanie nieprawdziwe.** `froala.com`, `namecheap.com` i `sendlayer.com`
+dostawaly „the 1 concrete path your robots.txt allows all answer", podczas gdy ta sciezka
+odpowiadala nam 403 albo 400. Przyczyna: wszystkie trzy to `/wp-admin/admin-ajax.php`, czyli
+**linia, ktora WordPress wpisuje do robots.txt na kazdej instalacji**, i endpoint POST, ktory na
+GET odpowiada 400 z zalozenia. To boilerplate, nie obietnica o stronie: ten sam blad kategorii co
+wildcard, tylko pietro nizej. Wykluczone, te trzy wiersze sa teraz `notApplicable`.
+
+Czwarty przypadek, `name.com`, zachowuje punkt (nic nie jest martwe), ale zdanie mowi teraz
+**„none of the 2 concrete paths is gone, though /account/create answered us 403"** zamiast
+udawac, ze wszystko odpowiada.
+
+Wzorzec potwierdzony po raz jedenasty i drugi raz tej nocy: **kazda poprawka wprowadza przeciwny
+blad w nowym miejscu.** Check mial trzy godziny i mial juz cztery wiersze ze zlym zdaniem.
+
 ## Runda 2026-08-11 (76): kuracja rejestratorow i korekta wlasnej tezy
 
 **`opensrs.com` usuniety z kategorii.** Jego wlasny tytul strony brzmi „Reseller Platform for
