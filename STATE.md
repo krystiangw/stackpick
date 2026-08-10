@@ -579,6 +579,41 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-10 (72): recenzja naszego raportu przez cudzego agenta, formula 7.6
+
+Krystian przepuscil raport dla swojej innej strony przez agenta, ktory ten raport zrecenzowal.
+**Cztery zarzuty, trzy trafione, jeden czesciowo.** Najlepszy zewnetrzny audyt, jaki dostalismy,
+i tanszy niz nasze wlasne przebiegi adwersaryjne.
+
+**1. Sonda MCP patrzyla w piec miejsc, a serwer stal w szostym.** Ich endpoint jest pod
+`/api/mcp`, czyli tam, gdzie route Next.js go stawia (`app/api/mcp/route.ts`). Zarzut byl
+metodologiczny i celny: z „nie ma pod tymi adresami" wyprowadzalismy „nie ma powierzchni MCP".
+`/api/mcp` dodany do kandydatow, **formula 7.5 → 7.6**, bo zmienil sie zestaw sondowanych adresow.
+Zweryfikowane po zmianie: ich domena dostaje `mcp_present` **1/1**, „Live MCP endpoint at
+.../api/mcp, answered 401 with an auth challenge".
+
+**2. Rekomendacja przeczyla wlasnemu raportowi.** `llms_txt` nie zaliczal sie **z powodu martwych
+linkow** („llms.txt present, but 2 of the 3 links we sampled are gone"), a plan naprawy mowil
+„Publish /llms.txt". Radzilismy wdrozyc rzecz, o ktorej sami pisalismy dwie linijki wyzej, ze jest
+wdrozona, i **zawyzalismy obiecany zysk o punkt**. Przyczyna w `fixfirst.ts`: `REMEDIES` byly
+kluczowane po ID checka i ignorowaly powod porazki. Teraz `llms_txt` i `mcp_present` czytaja
+dowody i rozgalezia sie.
+
+**3. Benchmark nie nazywal populacji.** „Higher than 1 of the 168 domains scanned here" pokazane
+SaaS-owi dla analitykow gieldowych sugeruje pozycje na jego rynku, a te 168 to narzedzia
+deweloperskie, ktore sami wybralismy. Zdanie mowi to teraz wprost.
+
+**4. npm dla nie-biblioteki: czesciowo.** Check byl juz `unmeasured`, czyli **poza mianownikiem**,
+wiec nikt nie byl karany. Ale zdanie tego nie mowilo, wiec czytalo sie jak zarzut. `unblock`
+dodaje teraz wprost: jesli produktu nie instaluje sie jako paczke, ten check nie dotyczy i nic
+nie kosztuje.
+
+**Ich wlasna uwaga o sobie jest lepsza niz cala reszta:** naprawili llms.txt, czyli probke
+wskazana przez raport, i uznali klase za domknieta, zamiast sprawdzic, gdzie jeszcze publikuja
+liste wlasnych sciezek. Ich robots.txt mial `Allow: /pricing` i `Allow: /faq`, te same zmyslone
+sciezki. To dokladnie ten check, ktory Krystian zaproponowal godzine wczesniej i ktory wszedl jako
+`robots_paths_resolve` w 7.5. Dwie niezalezne osoby trafily w te sama dziure tego samego wieczora.
+
 ## Runda 2026-08-10 (71): pozorna regresja prozy, ktora byla zmiana miary
 
 Po dopisaniu dzisiejszych akapitow przemierzylem opublikowana proze: findings **9,7 → 16,5**,
