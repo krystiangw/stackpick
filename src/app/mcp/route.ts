@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { runScan } from '@/lib/scan-run'
 import { reportUrl } from '@/lib/email'
 import { publicBaseUrl, toAgentInstructions, toSarif } from '@/lib/export'
+import { CATEGORIES } from '@/lib/categories'
+import { lookup } from '@/lib/lookup'
 import { CHECKS, MAX_SCORE, STAGES, checkHelpUri } from '@/lib/score'
 
 export const maxDuration = 60
@@ -34,6 +36,34 @@ const TOOL = {
       },
     },
     required: ['domain'],
+    additionalProperties: false,
+  },
+} as const
+
+/**
+ * The other half of the same data, asked the way an agent asks it. scan_domain answers "is this
+ * vendor ready", which is the vendor's question. This answers "who can I actually finish with",
+ * which is the caller's, and it is the expensive one to answer by trying: four sessions to learn
+ * that three providers stop at a signup form.
+ *
+ * It eliminates rather than recommends. Whether a vendor suits the job is not something we
+ * measure, and we sell those same vendors the fix, so a ranking from us would be a judgement we
+ * never made sold by someone with an interest in it.
+ */
+const FIND_TOOL = {
+  name: 'find_providers',
+  title: 'Find providers an unattended agent can actually finish with',
+  description:
+    'Describe the problem in your own words, for example "let users upload images" or "send transactional email". ' +
+    'Returns the vendors we have measured in that category, split by whether an unattended run clears every ' +
+    'barrier we test, stops at one, or was never measurable, each with the date and a link to the evidence. ' +
+    'This is not a recommendation: it does not know whether a vendor suits your job, only where an agent stops.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      job: { type: 'string', description: 'The problem to solve, in your own words.' },
+    },
+    required: ['job'],
     additionalProperties: false,
   },
 } as const
@@ -74,17 +104,53 @@ export async function POST(request: Request) {
       capabilities: { tools: { listChanged: false } },
       serverInfo: { name: 'stackpick', title: 'StackPick', version: '1.0.0' },
       instructions:
-        'Call scan_domain with a bare domain. Every check is one HTTP request with a published rule, ' +
-        'documented at /methodology, so anything this returns can be reproduced and argued with.',
+        'Two tools. scan_domain takes a bare domain and scores it. find_providers takes a problem in ' +
+        'plain words and returns the vendors we have measured in that category, split by where an ' +
+        'unattended run stops. Every check is one HTTP request with a published rule, documented at ' +
+        '/methodology, so anything this returns can be reproduced and argued with.',
     })
   }
 
   if (method === 'ping') return result(id, {})
 
-  if (method === 'tools/list') return result(id, { tools: [TOOL] })
+  if (method === 'tools/list') return result(id, { tools: [TOOL, FIND_TOOL] })
 
   if (method === 'tools/call') {
     const params = message.params ?? {}
+
+    if (params.name === FIND_TOOL.name) {
+      const job = (params.arguments as { job?: unknown } | undefined)?.job
+      if (typeof job !== 'string' || job.length === 0) {
+        return toolFailure(id, 'Describe the problem, for example "let users upload images".')
+      }
+      const found = await lookup(job)
+      if (!found) {
+        return toolFailure(
+          id,
+          `No category we have measured matches "${job}". We hold ${CATEGORIES.length} categories, listed at ${publicBaseUrl(request)}/report, and silence here means we have not measured it rather than that nobody does it.`,
+        )
+      }
+      const line = (entry: { domain: string; barriers: string[]; measuredAt: string; evidence: string }) =>
+        `  ${entry.domain}${entry.barriers.length > 0 ? `: stops at ${entry.barriers.join('; ')}` : ''} (measured ${entry.measuredAt}, evidence ${publicBaseUrl(request)}${entry.evidence})`
+      const text = [
+        `${found.category.label}: ${found.measured} vendors measured, which is what we hold and not the whole market.`,
+        '',
+        `Cleared every barrier we test (${found.clear.length}):`,
+        ...(found.clear.length > 0 ? found.clear.map(line) : ['  none']),
+        '',
+        `Stops somewhere (${found.blocked.length}):`,
+        ...found.blocked.map(line),
+        ...(found.unknown.length > 0
+          ? ['', `Not measurable from our vantage (${found.unknown.length}):`, ...found.unknown.map(line)]
+          : []),
+        '',
+        'Each barrier is one HTTP request with a published rule at /methodology. Clearing them is not the',
+        'same as being the right choice: we measure whether an unattended run can finish, not whether the',
+        'product fits. Where this says none, that is the finding rather than a gap in the data.',
+      ].join('\n')
+      return result(id, { content: [{ type: 'text', text }], structuredContent: found })
+    }
+
     if (params.name !== TOOL.name) return failure(id, -32602, `Unknown tool: ${String(params.name)}`)
 
     const args = (params.arguments ?? {}) as { domain?: unknown; format?: unknown }
