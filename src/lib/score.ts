@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '7.5'
+export const FORMULA_VERSION = '7.6'
 
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on
@@ -12,7 +12,7 @@ export const FORMULA_VERSION = '7.5'
  * ask makes a vendor unable to reproduce our own denial.
  */
 const MCP_ADDRESSES = (domain: string) =>
-  `mcp.${domain}, mcp.${domain}/mcp, mcp.${domain}/v1/mcp, api.${domain}/mcp or /mcp`
+  `mcp.${domain}, mcp.${domain}/mcp, mcp.${domain}/v1/mcp, api.${domain}/mcp, /mcp or /api/mcp`
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
