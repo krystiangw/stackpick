@@ -594,11 +594,19 @@ każdy `agent*` i `machine*` compound, każde jednowyrazowe angielskie słowo. G
 Wybieramy nie najlepszą nazwę w języku angielskim, tylko najlepszą, którą da się dziś
 zarejestrować za cenę rejestracji.
 
-Rekomendacja: **MachineReadiness / machinereadiness.com** (jedyna wolna opisowa `.com`; omija
-pułapkę nazw z „agent", które brzmią jak observability agentów, czyli audyt cudzego agenta zamiast
-naszego produktu). Alternatywa o wyższej wariancji: `letagentsin.com`. Do sprawdzenia, gdy wróci
-budżet wyszukiwarki: jak wygląda pierwsza strona wyników na „machine readiness" (kolizja z
-terminem produkcyjnym / OEE).
+Rekomendacja MachineReadiness **upadła w tym samym dniu na sprawdzeniu, które sama zapowiadała**.
+Google na „machine readiness" to w całości Manufacturing Readiness Level: Wikipedia na pierwszej
+pozycji plus AI Overview definiujące frazę jako skalę 1-10 gotowości maszyny do produkcji. Oba
+kanały, które nazwa ma wygrywać, są zajęte, a drugi dokładnie tym mechanizmem, z którym byśmy
+walczyli: model odpowiada cudzą definicją, zanim nas wymieni.
+
+**Lekcja do zapamiętania, szersza niż ta nazwa:** opisowa dwuwyrazowa fraza angielska prawie na
+pewno jest już terminem technicznym w jakiejś dziedzinie, z hasłem w Wikipedii i AI Overview.
+Tego się nie przeskakuje nową stroną i tego nie widać, dopóki nie wyszukasz dokładnej frazy.
+Pierwszy test nazwy to nie „czy domena wolna", tylko „czy ta fraza już coś znaczy".
+
+Nowa rekomendacja: **Let Agents In / letagentsin.com**, jedyny wolny kandydat, który ten test
+przechodzi (fraza nie ma żadnego zajęcia). Cena: brzmi jak postulat, nie jak firma na fakturze.
 
 ## Runda 2026-08-10 (58b): audyt tonu opublikowanej prozy
 

@@ -80,25 +80,41 @@ choosing the best name that can be registered this afternoon for the price of a 
 | `chokepoint.dev` | The thing we find, named precisely | Negative-only framing, and .dev not .com |
 | `stackpick.ai` | Nothing changes | Keeps every problem above and buys a TLD we would abandon on rename |
 
+## MachineReadiness was the recommendation and the check killed it
+
+Searched 2026-08-10. The first page for "machine readiness" is entirely manufacturing:
+Manufacturing Readiness Levels, Technology Readiness Levels, Wikipedia at position one, and an AI
+Overview that defines the phrase as a one to ten scale for how prepared a machine is for
+production. Both channels a name has to win are already occupied, and the second is occupied by
+the exact mechanism we would be fighting: a model answering the phrase with somebody else's
+definition before we are mentioned. `readyformachines.com` inherits the same problem and dies
+with it.
+
+The lesson generalises, and it is the useful part of this audit. **A descriptive two-word English
+phrase is very likely to already be a term of art in some field, with a Wikipedia entry and an AI
+Overview behind it.** That occupancy cannot be outranked by a new site, and it is invisible until
+you search the exact phrase. So the check is not "is the domain free". It is "does this phrase
+already mean something", run before anything else.
+
 ## The recommendation
 
-Rename, before buying a domain, and go with **MachineReadiness** on `machinereadiness.com`.
+Rename before buying a domain, and go with **Let Agents In** on `letagentsin.com`.
 
-It wins on the criterion that actually matters for a category nobody searches for yet: a person
-who hears it once knows what we sell, and there is no competitor, no adjacent product and no
-crowded prefix absorbing the recall. It avoids the trap every `agent`-prefixed name walks into,
-which is sounding like agent observability, a much larger and better-funded category that audits
-the agents you built rather than the product they are trying to use. And it is the only
-descriptive .com in the whole sweep that is free at registration price.
+It is the only free candidate that passes the test above: the phrase has no prior occupancy at
+all, so brand search, retrieval and recall all resolve to one entity from day one. It says what
+we do in four words to somebody who has never heard of the category. It commits to a position
+that is already ours in writing, because the published audits argue vendors should be reachable
+and then measure whether they are. And it cannot be confused with agent observability, the much
+larger and better-funded category that audits the agents you built rather than the product they
+are trying to use.
 
-The one thing to verify before committing: what the first page of results for "machine readiness"
-actually looks like today. My reading is that the manufacturing sense is thin as an exact phrase,
-but the search budget for this session is spent and that is a check, not an assumption.
+The honest cost: it reads as a stance rather than a firm, and it will look slightly odd on an
+invoice for an $11,000 engagement. That is a real price and it is the one being paid for
+everything above.
 
-`letagentsin.com` is the higher-variance alternative. It is unmistakable in every channel and it
-states our position, which is genuinely ours: the published audits argue that vendors should be
-reachable and then measure whether they are. It is worth taking if the memorability is worth more
-than sounding like a firm.
+If that price is too high, the alternative is not another descriptive phrase. It is a coined
+word, which means another sweep, because every coined word worth having in this space was
+registered by somebody without a product.
 
 ## What to do regardless of which name wins
 
