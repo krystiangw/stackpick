@@ -1,4 +1,4 @@
-# StackPick
+# Let Agents In
 
 > Measures whether an AI coding agent can find, register with and integrate a product.
 > Every check is an HTTP request with a published rule, so the score reproduces.

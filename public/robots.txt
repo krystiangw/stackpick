@@ -1,4 +1,4 @@
-# StackPick measures whether sites welcome agents. It would be absurd to block them here.
+# Let Agents In measures whether sites welcome agents. It would be absurd to block them here.
 User-agent: *
 Allow: /
 
