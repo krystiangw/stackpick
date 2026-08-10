@@ -161,6 +161,17 @@ export const CHECKS: Check[] = [
       // deeper page while the entry point renders nothing is a different fact from a pass earned
       // where the reader arrives. Name the page either way.
       const where = from && from !== entry ? `, on ${from} rather than on ${entry}` : ''
+      // Cloaking: the same URL at the same moment, answered thinner to an agent user-agent than
+      // to Chrome. Every other read on the scan is a browser, so without asking twice this was
+      // invisible anywhere except the front door, and it is the sharpest form of the thing this
+      // check exists to measure. A vendor can reproduce it with two curls.
+      const thinner = f.docsThinnerForAgents
+      if (thinner !== null) {
+        return yes(
+          0,
+          `${entry} serves ${Math.round(thinner * 100)} percent less text to ${AGENT_UA} than to a Chrome user-agent, at the same URL and the same moment`,
+        )
+      }
       return f.docsTextChars >= 2000
         ? yes(1, `${chars} characters of text without JS${where}`)
         : yes(0, `Only ${chars} characters render without JS${where}`)

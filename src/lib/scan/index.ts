@@ -54,6 +54,12 @@ export type ScanFindings = {
   agentStatusesSeen: number[]
   blocksPlainRequests: boolean
   /**
+   * How much less an agent user-agent is served on the documentation page than a browser is, as
+   * a share of the browser's visible text. Null when there is no documentation page or the agent
+   * was refused outright, because a refusal is a different finding and already has its own check.
+   */
+  docsThinnerForAgents: number | null
+  /**
    * Whether anything substantive was read despite the door being shut. vonage.com answered 403 on
    * its marketing host while we successfully read its llms.txt, its documentation and its package,
    * and five checks still dropped out saying every request had been refused.
@@ -341,6 +347,20 @@ const NPM_PHASE_BUDGET_MS = 9_000
 type Phase = 'discovery' | 'door' | 'docs' | 'robots' | 'machine' | 'funnel' | 'npm'
 
 /**
+ * Cloaking, measured rather than asserted. Only counted when the agent was answered at all: a
+ * 403 is the door test's finding and reporting it twice would charge a vendor twice for one fact.
+ * The threshold is deliberately coarse, because a page that renders a personalised banner to a
+ * browser differs by a few percent and that is not cloaking.
+ */
+function thinnerForAgents(asBrowser: Fetched | null | undefined, asAgent: Fetched | null): number | null {
+  if (!asBrowser?.ok || !asAgent?.ok) return null
+  const browserText = visibleTextLength(asBrowser.body)
+  if (browserText < 2_000) return null
+  const share = 1 - visibleTextLength(asAgent.body) / browserText
+  return share > 0.5 ? share : null
+}
+
+/**
  * What each phase is the sole evidence for. A phase that never finished cannot support a
  * verdict on any of its checks, and score.ts has to read them off this list rather than
  * scoring the empty findings the phase left behind.
@@ -444,6 +464,12 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
   // Nothing below this line depends on anything else below it, and running the six of them
   // one after another was most of a scan: the door test waited on nobody and went third.
   const doorPending = phase('door', () => fetchWithRetries(found.site, { ua: AGENT_UA }))
+  // The documentation page as an agent sees it. Every other read on this scan is a browser, so
+  // a site that serves agents a thinner page than it serves Chrome was invisible to us anywhere
+  // except the front door. Same URL, same moment, only the user-agent differs.
+  const docsAsAgentPending = phase('docs', async () =>
+    found.docs ? fetchUrl(found.docs, { ua: AGENT_UA, fresh: true }) : null,
+  )
   // One documentation page is a lottery: cloudinary describes its Provisioning API on a page
   // we never opened, then failed the check for not describing it. Follow the pages an agent
   // hunting for credentials would follow.
@@ -505,8 +531,9 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     report('Testing signup and agent entry points', 4)
   })()
 
-  const [asAgent, deeperDocs, robots, machine, npm, funnel] = await Promise.all([
+  const [asAgent, docsAsAgent, deeperDocs, robots, machine, npm, funnel] = await Promise.all([
     doorPending,
+    docsAsAgentPending,
     docsPending,
     robotsPending,
     machinePending,
@@ -547,6 +574,7 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     // says we asked too often. auth0.com read as blocked only after we had scanned it four
     // times in a row while testing repeatability, and calling that a WAF would be an accusation.
     blocksPlainRequests: !asAgent.ok,
+    docsThinnerForAgents: thinnerForAgents(docsPage, docsAsAgent),
     readAnything:
       docsText.length > 0 ||
       machine.findings.hasLlmsTxt ||
