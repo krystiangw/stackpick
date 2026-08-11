@@ -579,6 +579,26 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (79): atak na opublikowana liczbe 20 z 68, formula 7.9
+
+Liczba „20 z 68 vendorow oglasza grant, ktory agent dokonczy" wisiala na `/findings` od wieczora
+i nikt jej nie sprawdzal, wiec odtworzylem **wszystkie 66 twierdzen** niezaleznym skryptem
+pobierajacym metadane OAuth z szesciu konwencjonalnych originow.
+
+**56 zgodnych, 8 nieosiagalnych, 2 rozbiezne.** I te dwie byly nasze.
+
+`vercel.com` ma **dwa serwery autoryzacji**: `mcp.vercel.com` oglasza `authorization_code` i
+`refresh_token`, a apeks `vercel.com` dodatkowo `client_credentials` i `device_code`. To sa dwa
+rozne serwery: token z platformowego nie otwiera serwera MCP. `weglot.com` ma ten sam ksztalt.
+
+Przyczyna w `mergeOauthProbes`: **sumowalismy listy grantow z obu sond**, wiec twierdzilismy o
+mozliwosci, ktorej nie daje zaden pojedynczy serwer. Pierwsza proba naprawy (preferuj druga sonde)
+**nie zadzialala i dobrze, ze sprawdzilem**: `mcp.vercel.com` jest sondowany juz w pierwszej, wiec
+druga byla pusta. Wlasciwa reguła jest o kolejnosci dokumentow: **dokument z hosta `mcp.` jest
+autorytatywny dla zasobu, o ktorym mowimy, a apeks jest zgadniety.**
+
+Opublikowana liczba byla **zawyzona o dwa**. Po reseedzie bedzie 18 z 68 albo blisko.
+
 ## Runda 2026-08-11 (78): weryfikacja 7.8
 
 166 wierszy, formula 7.8, max 17, reseed bez bledow. `robots_paths_resolve` ruszyl sie w
