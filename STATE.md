@@ -9,44 +9,34 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 
 ## W locie w tej chwili (2026-08-11, noc)
 
-**Kolejność jest tu ważna, bo dwie rzeczy nie mogą się minąć.**
+**Formuła 8.5 jest na produkcji** (Heroku v238, sprawdzone: `xata.io` dostaje nowe zdanie
+cytujące pytanie z FAQ). **Reseed 8.5 leci**, log `/tmp/reseed-8.5.log`, dwa przebiegi po 170
+domen, po nim automatycznie `npm run audit`.
 
-1. **Reseed 8.4d leci** (log `/tmp/reseed-8.4d.log`, dwa przebiegi po 170 domen, po nim
-   automatycznie `npm run audit`). Publikuje cytaty free-tier z rundy 114. **Do jego końca nie
-   wolno deployować**, bo produkcja liczyłaby już wg 8.5 i korpus wyszedłby mieszany.
-2. **Formuła 8.5 jest zacommitowana lokalnie i niewdrożona** (rundy 115-117: pytanie w FAQ nie
-   jest darmowym planem, zdania o zgadniętym pakiecie npm). Po zamknięciu 8.4d: `git push`,
-   `git push heroku main`, potem **własny reseed 8.5** i dopiero na nim audyt.
+Reseed 8.4d zamknięty i zweryfikowany: `170 ok, 0 failed`, audyt powiedział dokładnie
+`170 rows on formula 8.4, 0 contradictions` i `17 stated numbers and 3 named-vendor claims
+checked against the data, 0 adrift`. Stan sprzed 8.5 leży w **`/tmp/corpus-8.4.json`**.
 
-**Weryfikacja 8.5 jest teraz mechaniczna** (`scripts/diff-corpus.mts`, runda 120). Przed
-deployem zapisz stan 8.4, po reseedzie 8.5 porównaj z listą przewidzianych zmian:
+**Po reseedzie zrób dokładnie to:**
 
 ```
-curl -s https://stackpick-f12d13a227ea.herokuapp.com/corpus.json > /tmp/corpus-8.4.json
-# deploy 8.5, reseed, potem:
+npm run audit
 npm run diff-corpus /tmp/corpus-8.4.json -- --expect savvycal.com:self_serve,xata.io:self_serve,name.com:answers_plain_request,neon.com:agent_entry_point,pinecone.io:agent_entry_point
 ```
 
-Wyjście zerowe znaczy: wszystkie pięć ruszyło i **nic poza nimi**. Cokolwiek innego jest do
-przeczytania, nie do odnotowania.
+Kod wyjścia zero z drugiej komendy znaczy: **wszystkie pięć przewidzianych zmian zaszło i nic
+poza nimi**. Każdy inny wiersz jest do przeczytania, nie do odnotowania - to jedyny sposób
+odróżnienia reguły robiącej to, co zmierzyłem, od reguły robiącej to i coś jeszcze.
 
 Powtórzenie reseedu, gdyby coś przerwało:
 `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) bash scripts/reseed.sh`.
-Sprawdzenie: `npm run audit` ma powiedzieć `170 rows on formula <wersja>, 0 contradictions`
-i `17 stated numbers and 3 named-vendor claims checked against the data, 0 adrift`.
-Oczekiwana różnica 8.4 → 8.5 jest **policzona z góry, wiersz po wierszu, pięć zmian**:
-`savvycal.com` i `xata.io` tracą punkt za `self_serve` (runda 115), `name.com` zyskuje punkt za
-`answers_plain_request` (runda 118), `neon.com` i `pinecone.io` schodzą z dwóch punktów na jeden
-za `agent_entry_point` (runda 119). Wszystko poza tą piątką to pogoda przy podłodze 0,64 procent,
-a **każdy wiersz spoza niej jest sygnałem, że któraś reguła robi więcej, niż zmierzyłem** - i to
-jest właściwy sposób czytania tego reseedu.
 
 ## Stan na teraz, w dziesięciu liniach
 
 - Produkt nazywa się **Let Agents In** od 2026-08-10. Domena **nie jest kupiona**, adres to nadal
   `stackpick-f12d13a227ea.herokuapp.com`, a nazwa hosta zostaje świadomie do czasu zakupu.
   User-agent skanera to `LetAgentsIn/1.0`.
-- Formuła **8.4**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
+- Formuła **8.5**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
   `npm run audit` pilnuje **17 liczb i 3 twierdzeń nazywających firmy**, przy **0 sprzecznościach**,
   czyli każdą liczbę liczoną z danych, która trafia na publiczną stronę, i trzy zdania obok nich.
 - **Podłoga szumu korpusu: 0,64 procent** (15 zmian na 2338 przy dwóch reseedach bez zmiany reguły).
