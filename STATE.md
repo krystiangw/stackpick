@@ -598,6 +598,18 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (95): szukalem sposobu, zeby nie pytac Krystiana o retencje, i nie ma takiego
+
+Rozmiar dokumentu rozlozony na czesci: **11,3 kB, z czego scorecard 6,9 i findings 4,2**.
+**Zadnych tresci stron, zadnych cial odpowiedzi.** Raport jest juz chudy i nie ma w nim nic do
+przyciecia, wiec zmniejszenie przyszlych dokumentow **nie jest droga wyjscia** i jedyna dzwignia
+zostaje retencja.
+
+Kuszace „przechowujmy tylko findings i przeliczajmy scorecard przy odczycie" **jest bledem i warto,
+zeby to gdzies stalo**: przeliczenie starego raportu biezaca formula **po cichu przescoringowaloby
+historie**, a scorecard jest zapisany wlasnie po to, zeby zachowac to, co opublikowalismy wtedy.
+Te 6,9 kB to nie duplikat, to zapis.
+
 ## Runda 2026-08-11 (94): jedno zapytanie nie powinno zabierac calej strony
 
 Wniosek konstrukcyjny z awarii, a nie tylko jej opis. **Cztery powierzchnie czekaja na te sama
