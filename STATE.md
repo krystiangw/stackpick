@@ -579,6 +579,14 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (78): weryfikacja 7.8
+
+166 wierszy, formula 7.8, max 17, reseed bez bledow. `robots_paths_resolve` ruszyl sie w
+**dokladnie trzech wierszach** i sa to te trzy z boilerplate WordPressa (`froala.com`,
+`sendlayer.com`, `namecheap.com`), wszystkie pass → notApplicable. Calkowity ruch **12 na 2490,
+czyli 0,48 procent**, ponizej podlogi szumu 0,64, a pozostale dziewiec zmian rozklada sie po
+siedmiu checkach po jednej albo dwie.
+
 ## Runda 2026-08-11 (77): atak na wlasny najnowszy check, formula 7.8
 
 `robots_paths_resolve` mial trzy godziny i nikt go nie atakowal, wiec zaatakowalem go sam:
