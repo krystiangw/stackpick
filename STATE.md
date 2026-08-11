@@ -598,6 +598,16 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (90): straznik liczb biegnie tam, gdzie liczby sie zmieniaja
+
+`npm run audit` znalazl dzis dwie prawdziwe rzeczy i obie tylko dlatego, ze **akurat go
+uruchomilem**. Skrypt, ktory chroni przed dryfem, a odpala sie z pamieci czlowieka, jest tym samym
+rodzajem strazy co check, ktory po cichu przestal pasowac.
+
+Dopisany na koncu `scripts/reseed.sh`, czyli **dokladnie w momencie, w ktorym liczby sie zmieniaja**.
+Niefatalny swiadomie: reseed, ktory doszedl do konca, jest wart zachowania nawet gdy audyt zglosi
+rozjazd, a komunikat mowi wprost, ze korpus jest zaciagniety i to liczby wymagaja sprawdzenia.
+
 ## Runda 2026-08-11 (89): pulapka zamknieta i sprawdzona kanarkiem, ktory najpierw sklamał
 
 `npm run build` to teraz **`tsc --noEmit && next build`**, wiec lokalny build sprawdza to samo, co
