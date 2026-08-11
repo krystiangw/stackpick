@@ -1,3 +1,4 @@
+import { SITE_URL } from '../src/lib/site'
 /**
  * A scorecard has to hold together when read line by line, and it did not: rows claimed every
  * request had been refused while their neighbours quoted the pages we had just fetched. This
@@ -7,7 +8,7 @@
 type Check = { id: string; verdict: string; points: number; max: number; detail: string }
 type Row = { domain: string; total: number; measurable: number; max: number; unattendedGrant: boolean | null; refusesAgentsAtSignup: boolean; checks: Check[] }
 
-const url = process.argv[2] ?? 'https://stackpick-f12d13a227ea.herokuapp.com/corpus.json'
+const url = process.argv[2] ?? `${SITE_URL}/corpus.json`
 
 /**
  * Retried, because this now runs the moment a reseed ends and the dyno is at its busiest: the

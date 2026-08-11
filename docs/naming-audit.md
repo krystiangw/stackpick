@@ -121,3 +121,29 @@ registered by somebody without a product.
 The name is not where the search traffic comes from. Titles and slugs are, and they already do
 the work: each scorecard should carry the vendor and the question in its title, not the brand.
 That is a change to page metadata, not to the brand, and it is worth more than either name.
+
+## Moving to the domain, once it is bought
+
+Written while the domain was still unbought, so the buying is the only step that needs a person.
+
+**One string decides every published address.** `src/lib/site.ts` exports `SITE_URL`, which the
+user-agent, the documentation page and both corpus scripts read. Set `STACKPICK_BASE_URL` on the
+dyno and change the fallback in that file, and everything a stranger reads moves with it. The
+places that fall back to `localhost:3000` are metadata and sitemaps, and they are correct as they
+are: in development that is the truth.
+
+1. `heroku domains:add letagentsin.com -a stackpick` and `www.letagentsin.com`, then point DNS at
+   the DNS target Heroku prints. On Cloudflare use CNAME flattening for the apex, because Heroku
+   gives a hostname and an apex cannot hold a CNAME.
+2. `heroku config:set STACKPICK_BASE_URL=https://letagentsin.com -a stackpick`.
+3. Change the fallback in `src/lib/site.ts`, and the literal host in `public/llms.txt`,
+   `public/robots.txt`, `public/agents.md`, `public/agent-signup.md`,
+   `public/.well-known/mcp.json` and `public/.well-known/agent-access.json`, which are static
+   files and cannot read an environment variable.
+4. `npm run reseed`, because 169 detail sentences quote the user-agent, which carries the URL.
+5. **Do not retire the herokuapp host.** Every scorecard link published so far names it, including
+   the four audits and anything anyone forwarded. Heroku keeps serving it for free, so the old
+   links keep resolving.
+6. Rename `STACKPICK_BASE_URL` and `STACKPICK_CONSOLE_TOKEN` at the same time if you want, since
+   the dyno config is being touched anyway. Leave `MONGODB_DB` alone: renaming it points
+   production at an empty database.

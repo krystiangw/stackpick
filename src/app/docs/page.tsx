@@ -4,13 +4,14 @@ import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR, REUSE_WINDOW_MS } from '@/lib
 import { CHECKS, FORMULA_VERSION, MAX_SCORE, STAGES } from '@/lib/score'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
+import { SITE_URL } from '@/lib/site'
 
 export const metadata: Metadata = {
   title: 'Docs: Let Agents In',
   description: 'How to scan a domain from code: endpoints, response shape, limits, and how to read a scorecard.',
 }
 
-const BASE = process.env.STACKPICK_BASE_URL ?? 'https://stackpick-f12d13a227ea.herokuapp.com'
+const BASE = SITE_URL
 
 function Code({ children }: { children: string }) {
   return (

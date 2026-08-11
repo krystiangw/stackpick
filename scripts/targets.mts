@@ -10,11 +10,12 @@
  */
 import { writeFileSync } from 'node:fs'
 import { couldBuy, OWNERSHIP } from '../src/data/ownership'
+import { SITE_URL } from '../src/lib/site'
 
 type Check = { id: string; verdict: string; points: number; max: number; detail: string }
 type Row = { domain: string; total: number; measurable: number; max: number; unattendedGrant: boolean | null; checks: Check[] }
 
-const url = process.argv[2] ?? 'https://stackpick-f12d13a227ea.herokuapp.com/corpus.json'
+const url = process.argv[2] ?? `${SITE_URL}/corpus.json`
 const corpus = (await (await fetch(url)).json()) as { formulaVersion: string; rows: Row[] }
 
 const at = (row: Row, id: string) => row.checks.find((check) => check.id === id)

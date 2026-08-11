@@ -2,6 +2,7 @@ import { AsyncLocalStorage } from 'node:async_hooks'
 import { brotliDecompressSync, constants as zlibConstants, gunzipSync, inflateSync } from 'node:zlib'
 import { installGuardedDispatcher } from './dispatcher'
 import { assertPublicHost, BlockedTargetError } from './guard'
+import { SITE_URL } from '../site'
 
 installGuardedDispatcher()
 
@@ -27,7 +28,7 @@ export const NAMED_CRAWLERS = [
   { name: 'GPTBot', ua: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.1; +https://openai.com/gptbot' },
 ] as const
 
-export const AGENT_UA = `LetAgentsIn/1.0 (+${process.env.STACKPICK_BASE_URL ?? 'https://stackpick-f12d13a227ea.herokuapp.com'}/methodology)`
+export const AGENT_UA = `LetAgentsIn/1.0 (+${SITE_URL}/methodology)`
 
 /**
  * Under undici's own 10 s connect timeout, so a host that resolves and then accepts nothing -
