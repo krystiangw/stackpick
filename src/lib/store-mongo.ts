@@ -96,7 +96,12 @@ export class MongoStore implements Store {
         { $sort: { scannedAt: -1 } },
         { $limit: limit },
         { $project: { _id: 0 } },
-      ])
+      ],
+      // The whole site returned 500 on 2026-08-11 after ten reseeds in a day grew the collection
+      // past what $group holds in memory: "Exceeded memory limit for $group, but didn't allow
+      // external spilling". A report carries the page bodies it read, so this collection grows
+      // fast and the aggregation has to be allowed to spill.
+      { allowDiskUse: true })
       .toArray()) as Report[]
   }
 

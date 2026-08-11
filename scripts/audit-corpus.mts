@@ -8,7 +8,31 @@ type Check = { id: string; verdict: string; points: number; max: number; detail:
 type Row = { domain: string; total: number; measurable: number; max: number; unattendedGrant: boolean | null; checks: Check[] }
 
 const url = process.argv[2] ?? 'https://stackpick-f12d13a227ea.herokuapp.com/corpus.json'
-const corpus = (await (await fetch(url)).json()) as { formulaVersion: string; rows: Row[] }
+
+/**
+ * Retried, because this now runs the moment a reseed ends and the dyno is at its busiest: the
+ * first automatic run came back empty and the script died on JSON.parse with a stack trace,
+ * which is how a guard teaches people to ignore it. An unreadable corpus is a failure to measure,
+ * and it says so in one line instead of pretending the numbers are wrong.
+ */
+async function readCorpus(attempt = 1): Promise<{ formulaVersion: string; rows: Row[] }> {
+  try {
+    const res = await fetch(url)
+    const body = await res.text()
+    if (!res.ok || body.trim().length === 0) throw new Error(`${res.status}, ${body.length} bytes`)
+    return JSON.parse(body) as { formulaVersion: string; rows: Row[] }
+  } catch (error) {
+    if (attempt >= 3) {
+      console.error(`could not read ${url} after ${attempt} tries: ${(error as Error).message}`)
+      console.error('nothing was checked. This is a failure to measure, not a drift in the numbers.')
+      process.exit(2)
+    }
+    await new Promise((resolve) => setTimeout(resolve, attempt * 5000))
+    return readCorpus(attempt + 1)
+  }
+}
+
+const corpus = await readCorpus()
 
 const REFUSAL = /every request was refused|edge refused our requests|nothing we requested got through/i
 // "only 0 documentation pages could be read" is a denial, not evidence, so the counts have to
