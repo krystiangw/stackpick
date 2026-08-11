@@ -22,8 +22,10 @@ Powtórzenie reseedu, gdyby coś przerwało:
 `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) bash scripts/reseed.sh`.
 Sprawdzenie: `npm run audit` ma powiedzieć `170 rows on formula <wersja>, 0 contradictions`
 i `17 stated numbers and 3 named-vendor claims checked against the data, 0 adrift`.
-Oczekiwana różnica 8.4 → 8.5 jest **mała i policzona z góry: dwa wiersze** (`savvycal.com`,
-`xata.io`) tracą punkt za `self_serve`, reszta to pogoda przy podłodze 0,64 procent.
+Oczekiwana różnica 8.4 → 8.5 jest **mała i policzona z góry: trzy wiersze**. `savvycal.com`
+i `xata.io` tracą punkt za `self_serve` (runda 115), `name.com` zyskuje punkt za
+`answers_plain_request` (runda 118). Wszystko poza tym to pogoda przy podłodze 0,64 procent,
+a każde odstępstwo od tej trójki jest sygnałem, że któraś reguła robi więcej, niż zmierzyłem.
 
 ## Stan na teraz, w dziesięciu liniach
 
@@ -335,6 +337,28 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-11 (118): sami wywołaliśmy ścianę i policzyliśmy ją vendorowi
+
+`answers_plain_request` ma sześć porażek i jedna z nich przeczy własnym danym. `name.com` ma
+zapisaną sekwencję **(200, 429, 429)**, a publikowane zdanie brzmi „no agent reaches the site
+at all". Pierwsze żądanie dostało 200, czyli agent dotarł.
+
+Mechanizm: `botChallenge` czyta **ostatni** fetch, a zdanie mówi o całym skanie. Trzy żądania pod
+rząd to nasze obciążenie, nie zachowanie agenta, więc wyzwanie, na które potem trafiliśmy, jest
+nasze. Dokładnie to rozumowanie stało już obok, przy `rateLimitedUs`, gdzie komentarz opisuje
+`postmark.com` (200, 429, 200). Teraz 2xx gdziekolwiek w sekwencji obala to zdanie.
+
+Zmierzone przed zmianą: **cztery wiersze w korpusie mają mieszaną sekwencję** (`hover.com`,
+`logto.io`, `postmarkapp.com`, `name.com`) i tylko ten jeden na tym tracił. Kafel „A challenge,
+not a limit" na karcie wyniku dostał ten sam warunek, bo inaczej mówiłby prozą to, czemu check
+obok właśnie zaprzeczył.
+
+**Uwaga na przyszłość:** pozostałe pięć porażek sprawdziłem z tej maszyny i `contentful.com`,
+`pandadoc.com`, `bitmovin.com`, `namecheap.com` i `vonage.com` odmawiają tak samo **przeglądarce
+jak i nam** (403/403, 429/429). To nie obala werdyktu, bo wyzwanie JS jest wymierzone we
+wszystko, co nie wykonuje skryptów, ale znaczy, że nasz punkt obserwacyjny nie rozstrzyga tych
+wierszy. Rozstrzygnąłby dopiero skan z innej sieci.
 
 ## Runda 2026-08-11 (117): każda porażka „bez typów" mówi o pakiecie, który sam zgadłem
 
