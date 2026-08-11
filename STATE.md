@@ -21,10 +21,14 @@ reguły idzie z przewidywaniem spisanym z góry, wiersz po wierszu, a po reseedz
 `npm run diff-corpus <przed.json> -- --expect dom:check,...` ma zwrócić zero niespodzianek.
 Wszystko poza listą czyta się pojedynczo. Tak znalazł się błąd karty MCP na telnyx.
 
-**Trwa: trasowanie.** Świeży zestaw napisany i zmierzony (runda 126): **59,3 procent błędu**,
-`npm run routing-fresh`. Następny krok to zmiana mechanizmu, nie dopisywanie słów: dopasowanie
-pytania do `jobToBeDone`, `label` i nazw dostawców w `categories.ts`, mierzone na obu zestawach
-naraz. Warunek wdrożenia: świeży zestaw w górę, spalony bez regresji (`KNOWN_DEBT = 11`).
+**Trasowanie zmierzone i zamknięte na tę noc** (rundy 126-127): 59,3 procent błędu na zestawie
+odłożonym, dwie próby naprawy odrzucone pomiarem, uczciwa liczba opublikowana w opisie narzędzia
+MCP. `npm run routing-fresh` (z `WHY=1` pokazuje punktację). **Nie dopisuj słów do `VOCABULARY`
+licząc, że to pomoże**: ten projekt zmierzył to trzy razy (rundy 52, 53, 127).
+
+**Otwarta decyzja produktowa dla Krystiana:** `find_providers` może odpowiadać często i mylić się
+w 8 na 27 odpowiedzi (dziś), albo wymagać dwóch słów z jednej kategorii i wtedy nie mylić się
+wcale, odpowiadając o połowę rzadziej. Obie opcje zmierzone na obu zestawach.
 
 ## Stan na teraz, w dziesięciu liniach
 
@@ -336,6 +340,33 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (127): dwie próby naprawy trasowania, obie zmierzone i obie odrzucone
+
+**Próba pierwsza: inny próg.** Cztery reguły decyzyjne na tych samych punktach, oba zestawy naraz.
+Żadna nie poprawia trafności, wszystkie tylko wymieniają złą odpowiedź na milczenie. Wymóg
+**dwóch słów** z tej samej kategorii kasuje **wszystkie** złe odpowiedzi na obu zestawach i kosztuje
+połowę trafnych (świeży 37 → 19 procent, spalony 83 → 36). Reguły marginesu nie ruszają niczego,
+bo osiem złych odpowiedzi to **pojedyncze trafienia bez rywala**: „scanned invoices" dosięga
+payments i nic więcej, „summarisation job" dosięga background-jobs i nic więcej.
+
+**Próba druga: inny dowód.** Zebrałem, jak **162 ze 170 dostawców opisuje samych siebie**
+(`<title>`, meta description, pierwsze nagłówki) i zbudowałem z tego profil terminów per kategoria,
+**strojony wyłącznie na spalonym zestawie**, żeby świeży został na jeden pomiar. Najlepsze
+parametry (termin u ≥4 dostawców, w ≤2 kategoriach, 63 terminy razem) dały na świeżym zestawie
+**25 trafnych i 9 złych wobec 24 i 8**. Jedna odpowiedź w każdą stronę, czyli szum. Powód jest
+widoczny w danych: copy marketingowe jest generyczne („platform", „build", „developers"), a to,
+co odróżnia kategorie, wypada przy filtrowaniu.
+
+**Wniosek: mechanizm jest u sufitu i dostawą tej rundy jest liczba, nie poprawka.** Opis narzędzia
+`find_providers` w MCP mówił dotąd „16 na 20" z pytań pisanych **po** regułach. Teraz mówi prawdę
+z zestawu odłożonego: 24 na 59, w tym 27 milczeń, 6 złych kategorii i 2 odpowiedzi tam, gdzie
+należało odmówić, plus zdanie wprost: **odpowiedziało na 27 z 59 pytań i 8 z tych odpowiedzi było
+złych**. Wdrożone i sprawdzone na produkcji.
+
+**Co zostaje do rozstrzygnięcia (nie przez agenta):** czy `find_providers` ma dalej odpowiadać
+często i myląc się w 8 na 27 przypadków, czy rzadko i prawie nigdy się nie myląc. To decyzja
+produktowa o tym, czy narzędzie ma być użyteczne, czy bezpieczne, i obie opcje są zmierzone.
 
 ## Runda 2026-08-12 (126): trasowanie ma 59 procent błędu, nie 20
 
