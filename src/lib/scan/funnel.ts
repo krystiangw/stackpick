@@ -96,7 +96,7 @@ const PROVISIONING_PATTERNS = [
 ]
 
 /** Only signals that actually mean "an agent can finish without a human or a card". */
-const SELF_SERVE_PATTERNS = [
+export const SELF_SERVE_PATTERNS = [
   /no credit card/i,
   /\bno card\b/i,
   /(?<!no )free tier/i,
@@ -183,6 +183,47 @@ export function everyFreeSignalIsAButton(patterns: RegExp[], text: string): bool
     }
   }
   return sawAny
+}
+
+/**
+ * An interrogative word has to stand close in front of the match, not merely somewhere before the
+ * next question mark. Without it a pricing table carries the rule away: pusher.com's "Sandbox
+ * Free" and four "$0" cells on workos.com sit in runs of table text with no punctuation at all
+ * until a question further down the page, and a distant mark would make questions of them.
+ *
+ * Bounded and not anchored to a sentence start, because an accordion has no sentence starts: the
+ * headings on savvycal.com run together as "Frequently Asked Questions Do you offer a free
+ * trial? How does company billing work?" with nothing between them to break on.
+ */
+const QUESTION_BEFORE = /\b(?:do|does|did|is|are|was|were|can|could|will|would|should|shall|may|might|have|has|what|how|why|when|where|which|who)\b[^.!?]*$/i
+
+/**
+ * Whether every free-tier signal on the page stands inside a question. An FAQ heading is a
+ * question the vendor asks, not an answer they give: savvycal.com's only free-tier wording is
+ * "Do you offer a free trial?" and xata.io's is "Is there a free tier?", and on both pages the
+ * accordion is collapsed, so the served HTML carries the question and no answer at all. We were
+ * scoring the fact that the page raises the subject.
+ *
+ * A page that does answer keeps its point without any answer parsing here, because an answer that
+ * confirms a free tier says the words again outside the question, and that second match is not
+ * interrogative. An answer of a bare "Yes." loses the point, and that is the known cost.
+ */
+export function everyFreeSignalIsAQuestion(patterns: RegExp[], text: string): string | null {
+  let asked: string | null = null
+  for (const pattern of patterns) {
+    const global = new RegExp(pattern.source, `${pattern.flags.replace('g', '')}g`)
+    for (const match of text.matchAll(global)) {
+      const at = match.index ?? 0
+      const rest = text.slice(at + match[0].length)
+      const closesAt = rest.search(/[.!?\n]/)
+      const closer = closesAt === -1 ? '' : rest[closesAt]
+      const before = text.slice(Math.max(0, at - 60), at)
+      const opener = before.match(QUESTION_BEFORE)
+      if (closer !== '?' || !opener) return null
+      asked ??= `${before.slice(opener.index)}${match[0]}${rest.slice(0, closesAt + 1)}`
+    }
+  }
+  return asked
 }
 // Weighted rather than a bare list of types, which reads to a strict server as a demand:
 // plausible.io answers 406 to "text/markdown, application/json, text/plain" and savvycal.com
@@ -389,7 +430,14 @@ export type FunnelFindings = {
   /** Whether the endpoint probe got an answer, as opposed to never reaching a host. */
   mcpProbed: boolean
   signup: SignupFindings
-  provisioning: { programmatic: string[]; selfServeSignals: string[]; selfServeQuotes?: string[]; selfServeIsButtonOnly?: boolean }
+  provisioning: {
+    programmatic: string[]
+    selfServeSignals: string[]
+    selfServeQuotes?: string[]
+    selfServeIsButtonOnly?: boolean
+    /** The question the page asks, when asking it is the only free-tier wording it carries. */
+    selfServeOnlyAsked?: string | null
+  }
   /** True when the site answers unknown paths with real text, making entry probes meaningless. */
   servesCatchAll: boolean
   /** The same question per namespace, because one does not imply another. */
@@ -1078,6 +1126,7 @@ export async function scanFunnel({
       selfServeSignals: matching(SELF_SERVE_PATTERNS, pricingText),
       selfServeQuotes: quoting(SELF_SERVE_PATTERNS, pricingText),
       selfServeIsButtonOnly: everyFreeSignalIsAButton(SELF_SERVE_PATTERNS, visibleText(pricingText)),
+      selfServeOnlyAsked: everyFreeSignalIsAQuestion(SELF_SERVE_PATTERNS, visibleText(pricingText)),
     },
     servesCatchAll: catchAll.markdown || catchAll.json || catchAll.text,
     catchAll,

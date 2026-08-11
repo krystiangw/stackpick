@@ -1,6 +1,11 @@
 import { thinnerForAgents } from '../src/lib/scan'
-import { BOT_DEFENCE_RULES, PROVISIONING_RULES } from '../src/lib/scan/funnel'
-import { everyFreeSignalIsAButton } from '../src/lib/scan/funnel'
+import {
+  BOT_DEFENCE_RULES,
+  PROVISIONING_RULES,
+  SELF_SERVE_PATTERNS,
+  everyFreeSignalIsAButton,
+  everyFreeSignalIsAQuestion,
+} from '../src/lib/scan/funnel'
 
 /**
  * The scanner's rules against sentences we wrote on purpose, half of which must match and half of
@@ -67,6 +72,27 @@ const buttonOnly: Case[] = [
 const FREE = [/\bfree trial\b/i, /\bget started\b[\s-]*(?:for\s+)?free\b/i, /\bstarter\b[^.\n]{0,24}\bfree\b/i, /free forever/i, /\bno card\b/i]
 for (const [text, expected] of buttonOnly) {
   check(`"${text}"`, everyFreeSignalIsAButton(FREE, text), expected)
+}
+
+console.log('free tier, czyli pytanie kontra odpowiedź')
+const asked: Case[] = [
+  // Both real cases: a collapsed FAQ accordion whose HTML carries the question and no answer.
+  ['Frequently Asked Questions Do you offer a free trial? How does company billing work?', true],
+  ['How does Xata reduce my cloud costs? Is there a free tier? Can I start on SaaS?', true],
+  // The answer says the words again outside the question, so the page keeps its point without
+  // anything here having to parse the answer.
+  ['Is there a free tier? Yes, our free tier covers 10,000 requests a month.', false],
+  // A pricing table has no punctuation at all, so the next question mark can be a screen away.
+  // Both of these were read as questions before the rule required an opener in front of the words.
+  ['Flexible pricing Enterprise options Sandbox Free Sign up Messages per day 200k Need a plan?', false],
+  ['Directory Sync User provisioning and role mapping Get started $0 / month Need a plan that fits?', false],
+  ['The Starter plan is Free forever', false],
+]
+// The real pattern list here, not the short fixture above, because two of these cases are the
+// literal table text from pusher.com and workos.com and they only matter against the patterns
+// that actually matched them.
+for (const [text, expected] of asked) {
+  check(`"${text.slice(0, 52)}"`, everyFreeSignalIsAQuestion(SELF_SERVE_PATTERNS, text) !== null, expected)
 }
 
 console.log('bot defence, czyli warstwa raportowana obok werdyktu, nie punktowana')

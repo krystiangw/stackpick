@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '8.4'
+export const FORMULA_VERSION = '8.5'
 
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on
@@ -693,7 +693,11 @@ export const CHECKS: Check[] = [
       // one unpriced plan and a "Start free trial" button, and `free trial` is a statement
       // pattern, so no list of button phrases could catch it without catching every real trial.
       const onlyChrome = chrome.length > 0 && f.funnel.provisioning.selfServeIsButtonOnly === true
-      if (f.funnel.provisioning.selfServeSignals.length > 0 && !onlyChrome) {
+      // A question the page asks is not an answer it gives. savvycal.com's only free-tier wording
+      // is "Do you offer a free trial?" and xata.io's is "Is there a free tier?", and on both the
+      // accordion ships collapsed, so the HTML carries the question with no answer anywhere in it.
+      const onlyAsked = chrome.length > 0 ? (f.funnel.provisioning.selfServeOnlyAsked ?? null) : null
+      if (f.funnel.provisioning.selfServeSignals.length > 0 && !onlyChrome && !onlyAsked) {
         // Saying it once out of two tries still means you say it, and hiding the disagreement
         // would leave a vendor unable to explain why the number moved between two scans.
         // Quoted, because "free tier or no-card signals" is a claim a vendor cannot check against
@@ -730,6 +734,15 @@ export const CHECKS: Check[] = [
           0,
           `${page ?? 'Your pricing page'} carries a "start for free" style link and nothing else about a free tier, so what we found is a button rather than a stated price`,
         )
+      }
+      // Quotes the question, because "we found only a question" is a claim the vendor can check
+      // against their own page in one search, and a paraphrase is not.
+      if (onlyAsked) {
+        return {
+          points: 0,
+          detail: `The only free-tier wording at ${page} is a question the page asks, "${onlyAsked.trim()}", and the answer to it is not in the HTML we were served`,
+          unblock: 'Serve the answer to that question in the HTML, or state the tier in the pricing table, and this becomes a pass.',
+        }
       }
       if (f.funnel.pricingFetched && f.funnel.pricesVisibleWithoutJs === false) {
         // Says what was measured. The old sentence claimed nothing about the tiers survived, and
