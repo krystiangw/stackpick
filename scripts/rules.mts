@@ -1,5 +1,5 @@
 import { thinnerForAgents } from '../src/lib/scan'
-import { PROVISIONING_RULES } from '../src/lib/scan/funnel'
+import { BOT_DEFENCE_RULES, PROVISIONING_RULES } from '../src/lib/scan/funnel'
 import { everyFreeSignalIsAButton } from '../src/lib/scan/funnel'
 
 /**
@@ -67,6 +67,17 @@ const buttonOnly: Case[] = [
 const FREE = [/\bfree trial\b/i, /\bget started\b[\s-]*(?:for\s+)?free\b/i, /\bstarter\b[^.\n]{0,24}\bfree\b/i, /free forever/i, /\bno card\b/i]
 for (const [text, expected] of buttonOnly) {
   check(`"${text}"`, everyFreeSignalIsAButton(FREE, text), expected)
+}
+
+console.log('bot defence, czyli warstwa raportowana obok werdyktu, nie punktowana')
+const defence: Case[] = [
+  ['<script>window.KPSDK.configure(x)</script>', true],
+  ['<script src="https://js.datadome.co/tags.js"></script>', true],
+  ['<div class="captcha-placeholder"></div>', false],
+  ['kaskada is a river in Poland', false],
+]
+for (const [text, expected] of defence) {
+  check(`"${text.slice(0, 46)}"`, Object.values(BOT_DEFENCE_RULES).some((rule) => rule.test(text)), expected)
 }
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)

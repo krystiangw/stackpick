@@ -522,7 +522,17 @@ export const CHECKS: Check[] = [
           inconclusive: true,
         }
       }
-      return yes(1, 'No CAPTCHA vendor in the server HTML. A widget mounted later by JavaScript would not show here.')
+      // Named next to the pass, not folded into it. See BOT_DEFENCE_SIGNATURES: the point stands
+      // because there is no CAPTCHA, and the reader still gets to know what else is on the page.
+      const defence = f.funnel.signup.botDefence ?? []
+      return yes(
+        1,
+        `No CAPTCHA vendor in the server HTML. A widget mounted later by JavaScript would not show here.${
+          defence.length > 0
+            ? ` The page does carry ${defence.join(' and ')}, a bot defence that decides in the background rather than a challenge anyone solves. We did not submit the form, so whether it lets an unattended request through is not something we measured.`
+            : ''
+        }`,
+      )
     },
   },
   {

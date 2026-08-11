@@ -25,6 +25,23 @@ const CAPTCHA_SIGNATURES: Record<string, RegExp> = {
 }
 
 /**
+ * Not CAPTCHAs, and deliberately not scored as any. These are bot-defence SDKs that decide in the
+ * background whether a request is a person, with no widget to solve and nothing visible to fail.
+ * resend.com and turbopuffer.com both ship Kasada's client on every page including signup, and
+ * both pass the CAPTCHA check honestly: there is no CAPTCHA there.
+ *
+ * What we did not do is submit the form, so we do not know whether an unattended request gets
+ * through, and a check that failed them on this would be claiming a measurement we never made.
+ * It is reported next to the pass instead, because a reader deciding where to send an agent
+ * deserves to know the layer is there.
+ */
+const BOT_DEFENCE_SIGNATURES: Record<string, RegExp> = {
+  kasada: /\bKPSDK\b|kasada/i,
+  datadome: /datadome/i,
+  perimeterx: /perimeterx|px-captcha/i,
+}
+
+/**
  * The seven ways a vendor says an agent can make its own credentials. Each one covers the words
  * for a credential rather than one spelling of it: LaunchDarkly documents creating an access
  * token at /docs/api/access-tokens and never writes "api key" on the page, and a rule that only
@@ -197,6 +214,8 @@ export const PROVISIONING_PATTERN_COUNT = PROVISIONING_PATTERNS.length
 /** Exported so a rule test can show it saying yes and no, rather than only ever saying no. */
 export const PROVISIONING_RULES = PROVISIONING_PATTERNS
 
+export const BOT_DEFENCE_RULES = BOT_DEFENCE_SIGNATURES
+
 /**
  * The same seven rules in the words a vendor can search their own documentation for. Published
  * on the methodology page: a verdict that says "1 of 7 phrases" and never says which seven is
@@ -222,6 +241,8 @@ export type SignupFindings = {
   reachable: boolean
   rendersFormWithoutJs: boolean
   captcha: string[]
+  /** Background bot defence, reported next to the CAPTCHA verdict and never scored as one. */
+  botDefence?: string[]
   behindCloudflare: boolean
   /**
    * What a browser user-agent got at the same URL, asked only when the agent was refused. The
@@ -594,6 +615,7 @@ async function inspectSignup(url: string | null): Promise<SignupFindings> {
       reachable: false,
       rendersFormWithoutJs: false,
       captcha: [],
+      botDefence: [],
       behindCloudflare: false,
       browserStatus: null,
     }
@@ -614,6 +636,9 @@ async function inspectSignup(url: string | null): Promise<SignupFindings> {
     reachable: got.ok,
     rendersFormWithoutJs: rendersUsableForm(body),
     captcha: Object.entries(CAPTCHA_SIGNATURES)
+      .filter(([, pattern]) => pattern.test(body))
+      .map(([name]) => name),
+    botDefence: Object.entries(BOT_DEFENCE_SIGNATURES)
       .filter(([, pattern]) => pattern.test(body))
       .map(([name]) => name),
     behindCloudflare: 'cf-ray' in got.headers || (got.headers.server ?? '').toLowerCase().includes('cloudflare'),
