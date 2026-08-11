@@ -149,8 +149,8 @@ export default async function MethodologyPage() {
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           It is not evenly spread. Nine of the fifteen sit in the three checks that depend on a host
           answering us at all, and the rest are single rows. We chased two of them rather than assume:
-          name.com went from refusing us to answering, and answers a browser and both of our user-agent
-          strings identically three times over, so the change was theirs and transient. froala.com answers
+          name.com went from refusing us to answering, and answers a browser and both agent user-agents we
+          asked as that day identically three times over, so the change was theirs and transient. froala.com answers
           403, 200, 403 in the same alternating pattern to a browser as to us, so its row moving is froala
           being froala.
         </p>

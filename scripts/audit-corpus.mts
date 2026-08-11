@@ -265,7 +265,74 @@ const stated: { page: string; pattern: RegExp; expected: number; what: string }[
   },
 ]
 
+/**
+ * The half of a page a number guard cannot see: sentences that name a company. They drift the
+ * same way numbers do and more quietly, because nothing recomputes them. contentful.com was
+ * published as clearing all three barriers for a week after a rate-limited scan took it off the
+ * computed list two paragraphs above, and every number on that page was correct throughout.
+ */
+const held = new Map(corpus.rows.map((row) => [row.domain, row]))
+const named: { page: string; pattern: RegExp; holds: (found: RegExpMatchArray) => string | null; what: string }[] = [
+  {
+    page: '/findings',
+    pattern: /(\S+) and (\S+) publish the same shaped door, and only (\S+) offers client_credentials/,
+    what: 'the two registrars',
+    holds: (found) => {
+      const [, first, second, opens] = found
+      const shut = first === opens ? second : first
+      if (held.get(opens)?.unattendedGrant !== true) return `${opens} no longer advertises an unattended grant`
+      if (held.get(shut)?.unattendedGrant !== false) return `${shut} is no longer the one that stays shut`
+      return null
+    },
+  },
+  {
+    page: '/findings',
+    // Domain tokens rather than "up to the full stop": every name in the list contains one.
+    pattern: /The vendors that meet all three today:\s*((?:[a-z0-9-]+\.[a-z]{2,}(?:,\s*)?)+)/,
+    what: 'the all-three list',
+    holds: (found) => {
+      const listed = found[1].split(/,\s*/).map((domain) => domain.trim())
+      const computed = corpus.rows.filter((row) => legsMet(row).every((leg) => leg.known && leg.met)).map((row) => row.domain)
+      const missing = computed.filter((domain) => !listed.includes(domain))
+      const extra = listed.filter((domain) => !computed.includes(domain))
+      if (missing.length > 0 || extra.length > 0) {
+        return `names ${extra.join(', ') || 'nobody'} that the data does not, and omits ${missing.join(', ') || 'nobody'}`
+      }
+      return null
+    },
+  },
+  {
+    page: '/findings',
+    pattern: /(\S+) (?:is|are) on this list and gates? signup with an hCaptcha/,
+    what: 'the late-CAPTCHA example',
+    holds: (found) => {
+      const computed = corpus.rows.filter((row) => legsMet(row).every((leg) => leg.known && leg.met)).map((row) => row.domain)
+      const listed = found[1].split(/\s+and\s+/).map((domain) => domain.trim())
+      const off = listed.filter((domain) => !computed.includes(domain))
+      return off.length > 0 ? `names ${off.join(', ')}, which no longer clears all three` : null
+    },
+  },
+]
+
 let drift = 0
+for (const claim of named) {
+  const page = await pageText(claim.page)
+  const found = page.match(claim.pattern)
+  // A sentence that renders only while it is true is allowed to be absent. The others are not.
+  if (!found) {
+    if (claim.what !== 'the late-CAPTCHA example') {
+      drift++
+      console.log(`${claim.page}: could not find ${claim.what} at all`)
+    }
+    continue
+  }
+  const wrong = claim.holds(found)
+  if (wrong) {
+    drift++
+    console.log(`${claim.page}: ${claim.what} ${wrong}`)
+  }
+}
+
 for (const claim of stated) {
   const found = (await pageText(claim.page)).match(claim.pattern)
   if (!found) {
@@ -276,5 +343,5 @@ for (const claim of stated) {
     console.log(`${claim.page}: says ${found[1]} for ${claim.what}, data says ${claim.expected}`)
   }
 }
-console.log(`${stated.length} stated numbers checked against the data, ${drift} adrift`)
+console.log(`${stated.length} stated numbers and ${named.length} named-vendor claims checked against the data, ${drift} adrift`)
 process.exit(bad === 0 && drift === 0 ? 0 : 1)
