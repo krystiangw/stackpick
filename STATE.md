@@ -12,18 +12,20 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 - Produkt nazywa się **Let Agents In** od 2026-08-10. Domena **nie jest kupiona**, adres to nadal
   `stackpick-f12d13a227ea.herokuapp.com`, a nazwa hosta zostaje świadomie do czasu zakupu.
   User-agent skanera to `LetAgentsIn/1.0`.
-- Formuła **8.3**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
+- Formuła **8.4**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
   `npm run audit` pilnuje **17 liczb i 3 twierdzeń nazywających firmy**, przy **0 sprzecznościach**,
   czyli każdą liczbę liczoną z danych, która trafia na publiczną stronę, i trzy zdania obok nich.
 - **Podłoga szumu korpusu: 0,64 procent** (15 zmian na 2338 przy dwóch reseedach bez zmiany reguły).
   Opublikowana na `/methodology`. Każda różnica mniejsza to pogoda, nie zmiana. Trzy reseedy tej
-  nocy: 8.0 → 8.1 ruszyło **0,98 procent**, 8.1 → 8.2 **0,78**, 8.2 → 8.3 **0,43**. Netto
-  **8.1 → 8.3 to 23 werdykty, 0,90 procent**, z czego 11 w `programmatic_provisioning`.
+  nocy: 8.0 → 8.1 ruszyło **0,98 procent**, 8.1 → 8.2 **0,78**, 8.2 → 8.3 **0,43**, 8.3 → 8.4
+  **1,53** i to jest największa pojedyncza zmiana od tygodnia, bo **29 wierszy** straciło kredyt
+  za zdanie o klikaniu w panelu.
 - Jedenaście przebiegów adwersaryjnych: **16,7 → 2,2 → 3,9 → 2,0 → 0,94 → 7,9 → 1,4 → 1,29 → 0,77 →
   0,39 procent**, jedenasty bez wspólnej metryki, bo atakował trzy powierzchnie osobno: dwa
   fałszywe twierdzenia w skanerze (patrz runda 102) i **31,8 procent błędu w trasowaniu**.
-- Opublikowane liczby: **7 ze 170** przechodzi wszystkie trzy bariery (było 5, dwóch doszło na
-  poprawce `programmatic_provisioning`), **47 jest o jeden wymóg od tego**, **19 z 66** publikujących endpoint rejestracji ma grant, który agent dokończy bez
+- Opublikowane liczby: **5 ze 170** przechodzi wszystkie trzy bariery, **42 jest o jeden wymóg od
+  tego** (w nocy 5 → 7 → 5: poszerzenie `programmatic_provisioning` dodało dwóch, a wymóg markera
+  programowego zabrał ich i jeszcze jednego), **19 z 66** publikujących endpoint rejestracji ma grant, który agent dokończy bez
   człowieka, **0 ze 170** serwuje agentom mniej tekstu niż przeglądarce.
 - **67 żywych serwerów MCP, 52 z nich publikuje RFC 7591** (68 w całym korpusie). DCR przyszło
   z wymogu specyfikacji MCP, nie z decyzji o wpuszczeniu agentów, a dwie trzecie tych drzwi i tak
@@ -309,6 +311,35 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-11 (110): check przestał kredytować przyciski i zabrał 25 punktów
+
+`programmatic_provisioning` liczył frazę, nie procedurę, więc `strapi.io` dostawał punkt za
+„Creating a new API token: **Click on the Create new API Token button**". Fraza liczy się teraz
+tylko z markerem programowym w tym samym zdaniu.
+
+**To pierwsza zmiana tej nocy, która odejmuje.** Reseed na 8.4: **29 werdyktów ruszonych, wszystkie
+w tym checku, netto minus 25 punktów** w korpusie. Rozkład `pass` 37 → 28, `partial` 56 → 49,
+`fail` 58 → 76. Średnia korpusu 8,79 → 8,66. Diff całości to **1,53 procent**, najwięcej od
+tygodnia, i tym razem to nie jest podejrzane, tylko zamierzone.
+
+**Przeczytałem, co stracił każdy z czterech pierwszych, i wszystkie cztery straty są słuszne:**
+- `chargebee.com`: „only the Site admin or the site owner **can create the API keys**" - zdanie
+  o uprawnieniach ludzi.
+- `groq.com`: „**Please visit here** to create an API Key" - link do panelu.
+- `inngest.com`: „Create an Inngest API key **in the Cloud dashboard**".
+- `mux.com`: „You create an access token, upload a video, and play it" - narracja z quickstartu,
+  nie ścieżka.
+
+**Cena, którą płacimy świadomie:** vendor, który naprawdę ma API do kluczy, ale opisuje je słowami
+spoza listy markerów, dostaje teraz zero. Zdanie w raporcie mówi wprost „None of the 7 provisioning
+phrases appears in the N documents we read", czyli twierdzi o frazach, nie o istnieniu ścieżki,
+a `/methodology` mówi teraz wprost, czego wymaga fraza tworzenia. To jest ta sama asymetria, co
+przy całym skanerze: **fałszywy pozytyw kosztuje wiarygodność, fałszywy negatyw kosztuje punkt**.
+
+Liczba na `/findings` przeszła w nocy **5 → 7 → 5**, bo poszerzenie dodało dwóch vendorów, a marker
+zabrał ich i jeszcze `deepl.com`. Lista „wszystkie trzy" to dziś `auth0.com`, `bird.com`,
+`resend.com`, `sendlayer.com`, `supabase.com`, a strażnik zdań sprawdza te nazwy przy każdym audycie.
 
 ## Runda 2026-08-11 (109): trzeci reseed zamknął noc i pierwszy raz odjął punkty
 
