@@ -18,6 +18,18 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
    jest darmowym planem, zdania o zgadniętym pakiecie npm). Po zamknięciu 8.4d: `git push`,
    `git push heroku main`, potem **własny reseed 8.5** i dopiero na nim audyt.
 
+**Weryfikacja 8.5 jest teraz mechaniczna** (`scripts/diff-corpus.mts`, runda 120). Przed
+deployem zapisz stan 8.4, po reseedzie 8.5 porównaj z listą przewidzianych zmian:
+
+```
+curl -s https://stackpick-f12d13a227ea.herokuapp.com/corpus.json > /tmp/corpus-8.4.json
+# deploy 8.5, reseed, potem:
+npm run diff-corpus /tmp/corpus-8.4.json -- --expect savvycal.com:self_serve,xata.io:self_serve,name.com:answers_plain_request,neon.com:agent_entry_point,pinecone.io:agent_entry_point
+```
+
+Wyjście zerowe znaczy: wszystkie pięć ruszyło i **nic poza nimi**. Cokolwiek innego jest do
+przeczytania, nie do odnotowania.
+
 Powtórzenie reseedu, gdyby coś przerwało:
 `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) bash scripts/reseed.sh`.
 Sprawdzenie: `npm run audit` ma powiedzieć `170 rows on formula <wersja>, 0 contradictions`
