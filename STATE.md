@@ -598,6 +598,33 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (91): piec wierszy dodanych, jeden falszywy pozytyw zlapany przez wlasny audyt
+
+**Uzupelnione trzy najciensze kategorie**, kazdy wpis na podstawie wlasnych slow vendora:
+`mongodb.com` („a flexible, AI-ready database") i `redis.io` do baz danych, `restate.dev`
+(„lightweight runtime ... innately resilient distributed apps") i `windmill.dev` („code-first
+orchestration platform") do zadan w tle, `timekit.io` („Scheduling, at scale") do kalendarzy.
+**Odrzucone po sprawdzeniu:** `fauna.com` (nie odpowiada w ogole) i `hookdeck.com` (bramka
+webhookow, dwuznaczna polka, a dwuznacznych filowan wlasnie unikamy). Korpus: **171 wierszy**.
+
+**I audyt natychmiast zglosil sprzecznosc na jednym z nowych wierszy.** `restate.dev`:
+`agent_entry_point` cytowal trzy znalezione pliki wejscia, a `signup_reachable` mowil, ze nic nie
+linkuje do rejestracji. Sonda kontrolna potwierdzila: **strona odpowiada 200 markdownem na dowolna
+sciezke `.md`**, lacznie z wymyslona przeze mnie.
+
+Kontrolka na catch-all istniala i **przegrala z szablonem, ktory wpisuje w tresc sciezke, o ktora
+pytano**. Stub brzmi „# Restate - /<sciezka> A markdown rendering of this page is not available",
+wiec `/agent-signup.md` mial 227 bajtow, `/skill.md` 213, kontrolka jeszcze inna liczbe, a
+porownanie bylo **na dokladnej rownosci dlugosci**. Trzy kopie jednej odmowy poszly jako trzy pliki
+wejscia.
+
+Teraz porownywane sa cialaod kontrolki i sondy **po usunieciu segmentow sciezek z obu**.
+Zweryfikowane, ze nie lamie prawdziwych plikow: `sentry.io` zachowuje swoj `mcp.json`, a
+`resend.com` swoj `agent.md`. **Formula 7.9 → 8.0.**
+
+Pierwsza wersja poprawki **nie zadzialala i sprawdzilem to zamiast zalozyc**: usuwalem z tresci
+`/agent-signup.md` z rozszerzeniem, a w tresci jest `/agent-signup` bez niego.
+
 ## Runda 2026-08-11 (90): straznik liczb biegnie tam, gdzie liczby sie zmieniaja
 
 `npm run audit` znalazl dzis dwie prawdziwe rzeczy i obie tylko dlatego, ze **akurat go
