@@ -30,7 +30,9 @@ const expected = new Set(
     .map((pair) => pair.trim())
     .filter(Boolean),
 )
-const [beforePath, afterPath] = args.filter((arg, index) => index !== expectAt && index !== expectAt + 1)
+// Guarded, because with no --expect the index is -1 and "index !== expectAt + 1" then eats the
+// first positional argument. The first run with no prediction died on its own usage message.
+const [beforePath, afterPath] = args.filter((arg, index) => expectAt === -1 || (index !== expectAt && index !== expectAt + 1))
 
 async function read(source: string | undefined): Promise<Corpus> {
   if (!source || source.startsWith('http')) {
