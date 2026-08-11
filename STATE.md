@@ -9,24 +9,24 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 
 ## W locie w tej chwili (2026-08-11, noc)
 
-**Formuła 8.5 jest na produkcji** (Heroku v238, sprawdzone: `xata.io` dostaje nowe zdanie
-cytujące pytanie z FAQ). **Reseed 8.5 leci**, log `/tmp/reseed-8.5.log`, dwa przebiegi po 170
-domen, po nim automatycznie `npm run audit`.
+**Formuła 8.6 jest na produkcji, reseed 8.6 leci** (log `/tmp/reseed-8.6.log`, po nim
+automatycznie `npm run audit`). Stan sprzed niego leży w **`/tmp/corpus-8.5.json`**.
 
-Reseed 8.4d zamknięty i zweryfikowany: `170 ok, 0 failed`, audyt powiedział dokładnie
-`170 rows on formula 8.4, 0 contradictions` i `17 stated numbers and 3 named-vendor claims
-checked against the data, 0 adrift`. Stan sprzed 8.5 leży w **`/tmp/corpus-8.4.json`**.
+**Przewidywanie dla tego reseedu: zero zmian werdyktu.** Żaden wiersz nie niósł zdania, które
+8.6 poprawia, więc wszystko, co się ruszy, jest pogodą - i to czyni ten przebieg **trzecim
+pomiarem podłogi szumu** (dotąd: 0,64 procent z dwóch przebiegów, plus 0,47 z reseedu 8.5,
+w którym pięć zmian było zamierzonych).
 
-**Po reseedzie zrób dokładnie to:**
+Po reseedzie:
 
 ```
 npm run audit
-npm run diff-corpus /tmp/corpus-8.4.json -- --expect savvycal.com:self_serve,xata.io:self_serve,name.com:answers_plain_request,neon.com:agent_entry_point,pinecone.io:agent_entry_point
+npm run diff-corpus /tmp/corpus-8.5.json
 ```
 
-Kod wyjścia zero z drugiej komendy znaczy: **wszystkie pięć przewidzianych zmian zaszło i nic
-poza nimi**. Każdy inny wiersz jest do przeczytania, nie do odnotowania - to jedyny sposób
-odróżnienia reguły robiącej to, co zmierzyłem, od reguły robiącej to i coś jeszcze.
+Reseed 8.5 zamknięty i rozliczony: `170 rows on formula 8.5, 0 contradictions`,
+`17 stated numbers and 3 named-vendor claims checked against the data, 0 adrift`,
+a diff wobec 8.4 dał **5 z 5 przewidzianych zmian i 7 wierszy pogody** (runda 121).
 
 Powtórzenie reseedu, gdyby coś przerwało:
 `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) bash scripts/reseed.sh`.
@@ -36,7 +36,7 @@ Powtórzenie reseedu, gdyby coś przerwało:
 - Produkt nazywa się **Let Agents In** od 2026-08-10. Domena **nie jest kupiona**, adres to nadal
   `stackpick-f12d13a227ea.herokuapp.com`, a nazwa hosta zostaje świadomie do czasu zakupu.
   User-agent skanera to `LetAgentsIn/1.0`.
-- Formuła **8.5**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
+- Formuła **8.6**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
   `npm run audit` pilnuje **17 liczb i 3 twierdzeń nazywających firmy**, przy **0 sprzecznościach**,
   czyli każdą liczbę liczoną z danych, która trafia na publiczną stronę, i trzy zdania obok nich.
 - **Podłoga szumu korpusu: 0,64 procent** (15 zmian na 2338 przy dwóch reseedach bez zmiany reguły).
@@ -341,6 +341,45 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-11 (122): jeden nieudany fetch skasował żywy serwer MCP
+
+Diff 8.5 pokazał siedem wierszy poza przewidywaniem. Sześć to znane klasy pogody (odmowa
+dokumentacji, ucięta strona, rejestr npm milczy). Siódmy był prawdziwym błędem.
+
+`telnyx.com` stracił punkt ze zdaniem „nothing answered at mcp.telnyx.com or /mcp. A card is
+a claim about a server, not a server." Ich `/.well-known/mcp.json` **nazywa** `api.telnyx.com/v2/mcp`,
+a ten adres odpowiada **pełnym handshakiem** (`serverInfo.name = telnyx_api`, protokół 2025-06-18).
+Sprawdziłem to ręcznie, a potem trzy rescany z rzędu: za każdym razem „Live MCP endpoint".
+
+Mechanizm: kod dereferencji karty istnieje od dawna i nawet wymienia telnyx w komentarzu, ale
+karta jest pobierana **osobnym żądaniem**, a to jedno żądanie się nie udało. Kandydat zniknął
+z listy, a zdanie wymieniło dwa adresy, które **zgadujemy**, tak jakby to były adresy, o których
+mowa. Dostawca nie ma jak takiego zaprzeczenia odtworzyć.
+
+Dwie poprawki, formuła **8.6**: karta pytana **drugi raz**, gdy pierwszy nie wyszedł, a kiedy
+mimo to nie da się z niej odczytać adresu, werdykt jest **niemierzalny**, nie porażką. Gdy da
+się odczytać, zdanie **nazywa adres z karty**, a nie tylko nasze zgadywanki. Żaden wiersz
+w korpusie nie niósł tego zdania w chwili zmiany (telnyx zdążył wrócić), więc reseed 8.6 jest
+zarazem **trzecim pomiarem podłogi szumu**: przewidywanie brzmi „zero zmian werdyktu", a
+wszystko, co się ruszy, jest z definicji pogodą.
+
+## Runda 2026-08-11 (121): pierwszy reseed oceniony wobec spisanego przewidywania
+
+8.4 → 8.5, **2550 werdyktów, 12 ruszyło, 0,47 procent**, czyli poniżej podłogi szumu 0,64.
+**Wszystkie pięć przewidzianych zmian zaszło co do wiersza i co do kierunku:** `savvycal.com`
+i `xata.io` straciły `self_serve`, `name.com` odzyskał `answers_plain_request`, `neon.com`
+i `pinecone.io` zeszły z dwóch punktów na jeden za `agent_entry_point`.
+
+To pierwszy raz, kiedy reseed został oceniony inaczej niż jedną liczbą procentową, i od razu
+się to opłaciło: siedem wierszy poza listą wymusiło przeczytanie każdego z osobna, a jeden
+z nich okazał się błędem (runda 122). Przy samym procencie ten reseed wyglądałby na czystszy
+niż poprzednie i nikt by w niego nie zajrzał.
+
+Pozostała szóstka, dla porządku: `amplitude.com` (cennik wcześniej niemierzalny, teraz
+przeczytany), `bitmovin.com` i `medusajs.com` i `postmarkapp.com` (odmowy przy naszym własnym
+obciążeniu, bo reseed odwiedza każdą domenę dwa razy), `signoz.io` (rejestr npm nie odpowiedział),
+`here.com` (więcej przeczytanych stron dokumentacji, dwie frazy zamiast jednej).
 
 ## Runda 2026-08-11 (120): dziewiętnaście oskarżeń o martwe linki, wszystkie prawdziwe
 
