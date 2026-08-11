@@ -594,6 +594,30 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (84): trzy pozycje z wlasnej listy zamkniete
+
+**Reguła `browser-only` dowiedziona.** Wprowadzilem ja z jednego przypadku (`njal.la`), wiec
+przepuscilem **wszystkie 66 zaliczonych endpointow MCP** przez ten sam handshake i szukalem
+odmowy z CSRF albo Referer: **zero trafien**. Nie kredytujemy zadnej sciany, a `njal.la` byl
+jedynym przypadkiem w korpusie.
+
+**Piec przepisanych rad zweryfikowanych na prawdziwych vendorach**, na opublikowanej stronie, nie
+lokalnie: `baseten.co` („Your llms.txt is already there. 2 of the 12 links are gone"), `api.video`
+(„Publish /llms.txt", bo pliku nie ma), **`algolia.com` („already permits them, so this is not a
+robots.txt fix. Your edge answered ClaudeBot 403 and GPTBot 403")**, `agora.io` i `baseten.co` na
+obu galeziach `oauth_dcr`, `commercetools.com` na obu galeziach `self_serve` i `mcp_present`.
+Kazda galaz odpala sie na wlasciwym vendorze.
+
+**Trasowanie zmierzone na tekstach, ktorych nie napisalem.** Zamiast trzeciego wlasnego zestawu
+pytan wzialem **opisy wlasne 40 vendorow** (`meta description` z ich stron) i sprawdzilem, czy
+`find_providers` trafia do kategorii, pod ktora ich zlozylismy: **26 trafionych, 6 zlych, 8 odmow,
+czyli 81 procent tych, ktore w ogole trasuje.**
+
+Zastrzezenie, bez ktorego ta liczba klamie: **marketingowy opis produktu to inny gatunek niz
+pytanie dzwoniacego**, a czesc „bledow" to spory o nasza wlasna kuracje, nie o trasowanie.
+`supabase.com` jest u nas pod przechowywaniem plikow, a trasuje sie do baz danych, co jest
+rozsadniejsze niz nasza polka. **Zestawu nie dostrajam**, bo dostrojony przestalby byc zewnetrzny.
+
 ## Runda 2026-08-11 (83): spojnosc eksportow i nasz wlasny opis API
 
 `corpus.csv` kontra `corpus.json`: **2490 wierszy w formacie dlugim (166 x 15) wobec 166 obiektow,
