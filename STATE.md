@@ -22,10 +22,12 @@ Powtórzenie reseedu, gdyby coś przerwało:
 `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) bash scripts/reseed.sh`.
 Sprawdzenie: `npm run audit` ma powiedzieć `170 rows on formula <wersja>, 0 contradictions`
 i `17 stated numbers and 3 named-vendor claims checked against the data, 0 adrift`.
-Oczekiwana różnica 8.4 → 8.5 jest **mała i policzona z góry: trzy wiersze**. `savvycal.com`
-i `xata.io` tracą punkt za `self_serve` (runda 115), `name.com` zyskuje punkt za
-`answers_plain_request` (runda 118). Wszystko poza tym to pogoda przy podłodze 0,64 procent,
-a każde odstępstwo od tej trójki jest sygnałem, że któraś reguła robi więcej, niż zmierzyłem.
+Oczekiwana różnica 8.4 → 8.5 jest **policzona z góry, wiersz po wierszu, pięć zmian**:
+`savvycal.com` i `xata.io` tracą punkt za `self_serve` (runda 115), `name.com` zyskuje punkt za
+`answers_plain_request` (runda 118), `neon.com` i `pinecone.io` schodzą z dwóch punktów na jeden
+za `agent_entry_point` (runda 119). Wszystko poza tą piątką to pogoda przy podłodze 0,64 procent,
+a **każdy wiersz spoza niej jest sygnałem, że któraś reguła robi więcej, niż zmierzyłem** - i to
+jest właściwy sposób czytania tego reseedu.
 
 ## Stan na teraz, w dziesięciu liniach
 
@@ -337,6 +339,26 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-11 (119): dwa pliki dostają najwyższą notę za słowo, które znaczy co innego
+
+`agent_entry_point` to jedyny check wart **dwa punkty**, więc różnica między „plik jest"
+a „plik jest procedurą" waży u nas najwięcej. Ściągnąłem **wszystkie piętnaście** plików, które
+coś dostały, i wypisałem, co dokładnie zapaliło regułę.
+
+Dziesięć z dwunastu plików na dwa punkty nazywa **od pięciu do dziesięciu różnych rzeczy**, których
+agent potrzebuje (klucz, base URL, endpoint rejestracji). Dwa stoją na jednym słowie i oba znaczą
+nim co innego: `neon.com/skill.md` łapie `endpoint` trzy razy i **za każdym razem jest to
+„each branch has its own compute endpoint"**, czyli host Postgresa, a nie miejsce, do którego się
+wysyła żądanie. Jedyne trafienie `pinecone.io/agents.md` to `curl -fsSL .../install.sh | sh`
+w pliku, który poza tym jest **spisem odnośników**.
+
+Reguła wymaga teraz **dwóch różnych sygnałów**. Oba pliki zachowują punkt za to, że istnieją,
+żaden nie twierdzi już, że opisuje procedurę. Trzy pliki z jednym punktem (`inngest.com/ai.txt`,
+`resend.com/agent.md`, `shopify.com/skill.md`) mają **zero trafień**, więc reguła ich nie dotyka,
+a przy okazji potwierdziła się ich klasyfikacja: `shopify.com/skill.md` pisze wprost
+„This page intentionally contains no operational guidance". Wszystkie piętnaście plików siedzi
+w `scripts/rules.mts`.
 
 ## Runda 2026-08-11 (118): sami wywołaliśmy ścianę i policzyliśmy ją vendorowi
 
