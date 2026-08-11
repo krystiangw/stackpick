@@ -34,6 +34,14 @@ export type CorpusRow = {
    * matching a sentence instead, and on 2026-08-11 the sentence and the computation disagreed.
    */
   refusesAgentsAtSignup: boolean
+  /**
+   * The registrable domain this row was actually measured on, when the home page landed on
+   * somebody else's. sendgrid.com answers robots.txt with a redirect to twilio.com/robots.txt,
+   * so its row credits Twilio's file to SendGrid while twilio.com sits in the corpus scoring the
+   * same file. The scorecard has said so in a banner for weeks; the dataset did not, and the
+   * dataset is what anybody computing a market number reads.
+   */
+  measuredOn: string | null
   scorecardUrl: string
   checks: { id: string; verdict: CorpusVerdict; points: number; max: number; detail: string }[]
 }
@@ -74,6 +82,7 @@ export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus 
         scannedAt: report.scannedAt,
         rateLimited: Boolean(report.findings?.rateLimitedUs),
         refusesAgentsAtSignup: report.findings ? refusesAgentsAtSignup(report.findings) : false,
+        measuredOn: report.findings?.resolvedElsewhere?.finalDomain ?? null,
         unattendedGrant: report.findings?.funnel?.oauth?.grantTypes
           ? Boolean(report.findings.funnel.oauth.unattendedGrant)
           : null,
@@ -139,6 +148,7 @@ export function corpusToCsv(corpus: Corpus): string {
     'check_max',
     'detail',
     'rate_limited',
+    'measured_on',
   ]
   const lines = [header.join(',')]
   for (const row of corpus.rows) {
@@ -159,6 +169,7 @@ export function corpusToCsv(corpus: Corpus): string {
           check.max,
           check.detail,
           row.rateLimited ? 'true' : 'false',
+          row.measuredOn,
         ]
           .map(escape)
           .join(','),
