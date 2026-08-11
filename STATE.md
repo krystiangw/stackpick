@@ -7,13 +7,23 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
-## W locie w tej chwili (2026-08-11, wieczór)
+## W locie w tej chwili (2026-08-11, noc)
 
-**Reseed publikujący cytaty free-tier leci**, log `/tmp/reseed-8.4d.log`, dwa przebiegi po 170
-domen, po nim automatycznie `npm run audit`. Kod jest wdrożony i drzewo czyste, więc reseed można
-w razie czego powtórzyć: `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) bash scripts/reseed.sh`.
-Sprawdzenie po nim: `npm run audit` ma powiedzieć `170 rows on formula 8.4, 0 contradictions`
+**Kolejność jest tu ważna, bo dwie rzeczy nie mogą się minąć.**
+
+1. **Reseed 8.4d leci** (log `/tmp/reseed-8.4d.log`, dwa przebiegi po 170 domen, po nim
+   automatycznie `npm run audit`). Publikuje cytaty free-tier z rundy 114. **Do jego końca nie
+   wolno deployować**, bo produkcja liczyłaby już wg 8.5 i korpus wyszedłby mieszany.
+2. **Formuła 8.5 jest zacommitowana lokalnie i niewdrożona** (rundy 115-117: pytanie w FAQ nie
+   jest darmowym planem, zdania o zgadniętym pakiecie npm). Po zamknięciu 8.4d: `git push`,
+   `git push heroku main`, potem **własny reseed 8.5** i dopiero na nim audyt.
+
+Powtórzenie reseedu, gdyby coś przerwało:
+`STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) bash scripts/reseed.sh`.
+Sprawdzenie: `npm run audit` ma powiedzieć `170 rows on formula <wersja>, 0 contradictions`
 i `17 stated numbers and 3 named-vendor claims checked against the data, 0 adrift`.
+Oczekiwana różnica 8.4 → 8.5 jest **mała i policzona z góry: dwa wiersze** (`savvycal.com`,
+`xata.io`) tracą punkt za `self_serve`, reszta to pogoda przy podłodze 0,64 procent.
 
 ## Stan na teraz, w dziesięciu liniach
 
@@ -258,6 +268,10 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   ekstrakcja nazw z instrukcji importu dołożyła dwie fałszywe atrybucje i nie naprawiła żadnej.
   Dowód nadal musi być **niezależny od mierzonej cechy** (nie „ma typy"), ale ani ranking, ani
   ekstrakcja nie są dźwignią. Trzecia próba bez nowego rodzaju dowodu jest stratą czasu.
+  **Zmierzone 2026-08-11 (runda 117): wszystkie dziesięć porażek tego checku pochodzi
+  z wyszukiwarki rejestru, ani jedna z pakietu podlinkowanego na stronach, które czytamy** -
+  a w snapshotach tych stron nazwy właściwego pakietu **nie ma wcale**, więc brakuje przesłanki,
+  a nie parsera. Werdykt zostaje, zdanie od 8.5 mówi, że nazwę zgadliśmy.
 - ~~**Bramka mailowa na wyniku skanu.**~~ **zrobione 2026-08-09.** Audyt cenowy twierdził, że
   nie zbieramy maila. Zbieraliśmy, tylko formularz był **ostatnią sekcją strony**, po dziesięciu
   sekcjach i całej tabeli dowodów, czyli w miejscu, w którym intencja, której potrzebuje, już
@@ -321,6 +335,53 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-11 (117): każda porażka „bez typów" mówi o pakiecie, który sam zgadłem
+
+`typed_package` psuje się nie na wykrywaniu typów, tylko na tym, **który pakiet nazywamy vendorowym**.
+Dziesięć wierszy ma werdykt „ships without bundled types" i **wszystkie dziesięć pochodzi
+z wyszukiwarki rejestru**, ani jeden z pakietu podlinkowanego na stronie czy w dokumentacji
+(sprawdzone `pnpm attribution snapshot` + `replay` na tych dziesięciu domenach).
+
+Na kilku zgadliśmy zły artefakt: `directus.com` jest oceniany po pakiecie `directus`, czyli po
+serwerze, a SDK, które się instaluje, to otypowany `@directus/sdk`. `xata.io` po `@xata.io/api`
+przy istniejącym otypowanym `@xata.io/client`. `namecheap.com` po `node-vault-client`, czyli po
+kliencie HashiCorp Vault. Sprawdziłem w snapshotach: nazwy właściwego pakietu **nie ma nigdzie na
+stronach, które przeczytaliśmy**, więc to nie jest błąd parsowania, tylko brak przesłanki.
+
+Werdykt zostawiam, bo zgodność wydawcy to prawdziwa przesłanka, a po samej nazwie nie odróżnię
+złego strzału od pakietu naprawdę bez typów. Zmieniam zdanie: klauzula „matched from the registry
+by who publishes it rather than by a link on your site" stała dotąd **tylko przy zaliczeniu**,
+a potrzebna jest bardziej przy porażce. Teraz jest przy wszystkich trzech.
+
+## Runda 2026-08-11 (116): reguła RFC, która nic nie zmienia, nie wchodzi do kodu
+
+`no_crawl_delay` bierze **maksimum** z grupy `*` i wszystkich nazwanych grup botów AI. RFC 9309
+mówi co innego: bot słucha grupy, która go nazywa, a wildcard wtedy go nie dotyczy. Napisałem
+wersję rozstrzygającą per agent i zmierzyłem: **141 plików robots.txt, w tym wszystkie osiem
+z korpusu, które w ogóle mają `Crawl-delay` - zero rozjazdów**.
+
+Własny test to obalił szybciej niż korpus. Dwie wersje mogą się rozjechać **tylko** wtedy, gdy
+wszystkie trzynaście botów ma własną grupę bez opóźnienia, bo inaczej reszta i tak dziedziczy
+wildcard i maksimum wychodzi to samo. Wycofane, prostsza wersja zostaje. W `scripts/rules.mts`
+zostały trzy przypadki przybijające faktyczne zachowanie, w tym ten, który mnie poprawił.
+
+## Runda 2026-08-11 (115): pytanie, które strona zadaje, nie jest planem, który oferuje
+
+Kandydat z rundy 114 zmierzony i wdrożony jako **formuła 8.5**. Na 120 zaliczonych wierszy
+przesuwają się **dwa**: `savvycal.com` („Do you offer a free trial?") i `xata.io` („Is there
+a free tier?"). U obu akordeon FAQ jest **zwinięty**, więc serwowany HTML niesie samo pytanie
+i **odpowiedzi nie ma w nim wcale**. Punktowaliśmy to, że strona porusza temat.
+
+Reguła nie czyta odpowiedzi i nie musi: strona, która odpowiada twierdząco, powtarza te słowa
+poza pytaniem, a to drugie trafienie już nie jest pytaniem. Koszt znany i zapisany: odpowiedź
+brzmiąca samo „Yes." punktu nie uratuje.
+
+**Pierwsza wersja reguły była zła i pokazał to pomiar, nie przegląd.** Wymagała tylko znaku
+zapytania po trafieniu, więc odwracała cztery wiersze, a dwa z nich to tabele cennika bez żadnej
+interpunkcji: `pusher.com` („Sandbox Free") i cztery komórki `$0` na `workos.com` łapały pytanie
+oddalone o pół ekranu. Teraz reguła wymaga słowa pytającego **w oknie 60 znaków przed** trafieniem.
+Oba przypadki siedzą w `scripts/rules.mts` jako przypadki, które nie mają się zapalić.
 
 ## Runda 2026-08-11 (114): 120 wierszy mówiło „są sygnały" i nie pokazywało żadnego
 
