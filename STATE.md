@@ -579,6 +579,21 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (80): weryfikacja 7.9, liczba poprawiona na zywej stronie
+
+166 wierszy, formula 7.9, reseed bez bledow. **`unattendedGrant`: 20 → 18**, a twierdzenie stracily
+dokladnie `vercel.com` i `weglot.com`, czyli te dwa, ktore znalazl atak. Nic nie zyskalo.
+`/findings` mowi teraz „Of the 68 vendors publishing a registration endpoint, only 18".
+
+Ruch werdyktow **5 na 2490, czyli 0,20 procent**, i `oauth_dcr` nie ma wsrod nich ani jednego:
+punkt sie nie ruszyl, zmienilo sie tylko zdanie, dokladnie tak, jak bylo zaprojektowane.
+
+**Podsumowanie nocy w liczbach.** Formula 7.4 → 7.9, piec bumpow, kazdy zweryfikowany reseedem i
+porownaniem calego korpusu. Trzy fałszywe pozytywy znalezione **atakiem na wlasne swieze reguly**
+w ciagu godzin od ich wdrozenia: `njal.la` (serwer MCP odmawiajacy bez naglowka przegladarki),
+cztery wiersze z boilerplate WordPressa w `robots.txt`, i dwa serwery autoryzacji zlane w jedno
+twierdzenie. Wszystkie trzy mialy ten sam ksztalt: **zdanie twierdzilo wiecej, niz dowodzil pomiar.**
+
 ## Runda 2026-08-11 (79): atak na opublikowana liczbe 20 z 68, formula 7.9
 
 Liczba „20 z 68 vendorow oglasza grant, ktory agent dokonczy" wisiala na `/findings` od wieczora
