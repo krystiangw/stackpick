@@ -9,7 +9,8 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 
 ## W locie w tej chwili (2026-08-12, noc)
 
-**Nic nie leci.** Formuła **8.6** jest na produkcji, korpus przeskanowany w całości na 8.6,
+**Reseed 8.7 leci** (log `/tmp/reseed-8.7.log`), stan sprzed niego w `/tmp/corpus-8.6.json`,
+przewidywanie: `mapbox.com:programmatic_provisioning`. Poprzedni stan: formuła 8.6 na produkcji,
 `npm run audit` mówi `170 rows on formula 8.6, 0 contradictions` oraz `17 stated numbers and
 3 named-vendor claims checked against the data, 0 adrift`. Drzewo czyste, wszystko wypchnięte.
 
@@ -28,7 +29,7 @@ którego sam procent by nie pokazał.
 - Produkt nazywa się **Let Agents In** od 2026-08-10. Domena **nie jest kupiona**, adres to nadal
   `stackpick-f12d13a227ea.herokuapp.com`, a nazwa hosta zostaje świadomie do czasu zakupu.
   User-agent skanera to `LetAgentsIn/1.0`.
-- Formuła **8.6**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
+- Formuła **8.7**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
   `npm run audit` pilnuje **17 liczb i 3 twierdzeń nazywających firmy**, przy **0 sprzecznościach**,
   czyli każdą liczbę liczoną z danych, która trafia na publiczną stronę, i trzy zdania obok nich.
 - **Podłoga szumu korpusu: 0,64 procent** (15 zmian na 2338 przy dwóch reseedach bez zmiany reguły).
@@ -333,6 +334,26 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (124): „odmówili nam" o stronie, której sami źle wybraliśmy
+
+Kandydat z rundy 123 zmierzony i wyszło co innego, niż zakładałem. Check provisioningu wybiera
+trzy strony dokumentacji z sitemapy albo z indeksu i o każdej, która nie odpowiedziała, pisze
+vendorowi **„N pages we selected refused our request"**. Skaner liczył sztuki i **nie pamiętał
+statusu**, więc nie dało się sprawdzić, co to były za odmowy.
+
+Dopisałem status do wyniku skanu i zmierzyłem: **żadnego 429 z tej maszyny**, za to jedyna
+nieprzeczytana strona `mapbox.com` odpowiada **404**. Nikt nam niczego nie odmówił, tylko nasz
+własny link jest nieaktualny, a vendor dostawał za to „niemierzalne" na najcięższym checku.
+
+Formuła **8.7**: 404 przestaje być powodem do niemierzalności, a każdy inny status **jest nazwany
+w zdaniu**, żeby dało się odróżnić regułę na brzegu od naszego zwietrzałego linku. Przy 429 zdanie
+mówi wprost, że to nasze obciążenie, co jest opublikowaną regułą tego projektu wszędzie indziej
+i akurat tutaj nie było stosowane. Wiersze zeskanowane, zanim skaner zapamiętywał statusy, czyta
+się po staremu, bo dowodu na nowe czytanie wtedy nie mieliśmy.
+
+Sprawdzone na produkcji przed reseedem: `mapbox.com` przeszedł z „niemierzalne" na
+`None of the 7 provisioning phrases appears in the 4 documents we read`, czyli na werdykt.
 
 ## Runda 2026-08-12 (123): drugi pomiar podłogi szumu i to, z czego ten szum jest zrobiony
 
