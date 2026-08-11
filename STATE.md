@@ -314,6 +314,32 @@ których agent nie ma prawa rozstrzygnąć sam.**
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
 
+## Runda 2026-08-11 (111): dwa checki przestały mówić o stronie, której nie nazywają
+
+Nogi koniunkcji z `/findings` opierają się na jednej stronie każda, a `signup_reachable`
+i `signup_no_captcha` **nie mówiły której**. Reszta skanera ma tę zasadę zapisaną w kodzie od
+dawna („every sentence here says which page it read") i te dwa checki po prostu jej nie miały,
+mimo że są najbardziej narażone: **stronę rejestracji zgadujemy**, idąc za linkami i próbując
+ścieżek, i projekt raz już opublikował 404 z cudzego hosta jako znalezisko o `anvil.co`.
+
+Teraz obie sentencje nazywają adres, **144 wiersze ze 170** go niosą (reszta to nieoznaczalne
+i nieistotne), a reguła audytu o checkach popartych jednym dokumentem obejmuje `signup_reachable`,
+więc pass, który przestanie nazywać stronę, wywali guard.
+
+**Dzięki temu dało się zaatakować ten check niezależnie i przeszedł.** Napisałem drugi czytnik
+formularza **z opisu checku, nie z jego kodu**, i puściłem go na wszystkie 127 wierszy z werdyktem
+pass albo fail: **trzy rozjazdy**.
+
+- `api.video` i `payloadcms.com`: mój prostszy czytnik mówi „jest formularz", nasz mówi „nie ma".
+  **Nasz ma rację i wie dlaczego**: u `api.video` jedyny input jest `disabled`, a checkbox zgody
+  stoi poza formularzem, u `payloadcms.com` to newsletter w stopce. Oba przypadki są opisane
+  w komentarzu przy regule, bo oba już raz nas kosztowały.
+- `weglot.com`: my mówimy pass, ja widzę 403. Sprawdzone ręcznie: `dashboard.weglot.com/register`
+  odpowiada **403 i przeglądarce, i agentowi**, czyli teraz jest nieoznaczalne, a pass pochodzi
+  z momentu, w którym odpowiadało. To zmienność po ich stronie, nie błąd reguły.
+
+Zgodność na 124 wierszach warta jest mniej niż te trzy rozjazdy i po to się je czyta.
+
 ## Runda 2026-08-11 (110): check przestał kredytować przyciski i zabrał 25 punktów
 
 `programmatic_provisioning` liczył frazę, nie procedurę, więc `strapi.io` dostawał punkt za
