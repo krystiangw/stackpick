@@ -598,6 +598,20 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (97): przeniesienie na domene przygotowane, zeby zakup byl jedyna praca
+
+Adres bazowy byl **zaszyty w czternastu plikach, 28 razy**, i w dwoch odmianach, ktorych nikt nie
+odrozniał: metadane i sitemapa spadaja na `localhost:3000` (i **slusznie**, bo w developmencie to
+jest prawda), a user-agent i strona dokumentacji na produkcje. Ta druga rodzina siedzi teraz w
+`src/lib/site.ts` jako jedno `SITE_URL`, ktore czytaja user-agent, `/docs` i oba skrypty korpusowe.
+
+Procedura przeniesienia dopisana do `docs/naming-audit.md`, szesc krokow, w tym dwa nieoczywiste:
+- **Nie wygaszac hosta herokuapp.** Kazdy dotad opublikowany link do scorecardu go nazywa, lacznie
+  z czterema audytami. Heroku serwuje go dalej za darmo, wiec stare linki zyja.
+- **Reseed po przelaczeniu**, bo **169 zdan detail cytuje user-agenta**, ktory niesie adres.
+- Pliki w `public/` (llms.txt, robots.txt, agents.md, agent-signup.md, oba `.well-known`) sa
+  statyczne i **nie przeczytaja zmiennej srodowiskowej**, wiec maja wlasny punkt na liscie.
+
 ## Runda 2026-08-11 (96): piec decyzji zaudytowanych pomiarem i wykonanych
 
 **1. Retencja: NIE kasujemy, i to jest odwrocenie mojej wlasnej rekomendacji.** 222,8 MB danych
