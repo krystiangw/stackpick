@@ -234,6 +234,16 @@ export default async function IndustryReportPage() {
             building block is a real purchase decision. A scan anyone runs on this site gets its own permanent
             link and is compared against this corpus, but never joins it.
           </li>
+          {/* The per-category n is small enough that one vendor moves a category by more than the
+              corpus moves on its own between reseeds. Printed rather than fixed by quietly adding
+              vendors, because which vendors belong in the corpus is a scope decision. */}
+          <li>
+            Not thick enough for category rankings to be read as league tables. Most categories hold five or
+            six vendors, so one of them moving is worth several points of the category share, which is more
+            than the 0.64 percent the whole corpus moves between two identical rescans. Compare a vendor with
+            its own past scans and with the named peers on its scorecard, not with a category average built
+            on six rows.
+          </li>
           <li>
             Not equally measurable across stages. Coverage differs check by check, the n on each stage row is
             the number of domains behind it, and the table above prints what we could not evaluate rather than
