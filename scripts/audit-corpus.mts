@@ -189,7 +189,9 @@ const stated: { page: string; pattern: RegExp; expected: number; what: string }[
   },
   {
     page: '/findings',
-    pattern: /(\d+) more serve a form that renders nothing without JavaScript/,
+    // Matched "N more serve a form..." until the sentence was rewritten on 2026-08-11, and then
+    // silently checked nothing. Anchored on the words least likely to move.
+    pattern: /(\d+) serve a form that renders\s+nothing without JavaScript/,
     expected: needsJavaScript,
     what: 'signup forms needing JavaScript',
   },

@@ -1,31 +1,35 @@
-# StackPick: stan na 2026-08-09 (rano)
+# Let Agents In: stan na 2026-08-11 (rano)
 
 Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
 **Dwie sekcje na dole tego bloku, "Co zostało z audytów" i "Następne kroki merytoryczne", są
 kontraktem dla watchdoga. Aktualizuj je przy każdej zamkniętej pozycji, inaczej watchdog czyta
 listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, nie listą zadań.
+**Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
+czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
 ## Stan na teraz, w dziesięciu liniach
 
-- Formuła **7.4**, korpus **155 domen w 24 kategoriach**, `npm run audit` pilnuje **14 liczb**.
-  `storyblok.com` nie odpowiada dyno przy siedmiu reseedach z rzędu, a z tej maszyny odpowiada 200
-  przez Netlify: to fakt o naszym ruchu, nie o dostawcy, i dlatego wypadł z korpusu.
-- Opublikowane liczby: **5 ze 155** przechodzi wszystkie trzy bariery, **7 ze 129** plików llms.txt
-  wskazuje na strony, których nie ma, **0 ze 155** serwuje agentom mniej tekstu niż przeglądarce.
-- `npm run audit`: **0 sprzeczności w wierszach, 10 liczb ze stron zgodnych z danymi**.
-- Siedem przebiegów adwersaryjnych: **16,7 → 2,2 → 3,9 → 2,0 → 0,94 → 7,9 → 1,4 procent błędu**
-  (4 na 290). Szósty był skokiem w górę, bo zaatakował trzy zmiany napisane w jedną noc i
-  wszystkie trzy się posypały; siódmy potwierdził naprawy i znalazł cztery nowe. Wszystkie
-  zamknięte w rundzie 55.
-- Znalezisko rynkowe: **41 z 54 vendorów z żywym MCP publikuje RFC 7591**, poza tą grupą 23 ze 102.
-  DCR przyszło z wymogu specyfikacji MCP, nie z decyzji o wpuszczeniu agentów. **36 z 54 nadal
-  nie dokumentuje żadnej drogi do klucza.**
-- Odmowy rejestracji wymierzone w agenty: **0 udowodnionych na 156**. Bariera, którą umiemy
-  udowodnić, to **72 ze 156** formularzy rejestracji nieobecnych w serwowanym HTML-u.
-- Materiały wyjściowe (`outreach/`) przebudowane na 6.2, wszystko dalej **jako szkice**.
+- Produkt nazywa się **Let Agents In** od 2026-08-10. Domena **nie jest kupiona**, adres to nadal
+  `stackpick-f12d13a227ea.herokuapp.com`, a nazwa hosta zostaje świadomie do czasu zakupu.
+  User-agent skanera to `LetAgentsIn/1.0`.
+- Formuła **7.9**, korpus **166 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
+  `npm run audit` pilnuje **14 liczb** i **0 sprzeczności**.
+- **Podłoga szumu korpusu: 0,64 procent** (15 zmian na 2338 przy dwóch reseedach bez zmiany reguły).
+  Opublikowana na `/methodology`. Każda różnica mniejsza to pogoda, nie zmiana.
+- Dziesięć przebiegów adwersaryjnych: **16,7 → 2,2 → 3,9 → 2,0 → 0,94 → 7,9 → 1,4 → 1,29 → 0,77 →
+  0,39 procent**. Uwaga: ostatni jest **poniżej podłogi szumu**, więc pojedyncze znalezisko nie
+  jest dowodem.
+- Opublikowane liczby: **6 ze 166** przechodzi wszystkie trzy bariery, **18 z 68** publikujących
+  endpoint rejestracji ma grant, który agent dokończy bez człowieka, **0 ze 166** serwuje agentom
+  mniej tekstu niż przeglądarce.
+- **66 żywych serwerów MCP, 52 z nich publikuje RFC 7591.** DCR przyszło z wymogu specyfikacji
+  MCP, nie z decyzji o wpuszczeniu agentów, a dwie trzecie tych drzwi i tak wymaga człowieka.
+- Odmowy rejestracji wymierzone w agenty: **0 udowodnionych na 166**. Bariera, którą umiemy
+  udowodnić, to **86** formularzy rejestracji, które bez JavaScriptu nie renderują niczego.
 - Skanujemy sami siebie: **12 z 13 mierzalnych**, oblewamy `oauth_dcr` i piszemy o tym wprost.
-- Budżet skanu **25 s** (Heroku zabija po 30). Reseed **raz na zestaw zmian**, nie po każdej:
-  nasz własny ruch zaczął produkować 429 u `postmark.com` i odmowy u `launchdarkly.com`.
+  **Nie zmieniamy reguły, która poprawiłaby nasz własny wynik.**
+- Budżet skanu **27 s** (router Heroku zabija ciche żądanie po 30). Reseed **raz na zestaw zmian**:
+  nasz własny ruch produkował 429 u `postmark.com` i odmowy u `launchdarkly.com`.
 
 ## Gdzie to żyje
 
