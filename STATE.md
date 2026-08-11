@@ -598,6 +598,42 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (96): piec decyzji zaudytowanych pomiarem i wykonanych
+
+**1. Retencja: NIE kasujemy, i to jest odwrocenie mojej wlasnej rekomendacji.** 222,8 MB danych
+logicznych to po kompresji **74,7 MB storage'u**, indeksy 1,7 MB. Awaria byla problemem zapytania
+(`$group` bez spilla), ktory juz naprawilem indeksowanym odczytem na domene, a nie problemem
+miejsca. Kasowanie 12 tysiecy dokumentow byloby operacja nieodwracalna dla problemu, ktorego juz
+nie ma. **Prog do rewizji: storage powyzej 300 MB**, czyli okolo 700 reseedow stad.
+
+**2. Kuracja, rozstrzygnieta wlasnymi slowami vendorow.**
+- `vercel.com` **usuniety**: tytul „Agentic Infrastructure", opis „The autonomous stack for every
+  app and agent", slowo storage nie pada ani razu. Nie mamy kategorii hostingu, a wymyslanie jej
+  dla jednego vendora jest gorsza odpowiedzia niz przyznanie, ze hostingu nie mierzymy.
+- `supabase.com` **przeniesiony do baz danych**: tytul „The Postgres Development Platform", a
+  storage jest jednym z siedmiu produktow w opisie.
+- `sendgrid.com` i `twilio.com` **oba zostaja**, bo teza o podwojnym liczeniu **upadla na pomiarze**:
+  12 z 15 werdyktow zgodnych, ale tylko **6 identycznych co do zdania**, a trzy checki roznia sie
+  wprost (`robots_paths_resolve`, `agent_entry_point`, `oauth_dcr`). To nie jest ten sam pomiar.
+
+Korpus: **170 wierszy**, 0 sprzecznosci, 17 liczb bez rozjazdow.
+
+**3. Analityka: zbudowana, nieopublikowana.** Liczona **po stronie serwera w komponentach stron**,
+bo middleware chodzi w runtime Edge bez dostepu do bazy, a beacon po stronie klienta wymaga
+JavaScriptu i **nie policzylby agentow**, czyli akurat tych, o ktorych ten produkt jest. Zero
+ciasteczek, zero identyfikatorow, zero trzeciej strony. Rozbite na **przegladarke i klienta,
+ktorego ktos napisal**, czyli po linii, po ktorej dzieli sie caly nasz argument. Widoczne w
+konsoli `/app`, **nieopublikowane na stronie**: nasze wyniki i wskazniki bledu sa jawne, bo
+czytelnik moze je sprawdzic w korpusie, a licznik odwiedzin to fakt o nas, ktorego nikt nie
+zweryfikuje i ktory nikomu niczego nie rozstrzyga.
+
+**4. Monitoring: `/api/health`.** Czyta **jeden raport, nie korpus**, bo zapytanie o korpus jest
+tym, ktore padlo, wiec health zbudowany na nim bylby awaria, ktora ma wykrywac. Odpowiada 503 z
+powodem, gdy baza milczy. Zewnetrzny poller (UptimeRobot albo podobny) zostaje po stronie
+Krystiana, bo wymaga jego konta.
+
+**5. Domena:** jedyna pozycja, ktorej nie da sie wykonac bez niego, bo wymaga karty.
+
 ## Runda 2026-08-11 (95): szukalem sposobu, zeby nie pytac Krystiana o retencje, i nie ma takiego
 
 Rozmiar dokumentu rozlozony na czesci: **11,3 kB, z czego scorecard 6,9 i findings 4,2**.
