@@ -7,6 +7,14 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
+## W locie w tej chwili (2026-08-11, wieczór)
+
+**Reseed publikujący cytaty free-tier leci**, log `/tmp/reseed-8.4d.log`, dwa przebiegi po 170
+domen, po nim automatycznie `npm run audit`. Kod jest wdrożony i drzewo czyste, więc reseed można
+w razie czego powtórzyć: `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) bash scripts/reseed.sh`.
+Sprawdzenie po nim: `npm run audit` ma powiedzieć `170 rows on formula 8.4, 0 contradictions`
+i `17 stated numbers and 3 named-vendor claims checked against the data, 0 adrift`.
+
 ## Stan na teraz, w dziesięciu liniach
 
 - Produkt nazywa się **Let Agents In** od 2026-08-10. Domena **nie jest kupiona**, adres to nadal
@@ -313,6 +321,26 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-11 (114): 120 wierszy mówiło „są sygnały" i nie pokazywało żadnego
+
+`self_serve` to ostatni nieatakowany check z wagą. Jego zdanie o przejściu, **najczęstsze zdanie
+w całym korpusie, 120 wierszy**, brzmiało „Free tier or no-card signals at *URL*" i nie nazywało
+ani słów, ani reguły. Twierdzenie, którego vendor nie ma jak sprawdzić.
+
+Teraz cytuje to, co było na stronie: `resend.com` → `"free trial", "$0"`, `algolia.com` →
+`"try for free", "Free to start, then pay as you go"`, `qdrant.tech` → `"Free Tier", "Free forever"`.
+
+**Zmiana zarobiła na siebie natychmiast.** Sprawdziłem cytaty ręcznie: `$0` u Resenda pochodzi
+z prawdziwego wiersza darmowego planu („Free Recommended $0 / mo 3,000 emails"), ale drugi cytat,
+`free trial`, jest u nich **wyłącznie jako pytanie w FAQ**: „Is there a free trial available?".
+Werdykt broni się na `$0`, ale słaba połowa dowodu jest teraz widoczna zamiast schowanej za
+podsumowaniem.
+
+**Następny kandydat, celowo nie wdrożony razem z tym** (jedna zmiana reguły na reseed): fraza
+o darmowym planie stojąca w zdaniu pytającym nie jest twierdzeniem. Do sprawdzenia na całym
+korpusie, bo „Is there a free trial?" i „Do you have a free tier?" to częsty nagłówek FAQ i reguła
+może dotknąć kilkunastu wierszy.
 
 ## Runda 2026-08-11 (113): dwóch vendorów bez CAPTCHY ma za to obronę przed botami
 
