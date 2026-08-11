@@ -89,7 +89,7 @@ console.log(`\n${corpus.rows.length} rows on formula ${corpus.formulaVersion}, $
  */
 const origin = new URL(url).origin
 const pageText = async (path: string) =>
-  (await (await fetch(`${origin}${path}`)).text())
+  (await (await fetch(`${origin}${path}`, { headers: { 'user-agent': 'letagentsin-audit/1.0' } })).text())
     .replace(/<script[\s\S]*?<\/script>/g, '')
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
