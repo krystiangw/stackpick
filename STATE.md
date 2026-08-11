@@ -341,6 +341,27 @@ których agent nie ma prawa rozstrzygnąć sam.**
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
 
+## Runda 2026-08-12 (128): martwe linki w llms.txt to naprawdę dokumenty, nie załączniki
+
+Kandydat z rundy 120 zmierzony przez **odtworzenie próbkowania link po linku**, a nie przez
+czytanie `firstDead` z korpusu. Wynik: z dwudziestu wierszy karanych za martwe linki regułę
+pomijającą załączniki odwróciłby **jeden** (`pdfmonkey.io`, dwa martwe `.webp`). Reszta traci
+punkt na **prawdziwych dokumentach**: wpisy blogowe `calendly.com` i `nylas.com`, strony
+dokumentacji `flagsmith.com`, `tigrisdata.com` i `redis.io`, pliki README na GitHubie
+`oramasearch.com`, a `tolgee.io` linkuje wprost `tolgee.io/404`.
+
+Jeden wiersz to mniej niż podłoga szumu (0,64 procent to ~16 werdyktów), więc **reguła nie
+wchodzi**. Obawa była teoretyczna, dane jej nie potwierdzają.
+
+**Znalezisko uboczne, ważniejsze od samego kandydata: sześciu z dwudziestu wierszy nie umiałem
+odtworzyć** (`agora.io`, `baseten.co`, `cloudflare.com`, `dnsimple.com`, `replicate.com`,
+`together.ai`) - u nich moja próbka nie znalazła żadnego martwego linku, a u `replicate.com`
+złapała tylko jeden link w ogóle. Powód jest po mojej stronie: skan czyta pliki pod adresami,
+które **sam odkrył** (często na subdomenie dokumentacji), a ja zgadywałem `llms.txt` obok apexa
+i `llms-full.txt` przez podmianę nazwy. To znaczy, że **werdykt tego checku nie jest odtwarzalny
+z samego korpusu**: zdanie nazywa pierwszy martwy link, ale nie nazywa plików, z których wzięta
+jest próbka. To jest realna luka do zamknięcia i tańsza niż jakakolwiek nowa reguła.
+
 ## Runda 2026-08-12 (127): dwie próby naprawy trasowania, obie zmierzone i obie odrzucone
 
 **Próba pierwsza: inny próg.** Cztery reguły decyzyjne na tych samych punktach, oba zestawy naraz.

@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '8.7'
+export const FORMULA_VERSION = '8.8'
 
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on
@@ -126,7 +126,11 @@ export const CHECKS: Check[] = [
         }
         // deepl.com and mixpanel.com publish theirs only on a documentation subdomain, so
         // "llms.txt present" sent a vendor to an apex that 404s and read as invented.
-        const at = f.machine.llmsUrls?.[0] ? ` at ${f.machine.llmsUrls[0]}` : ''
+        // Every file the sample was taken from, not the first of them. Naming one address for two
+        // files makes the verdict unreproducible, which is not theoretical: rebuilding this check
+        // from the corpus on 2026-08-12 failed on six of twenty rows, because the sample runs over
+        // files the scan discovered at addresses the sentence never printed.
+        const at = f.machine.llmsUrls?.length ? ` at ${f.machine.llmsUrls.join(' and ')}` : ''
         const links = f.machine.llmsLinks
         // The sample runs over every llms file we read, concatenated, so a row that names only
         // llms.txt describes a measurement that did not happen. pdfmonkey.io proved it: the dead
