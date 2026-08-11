@@ -314,6 +314,33 @@ których agent nie ma prawa rozstrzygnąć sam.**
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
 
+## Runda 2026-08-11 (112): reguła, która umiała powiedzieć tylko „nie"
+
+`/findings` publikuje wynik zerowy: **0 ze 170** serwuje agentowi mierzalnie mniej tekstu niż
+przeglądarce. Wynik zerowy z narzędzia, które nigdy nie pokazało, że umie powiedzieć „tak", jest
+tym samym co test, który nie umie oblać.
+
+**Zmierzyłem sam stosunek, nie werdykt: 104 wiersze, po dwa pobrania każdy, przeglądarka kontra
+nasz user-agent.** Rozkład jest ostrzejszy niż to, co publikujemy: **103 wiersze mają dokładnie
+zero różnicy**, żaden nie siedzi w paśmie 5-50 procent. Jedyne trafienie, `calendly.com` ze
+spadkiem 0,5, sprawdzone ręcznie po chwili: **te same 2844 znaki i te same 310 kB dla obu
+klientów**, czyli był to jednorazowy artefakt pobrania, nie cloaking.
+
+**Wniosek: wynik zerowy jest prawdziwy i mocniejszy, niż go opisujemy.** To nie jest „nikt nie
+przekracza progu", tylko „prawie nikt nie różnicuje w ogóle".
+
+**Nowy plik `scripts/rules.mts` i to jest trwała część tej rundy.** Reguły skanera puszczone na
+zdaniach napisanych specjalnie, połowa ma trafiać, połowa nie: reguła cloakingu (umie zwrócić
+liczbę, umie zwrócić null, ma podłogę 2000 znaków), siedem wzorców provisioningu (sześć zdań
+programowych i siedem panelowych, w tym wszystkie fałszywe pozytywy z tej nocy) oraz reguła
+„samo free w przycisku". Wchodzi w `npm run build`, więc reguła, która przestaje zachowywać się
+jak opisana, wywala build przed deployem. Sfalsyfikowany na miejscu: podmieniona oczekiwana
+wartość wywala go z komunikatem, przywrócona przechodzi.
+
+**Zapisany limit, którego strona nie mówi:** reguła odpala się dopiero powyżej **50 procent**
+spadku, więc vendor serwujący agentowi 45 procent mniej tekstu jest publikowany jako
+nie-cloakujący. Test to teraz stwierdza wprost zamiast chować.
+
 ## Runda 2026-08-11 (111): dwa checki przestały mówić o stronie, której nie nazywają
 
 Nogi koniunkcji z `/findings` opierają się na jednej stronie każda, a `signup_reachable`
