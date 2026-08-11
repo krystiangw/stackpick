@@ -579,6 +579,27 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (81): kazda opublikowana liczba odtworzona niezaleznie
+
+Zrobilem stronie `/findings` to, co recenzent zrobil naszemu raportowi: wyciagnalem **kazde
+zdanie z liczba** i odtworzylem je wlasnym skryptem prosto z `corpus.json`, nie patrzac w
+`industry.ts`.
+
+**Siedem liczb, siedem zgodnych.** 66 serwerow MCP, 52 z nich z DCR, 68 z endpointem rejestracji,
+18 z grantem bez czlowieka, 6 spelniajacych wszystkie trzy warunki.
+
+Dwie pozornie sie rozjechaly i **w obu przypadkach bledna byla moja rekonstrukcja, nie strona**.
+`mcpWithoutKeys`: naliczylem 25, strona mowi 20, bo strona wymaga, zeby
+`programmatic_provisioning` byl **zmierzony** i zerowy, a ja liczylem niezmierzone jako zera.
+„O krok": naliczylem 60, strona mowi 47, bo strona wymaga dokladnie **jednej znanej** porazki
+i **zera niezmierzonych** nog. Obie definicje sa ostrzejsze niz moja, czyli strona jest
+konserwatywniejsza niz naiwne odtworzenie.
+
+Jedna poprawka jezykowa: zdanie o signupie brzmialo „**0** of them answer an agent with a refusal,
+and **86 more**...". „More" po zerze nie ma do czego sie odniesc. Przepisane tak, zeby wynik zerowy
+byl znaleziskiem, a nie punktem odniesienia: odmowa wprost jest rzadka, a sciana jest cichsza i
+zatrzymuje tak samo.
+
 ## Runda 2026-08-11 (80): weryfikacja 7.9, liczba poprawiona na zywej stronie
 
 166 wierszy, formula 7.9, reseed bez bledow. **`unattendedGrant`: 20 → 18**, a twierdzenie stracily
