@@ -16,8 +16,17 @@ import { getStore } from './store'
  */
 export type VisitDay = { day: string; path: string; count: number }
 
+/**
+ * Our own tooling, which must not appear in our own numbers. The audit fetches /findings and
+ * /report after every reseed, and within a day of shipping this counter that alone was 29 of the
+ * 39 recorded agent renders. The first conclusion anybody would draw from the data would have
+ * been that agents love the findings page, and it would have been us.
+ */
+const OURS = /LetAgentsIn|letagentsin-audit/i
+
 /** Never throws and never blocks the page: a counter that can 500 a page is worse than no counter. */
 export function recordVisit(path: string, userAgent?: string | null): void {
+  if (userAgent && OURS.test(userAgent)) return
   const day = new Date().toISOString().slice(0, 10)
   // An agent and a browser are different visitors and the difference is the product's subject.
   const kind = looksLikeAgent(userAgent) ? 'agent' : 'browser'

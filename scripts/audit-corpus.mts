@@ -18,7 +18,8 @@ const url = process.argv[2] ?? `${SITE_URL}/corpus.json`
  */
 async function readCorpus(attempt = 1): Promise<{ formulaVersion: string; rows: Row[] }> {
   try {
-    const res = await fetch(url)
+    // Named so the visit counter can leave our own monitoring out of our own numbers.
+    const res = await fetch(url, { headers: { 'user-agent': 'letagentsin-audit/1.0' } })
     const body = await res.text()
     if (!res.ok || body.trim().length === 0) throw new Error(`${res.status}, ${body.length} bytes`)
     return JSON.parse(body) as { formulaVersion: string; rows: Row[] }
