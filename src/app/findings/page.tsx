@@ -307,11 +307,13 @@ export default async function FindingsPage() {
               door, and only dynadot.com offers client_credentials behind it.
             </p>
             <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-              One stage further down, where nobody else is looking:{' '}
-              <span className="font-mono">{corpus.signupRefusesAgents}</span> of them answer an agent at the
-              signup form with a refusal rather than a form, and{' '}
-              <span className="font-mono">{corpus.signupNeedsJavaScript}</span> more serve a form that renders
-              nothing without JavaScript. Google ships an agentic browsing category in Lighthouse and Cloudflare
+              {/* The first number is currently zero, and "and N more" after a zero has nothing to be
+                  more than. Written so the null result reads as the finding it is. */}
+              One stage further down, where nobody else is looking. Refusing an agent outright at the signup
+              form is rare: <span className="font-mono">{corpus.signupRefusesAgents}</span> vendors do it while
+              serving a browser at the same URL. The wall is quieter than that, and it stops just as much:{' '}
+              <span className="font-mono">{corpus.signupNeedsJavaScript}</span> serve a form that renders
+              nothing without JavaScript, which an agent fetching HTML reads as a page with no way in. Google ships an agentic browsing category in Lighthouse and Cloudflare
               ships a readiness scanner, and both stop at documentation and protocol files. Neither asks whether
               an unattended client can get an account, which is the step every one of our agent runs died on.
             </p>
