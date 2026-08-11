@@ -163,6 +163,9 @@ const PHRASES: [RegExp, string][] = [
   [/\bvideo call/, 'video'],
   [/\brich text\b/, 'rich-text-editors'],
   [/\btext editor\b/, 'rich-text-editors'],
+  // The gerund of a rule we already had. prosemirror.net describes itself as an "in-browser
+  // structured text editing component" and routed to browser infrastructure on the word browser.
+  [/\btext editing\b/, 'rich-text-editors'],
   // "A/B" tokenises to two single letters and is dropped by the length filter, so the question
   // was decided by "checkout" and went to payments.
   [/\ba\/b\b/, 'feature-flags'],
