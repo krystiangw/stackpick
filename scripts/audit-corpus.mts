@@ -5,7 +5,7 @@
  * not a check: anything it prints is a bug in the scanner or in a verdict sentence.
  */
 type Check = { id: string; verdict: string; points: number; max: number; detail: string }
-type Row = { domain: string; total: number; measurable: number; max: number; checks: Check[] }
+type Row = { domain: string; total: number; measurable: number; max: number; unattendedGrant: boolean | null; checks: Check[] }
 
 const url = process.argv[2] ?? 'https://stackpick-f12d13a227ea.herokuapp.com/corpus.json'
 const corpus = (await (await fetch(url)).json()) as { formulaVersion: string; rows: Row[] }
