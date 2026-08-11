@@ -204,6 +204,12 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
      znalezisk poza tą jedną z rundy 103.
   3. ~~**`machine_readable_api`**~~ **zrobione w rundzie 104: 106 na 106.** `robots_paths_resolve`
      był atakowany wcześniej (22 werdykty odtworzone ręcznie, 4 złe zdania naprawione).
+  5. **`programmatic_provisioning` liczy frazy, nie czyta procedur.** Runda 108 pokazała to na
+     `loops.so`: „This creates an API key" opisuje kliknięcie w panelu i jest punktowane tak samo
+     jak zdanie o endpoincie. Dotyczy wszystkich 58 wierszy z tą frazą. Hipoteza do sprawdzenia na
+     całym korpusie: fraza liczy się dopiero, gdy w promieniu ~80 znaków stoi marker programowy
+     (`via the API`, `curl`, `POST /`, `CLI`, `SDK`, nazwa endpointu). **To odejmie punkty**, więc
+     wymaga własnego przebiegu, własnego reseedu i przeczytania, komu odjęło i dlaczego.
   4. ~~**Zdania w `/findings` obok liczb.**~~ **zrobione w rundach 105-106.** Znalezione jedno
      fałszywe (Contentful), a audyt pilnuje teraz trzech twierdzeń nazywających firmy. **Nie
      obejmuje to zdań na `/methodology` i `/report`**, które są historyczne i datowane, więc
