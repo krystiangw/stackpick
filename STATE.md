@@ -314,6 +314,33 @@ których agent nie ma prawa rozstrzygnąć sam.**
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
 
+## Runda 2026-08-11 (113): dwóch vendorów bez CAPTCHY ma za to obronę przed botami
+
+Check zna cztery CAPTCHE. Zapytałem te same strony rejestracji **szerszą listą dziesięciu**
+(friendlycaptcha, altcha, geetest, AWS WAF, mtcaptcha, datadome, perimeterx, kasada, captchafox,
+challenges.cloudflare.com) i wyszły dwa trafienia: **`resend.com`**, czyli jeden z pięciu vendorów
+z listy „przechodzi wszystkie trzy bariery", oraz **`turbopuffer.com`**. Oba serwują na stronie
+rejestracji klienta **Kasady** (`KPSDK`).
+
+**Nie zaliczyłem tego jako CAPTCHY i to jest sedno tej rundy.** Nie ma tam widgetu ani niczego do
+rozwiązania; ta warstwa decyduje w tle. Wrzucenie jej do checku o nazwie „No CAPTCHA in the signup
+HTML" uczyniłoby zdanie fałszywym, a oblanie vendora na tej podstawie byłoby **twierdzeniem
+o pomiarze, którego nie zrobiliśmy**: formularzy rejestracji nie wysyłamy, więc nie wiemy, co się
+dzieje po submicie. To dokładnie ta klasa nadgorliwości, którą zewnętrzny recenzent wytknął nam
+przy MCP.
+
+Punkt więc zostaje, a zdanie mówi, co jeszcze jest na stronie: *„The page does carry kasada, a bot
+defence that decides in the background rather than a challenge anyone solves. We did not submit the
+form, so whether it lets an unattended request through is not something we measured."*
+
+**Sprawdzone przed napisaniem tego zdania:** SDK siedzi też na stronie głównej i cenniku
+`resend.com`, czyli to obrona całego serwisu, a nie bramka postawiona na rejestracji.
+
+Reszta szerokiej listy nie znalazła nic: **żaden vendor, któremu dajemy pass, nie ma CAPTCHY,
+której po prostu nie umieliśmy nazwać**, i żaden oblany nie jest oblany bez trafienia z naszej
+listy. Nowa reguła ma swoje przypadki w `scripts/rules.mts`, łącznie z negatywnym („kaskada is
+a river in Poland").
+
 ## Runda 2026-08-11 (112): reguła, która umiała powiedzieć tylko „nie"
 
 `/findings` publikuje wynik zerowy: **0 ze 170** serwuje agentowi mierzalnie mniej tekstu niż
