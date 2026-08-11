@@ -12,20 +12,25 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 - Produkt nazywa się **Let Agents In** od 2026-08-10. Domena **nie jest kupiona**, adres to nadal
   `stackpick-f12d13a227ea.herokuapp.com`, a nazwa hosta zostaje świadomie do czasu zakupu.
   User-agent skanera to `LetAgentsIn/1.0`.
-- Formuła **7.9**, korpus **166 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
+- Formuła **8.1**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
   `npm run audit` pilnuje **17 liczb** i **0 sprzeczności**, czyli **każdą liczbę liczoną z danych, która trafia na publiczną stronę**.
 - **Podłoga szumu korpusu: 0,64 procent** (15 zmian na 2338 przy dwóch reseedach bez zmiany reguły).
-  Opublikowana na `/methodology`. Każda różnica mniejsza to pogoda, nie zmiana.
-- Dziesięć przebiegów adwersaryjnych: **16,7 → 2,2 → 3,9 → 2,0 → 0,94 → 7,9 → 1,4 → 1,29 → 0,77 →
-  0,39 procent**. Uwaga: ostatni jest **poniżej podłogi szumu**, więc pojedyncze znalezisko nie
-  jest dowodem.
-- Opublikowane liczby: **6 ze 166** przechodzi wszystkie trzy bariery, **18 z 68** publikujących
-  endpoint rejestracji ma grant, który agent dokończy bez człowieka, **0 ze 166** serwuje agentom
-  mniej tekstu niż przeglądarce.
-- **66 żywych serwerów MCP, 52 z nich publikuje RFC 7591.** DCR przyszło z wymogu specyfikacji
-  MCP, nie z decyzji o wpuszczeniu agentów, a dwie trzecie tych drzwi i tak wymaga człowieka.
-- Odmowy rejestracji wymierzone w agenty: **0 udowodnionych na 166**. Bariera, którą umiemy
-  udowodnić, to **86** formularzy rejestracji, które bez JavaScriptu nie renderują niczego.
+  Opublikowana na `/methodology`. Każda różnica mniejsza to pogoda, nie zmiana. Przejście 8.0 → 8.1
+  ruszyło **25 werdyktów na 2550, czyli 0,98 procent**, i tylko trzy z nich są skutkiem reguły.
+- Jedenaście przebiegów adwersaryjnych: **16,7 → 2,2 → 3,9 → 2,0 → 0,94 → 7,9 → 1,4 → 1,29 → 0,77 →
+  0,39 procent**, jedenasty bez wspólnej metryki, bo atakował trzy powierzchnie osobno: dwa
+  fałszywe twierdzenia w skanerze (patrz runda 102) i **31,8 procent błędu w trasowaniu**.
+- Opublikowane liczby: **5 ze 170** przechodzi wszystkie trzy bariery, **48 jest o jeden wymóg od
+  tego**, **19 z 66** publikujących endpoint rejestracji ma grant, który agent dokończy bez
+  człowieka, **0 ze 170** serwuje agentom mniej tekstu niż przeglądarce.
+- **67 żywych serwerów MCP, 52 z nich publikuje RFC 7591** (68 w całym korpusie). DCR przyszło
+  z wymogu specyfikacji MCP, nie z decyzji o wpuszczeniu agentów, a dwie trzecie tych drzwi i tak
+  wymaga człowieka.
+- Odmowy rejestracji wymierzone w agenty: **0 udowodnionych na 170**. Bariera, którą umiemy
+  udowodnić, to **87** formularzy rejestracji, które bez JavaScriptu nie renderują niczego.
+- **Trasowanie `find_providers` to najsłabszy element produktu: 31,8 procent błędu** na pytaniach,
+  na których go nie strojono, przy 0,39 procent skanera. Liczba jest w opisie narzędzia MCP,
+  a `scripts/routing.mts` jest zapadką na siedmiu znanych błędach, nie progiem zaliczenia.
 - Skanujemy sami siebie: **12 z 13 mierzalnych**, oblewamy `oauth_dcr` i piszemy o tym wprost.
   **Nie zmieniamy reguły, która poprawiłaby nasz własny wynik.**
 - Budżet skanu **27 s** (router Heroku zabija ciche żądanie po 30). Reseed **raz na zestaw zmian**:
@@ -167,9 +172,13 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   apeksów przemiecionych). Niedowiedzione i naprawione: klasyfikacja CTA (fałszywy fail
   `pinecone.io`) oraz `find_providers` (23 procent złych trasowań).
 
-- **Jedenasty przebieg adwersaryjny.** Baseline: **0,39 procent**, ale uwaga, to jest **poniżej
-  zmierzonej podłogi szumu korpusu 0,64 procent**, więc pojedyncze znalezisko nie jest dowodem.
-  Stan powierzchni po nocy 10/11 sierpnia:
+- ~~**Jedenasty przebieg adwersaryjny**~~ **zrobiony 2026-08-11, rundy 102-103.** Bez jednej
+  metryki, bo trzy powierzchnie mierzą się osobno: **reguła `browser-only` była fałszywa na swoim
+  jedynym przypadku** (njal.la, kontrolka w złej przestrzeni nazw), **sonda brzegowa pytała jako
+  crawlery treningowe** przy checku o agentach on-demand, a **trasowanie ma 31,8 procent błędu**
+  na pytaniach, na których go nie strojono. Rozgałęzione `REMEDIES` sprawdzone na vendorach,
+  których dotyczą, i poza powyższym wszystkie wyszły prawdziwe. Zapis niżej jest tym, co ten
+  przebieg zastał, i zostaje jako historia:
 
   **Zaatakowane przeze mnie i dowiedzione, nie marnuj na to przebiegu:** `robots_paths_resolve`
   (wszystkie 22 werdykty odtworzone ręcznie, znalezione i naprawione 4 złe zdania), twierdzenie o
@@ -181,6 +190,20 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   rozgałęzione `REMEDIES` w `fixfirst.ts` (pięć rad przepisanych jednej nocy, żadna nie
   zweryfikowana na vendorze, którego dotyczy), oraz `find_providers` na **świeżych** pytaniach,
   bo oba istniejące zestawy są spalone dostrajaniem.
+
+- **Dwunasty przebieg adwersaryjny, do zrobienia.** Powierzchnie, których jedenasty nie ruszył,
+  w kolejności wagi:
+  1. **Trasowanie po raz drugi.** Wszystkie 109 pytań w `scripts/routing.mts` jest już spalone.
+     Napisz nowe, zaetykietuj przed uruchomieniem, podziel na pół, stroj tylko na jednej.
+     Hipoteza z rundy 102, **nieprzetestowana i celowo nie wdrożona**, bo wyszła z połowy
+     odłożonej: gdy pytanie nazywa **kanał dostawy** (sms, głos, push, mail), kanał powinien
+     wygrywać remis z dziedziną („SMS reminders before the appointment" to komunikacja, nie
+     kalendarz). To reguła o świecie, nie o pytaniu, więc wolno ją sprawdzić na nowym zestawie.
+  2. **Gałęzie zamieniające status HTTP na werdykt.** Runda 103 znalazła jedną, która nie
+     odziedziczyła reguły o 429 (`crawlersRefused`). Przejrzyj **każdą** pozostałą pod tym kątem.
+  3. **`robots_paths_resolve` i `machine_readable_api`** nie były atakowane od czasu wprowadzenia.
+  4. **Zdania w `/findings` obok liczb.** Audyt pilnuje liczb, nie zdań, a runda 55 pokazała, że
+     werdykt bywa dobry przy fałszywym zdaniu.
 - ~~**Kuracja korpusu jest niesprawdzona**~~ **zrobione 2026-08-10**, przelot po wszystkich 156
   wierszach z pytaniem, czy domena to firma, o której myślimy. **155 zweryfikowanych, 1 nieczytelny**
   (`digger.tools`, 429). Znaleziska: `defer.run` **wypada z korpusu** (apex 301 na cudzą domenę na
@@ -269,6 +292,44 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-11 (103): reseed na 8.1, jedno fałszywe oskarżenie znalezione i cofnięte
+
+Reseed przeszedł **170 domen, zero błędów**, korpus jest w całości na **8.1**, `npm run audit`
+mówi **17 liczb sprawdzonych, 0 rozjazdów, 0 sprzeczności**.
+
+**Koszt dodatkowych kontrolek: ujemny.** Sonda MCP wysyła teraz do dwóch żądań więcej na domenę, bo
+kontrolka siedzi w przestrzeni nazw kandydata, a mimo to **nieoznaczalnych ubyło: 231 → 220**,
+a wierszy uciętych budżetem **2 → 1**. Suma punktów 1490 → 1491. Reguła numer trzy z tego pliku
+(„naprawa dokładająca żądania zabiera budżet gdzie indziej") tym razem nie zadziałała i dobrze,
+że sprawdziłem zamiast założyć.
+
+**Diff wszystkich werdyktów 8.0 → 8.1: 25 na 2550, czyli 0,98 procent**, tuż nad podłogą szumu
+0,64. Z tego z reguły wynikają **trzy** wiersze w `user_agents_allowed`, reszta to pogoda.
+Sprawdziłem oba nowe oblania ręcznie, bo nowy zarzut wobec nazwanej firmy to najgorsza klasa błędu
+w tym projekcie, i wyszły z tego dwa przeciwne wyniki:
+
+- **`workos.com` jest prawdziwe i powtarzalne**: `Claude-User` dostaje 404 na `/docs`, a
+  przeglądarka, `ChatGPT-User` i `ClaudeBot` dostają 200 i 95 kB. Dokładnie ta dyskryminacja,
+  której ten check szuka, i **stara sonda nie mogła jej zobaczyć**, bo pytała crawlerami
+  treningowymi. To jest dowód, że zmiana z rundy 102 była warta zachodu.
+- **`savvycal.com` było moim błędem.** Opublikowaliśmy „wasz brzeg odpowiedział ChatGPT-User 429",
+  a 429 to **nasze własne obciążenie z reseedu**, nie ich decyzja. Reszta skanera od dawna traktuje
+  429 jako nieoznaczalne i tylko ta gałąź robiła z niego werdykt. Zapytany raz, savvycal odpowiada
+  każdemu nazwanemu agentowi 200 tym samym plikiem 18 kB. Poprawione, przeskanowane, wiersz wrócił
+  do „Explicitly allowed: ChatGPT-User".
+
+**Wniosek do zapamiętania:** każda nowa gałąź, która zamienia status HTTP na werdykt, musi osobno
+odziedziczyć regułę o 429. Ta reguła jest w projekcie od rundy 60 i i tak nie weszła sama do kodu
+napisanego wczoraj.
+
+`measuredOn` w korpusie ma dokładnie **dwa** wiersze: `sendgrid.com → twilio.com` (podwójne
+liczenie plików Twilio, poniżej podłogi szumu, opisane w notatkach `corpus.json`) i
+`oramasearch.com → orama.com`, gdzie decyzja z 2026-08-10 **sprawdzona ponownie i nadal się broni**:
+`oramasearch.com/llms.txt` odpowiada 200, `orama.com/llms.txt` 404, więc przemianowanie wiersza
+skasowałoby plik, który vendor naprawdę publikuje.
+
+Nasz własny wiersz na 8.1: **12 z 13 mierzalnych**, nadal oblewamy `oauth_dcr`.
 
 ## Runda 2026-08-11 (102): jedenasty przebieg, trzy powierzchnie nietknięte i jedna z nich fałszywa
 
