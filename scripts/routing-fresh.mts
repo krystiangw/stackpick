@@ -1,4 +1,4 @@
-import { categoryForJob } from '../src/lib/lookup'
+import { categoryForJob, explainJob } from '../src/lib/lookup'
 
 /**
  * Questions the routing rules have never seen.
@@ -95,6 +95,14 @@ const guessed = wrong.filter((result) => result.expect === null && result.got !=
 for (const result of wrong) {
   const kind = result.got === null ? 'NO MATCH' : `-> ${result.got}`
   console.log(`  ${(result.expect ?? 'null').padEnd(22)} ${kind.padEnd(26)} ${result.asked}`)
+  // Three different failures hide behind one null: nothing scored, two categories tied, or our
+  // own prose decided it. They need three different fixes, so the run prints which one it was.
+  if (process.env.WHY) {
+    const { words, top } = explainJob(result.asked)
+    console.log(
+      `      ${top.length === 0 ? 'nic nie punktuje' : top.map((row) => `${row.id}=${row.score}(silne ${row.strong})`).join('  ')} [slow: ${words}]`,
+    )
+  }
 }
 
 const rate = ((wrong.length / results.length) * 100).toFixed(1)

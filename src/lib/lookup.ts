@@ -226,6 +226,32 @@ const ASKING_FOR_ANOTHER = new RegExp(
     String.raw`|\b(?:alternatives?|competitors?|replacements?|instead of|similar to|replace|migrating? (?:from|off)|vs\.?)\s+(?:to\s+|the\s+|a\s+)?\b(${BRAND_ALTERNATION})\b`,
 )
 
+/**
+ * Why a question routed the way it did: the top scorers with their two components. Written for
+ * the routing scripts, because "it returned null" covers three different failures that need three
+ * different fixes, and telling them apart by reading the rules is how the last round guessed wrong.
+ */
+export function explainJob(job: string): { words: number; top: { id: string; strong: number; score: number }[] } {
+  const asked = job.toLowerCase().replace(/\bsign(?:s|ed|ing)? ?up\b/g, ' ')
+  const words = asked
+    .split(/[^a-z0-9]+/)
+    .map(stem)
+    .filter((word) => (word.length > 2 || FILED.has(word)) && !NO_INFORMATION.has(word))
+  const top = CATEGORIES.map((category) => {
+    const vocabulary = (VOCABULARY[category.id] ?? []).map(stem)
+    const strong = words.filter((word) => vocabulary.some((term) => sameTerm(word, term))).length * 10
+    const prose = proseWords(category)
+    const weak = words.filter((word) => !vocabulary.some((term) => sameTerm(word, term)) && prose.has(word)).length
+    return { id: category.id, strong, score: strong + weak }
+  })
+    .filter((row) => row.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+  // The count matters as much as the winner: one hit inside a nine word sentence is a different
+  // kind of evidence from two hits inside three words, and the decision rule needs to see both.
+  return { words: words.length, top }
+}
+
 export function categoryForJob(job: string): Category | null {
   const asked = job.toLowerCase().replace(/\bsign(?:s|ed|ing)? ?up\b/g, ' ')
   const phrase = PHRASES.find(([pattern]) => pattern.test(asked))
