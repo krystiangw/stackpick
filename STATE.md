@@ -12,11 +12,13 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 - Produkt nazywa się **Let Agents In** od 2026-08-10. Domena **nie jest kupiona**, adres to nadal
   `stackpick-f12d13a227ea.herokuapp.com`, a nazwa hosta zostaje świadomie do czasu zakupu.
   User-agent skanera to `LetAgentsIn/1.0`.
-- Formuła **8.1**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
-  `npm run audit` pilnuje **17 liczb** i **0 sprzeczności**, czyli **każdą liczbę liczoną z danych, która trafia na publiczną stronę**.
+- Formuła **8.3**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
+  `npm run audit` pilnuje **17 liczb i 3 twierdzeń nazywających firmy**, przy **0 sprzecznościach**,
+  czyli każdą liczbę liczoną z danych, która trafia na publiczną stronę, i trzy zdania obok nich.
 - **Podłoga szumu korpusu: 0,64 procent** (15 zmian na 2338 przy dwóch reseedach bez zmiany reguły).
-  Opublikowana na `/methodology`. Każda różnica mniejsza to pogoda, nie zmiana. Przejście 8.0 → 8.1
-  ruszyło **25 werdyktów na 2550, czyli 0,98 procent**, i tylko trzy z nich są skutkiem reguły.
+  Opublikowana na `/methodology`. Każda różnica mniejsza to pogoda, nie zmiana. Trzy reseedy tej
+  nocy: 8.0 → 8.1 ruszyło **0,98 procent**, 8.1 → 8.2 **0,78**, 8.2 → 8.3 **0,43**. Netto
+  **8.1 → 8.3 to 23 werdykty, 0,90 procent**, z czego 11 w `programmatic_provisioning`.
 - Jedenaście przebiegów adwersaryjnych: **16,7 → 2,2 → 3,9 → 2,0 → 0,94 → 7,9 → 1,4 → 1,29 → 0,77 →
   0,39 procent**, jedenasty bez wspólnej metryki, bo atakował trzy powierzchnie osobno: dwa
   fałszywe twierdzenia w skanerze (patrz runda 102) i **31,8 procent błędu w trasowaniu**.
@@ -307,6 +309,31 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-11 (109): trzeci reseed zamknął noc i pierwszy raz odjął punkty
+
+`170 wierszy na 8.3, 0 sprzeczności, 17 liczb i 3 twierdzenia o firmach, 0 rozjazdów.`
+
+Diff 8.2 → 8.3: **11 werdyktów, 0,43 procent, czyli poniżej podłogi szumu**. W
+`programmatic_provisioning` ruszyło pięć i **wszystkie w dół**, co jest kształtem, jakiego się
+spodziewałem po usuwaniu fałszywych trafień, i odwrotnością tego, co pokazał reseed 8.2.
+
+**Jedno z nich było fałszywe od dawna, nie od wczoraj:** `polar.sh` traci punkt za zdanie
+„**Programmatically create** dynamic **checkout sessions** for custom flows". To pasowało już do
+starego, dosłownego wzorca `programmatically create`, więc było fałszywym pozytywem także w 8.1
+i wcześniej. Wymóg poświadczenia pomiędzy słowami wyczyścił przy okazji błąd, którego nie
+szukałem. `modal.com` to ten sam przypadek.
+
+**Bilans całej nocy na tym checku, 8.1 → 8.3, jedenaście wierszy:** w górę `stripe.com`,
+`launchdarkly.com`, `amplitude.com`, `windmill.dev`, `medusajs.com`, `sendlayer.com`, `loops.so`;
+w dół `modal.com`, `polar.sh`; do nieoznaczalnych `postmarkapp.com` i `signoz.io` (odmowy stron,
+czyli pogoda). Rozkład: `pass` 37 → 37, `partial` 53 → 56, `fail` 62 → 58.
+
+**Wniosek metodyczny, który zapisuję na przyszłość:** poszerzenie i zacieśnienie tej samej reguły
+trzeba było zrobić w **dwóch osobnych reseedach**, i to nie było marnotrawstwo. Gdyby poszły razem,
+diff pokazałby kilka ruchów w obie strony i nie dałoby się powiedzieć, które z nich są skutkiem
+której połowy zmiany. Osiem ruchów w górę było czytelnym sygnałem, że coś jest nie tak, właśnie
+dlatego, że nic nie szło w dół.
 
 ## Runda 2026-08-11 (108): osiem werdyktów w górę to nie sukces, to kształt błędu
 
