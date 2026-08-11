@@ -32,6 +32,24 @@ const CAPTCHA_SIGNATURES: Record<string, RegExp> = {
  */
 const CREDENTIAL = String.raw`(?:api[- ]?key|api[- ]?token|access[- ]token|personal[- ]access[- ]token|service[- ]account|auth[- ]token|secret[- ]key)`
 
+/**
+ * Anything that makes a sentence about a machine rather than about a person at a screen. The
+ * creation phrase alone counts a dashboard: loops.so writes "click Generate key. This creates an
+ * API key", which is documented key creation and is not what a check called programmatic
+ * provisioning is asking about.
+ */
+const PROGRAMMATIC_MARKER = String.raw`(?:(?:via|through|using|with) the api|(?:management|admin|account|provisioning|rest|public)[ -]api|\bcurl\b|\bPOST\b|\bGET\b|/v\d|\bCLI\b|\bSDK\b|endpoint|programmatic\w*|\brequest\b|on (?:your|its|their) behalf)`
+
+/**
+ * Any character except the full stop that ends a sentence, so the window stays inside one
+ * sentence without breaking on a URL. `[^.]` cannot do both: it cuts
+ * `curl -X POST https://api.example.com/keys creates an api key` at "example", which is exactly
+ * the sentence the marker exists to recognise.
+ */
+const SAME_SENTENCE = String.raw`(?:(?!\.\s)[\s\S])`
+
+const CREATES_A_CREDENTIAL = String.raw`creat(?:e|es|ing)(?:\s+(?:and|or)\s+\w+)?\s+(?:an?|your|a new|new|the)?\s*${CREDENTIAL}`
+
 const PROVISIONING_PATTERNS = [
   /management api/i,
   /provisioning api/i,
@@ -41,7 +59,11 @@ const PROVISIONING_PATTERNS = [
   // manage API keys on your behalf" and we published Stripe as documenting no path at all. Only
   // a conjunction is allowed through, not arbitrary text, because "create a customer with an api
   // key" is about spending a credential rather than making one.
-  new RegExp(String.raw`creat(?:e|es|ing)(?:\s+(?:and|or)\s+\w+)?\s+(?:an?|your|a new|new|the)?\s*${CREDENTIAL}`, 'i'),
+  new RegExp(
+    String.raw`${PROGRAMMATIC_MARKER}${SAME_SENTENCE}{0,80}${CREATES_A_CREDENTIAL}` +
+      String.raw`|${CREATES_A_CREDENTIAL}${SAME_SENTENCE}{0,80}${PROGRAMMATIC_MARKER}`,
+    'i',
+  ),
   // Either order, and the credential has to be the thing being created, in both directions. Three
   // sentences in the corpus say the words and mean something else: agora.io's "creating projects
   // and retrieving usage data programmatically", nylas.com's "create accounts programmatically",
@@ -183,7 +205,7 @@ export const PROVISIONING_PATTERN_LABELS = [
   'account api',
   // Parenthesised because the sentence quotes each label as one phrase, and a comma-separated
   // list read as six: a vendor saw "1 of 7 provisioning phrases" followed by six things.
-  'create an api key (or api token, access token, personal access token, service account, auth token, secret key)',
+  'create an api key (or api token, access token, personal access token, service account, auth token, secret key), next to something programmatic',
   'programmatically create, in either word order',
   'service account',
   'a documented path like /v1/api_keys or /v2/access-tokens',
