@@ -598,6 +598,29 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (93): analityka (nie ma zadnej), zasieg awarii i koszt retencji
+
+**Awaria trwala co najmniej 44 minuty**, pierwszy 500 o 08:38:02 UTC, ostatni o 09:22:23, czyli do
+mojego wdrozenia. Zaczela sie **w trakcie reseedu**, gdy kolekcja przekroczyla prog `$group`.
+Pracowalem przez caly ten czas i **nie zauwazylem**. Jedyny powod, dla ktorego w ogole wyszlo na
+jaw, to audyt dopiety pod koniec reseedu **godzine wczesniej**. Bez tego strona lezalaby do rana.
+
+**Analityka: nie ma zadnej.** Zero integracji (Plausible, PostHog, GA, cokolwiek). Nie wiemy nic
+o ruchu. Za to baza trzyma kazdy skan i kazdego leada, wiec przeczytalem je pierwszy raz:
+**ani jeden obcy nie uzyl produktu**. 12 domen poza kuracja, wszystkie nasze testy z 7-10 sierpnia
+(`github.com`, `openai.com`, `htmx.org`, `linear.app`, `allegro.pl`, portfolio Krystiana, strona
+recenzenta). 25 leadow, w tym `xff-probe-a/b/c`, czyli moje wlasne sondy limitow. **Zero
+prawdziwych.** To nie jest zla wiadomosc, tylko brak wiadomosci: nie ma domeny i nie bylo ogloszenia.
+
+**Retencja, zmierzona i czekajaca na decyzje Krystiana:** 12 786 dokumentow, **207 MB, 67 kopii na
+domene**. Zostawienie dwoch pokolen na domene usuwa **97 procent** danych (12 786 → 377), pieciu 93
+procent. **Nic nie usuwam bez zgody**, bo stare raporty trzymaja trwale linki do scorecardow.
+
+Do rozwazenia przy analityce, gdy przyjdzie czas: **nie dokladac zapisu przy kazdym zadaniu do tej
+samej bazy, ktora wlasnie polozyla strone.** Wlasciwy ksztalt to licznik po stronie serwera bez
+ciasteczek albo self-hosted Umami: sprzedajemy pomiar cudzych stron, wiec skrypt sledzacy na
+wlasnej bylby zlym zartem.
+
 ## Runda 2026-08-11 (92): cala strona lezala i to moja wina, a znalazl to straznik dopiety godzine wczesniej
 
 **Produkcja zwracala 500 na kazdej stronie.** Przyczyna w logach byla jednoznaczna:
