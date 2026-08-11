@@ -5,7 +5,7 @@
  * not a check: anything it prints is a bug in the scanner or in a verdict sentence.
  */
 type Check = { id: string; verdict: string; points: number; max: number; detail: string }
-type Row = { domain: string; total: number; measurable: number; max: number; unattendedGrant: boolean | null; checks: Check[] }
+type Row = { domain: string; total: number; measurable: number; max: number; unattendedGrant: boolean | null; refusesAgentsAtSignup: boolean; checks: Check[] }
 
 const url = process.argv[2] ?? 'https://stackpick-f12d13a227ea.herokuapp.com/corpus.json'
 
@@ -161,11 +161,10 @@ const unattendedGrant = corpus.rows.filter((row) => row.unattendedGrant === true
 
 // Currently zero, which is exactly why it needs a guard: a number nobody watches can stop being
 // zero on one side without the other noticing. The sentence and the data have to move together.
-const signupRefusals = corpus.rows.filter((row) =>
-  /^Signup answers .* identifying itself as an agent/.test(
-    row.checks.find((check) => check.id === 'signup_reachable')?.detail ?? '',
-  ),
-).length
+// Read off the published field rather than a sentence. Matching prose was a proxy for a
+// computation that reads browserStatus, which corpus.json did not carry, so on 2026-08-11 the
+// guard reported a drift that was only the two sides measuring different things.
+const signupRefusals = corpus.rows.filter((row) => row.refusesAgentsAtSignup).length
 
 const stated: { page: string; pattern: RegExp; expected: number; what: string }[] = [
   {

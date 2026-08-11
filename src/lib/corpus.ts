@@ -1,6 +1,6 @@
 import { categoryFor } from './categories'
 import { publishedCorpus } from './published'
-import { checkHelpUri, CHECKS, MAX_SCORE, type ScoredCheck } from './score'
+import { checkHelpUri, CHECKS, MAX_SCORE, refusesAgentsAtSignup, type ScoredCheck } from './score'
 
 /**
  * The corpus as data rather than as a page. OpenSSF Scorecard publishes every result it has as a
@@ -28,6 +28,12 @@ export type CorpusRow = {
    * vendors that have one advertise nothing an unattended agent can complete.
    */
   unattendedGrant: boolean | null
+  /**
+   * Whether the signup refused an agent while serving a browser at the same URL. Published
+   * because /findings states it and nothing in this file let a reader check it: the guard was
+   * matching a sentence instead, and on 2026-08-11 the sentence and the computation disagreed.
+   */
+  refusesAgentsAtSignup: boolean
   scorecardUrl: string
   checks: { id: string; verdict: CorpusVerdict; points: number; max: number; detail: string }[]
 }
@@ -67,6 +73,7 @@ export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus 
         share: measurable > 0 ? Number((report.scorecard.total / measurable).toFixed(4)) : null,
         scannedAt: report.scannedAt,
         rateLimited: Boolean(report.findings?.rateLimitedUs),
+        refusesAgentsAtSignup: report.findings ? refusesAgentsAtSignup(report.findings) : false,
         unattendedGrant: report.findings?.funnel?.oauth?.grantTypes
           ? Boolean(report.findings.funnel.oauth.unattendedGrant)
           : null,
