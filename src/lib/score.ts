@@ -802,23 +802,42 @@ export const CHECKS: Check[] = [
             'Name your package once in your docs, or link it from your repository, and we stop guessing. If your product is not something a developer installs, this check does not apply to you: unmeasured is out of the score and out of the denominator, so it costs you nothing.',
         }
       }
-      if (!f.npm.found) return yes(0, `Package ${f.npm.package} not found on the registry`)
-      if (!f.npm.bundledTypes) return yes(0, `${f.npm.package} ships without bundled types`)
+      // Whether the name is the vendor's claim or our guess. Measured 2026-08-11: all ten rows
+      // that fail this check rest on a registry search and not one on a package named anywhere
+      // on the vendor's own pages, and the guess is demonstrably the wrong artefact on several
+      // of them. directus.com is scored on `directus`, the server, while the SDK a developer
+      // installs is the typed `@directus/sdk`; xata.io on `@xata.io/api` while its SDK is the
+      // typed `@xata.io/client`; namecheap.com on `node-vault-client`, which is a HashiCorp
+      // Vault client. The verdict stands, because a publisher match is real evidence and we
+      // cannot tell a wrong guess from a genuinely untyped package by its name. What cannot
+      // stand is saying it in a sentence that reads as though the vendor had pointed us there.
+      // Withholding the point when the name did not look like an SDK cost chromadb and
+      // @amplitude/analytics-browser, both of which are exactly the package a developer
+      // installs. A name is too crude a classifier for that, so the point stands and the
+      // sentence says what the match rests on instead of overstating it.
+      //
+      // On every sentence and not only the pass, because the negative ones need it more.
+      // Measured 2026-08-11: all ten rows that fail this check rest on a registry search and not
+      // one on a package named anywhere on the pages we read, and on several the guess is the
+      // wrong artefact. directus.com is scored on `directus`, the server, while the SDK a
+      // developer installs is the typed `@directus/sdk`; xata.io on `@xata.io/api` while its SDK
+      // is the typed `@xata.io/client`; namecheap.com on `node-vault-client`, a HashiCorp Vault
+      // client. The verdict stands, because a publisher match is real evidence and nothing in
+      // the name separates a wrong guess from a genuinely untyped package. What cannot stand is
+      // a sentence that reads as though the vendor had pointed us at it.
+      const basis =
+        f.discovered.npmSource !== 'registry-search'
+          ? ''
+          : ', matched from the registry by who publishes it rather than by a link on your site'
+      if (!f.npm.found) return yes(0, `Package ${f.npm.package} not found on the registry${basis}`)
+      if (!f.npm.bundledTypes) return yes(0, `${f.npm.package} ships without bundled types${basis}`)
       const stale = f.npm.staleMonths
       if (stale !== undefined && stale >= 24) {
         // What we measure is the registry record's Last-Modified, which any metadata write moves,
         // so it is a floor on the age and not the publish date. june.so read as 28 months where
         // the newest version is 35.6 months old, and the sentence claimed the smaller number.
-        return yes(0, `${f.npm.package} is typed, and its registry record has not changed in ${stale} months`)
+        return yes(0, `${f.npm.package} is typed, and its registry record has not changed in ${stale} months${basis}`)
       }
-      // Withholding the point when the name did not look like an SDK cost chromadb and
-      // @amplitude/analytics-browser, both of which are exactly the package a developer
-      // installs. A name is too crude a classifier for that, so the point stands and the
-      // sentence says what the match rests on instead of overstating it.
-      const basis =
-        f.discovered.npmSource !== 'registry-search'
-          ? ''
-          : ', matched from the registry by who publishes it rather than by a link on your site'
       return yes(1, `${f.npm.package}@${f.npm.version} ships types${basis}`)
     },
   },
