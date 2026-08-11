@@ -42,7 +42,7 @@ const REFUSAL = /every request was refused|edge refused our requests|nothing we 
 const READ_SOMETHING = /[1-9][\d,]* characters|[1-9][\d,]* documentation pages|pages we read|Found: |present\b|at https?:\/\//i
 const NO_SIGNUP = /nothing on the site links to an account signup|nothing on the site links to pricing/i
 /** Checks whose evidence is one page, so a pass has to say which one. */
-const URL_BACKED = new Set(['machine_readable_api', 'mcp_present', 'agent_entry_point'])
+const URL_BACKED = new Set(['machine_readable_api', 'mcp_present', 'agent_entry_point', 'signup_reachable'])
 
 let bad = 0
 for (const row of corpus.rows) {

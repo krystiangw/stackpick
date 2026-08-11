@@ -517,7 +517,7 @@ export const CHECKS: Check[] = [
       if (!f.funnel.signup.rendersFormWithoutJs) {
         return {
           points: 0,
-          detail: 'Unmeasurable: the signup form is not in the server HTML, so its gates are not either',
+          detail: `Unmeasurable: the signup form at ${f.funnel.signup.url} is not in the server HTML, so its gates are not either`,
           unblock: 'Server-render the form, or tell us the endpoint it posts to, and the gates become visible to us and to an agent.',
           inconclusive: true,
         }
@@ -582,9 +582,13 @@ export const CHECKS: Check[] = [
         const contrast = browser === null ? '' : `, where a Chrome user-agent gets ${browser}`
         return yes(0, `Signup answers ${seen} to a request identifying itself as an agent${contrast}`)
       }
+      // Names the page, like every other check whose evidence is one document. Without it a vendor
+      // reading "your form needs JavaScript" cannot tell which page we read, and this is a page we
+      // found by following links and guessing paths, so being wrong about it is a thing that
+      // happens: anvil.co's signup was on another host entirely.
       return signup.rendersFormWithoutJs
-        ? yes(1, 'Form renders in server HTML')
-        : yes(0, 'Reachable, but the form needs JavaScript')
+        ? yes(1, `Form renders in server HTML at ${signup.url}`)
+        : yes(0, `${signup.url} is reachable, but its form needs JavaScript`)
     },
   },
   {
