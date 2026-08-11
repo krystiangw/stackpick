@@ -598,6 +598,26 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (88): dwie rzeczy, ktore prawie przeszly niezauwazone
+
+**Push na Heroku zostal odrzucony, a ja napisalem "DEPLOYED".** Hook `pre-receive` uruchamia
+pelny `tsc`, ktorego `next build` nie uruchamia, i wywalil sie na `scripts/audit-corpus.mts`:
+typ `Row` nie mial pola `unattendedGrant`, ktore sam wczoraj dopisalem do korpusu. Moj lancuch
+`&& echo DEPLOYED` wypisal potwierdzenie mimo odrzucenia, bo `git push | tail` konczy sie zerem.
+**Weryfikacja po skutku, nie po kodzie wyjscia:** dopiero `grep` na zywej stronie pokazal, ze
+zmiany tam nie ma. Naprawione i wdrozone naprawde, potwierdzone trescia strony.
+
+Wniosek do noszenia: **`npm run build` nie jest tym samym co typecheck, ktory blokuje deploy.**
+Przed pushem na Heroku warto uruchomic `npx tsc --noEmit`, bo skrypty w `scripts/` sa poza
+kompilacja Nexta i psuja deploy dopiero na zdalnym hooku.
+
+**Opublikowany limit gruboci kategorii.** Mediana kategorii to **6 vendorow**, najciensze maja 5,
+wiec **jeden vendor rusza udzialem kategorii o kilka punktow procentowych, czyli wiecej niz caly
+korpus rusza sie sam miedzy reseedami (0,64 procent)**. Zamiast po cichu dosypywac vendorow o
+szostej rano, co jest decyzja o zakresie produktu, `/report` mowi to teraz wprost: to nie sa
+tabele ligowe, porownuj vendora z jego wlasnymi poprzednimi skanami i z nazwanymi sasiadami na
+jego karcie, a nie ze srednia kategorii zbudowana na szesciu wierszach.
+
 ## Runda 2026-08-11 (87): pokrycie strażnika policzone, nie oszacowane
 
 Zamiast dopisywac wzorce na wyczucie, policzylem **ile liczb liczonych z danych strony w ogole
