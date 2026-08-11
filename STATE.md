@@ -598,6 +598,22 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (89): pulapka zamknieta i sprawdzona kanarkiem, ktory najpierw sklamał
+
+`npm run build` to teraz **`tsc --noEmit && next build`**, wiec lokalny build sprawdza to samo, co
+hook Heroku, i klasa bledu z rundy 88 nie moze sie powtorzyc.
+
+**Nie uwierzylem wlasnej poprawce i dobrze zrobilem.** Wrzucilem plik z celowym bledem typu do
+`scripts/`, build przeszedl, wiec poprawka wygladala na bezuzyteczna. Przyczyna byla w tescie, nie
+w konfiguracji: plik nazwal sie `.typecanary.ts` z kropka, a glob `**/*.ts` **nie lapie plikow
+ukrytych**. Po zmianie nazwy na widoczna build wywalil sie natychmiast
+(`error TS2322: Type 'string' is not assignable to type 'number'`), a po usunieciu kanarka wrocil
+do zielonego.
+
+Gdybym poprzestal na pierwszym przebiegu, wyciagnalbym dokladnie odwrotny wniosek i albo cofnal
+dobra poprawke, albo dopisal niepotrzebna konfiguracje. **Kanarek tez wymaga sprawdzenia, czy
+w ogole moze zaspiewac.**
+
 ## Runda 2026-08-11 (88): dwie rzeczy, ktore prawie przeszly niezauwazone
 
 **Push na Heroku zostal odrzucony, a ja napisalem "DEPLOYED".** Hook `pre-receive` uruchamia
@@ -607,9 +623,9 @@ typ `Row` nie mial pola `unattendedGrant`, ktore sam wczoraj dopisalem do korpus
 **Weryfikacja po skutku, nie po kodzie wyjscia:** dopiero `grep` na zywej stronie pokazal, ze
 zmiany tam nie ma. Naprawione i wdrozone naprawde, potwierdzone trescia strony.
 
-Wniosek do noszenia: **`npm run build` nie jest tym samym co typecheck, ktory blokuje deploy.**
-Przed pushem na Heroku warto uruchomic `npx tsc --noEmit`, bo skrypty w `scripts/` sa poza
-kompilacja Nexta i psuja deploy dopiero na zdalnym hooku.
+Wniosek do noszenia: **`npm run build` nie byl tym samym co typecheck, ktory blokuje deploy.**
+Zamkniete w rundzie 89: `build` to teraz `tsc --noEmit && next build`, wiec lokalny build sprawdza
+dokladnie to, co zdalny hook.
 
 **Opublikowany limit gruboci kategorii.** Mediana kategorii to **6 vendorow**, najciensze maja 5,
 wiec **jeden vendor rusza udzialem kategorii o kilka punktow procentowych, czyli wiecej niz caly
