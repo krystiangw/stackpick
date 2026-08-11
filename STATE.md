@@ -270,6 +270,55 @@ których agent nie ma prawa rozstrzygnąć sam.**
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
 
+## Runda 2026-08-11 (102): jedenasty przebieg, trzy powierzchnie nietknięte i jedna z nich fałszywa
+
+Zaatakowałem dokładnie to, co poprzednia runda zostawiła jako "nietknięte i warte ataku", i dwie
+z trzech powierzchni okazały się zepsute.
+
+**Reguła `browser-only` w MCP była wprowadzona na jednym przypadku i ten przypadek był fałszywy.**
+`njal.la/api/mcp` odpowiada odmową CSRF w JSON-RPC, ale `njal.la/api/cokolwiek-innego` odpowiada
+tym samym: całe `/api/` to jeden widok Django. Opublikowaliśmy im serwer MCP, którego nigdy nie
+zbudowali. Przyczyna jest ogólna i warta zapamiętania: **kontrolka stała w korzeniu hosta, a
+badana ścieżka w przestrzeni nazw `/api/`**, więc catch-all w tej przestrzeni był dla niej
+niewidoczny. To ta sama lekcja, co `sentry.io` w rundzie 100, gdzie moja sonda pytała o bzdurę
+`.md`, a kredyt był za `.json`. Kontrolka to teraz **ostatni segment ścieżki kandydata podmieniony
+na nazwę, której nikt nie zarejestrował**, a nie korzeń hosta.
+
+Sprawdzone na całym korpusie zanim to naprawiłem: 1020 sond po sześciu adresach na 170 domen, potem
+75 kontrolek w tej samej przestrzeni nazw dla wszystkiego, co odpowiedziało. **Żaden opublikowany
+pass nie pochodził ze ścieżki `/api/mcp`**, więc korpus traci jedno fałszywe zdanie i zero punktów.
+`betterstack.com/mcp` sprawdzony osobno, bo to jedyny pass na ścieżce apeksu bez uściśnięcia
+handshakiem: 401 `invalid_token` przy 404 HTML na rodzeństwie, czyli werdykt jest zdrowy.
+
+**Sonda brzegowa pytała jako klasa crawlerów, o której ten check nie jest.** `user_agents_allowed`
+mierzy, czy przepuszczacie agenta działającego na zlecenie człowieka, i w arm-ie robots.txt liczy
+wyłącznie klasę `user`. W arm-ie brzegowym pytała jako **ClaudeBot i GPTBot, czyli crawlery od
+zbierania danych treningowych**, i na tym oblewała vendora, po czym rada mówiła "wypuśćcie agentów
+on-demand". Klasy naprawdę się różnią: `algolia.com` odpowiada ClaudeBot 403, ChatGPT-User 403,
+**Claude-User 200**. Sonda pyta teraz jako ChatGPT-User i Claude-User, liczba żądań bez zmian.
+Cztery wiersze na tym arm-ie (algolia, froala, lemonsqueezy, scrapingbee) sprawdzone ręcznie na
+wszystkich czterech user-agentach: **werdykty bez zmian, zmienia się zdanie i dowód**.
+
+**Pięć rozgałęzionych rad w `fixfirst.ts` sprawdziłem na vendorach, których dotyczą.** Poza
+powyższym wszystkie wyszły prawdziwe: martwy link agory to naprawdę 404, cronofy naprawdę nie ma
+typów w pakiecie, `here.com` ma na cenniku dokładnie jedno "free" i jest w przycisku, chargebee
+naprawdę publikuje metadane AS bez `registration_endpoint` (znalezione dopiero przez
+`authorization_servers` w dokumencie protected-resource, bo pod apeksem tego dokumentu nie ma).
+
+**Trasowanie `find_providers` to najsłabsza rzecz w produkcie i teraz wiem o ile.** Napisałem 45
+nowych pytań i **zaetykietowałem je przed uruchomieniem**: 40 procent błędu, przy 64/64 na starym
+zestawie. Naprawiałem **tylko na połowie**, drugą uruchomiłem raz: **31,8 procent**. Ta liczba
+poszła do opisu narzędzia MCP, bo caller ma prawo wiedzieć, że brak wyniku znaczy "nie umiemy
+przeczytać pytania". Test jest teraz **zapadką na siedmiu błędach**, a nie progiem zaliczenia,
+żeby nikt nie naprawił długu dopasowaniem do testu. Oba zestawy są spalone, dwunasty przebieg pisze
+nowe pytania. Procedura w KB: `zestaw-testowy-na-ktorym-stroisz-regule-przestaje-ja-mierzyc`.
+
+Formuła **8.1**, reseed w biegu. Osobno: `corpus.json` i `corpus.csv` publikują teraz `measuredOn`,
+czyli domenę, na której wiersz faktycznie zmierzono. `sendgrid.com` oddaje robots.txt
+przekierowaniem na `twilio.com/robots.txt`, więc jego wiersz kredytuje plik Twilio SendGridowi,
+a twilio.com liczy ten sam plik obok. **Czy taki wiersz ma wypadać ze statystyk, jest następnym
+pytaniem i wymaga najpierw policzenia, ilu wierszy dotyczy.**
+
 ## Runda 2026-08-11 (101): dziennik wyprowadzony, bo płaciła za niego każda sesja
 
 `STATE.md` miał **3274 linie i 225 kB**, czyli około 55 tysięcy tokenów, i jest **punktem wejścia

@@ -188,18 +188,21 @@ const PHRASES: [RegExp, string][] = [
   [/\be[- ]?sign|\bsign a (?:document|contract)\b/, 'documents-signature'],
 ]
 
+/**
+ * Every term anybody filed, at any length. The length rule below drops short words as noise, and
+ * it dropped "s3", which left "object storage s3 compatible" with nothing but our own prose.
+ */
+const FILED = new Set(Object.values(VOCABULARY).flat().map(stem))
+
 export function categoryForJob(job: string): Category | null {
   const asked = job.toLowerCase().replace(/\bsign(?:s|ed|ing)? ?up\b/g, ' ')
   const phrase = PHRASES.find(([pattern]) => pattern.test(asked))
   if (phrase) return CATEGORIES.find((category) => category.id === phrase[1]) ?? null
 
-  // Short words are noise unless somebody filed them: the length rule dropped "s3" and left
-  // "object storage s3 compatible" with nothing but our own prose to go on, which is a null.
-  const filed = new Set(Object.values(VOCABULARY).flat().map(stem))
   const words = asked
     .split(/[^a-z0-9]+/)
     .map(stem)
-    .filter((word) => (word.length > 2 || filed.has(word)) && !NO_INFORMATION.has(word))
+    .filter((word) => (word.length > 2 || FILED.has(word)) && !NO_INFORMATION.has(word))
   if (words.length === 0) return null
   const scored = CATEGORIES.map((category) => {
     const vocabulary = (VOCABULARY[category.id] ?? []).map(stem)
