@@ -113,7 +113,10 @@ export const CATEGORIES: Category[] = [
     id: 'background-jobs',
     label: 'Background jobs and workflows',
     jobToBeDone: 'run work that must not happen inside a request',
-    domains: ['inngest.com', 'trigger.dev', 'temporal.io', 'upstash.com', 'hatchet.run'],
+    // Both filed on their own words: restate.dev "lightweight runtime ... innately resilient
+    // distributed apps", which is durable execution and temporal.io's shelf, and windmill.dev
+    // "code-first orchestration platform".
+    domains: ['inngest.com', 'trigger.dev', 'temporal.io', 'upstash.com', 'hatchet.run', 'restate.dev', 'windmill.dev'],
   },
   {
     id: 'llm-infrastructure',
@@ -143,7 +146,8 @@ export const CATEGORIES: Category[] = [
     id: 'scheduling',
     label: 'Scheduling and calendar APIs',
     jobToBeDone: 'book a meeting into a calendar you do not control',
-    domains: ['cal.com', 'calendly.com', 'nylas.com', 'savvycal.com', 'cronofy.com'],
+    // "Scheduling, at scale" on its own home page, which is the job this category names.
+    domains: ['cal.com', 'calendly.com', 'nylas.com', 'savvycal.com', 'cronofy.com', 'timekit.io'],
   },
   {
     id: 'maps-geo',
@@ -155,7 +159,9 @@ export const CATEGORIES: Category[] = [
     id: 'databases',
     label: 'Managed databases',
     jobToBeDone: 'get a production database without running one',
-    domains: ['neon.com', 'planetscale.com', 'turso.tech', 'cockroachlabs.com', 'xata.io'],
+    // mongodb.com and redis.io were missing from a category about getting a production database
+    // without running one, which was the largest gap in the corpus rather than a judgement call.
+    domains: ['neon.com', 'planetscale.com', 'turso.tech', 'cockroachlabs.com', 'xata.io', 'mongodb.com', 'redis.io'],
   },
   {
     id: 'observability',
