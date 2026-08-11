@@ -22,8 +22,8 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 - Jedenaście przebiegów adwersaryjnych: **16,7 → 2,2 → 3,9 → 2,0 → 0,94 → 7,9 → 1,4 → 1,29 → 0,77 →
   0,39 procent**, jedenasty bez wspólnej metryki, bo atakował trzy powierzchnie osobno: dwa
   fałszywe twierdzenia w skanerze (patrz runda 102) i **31,8 procent błędu w trasowaniu**.
-- Opublikowane liczby: **5 ze 170** przechodzi wszystkie trzy bariery, **48 jest o jeden wymóg od
-  tego**, **19 z 66** publikujących endpoint rejestracji ma grant, który agent dokończy bez
+- Opublikowane liczby: **7 ze 170** przechodzi wszystkie trzy bariery (było 5, dwóch doszło na
+  poprawce `programmatic_provisioning`), **47 jest o jeden wymóg od tego**, **19 z 66** publikujących endpoint rejestracji ma grant, który agent dokończy bez
   człowieka, **0 ze 170** serwuje agentom mniej tekstu niż przeglądarce.
 - **67 żywych serwerów MCP, 52 z nich publikuje RFC 7591** (68 w całym korpusie). DCR przyszło
   z wymogu specyfikacji MCP, nie z decyzji o wpuszczeniu agentów, a dwie trzecie tych drzwi i tak
