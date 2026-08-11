@@ -246,8 +246,23 @@ const entryAccept = (path: string) =>
 const PROCEDURE_SIGNALS =
   /api[- ]?key|api[- ]?token|access[- ]token|service[- ]token|service[- ]account|credential|bearer|authorization|endpoint|curl |POST https?:|sign[- ]?up|register|base[- ]?url/i
 
-function describesAProcedure(body: string): boolean {
-  return body.trim().length >= 400 && PROCEDURE_SIGNALS.test(body)
+/**
+ * Two different signals, because one word is too easily a false friend. Read across the twelve
+ * files scoring the full two points: ten name five to ten different things an agent needs, and
+ * the two that rest on a single word both mean something else by it. neon.com/skill.md matches
+ * `endpoint` three times, every one of them "each branch has its own compute endpoint", which is
+ * a Postgres host and not somewhere to send a request. pinecone.io/agents.md matches `curl ` once
+ * and it is `curl -fsSL https://pinecone.io/install.sh | sh`, an install script inside what is
+ * otherwise an index of links. Both keep the point for having a file; neither describes a
+ * procedure. The three files scoring one point match nothing at all, so this does not touch them.
+ */
+export function describesAProcedure(body: string): boolean {
+  if (body.trim().length < 400) return false
+  const kinds = new Set<string>()
+  for (const match of body.matchAll(new RegExp(PROCEDURE_SIGNALS.source, 'gi'))) {
+    kinds.add(match[0].toLowerCase().replace(/[^a-z]/g, ''))
+  }
+  return kinds.size >= 2
 }
 
 export const PROVISIONING_PATTERN_COUNT = PROVISIONING_PATTERNS.length

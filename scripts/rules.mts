@@ -4,6 +4,7 @@ import {
   BOT_DEFENCE_RULES,
   PROVISIONING_RULES,
   SELF_SERVE_PATTERNS,
+  describesAProcedure,
   everyFreeSignalIsAButton,
   everyFreeSignalIsAQuestion,
 } from '../src/lib/scan/funnel'
@@ -95,6 +96,24 @@ const asked: Case[] = [
 for (const [text, expected] of asked) {
   check(`"${text.slice(0, 52)}"`, everyFreeSignalIsAQuestion(SELF_SERVE_PATTERNS, text) !== null, expected)
 }
+
+console.log('punkt wejścia, czyli procedura kontra jedno słowo, które znaczy co innego')
+const pad = (text: string) => `${text}\n${'Weaviate is an open-source vector database. '.repeat(12)}`
+const procedure: Case[] = [
+  ['Get your API key from the dashboard, then set the base URL to https://api.example.com', true],
+  // Both real files, in the words that decided them. `endpoint` on neon.com/skill.md is a Postgres
+  // host and `curl ` on pinecone.io/agents.md is an install script inside an index of links.
+  ['Each branch has its own compute endpoint, and branches are copy-on-write clones.', false],
+  ['**CLI** `curl -fsSL https://pinecone.io/install.sh | sh` **MCP** `npx -y @pinecone-io/mcp`', false],
+  ['Use API-key or OIDC authentication. ## Credentials Typical clients require WEAVIATE_URL.', true],
+  ['This page intentionally contains no operational guidance for agents or merchants.', false],
+]
+for (const [text, expected] of procedure) {
+  check(`"${text.slice(0, 52)}"`, describesAProcedure(pad(text)), expected)
+}
+// The floor is on length and nothing else, so a one-line file naming two things is still not a
+// procedure a machine can follow.
+check('za krótki plik mimo dwóch sygnałów', describesAProcedure('Get an API key and POST https://a.test'), false)
 
 console.log('crawl-delay, czyli czyja grupa obowiązuje')
 const delay = (body: string) => crawlDelayForAgents(parseRobots(body))
