@@ -204,8 +204,10 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
      znalezisk poza tą jedną z rundy 103.
   3. ~~**`machine_readable_api`**~~ **zrobione w rundzie 104: 106 na 106.** `robots_paths_resolve`
      był atakowany wcześniej (22 werdykty odtworzone ręcznie, 4 złe zdania naprawione).
-  4. **Zdania w `/findings` obok liczb.** Audyt pilnuje liczb, nie zdań, a runda 55 pokazała, że
-     werdykt bywa dobry przy fałszywym zdaniu.
+  4. ~~**Zdania w `/findings` obok liczb.**~~ **zrobione w rundach 105-106.** Znalezione jedno
+     fałszywe (Contentful), a audyt pilnuje teraz trzech twierdzeń nazywających firmy. **Nie
+     obejmuje to zdań na `/methodology` i `/report`**, które są historyczne i datowane, więc
+     dryfują wolniej, ale nie są pilnowane niczym.
 - ~~**Kuracja korpusu jest niesprawdzona**~~ **zrobione 2026-08-10**, przelot po wszystkich 156
   wierszach z pytaniem, czy domena to firma, o której myślimy. **155 zweryfikowanych, 1 nieczytelny**
   (`digger.tools`, 429). Znaleziska: `defer.run` **wypada z korpusu** (apex 301 na cudzą domenę na
@@ -294,6 +296,26 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-11 (106): audyt pilnuje teraz też zdań, które nazywają firmę
+
+Ostatnia pozycja dwunastego przebiegu. Każda liczba korpusowa na stronie jest przeliczana i
+pilnowana; **zdanie nazywające firmę nie jest ani jednym, ani drugim** i dryfuje ciszej. Runda 105
+znalazła jedno takie: przez tydzień pisaliśmy, że Contentful przechodzi wszystkie trzy bariery,
+dwa akapity pod listą, która go nie zawierała, a **wszystkie liczby na tej stronie były przez ten
+cały czas poprawne**.
+
+Trzy twierdzenia trzymają się teraz danych albo wywalają audyt: dwaj rejestratorzy za tymi samymi
+drzwiami (`namecheap.com` zamknięte, `dynadot.com` otwarte), sama lista „wszystkie trzy" i przykład
+z późną CAPTCHĄ. Guard wypisuje `17 liczb i 3 twierdzenia o firmach, 0 rozjazdów`.
+
+**Sfalsyfikowany przed wdrożeniem**, bo test, który nie umie oblać, nie jest testem: w kopii
+roboczej odjąłem `supabase.com` jedną nogę i dostałem wszystkie trzy skargi plus dwa rozjazdy
+liczbowe. Pierwsza wersja wzorca też oblała, ale z własnego błędu: `[^.]+` na liście domen kończy
+się na pierwszej kropce, czyli na `auth0`.
+
+Przy okazji: zdanie o powtarzalności na `/methodology` mówiło „oba nasze user-agenty", a od dziś
+znaczą co innego. Teraz mówi „oba, którymi pytaliśmy tamtego dnia".
 
 ## Runda 2026-08-11 (105): trasowanie z 35 na 20 procent, i jedna rzecz, którą popsułem
 
