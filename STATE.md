@@ -598,6 +598,34 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (92): cala strona lezala i to moja wina, a znalazl to straznik dopiety godzine wczesniej
+
+**Produkcja zwracala 500 na kazdej stronie.** Przyczyna w logach byla jednoznaczna:
+`Exceeded memory limit for $group, but didn't allow external spilling`. **Dziesiec reseedow w ciagu
+doby** rozdmuchalo kolekcje raportow (kazdy raport niesie tresci stron, ktore przeczytal) poza to,
+co `$group` utrzyma w pamieci, a `latestPerDomain` bylo zbudowane wlasnie na `$group` po calej
+kolekcji.
+
+`allowDiskUse: true` **nie pomoglo**, bo klaster nie pozwala na spill, wiec agregacja poszla w
+calosci: `distinct('domain')` plus jedno **indeksowane** zapytanie na domene, osiem rownolegle.
+Nic nie trzyma w pamieci wiecej niz jeden raport naraz. Strona wrocila, 171 wierszy, formula 8.0,
+0 sprzecznosci.
+
+**Znalazl to audyt dopiety pod reseed godzine wczesniej** i znalazl go tylko dlatego, ze biegnie
+automatycznie. Przy okazji sam pokazal wade: wywalil sie stosem wywolan na pustej odpowiedzi.
+Teraz ponawia trzy razy i mowi jednym zdaniem, ze **nie zmierzyl niczego**, co jest czym innym niz
+rozjazd liczb.
+
+**I drugi straznik zarobil na siebie w tej samej godzinie.** Ten na zerze odmow przy rejestracji
+zglosil rozjazd: strona liczy 1, korpus 0. Zadna ze stron nie klamala. `/findings` liczy z
+`browserStatus`, ktorego `corpus.json` nie publikowal, wiec moj wzorzec dopasowywal **proze
+zamiast faktu**. Naprawione przez opublikowanie faktu (`refusesAgentsAtSignup` per wiersz), a nie
+przez poluzowanie straznika. Kazdy moze teraz sprawdzic te liczbe sam.
+
+**Reguła do noszenia:** straznik, ktory porownuje proxy z prawda, predzej czy pozniej zglosi
+falszywy alarm. Jesli strona twierdzi cos, czego korpus nie niesie, **brakuje pola w korpusie**,
+a nie sprytniejszego regexa.
+
 ## Runda 2026-08-11 (91): piec wierszy dodanych, jeden falszywy pozytyw zlapany przez wlasny audyt
 
 **Uzupelnione trzy najciensze kategorie**, kazdy wpis na podstawie wlasnych slow vendora:
