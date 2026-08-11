@@ -9,33 +9,30 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 
 ## W locie w tej chwili (2026-08-12, noc)
 
-**Nic nie leci.** Formuła **8.7** na produkcji, korpus w całości na 8.7, `npm run audit` mówi
-`170 rows on formula 8.7, 0 contradictions` i `17 stated numbers and 3 named-vendor claims
-checked against the data, 0 adrift`. Drzewo czyste, wszystko wypchnięte.
+**Reseed 8.8 leci** (log `/tmp/reseed-8.8.log`), stan sprzed niego w `/tmp/corpus-8.7.json`.
+**Przewidywanie: zero zmian werdyktu**, bo 8.8 zmienia wyłącznie zdanie (nazywa oba pliki
+`llms`, z których pochodzi próbka linków). To zarazem **czwarty pomiar podłogi szumu**.
 
-Kopie do porównań: `/tmp/corpus-8.4.json`, `/tmp/corpus-8.5.json`, `/tmp/corpus-8.6.json`,
-`/tmp/corpus-8.7.json`.
+Po reseedzie:
 
-**Sposób pracy, który się sprawdził cztery razy z rzędu i którego trzymaj się dalej:** zmiana
-reguły idzie z przewidywaniem spisanym z góry, wiersz po wierszu, a po reseedzie
-`npm run diff-corpus <przed.json> -- --expect dom:check,...` ma zwrócić zero niespodzianek.
-Wszystko poza listą czyta się pojedynczo. Tak znalazł się błąd karty MCP na telnyx.
+```
+npm run audit
+npm run diff-corpus /tmp/corpus-8.7.json
+```
 
-**Trasowanie zmierzone i zamknięte na tę noc** (rundy 126-127): 59,3 procent błędu na zestawie
-odłożonym, dwie próby naprawy odrzucone pomiarem, uczciwa liczba opublikowana w opisie narzędzia
-MCP. `npm run routing-fresh` (z `WHY=1` pokazuje punktację). **Nie dopisuj słów do `VOCABULARY`
-licząc, że to pomoże**: ten projekt zmierzył to trzy razy (rundy 52, 53, 127).
+Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-8.7.json`.
 
-**Otwarta decyzja produktowa dla Krystiana:** `find_providers` może odpowiadać często i mylić się
-w 8 na 27 odpowiedzi (dziś), albo wymagać dwóch słów z jednej kategorii i wtedy nie mylić się
-wcale, odpowiadając o połowę rzadziej. Obie opcje zmierzone na obu zestawach.
+**Sposób pracy, którego trzymaj się dalej:** zmiana reguły idzie z przewidywaniem spisanym z góry,
+wiersz po wierszu, a `diff-corpus` ma zwrócić zero niespodzianek. Sprawdziło się pięć razy z rzędu
+(5/5, 0/0, 1/1, 0/0 i ten). Wszystko poza listą czyta się pojedynczo, bo tak znalazł się błąd
+karty MCP na telnyx.
 
 ## Stan na teraz, w dziesięciu liniach
 
 - Produkt nazywa się **Let Agents In** od 2026-08-10. Domena **nie jest kupiona**, adres to nadal
   `stackpick-f12d13a227ea.herokuapp.com`, a nazwa hosta zostaje świadomie do czasu zakupu.
   User-agent skanera to `LetAgentsIn/1.0`.
-- Formuła **8.7**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
+- Formuła **8.8**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
   `npm run audit` pilnuje **17 liczb i 3 twierdzeń nazywających firmy**, przy **0 sprzecznościach**,
   czyli każdą liczbę liczoną z danych, która trafia na publiczną stronę, i trzy zdania obok nich.
 - **Podłoga szumu korpusu: 0,64 procent** (15 zmian na 2338 przy dwóch reseedach bez zmiany reguły).
