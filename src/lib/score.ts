@@ -57,6 +57,18 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       const seen = f.agentStatusesSeen?.length && new Set(f.agentStatusesSeen).size > 1
       const tries = seen ? ` across three tries (${f.agentStatusesSeen.join(', ')})` : ''
+      // A 2xx anywhere in the sequence disproves the sentence below, whatever the last try said.
+      // name.com answered (200, 429, 429) and we published "no agent reaches the site at all"
+      // about a site that had just served us, because the challenge is read off the final fetch
+      // alone. Three requests in a row is our load and not what an agent does, so the challenge
+      // we then met is ours to own. Same reasoning the rate-limit branch below already carries.
+      const letUsIn = f.agentStatusesSeen?.find((status) => status >= 200 && status < 400)
+      if (f.botChallenge && letUsIn !== undefined) {
+        return yes(
+          1,
+          `Answered ${letUsIn} to ${AGENT_UA}${tries}, so an agent reaches the site: the JavaScript challenge came only after we had asked three times in a row, which is our load rather than your wall`,
+        )
+      }
       // A challenge is not a limit. The edge is asking the caller to run JavaScript, which every
       // browser does invisibly and no HTTP client does at all, so it is the sharpest possible
       // answer to this check rather than an excuse for skipping it.

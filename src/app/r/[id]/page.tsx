@@ -241,7 +241,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </section>
       )}
 
-      {findings.botChallenge && (
+      {/* Not when one of the tries answered: the box would say no agent gets in while the check
+          above it passes the vendor for having let us in. name.com answered (200, 429, 429). */}
+      {findings.botChallenge && !findings.agentStatusesSeen?.some((status) => status >= 200 && status < 400) && (
         <section className="border-b border-rule py-8">
           <div className="border-l-2 border-fail bg-surface p-6">
             <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-fail">A challenge, not a limit</h2>
