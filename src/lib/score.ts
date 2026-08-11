@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '8.5'
+export const FORMULA_VERSION = '8.6'
 
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on
@@ -472,9 +472,24 @@ export const CHECKS: Check[] = [
         return yes(1, `Live MCP endpoint at ${first.url}, ${how}`)
       }
       if (f.machine.wellKnown.mcp_server_card) {
+        // Only when we actually read the address out of the card. telnyx.com published this
+        // sentence during the 8.5 reseed while its card named api.telnyx.com/v2/mcp, which
+        // answers a full handshake: one failed fetch of the card dropped the only candidate that
+        // mattered, and the sentence then named the two hostnames we had guessed as though they
+        // were the addresses in question. Naming them is what makes it checkable, so a scan that
+        // never got the card has to say that instead of concluding from what it guessed.
+        const named = f.funnel.mcpCardNamed ?? []
+        if (named.length === 0) {
+          return {
+            points: 0,
+            detail: `Unmeasurable: /.well-known/mcp.json is published and we could not read an endpoint out of it this time, so the addresses we probed were guesses rather than yours`,
+            inconclusive: true,
+            unblock: 'Nothing for you to do if the file is served reliably. We rescan, and a readable card decides this in one request.',
+          }
+        }
         return yes(
           0,
-          `/.well-known/mcp.json is published, but nothing answered at mcp.${f.domain} or /mcp. A card is a claim about a server, not a server.`,
+          `/.well-known/mcp.json names ${named.join(', ')}, and nothing answered there or at mcp.${f.domain} or /mcp. A card is a claim about a server, not a server.`,
         )
       }
       // Only when the probe itself found nothing out. Eleven of the twelve rows that published

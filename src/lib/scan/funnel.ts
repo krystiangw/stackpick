@@ -1,4 +1,4 @@
-import { AGENT_UA, BROWSER_UA, fetchUrl, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, visibleTextLength, type Fetched } from './http'
+import { AGENT_UA, BROWSER_UA, fetchUrl, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, timeLeftMs, visibleTextLength, type Fetched } from './http'
 
 export const AGENT_ENTRY_PATHS = [
   '/agent-signup.md',
@@ -444,6 +444,8 @@ export type FunnelFindings = {
   mcpEndpoints: McpEndpoint[]
   /** Whether the endpoint probe got an answer, as opposed to never reaching a host. */
   mcpProbed: boolean
+  /** The addresses the vendor's own card named, empty when we could not read it. */
+  mcpCardNamed: string[]
   signup: SignupFindings
   provisioning: {
     programmatic: string[]
@@ -803,7 +805,18 @@ async function servesCatchAllText(site: string): Promise<CatchAll> {
  * the two together, and Inngest's at api.inngest.com/mcp.
  */
 async function cardEndpoints(site: string): Promise<string[]> {
-  const card = await fetchUrl(`${site}/.well-known/mcp.json`, { accept: 'application/json' })
+  // Asked twice when the first ask fails, because this one document is the difference between
+  // probing the address we were handed and guessing at hostnames. telnyx.com lost its live
+  // server to a single failed fetch of this file during the 8.5 reseed: the published row said
+  // "nothing answered at mcp.telnyx.com or /mcp", naming the two we guessed, while the card it
+  // had just found names api.telnyx.com/v2/mcp, which answers a full handshake. Three rescans
+  // minutes later all found it. A failure to read is not an absence, and everywhere else in the
+  // scanner that rule is already enforced.
+  let card = await fetchUrl(`${site}/.well-known/mcp.json`, { accept: 'application/json' })
+  if (!card.ok && timeLeftMs() > 2_000) {
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    card = await fetchUrl(`${site}/.well-known/mcp.json`, { accept: 'application/json', fresh: true })
+  }
   if (!card.ok) return []
   try {
     const parsed = JSON.parse(card.body) as {
@@ -830,7 +843,12 @@ async function cardEndpoints(site: string): Promise<string[]> {
  * on eleven of the twelve rows that published that excuse the probe had already settled it: the
  * host does not resolve, or it answers a path nobody registered exactly the same way.
  */
-type McpProbe = { endpoints: McpEndpoint[]; answered: boolean }
+type McpProbe = {
+  endpoints: McpEndpoint[]
+  answered: boolean
+  /** Whether the card named an address for us, as opposed to us guessing at hostnames. */
+  cardNamed: string[]
+}
 
 /** Whether the handshake was forwarded to another origin, which no MCP server does to its own POST. */
 function leftTheEndpoint(asked: string, landed: string): boolean {
@@ -1014,7 +1032,7 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
   )
   // A status of zero is a host that never answered, which is the one case where we genuinely
   // found nothing out rather than found nothing.
-  return { endpoints: routedFirst, answered: results.some((got) => got.status !== 0) }
+  return { endpoints: routedFirst, answered: results.some((got) => got.status !== 0), cardNamed: fromCard }
 }
 
 export type FunnelInput = {
@@ -1135,6 +1153,7 @@ export async function scanFunnel({
     oauth,
     mcpEndpoints,
     mcpProbed: mcp.answered,
+    mcpCardNamed: mcp.cardNamed,
     signup,
     provisioning: {
       programmatic: matching(PROVISIONING_PATTERNS, await corpus, PROVISIONING_PATTERN_LABELS),
