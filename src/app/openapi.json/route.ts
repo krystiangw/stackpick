@@ -86,6 +86,61 @@ export function GET() {
           responses: { '200': { description: 'text/event-stream carrying step, done and failed events' } },
         },
       },
+      // The three surfaces this document used to omit, which is the defect we score other people
+      // for: an agent reading our own API description could not learn that the corpus exists.
+      '/corpus.json': {
+        get: {
+          summary: 'Every curated domain we have scanned, one formula version throughout',
+          operationId: 'getCorpus',
+          responses: {
+            '200': {
+              description: 'The published corpus, recomputed per request',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      formulaVersion: { type: 'string' },
+                      domains: { type: 'integer' },
+                      max: { type: 'integer' },
+                      rows: {
+                        type: 'array',
+                        items: {
+                          type: 'object',
+                          properties: {
+                            domain: { type: 'string' },
+                            category: { type: ['string', 'null'] },
+                            total: { type: 'integer' },
+                            measurable: { type: 'integer' },
+                            unattendedGrant: { type: ['boolean', 'null'] },
+                            scorecardUrl: { type: 'string' },
+                            checks: { type: 'array', items: { type: 'object' } },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/corpus.csv': {
+        get: {
+          summary: 'The same corpus, one row per domain and check',
+          operationId: 'getCorpusCsv',
+          responses: { '200': { description: 'text/csv, long format' } },
+        },
+      },
+      '/mcp': {
+        post: {
+          summary: 'MCP over Streamable HTTP: scan_domain and find_providers',
+          operationId: 'mcpJsonRpc',
+          description: 'JSON-RPC 2.0. GET answers 405 by design, because there is no server-initiated stream.',
+          responses: { '200': { description: 'JSON-RPC result' } },
+        },
+      },
     },
   })
 }
