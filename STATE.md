@@ -598,6 +598,20 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (99): wzorzec nocy zapisany poza tym repo
+
+Cztery razy tej nocy pierwsza wersja poprawki byla zla i cztery razy wyszlo to wylacznie dlatego,
+ze sprawdzalem **skutek**, a nie kod wyjscia: push, ktory powiedzial DEPLOYED i zostal odrzucony
+przez hook; kanarek typow, ktory nie mogl zaspiewac, bo nazwalem go z kropka; podmiana nazwy, ktora
+pominela polowe plikow przez wielkie P; wykluczenie licznika, ktore objelo jedno z dwoch wywolan.
+
+Zapisane do wspolnej bazy, bo to nie jest wiedza o StackPicku:
+`clad-kb show weryfikuj-skutek-nie-kod-wyjscia-cztery-przypadki-z-jednej-n`. Razem z dwoma
+wariantami, ktore tez wyszly tej nocy: **guard porownujacy proxy z prawda zawsze kiedys sklamie**
+(brakuje pola w danych, nie sprytniejszego regexa) oraz **zanim wyciagniesz wniosek ze zmiany
+liczby, sprawdz, czy miernik jest ten sam** (`slopscore.py` zmienil ksztalt wyniku miedzy dwoma
+pomiarami tej samej prozy, `typed_package` skakal przez zimny cache npm).
+
 ## Runda 2026-08-11 (98): atak na wlasny licznik, dzien po jego wdrozeniu
 
 Zweryfikowane, co dzialalo: trzy zadania z UA przegladarki daly dokladnie **`/pricing browser · 3`**,
