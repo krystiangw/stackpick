@@ -194,6 +194,9 @@ function describesAProcedure(body: string): boolean {
 
 export const PROVISIONING_PATTERN_COUNT = PROVISIONING_PATTERNS.length
 
+/** Exported so a rule test can show it saying yes and no, rather than only ever saying no. */
+export const PROVISIONING_RULES = PROVISIONING_PATTERNS
+
 /**
  * The same seven rules in the words a vendor can search their own documentation for. Published
  * on the methodology page: a verdict that says "1 of 7 phrases" and never says which seven is

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "tsc --noEmit && next build",
+    "build": "tsc --noEmit && tsx scripts/rules.mts && next build",
     "start": "next start",
     "lint": "eslint",
     "scan": "tsx scripts/scan-cli.ts",
@@ -15,7 +15,8 @@
     "seed": "tsx harness/seed.mts",
     "collect": "tsx harness/collect.mts",
     "cell": "tsx harness/run.mts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "rules": "tsx scripts/rules.mts"
   },
   "dependencies": {
     "mongodb": "^7.5.0",

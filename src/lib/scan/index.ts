@@ -359,7 +359,7 @@ type Phase = 'discovery' | 'door' | 'docs' | 'robots' | 'machine' | 'funnel' | '
  * The threshold is deliberately coarse, because a page that renders a personalised banner to a
  * browser differs by a few percent and that is not cloaking.
  */
-function thinnerForAgents(asBrowser: Fetched | null | undefined, asAgent: Fetched | null): number | null {
+export function thinnerForAgents(asBrowser: Fetched | null | undefined, asAgent: Fetched | null): number | null {
   if (!asBrowser?.ok || !asAgent?.ok) return null
   const browserText = visibleTextLength(asBrowser.body)
   if (browserText < 2_000) return null
