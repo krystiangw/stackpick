@@ -185,10 +185,25 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   jest confoundem. Gemini spada na darmowy próg API (20 żądań dziennie) i nie kończy przebiegu.
 - ~~**Ósmy przebieg adwersaryjny**~~ **zrobione 2026-08-10: 1,29 procent** (4 na 311), runda 56.
 - ~~**Dziewiąty przebieg adwersaryjny**~~ **zrobione 2026-08-10: 0,77 procent** (4 na 523), runda 57.
-- **Dziesiąty przebieg adwersaryjny.** Baseline: **0,77 procent**. Warte ataku: **sonda nazwanymi
-  crawlerami** (jedna strona, nie serwis, i to jest opublikowany limit), **klasyfikacja CTA po
-  czasowniku** (siódma zmiana `self_serve`), **próbka llms.txt co N-ty link**, słownik
-  `find_providers`, i czy poprawka głosowania 429 nie zmieniła czegoś, czego nie sprawdziłem.
+- ~~**Dziesiąty przebieg adwersaryjny**~~ **zrobione 2026-08-10: 0,39 procent** (1 na 256), rundy
+  60-63. Dowiedzione: sonda nazwanymi crawlerami (109/109), reguła 429 (53/53), kuracja (155
+  apeksów przemiecionych). Niedowiedzione i naprawione: klasyfikacja CTA (fałszywy fail
+  `pinecone.io`) oraz `find_providers` (23 procent złych trasowań).
+
+- **Jedenasty przebieg adwersaryjny.** Baseline: **0,39 procent**, ale uwaga, to jest **poniżej
+  zmierzonej podłogi szumu korpusu 0,64 procent**, więc pojedyncze znalezisko nie jest dowodem.
+  Stan powierzchni po nocy 10/11 sierpnia:
+
+  **Zaatakowane przeze mnie i dowiedzione, nie marnuj na to przebiegu:** `robots_paths_resolve`
+  (wszystkie 22 werdykty odtworzone ręcznie, znalezione i naprawione 4 złe zdania), twierdzenie o
+  grantach (66 twierdzeń odtworzonych niezależnie, znalezione i naprawione 2), każda liczba na
+  `/findings` i `/report` (kilkanaście, wszystkie zgodne), spójność `corpus.csv` z `corpus.json`.
+
+  **Nietknięte i warte ataku:** reguła `browser-only` w MCP (wprowadzona po jednym przypadku,
+  `njal.la`, i nigdy nie sprawdzona na innych), sondowanie `/api/mcp` poza tym jednym wierszem,
+  rozgałęzione `REMEDIES` w `fixfirst.ts` (pięć rad przepisanych jednej nocy, żadna nie
+  zweryfikowana na vendorze, którego dotyczy), oraz `find_providers` na **świeżych** pytaniach,
+  bo oba istniejące zestawy są spalone dostrajaniem.
 - ~~**Kuracja korpusu jest niesprawdzona**~~ **zrobione 2026-08-10**, przelot po wszystkich 156
   wierszach z pytaniem, czy domena to firma, o której myślimy. **155 zweryfikowanych, 1 nieczytelny**
   (`digger.tools`, 429). Znaleziska: `defer.run` **wypada z korpusu** (apex 301 na cudzą domenę na
