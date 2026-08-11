@@ -341,6 +341,10 @@ której po prostu nie umieliśmy nazwać**, i żaden oblany nie jest oblany bez 
 listy. Nowa reguła ma swoje przypadki w `scripts/rules.mts`, łącznie z negatywnym („kaskada is
 a river in Poland").
 
+Reseed odświeżający potwierdzony na produkcji: oba wiersze niosą nowe zdanie **przy zachowanym
+punkcie**, a cały diff to **6 werdyktów, 0,24 procent**, czyli grubo poniżej podłogi szumu. W tym
+`weglot.com`, który sam poprawił się na nieoznaczalny, dokładnie jak zapowiadałem w rundzie 111.
+
 ## Runda 2026-08-11 (112): reguła, która umiała powiedzieć tylko „nie"
 
 `/findings` publikuje wynik zerowy: **0 ze 170** serwuje agentowi mierzalnie mniej tekstu niż
