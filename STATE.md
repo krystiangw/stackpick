@@ -598,6 +598,23 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (98): atak na wlasny licznik, dzien po jego wdrozeniu
+
+Zweryfikowane, co dzialalo: trzy zadania z UA przegladarki daly dokladnie **`/pricing browser · 3`**,
+zero podwojnego liczenia, klasyfikacja poprawna w obie strony.
+
+**I znalazlem powazniejsza rzecz.** `/findings agent · 29` to byl **w wiekszosci nasz wlasny skrypt
+audytu**, ktory odpytuje `/findings` i `/report` po kazdym reseedzie. Pierwszym wnioskiem z tych
+danych byloby „agenci uwielbiaja nasza strone z wynikami", a to bylibysmy my. Licznik zbudowany
+wczoraj po to, zeby wiedziec, czy ktokolwiek przyszedl, **mierzylby glownie nas samych**.
+
+Wykluczenie po user-agencie, i **pierwsza wersja nie zadzialala**: nazwalem tylko pobranie korpusu,
+a audyt pobiera **osobno takze same strony**. Zmierzone zamiast zalozone: licznik wzrosl z 29 na 43
+mimo poprawki. Po nazwaniu obu wywolan pelny przebieg audytu **nie doklada ani jednego renderu**.
+
+Czwarty raz tej nocy pierwsza wersja poprawki byla zla i czwarty raz wyszlo to tylko dlatego, ze
+sprawdzam skutek, a nie kod wyjscia.
+
 ## Runda 2026-08-11 (97): przeniesienie na domene przygotowane, zeby zakup byl jedyna praca
 
 Adres bazowy byl **zaszyty w czternastu plikach, 28 razy**, i w dwoch odmianach, ktorych nikt nie
