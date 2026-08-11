@@ -27,22 +27,25 @@ async function collections(): Promise<{
   reports: Collection<ReportDoc>
   leads: Collection<Lead>
   answers: Collection<CachedAnswer>
+  visits: Collection<{ day: string; path: string; count: number }>
 }> {
   const database = await db()
   const reports = database.collection<ReportDoc>('reports')
   const leads = database.collection<Lead>('leads')
   const answers = database.collection<CachedAnswer>('registryAnswers')
+  const visits = database.collection<{ day: string; path: string; count: number }>('visits')
 
   indexesReady ??= Promise.all([
     reports.createIndex({ domain: 1, scannedAt: -1 }),
     reports.createIndex({ scannedAt: -1 }),
     leads.createIndex({ createdAt: -1 }),
+    visits.createIndex({ day: -1, path: 1 }, { unique: true }),
     // Mongo expires them, so nothing here has to remember to.
     answers.createIndex({ at: 1 }, { expireAfterSeconds: REGISTRY_TTL_MS / 1000 }),
   ]).then(() => undefined)
   await indexesReady
 
-  return { reports, leads, answers }
+  return { reports, leads, answers, visits }
 }
 
 const registryAnswers: SharedCache = {
@@ -119,6 +122,21 @@ export class MongoStore implements Store {
   async saveLead(lead: Lead) {
     const { leads } = await collections()
     await leads.insertOne(lead)
+  }
+
+  async recordVisit(visit: { day: string; path: string }) {
+    const { visits } = await collections()
+    await visits
+      .updateOne({ day: visit.day, path: visit.path }, { $inc: { count: 1 } }, { upsert: true })
+  }
+
+  async listVisits(days: number) {
+    const { visits } = await collections()
+    const since = new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10)
+    return (await visits
+      .find({ day: { $gte: since } }, withoutId)
+      .sort({ day: -1, count: -1 })
+      .toArray()) as { day: string; path: string; count: number }[]
   }
 
   async listLeads(limit: number) {

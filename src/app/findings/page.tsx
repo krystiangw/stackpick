@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { buildIndustryReport } from '@/lib/industry'
+import { recordVisit } from '@/lib/visits'
+import { headers } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 
@@ -109,6 +111,7 @@ const RESULTS: Result[] = [
 ]
 
 export default async function FindingsPage() {
+  recordVisit('/findings', (await headers()).get('user-agent'))
   // The behavioural studies say a wall exists. The corpus says how much of the market is standing
   // behind it, and this page argued the first half without ever showing the second.
   const corpus = await buildIndustryReport()

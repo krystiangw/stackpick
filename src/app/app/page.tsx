@@ -5,7 +5,18 @@ export const dynamic = 'force-dynamic'
 
 export default async function AppPage() {
   const store = getStore()
-  const [reports, leads] = await Promise.all([store.listReports(50), store.listLeads(50)])
+  const [reports, leads, visits] = await Promise.all([
+    store.listReports(50),
+    store.listLeads(50),
+    store.listVisits(30),
+  ])
+  // Split the way the product's whole argument splits: what a browser did and what a client
+  // someone wrote did. Nothing here identifies anybody, and none of it is published.
+  const byKind = visits.reduce<Record<string, number>>((totals, visit) => {
+    const kind = visit.path.endsWith(' agent') ? 'agent' : 'browser'
+    totals[kind] = (totals[kind] ?? 0) + visit.count
+    return totals
+  }, {})
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
@@ -14,6 +25,21 @@ export default async function AppPage() {
         Run a scan, then send the scorecard to whoever owns the domain. Outbound goes out one address at a
         time and on purpose.
       </p>
+
+      <section className="mt-8 border-t border-rule pt-6">
+        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Last 30 days</h2>
+        <p className="mt-2 font-mono text-sm">
+          {byKind.browser ?? 0} browser renders · {byKind.agent ?? 0} from clients that are not a browser
+        </p>
+        <ul className="mt-3 flex flex-col gap-1 font-mono text-xs text-ink-soft">
+          {visits.slice(0, 12).map((visit) => (
+            <li key={`${visit.day}${visit.path}`}>
+              {visit.day} · {visit.path} · {visit.count}
+            </li>
+          ))}
+          {visits.length === 0 && <li>nothing counted yet</li>}
+        </ul>
+      </section>
 
       <AdminConsole
         reports={reports.map((report) => ({

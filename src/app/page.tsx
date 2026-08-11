@@ -4,6 +4,8 @@ import { Rankings } from '@/components/rankings'
 import { ScanForm } from '@/components/scan-form'
 import { loadRankings } from '@/lib/rankings'
 import { CHECKS, MAX_SCORE, STAGES } from '@/lib/score'
+import { recordVisit } from '@/lib/visits'
+import { headers } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,6 +41,7 @@ const EVIDENCE = [
 ]
 
 export default async function Home() {
+  recordVisit('/', (await headers()).get('user-agent'))
   const { categories, coverage } = await loadRankings()
   // The stage list is abstract until it has a shape next to it, and the shape has to come from
   // a domain anyone can open and check rather than from an invented example.

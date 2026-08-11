@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { CHECKS, MAX_SCORE } from '@/lib/score'
+import { recordVisit } from '@/lib/visits'
+import { headers } from 'next/headers'
 
 export const metadata: Metadata = {
   title: 'Pricing: Let Agents In',
@@ -81,7 +83,8 @@ const AFTER = [
   },
 ]
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  recordVisit('/pricing', (await headers()).get('user-agent'))
   return (
     <main className="mx-auto max-w-5xl px-6">
       <section className="border-b border-rule py-14">

@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR, REUSE_WINDOW_MS } from '@/lib/scan-gate'
 import { CHECKS, FORMULA_VERSION, MAX_SCORE, STAGES } from '@/lib/score'
+import { recordVisit } from '@/lib/visits'
+import { headers } from 'next/headers'
 
 export const metadata: Metadata = {
   title: 'Docs: Let Agents In',
@@ -18,7 +20,8 @@ function Code({ children }: { children: string }) {
   )
 }
 
-export default function DocsPage() {
+export default async function DocsPage() {
+  recordVisit('/docs', (await headers()).get('user-agent'))
   return (
     <main className="mx-auto max-w-5xl px-6">
       <section className="border-b border-rule py-14">

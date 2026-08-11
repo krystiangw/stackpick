@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { buildIndustryReport, type CheckTally } from '@/lib/industry'
+import { recordVisit } from '@/lib/visits'
+import { headers } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,6 +19,7 @@ function tallyFor(checks: CheckTally[], id: string): CheckTally | undefined {
 }
 
 export default async function IndustryReportPage() {
+  recordVisit('/report', (await headers()).get('user-agent'))
   const report = await buildIndustryReport()
 
   if (!report) {

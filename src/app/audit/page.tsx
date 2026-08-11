@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { listAudits, tally } from '@/lib/audit'
+import { recordVisit } from '@/lib/visits'
+import { headers } from 'next/headers'
 
 const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']
 const spell = (n: number) => WORDS[n] ?? String(n)
@@ -14,6 +16,7 @@ export const metadata: Metadata = {
 }
 
 export default async function AuditIndexPage() {
+  recordVisit('/audit', (await headers()).get('user-agent'))
   const audits = await listAudits()
   const runs = audits.reduce((sum, audit) => sum + audit.runs.length, 0)
   const categories = new Set(audits.map((audit) => audit.category)).size

@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { AGENT_ENTRY_PATHS, PROVISIONING_PATTERN_LABELS } from '@/lib/scan/funnel'
 import { AI_CRAWLERS } from '@/lib/scan/robots'
 import { CHECKS, FORMULA_VERSION, MAX_SCORE, STAGES } from '@/lib/score'
+import { recordVisit } from '@/lib/visits'
+import { headers } from 'next/headers'
 
 export const metadata: Metadata = {
   title: 'Methodology: Let Agents In',
@@ -14,7 +16,8 @@ const CLASS_COST: Record<string, string> = {
   user: 'Blocking it stops your customer’s agent from reading your docs mid-integration.',
 }
 
-export default function MethodologyPage() {
+export default async function MethodologyPage() {
+  recordVisit('/methodology', (await headers()).get('user-agent'))
   return (
     <main className="mx-auto max-w-5xl px-6">
       <section className="border-b border-rule py-14">

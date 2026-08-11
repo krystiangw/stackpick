@@ -35,6 +35,9 @@ export interface Store {
   latestPerDomain(limit: number, seededOnly?: boolean): Promise<Report[]>
   saveLead(lead: Lead): Promise<void>
   listLeads(limit: number): Promise<Lead[]>
+  /** One counter per day and path. Upserted, so a page render costs one small write. */
+  recordVisit(visit: { day: string; path: string }): Promise<void>
+  listVisits(days: number): Promise<{ day: string; path: string; count: number }[]>
 }
 
 const DATA_DIR = path.join(process.cwd(), 'data')
@@ -91,6 +94,13 @@ class FileStore implements Store {
     const file = path.join(dir, 'leads.jsonl')
     const existing = await readFile(file, 'utf8').catch(() => '')
     await writeFile(file, `${existing}${JSON.stringify(lead)}\n`)
+  }
+
+  /** The local store exists so a developer can run without Mongo; counting visits there is noise. */
+  async recordVisit() {}
+
+  async listVisits() {
+    return []
   }
 
   async listLeads(limit: number) {
