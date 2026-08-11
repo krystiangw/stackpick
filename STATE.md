@@ -594,6 +594,31 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (85): szesc „bledow" trasowania przejrzanych po kolei, dwa realne
+
+Zewnetrzny pomiar dal szesc zlych trasowan. Przejrzenie ich po kolei pokazalo, ze **cztery nie sa
+bledami trasowania**:
+
+- `daily.co` trasuje sie do observability, bo jego wlasny opis brzmi „Daily is the team behind
+  Pipecat. Ultra low latency, open source SDKs, and enterprise reliability" i **ani razu nie mowi
+  o wideo**. Trasowanie czyta ten tekst poprawnie, tylko tekst nie opisuje produktu.
+- `pinecone.io` trasuje sie do wyszukiwania, bo ich wlasne copy zaczyna sie od „Search through
+  billions of items". Nasza polka (bazy wektorowe) opisuje produkt, ich zdanie opisuje zastosowanie.
+- `axiom.co` i `highlight.io` to spory na granicy kategorii, gdzie ich wlasne slowa („event store",
+  „monitoring platform") sa dwuznaczne.
+
+**Jeden realny brak w regule, naprawiony:** `prosemirror.net` („In-browser structured text editing
+component") szedl do infrastruktury przegladarkowej na slowie *browser*. Mielismy fraze
+`text editor`, nie mielismy `text editing`. Dopisana, czyli **dokonczenie istniejacej reguly, a nie
+regula pod przypadek**. Oba zestawy pytan bez zmian (64/64).
+
+**Jedna sprawa kuracji dla Krystiana, dolaczona do `vercel.com`:** `supabase.com` lezy pod
+przechowywaniem plikow, a jego wlasna strona zaczyna sie od „Build production-grade applications
+with a **Postgres database**, Authentication, instant APIs, Realtime, Functions, Storage and Vector
+embeddings". Storage jest jednym z siedmiu produktow. To nie jest blad w stylu `tigrisdata.com`
+(ktora sie przebranzowila w calosci), tylko **vendor wieloproduktowy, ktorego jedna kategoria nie
+utrzyma**, a nasz model daje jedna. Ta sama klasa co `vercel.com`, wiec ta sama decyzja.
+
 ## Runda 2026-08-11 (84): trzy pozycje z wlasnej listy zamkniete
 
 **Reguła `browser-only` dowiedziona.** Wprowadzilem ja z jednego przypadku (`njal.la`), wiec
