@@ -199,9 +199,10 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
      odłożonej: gdy pytanie nazywa **kanał dostawy** (sms, głos, push, mail), kanał powinien
      wygrywać remis z dziedziną („SMS reminders before the appointment" to komunikacja, nie
      kalendarz). To reguła o świecie, nie o pytaniu, więc wolno ją sprawdzić na nowym zestawie.
-  2. **Gałęzie zamieniające status HTTP na werdykt.** Runda 103 znalazła jedną, która nie
-     odziedziczyła reguły o 429 (`crawlersRefused`). Przejrzyj **każdą** pozostałą pod tym kątem.
-  3. **`robots_paths_resolve` i `machine_readable_api`** nie były atakowane od czasu wprowadzenia.
+  2. ~~**Gałęzie zamieniające status HTTP na werdykt.**~~ **zrobione w rundzie 104**, zero dalszych
+     znalezisk poza tą jedną z rundy 103.
+  3. ~~**`machine_readable_api`**~~ **zrobione w rundzie 104: 106 na 106.** `robots_paths_resolve`
+     był atakowany wcześniej (22 werdykty odtworzone ręcznie, 4 złe zdania naprawione).
   4. **Zdania w `/findings` obok liczb.** Audyt pilnuje liczb, nie zdań, a runda 55 pokazała, że
      werdykt bywa dobry przy fałszywym zdaniu.
 - ~~**Kuracja korpusu jest niesprawdzona**~~ **zrobione 2026-08-10**, przelot po wszystkich 156
@@ -292,6 +293,36 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-11 (104): dwie powierzchnie zaatakowane, obie się obroniły
+
+**Reguła o 429 sprawdzona w każdej gałęzi, która zamienia status na werdykt.** Runda 103 znalazła
+jedną, która jej nie odziedziczyła, więc przejrzałem resztę: próbnik martwych linków w `llms.txt`
+(tylko 404 i 410 liczą się jako martwe), ścieżki `Allow` z `robots.txt` (to samo, plus osobny
+kubełek „nie odpowiedziało"), ścieżki wejścia (429 robi check **nieoznaczalnym**, co jest stroną
+ostrożną), `answers_plain_request` (osobna gałąź `rateLimitedUs`), `self_serve` (gałąź oblewająca
+jest za bramką `pricingFetched`), rejestr npm. **Zero dalszych znalezisk.**
+
+**`machine_readable_api` zaatakowany kontrolką w przestrzeni nazw dokumentacji i obronił się w
+całości: 106 na 106.** To jest ten check, w którym kontrolka catch-all stoi w korzeniu serwisu,
+a dowód pochodzi z hosta dokumentacji, czyli z zupełnie innej przestrzeni nazw. Wysłałem bzdurną
+ścieżkę do katalogu każdej z 97 stron kredytowanych za negocjację markdownu: **dziewięć oddało
+markdown**, w tym `groq.com` prawdziwie wyglądającą stronę zamiast błędu.
+
+Porównanie treści oczyściło wszystkie dziewięć: kontrolki to markdownowe „Page Not Found" na 280
+do 2226 bajtów, a strony kredytowane mają od 814 bajtów do 33 kB prawdziwej dokumentacji z
+frontmatterem. Dziewięć kredytów za OpenAPI sprawdzone osobno: **każdy plik parsuje się jako
+dokument OpenAPI 3.x** i ma od 3 do 866 ścieżek.
+
+**Z tego wyszło rozróżnienie, którego wcześniej nie miałem nazwanego** i które trafiło do KB:
+- **Twierdzenie o istnieniu** („macie serwer pod tym adresem") kontrolka w tej samej przestrzeni
+  nazw rozstrzyga: identyczna odpowiedź znaczy, że twierdzenie jest fałszywe.
+- **Twierdzenie o zdolności** („wasza dokumentacja negocjuje markdown") kontrolka oddająca ten sam
+  **rodzaj** odpowiedzi niczego nie obala, bo platforma serwująca markdown także dla nieistniejącej
+  ścieżki tym bardziej negocjuje markdown. Rozstrzyga dopiero porównanie treści.
+
+Mieszanie tych dwóch przypadków dałoby dziewięć fałszywych oblań u vendorów, którzy robią dokładnie
+to, o co prosimy.
 
 ## Runda 2026-08-11 (103): reseed na 8.1, jedno fałszywe oskarżenie znalezione i cofnięte
 
