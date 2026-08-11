@@ -111,6 +111,7 @@ export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus 
       'A verdict of unmeasured means we could not evaluate the check, and notApplicable means it does not apply to a product of this kind. Neither is a failure and neither counts in measurable.',
       'unattendedGrant is null when a vendor publishes no registration endpoint or no grant list, false when every advertised grant needs a person at a browser, true when client_credentials is among them. device_code counts as false: approving on another screen is still a person.',
       'rateLimited means the host answered 429 during that scan, so some checks are unmeasured for a reason that is ours and not theirs. Those rows are thinner than the site, and filtering them out is reasonable.',
+      'measuredOn names the domain a row was actually read on, when the home page landed somewhere else. Those rows describe the journey an agent takes from the domain in the name, and the files they score belong to the domain in measuredOn: sendgrid.com answers robots.txt with a redirect to twilio.com/robots.txt, and twilio.com is a row of its own, so anything counted across the corpus counts that file twice.',
       'These are vendors we have no relationship with. Every check is one HTTP request with a published rule, so any row here can be reproduced or disputed.',
     ],
     checks: CHECKS.map((check) => ({
