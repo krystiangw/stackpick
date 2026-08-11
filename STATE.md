@@ -579,6 +579,20 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (83): spojnosc eksportow i nasz wlasny opis API
+
+`corpus.csv` kontra `corpus.json`: **2490 wierszy w formacie dlugim (166 x 15) wobec 166 obiektow,
+zbiory domen identyczne, zero rozjazdow** w `total` i `measurable`. Dwie powierzchnie tych samych
+danych sie nie rozjechaly.
+
+**Ale `/openapi.json` opisywal tylko `/api/scan` i `/api/scan/stream`.** Publikujemy jeszcze
+`/corpus.json`, `/corpus.csv` i `/mcp`, wiec agent czytajacy nasz wlasny opis API **nie mial jak
+sie dowiedziec, ze korpus istnieje**. To jest dokladnie ten defekt, za ktory punktujemy innych
+w `machine_readable_api`, u nas samych, na stronie, ktora mowi „We are scored by this too".
+
+Dopisane wszystkie trzy, ze schematem wiersza korpusu (lacznie z `unattendedGrant`) i z uwaga, ze
+`/mcp` odpowiada 405 na GET z zalozenia, bo nie ma strumienia inicjowanego przez serwer.
+
 ## Runda 2026-08-11 (82): druga publiczna strona z danymi, komplet zgodny
 
 To samo co z `/findings`, tym razem `/report`. Odtworzone niezaleznie z `corpus.json`:
