@@ -124,7 +124,30 @@ const cloaked = corpus.rows.filter((row) =>
   /percent less text/.test(row.checks.find((check) => check.id === 'docs_without_js')?.detail ?? ''),
 ).length
 
+// Published on 2026-08-10 and unguarded until the audit was asked how many numbers the site
+// states against how many it watches. A number nobody checks is a number that drifts.
+// Everyone whose oauth_dcr passes, which is what "publishing a registration endpoint" means.
+// Counting `unattendedGrant !== null` instead was two short: bitmovin.com and calendly.com
+// publish the endpoint and no grant_types_supported at all, and the sentence still covers them.
+const withRegistration = corpus.rows.filter((row) => {
+  const check = row.checks.find((c) => c.id === 'oauth_dcr')
+  return check !== undefined && check.points === check.max
+}).length
+const unattendedGrant = corpus.rows.filter((row) => row.unattendedGrant === true).length
+
 const stated: { page: string; pattern: RegExp; expected: number; what: string }[] = [
+  {
+    page: '/findings',
+    pattern: /Of the\s+(\d+)\s+vendors publishing a registration/,
+    expected: withRegistration,
+    what: 'vendors publishing a registration endpoint',
+  },
+  {
+    page: '/findings',
+    pattern: /endpoint, only\s+(\d+)\s+advertise a grant/,
+    expected: unattendedGrant,
+    what: 'grants an unattended agent can finish',
+  },
   {
     page: '/findings',
     pattern: /(\d+) of \d+ llms.txt files point at pages that are gone/,
