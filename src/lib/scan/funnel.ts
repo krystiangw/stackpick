@@ -36,8 +36,21 @@ const PROVISIONING_PATTERNS = [
   /management api/i,
   /provisioning api/i,
   /account api/i,
-  new RegExp(String.raw`creat(?:e|ing) (?:an?|your|a new|new|the)?\s*${CREDENTIAL}`, 'i'),
-  /programmatically create/i,
+  // "create and manage API keys" is the commonest way this is written and the conjunction was
+  // enough to hide it: docs.stripe.com/keys/managed-api-keys says a platform "can create and
+  // manage API keys on your behalf" and we published Stripe as documenting no path at all. Only
+  // a conjunction is allowed through, not arbitrary text, because "create a customer with an api
+  // key" is about spending a credential rather than making one.
+  new RegExp(String.raw`creat(?:e|es|ing)(?:\s+(?:and|or)\s+\w+)?\s+(?:an?|your|a new|new|the)?\s*${CREDENTIAL}`, 'i'),
+  // Either order, and the credential has to be the thing being created. Without that clause it
+  // read agora.io's "creating projects and retrieving usage data programmatically" and nylas.com's
+  // "create accounts programmatically" as documented key provisioning, which is a different
+  // sentence about a different object. Both are in the corpus and both were caught before this
+  // shipped, by reading what the new pattern had matched rather than counting that it matched more.
+  new RegExp(
+    String.raw`programmatically creat\w+|creat\w+[^.]{0,30}${CREDENTIAL}[^.]{0,30}programmatically|programmatically[^.]{0,30}creat\w+[^.]{0,30}${CREDENTIAL}`,
+    'i',
+  ),
   /service account/i,
   new RegExp(String.raw`/v\d+/(?:api[-_]keys|access[-_]tokens)`, 'i'),
 ]
@@ -167,8 +180,10 @@ export const PROVISIONING_PATTERN_LABELS = [
   'management api',
   'provisioning api',
   'account api',
-  'create an api key, api token, access token, personal access token, service account, auth token or secret key',
-  'programmatically create',
+  // Parenthesised because the sentence quotes each label as one phrase, and a comma-separated
+  // list read as six: a vendor saw "1 of 7 provisioning phrases" followed by six things.
+  'create an api key (or api token, access token, personal access token, service account, auth token, secret key)',
+  'programmatically create, in either word order',
   'service account',
   'a documented path like /v1/api_keys or /v2/access-tokens',
 ]
