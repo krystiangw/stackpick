@@ -598,6 +598,24 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (100): reguła 8.0 sprawdzona na calym korpusie, zero dalszych falszywych pozytywow
+
+Poprawke na catch-all echoujacy sciezke wdrozylem po jednym przypadku (`restate.dev`) i
+zweryfikowalem na trzech domenach, wiec sprawdzilem ja na **wszystkich 18 vendorach z przyznanym
+plikiem wejscia**: kazdemu wyslana bzdurna sciezka `.md`. **Jedno trafienie i okazalo sie moje.**
+
+`sentry.io` odpowiada na dowolne `.md` 976-bajtowym stubem („You've hit the web UI"), ale jest
+kredytowany za plik **`.json`**, a moja sonda pytala tylko o `.md`. Sprawdzenie wlasciwej
+przestrzeni nazw: `/.well-known/mcp.json` to prawdziwa karta serwera (106 B JSON-a), a bzdura w tej
+samej przestrzeni daje 301. **Kredyt zasluzony, konstrukcja per-namespace robi dokladnie to, po co
+powstala.**
+
+Rozklad potwierdza to niezaleznie: 16 vendorow z jednym plikiem, 2 z dwoma, **zero z trzema albo
+wiecej**, czyli ksztalt `restate.dev` nie wystepuje juz nigdzie.
+
+Warte odnotowania, ze **sonda byla slepa na przestrzenie nazw i zlapalem to zanim zglosilem
+znalezisko**. Gdyby poszlo odwrotnie, wpisalbym vendorowi blad, ktorego nie ma.
+
 ## Runda 2026-08-11 (99): wzorzec nocy zapisany poza tym repo
 
 Cztery razy tej nocy pierwsza wersja poprawki byla zla i cztery razy wyszlo to wylacznie dlatego,
