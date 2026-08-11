@@ -13,7 +13,7 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
   `stackpick-f12d13a227ea.herokuapp.com`, a nazwa hosta zostaje świadomie do czasu zakupu.
   User-agent skanera to `LetAgentsIn/1.0`.
 - Formuła **7.9**, korpus **166 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
-  `npm run audit` pilnuje **16 liczb** i **0 sprzeczności**.
+  `npm run audit` pilnuje **17 liczb** i **0 sprzeczności**, czyli **każdą liczbę liczoną z danych, która trafia na publiczną stronę**.
 - **Podłoga szumu korpusu: 0,64 procent** (15 zmian na 2338 przy dwóch reseedach bez zmiany reguły).
   Opublikowana na `/methodology`. Każda różnica mniejsza to pogoda, nie zmiana.
 - Dziesięć przebiegów adwersaryjnych: **16,7 → 2,2 → 3,9 → 2,0 → 0,94 → 7,9 → 1,4 → 1,29 → 0,77 →
@@ -597,6 +597,21 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 `sinch.com` oblewały na tym samym kształcie. Lista fraz nie mogła tego naprawić, bo `free trial`
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
+
+## Runda 2026-08-11 (87): pokrycie strażnika policzone, nie oszacowane
+
+Zamiast dopisywac wzorce na wyczucie, policzylem **ile liczb liczonych z danych strony w ogole
+publikuja**: 14 roznych pol `corpus.*` w JSX na `/`, `/findings` i `/report`. Audyt pilnowal 13
+z nich. Niepilnowana byla jedna i akurat ta, ktora wczoraj przepisalem: **zero odmow przy
+rejestracji**.
+
+Guard na zero jest wart wiecej niz na liczbe niezerowa, bo **zero nikt nie kwestionuje**. Ten
+istnieje po to, zeby zlapac dzien, w ktorym przestanie byc zerem po jednej stronie i nie po
+drugiej. Wzorzec po stronie danych kotwiczy na zdaniu „Signup answers ... identifying itself as
+an agent", ktore dzis nie wystepuje ani razu.
+
+**17 liczb, 0 rozjazdow, pokrycie kompletne.** To jest wlasciwosc, ktora da sie powiedziec:
+kazda liczba liczona z danych, ktora trafia na publiczna strone, ma strażnika.
 
 ## Runda 2026-08-11 (86): straznik liczb zlapal dwie rzeczy, obie moje
 

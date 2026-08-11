@@ -135,7 +135,21 @@ const withRegistration = corpus.rows.filter((row) => {
 }).length
 const unattendedGrant = corpus.rows.filter((row) => row.unattendedGrant === true).length
 
+// Currently zero, which is exactly why it needs a guard: a number nobody watches can stop being
+// zero on one side without the other noticing. The sentence and the data have to move together.
+const signupRefusals = corpus.rows.filter((row) =>
+  /^Signup answers .* identifying itself as an agent/.test(
+    row.checks.find((check) => check.id === 'signup_reachable')?.detail ?? '',
+  ),
+).length
+
 const stated: { page: string; pattern: RegExp; expected: number; what: string }[] = [
+  {
+    page: '/findings',
+    pattern: /signup\s+form is rare:\s*(\d+)\s+vendors do it/,
+    expected: signupRefusals,
+    what: 'signups that refuse an agent while serving a browser',
+  },
   {
     page: '/findings',
     pattern: /Of the\s+(\d+)\s+vendors publishing a registration/,
