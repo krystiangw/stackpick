@@ -78,3 +78,11 @@ if [ -n "$failed" ]; then
   done
 fi
 done
+
+# The moment the numbers change is the moment a stated number can start lying, so the guard runs
+# here rather than when somebody remembers. It found two real problems on 2026-08-11: a pattern
+# that had silently stopped matching after a sentence was rewritten, and a wrong expectation of
+# my own. Non-fatal on purpose: a reseed that finished is still worth having.
+echo
+echo "== sprawdzam opublikowane liczby"
+npm run --silent audit || echo "audyt zglosil rozjazd, korpus jest zaciagniety, liczby wymagaja sprawdzenia"
