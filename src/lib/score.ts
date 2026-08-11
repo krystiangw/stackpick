@@ -696,11 +696,15 @@ export const CHECKS: Check[] = [
       if (f.funnel.provisioning.selfServeSignals.length > 0 && !onlyChrome) {
         // Saying it once out of two tries still means you say it, and hiding the disagreement
         // would leave a vendor unable to explain why the number moved between two scans.
+        // Quoted, because "free tier or no-card signals" is a claim a vendor cannot check against
+        // their own page, and the words we found are.
+        const quotes = f.funnel.provisioning.selfServeQuotes ?? []
+        const said = quotes.length > 0 ? `: ${quotes.map((quote) => `"${quote}"`).join(', ')}` : ''
         return yes(
           1,
           f.funnel.pricingTriesDisagreed
-            ? `Free tier or no-card signals${at}, present in one of the two fetches of that page`
-            : `Free tier or no-card signals${at}`,
+            ? `Free tier or no-card signals${at}${said}, present in one of the two fetches of that page`
+            : `Free tier or no-card signals${at}${said}`,
         )
       }
       // Absence read off a body we cut short is not absence. The same rule already governs the

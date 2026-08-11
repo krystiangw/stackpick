@@ -389,7 +389,7 @@ export type FunnelFindings = {
   /** Whether the endpoint probe got an answer, as opposed to never reaching a host. */
   mcpProbed: boolean
   signup: SignupFindings
-  provisioning: { programmatic: string[]; selfServeSignals: string[]; selfServeIsButtonOnly?: boolean }
+  provisioning: { programmatic: string[]; selfServeSignals: string[]; selfServeQuotes?: string[]; selfServeIsButtonOnly?: boolean }
   /** True when the site answers unknown paths with real text, making entry probes meaningless. */
   servesCatchAll: boolean
   /** The same question per namespace, because one does not imply another. */
@@ -662,6 +662,22 @@ function matching(patterns: RegExp[], html: string, labels?: string[]): string[]
   return patterns
     .map((pattern, index) => (pattern.test(text) ? (labels?.[index] ?? pattern.source) : null))
     .filter((label): label is string => label !== null)
+}
+
+/**
+ * The vendor's own words rather than the name of the rule that caught them. "Free tier or no-card
+ * signals at your pricing page" is a claim a vendor has no way to check; "no credit card",
+ * "Starter Free" is one they can search their own page for.
+ */
+function quoting(patterns: RegExp[], html: string, most = 3): string[] {
+  const text = visibleText(html)
+  const found: string[] = []
+  for (const pattern of patterns) {
+    const hit = pattern.exec(text)?.[0]?.replace(/\s+/g, ' ').trim()
+    if (hit && hit.length <= 60 && !found.some((seen) => seen.toLowerCase() === hit.toLowerCase())) found.push(hit)
+    if (found.length >= most) break
+  }
+  return found
 }
 
 /**
@@ -1060,6 +1076,7 @@ export async function scanFunnel({
     provisioning: {
       programmatic: matching(PROVISIONING_PATTERNS, await corpus, PROVISIONING_PATTERN_LABELS),
       selfServeSignals: matching(SELF_SERVE_PATTERNS, pricingText),
+      selfServeQuotes: quoting(SELF_SERVE_PATTERNS, pricingText),
       selfServeIsButtonOnly: everyFreeSignalIsAButton(SELF_SERVE_PATTERNS, visibleText(pricingText)),
     },
     servesCatchAll: catchAll.markdown || catchAll.json || catchAll.text,
