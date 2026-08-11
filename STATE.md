@@ -13,7 +13,7 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
   `stackpick-f12d13a227ea.herokuapp.com`, a nazwa hosta zostaje świadomie do czasu zakupu.
   User-agent skanera to `LetAgentsIn/1.0`.
 - Formuła **7.9**, korpus **166 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
-  `npm run audit` pilnuje **14 liczb** i **0 sprzeczności**.
+  `npm run audit` pilnuje **16 liczb** i **0 sprzeczności**.
 - **Podłoga szumu korpusu: 0,64 procent** (15 zmian na 2338 przy dwóch reseedach bez zmiany reguły).
   Opublikowana na `/methodology`. Każda różnica mniejsza to pogoda, nie zmiana.
 - Dziesięć przebiegów adwersaryjnych: **16,7 → 2,2 → 3,9 → 2,0 → 0,94 → 7,9 → 1,4 → 1,29 → 0,77 →
@@ -597,6 +597,29 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 `sinch.com` oblewały na tym samym kształcie. Lista fraz nie mogła tego naprawić, bo `free trial`
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
+
+## Runda 2026-08-11 (86): straznik liczb zlapal dwie rzeczy, obie moje
+
+`npm run audit` **przestal sprawdzac jedna z liczb**, bo godzine wczesniej przepisalem zdanie o
+formularzach rejestracji na `/findings`, a wzorzec szukal starego brzmienia („N **more** serve a
+form"). Skrypt powiedzial „could not find the sentence at all", ale gdyby byl mniej gadatliwy, po
+prostu przestalby pilnowac i nikt by nie zauwazyl. **Check, ktory po cichu przestaje sprawdzac,
+jest gorszy niz jego brak.** Wzorzec zakotwiczony na slowach najmniej podatnych na przepisanie.
+
+**Luka odwrotna, wieksza:** liczby opublikowane wczoraj wieczorem („Of the 68 vendors publishing a
+registration endpoint, only 18") **nie byly pilnowane przez nikogo**. Audyt pilnowal 14 liczb,
+a strona publikowala wiecej. Dopisane, jest **16**.
+
+I nowy straznik od razu zarobil na siebie, wskazujac blad **w moim wlasnym oczekiwaniu**: liczylem
+`unattendedGrant !== null`, co dawalo 66, podczas gdy zdanie mowi „publikujacych endpoint
+rejestracji", czyli 68. Roznica to `bitmovin.com` i `calendly.com`, ktore publikuja endpoint i
+zadnej listy grantow. Strona miala racje, moja definicja nie.
+
+**Nagłowek `STATE.md` przepisany.** Mowil „StackPick, stan na 2026-08-09, formula 7.4, 155 domen,
+budzet 25 s", czyli byl o dwa dni i piec wersji formuly do tylu, w pliku, ktory pierwsza linijka
+opisuje jako **punkt wejscia po compact**. Caly dziennik rund byl aktualizowany skrupulatnie, a
+jedyna sekcja, ktora ktokolwiek czyta najpierw, zostala z tylu. Dopisane ostrzezenie, zeby
+przepisywac naglowek, a nie tylko dziennik.
 
 ## Runda 2026-08-11 (85): szesc „bledow" trasowania przejrzanych po kolei, dwa realne
 
