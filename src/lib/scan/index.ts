@@ -118,6 +118,8 @@ export type ScanFindings = {
    * vendor whose Account API creates keys.
    */
   docsPagesUnread: number
+  /** Why each unread page was unread, so a 429 we caused is not published as a refusal. */
+  docsPagesUnreadStatuses: number[]
   robots: RobotsFindings
   machine: MachineFindings
   funnel: FunnelFindings
@@ -268,7 +270,7 @@ async function readDeeper(
    * Twilio Chat and Authy. We published those numbers under SendGrid's name.
    */
   mustMention: string | null = null,
-): Promise<{ pages: Fetched[]; unreadable: number }> {
+): Promise<{ pages: Fetched[]; unreadable: number; unreadStatuses: number[] }> {
   const base = new URL(docsUrl)
   const seen = new Set<string>([docsUrl])
   const fromLinks: string[] = []
@@ -298,7 +300,15 @@ async function readDeeper(
 
   const pages = await inParallel(candidates, (url) => fetchUrl(url))
   const readable = pages.filter((page) => page.ok)
-  return { pages: readable, unreadable: pages.length - readable.length }
+  // Kept, not just counted. "Your edge refused our request" is a claim about the vendor, and a
+  // 429 is not that: this project's own published rule is that a 429 is our load rather than an
+  // answer about agents, and it is already enforced on the crawler check and the door check.
+  // Three of these pages are fetched in parallel inside a burst of about nineteen documents.
+  return {
+    pages: readable,
+    unreadable: pages.length - readable.length,
+    unreadStatuses: pages.filter((page) => !page.ok).map((page) => page.status),
+  }
 }
 
 /**
@@ -496,7 +506,7 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
   const docsPending = phase('docs', async () =>
     docsPage?.ok && found.docs
       ? readDeeper(domain, found.docs, docsPage.body, brandOnHost)
-      : { pages: [], unreadable: 0 },
+      : { pages: [], unreadable: 0, unreadStatuses: [] },
   )
   const robotsPending = phase('robots', () => scanRobots(found.site))
   const machinePending = phase('machine', () =>
@@ -631,6 +641,7 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     docsPagesRead: documentsRead.length,
     docsPagesReadUrls: documentsRead,
     docsPagesUnread: deeperDocs.unreadable,
+    docsPagesUnreadStatuses: deeperDocs.unreadStatuses,
     robots,
     machine: machine.findings,
     funnel,

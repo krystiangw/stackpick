@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '8.6'
+export const FORMULA_VERSION = '8.7'
 
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on
@@ -637,7 +637,20 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       const found = f.funnel.provisioning.programmatic.length
       const pages = f.docsPagesRead ?? 0
-      const unread = f.docsPagesUnread ?? 0
+      // A 404 is our own bad pick, not a refusal. We choose these three pages out of a sitemap or
+      // a docs index, so a link that is gone says our selection is stale and says nothing at all
+      // about the vendor, and calling it "refused our request" was flatly untrue: mapbox.com's one
+      // unread page answers 404. Anything else stays a reason not to conclude, and the sentence
+      // now names the status so the vendor can tell an edge rule from our stale link.
+      const statuses = f.docsPagesUnreadStatuses ?? []
+      const refusals = statuses.filter((status) => status !== 404)
+      // Rows scanned before the statuses were recorded have the count and nothing else, and
+      // dropping them into "no refusals" would rewrite their verdict on evidence we never held.
+      const unread = statuses.length > 0 ? refusals.length : (f.docsPagesUnread ?? 0)
+      const why =
+        refusals.length > 0
+          ? ` (${[...new Set(refusals)].join(', ')}${refusals.includes(429) ? ', and a 429 is our own burst rather than an answer about agents' : ''})`
+          : ''
       // One page was enough to award two points and too little to conclude anything when the
       // count was zero. That asymmetry inflated every vendor whose first docs page mentioned keys.
       if (found > 0 && pages >= 2) {
@@ -648,7 +661,7 @@ export const CHECKS: Check[] = [
         if (found === 1 && unread > 0) {
           return {
             points: 0,
-            detail: `Unmeasurable: provisioning language found on the pages we read, and ${unread} more we selected refused our request, so how much of it you document is not something this scan measured`,
+            detail: `Unmeasurable: provisioning language found on the pages we read, and ${unread} more we selected did not answer${why}, so how much of it you document is not something this scan measured`,
             inconclusive: true,
             unblock: 'Let ordinary HTTP reach your documentation pages and this becomes measurable.',
           }
@@ -687,7 +700,7 @@ export const CHECKS: Check[] = [
       if (unread > 0) {
         return {
           points: 0,
-          detail: `Unmeasurable: ${unread} documentation ${unread === 1 ? 'page we selected refused our request' : 'pages we selected refused our request'}, so nothing here is a finding about what you document`,
+          detail: `Unmeasurable: ${unread} documentation ${unread === 1 ? 'page we selected did not answer' : 'pages we selected did not answer'}${why}, so nothing here is a finding about what you document`,
           inconclusive: true,
           unblock: 'Let ordinary HTTP reach your documentation pages and this becomes measurable.',
         }
