@@ -258,7 +258,8 @@ export default async function FindingsPage() {
               <>
                 {' '}
                 <span className="font-mono text-sm text-ink">{lateCaptchaOnList.join(' and ')}</span>{' '}
-                {lateCaptchaOnList.length === 1 ? 'is' : 'are'} on this list and gate signup with an hCaptcha
+                {lateCaptchaOnList.length === 1 ? 'is' : 'are'} on this list and{' '}
+                {lateCaptchaOnList.length === 1 ? 'gates' : 'gate'} signup with an hCaptcha
                 {' '}
                 {lateCaptchaOnList.length === 1 ? 'its' : 'their'} bundle loads later.
               </>
