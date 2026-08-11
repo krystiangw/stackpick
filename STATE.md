@@ -297,6 +297,33 @@ których agent nie ma prawa rozstrzygnąć sam.**
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
 
+## Runda 2026-08-11 (108): osiem werdyktów w górę to nie sukces, to kształt błędu
+
+Reseed na 8.2 przeszedł 170 domen i ruszył **20 werdyktów na 2550, czyli 0,78 procent**, tuż nad
+podłogą szumu. Osiem z nich siedzi w `programmatic_provisioning`, czyli w checku, który zmieniłem,
+i **wszystkie osiem poszło w górę**. To jest dokładnie kształt, jaki przybiera złe poszerzenie,
+więc przeczytałem, co każde z nich dopasowało.
+
+**Jedno było fałszywe:** `hatchet.run` dostał punkt za nagłówek „**Programmatically Creating** Cron
+Triggers". Słowa się zgadzają, temat nie. Weszło **gałęzią wiodącą**, którą poprzednia poprawka
+zostawiła bez opieki: stary wzorzec był dosłownym `programmatically create`, a ja poszerzyłem go do
+dowolnego słowa na `creat`, jednocześnie dokładając wymóg poświadczenia **tylko w kolejności
+odwrotnej**. Teraz obie kolejności wymagają poświadczenia pomiędzy.
+
+**Sprawdzone ponownie na zdaniach, nie na liczbach:** zostają `launchdarkly.com` („list, create,
+modify, and delete access tokens programmatically") i `deepl.com` („create a developer API key
+programmatically"), wypadają cron triggery Hatcheta, projekty Agory i konta Nylasa.
+
+Formuła **8.3**, trzeci reseed tej nocy w biegu.
+
+**Znane ograniczenie tego checku, zapisane świadomie zamiast naprawiane po drodze:** to jest
+**licznik fraz, nie czytnik procedur**. `loops.so` dostaje punkt za „This **creates an API key**",
+zdanie opisujące kliknięcie w panelu. Ta słabość jest w checku od początku i dotyczy wszystkich 58
+wierszy z tą frazą, nie tylko nowych, bo `create an api key` w zdaniu o dashboardzie wygląda tak
+samo jak w zdaniu o API. Naprawa wymagałaby markera programowego (endpoint, CLI, „via the API")
+w pobliżu frazy i **odjęłaby punkty wielu vendorom**, więc jest kandydatem na osobny przebieg
+z własnym reseedem, a nie dokładką do tego.
+
 ## Runda 2026-08-11 (107): najcięższy check czytał połowę zdań, które go dotyczą
 
 `programmatic_provisioning` waży dwa punkty i jest jedną z trzech nóg koniunkcji na `/findings`,
