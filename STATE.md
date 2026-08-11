@@ -208,7 +208,9 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
      znalezisk poza tą jedną z rundy 103.
   3. ~~**`machine_readable_api`**~~ **zrobione w rundzie 104: 106 na 106.** `robots_paths_resolve`
      był atakowany wcześniej (22 werdykty odtworzone ręcznie, 4 złe zdania naprawione).
-  5. **`programmatic_provisioning` liczy frazy, nie czyta procedur.** Runda 108 pokazała to na
+  5. ~~**`programmatic_provisioning` liczy frazy, nie czyta procedur.**~~ **zrobione w rundzie 110**,
+     29 werdyktów, netto minus 25 punktów, cztery pierwsze straty przeczytane i wszystkie słuszne.
+     Zapis niżej jest tym, co ten przebieg zastał. Runda 108 pokazała to na
      `loops.so`: „This creates an API key" opisuje kliknięcie w panelu i jest punktowane tak samo
      jak zdanie o endpoincie. Dotyczy wszystkich 58 wierszy z tą frazą. Hipoteza do sprawdzenia na
      całym korpusie: fraza liczy się dopiero, gdy w promieniu ~80 znaków stoi marker programowy
