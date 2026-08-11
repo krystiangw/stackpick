@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '8.0'
+export const FORMULA_VERSION = '8.1'
 
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on
@@ -207,9 +207,8 @@ export const CHECKS: Check[] = [
           : yes(1, 'No robots.txt, so nothing is disallowed for anyone')
       }
       // What robots.txt permits and what the edge does are two different measurements, and only
-      // one of them is what a crawler experiences. algolia.com's file blocks nobody while its edge
-      // answers 403 to any agent whose name contains "Bot", and amplitude.com answers ClaudeBot
-      // and GPTBot 404 at a documentation page it serves a browser in full.
+      // one of them is what an agent experiences. algolia.com's file blocks nobody while its edge
+      // answers 403 to ChatGPT-User at a documentation page it serves a browser in full.
       const refused = f.crawlersRefused ?? []
       if (refused.length > 0) {
         return yes(

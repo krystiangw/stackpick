@@ -261,10 +261,14 @@ export type McpEndpoint = {
   status: number
   /**
    * `browser-only` is a server that speaks the protocol and then refuses anything without a
-   * browser header. njal.la answers a JSON-RPC initialize at /api/mcp/ with 200 and a body of
-   * `CSRF Failed: Referer checking failed - no Referer`, which no unattended agent sends. It is
-   * a server, and it is not one an agent can use, and scoring it as live would hand a point to
-   * exactly the wall this scanner exists to find.
+   * browser header, which no unattended agent sends. It is a server, and it is not one an agent
+   * can use, and scoring it as live would hand a point to exactly the wall this scanner exists
+   * to find.
+   *
+   * It was introduced on njal.la and njal.la turned out not to be a case of it: their whole
+   * `/api/` prefix answers that same CSRF refusal to any name at all. The rule now has no
+   * instance in the corpus, and it is kept because the shape is real and the control below can
+   * now tell the two apart.
    */
   evidence: 'challenges' | 'rejects-get' | 'answers-json' | 'browser-only'
 }
@@ -719,7 +723,20 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
   // evidence of nothing and we published it as a live server on 18 domains. The control is the
   // same request at a path nobody registered, on the same origin, so the only thing that counts
   // is /mcp answering differently from the rest of the site.
-  const controlPath = '/mcp-letagentsin-control-8f3a1c'
+  const controlSegment = 'mcp-letagentsin-control-8f3a1c'
+  /**
+   * The candidate's own directory, not the site root. njal.la answers /api/mcp with a JSON-RPC
+   * CSRF refusal and answers /api/anything-else with byte-identical text, because the whole
+   * /api/ prefix is one view; we published them as running a server that only talks to browsers.
+   * A control at the site root cannot see that, because the root of that site 404s like any
+   * other, so a namespace with a catch-all could hand any vendor an endpoint they never built.
+   */
+  const controlFor = (url: string) => {
+    const parsed = new URL(url)
+    const segments = parsed.pathname.split('/').filter(Boolean)
+    segments[Math.max(segments.length - 1, 0)] = controlSegment
+    return `${parsed.origin}/${segments.join('/')}`
+  }
   const [results, control] = await Promise.all([
     inParallel(candidates, (url) =>
       // An MCP server speaks JSON-RPC over POST; a GET tells us far less and is what made us
@@ -770,29 +787,33 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
           if (got.status === 0 || completesHandshake(got.body)) return false
           return !discreditedByWildcard(got) || fromCard.includes(url)
         })
-        .map((url) => new URL(url).origin),
+        .map(controlFor),
     ),
   ]
-  const controls = await inParallel(needsControl, (origin) => fetchUrl(`${origin}${controlPath}`, handshake))
-  const nonsenseStatus = new Map(needsControl.map((origin, index) => [origin, controls[index].status]))
+  const controls = await inParallel(needsControl, (url) => fetchUrl(url, handshake))
+  const nonsense = new Map(needsControl.map((url, index) => [url, controls[index]]))
 
   const endpoints = results
     .map((got, index) => {
       if (completesHandshake(got.body)) {
         return { url: got.url, status: got.status, evidence: 'answers-json' as const }
       }
-      if (got.ok && !looksLikeHtml(got) && BROWSER_ONLY_REFUSAL.test(got.body)) {
-        return { url: got.url, status: got.status, evidence: 'browser-only' as const }
-      }
       // The wildcard probe only discredits addresses we guessed. An address the vendor named in
       // its own card is not a guess, and sentry.io's card points at another domain entirely.
       if (discreditedByWildcard(got) && !fromCard.includes(candidates[index])) return null
+      const control = nonsense.get(controlFor(candidates[index]))
+      // Read after the control, never before it: the same refusal at a name nobody registered is
+      // the namespace talking, not a server.
+      if (got.ok && !looksLikeHtml(got) && BROWSER_ONLY_REFUSAL.test(got.body)) {
+        if (control && BROWSER_ONLY_REFUSAL.test(control.body)) return null
+        return { url: got.url, status: got.status, evidence: 'browser-only' as const }
+      }
       const authenticating = got.status === 401 && Boolean(got.headers['www-authenticate'])
       // An unrouted path answering the same way means the answer was about the site, not about
       // MCP. Exempting the auth challenge is deliberate: a host that gates every path behind
       // OAuth is what an MCP server looks like, and mcp.sentry.dev is exactly that, while its
       // WWW-Authenticate header is something a marketing site's 405 never carries.
-      if (!authenticating && !dedicatedHostChallenge(got, candidates[index]) && got.status === nonsenseStatus.get(new URL(candidates[index]).origin)) return null
+      if (!authenticating && !dedicatedHostChallenge(got, candidates[index]) && got.status === control?.status) return null
       // A page that only serves GET says so in Allow, and it answers a POST with its own HTML
       // error. firecrawl.dev, honeybadger.io, posthog.com and scrapingbee.com were all published
       // as running a server at a marketing or docs page on that 405, while their real endpoint
@@ -813,7 +834,6 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
       // datadoghq.com both answer their MCP path with {"error":"invalid_token"} and answer a
       // path nobody registered with 404, which is a routed endpoint asking for credentials,
       // but neither sends WWW-Authenticate, so all three shapes above missed them.
-      const origin = new URL(candidates[index]).origin
       // A host called mcp.<domain> exists because somebody built one. When every path on it
       // demands credentials, that is what an MCP server behind OAuth looks like, which is the
       // exemption mcp.sentry.dev already had through its WWW-Authenticate header. contentful.com
@@ -824,7 +844,7 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
       const demandsCredentials =
         (got.status === 401 || got.status === 403) &&
         !looksLikeHtml(got) &&
-        (dedicatedHost || got.status !== nonsenseStatus.get(origin))
+        (dedicatedHost || got.status !== control?.status)
       if (!authenticating && !wrongMethod && !speaksJson && !demandsCredentials) return null
       return {
         // The address that answered, not the one we asked. pinecone.io/mcp is a redirect stub

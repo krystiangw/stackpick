@@ -114,7 +114,7 @@ function sameTerm(word: string, term: string): boolean {
 
 /** What a caller says, mapped to what we filed it under. Only terms our own prose does not carry. */
 const VOCABULARY: Record<string, string[]> = {
-  'file-storage': ['upload', 'file', 'image', 'photo', 'avatar', 'screenshot', 'attachment', 'cdn', 'bucket', 's3', 'media'],
+  'file-storage': ['upload', 'file', 'image', 'photo', 'avatar', 'attachment', 'cdn', 'bucket', 's3', 'media'],
   auth: ['login', 'signin', 'sign', 'authentication', 'authenticate', 'sso', 'oauth', 'identity', 'password', 'google', 'saml'],
   'transactional-email': ['email', 'mail', 'smtp', 'inbox', 'deliverability'],
   'product-analytics': ['analytics', 'track', 'funnel', 'retention', 'behaviour', 'behavior', 'event', 'click', 'replay', 'conversion', 'cohort'],
@@ -124,13 +124,17 @@ const VOCABULARY: Record<string, string[]> = {
   'feature-flags': ['flag', 'toggle', 'rollout', 'experiment', 'experimentation'],
   search: ['search', 'index', 'autocomplete', 'typeahead', 'facet'],
   // Not "call" or "calls": a video call is not telephony and an API call is neither.
-  communications: ['sms', 'voice', 'whatsapp', 'phone', 'telephony', 'messaging', 'otp', 'passcode'],
+  // Not "otp": the vendor who sends one and the vendor who verifies one are two categories, so a
+  // caller who writes nothing but that word has asked something we cannot route.
+  communications: ['sms', 'voice', 'whatsapp', 'phone', 'telephony', 'messaging', 'passcode'],
   // Not "editor": somebody asking for an editor wants the component, and a CMS is asked for by name.
-  'headless-cms': ['cms', 'content', 'blog', 'article', 'page', 'homepage', 'copywriter'],
+  // Not "page" either: a status page, a pricing page and a contact page are three other categories,
+  // and the word tied all of them against the one the caller meant.
+  'headless-cms': ['cms', 'content', 'blog', 'article', 'homepage', 'writer', 'copywriter'],
   'background-jobs': ['job', 'queue', 'worker', 'cron', 'workflow', 'async', 'background', 'nightly', 'batch', 'durable'],
-  'llm-infrastructure': ['llm', 'model', 'inference', 'gpu', 'prompt', 'completion', 'openai'],
+  'llm-infrastructure': ['llm', 'model', 'inference', 'gpu', 'prompt', 'completion', 'openai', 'transcription', 'transcribe'],
   video: ['video', 'stream', 'livestream', 'webinar', 'broadcast', 'encode', 'transcode', 'player', 'playback'],
-  'browser-infrastructure': ['scrape', 'crawl', 'crawler', 'headless', 'browser', 'puppeteer', 'playwright', 'proxy'],
+  'browser-infrastructure': ['scrape', 'crawl', 'crawler', 'headless', 'browser', 'puppeteer', 'playwright', 'proxy', 'screenshot'],
   // Not "alerting": an alert about an exception is error monitoring and an alert about latency is
   // observability, so the word decided nothing and tied all three.
   notifications: ['notification', 'notify', 'push', 'slack', 'webhook', 'bell', 'unread'],
@@ -138,10 +142,11 @@ const VOCABULARY: Record<string, string[]> = {
   'maps-geo': ['map', 'geocode', 'address', 'coordinate', 'location', 'geo', 'route', 'routing'],
   databases: ['database', 'postgres', 'postgresql', 'mysql', 'sql', 'sqlite', 'db'],
   observability: ['observability', 'log', 'metric', 'trace', 'tracing', 'monitor', 'uptime', 'apm', 'latency', 'dashboard', 'p99', 'slow'],
-  'documents-signature': ['document', 'signature', 'sign', 'signing', 'pdf', 'contract', 'esign'],
+  'documents-signature': ['document', 'signature', 'sign', 'signing', 'pdf', 'contract', 'esign', 'nda'],
   // Not "store": in nine questions out of ten it is the verb, and it sent both "store user
-  // avatars" and "where do I store uploaded files" to commerce.
-  commerce: ['commerce', 'ecommerce', 'shop', 'cart', 'catalog', 'storefront'],
+  // avatars" and "where do I store uploaded files" to commerce. Not "shop" either: "our shops" is
+  // a chain of buildings, and it tied against the map the caller wanted pins on.
+  commerce: ['commerce', 'ecommerce', 'cart', 'catalog', 'storefront'],
   localization: ['translate', 'translation', 'localization', 'localisation', 'i18n', 'language', 'locale'],
   'rich-text-editors': ['wysiwyg', 'richtext', 'editor', 'formatting', 'markdown'],
   // Not "domain": it is the word for a scope, a model boundary and an email suffix long before
@@ -174,6 +179,9 @@ const PHRASES: [RegExp, string][] = [
   // The channel decides: a passcode is auth, a passcode by text is the thing that carries it.
   [/\bby (?:text|sms)\b/, 'communications'],
   [/\bregister a domain\b|\bbuy a domain\b|\bdomain name\b|\bdns record/, 'domains-dns'],
+  // The plural and the bulk case, which the singular patterns missed: a caller buying one domain
+  // does it in a browser, and the one who writes to us is buying forty.
+  [/\b(?:buy|buying|register|registering|purchase|purchasing)\b[^.]{0,24}\bdomains\b/, 'domains-dns'],
   // Only when nothing else in the question is louder: "send emails when they sign up" is a
   // question about email that happens to mention signing up.
   [/\bsign in with\b|\bsingle sign[- ]?on\b|\blog in\b/, 'auth'],
@@ -185,10 +193,13 @@ export function categoryForJob(job: string): Category | null {
   const phrase = PHRASES.find(([pattern]) => pattern.test(asked))
   if (phrase) return CATEGORIES.find((category) => category.id === phrase[1]) ?? null
 
+  // Short words are noise unless somebody filed them: the length rule dropped "s3" and left
+  // "object storage s3 compatible" with nothing but our own prose to go on, which is a null.
+  const filed = new Set(Object.values(VOCABULARY).flat().map(stem))
   const words = asked
     .split(/[^a-z0-9]+/)
     .map(stem)
-    .filter((word) => word.length > 2 && !NO_INFORMATION.has(word))
+    .filter((word) => (word.length > 2 || filed.has(word)) && !NO_INFORMATION.has(word))
   if (words.length === 0) return null
   const scored = CATEGORIES.map((category) => {
     const vocabulary = (VOCABULARY[category.id] ?? []).map(stem)

@@ -19,13 +19,19 @@ export const BROWSER_UA =
 // scanner. letagentsin.ai is not registered yet, so this points at where the product lives.
 /**
  * The user agents an edge actually has rules for. Ours is a string nobody has ever written a rule
- * against, which made a clean measurement of a question nobody asked: amplitude.com answers 404 to
- * ClaudeBot and GPTBot at a documentation URL it serves us in full, and algolia.com answers 403 to
- * any agent whose name contains "Bot". Asking only as ourselves made both invisible.
+ * against, which made a clean measurement of a question nobody asked: algolia.com answers 403 to
+ * any agent whose name contains "Bot" at a documentation URL it serves us in full.
+ *
+ * On-demand fetchers, not training crawlers, and the two are not interchangeable. This probe used
+ * to ask as ClaudeBot and GPTBot, which are the crawlers that build training sets, and then fail
+ * the vendor under a check whose whole subject is the agent fetching for a customer who asked.
+ * Our own robots.txt rule says the same thing and says it correctly: a training crawler in the
+ * disallow group costs nothing. Measured on algolia.com the day this was fixed, the classes
+ * genuinely differ at the edge: ClaudeBot 403, ChatGPT-User 403, Claude-User 200.
  */
 export const NAMED_CRAWLERS = [
-  { name: 'ClaudeBot', ua: 'Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)' },
-  { name: 'GPTBot', ua: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.1; +https://openai.com/gptbot' },
+  { name: 'ChatGPT-User', ua: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot' },
+  { name: 'Claude-User', ua: 'Mozilla/5.0 (compatible; Claude-User/1.0; +Claude-User@anthropic.com)' },
 ] as const
 
 export const AGENT_UA = `LetAgentsIn/1.0 (+${SITE_URL}/methodology)`

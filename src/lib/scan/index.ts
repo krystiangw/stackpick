@@ -62,7 +62,7 @@ export type ScanFindings = {
   docsThinnerForAgents: number | null
   /**
    * Named AI crawlers refused at a documentation URL a browser is served. Separate from the door
-   * test, which asks as us: robots.txt can permit ClaudeBot while the edge in front of it does not,
+   * test, which asks as us: robots.txt can permit an agent while the edge in front of it does not,
    * and only one of those two is what a crawler experiences.
    */
   crawlersRefused: { name: string; status: number }[]
