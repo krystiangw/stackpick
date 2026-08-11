@@ -25,10 +25,12 @@ export const CATEGORIES: Category[] = [
       'cloudinary.com',
       'imagekit.io',
       'bunny.net',
-      'supabase.com',
       'filestack.com',
       'transloadit.com',
-      'vercel.com',
+      // vercel.com was here until 2026-08-11. Its own title is "Agentic Infrastructure" and its
+      // description "The autonomous stack for every app and agent": the word storage appears
+      // nowhere. Removed rather than refiled, because we hold no hosting category and inventing
+      // one for a single vendor is a worse answer than admitting we do not measure hosting.
       'cloudflare.com',
     ],
   },
@@ -161,7 +163,10 @@ export const CATEGORIES: Category[] = [
     jobToBeDone: 'get a production database without running one',
     // mongodb.com and redis.io were missing from a category about getting a production database
     // without running one, which was the largest gap in the corpus rather than a judgement call.
-    domains: ['neon.com', 'planetscale.com', 'turso.tech', 'cockroachlabs.com', 'xata.io', 'mongodb.com', 'redis.io'],
+    // supabase.com moved here from file storage on 2026-08-11. Its own title is "The Postgres
+    // Development Platform" and storage is one of the seven products its description lists, so
+    // the database shelf is the one its own words name first.
+    domains: ['neon.com', 'planetscale.com', 'turso.tech', 'cockroachlabs.com', 'xata.io', 'mongodb.com', 'redis.io', 'supabase.com'],
   },
   {
     id: 'observability',
