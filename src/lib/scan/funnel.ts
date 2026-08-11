@@ -282,6 +282,8 @@ export type CatchAll = {
   entryText?: boolean
   /** What an unregistered path in each namespace answered with, in bytes. */
   bodyLengths?: { markdown: number; json: number; text: number }
+  /** And the bodies, so a stub that echoes the path it refuses can still be recognised. */
+  bodies?: { markdown: string; json: string; text: string }
 }
 
 export type FunnelFindings = {
@@ -630,6 +632,12 @@ async function servesCatchAllText(site: string): Promise<CatchAll> {
       json: json.body.length,
       text: plainAsEntry.body.length,
     },
+    // The control bodies themselves, because comparing lengths alone loses to a template that
+    // echoes the path it was asked for. restate.dev answers every .md path with the same stub
+    // reading "# Restate - /<path> A markdown rendering of this page is not available", so
+    // /agent-signup.md came back 227 bytes, /skill.md 213 and the control something else again,
+    // and three copies of one stub were published as three agent entry files.
+    bodies: { markdown: markdown.body, json: json.body, text: plainAsEntry.body },
   }
 }
 
@@ -888,7 +896,22 @@ export async function scanFunnel({
       : path.endsWith('.txt')
         ? catchAll.bodyLengths?.text
         : catchAll.bodyLengths?.markdown
-    const sameAsNonsense = controlLength !== undefined && controlLength > 0 && got.body.length === controlLength
+    const controlBody = path.endsWith('.json')
+      ? catchAll.bodies?.json
+      : path.endsWith('.txt')
+        ? catchAll.bodies?.text
+        : catchAll.bodies?.markdown
+    // Path segments removed from both bodies before comparing, because a stub that names the path
+    // it is refusing differs from the control by exactly that name. restate.dev answers every .md
+    // path with "# Restate - /<path> A markdown rendering of this page is not available", so the
+    // lengths never matched and three copies of one refusal were published as three entry files.
+    // Stripping URLs cannot make two genuinely different files look alike: what is left of a real
+    // agent-signup.md is a procedure, and what is left of a refusal is the refusal.
+    const withoutPaths = (body: string) => body.replace(/\/[\w.@~-]+/g, ' ').replace(/\s+/g, ' ').trim()
+    const sameTemplate =
+      controlBody !== undefined && controlBody.length > 0 && withoutPaths(got.body) === withoutPaths(controlBody)
+    const sameAsNonsense =
+      sameTemplate || (controlLength !== undefined && controlLength > 0 && got.body.length === controlLength)
     const present = !sameAsNonsense && isRealTextFile(got, 30)
     const refused = got.status >= 400 && got.status !== 404
     return [path, present, present && describesAProcedure(got.body), got.body, refused] as const
