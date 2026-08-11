@@ -1,3 +1,4 @@
+import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import {
   BOT_DEFENCE_RULES,
@@ -94,6 +95,24 @@ const asked: Case[] = [
 for (const [text, expected] of asked) {
   check(`"${text.slice(0, 52)}"`, everyFreeSignalIsAQuestion(SELF_SERVE_PATTERNS, text) !== null, expected)
 }
+
+console.log('crawl-delay, czyli czyja grupa obowiązuje')
+const delay = (body: string) => crawlDelayForAgents(parseRobots(body))
+check('wildcard bez nazwanych botów', delay('User-agent: *\nCrawl-delay: 10'), 10)
+check(
+  'opoznienie stoi przy nazwanym bocie, nie przy wildcardzie',
+  delay('User-agent: *\nAllow: /\n\nUser-agent: GPTBot\nCrawl-delay: 5'),
+  5,
+)
+// Its own group does not exempt an agent while the other twelve still inherit the wildcard, which
+// is why resolving this per agent per RFC 9309 changed no row: the maximum is the same number.
+check(
+  'wlasna grupa jednego bota nie znosi wildcarda',
+  delay('User-agent: *\nCrawl-delay: 10\n\nUser-agent: ChatGPT-User\nAllow: /'),
+  10,
+)
+// A delay under somebody else's group is not ours to publish. stripe.com writes one for rogerbot.
+check('opoznienie dla obcego bota', delay('User-agent: rogerbot\nCrawl-delay: 10'), null)
 
 console.log('bot defence, czyli warstwa raportowana obok werdyktu, nie punktowana')
 const defence: Case[] = [
