@@ -33,10 +33,24 @@ export type RankingsView = { categories: RankedCategory[]; coverage: CorpusCover
  * Rendered on the landing page as proof rather than as a claim: a ranking of real domains
  * is harder to dismiss than an adjective about what the scanner can do.
  */
+/**
+ * The home page is the scan form and the argument for running it, and neither needs the corpus.
+ * On 2026-08-11 one failing database query returned 500 on every page for 44 minutes, including
+ * this one, where the rankings are a supporting exhibit. An unreadable corpus now costs the
+ * exhibit and nothing else.
+ */
 export async function loadRankings(): Promise<RankingsView> {
-  const latest = new Map(
-    (await publishedCorpus()).reports.map((report) => [report.domain, report]),
-  )
+  let reports: Awaited<ReturnType<typeof publishedCorpus>>['reports']
+  try {
+    reports = (await publishedCorpus()).reports
+  } catch (error) {
+    console.error('rankings: corpus unreadable, rendering without them', error)
+    return {
+      categories: [],
+      coverage: { domains: 0, max: 0, averageMeasurable: 0, fullyMeasurable: 0, signupRefusesAgents: 0, signupNeedsJavaScript: 0 },
+    }
+  }
+  const latest = new Map(reports.map((report) => [report.domain, report]))
 
   const scanned = [...latest.values()]
   const coverage: CorpusCoverage = {
