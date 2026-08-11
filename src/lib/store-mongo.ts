@@ -85,24 +85,35 @@ export class MongoStore implements Store {
     return (await reports.find({}, withoutId).sort({ scannedAt: -1 }).limit(limit).toArray()) as Report[]
   }
 
+  /**
+   * One indexed lookup per domain instead of a $group over the whole collection. The aggregation
+   * took the site down on 2026-08-11: after ten reseeds in a day the reports outgrew the 100 MB
+   * $group limit, every page answered 500, and `allowDiskUse: true` changed nothing because the
+   * cluster does not permit spilling. A report carries the page bodies it read, so this collection
+   * grows by tens of megabytes per reseed and the aggregation was always going to lose that race.
+   *
+   * `distinct` returns a few hundred short strings and each lookup rides the (domain, scannedAt)
+   * sort, so nothing here holds more than one report in memory at a time.
+   */
   async latestPerDomain(limit: number, seededOnly = false) {
     const { reports } = await collections()
-    return (await reports
-      .aggregate([
-        ...(seededOnly ? [{ $match: { seeded: true } }] : []),
-        { $sort: { domain: 1, scannedAt: -1 } },
-        { $group: { _id: '$domain', latest: { $first: '$$ROOT' } } },
-        { $replaceRoot: { newRoot: '$latest' } },
-        { $sort: { scannedAt: -1 } },
-        { $limit: limit },
-        { $project: { _id: 0 } },
-      ],
-      // The whole site returned 500 on 2026-08-11 after ten reseeds in a day grew the collection
-      // past what $group holds in memory: "Exceeded memory limit for $group, but didn't allow
-      // external spilling". A report carries the page bodies it read, so this collection grows
-      // fast and the aggregation has to be allowed to spill.
-      { allowDiskUse: true })
-      .toArray()) as Report[]
+    const filter = seededOnly ? { seeded: true } : {}
+    const domains = (await reports.distinct('domain', filter)) as string[]
+    const found: Report[] = []
+    const queue = [...domains]
+    await Promise.all(
+      Array.from({ length: 8 }, async () => {
+        while (queue.length > 0) {
+          const domain = queue.shift() as string
+          const latest = (await reports.findOne(
+            { ...filter, domain },
+            { ...withoutId, sort: { scannedAt: -1 } },
+          )) as Report | null
+          if (latest) found.push(latest)
+        }
+      }),
+    )
+    return found.sort((a, b) => b.scannedAt.localeCompare(a.scannedAt)).slice(0, limit)
   }
 
   async saveLead(lead: Lead) {
