@@ -598,6 +598,22 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (94): jedno zapytanie nie powinno zabierac calej strony
+
+Wniosek konstrukcyjny z awarii, a nie tylko jej opis. **Cztery powierzchnie czekaja na te sama
+dana** (`/` przez `loadRankings`, `/findings` i `/report` przez `buildIndustryReport`, scorecard
+przez `buildComparison`), wiec jedno zapytanie polozylo wszystkie naraz, lacznie ze strona glowna,
+ktorej zadaniem jest formularz skanu i argument za jego uruchomieniem.
+
+- **`loadRankings` degraduje sie zamiast rzucac.** Nieczytelny korpus kosztuje teraz ranking i nic
+  wiecej: landing renderuje sie bez niego, bo bloki liczbowe byly juz oslonietе warunkami `> 0`.
+- **`src/app/error.tsx`**, ktorego nie bylo w ogole, wiec podczas 44 minut awarii odwiedzajacy
+  widzial domyslny ekran frameworka. Teraz mowi, ktorego pomiaru brakuje, zapewnia, ze nic nie
+  zostalo opublikowane blednie, i **kieruje tam, gdzie dziala**: skan wlasnej domeny i metodologia,
+  ktore nie potrzebuja korpusu.
+
+Zweryfikowane, ze nic sie nie zepsulo: piec stron po 200.
+
 ## Runda 2026-08-11 (93): analityka (nie ma zadnej), zasieg awarii i koszt retencji
 
 **Awaria trwala co najmniej 44 minuty**, pierwszy 500 o 08:38:02 UTC, ostatni o 09:22:23, czyli do
