@@ -28,9 +28,10 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
   wymaga człowieka.
 - Odmowy rejestracji wymierzone w agenty: **0 udowodnionych na 170**. Bariera, którą umiemy
   udowodnić, to **87** formularzy rejestracji, które bez JavaScriptu nie renderują niczego.
-- **Trasowanie `find_providers` to najsłabszy element produktu: 31,8 procent błędu** na pytaniach,
-  na których go nie strojono, przy 0,39 procent skanera. Liczba jest w opisie narzędzia MCP,
-  a `scripts/routing.mts` jest zapadką na siedmiu znanych błędach, nie progiem zaliczenia.
+- **Trasowanie `find_providers` to najsłabszy element produktu: 20 procent błędu** na pytaniach,
+  na których go nie strojono (poprzedni pomiar 31,8), przy 0,39 procent skanera. Liczba jest
+  w opisie narzędzia MCP, a `scripts/routing.mts` jest zapadką na jedenastu znanych błędach,
+  nie progiem zaliczenia. Wszystkie 149 pytań w tym pliku jest spalonych strojeniem.
 - Skanujemy sami siebie: **12 z 13 mierzalnych**, oblewamy `oauth_dcr` i piszemy o tym wprost.
   **Nie zmieniamy reguły, która poprawiłaby nasz własny wynik.**
 - Budżet skanu **27 s** (router Heroku zabija ciche żądanie po 30). Reseed **raz na zestaw zmian**:
@@ -193,12 +194,12 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
 
 - **Dwunasty przebieg adwersaryjny, do zrobienia.** Powierzchnie, których jedenasty nie ruszył,
   w kolejności wagi:
-  1. **Trasowanie po raz drugi.** Wszystkie 109 pytań w `scripts/routing.mts` jest już spalone.
-     Napisz nowe, zaetykietuj przed uruchomieniem, podziel na pół, stroj tylko na jednej.
-     Hipoteza z rundy 102, **nieprzetestowana i celowo nie wdrożona**, bo wyszła z połowy
-     odłożonej: gdy pytanie nazywa **kanał dostawy** (sms, głos, push, mail), kanał powinien
-     wygrywać remis z dziedziną („SMS reminders before the appointment" to komunikacja, nie
-     kalendarz). To reguła o świecie, nie o pytaniu, więc wolno ją sprawdzić na nowym zestawie.
+  1. ~~**Trasowanie po raz drugi.**~~ **zrobione w rundzie 105: 35 → 20 procent.** Wszystkie 149
+     pytań w `scripts/routing.mts` jest teraz spalone, więc trzynasty przebieg pisze kolejne.
+     Dwie hipotezy nadal **nieprzetestowane i celowo nie wdrożone**, bo obie wyszły z połowy
+     odłożonej: (a) gdy pytanie nazywa **kanał dostawy** (sms, głos, push, mail), kanał powinien
+     wygrywać remis z dziedziną, (b) `chrome` jest słowem infrastruktury przeglądarkowej. Obie są
+     regułami o świecie, nie o pytaniu, więc wolno je sprawdzić na nowym zestawie.
   2. ~~**Gałęzie zamieniające status HTTP na werdykt.**~~ **zrobione w rundzie 104**, zero dalszych
      znalezisk poza tą jedną z rundy 103.
   3. ~~**`machine_readable_api`**~~ **zrobione w rundzie 104: 106 na 106.** `robots_paths_resolve`
@@ -293,6 +294,34 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-11 (105): trasowanie z 35 na 20 procent, i jedna rzecz, którą popsułem
+
+Dwunasty przebieg na trasowaniu. Czterdzieści nowych pytań w dwóch rejestrach, których wcześniejsze
+zestawy nie mają: **krótkie jak w wyszukiwarce** i **człowiek opowiadający problem**.
+Zaetykietowane przed uruchomieniem, **baseline 35 procent błędu**. Poprawki wyłącznie z połowy
+parzystej, potem połowa odłożona uruchomiona raz: **20 procent, cztery na dwadzieścia**, przy
+sześciu przed poprawkami. Ta liczba zastępuje 31,8 w opisie narzędzia MCP.
+
+**Największa dziura była systemowa, nie leksykalna: nie znaliśmy nazw vendorów.** „stripe
+alternative", „algolia alternative", „auth0 alternative" wszystkie milczały, podczas gdy korpus
+trzyma każdą z tych firm w dokładnie jednej kategorii. Teraz nazwa vendora trasuje, ale **tylko
+przyklejona do słowa proszącego o inną firmę**. Pierwsza wersja wymagała jedynie, żeby marka
+i słowo „alternative" były gdziekolwiek w pytaniu, i natychmiast przeczytała „screenshot every
+competitor page **daily**" jako szukanie zamiennika dla Daily. Ćwierć korpusu nazywa się zwykłym
+angielskim słowem (`here.com`, `name.com`, `daily.co`, `split.io`, `loops.so`, `polar.sh`), więc
+sąsiedztwo jest tu jedyną obroną.
+
+**Cztery słowa wypadły ze słownika, bo rozstrzygały kategorie, które tylko modyfikują:** `webhook`
+(dostarcza je każda kategoria), `headless` (CMS, commerce i przeglądarka), `markdown` (edytor go
+pisze, CMS przechowuje), wcześniej `page`. To jest ta klasa poprawek, która **uogólnia się na
+pytania, których nie widziałem**: usunięcie samego `page` naprawiło trzy pytania w połowie
+odłożonej poprzedniego przebiegu.
+
+**Koszt zapisany, nie zamieciony:** usunięcie `headless` zamieniło jedno pytanie odłożone
+(„headless chrome do renderowania pdf-ów") z cichego pudła na **złą odpowiedź**
+(documents-signature, po słowie „pdfs"). Zostaje w pliku z adnotacją. Naprawienie go teraz
+znaczyłoby strojenie na połowie odłożonej, czyli spalenie jedynego uczciwego pomiaru, jaki mam.
 
 ## Runda 2026-08-11 (104): dwie powierzchnie zaatakowane, obie się obroniły
 
