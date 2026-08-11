@@ -9,20 +9,22 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 
 ## W locie w tej chwili (2026-08-12, noc)
 
-**Reseed 8.7 leci** (log `/tmp/reseed-8.7.log`), stan sprzed niego w `/tmp/corpus-8.6.json`,
-przewidywanie: `mapbox.com:programmatic_provisioning`. Poprzedni stan: formuła 8.6 na produkcji,
-`npm run audit` mówi `170 rows on formula 8.6, 0 contradictions` oraz `17 stated numbers and
-3 named-vendor claims checked against the data, 0 adrift`. Drzewo czyste, wszystko wypchnięte.
+**Nic nie leci.** Formuła **8.7** na produkcji, korpus w całości na 8.7, `npm run audit` mówi
+`170 rows on formula 8.7, 0 contradictions` i `17 stated numbers and 3 named-vendor claims
+checked against the data, 0 adrift`. Drzewo czyste, wszystko wypchnięte.
 
-Stany do porównań leżą w `/tmp/corpus-8.4.json` i `/tmp/corpus-8.5.json` (uwaga: `/tmp` na tej
-maszynie przeżywa restart, ale nie jest wieczne, więc przed dłuższą przerwą warto zapisać kopię
-gdzie indziej).
+Kopie do porównań: `/tmp/corpus-8.4.json`, `/tmp/corpus-8.5.json`, `/tmp/corpus-8.6.json`,
+`/tmp/corpus-8.7.json`.
 
-Sposób pracy, który się sprawdził tej nocy i którego trzymaj się dalej: **zmiana reguły idzie
-z przewidywaniem spisanym z góry, wiersz po wierszu**, a po reseedzie
-`npm run diff-corpus <przed.json> -- --expect dom:check,...` ma zwrócić zero. Wszystko, co ruszy
-się poza listą, czyta się pojedynczo. Tak znalazł się błąd karty MCP na telnyx (runda 122),
-którego sam procent by nie pokazał.
+**Sposób pracy, który się sprawdził cztery razy z rzędu i którego trzymaj się dalej:** zmiana
+reguły idzie z przewidywaniem spisanym z góry, wiersz po wierszu, a po reseedzie
+`npm run diff-corpus <przed.json> -- --expect dom:check,...` ma zwrócić zero niespodzianek.
+Wszystko poza listą czyta się pojedynczo. Tak znalazł się błąd karty MCP na telnyx.
+
+**Następny obszar to trasowanie, nie checki.** Skaner ma 0,39 procent błędu przy podłodze szumu
+0,3-0,6, więc dalsze dłubanie w regułach mierzy głównie pogodę. `find_providers` ma **20 procent
+błędu** i wszystkie 149 pytań w `scripts/routing.mts` jest spalone dostrajaniem, więc trzynasty
+przebieg zaczyna się od **napisania świeżego zestawu pytań**, których reguły nigdy nie widziały.
 
 ## Stan na teraz, w dziesięciu liniach
 
@@ -334,6 +336,27 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (125): czwarty reseed nocy, przewidywanie znów co do wiersza
+
+8.6 → 8.7: **8 z 2550, 0,31 procent**, przewidywanie `mapbox.com:programmatic_provisioning`
+sprawdzone **1 z 1**. Siedem pozostałych to pogoda, i to w większości **te same wiersze, które
+oscylują od trzech reseedów**: `calendly.com`, `froala.com`, `here.com`, `split.io` ruszyły się
+tym razem w drugą stronę niż poprzednio.
+
+**Nowa instrumentacja zapłaciła za siebie od razu.** `postmarkapp.com` publikuje teraz
+„1 documentation page we selected did not answer **(0)**", a status 0 to timeout, nie brzeg.
+Przez cały czas czytaliśmy to jako „ich edge nas odrzucił" i pisaliśmy tak vendorowi.
+
+Jedyną zmianę, która mogła być prawdziwa, sprawdziłem ręcznie: `cloudflare.com` linkuje w swoim
+`llms.txt` stronę `developers.cloudflare.com/pages/functions/api-routes/`, która **naprawdę
+odpowiada 404**, tak samo przeglądarce jak i nam. Ich zmiana, nie nasza, punkt słusznie stracony.
+
+**Bilans nocy: cztery reseedy, 8.4 → 8.7, i za każdym razem przewidywanie sprawdzało się co do
+wiersza** (5/5, 0/0, 1/1). Podłoga szumu zmierzona trzy razy: 0,64 / 0,27 / 0,31 procent.
+Skaner jest w tym miejscu, w którym szum sieci przewyższa błąd reguł, więc **dalsze dłubanie
+w checkach ma malejący zwrot** i następna praca powinna iść w trasowanie, które ma 20 procent
+błędu, czyli pięćdziesiąt razy więcej niż skaner.
 
 ## Runda 2026-08-12 (124): „odmówili nam" o stronie, której sami źle wybraliśmy
 
