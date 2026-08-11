@@ -594,8 +594,13 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     blocksPlainRequests: !asAgent.ok,
     docsThinnerForAgents: thinnerForAgents(docsPage, docsAsAgent),
     // Only when the browser was served: a page nobody can read is not a page that discriminates.
+    // Not 429. That is our own load speaking, and the rest of this scanner already says so: a 429
+    // makes a check unmeasurable rather than failed. savvycal.com was published as refusing
+    // ChatGPT-User on the strength of one, and answers every named agent 200 when asked once.
     crawlersRefused: docsPage?.ok
-      ? namedCrawlers.filter(({ got }) => got.status >= 400).map(({ name, got }) => ({ name, status: got.status }))
+      ? namedCrawlers
+          .filter(({ got }) => got.status >= 400 && got.status !== 429)
+          .map(({ name, got }) => ({ name, status: got.status }))
       : [],
     readAnything:
       docsText.length > 0 ||
