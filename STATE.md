@@ -7,29 +7,21 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
-## W locie w tej chwili (2026-08-11, noc)
+## W locie w tej chwili (2026-08-12, noc)
 
-**Formuła 8.6 jest na produkcji, reseed 8.6 leci** (log `/tmp/reseed-8.6.log`, po nim
-automatycznie `npm run audit`). Stan sprzed niego leży w **`/tmp/corpus-8.5.json`**.
+**Nic nie leci.** Formuła **8.6** jest na produkcji, korpus przeskanowany w całości na 8.6,
+`npm run audit` mówi `170 rows on formula 8.6, 0 contradictions` oraz `17 stated numbers and
+3 named-vendor claims checked against the data, 0 adrift`. Drzewo czyste, wszystko wypchnięte.
 
-**Przewidywanie dla tego reseedu: zero zmian werdyktu.** Żaden wiersz nie niósł zdania, które
-8.6 poprawia, więc wszystko, co się ruszy, jest pogodą - i to czyni ten przebieg **trzecim
-pomiarem podłogi szumu** (dotąd: 0,64 procent z dwóch przebiegów, plus 0,47 z reseedu 8.5,
-w którym pięć zmian było zamierzonych).
+Stany do porównań leżą w `/tmp/corpus-8.4.json` i `/tmp/corpus-8.5.json` (uwaga: `/tmp` na tej
+maszynie przeżywa restart, ale nie jest wieczne, więc przed dłuższą przerwą warto zapisać kopię
+gdzie indziej).
 
-Po reseedzie:
-
-```
-npm run audit
-npm run diff-corpus /tmp/corpus-8.5.json
-```
-
-Reseed 8.5 zamknięty i rozliczony: `170 rows on formula 8.5, 0 contradictions`,
-`17 stated numbers and 3 named-vendor claims checked against the data, 0 adrift`,
-a diff wobec 8.4 dał **5 z 5 przewidzianych zmian i 7 wierszy pogody** (runda 121).
-
-Powtórzenie reseedu, gdyby coś przerwało:
-`STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) bash scripts/reseed.sh`.
+Sposób pracy, który się sprawdził tej nocy i którego trzymaj się dalej: **zmiana reguły idzie
+z przewidywaniem spisanym z góry, wiersz po wierszu**, a po reseedzie
+`npm run diff-corpus <przed.json> -- --expect dom:check,...` ma zwrócić zero. Wszystko, co ruszy
+się poza listą, czyta się pojedynczo. Tak znalazł się błąd karty MCP na telnyx (runda 122),
+którego sam procent by nie pokazał.
 
 ## Stan na teraz, w dziesięciu liniach
 
@@ -341,6 +333,29 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (123): drugi pomiar podłogi szumu i to, z czego ten szum jest zrobiony
+
+Reseed 8.6 poszedł z przewidywaniem „zero zmian werdyktu" i przewidywanie się sprawdziło:
+**7 z 2550, czyli 0,27 procent**, przy 0,64 zmierzonym dwa dni wcześniej. Żaden z siedmiu
+wierszy nie ruszył się z powodu zmiany 8.6.
+
+**Co ważniejsze niż sama liczba: pięć z tych siedmiu przekroczyło granicę mierzalne/niemierzalne**,
+a nie zmieniło zdania o dostawcy. `postmarkapp.com`, `medusajs.com` i `bitmovin.com` raz odmawiają
+dokumentacji, raz nie; `amplitude.com` raz mieści się w limicie odczytu cennika, raz nie (i w diffie
+8.4 → 8.5 ruszył się w drugą stronę, więc to ten sam wiersz oscylujący). Skaner prosi hosta o około
+dziewiętnaście dokumentów w budżecie trzydziestu sekund, czyli **sam jest tym obciążeniem**, więc
+część tego szumu jest nasza, nie internetu. To poszło na `/methodology` razem z drugim pomiarem,
+bo strona twierdziła dotąd „that is the floor" na podstawie jednego przebiegu.
+
+Naprawiony też własny błąd w `diff-corpus`: bez `--expect` indeks -1 zjadał pierwszy argument
+i narzędzie umierało na własnym komunikacie pomocy. Znalazł to pierwszy przebieg bez przewidywania.
+
+**Kandydat, który z tego wynika i nie jest wdrożony:** dokument, który odpowiada **429** w trakcie
+skanu, jest dziś liczony jako odmowa, a projekt ma już opublikowaną regułę, że 429 to nasze
+obciążenie, nie odpowiedź o agentach (stosowaną przy `crawlersRefused` i przy `answers_plain_request`).
+Ta sama reguła nie jest stosowana do stron dokumentacji. Przed wdrożeniem trzeba policzyć, ile
+dokumentów w skanie faktycznie kończy się na 429, bo dziś tego nie wiemy.
 
 ## Runda 2026-08-11 (122): jeden nieudany fetch skasował żywy serwer MCP
 
