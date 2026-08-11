@@ -110,11 +110,21 @@ const RESULTS: Result[] = [
   },
 ]
 
+/**
+ * Signups we opened by hand and found gated by an hCaptcha the bundle mounts after load, which the
+ * scanner cannot see because it reads served HTML. Named on the page only while they are still on
+ * the list the sentence is about: contentful.com was named there for a week after a rate-limited
+ * scan took it off the list, which is the drift the number guard cannot catch because it is prose.
+ */
+const LATE_CAPTCHA = ['supabase.com', 'contentful.com']
+
 export default async function FindingsPage() {
   recordVisit('/findings', (await headers()).get('user-agent'))
   // The behavioural studies say a wall exists. The corpus says how much of the market is standing
   // behind it, and this page argued the first half without ever showing the second.
   const corpus = await buildIndustryReport()
+  // Only while they are still on the list the sentence points at.
+  const lateCaptchaOnList = LATE_CAPTCHA.filter((domain) => corpus?.usable.domains.includes(domain) ?? false)
   return (
     <main className="mx-auto max-w-5xl px-6">
       <section className="border-b border-rule py-14">
@@ -244,8 +254,16 @@ export default async function FindingsPage() {
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-faint">
             Clearing all three is not the same as being usable, and the gap is one we can name precisely: we
             read served HTML, so a CAPTCHA that JavaScript mounts after the page loads is invisible to us.
-            Supabase and Contentful are on this list and both gate signup with an hCaptcha their bundle loads
-            later. That is a limit of the instrument, not a hedge, and it is the reason the paid audit runs real
+            {lateCaptchaOnList.length > 0 && (
+              <>
+                {' '}
+                <span className="font-mono text-sm text-ink">{lateCaptchaOnList.join(' and ')}</span>{' '}
+                {lateCaptchaOnList.length === 1 ? 'is' : 'are'} on this list and gate signup with an hCaptcha
+                {' '}
+                {lateCaptchaOnList.length === 1 ? 'its' : 'their'} bundle loads later.
+              </>
+            )}{' '}
+            That is a limit of the instrument, not a hedge, and it is the reason the paid audit runs real
             agents instead of counting files.
           </p>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-faint">
