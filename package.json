@@ -16,7 +16,8 @@
     "collect": "tsx harness/collect.mts",
     "cell": "tsx harness/run.mts",
     "typecheck": "tsc --noEmit",
-    "rules": "tsx scripts/rules.mts"
+    "rules": "tsx scripts/rules.mts",
+    "diff-corpus": "tsx scripts/diff-corpus.mts"
   },
   "dependencies": {
     "mongodb": "^7.5.0",
