@@ -579,6 +579,22 @@ nieocenowany plan i przycisk „Start free trial", a przechodziło, podczas gdy 
 jest wzorcem zdaniowym. Rozstrzyga **czasownik**: „Start free trial" to kontrolka, „14 day free
 trial, no credit card required" to fakt o produkcie.
 
+## Runda 2026-08-11 (82): druga publiczna strona z danymi, komplet zgodny
+
+To samo co z `/findings`, tym razem `/report`. Odtworzone niezaleznie z `corpus.json`:
+58 z 150 bez sciezki do klucza, 16 z za mala iloscia dokumentacji, 97 ze 165 bez metadanych OAuth,
+20 ze 166 z serwerem MCP i bez klucza, oraz **cala tabela werdyktow** dla czterech checkow
+(159/0/4/3, 120/0/46/0, 144/0/10/12, 157/0/4/5). **Wszystko zgodne co do jednej liczby.**
+
+Dwie liczby naglowkowe rozjechaly sie o punkt procentowy (moje 92 i 26 wobec 91 i 27) i znowu
+**bledna byla moja miara**: strona liczy **srednia z udzialow per domena**, co daje 91,0 i 26,5,
+a ja policzylem iloraz zsumowany, ktory daje 91,6 i 26,2. Naglowek tabeli mowi „mean share"
+wprost, wiec strona robi to, co deklaruje.
+
+**Obie publiczne strony z danymi sa teraz zweryfikowane niezaleznie**, w sumie kilkanascie liczb,
+i w kazdym przypadku, gdy cos sie nie zgadzalo, ostrzejsza albo poprawniejsza definicja byla po
+stronie serwisu. To jest odwrotnosc tego, czego szukalem, i dlatego warto to zapisac.
+
 ## Runda 2026-08-11 (81): kazda opublikowana liczba odtworzona niezaleznie
 
 Zrobilem stronie `/findings` to, co recenzent zrobil naszemu raportowi: wyciagnalem **kazde
