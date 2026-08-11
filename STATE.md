@@ -297,6 +297,44 @@ których agent nie ma prawa rozstrzygnąć sam.**
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
 
+## Runda 2026-08-11 (107): najcięższy check czytał połowę zdań, które go dotyczą
+
+`programmatic_provisioning` waży dwa punkty i jest jedną z trzech nóg koniunkcji na `/findings`,
+a nie był atakowany od wprowadzenia. Szukał stworzenia i poświadczenia **bez niczego pomiędzy**,
+a najczęstszy sposób, w jaki vendorzy to piszą, ma pomiędzy spójnik.
+
+**`stripe.com` był publikowany jako nie dokumentujący żadnej drogi do klucza**, podczas gdy
+`docs.stripe.com/keys/managed-api-keys` mówi, że platforma „can **create and manage** API keys on
+your behalf" i że „the platform creates them **programmatically**". Dwa zdania, oba o dokładnie
+tym, o co ten check pyta, oba przepuszczone przez odstęp jednego słowa.
+
+**Poszerzenie musiałem cofnąć w połowie i to jest tu najważniejsze.** Pierwsza wersja drugiego
+wzorca łapała `creat...` w promieniu czterdziestu znaków od `programmatically` i natychmiast
+przeczytała `agora.io` „creating projects and retrieving usage data programmatically" oraz
+`nylas.com` „create accounts programmatically" jako udokumentowane wydawanie kluczy. **Oba zdania
+są o innym obiekcie.** Teraz poświadczenie musi stać **pomiędzy** tymi słowami, co zachowuje
+prawdziwe trafienia (`deepl.com` „create a developer API key programmatically", `nylas.com`
+„Create, list, and revoke API keys programmatically") i wyrzuca oba fałszywe.
+
+Złapane **czytaniem, co nowy wzorzec dopasował**, a nie liczeniem, że dopasował więcej.
+Poszerzenie, które wyłącznie dodaje punkty, jest sposobem, w jaki korpus się nadyma.
+
+Przy okazji: zdanie kredytujące cytowało **jeden wzorzec jako sześć fraz**, bo jego etykieta była
+listą pisowni oddzieloną przecinkami wewnątrz jednej pary cudzysłowów. Vendor czytał „1 of 7
+provisioning phrases", a potem sześć rzeczy. 58 wierszy niosło tę etykietę.
+
+Formuła **8.2**, reseed w biegu.
+
+**Zamknięte przez pomiar, nie przez naprawę: 13 wierszy bez pakietu npm.** Hipoteza była taka, że
+to nasze ograniczenie, bo rejestr nas odmawia. Zmierzone: **limit siedzi wyłącznie na
+`/-/v1/search`** (429 po kilkunastu zapytaniach), a **dokumenty pakietów nie limitują się w ogóle**
+(20 pobrań pod rząd, zero odmów). Napisałem więc ścieżkę zgadującą nazwy konwencjonalne i
+sprawdzającą je po dokumencie, i **wyszła pusta na 13 z 13**: te firmy albo nie mają pakietu npm
+(`calendly.com`, `porkbun.com`, `weglot.com`), albo publikują pod inną marką (`betterstack.com`
+→ `@logtail/node`), albo pakiet jest cudzy (`usefathom.com` → `fathom-client` od osoby prywatnej).
+**Ścieżkę wycofałem zamiast wdrożyć**, bo martwy kod jest gorszy niż brak kodu. W KB jako
+`npm-limit-jest-na--v1search-nie-na-dokumentach-pakietow`.
+
 ## Runda 2026-08-11 (106): audyt pilnuje teraz też zdań, które nazywają firmę
 
 Ostatnia pozycja dwunastego przebiegu. Każda liczba korpusowa na stronie jest przeliczana i
