@@ -436,8 +436,21 @@ async function probeOauthOrigins(targets: OauthTarget[]): Promise<OauthProbe> {
     ...(followed.length > 0 ? await inParallel(followed, (url) => fetchUrl(url, { accept: 'application/json' })) : []),
   ]
 
+  // The MCP host first. A claim about the token that opens an MCP server has to come off the
+  // server guarding it, and a conventionally guessed apex is a different authorization server
+  // with different grants: vercel.com advertises client_credentials on its platform metadata
+  // while mcp.vercel.com, which is what an agent actually has to get past, advertises only
+  // authorization_code and refresh_token. Reading the apex first published the platform's
+  // capability as if it opened the resource.
+  const ordered = [...results].sort((a, b) => {
+    const rank = (url: string) => {
+      try { return new URL(url).hostname.startsWith('mcp.') ? 0 : 1 } catch { return 1 }
+    }
+    return rank(a.url) - rank(b.url)
+  })
+
   let metadataPublished = false
-  for (const got of results) {
+  for (const got of ordered) {
     if (!got.ok || looksLikeHtml(got)) continue
     try {
       const metadata = JSON.parse(got.body) as {
@@ -507,7 +520,13 @@ function oauthTargetsKnownUpFront(domain: string, site: string, signupUrl: strin
 
 function mergeOauthProbes(first: OauthProbe, second: OauthProbe): FunnelFindings['oauth'] {
   const origins = [...new Set([...first.origins, ...second.origins])]
-  const grantTypes = [...new Set([...(first.grantTypes ?? []), ...(second.grantTypes ?? [])])]
+  // Grants describe one authorization server, and unioning two servers' lists invents a
+  // capability neither offers. vercel.com publishes client_credentials on its platform metadata
+  // while mcp.vercel.com, the server actually guarding the resource, offers only
+  // authorization_code and refresh_token, and the token that opens the MCP endpoint comes from
+  // the second one. weglot.com is the same shape. The MCP host wins when it published grants,
+  // because that is the door the claim is about.
+  const grantTypes = first.grantTypes ?? second.grantTypes ?? []
   return {
     metadataPublished: first.metadataPublished || second.metadataPublished,
     dynamicClientRegistration: first.dynamicClientRegistration || second.dynamicClientRegistration,
