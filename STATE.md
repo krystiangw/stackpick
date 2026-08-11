@@ -21,10 +21,10 @@ reguły idzie z przewidywaniem spisanym z góry, wiersz po wierszu, a po reseedz
 `npm run diff-corpus <przed.json> -- --expect dom:check,...` ma zwrócić zero niespodzianek.
 Wszystko poza listą czyta się pojedynczo. Tak znalazł się błąd karty MCP na telnyx.
 
-**Następny obszar to trasowanie, nie checki.** Skaner ma 0,39 procent błędu przy podłodze szumu
-0,3-0,6, więc dalsze dłubanie w regułach mierzy głównie pogodę. `find_providers` ma **20 procent
-błędu** i wszystkie 149 pytań w `scripts/routing.mts` jest spalone dostrajaniem, więc trzynasty
-przebieg zaczyna się od **napisania świeżego zestawu pytań**, których reguły nigdy nie widziały.
+**Trwa: trasowanie.** Świeży zestaw napisany i zmierzony (runda 126): **59,3 procent błędu**,
+`npm run routing-fresh`. Następny krok to zmiana mechanizmu, nie dopisywanie słów: dopasowanie
+pytania do `jobToBeDone`, `label` i nazw dostawców w `categories.ts`, mierzone na obu zestawach
+naraz. Warunek wdrożenia: świeży zestaw w górę, spalony bez regresji (`KNOWN_DEBT = 11`).
 
 ## Stan na teraz, w dziesięciu liniach
 
@@ -336,6 +336,31 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (126): trasowanie ma 59 procent błędu, nie 20
+
+Napisałem **59 świeżych pytań** (`scripts/routing-fresh.mts`), wszystkie sformułowane tak, jak
+pytanie przychodzi na kanale, **bez otwierania `src/lib/lookup.ts`**, i zaetykietowane przed
+pierwszym uruchomieniem. Wynik pierwszego przebiegu, czyli jedyny uczciwy:
+
+**24 na 59 poprawnie. 35 błędów, 59,3 procent.**
+
+Dla porównania: spalony zestaw 149 pytań pokazuje 7,4 procent, a liczba podawana dotąd jako
+uczciwa to 20 procent (z czterech pytań odłożonych w dwunastym przebiegu). **Prawdziwa jest ta
+najgorsza**, bo tylko ona pochodzi z pytań, których reguły nigdy nie widziały.
+
+Rozkład błędów jest jedyną dobrą wiadomością: **27 z 35 to ciche pudła** (`NO MATCH`), czyli
+narzędzie mówi „nie wiem", zamiast wysłać kogoś do złych dostawców. Tylko **2 to zgadywanie tam,
+gdzie poprawną odpowiedzią jest „nie wiem"** („our app is slow" → observability, „manage our AWS
+bill" → payments). Szkodliwość jest więc niska, ale i użyteczność: co drugie pytanie zostaje bez
+odpowiedzi.
+
+**Wniosek o mechanizmie, nie o słowniku.** Ręczna lista słów kluczowych nie uogólnia się z definicji:
+„twilio alternative" trafia, bo reguła zna ten wzorzec, a „we are moving off contentful" nie trafia
+wcale. Dopisanie 35 słów naprawi te 35 pytań i przegra następne 35, co ten projekt już raz
+zmierzył (rundy 52-53). Kolejny krok to **zmiana mechanizmu na deterministyczne dopasowanie do
+opisów kategorii i nazw dostawców**, mierzone na obu zestawach naraz: ma poprawić świeży, nie
+psując spalonego.
 
 ## Runda 2026-08-12 (125): czwarty reseed nocy, przewidywanie znów co do wiersza
 
