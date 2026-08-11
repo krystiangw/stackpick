@@ -42,13 +42,14 @@ const PROVISIONING_PATTERNS = [
   // a conjunction is allowed through, not arbitrary text, because "create a customer with an api
   // key" is about spending a credential rather than making one.
   new RegExp(String.raw`creat(?:e|es|ing)(?:\s+(?:and|or)\s+\w+)?\s+(?:an?|your|a new|new|the)?\s*${CREDENTIAL}`, 'i'),
-  // Either order, and the credential has to be the thing being created. Without that clause it
-  // read agora.io's "creating projects and retrieving usage data programmatically" and nylas.com's
-  // "create accounts programmatically" as documented key provisioning, which is a different
-  // sentence about a different object. Both are in the corpus and both were caught before this
-  // shipped, by reading what the new pattern had matched rather than counting that it matched more.
+  // Either order, and the credential has to be the thing being created, in both directions. Three
+  // sentences in the corpus say the words and mean something else: agora.io's "creating projects
+  // and retrieving usage data programmatically", nylas.com's "create accounts programmatically",
+  // and hatchet.run's heading "Programmatically Creating Cron Triggers". The last one got through
+  // a first fix that only guarded the reversed order, and it took a reseed and a reading of what
+  // had matched to find it, because the number alone looked like the widening working.
   new RegExp(
-    String.raw`programmatically creat\w+|creat\w+[^.]{0,30}${CREDENTIAL}[^.]{0,30}programmatically|programmatically[^.]{0,30}creat\w+[^.]{0,30}${CREDENTIAL}`,
+    String.raw`creat\w+[^.]{0,30}${CREDENTIAL}[^.]{0,30}programmatically|programmatically[^.]{0,30}creat\w+[^.]{0,30}${CREDENTIAL}`,
     'i',
   ),
   /service account/i,

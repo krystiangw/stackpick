@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '8.2'
+export const FORMULA_VERSION = '8.3'
 
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on
