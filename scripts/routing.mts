@@ -140,6 +140,55 @@ const QUESTIONS: Question[] = [
   { asked: 'invoicing', expect: null, note: 'HELD OUT, answers payments; arguable, and an arguable answer is one we said we would not give' },
   { asked: 'we need to send 200k marketing emails a month', expect: null, note: 'HELD OUT, answers transactional-email; a bulk sender is not a transactional API' },
   { asked: 'queue for webhooks retries', expect: 'background-jobs', note: 'HELD OUT, still silent: queue against webhook' },
+  // The twelfth pass, 2026-08-11. Two registers again absent from everything above: search-box
+  // short, and a person rambling. Labelled before the run, baseline 35 percent wrong. Fixes were
+  // taken from the even half only and the odd half was then run once: 20 percent, four of twenty,
+  // down from six. That is the honest generalisation number and it replaces 31.8 from the
+  // eleventh pass. All of these are burned now.
+  { asked: 'webhooks', expect: null, note: 'answered notifications; every category delivers them and none is asked for by that word' },
+  { asked: 'email api', expect: 'transactional-email' },
+  { asked: 'signup captcha', expect: null },
+  { asked: 'cdn images', expect: 'file-storage' },
+  { asked: 'postgres hosting', expect: 'databases' },
+  { asked: 'push notifications', expect: 'notifications' },
+  { asked: 'sms api', expect: 'communications' },
+  { asked: 'stripe alternative', expect: 'payments', note: 'silent: no vendor name was in the vocabulary' },
+  { asked: 'algolia alternative', expect: 'search', note: 'silent: same' },
+  { asked: 'sentry alternative', expect: 'error-monitoring' },
+  { asked: 'auth0 alternative', expect: 'auth', note: 'silent: same' },
+  { asked: 'vector db for rag', expect: 'vector-search' },
+  { asked: 'headless commerce', expect: 'commerce', note: 'silent: "headless" pulled browser infrastructure' },
+  { asked: 'calendar api', expect: 'scheduling' },
+  { asked: 'geocoding api', expect: 'maps-geo' },
+  { asked: 'translation api', expect: 'localization' },
+  { asked: 'esignature api', expect: 'documents-signature' },
+  { asked: 'log aggregation', expect: 'observability' },
+  { asked: 'gpu inference', expect: 'llm-infrastructure' },
+  { asked: 'web scraping api', expect: 'browser-infrastructure' },
+  {
+    asked: 'we are a small team and we need to let our support people send text messages to customers without building the whole telephony thing',
+    expect: 'communications',
+  },
+  { asked: 'the marketing site is in webflow but the app needs the same blog posts, what do people use', expect: 'headless-cms' },
+  { asked: 'i want to know why users drop off on step three of onboarding and whether the new copy helped', expect: 'product-analytics' },
+  { asked: 'we keep getting paged at 3am and nobody knows which service is slow', expect: 'observability' },
+  { asked: 'our uploads are killing the server, we need someone else to hold the files and resize them', expect: 'file-storage' },
+  { asked: 'the CFO wants invoices with VAT for european customers and we take cards', expect: 'payments' },
+  { asked: 'customers ask for a demo booking link that respects my google calendar', expect: 'scheduling' },
+  { asked: 'we need to ship a feature to beta users only, without a deploy for each change', expect: 'feature-flags' },
+  { asked: 'the docs team wants to write in markdown and have it show up on the site', expect: 'headless-cms', note: 'answered rich-text-editors on the word markdown' },
+  { asked: 'i need to run a headless chrome somewhere to render pdfs of our reports', expect: 'browser-infrastructure' },
+  { asked: 'there is a spike of javascript errors since friday and we have no idea which browser', expect: 'error-monitoring' },
+  { asked: 'we want to add search to our help centre, it is about 400 articles', expect: 'search' },
+  { asked: 'our app should ask users for their address and validate it', expect: 'maps-geo' },
+  { asked: 'we send about 30 emails per signup flow and half go to spam', expect: 'transactional-email' },
+  { asked: 'customers upload video of their workouts and we need to play it back on mobile', expect: 'video', note: 'answered file-storage; "play" was not a video word' },
+  { asked: 'we need to store 8 million rows and query them from the edge', expect: 'databases' },
+  { asked: 'the compliance team wants every contract signed electronically with an audit trail', expect: 'documents-signature' },
+  { asked: 'we want to try llama instead of gpt but not buy gpus', expect: 'llm-infrastructure' },
+  { asked: 'i need a way for our agent to get an api key without me clicking in a dashboard', expect: null },
+  { asked: 'how do i let people log in with their work google account and enforce 2fa', expect: 'auth' },
+
 ]
 
 const results = QUESTIONS.map((question) => {
@@ -162,12 +211,16 @@ console.log(
 )
 
 /**
- * The seven held-out failures above, unfixed on purpose. Fixing a question by looking at it is
+ * The eleven held-out failures above, unfixed on purpose. Fixing a question by looking at it is
  * how the first set got to 64 out of 64 while fresh questions ran at 40 percent, so this is a
  * ratchet rather than a pass mark: it fails when the number goes up, and says so when it goes
  * down. Lowering it is a real change to the vocabulary; editing it to match a run is not.
+ *
+ * Eleven of 149 is 7.4 percent, and it is not the number to quote. The honest one is measured on
+ * questions nothing was tuned against, which is 20 percent: four of the twenty held back from the
+ * twelfth pass. This file cannot produce that number again, because everything in it is burned.
  */
-const KNOWN_DEBT = 7
+const KNOWN_DEBT = 11
 if (wrong.length > KNOWN_DEBT) {
   console.error(`\nregresja: ${wrong.length} bledow przy dlugu ${KNOWN_DEBT}`)
   process.exit(1)

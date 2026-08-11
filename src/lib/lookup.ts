@@ -133,11 +133,15 @@ const VOCABULARY: Record<string, string[]> = {
   'headless-cms': ['cms', 'content', 'blog', 'article', 'homepage', 'writer', 'copywriter'],
   'background-jobs': ['job', 'queue', 'worker', 'cron', 'workflow', 'async', 'background', 'nightly', 'batch', 'durable'],
   'llm-infrastructure': ['llm', 'model', 'inference', 'gpu', 'prompt', 'completion', 'openai', 'transcription', 'transcribe'],
-  video: ['video', 'stream', 'livestream', 'webinar', 'broadcast', 'encode', 'transcode', 'player', 'playback'],
-  'browser-infrastructure': ['scrape', 'crawl', 'crawler', 'headless', 'browser', 'puppeteer', 'playwright', 'proxy', 'screenshot'],
+  video: ['video', 'stream', 'livestream', 'webinar', 'broadcast', 'encode', 'transcode', 'player', 'play', 'playback'],
+  // Not "headless": it modifies a CMS, a commerce platform and a browser, and "headless commerce"
+  // tied against the category it names.
+  'browser-infrastructure': ['scrape', 'crawl', 'crawler', 'browser', 'puppeteer', 'playwright', 'proxy', 'screenshot'],
   // Not "alerting": an alert about an exception is error monitoring and an alert about latency is
   // observability, so the word decided nothing and tied all three.
-  notifications: ['notification', 'notify', 'push', 'slack', 'webhook', 'bell', 'unread'],
+  // Not "webhook": every category delivers them and none of them is asked for by that word, so it
+  // sent a bare "webhooks" to notifications and tied "queue for webhooks retries" against jobs.
+  notifications: ['notification', 'notify', 'push', 'slack', 'bell', 'unread'],
   scheduling: ['calendar', 'schedule', 'booking', 'book', 'meeting', 'appointment', 'availability'],
   'maps-geo': ['map', 'geocode', 'address', 'coordinate', 'location', 'geo', 'route', 'routing'],
   databases: ['database', 'postgres', 'postgresql', 'mysql', 'sql', 'sqlite', 'db'],
@@ -148,7 +152,9 @@ const VOCABULARY: Record<string, string[]> = {
   // a chain of buildings, and it tied against the map the caller wanted pins on.
   commerce: ['commerce', 'ecommerce', 'cart', 'catalog', 'storefront'],
   localization: ['translate', 'translation', 'localization', 'localisation', 'i18n', 'language', 'locale'],
-  'rich-text-editors': ['wysiwyg', 'richtext', 'editor', 'formatting', 'markdown'],
+  // Not "markdown": it names a format that an editor writes and a CMS stores, so "the docs team
+  // wants to write in markdown and have it show up on the site" went to the editor.
+  'rich-text-editors': ['wysiwyg', 'richtext', 'editor', 'formatting'],
   // Not "domain": it is the word for a scope, a model boundary and an email suffix long before
   // it is the thing you buy. A caller shopping for one says registrar, or names the record type.
   'domains-dns': ['registrar', 'nameserver', 'whois', 'tld', 'cname', 'subdomain', 'icann', 'zone'],
@@ -186,6 +192,10 @@ const PHRASES: [RegExp, string][] = [
   // question about email that happens to mention signing up.
   [/\bsign in with\b|\bsingle sign[- ]?on\b|\blog in\b/, 'auth'],
   [/\be[- ]?sign|\bsign a (?:document|contract)\b/, 'documents-signature'],
+  // A qualifier plus a subject, where the subject decides and the qualifier tied it: "a spike of
+  // javascript errors and we have no idea which browser" scored error monitoring against browser
+  // infrastructure and returned nothing.
+  [/\bjavascript errors?\b|\bjs errors?\b/, 'error-monitoring'],
 ]
 
 /**
@@ -194,10 +204,38 @@ const PHRASES: [RegExp, string][] = [
  */
 const FILED = new Set(Object.values(VOCABULARY).flat().map(stem))
 
+/**
+ * A caller shopping for a competitor names the incumbent, and nothing in the vocabulary knew any
+ * vendor's name: "stripe alternative", "algolia alternative" and "auth0 alternative" all returned
+ * nothing while the corpus holds every one of those companies under exactly one category.
+ *
+ * The name has to sit against the word asking for another one. A quarter of the corpus is named
+ * with an ordinary English word (here.com, name.com, daily.co, split.io, loops.so, polar.sh), and
+ * a rule that only wanted both somewhere in the question read "screenshot every competitor page
+ * daily" as a search for an alternative to Daily and answered with video vendors.
+ */
+const BRANDS = new Map(
+  CATEGORIES.flatMap((category) =>
+    category.domains.map((domain) => [domain.split('.')[0].toLowerCase(), category.id] as const),
+  ),
+)
+
+const BRAND_ALTERNATION = [...BRANDS.keys()].map((brand) => brand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
+const ASKING_FOR_ANOTHER = new RegExp(
+  String.raw`\b(${BRAND_ALTERNATION})\b\s+(?:alternatives?|competitors?|replacements?)\b` +
+    String.raw`|\b(?:alternatives?|competitors?|replacements?|instead of|similar to|replace|migrating? (?:from|off)|vs\.?)\s+(?:to\s+|the\s+|a\s+)?\b(${BRAND_ALTERNATION})\b`,
+)
+
 export function categoryForJob(job: string): Category | null {
   const asked = job.toLowerCase().replace(/\bsign(?:s|ed|ing)? ?up\b/g, ' ')
   const phrase = PHRASES.find(([pattern]) => pattern.test(asked))
   if (phrase) return CATEGORIES.find((category) => category.id === phrase[1]) ?? null
+
+  const asksForAnother = asked.match(ASKING_FOR_ANOTHER)
+  if (asksForAnother) {
+    const named = BRANDS.get(asksForAnother[1] ?? asksForAnother[2])
+    if (named) return CATEGORIES.find((category) => category.id === named) ?? null
+  }
 
   const words = asked
     .split(/[^a-z0-9]+/)

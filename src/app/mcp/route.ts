@@ -58,7 +58,7 @@ const FIND_TOOL = {
     'Returns the vendors we have measured in that category, split by whether an unattended run clears every ' +
     'barrier we test, stops at one, or was never measurable, each with the date and a link to the evidence. ' +
     'This is not a recommendation: it does not know whether a vendor suits your job, only where an agent stops. ' +
-    'Routing a sentence to a category is the weakest thing here: measured on 22 questions written after the rules were, and never tuned against, it answered 15 correctly, stayed silent on 4 it should have answered and answered 3 it should have refused. It returns nothing rather than guess when two categories tie, so no result means we could not read the question, not that the category is empty.',
+    'Routing a sentence to a category is the weakest thing here: measured on 20 questions written after the rules were and never tuned against, it answered 16 correctly, stayed silent on 3 it should have answered and answered 1 it should have refused. It returns nothing rather than guess when two categories tie, so no result means we could not read the question, not that the category is empty.',
   inputSchema: {
     type: 'object',
     properties: {
