@@ -142,9 +142,22 @@ export default async function MethodologyPage() {
         <h2 className="text-lg font-semibold tracking-tight">How much the corpus moves on its own</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           On 10 August 2026 we rescanned all 167 domains twice, with no rule changed between the two runs,
-          and compared every verdict: 15 of 2,338 moved, which is 0.64 percent. That is the floor. A
-          difference smaller than it, in our numbers or in yours, is the internet being the internet rather
-          than something that changed.
+          and compared every verdict: 15 of 2,338 moved, which is 0.64 percent. A difference smaller than
+          that, in our numbers or in yours, is the internet being the internet rather than something that
+          changed.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          Measured again on 12 August 2026, on 170 domains and with a formula change that provably touched
+          no row: 7 of 2,550 moved, which is 0.27 percent. Two measurements, two days apart, on a corpus
+          that grew by three domains in between. Take the larger of the two as the floor until a third
+          says otherwise.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          What moves is mostly not a verdict changing its mind. Five of those seven rows crossed the line
+          between measured and unmeasured in one direction or the other: a documentation page that refused
+          us the first time and answered the second, a pricing page that fell either side of the size we
+          read. The scanner asks a host for about nineteen documents inside a thirty second budget, which
+          is itself a burst, so some of this noise is ours rather than the internet&apos;s.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           It is not evenly spread. Nine of the fifteen sit in the three checks that depend on a host
