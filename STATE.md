@@ -210,6 +210,11 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
      całym korpusie: fraza liczy się dopiero, gdy w promieniu ~80 znaków stoi marker programowy
      (`via the API`, `curl`, `POST /`, `CLI`, `SDK`, nazwa endpointu). **To odejmie punkty**, więc
      wymaga własnego przebiegu, własnego reseedu i przeczytania, komu odjęło i dlaczego.
+     Szkic przetestowany offline na dziewięciu zdaniach (runda 108), gotowy do wpięcia:
+     marker `(?:via|through|using|with) the api|(?:management|admin|account|provisioning|rest|public)[ -]api|curl|POST|GET|/v\d|CLI|SDK|endpoint|programmatic\w*|request`,
+     okno `(?:(?!\.\s)[\s\S]){0,80}` z każdej strony frazy. **Okno musi być takie, a nie `[^.]`**:
+     `curl -X POST https://api.example.com/keys creates an api key` ma kropki w URL-u i `[^.]`
+     ucina okno na `example`, czyli reguła gubi dokładnie te zdania, o które w niej chodzi.
   4. ~~**Zdania w `/findings` obok liczb.**~~ **zrobione w rundach 105-106.** Znalezione jedno
      fałszywe (Contentful), a audyt pilnuje teraz trzech twierdzeń nazywających firmy. **Nie
      obejmuje to zdań na `/methodology` i `/report`**, które są historyczne i datowane, więc
