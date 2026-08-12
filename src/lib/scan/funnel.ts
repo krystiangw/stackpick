@@ -55,7 +55,12 @@ const CREDENTIAL = String.raw`(?:api[- ]?key|api[- ]?token|access[- ]token|perso
  * API key", which is documented key creation and is not what a check called programmatic
  * provisioning is asking about.
  */
-const PROGRAMMATIC_MARKER = String.raw`(?:(?:via|through|using|with) the api|(?:management|admin|account|provisioning|rest|public)[ -]api|\bcurl\b|\bPOST\b|\bGET\b|/v\d|\bCLI\b|\bSDK\b|endpoint|programmatic\w*|\brequest\b|on (?:your|its|their) behalf)`
+// `request` was in this list and it is the word every documentation page uses about the call you
+// make *after* you have a key. plausible.io says "log in, click the New API Key button" and then
+// "authenticate your request", which matched, so the one vendor in the sample whose keys really
+// are dashboard-only would have been published as passing. A POST or a curl in the same sentence
+// still carries the real cases, including "send a POST request to /v1/api_keys".
+const PROGRAMMATIC_MARKER = String.raw`(?:(?:via|through|using|with) the api|(?:management|admin|account|provisioning|rest|public)[ -]api|\bcurl\b|\bPOST\b|\bGET\b|/v\d|\bCLI\b|\bSDK\b|endpoint|programmatic\w*|on (?:your|its|their) behalf)`
 
 /**
  * Any character except the full stop that ends a sentence, so the window stays inside one

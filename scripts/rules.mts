@@ -296,6 +296,50 @@ check('datadog free-datadog-trial', hits('/free-datadog-trial/'), true)
 check('blog o rejestracji domen to nie signup', hits('/blog/how-we-built-it'), false)
 check('cennik to nie signup', hits('/pricing'), false)
 
+console.log('provisioning, czyli czy w ogole zajrzelismy tam, gdzie klucze')
+const prov = CHECKS.find((c) => c.id === 'programmatic_provisioning')!
+const readPages = (urls: string[]) =>
+  prov.evaluate({
+    funnel: { provisioning: { programmatic: [] } },
+    docsPagesRead: urls.length,
+    docsPagesReadUrls: urls,
+    docsPagesUnreadStatuses: [],
+    docsPagesUnread: 0,
+  } as never)
+// The nine of fifteen: ranked candidates that carry no credential word at all, so their silence
+// about creating a key is not evidence of anything.
+check(
+  'zadna przeczytana strona nie jest o kluczach',
+  readPages(['https://v.test/docs/service-level-management', 'https://v.test/docs/delete-account']).inconclusive,
+  true,
+)
+// The page that would have carried the phrase was open in front of us and did not carry it.
+check(
+  'przeczytalismy strone o kluczach i nic tam nie ma',
+  readPages(['https://v.test/docs/api-keys', 'https://v.test/docs/quickstart']).inconclusive,
+  undefined,
+)
+check('i wtedy to jest zero, nie niemierzalne', readPages(['https://v.test/docs/api-keys', 'https://v.test/docs/x']).points, 0)
+check(
+  'authentication tez sie liczy',
+  readPages(['https://v.test/docs/authentication', 'https://v.test/docs/intro']).inconclusive,
+  undefined,
+)
+// Below two pages the check was already refusing to conclude, and still is.
+check('jedna strona to za malo, cokolwiek na niej jest', readPages(['https://v.test/docs/api-keys']).inconclusive, true)
+// plausible.io: log in, click the button, and then a word that used to make it pass.
+const provisioningMatches = (text: string) => PROVISIONING_RULES.some((rule) => rule.test(text))
+check(
+  'panel plus slowo request to nie sciezka programowa',
+  provisioningMatches('To create a new sites API key, log in to your account and click the New API Key button. After creating an API key, you can authenticate your request.'),
+  false,
+)
+check(
+  'POST do /v1/api_keys nadal sie liczy',
+  provisioningMatches('To create an API key, send a POST request to /v1/api_keys'),
+  true,
+)
+
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)
 

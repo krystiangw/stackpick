@@ -13,6 +13,14 @@ const TOLERATED_DEAD_LINKS = 1
 const DOCS_SHELL_FLOOR = 500
 
 /**
+ * A documentation path that promises to talk about credentials. Deliberately narrower than the
+ * hints that choose which pages to read: `management`, `account`, `getting-started` and
+ * `reference` all pick pages, and none of them means the page is about a key.
+ */
+const CREDENTIAL_PATH =
+  /(api[-_ ]?(?:app[-_ ]?)?keys?|access[-_ ]?keys?|service[-_ ]?(?:tokens?|accounts?)|signing[-_ ]?keys?|credentials?|tokens?|authentication|(^|\/)auth(\/|$)|provisioning)/i
+
+/**
  * Every address the probe actually tries. The sentence used to name two of the five, and on
  * kinde.com the one it left out is the one that answers: api.kinde.com/mcp challenges with a
  * WWW-Authenticate naming its own protected-resource document. Naming fewer addresses than we
@@ -791,7 +799,36 @@ export const CHECKS: Check[] = [
           unblock: 'Let ordinary HTTP reach your documentation pages and this becomes measurable.',
         }
       }
-      return yes(0, `None of the ${PROVISIONING_PATTERN_COUNT} provisioning phrases appears in the ${pages} documents we read`)
+      // The sentence below is an argument from absence, and an argument from absence is only
+      // worth making where the thing would have been. An independent audit of fifteen of these
+      // failures on 2026-08-12 found that in nine of them the scan had never opened a single
+      // page whose address contains a word about credentials at all: the ranked candidates were
+      // service-level-management, delete-account, data-management, two changelog posts. Every one
+      // of those rows published "none of the phrases appears" over evidence that could not have
+      // carried the phrases, and mongodb.com, grafana.com, sentry.io and upstash.com all document
+      // exactly what we said they did not.
+      //
+      // This is the honest half of the fix and it makes the check measure less. The other half is
+      // to go and read the right page, which is a change to selection rather than to scoring.
+      const looked = (f.docsPagesReadUrls ?? []).filter((url) => {
+        try {
+          return CREDENTIAL_PATH.test(new URL(url).pathname)
+        } catch {
+          return false
+        }
+      })
+      if (looked.length === 0) {
+        return {
+          points: 0,
+          detail: `Unmeasurable: none of the ${pages} documentation pages we reached is about keys or authentication, so their silence about creating one says nothing`,
+          inconclusive: true,
+          unblock: 'Link your API key or authentication page from your docs index or from llms.txt and this becomes measurable.',
+        }
+      }
+      return yes(
+        0,
+        `None of the ${PROVISIONING_PATTERN_COUNT} provisioning phrases appears in the ${pages} documents we read, including ${looked.slice(0, 2).join(' and ')}`,
+      )
     },
   },
   {
