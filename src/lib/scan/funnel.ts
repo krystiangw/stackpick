@@ -1051,16 +1051,17 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
   // Every POST answered the same way at a path nobody registered, with nothing in it. A site
   // whose edge does that has told us about itself and not about MCP, and calling that "nothing
   // answered at six addresses" is a claim we cannot support from here.
+  // Either control will do, and the wildcard is the one that usually sees it: a host that answers
+  // every POST also answers one to a subdomain nobody registered, which discredits the candidate
+  // before the per-path control is ever fetched. That is why the first version of this flag never
+  // fired on the domain it was written for.
+  const emptyTwoHundred = (got: Fetched | undefined) =>
+    got !== undefined && got.status >= 200 && got.status < 300 && got.body.trim().length === 0
   const swallowed = results.filter((got, index) => {
-    const control = nonsense.get(controlFor(candidates[index]))
-    return (
-      got.status >= 200 &&
-      got.status < 300 &&
-      got.body.trim().length === 0 &&
-      control !== undefined &&
-      control.status === got.status &&
-      control.body.trim().length === 0
-    )
+    if (!emptyTwoHundred(got)) return false
+    const sibling = nonsense.get(controlFor(candidates[index]))
+    const matching = (other: Fetched | undefined) => emptyTwoHundred(other) && other?.status === got.status
+    return matching(sibling) || matching(control)
   })
   return {
     endpoints: routedFirst,
