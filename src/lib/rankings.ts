@@ -95,7 +95,11 @@ export async function loadRankings(): Promise<RankingsView> {
       .filter((report): report is Report => Boolean(report))
       .map((report) => {
         const max = report.scorecard.measurable ?? report.scorecard.max
-        const doesNotApply = report.scorecard.checks.filter((check) => check.notApplicable).length
+        // Points, not checks: two of the fifteen are worth two, so counting rows would understate
+        // the card by one the day either of them gains a notApplicable branch.
+        const doesNotApply = report.scorecard.checks
+          .filter((check) => check.notApplicable)
+          .reduce((sum, check) => sum + check.max, 0)
         return {
           domain: report.domain,
           total: report.scorecard.total,

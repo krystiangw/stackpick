@@ -10,15 +10,19 @@ export const FORMULA_VERSION = '9.3'
 const TOLERATED_DEAD_LINKS = 1
 
 /** Characters of text below which a documentation page is a shell and not short prose. */
-const DOCS_SHELL_FLOOR = 500
+export const DOCS_SHELL_FLOOR = 500
 
 /**
  * A documentation path that promises to talk about credentials. Deliberately narrower than the
  * hints that choose which pages to read: `management`, `account`, `getting-started` and
  * `reference` all pick pages, and none of them means the page is about a key.
  */
+// A bare `token` was in here and it is a word this industry uses for three unrelated things.
+// /docs/tokenizer, /docs/design-tokens and /docs/tokens-and-pricing all satisfied a gate whose
+// whole job is to stop us arguing from an absence on pages that could never have carried the
+// evidence, and every LLM vendor and every design system in the corpus has one.
 const CREDENTIAL_PATH =
-  /(api[-_ ]?(?:app[-_ ]?)?keys?|access[-_ ]?keys?|service[-_ ]?(?:tokens?|accounts?)|signing[-_ ]?keys?|credentials?|tokens?|authentication|(^|\/)auth(\/|$)|provisioning)/i
+  /(api[-_ ]?(?:app[-_ ]?)?keys?|access[-_ ]?keys?|service[-_ ]?(?:tokens?|accounts?)|signing[-_ ]?keys?|credentials?|(?:access|api|auth|service|personal|bearer|project|signing)[-_ ]?tokens?|authentication|(^|\/)auth(\/|$)|provisioning)/i
 
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on
@@ -174,7 +178,10 @@ export const CHECKS: Check[] = [
         // vendors who had a file: every one of them maintaining a map an agent could follow,
         // graded level with the vendors who published none. A single miss at this sample size is
         // also inside the noise, so it is now named and not charged for.
-        if (links && links.dead > TOLERATED_DEAD_LINKS) {
+        // Proportional as well as absolute, because the sample has no floor: a file with one
+        // entry, dead, would otherwise take the point on the "one in twelve is noise" argument
+        // and print "0 of the 1 links we sampled answer" while doing it.
+        if (links && (links.dead > TOLERATED_DEAD_LINKS || links.dead * 4 > links.sampled)) {
           return yes(
             0,
             `${files}${at}, but ${links.dead} of the ${links.sampled} links we sampled ${across} are gone, starting with ${links.firstDead}`,
@@ -761,7 +768,7 @@ export const CHECKS: Check[] = [
           }
         }
         // Naming the phrases is the difference between a rule and a grep nobody can rerun: this
-        // is the heaviest check on the card and a vendor could not tell which seven we looked for.
+        // is the heaviest check on the card and a vendor could not tell which ones we looked for.
         const named = f.funnel.provisioning.programmatic.map((phrase) => `"${phrase}"`).join(', ')
         return yes(
           found >= 2 ? 2 : 1,

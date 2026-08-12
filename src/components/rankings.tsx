@@ -31,7 +31,7 @@ export function Rankings({ rankings }: { rankings: RankedCategory[] }) {
         Ordered by the share of measurable points each domain earned, which is why a smaller number can sit
         above a larger one. These are real scans, not examples. Each vendor can open its own scorecard, reproduce every check and
         tell us where we are wrong. That offer is the whole point of publishing the formula. Scores are out of
-        the points we could measure on each domain, not out of sixteen: a site that refuses our requests
+        the points we could measure on each domain, not out of the paper maximum: a site that refuses our requests
         scores against a smaller denominator, not a worse number.
       </p>
       {/* Which also means the denominator is something a vendor can shrink, and a share over a
@@ -39,10 +39,11 @@ export function Rankings({ rankings }: { rankings: RankedCategory[] }) {
           happened and the row is real, it just is not a comparison. */}
       <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-faint">
         A score marked <span className="font-mono">*</span> comes from a domain where too much of the card
-        was unreadable to compare it with the rest, which almost always means the site refused us. Checks
-        that simply do not apply, like an account on a library you install rather than sign up for, are not
-        counted against it. Those rows sit at the bottom of their category whatever the percentage says, so
-        that blocking the scanner cannot be a way to lead it.
+        was unreadable to compare it with the rest: usually the site refused us, sometimes we could not
+        reach the pages a check needs, and either way the fault can be ours. Checks that simply do not
+        apply, like an account on a library you install rather than sign up for, are not counted against
+        it. Those rows sit at the bottom of their category whatever the percentage says, so that blocking
+        the scanner cannot be a way to lead it.
       </p>
 
       <div className="mt-10 grid gap-10 md:grid-cols-2">

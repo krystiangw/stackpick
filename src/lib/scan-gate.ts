@@ -49,7 +49,9 @@ export async function bestExample(): Promise<ExampleReport | null> {
   const deep = all.filter(
     (report) =>
       (report.scorecard.measurable ?? report.scorecard.max) +
-        report.scorecard.checks.filter((check) => check.notApplicable).length >=
+        report.scorecard.checks
+          .filter((check) => check.notApplicable)
+          .reduce((sum, check) => sum + check.max, 0) >=
       RANKABLE_MEASURABLE,
   )
   const reports = deep.length > 0 ? deep : all

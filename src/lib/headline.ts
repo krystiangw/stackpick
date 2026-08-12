@@ -1,5 +1,5 @@
 import type { ScanFindings } from './scan'
-import type { Scorecard } from './score'
+import { DOCS_SHELL_FLOOR, type Scorecard } from './score'
 
 export type Headline = {
   /** One sentence a stranger would forward to a colleague. Specific, checkable, unflattering. */
@@ -73,7 +73,7 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
   }
 
   // Zero characters can mean thin docs or a page we never got. Only the first is a finding.
-  if (findings.docsTextChars > 0 && findings.docsTextChars < 2000 && discovered.docs) {
+  if (findings.docsTextChars > 0 && findings.docsTextChars < DOCS_SHELL_FLOOR && discovered.docs) {
     return {
       // Stating the number without stating that it is too little read as a compliment: the same
       // 1,778 characters headlined resend.com's scorecard while the check below it scored zero.
@@ -81,7 +81,7 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
       // The page the number came off, which is the richest documentation page this scan read and
       // not always the one we call the entry point. Naming the entry point instead attributed a
       // measurement to a page that never produced it.
-      evidence: `${findings.docsTextCharsFrom ?? discovered.docs} served ${findings.docsTextChars.toLocaleString('en-US')} characters of text to a plain fetch. The check passes at 2,000, which is about one screen of prose.`,
+      evidence: `${findings.docsTextCharsFrom ?? discovered.docs} served ${findings.docsTextChars.toLocaleString('en-US')} characters of text to a plain fetch. The check passes at ${DOCS_SHELL_FLOOR}, below which a page cannot hold a paragraph and a nav.`,
       severity: 'serious',
     }
   }

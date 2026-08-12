@@ -597,6 +597,14 @@ function looksLikeSignup(got: Fetched, homeUrl: string): boolean {
  * acquired and its own home page sends you to app.harness.io to register, which is a different
  * registrable name and still the answer to "where does an agent get an account".
  */
+/**
+ * Sections whose pages carry signup words and are not a signup. Widening the hints to catch
+ * `register_free` and trial pages also caught /events/registration, /webinars/registration and
+ * /blog/register-for-the-webinar, and only three candidates per source are ever fetched, so a
+ * webinar can push the real signup out of the sample.
+ */
+export const NOT_WHERE_ACCOUNTS_ARE_MADE = /\/(blog|events?|webinars?|news|press|community|careers?|jobs)(\/|$|-)/i
+
 function signupLinksOn(html: string, base: string, vendor: VendorSite): string[] {
   const links = extractLinks(html, base).filter(
     (link) => onVendorSite(link, vendor) || isAuthenticationHost(link) || isSiblingBrand(link, vendor),
@@ -608,6 +616,7 @@ function signupLinksOn(html: string, base: string, vendor: VendorSite): string[]
   for (const hint of SIGNUP_HINTS) {
     for (const link of links) {
       if (!hint.test(link)) continue
+      if (NOT_WHERE_ACCOUNTS_ARE_MADE.test(new URL(link).pathname)) continue
       const url = routeUrl(link)
       const page = originOf(url) + new URL(url).pathname + new URL(url).hash
       const held = found.get(page)

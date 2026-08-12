@@ -620,15 +620,23 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     asAgent.statusesSeen.every((status) => status === 429)
   // Two requests, and only for the handful of sites that challenged us. Asking every site this
   // would double the door test for an answer that is already visible everywhere else.
+  // Inside a phase, because outside one a probe that runs out of budget answers status 0, the
+  // filter drops it, and the check publishes "no agent reaches the site at all" on the strength
+  // of our own clock. That sentence is the harshest thing this product says, and the sites it
+  // applies to are the slow ones by construction: they challenged us first.
   const challengeAdmits = botChallenge
-    ? (
-        await inParallel([...NAMED_CRAWLERS], async (crawler) => ({
-          name: crawler.name,
-          got: await fetchUrl(found.site, { ua: crawler.ua, fresh: true }),
-        }))
+    ? await phase('door', async () =>
+        (
+          await inParallel([...NAMED_CRAWLERS], async (crawler) => ({
+            name: crawler.name,
+            got: await fetchUrl(found.site, { ua: crawler.ua, fresh: true }),
+          }))
+        )
+          // A 204 or a redirect is a status, not a page. The claim is that a named agent reads
+          // the site, so the body has to have something in it.
+          .filter(({ got }) => got.status >= 200 && got.status < 300 && visibleTextLength(got.body) > 0)
+          .map(({ name, got }) => ({ name, status: got.status })),
       )
-        .filter(({ got }) => got.status >= 200 && got.status < 400)
-        .map(({ name, got }) => ({ name, status: got.status }))
     : []
 
   report('Scoring', STEPS)

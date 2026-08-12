@@ -8,7 +8,7 @@ import { changesBetween, comparableScorecards } from '../src/lib/watch'
 import { CHECKS } from '../src/lib/score'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS } from '../src/lib/scan'
 import { rendersUsableForm } from '../src/lib/scan/funnel'
-import { SIGNUP_HINTS } from '../src/lib/scan/discover'
+import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE } from '../src/lib/scan/discover'
 import {
   BOT_DEFENCE_RULES,
   PROVISIONING_RULES,
@@ -81,6 +81,11 @@ const widerProvisioning: Case[] = [
   ['Use the Tokens API to create, list, update, and delete tokens programmatically', true],
   ["Use NerdGraph's ApiAccess field to programmatically create and manage license keys", true],
   ['Set the access_token returned by POST /auth/login', false],
+  // The name of an API is not a path to a key. Each of these would have earned two points on
+  // the strength of a sidebar link before the pattern required a creation verb beside it.
+  ['Rate limits for the Tokens API are documented below.', false],
+  ['Send your client ID and secret to the Token API to obtain an access token.', false],
+  ['Create your API key in the dashboard. The Credentials API is read-only.', false],
   ['To create a new sites API key, log in to your account and click the New API Key button.', false],
   ['use the Qdrant Cloud Console to create a Database API key for a cluster', false],
   ['This can be generated in the Data Studio within the user page', false],
@@ -316,6 +321,13 @@ check('datadog free-datadog-trial', hits('/free-datadog-trial/'), true)
 // The hint list decides which pages we pay to fetch, so it has to stay capable of saying no.
 check('blog o rejestracji domen to nie signup', hits('/blog/how-we-built-it'), false)
 check('cennik to nie signup', hits('/pricing'), false)
+// Widening the hints also caught these, and only three candidates per source are ever fetched,
+// so a webinar registration can push the real signup out of the sample.
+const notASignupSection = (path: string) => NOT_WHERE_ACCOUNTS_ARE_MADE.test(path)
+check('rejestracja na webinar', notASignupSection('/events/registration'), true)
+check('wpis na blogu o zapisach', notASignupSection('/blog/register-for-the-webinar'), true)
+check('prawdziwy signup nie jest odsiany', notASignupSection('/users/register_free'), false)
+check('trial nie jest odsiany', notASignupSection('/free-datadog-trial/'), false)
 
 console.log('provisioning, czyli czy w ogole zajrzelismy tam, gdzie klucze')
 const prov = CHECKS.find((c) => c.id === 'programmatic_provisioning')!
