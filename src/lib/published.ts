@@ -32,7 +32,44 @@ export type PublishedCorpus = { reports: Report[]; formulaVersion: string }
 
 const EMPTY: PublishedCorpus = { reports: [], formulaVersion: '' }
 
+/**
+ * How long a loaded corpus is reused before the database is asked again. The corpus changes when
+ * we reseed, which is a few times a week, so anything under an hour is generous; five minutes is
+ * chosen so a reseed shows up while somebody is still watching it finish.
+ *
+ * This exists because of the outage on 2026-08-12. The landing page is force-dynamic and read the
+ * whole corpus per request, so when Meta's crawler opened seventy pages at once, one dyno ran
+ * seventy full collection scans and returned 503 to everybody, including the people who were not
+ * crawling us. A cache is the fix; the deeper lesson is that being open to crawlers is a capacity
+ * commitment and not only a policy.
+ */
+const CORPUS_TTL_MS = 5 * 60 * 1000
+
+let cached: { at: number; value: PublishedCorpus } | null = null
+/** One database read serves a burst: without this, the cache fills seventy times, not once. */
+let inFlight: Promise<PublishedCorpus> | null = null
+
 export async function publishedCorpus(): Promise<PublishedCorpus> {
+  if (cached && Date.now() - cached.at < CORPUS_TTL_MS) return cached.value
+  if (inFlight) return inFlight
+  inFlight = loadCorpus()
+    .then((value) => {
+      cached = { at: Date.now(), value }
+      return value
+    })
+    .catch((error) => {
+      // A database blip should cost freshness, not the page. Callers already treat an empty
+      // corpus as "no exhibit", and yesterday's exhibit is better than none.
+      if (cached) return cached.value
+      throw error
+    })
+    .finally(() => {
+      inFlight = null
+    })
+  return inFlight
+}
+
+async function loadCorpus(): Promise<PublishedCorpus> {
   const seeded = (await getStore().latestPerDomain(1000, true)).filter((report) =>
     CURATED_DOMAINS.has(report.domain),
   )

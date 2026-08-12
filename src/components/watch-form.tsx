@@ -7,8 +7,8 @@ import { useState } from 'react'
  * unattended signup, so this form renders in the server HTML, takes no card and sets no
  * password: an agent can complete it as easily as a person.
  */
-export function WatchForm({ domain }: { domain?: string }) {
-  const [email, setEmail] = useState('')
+export function WatchForm({ domain, initialEmail }: { domain?: string; initialEmail?: string }) {
+  const [email, setEmail] = useState(initialEmail ?? '')
   const [site, setSite] = useState(domain ?? '')
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'already' | 'undelivered'>('idle')
   const [error, setError] = useState<string | null>(null)

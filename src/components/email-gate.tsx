@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { WatchForm } from './watch-form'
 
 export function EmailGate({
   domain,
@@ -47,6 +48,16 @@ export function EmailGate({
         <p className="mt-3 max-w-xl leading-relaxed">
           The scorecard for {domain} is in your inbox, with a permanent link you can forward.
         </p>
+        {/* The one thing this page could never give them: today's answer goes stale, and an edge
+            rule that starts refusing agents next month looks identical in a browser. Offered
+            after the scorecard rather than folded into the same submit, so nobody is signed up
+            for a recurring email by a button that promised a one-off one. */}
+        <p className="mt-6 max-w-xl leading-relaxed">
+          This is one photograph. Should we rerun it every week and write only when a verdict moves?
+        </p>
+        <div className="mt-4 max-w-xl">
+          <WatchForm domain={domain} initialEmail={email} />
+        </div>
       </div>
     )
   }
