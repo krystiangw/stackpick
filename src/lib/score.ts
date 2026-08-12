@@ -4,7 +4,7 @@ import { OPENAPI_PATHS } from './scan/machine'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '9.1'
+export const FORMULA_VERSION = '9.2'
 
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on

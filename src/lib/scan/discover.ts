@@ -86,6 +86,8 @@ const SIGNUP_HINTS = [
   /\/register(\/|$)/i,
   /\/registration/i,
   /\/create[_-]account/i,
+  // The other word order, which is what Rails scaffolds and what porkbun.com uses.
+  /\/accounts?\/(create|new)(\/|\?|$)/i,
   /\/join(\/|$)/i,
   /\/get[_-]started/i,
 ]
@@ -602,6 +604,32 @@ function signupLinksOn(html: string, base: string, vendor: VendorSite): string[]
     }
   }
   return [...found.values()]
+}
+
+/**
+ * The one door a company links when it links no signup: its login page. Kept to the bare path,
+ * because /account/settings is somewhere you already are and not a way in.
+ */
+const ACCOUNT_DOOR = /^\/(accounts?|log[_-]?in|sign[_-]?in|my)\/?$/i
+
+/**
+ * One hop through that door. porkbun.com's home page links /account and nothing else, and the
+ * page behind it links /account/create, so we published "nothing on the site links to an account
+ * signup" about a registrar whose registration is one click away. Costs a single request, and
+ * only on the domains where every earlier source has already come up empty.
+ */
+async function signupBehindTheLoginPage(html: string, base: string, vendor: VendorSite): Promise<string[]> {
+  const doors = extractLinks(html, base).filter((link) => {
+    if (!onVendorSite(link, vendor)) return false
+    try {
+      return ACCOUNT_DOOR.test(new URL(link).pathname)
+    } catch {
+      return false
+    }
+  })
+  if (doors.length === 0) return []
+  const got = await fetchUrl(doors[0])
+  return got.ok ? signupLinksOn(got.body, got.url, vendor) : []
 }
 
 const SIGNUP_LABELS = [/sign ?up/, /create (an )?account/, /register/, /free trial/]
@@ -1637,6 +1665,9 @@ export async function discover(domain: string): Promise<Discovered> {
       base,
     )
     if (fromRead) return fromRead
+
+    const fromDoor = await firstRealSignup(await signupBehindTheLoginPage(html, base, vendor), 'site', base)
+    if (fromDoor) return fromDoor
 
     const atPath = await firstRealSignup(
       SIGNUP_FALLBACKS.map((path) => `${site}${path}`),
