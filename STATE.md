@@ -9,13 +9,16 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 
 ## W locie w tej chwili (2026-08-12, noc)
 
-**Nic nie leci, ale korpus jest mieszany:** formuła **8.9** jest na produkcji, a wiersze pochodzą
-z 8.8 poza kilkoma przeskanowanymi ręcznie. **Następny krok to reseed 8.9** z przewidywaniem:
-`kinde.com:mcp_present` (fail → unmeasured) i możliwe drobne ruchy tam, gdzie jakiś inny brzeg
-połyka POST-y albo odpowiada 202 inaczej niż kontrolka. Po nim `npm run audit` i
-`npm run diff-corpus /tmp/corpus-floor-before.json -- --expect kinde.com:mcp_present`.
+**Nic nie leci.** Formuła **8.9**, korpus w całości na 8.9, audyt czysty
+(`170 rows on formula 8.9, 0 contradictions`, `0 adrift`), drzewo czyste i wypchnięte.
 
-Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-8.8.json`, `/tmp/corpus-floor-before.json`.
+**Następna pozycja merytoryczna:** z dziesięciu ruchów podłogi (runda 130) sonda MCP odpowiadała
+za trzy i **to jest zamknięte** (rundy 131-132). Zostaje drugie źródło: **`planetscale.com` rusza
+trzema checkami naraz**, bo raz znajdujemy jego stronę rejestracji, a raz nie. Zacznij tak samo
+jak przy MCP: pięć skanów z dyno pod rząd i sprawdzenie, czy `auth.planetscale.com/sign-up`
+odpowiada nam za każdym razem, zanim tkniesz regułę odkrywania.
+
+Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-8.9.json`, `/tmp/corpus-floor-before.json`.
 
 ## Stan na teraz, w dziesięciu liniach
 
@@ -327,6 +330,25 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (132): czterech dostawców, nie jeden, i guard, który zgłosił własne słownictwo
+
+Reseed 8.9 potwierdził przewidywanie **1 z 1** (`kinde.com:mcp_present` fail → unmeasured), ale
+reguła znalazła **czterech** dostawców, których brzeg połyka każdy POST z naszej sieci:
+`kinde.com`, `modal.com`, `pdfmonkey.io` i `quilljs.com`. Wszyscy czterej byli dotąd publikowani
+jako „no MCP surface", czyli **cztery twierdzenia o cudzym produkcie zrobione z pomiaru cudzego
+brzegu**, a nie jedno. Liczba żywych serwerów MCP nie drgnęła: dalej **67**.
+
+**Audyt zgłosił sprzeczność i sam był jej źródłem.** `quilljs.com: signup_no_captcha says nothing
+links to signup while mcp_present cites one` - bo moje nowe zdanie zawiera frazę „a path nobody
+**registered**", a guard szukał gołego słowa `register`. Teraz wymaga **adresu**, który wygląda
+na rejestrację, czyli tego, co „cites one" miało znaczyć od początku. To drugi raz tej nocy, gdy
+strażnik oskarżył coś, co miało rację (poprzednio runda 129), i oba razy kosztowało to kilka minut,
+bo strażnik nazywa dokładnie, co porównał.
+
+Reszta różnicy 8.8 → 8.9 (15 wierszy, 0,59 procent) to znani oscylatorzy: `planetscale.com`
+z trzema checkami naraz, `froala.com`, `bitmovin.com`, `postmarkapp.com`, `medusajs.com`
+i `chargebee.com`.
 
 ## Runda 2026-08-12 (131): trzy razy pomyliłem się co do kinde, zanim zmierzyłem właściwą rzecz
 
