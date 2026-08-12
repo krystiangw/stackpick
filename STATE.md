@@ -13,9 +13,10 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 (`170 rows on formula 9.0, 0 contradictions`, `0 adrift`), drzewo czyste i wypchnięte.
 Podłoga szumu **0,20 procent**, opublikowana z uzasadnieniem.
 
-**Zrobione po rundzie 137:** rozjazd podłogi szumu między `/report` a `/methodology` (runda 138).
-**Warte następnej sesji:** przejrzeć resztę liczb na `/report` i `/methodology` tak samo, bo
-strażnik pilnuje wyłącznie `/findings`, a obie te strony niosą twierdzenia liczbowe.
+**Zrobione po rundzie 137:** rozjazd podłogi szumu (138) i dwa nieprawdziwe zdania na
+`/methodology` (139). Przegląd obu stron zamknięty: na `/report` każda liczba jest liczona
+z danych, na `/methodology` zostały już tylko liczby **datowane i historyczne** (pomiary
+z 10 i 12 sierpnia, 70 checków cudzego narzędzia), które z założenia się nie przeliczają.
 
 **Otwarte, w kolejności wagi:**
 1. **Decyzja produktowa dla Krystiana:** `find_providers` użyteczny (odpowiada często, myli się
@@ -339,6 +340,24 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (139): dwa zdania na `/methodology`, które przestały być prawdziwe
+
+Przegląd niepilnowanych liczb doniósł dwa realne znaleziska, oba na `/methodology`
+(na `/report` wszystkie liczby są liczone z danych, więc tam nie ma czego pilnować):
+
+1. **„That is the stage this corpus measures as 95 percent solved"** - dziś to **91**. Liczba
+   wpisana ręcznie w zdanie porównujące nas z innym narzędziem, więc nic jej nie przeliczało.
+   Oba udziały w tym zdaniu biorą się teraz z **tego samego raportu, który drukuje `/report`**,
+   więc nie mogą się z nim rozjechać.
+2. **„our own adversarial audits put the error rate at 0.39 percent, which is below this floor"** -
+   **odwróciło się tej nocy**. Podłoga spadła do 0,20, bo przestaliśmy liczyć własne ucięte skany
+   jako zmienność internetu, więc 0,39 jest teraz **większe**. Zdanie mówi to wprost razem
+   z powodem, zamiast cicho zostać przy wygodniejszej wersji.
+
+**Weryfikacja na produkcji złapała mój własny błąd**, którego build nie widział: udziały etapów
+są ułamkami, więc strona przez chwilę pisała „1 percent solved" zamiast 91. To jest dokładnie ten
+powód, dla którego każda zmiana tej nocy kończyła się czytaniem strony, a nie zielonym buildem.
 
 ## Runda 2026-08-12 (138): liczba podana w dwóch miejscach zaczęła się kłócić sama ze sobą
 
