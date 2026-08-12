@@ -5,7 +5,7 @@
  * A user-agent that introduces itself as localhost tells a vendor nothing, and a documentation
  * page that links to localhost is broken for everyone but its author.
  *
- * This is the second kind. When the domain is bought, set `STACKPICK_BASE_URL` on the dyno and
- * change the string below, and every published address moves with it.
+ * This is the second kind. The fallback is the real domain, bought 2026-08-12; the dyno also
+ * sets `STACKPICK_BASE_URL`, so a change there moves every published address without a deploy.
  */
-export const SITE_URL = process.env.STACKPICK_BASE_URL ?? 'https://stackpick-f12d13a227ea.herokuapp.com'
+export const SITE_URL = process.env.STACKPICK_BASE_URL ?? 'https://letagentsin.com'

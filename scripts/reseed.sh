@@ -12,7 +12,7 @@
 # then said more about our load than about the vendor. Reseed once per set of changes.
 set -u
 
-BASE="${BASE:-https://stackpick-f12d13a227ea.herokuapp.com}"
+BASE="${BASE:-https://letagentsin.com}"
 TOKEN="${1:-${STACKPICK_CONSOLE_TOKEN:-}}"
 PAUSE="${PAUSE:-1}"
 
