@@ -4,7 +4,10 @@ import { OPENAPI_PATHS } from './scan/machine'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '9.2'
+export const FORMULA_VERSION = '9.3'
+
+/** Dead entries an llms.txt may carry before its map stops being worth following. */
+const TOLERATED_DEAD_LINKS = 1
 
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on
@@ -142,10 +145,22 @@ export const CHECKS: Check[] = [
         const across = f.machine.hasLlmsFullTxt ? 'across both files' : 'across the file'
         // A curated map whose entries are gone is worse than no map: an agent follows them, gets
         // nothing, and has spent its budget. The point is the file being useful, not present.
-        if (links && links.dead > 0) {
+        //
+        // But one dead link in a sample of twelve is rot, not a broken map, and until 2026-08-12
+        // it scored the same zero as publishing nothing at all. That was twelve of the nineteen
+        // vendors who had a file: every one of them maintaining a map an agent could follow,
+        // graded level with the vendors who published none. A single miss at this sample size is
+        // also inside the noise, so it is now named and not charged for.
+        if (links && links.dead > TOLERATED_DEAD_LINKS) {
           return yes(
             0,
             `${files}${at}, but ${links.dead} of the ${links.sampled} links we sampled ${across} are gone, starting with ${links.firstDead}`,
+          )
+        }
+        if (links && links.dead > 0) {
+          return yes(
+            1,
+            `${files}${at}, and ${links.sampled - links.dead} of the ${links.sampled} links we sampled ${across} answer. One is gone: ${links.firstDead}`,
           )
         }
         const checked = links ? `, and the ${links.sampled} links we sampled ${across} all answer` : ''

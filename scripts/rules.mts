@@ -5,6 +5,7 @@ import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
 import { changesBetween } from '../src/lib/watch'
+import { CHECKS } from '../src/lib/score'
 import {
   BOT_DEFENCE_RULES,
   PROVISIONING_RULES,
@@ -222,6 +223,25 @@ check('przejscie w niemierzalne to nie oskarzenie', moved([verdict(1, 1)], [verd
 // A check the earlier scan never had must not be reported as a change from nothing.
 check('nowy check nie jest zmiana', moved([], [verdict(1, 1)]).length, 0)
 
+console.log('llms.txt, czyli ile zgnilizny wolno mapie')
+const llms = CHECKS.find((c) => c.id === 'llms_txt')!
+const withDeadLinks = (dead: number) =>
+  llms.evaluate({
+    machine: {
+      hasLlmsTxt: true,
+      hasLlmsFullTxt: false,
+      llmsUrls: ['https://example.test/llms.txt'],
+      llmsLinks: { sampled: 12, dead, firstDead: 'https://example.test/gone' },
+      llms: {},
+    },
+    funnel: { servesCatchAll: false },
+  } as never)
+// A file whose every entry answers is the only case that was ever uncontroversial.
+check('mapa bez martwych linkow', withDeadLinks(0).points, 1)
+// One miss in twelve is rot inside the noise of the sample, not a map an agent cannot follow.
+check('jeden martwy link nie kosztuje punktu', withDeadLinks(1).points, 1)
+check('jeden martwy link jest jednak nazwany', withDeadLinks(1).detail.includes('https://example.test/gone'), true)
+check('dwa martwe linki kosztuja punkt', withDeadLinks(2).points, 0)
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

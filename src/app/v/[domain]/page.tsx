@@ -192,8 +192,27 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
           </a>
           .
         </p>
+        {/* We publish a graded verdict about a company that never asked us to. The least we owe
+            them is a stated way to argue with it, and the corrections we get are the cheapest
+            source of rule bugs we have. */}
+        <p className="mt-4 max-w-2xl leading-relaxed">
+          If a line here is wrong,{' '}
+          <Link href={`/?domain=${encodeURIComponent(name)}`} className="text-brass underline underline-offset-4">
+            rescan it
+          </Link>{' '}
+          first, because most of what we get told is already fixed and the page is only as new as the last
+          scan. If it is still wrong after that, write to{' '}
+          <a
+            href={`mailto:hello@letagentsin.com?subject=${encodeURIComponent(`Wrong verdict on ${name}`)}`}
+            className="text-brass underline underline-offset-4"
+          >
+            hello@letagentsin.com
+          </a>{' '}
+          with the check and what you see instead. A verdict we cannot reproduce comes down, and the rule
+          that produced it gets fixed for everybody rather than only for you.
+        </p>
         <p className="mt-4">
-          <Link href="/report" className="text-brass underline underline-offset-4">
+          <Link href="/" className="text-brass underline underline-offset-4">
             Scan a domain yourself
           </Link>
         </p>
