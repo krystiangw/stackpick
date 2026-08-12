@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-12 (po poludniu, formula 9.2, wlasna domena, monitoring)
+# Let Agents In: stan na 2026-08-12 (wieczor, formula 9.2, wlasna domena, monitoring)
 
 Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
 **Dwie sekcje na dole tego bloku, "Co zostało z audytów" i "Następne kroki merytoryczne", są
@@ -7,36 +7,44 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
-## W locie w tej chwili (2026-08-12, po południu) - DOMENA ŻYJE, KORPUS RESEEDUJE SIĘ NA 9.2
+## W locie w tej chwili (2026-08-12, po poludniu) - NIC NIE LECI, NASTEPNY KROK: PLATNOSCI
 
-**Leci reseed na formule 9.2 pod nowym user-agentem.** Snapshot sprzed: `before-9.2.json`
-w scratchpadzie. Po nim diff i audyt. **Przy diffie rozdziel dwie przyczyny:** ruchy w
-`answers_plain_request` i wszędzie, gdzie cytowany jest user-agent, to zmiana nazwy; ruchy
-w `signup_*` na `porkbun.com` to reguła z rundy 143.
+**Wszystko wypchniete, drzewo czyste, produkcja zdrowa, korpus 170 wierszy na 9.2, audyt czysty.**
 
-**DOMENA DZIAŁA: `https://letagentsin.com` (i `www`), certyfikat ACM wystawiony.**
-Porkbun, kupiona 2026-08-12 09:20:12Z, wygasa 2027-08-12, auto-renew ON, blokada transferu ON,
-WHOIS privacy działa, odnowienie 11,08 USD. Klucze API w `.env.local`
-(`PORKBUN_API_KEY`, `PORKBUN_SECRET_KEY`), DNS ustawiany przez ich API.
+**Dzien w skrocie:** kupiona i podlaczona domena `letagentsin.com` (Porkbun, ALIAS na apeksie,
+ACM), przeniesione wszystkie publikowane adresy, poczta wychodzaca zweryfikowana w Resendzie
+(DKIM i SPF na `send.`, wysylka sprawdzona end-to-end przez wlasny `/api/lead`), `hello@`
+przekierowany, prywatny Gmail zdjety z 11 miejsc, Search Console zweryfikowana i sitemap
+zgloszony, 170 stron `/v/<domena>` opublikowanych, monitoring zbudowany i dzialajacy,
+audyt UX w przegladarce z pieciooma naprawami. Rundy 143-145.
 
-**Zrobione przy przeprowadzce:** ALIAS na apeksie i CNAME dla www (cele Heroku są **różne**),
-skasowane przekierowanie na `letagentsin-com.l.ink` (zabrało ze sobą oba rekordy, które je
-trzymały), `STACKPICK_BASE_URL`, fallback w `src/lib/site.ts`, `BASE` w `reseed.sh`, oraz
-**pięć plików w `public/`, które miały stary host wpisany na sztywno** i nie idą przez `SITE_URL`.
+**NASTEPNY KROK: platnosci.** Decyzja cennikowa zapadla (**monitoring 99 USD/mies. za domene**,
+runda 144), kod monitoringu dziala i **jest dzis darmowy, co strona mowi wprost**. Brakuje
+tylko pobierania pieniedzy.
 
-**Zostawione świadomie w DNS:** `MX` na `fwd1/fwd2.porkbun.com` (darmowe przekierowanie poczty,
-kandydat na `hello@`), `TXT` z SPF Porkbuna (do zmiany przy Resendzie), dwa `_acme-challenge`.
+**Blokada na Krystianie, decyzja ksiegowa a nie techniczna: Stripe czy Paddle.**
+- **Stripe:** uruchamiam od reki, ale **VAT OSS od klientow z UE rozliczasz sam**.
+- **Paddle:** sprzedawca formalny, zdejmuje VAT calkowicie, wyzsza prowizja, **weryfikacja
+  konta trwa kilka dni**.
+Po decyzji: Checkout, webhook ustawiajacy `plan: 'paid'` i `subscriptionId` na `Watch`
+(pola juz istnieja w `src/lib/watch.ts`), oraz przepisanie `/pricing` na trzy poziomy.
 
-**Blokady po stronie Krystiana, obie małe:**
-- `hello@letagentsin.com` w panelu Porkbuna (EMAIL → Manage). **W API tego nie ma**, sprawdzone
-  w ich specu: jest tylko `/email/setPassword`. To zdejmuje prywatny Gmail z kart wyników.
-- Kod weryfikacyjny Search Console. Rekord TXT dopisze agent przez API.
+**Druga rzecz do zrobienia bez pytania nikogo: cron nie jest jeszcze uruchomiony.**
+`/api/cron/watch` dziala i jest chroniony `STACKPICK_CRON_TOKEN` (ustawiony na Heroku), ale
+**nikt go nie wola**. Skanuje jedna domene na wywolanie. Do wyboru: Heroku Scheduler (dodatek,
+nie ma go jeszcze) albo cron po stronie maszyny Krystiana.
 
-**Nasz własny wynik, zmierzony własnym skanerem na formule 9.2: 12/13 mierzalnych (92 procent).**
-W korpusie 170 firm lepsze są **trzy** (openrouter.ai, cloudflare.com, zenrows.com po 93), przy
-medianie 60. Jedyna prawdziwa porażka to `oauth_dcr` 0/1 i jest uczciwa: nie mamy kont.
-Trzy niemierzalne (`signup_*`, `typed_package`) z tego samego powodu. **Nasz własny skan wytyka
-nam to, co blokuje sprzedaż:** „publikujesz cennik pod /pricing, a nie znaleźliśmy rejestracji".
+**Otwarte, mniejsze:**
+- **Jedno dyno to jedyny serwer.** Crawler Meta polozyl je dzis raz. `robots.txt` i cache
+  zalatwily objaw; przy realnym ruchu trzeba bedzie drugiego (koszt).
+- **Widok mobilny niesprawdzony.** Rozszerzenie do Chrome robi zrzuty w stalej szerokosci
+  niezaleznie od rozmiaru okna, wiec audyt UX zweryfikowal tylko desktop.
+- **Nie mierzymy, czy strona uniesie crawl.** Dajemy punkt za brak `Crawl-delay` nie sprawdzajac
+  wydajnosci. Kandydat na dyskusje o formule, nie na szybka regule.
+
+**Pomiarowa lekcja o kosztach (nowa, 2026-08-12):** audyt w przegladarce to **najdrozsza rzecz,
+jaka robimy kontekstowo**. Zrzuty ekranu z `browser_batch` zjadly ~390k tokenow, czyli 39
+procent okna, w kilkanascie wywolan. Robic go celowo i krotko, nie eksploracyjnie.
 
 ## Stan na teraz, w dziesięciu liniach
 
