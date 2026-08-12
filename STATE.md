@@ -347,6 +347,25 @@ których agent nie ma prawa rozstrzygnąć sam.**
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
 
+## Runda 2026-08-12 (140): liczby o trasowaniu w opisie narzędzia oblewają teraz build
+
+Ryzyko, które sam stworzyłem w rundzie 127: opis narzędzia `find_providers` cytuje **siedem liczb**
+z zestawu odłożonego, wpisanych ręcznie. Były prawdziwe, gdy je pisałem. **„16 na 20" też było**,
+i przetrwało długo po tym, jak przestało.
+
+`npm run build` przelicza teraz wszystkie siedem z tych samych pytań i porównuje z opublikowanym
+zdaniem. Pytania wyprowadzone do `scripts/routing-questions.ts`, więc przebieg drukujący wynik
+i strażnik pilnujący opisu czytają **tę samą listę**.
+
+**Sprawdziłem, że strażnik umie oblać:** podmiana jednej liczby dała
+`ZLE odpowiedzi poprawnych: dostalem 24, oczekiwane 25` i zatrzymała build. Test, którego nie
+widziałem na czerwono, jest tylko nadzieją.
+
+Przy okazji pipeline zadziałał jak trzeba: pierwszy commit miał import z rozszerzeniem `.mts`,
+którego typecheck nie przyjmuje, i **hook Heroku odmówił przyjęcia zepsutego builda**. Commit
+zdążył trafić na origin, bo w moim łańcuchu `npm run build | tail` zwraca kod `tail`, nie builda.
+**Nie łącz builda z pushem przez `|` i `&&` w jednej linii**, bo pierwsza połowa łańcucha kłamie.
+
 ## Runda 2026-08-12 (139): dwa zdania na `/methodology`, które przestały być prawdziwe
 
 Przegląd niepilnowanych liczb doniósł dwa realne znaleziska, oba na `/methodology`
