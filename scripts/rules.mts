@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+import { categoryForJob } from '../src/lib/lookup'
+import { FRESH_QUESTIONS } from './routing-questions.mts'
 import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import {
@@ -143,6 +146,33 @@ const defence: Case[] = [
 for (const [text, expected] of defence) {
   check(`"${text.slice(0, 46)}"`, Object.values(BOT_DEFENCE_RULES).some((rule) => rule.test(text)), expected)
 }
+
+console.log('trasowanie, czyli czy opis narzędzia MCP nadal mówi prawdę')
+// The description quotes four numbers from the held-out set. They were true when written, and so
+// was "16 right out of 20" before it: a number in prose next to a number in a script drifts the
+// moment somebody edits the vocabulary, and nothing notices until a reader does.
+let right = 0
+let silent = 0
+let wrongCategory = 0
+let shouldHaveRefused = 0
+let answered = 0
+for (const question of FRESH_QUESTIONS) {
+  const got = categoryForJob(question.asked)?.id ?? null
+  if (got !== null) answered += 1
+  if (got === question.expect) right += 1
+  else if (got === null) silent += 1
+  else if (question.expect === null) shouldHaveRefused += 1
+  else wrongCategory += 1
+}
+const described = readFileSync('src/app/mcp/route.ts', 'utf8')
+const quoted = (pattern: RegExp) => Number(described.match(pattern)?.[1] ?? -1)
+check('pytań w zestawie odłożonym', FRESH_QUESTIONS.length, quoted(/Measured on (\d+) questions written before/))
+check('odpowiedzi poprawnych', right, quoted(/it answered (\d+) correctly/))
+check('milczeń tam, gdzie należało odpowiedzieć', silent, quoted(/said nothing on (\d+) it should have answered/))
+check('złych kategorii', wrongCategory, quoted(/sent (\d+) to the wrong category/))
+check('odpowiedzi tam, gdzie należało odmówić', shouldHaveRefused, quoted(/answered (\d+) that it should have refused/))
+check('udzielonych odpowiedzi', answered, quoted(/it gave an answer to (\d+) of the/))
+check('złych odpowiedzi razem', wrongCategory + shouldHaveRefused, quoted(/and (\d+) of those answers were wrong/))
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)
