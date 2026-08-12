@@ -5,13 +5,13 @@ import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
 /**
- * 9.4 rather than a second 9.3 on purpose. A partial 9.3 reseed ran against code carrying five
- * defects a review then found, and rows measured by two different scanners under one version
- * string are exactly what this constant exists to prevent. The abandoned rows keep the 9.3
- * label, fall out of the published majority as the new ones land, and stay honest about which
- * scanner produced them.
+ * Bumped whenever the rules move, including when they move back. 9.4 published "1 of 8
+ * provisioning phrases" and there are seven again, so every one of those sentences would be
+ * unreproducible against the deployed scanner. Two scanners under one version string is exactly
+ * what this constant exists to prevent, and the cost of being wrong about that is a vendor who
+ * cannot reproduce a number we published about them.
  */
-export const FORMULA_VERSION = '9.4'
+export const FORMULA_VERSION = '9.5'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
