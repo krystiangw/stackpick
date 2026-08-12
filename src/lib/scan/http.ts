@@ -42,6 +42,9 @@ export const AGENT_UA = `LetAgentsIn/1.0 (+${SITE_URL}/methodology)`
  * Every request is additionally clamped to whatever is left of the scan budget.
  */
 const TIMEOUT_MS = 8_000
+
+/** Three eight second waits is most of the budget already; a fourth buys nothing. */
+const MOST_TIMEOUTS_PER_HOST = 3
 const MAX_BYTES = 400_000
 
 /**
@@ -103,6 +106,14 @@ type ScanState = {
    * probes in one scan.
    */
   hostHealth: Map<string, 'ok' | 'dead'>
+  /**
+   * Timeouts per host, because "answered once" is not the same as "is answering". hover.com
+   * serves its home page and then hangs on nearly everything else, and at eight seconds a
+   * request that ate the entire 27 second budget: six of its eleven checks published as
+   * unmeasured on every attempt, four attempts in a row. A host is written off after three
+   * timeouts here, which is enough to survive one slow page and not enough to lose the scan.
+   */
+  timeouts: Map<string, number>
   slots: Map<string, HostSlots>
   /** One scan asks for the same URL up to four times, from phases that cannot see each other. */
   responses: Map<string, Promise<Fetched>>
@@ -118,6 +129,7 @@ export function withScanBudget<T>(budgetMs: number, run: () => Promise<T>): Prom
     {
       deadlineAt: Date.now() + budgetMs,
       hostHealth: new Map(),
+      timeouts: new Map(),
       slots: new Map(),
       responses: new Map(),
       lost: { count: 0 },
@@ -315,6 +327,9 @@ async function runFetch(url: string, options: FetchOptions, state: ScanState | n
       if (state?.hostHealth.get(attempted) === 'dead') {
         return empty(url, `${attempted} would not accept a connection earlier in this scan`)
       }
+      if ((state?.timeouts.get(attempted) ?? 0) >= MOST_TIMEOUTS_PER_HOST) {
+        return empty(url, `${attempted} timed out ${MOST_TIMEOUTS_PER_HOST} times earlier in this scan`)
+      }
 
       // Held for the whole request, including the body read, and keyed on the host of the
       // first hop: a redirect that leaves the site is too rare to queue separately for.
@@ -356,6 +371,9 @@ async function runFetch(url: string, options: FetchOptions, state: ScanState | n
     if (state && Date.now() >= state.deadlineAt) return empty(url, outOfTimeDuring)
     // Only ever a first impression: a host that has already answered something is never
     // written off on a later failure, so one reset cannot end the scan of a live site.
+    if (state && attempted && (error as Error)?.name === 'AbortError') {
+      state.timeouts.set(attempted, (state.timeouts.get(attempted) ?? 0) + 1)
+    }
     if (state && attempted && !state.hostHealth.has(attempted)) state.hostHealth.set(attempted, 'dead')
     return empty(url, error instanceof Error ? `${error.name}: ${error.message}` : String(error))
   } finally {
