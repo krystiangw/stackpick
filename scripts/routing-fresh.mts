@@ -1,5 +1,5 @@
 import { categoryForJob, explainJob } from '../src/lib/lookup'
-import { FRESH_QUESTIONS } from './routing-questions.mts'
+import { FRESH_QUESTIONS } from './routing-questions'
 
 /**
  * Questions the routing rules have never seen.

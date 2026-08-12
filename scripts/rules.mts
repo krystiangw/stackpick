@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { categoryForJob } from '../src/lib/lookup'
-import { FRESH_QUESTIONS } from './routing-questions.mts'
+import { FRESH_QUESTIONS } from './routing-questions'
 import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import {
