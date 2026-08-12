@@ -425,7 +425,10 @@ function truncationOf(incomplete: Set<Phase>, budgetMs: number, elapsedMs: numbe
     unmeasuredChecks: [...new Set(phases.flatMap((phase) => phase.checks))],
     // Read once per check, so it says what happened to that check rather than reciting the
     // whole list of what else was still running. The list is above, for the report to show once.
-    detail: `Unmeasurable: the scan ran out of time after ${Math.round(elapsedMs / 1000)} seconds and this was never tested. It is not a finding about you, and a rescan usually completes.`,
+    // Not "a rescan usually completes", which is false where it matters. hover.com truncates on
+    // every attempt and always on the same six checks, so a row that keeps saying this is telling
+    // the vendor something true about how long their site takes to answer us, not about a fluke.
+    detail: `Unmeasurable: the scan ran out of time after ${Math.round(elapsedMs / 1000)} seconds and this was never tested. It is not a finding about you. A rescan often completes, and a row that keeps saying this means your site takes longer than that budget to answer the requests we make.`,
   }
 }
 

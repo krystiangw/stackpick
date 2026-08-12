@@ -81,6 +81,17 @@ if [ -n "$failed" ]; then
       -H 'content-type: application/json' \
       -H "cookie: stackpick_console=$TOKEN" \
       -d "{\"domain\":\"$domain\"}")
+    # A retry that truncates again is still a row about our clock, so it is asked one more time
+    # with room to breathe rather than reported as recovered. hover.com went out as "the scan ran
+    # out of time" on the 9.0 reseed because this line only looked for a scorecard.
+    if printf '%s' "$out" | grep -q 'ran out of time'; then
+      sleep 20
+      out=$(curl -s --max-time 120 -X POST "$BASE/api/scan" \
+        -H 'content-type: application/json' \
+        -H "cookie: stackpick_console=$TOKEN" \
+        -d "{\"domain\":\"$domain\"}")
+      printf '%s' "$out" | grep -q 'ran out of time' && printf '%-24s STILL TRUNCATED\n' "$domain" && continue
+    fi
     printf '%s' "$out" | grep -q '"scorecard"' && printf '%-24s recovered\n' "$domain" || printf '%-24s STILL FAILING\n' "$domain"
   done
 fi
