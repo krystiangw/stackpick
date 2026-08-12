@@ -68,7 +68,12 @@ for (const row of corpus.rows) {
   }
 
   const denies = row.checks.filter((c) => NO_SIGNUP.test(c.detail))
-  const cites = row.checks.find((c) => /signup|register|sign[- ]?up/i.test(c.detail) && !NO_SIGNUP.test(c.detail))
+  // Citing a signup means naming a page, so the guard wants a URL and not just the word. Without
+  // that it fired on quilljs.com because the MCP sentence says "a path nobody registered", which
+  // is a guard reporting its own vocabulary rather than a row disagreeing with itself.
+  const cites = row.checks.find(
+    (c) => /https?:\/\/\S*(?:signup|sign[- ]?up|register)/i.test(c.detail) && !NO_SIGNUP.test(c.detail),
+  )
   if (denies.length > 0 && cites) say(`${denies[0].id} says nothing links to signup while ${cites.id} cites one`)
 
   // A pass on one of these is a claim about one specific page, and the page it is true of is
