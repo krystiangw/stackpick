@@ -9,9 +9,13 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 
 ## W locie w tej chwili (2026-08-12, noc)
 
-**Nic nie leci.** Formuła **9.0**, korpus w całości na 9.0, audyt czysty, drzewo czyste
-i wypchnięte. Podłoga szumu: **0,20 procent**, opublikowana na `/methodology` razem z powodem,
-dla którego wcześniejsze pomiary były wyższe.
+**Reseed leci** po zmianie bezpiecznika (log `/tmp/reseed-breaker.log`, stan sprzed:
+`/tmp/corpus-before-breaker.json`). `hover.com` przeskanowany ręcznie przed nim, więc jego ruch
+już się dokonał; **każda inna domena, która się ruszy, ma ten sam kształt co hover** (wildcard DNS
+albo host przyjmujący połączenia i milczący) i warto ją wypisać.
+
+Formuła **9.0**, audyt czysty, drzewo czyste i wypchnięte. Podłoga szumu: **0,20 procent**,
+opublikowana na `/methodology` razem z powodem, dla którego wcześniejsze pomiary były wyższe.
 
 **Stan pracy nocnej:** oba źródła szumu z rundy 130 zamknięte, podłoga przemierzona dwa razy,
 trasowanie zmierzone uczciwie (59,3 procent błędu, liczba opublikowana w opisie narzędzia MCP)
@@ -338,6 +342,30 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (136): hover nie był wolny, tylko ma wildcard DNS
+
+`hover.com` ucinał się na budżecie **za każdym razem**, zawsze na tych samych sześciu checkach.
+Pierwsza hipoteza: strona jest wolna. **Zmierzone z dyno: jest szybka** - strona główna 3,9 s,
+robots.txt 254 ms, cennik 1,9 s, reszta poniżej sekundy.
+
+Druga hipoteza: coś na tym hoście wisi, więc dołożyłem bezpiecznik liczący przekroczenia czasu
+**per host**. **Nie zmienił niczego**, i to samo w sobie było informacją.
+
+Prawdziwa przyczyna: **`hover.com` ma wildcard DNS**. `mcp.hover.com`, `api.hover.com`,
+`docs.hover.com` i moja kontrolka o nazwie `mcp-letagentsin-control-8f3a1c.hover.com` **wszystkie
+przyjmują połączenie i milczą po 8 sekund każda**. Licznik per host nigdy nie dobijał do trzech,
+bo za każdym razem to inna nazwa, pytana raz. Liczony **per witryna** dobija natychmiast.
+
+Bezpiecznik blokuje tylko nazwy, które w tym skanie **nic nie odpowiedziały**, więc zdrowy apex
+czyta się dalej, a wyimaginowane subdomeny przestają kosztować budżet. Efekt na produkcji, trzy
+skany z rzędu: **`hover.com` 3/11 mierzalnych, zero ucięć**, wcześniej 3/5 z sześcioma checkami
+poza mianownikiem. Jego udział spadł z pozornych 60 na uczciwe 27 procent, bo przestaliśmy
+wykluczać checki, których po prostu nie zdążyliśmy zadać.
+
+**Wniosek metodyczny, drugi raz tej nocy:** gdy poprawka nie zmienia nic, to jest wynik pomiaru,
+a nie powód, żeby dołożyć drugą. Za pierwszym razem (runda 132) była to flaga patrząca na złą
+kontrolkę, teraz licznik liczący złą rzecz.
 
 ## Runda 2026-08-12 (135): podłoga szumu spadła z 0,64 na 0,20 procent i wiadomo dlaczego
 
