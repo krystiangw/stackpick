@@ -9,15 +9,18 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 
 ## W locie w tej chwili (2026-08-12, noc)
 
-**Reseed 9.0 leci** (log `/tmp/reseed-9.0.log`), stan sprzed niego w `/tmp/corpus-before-9.0.json`,
-lista przewidywań w `/tmp/expect-9.0.txt` (32 pozycje). Po nim:
+**Nic nie leci.** Formuła **9.0**, korpus w całości na 9.0, audyt czysty
+(`170 rows on formula 9.0, 0 contradictions`, `0 adrift`), drzewo czyste i wypchnięte.
 
-```
-npm run audit
-npm run diff-corpus /tmp/corpus-before-9.0.json -- --expect "$(cat /tmp/expect-9.0.txt)"
-```
+**Uwaga: `hover.com` ma sześć checków trwale niemierzalnych** (ucina się na budżecie 27 s przy
+każdej próbie, sprawdzone cztery razy). To nie jest do naprawienia ponawianiem i tak też jest
+teraz napisane w jego wierszu.
 
-Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-8.9.json`.
+**Następna pozycja:** oba źródła szumu z rundy 130 są zamknięte (MCP w rundach 131-132, odkrywanie
+rejestracji w 133). Warto przemierzyć podłogę jeszcze raz na 9.0, bo od ostatniego pomiaru
+(0,39 procent) doszły trzy poprawki dotykające właśnie tego, co migotało.
+
+Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-8.9.json`, `/tmp/corpus-before-9.0.json`.
 
 ## Stan na teraz, w dziesięciu liniach
 
@@ -329,6 +332,31 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (134): 32 z 32 przewidzianych, a niespodzianki pokazały dziurę w mojej łatce
+
+Reseed 9.0: **43 ruszone werdykty, z tego 32 przewidziane co do wiersza i potwierdzone 32 na 32**.
+Pierwszy raz przewidywanie miało dziesiątki pozycji i wszystkie się sprawdziły.
+
+Jedenaście niespodzianek warto przeczytać, bo trzy z nich nie są pogodą:
+
+- **`postmarkapp.com`**: „3 documentation pages we selected did not answer (**429, and a 429 is our
+  own burst rather than an answer about agents**)". Zdanie z rundy 124 w akcji: to, co przez
+  tygodnie czytaliśmy jako „ich brzeg nas odrzuca", jest naszym własnym obciążeniem i teraz tak
+  jest napisane.
+- **`name.com`**: `typed_package` z porażki na zaliczenie, bo `@namecom/core-api` przeszedł
+  **z 0.0.0 („placeholder - real SDK publishes later") na 1.33.0 z typami**. To zmiana u vendora
+  w ciągu jednej nocy, nie u nas.
+- **`hover.com`**: `answers_plain_request` na „scan ran out of time" **mimo** poprawki z rundy 129.
+  Pętla ponawiająca sprawdzała tylko, czy wrócił scorecard, więc ponowiony ucięty skan szedł do
+  publikacji jako „recovered". Poprawione: ponawia jeszcze raz z dłuższą przerwą i raportuje
+  `STILL TRUNCATED`.
+
+**Przy okazji hover.com wyszło coś, co nie jest usterką:** skanowany cztery razy ręcznie ucina się
+**za każdym razem i zawsze na tych samych sześciu checkach**. To nie migotanie, tylko strona,
+która z naszej sieci nie mieści się w 27 sekundach. Zdanie obiecywało „a rescan usually completes",
+czyli było fałszywe dokładnie tam, gdzie vendor by je przeczytał. Teraz mówi, co znaczy powtarzające
+się ucięcie: ich strona odpowiada na nasze żądania dłużej, niż wynosi budżet.
 
 ## Runda 2026-08-12 (133): „nie dotyczy" mówiło szesnastu firmom, że nie mają kont
 
