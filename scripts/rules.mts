@@ -73,6 +73,22 @@ for (const [text, expected] of provisioning) {
   check(`"${text.slice(0, 52)}"`, PROVISIONING_RULES.some((rule) => rule.test(text)), expected)
 }
 
+// The spellings an audit of our own failures found us blind to, each with the vendor it came
+// from, and the dashboard sentences from the same audit that must stay out.
+const widerProvisioning: Case[] = [
+  ['Create a signing key with POST /system/v1/signing-keys', true],
+  ['tigris access-keys create returns the key ID and secret. Use the CLI to create an access key.', true],
+  ['Use the Tokens API to create, list, update, and delete tokens programmatically', true],
+  ["Use NerdGraph's ApiAccess field to programmatically create and manage license keys", true],
+  ['Set the access_token returned by POST /auth/login', false],
+  ['To create a new sites API key, log in to your account and click the New API Key button.', false],
+  ['use the Qdrant Cloud Console to create a Database API key for a cluster', false],
+  ['This can be generated in the Data Studio within the user page', false],
+]
+for (const [text, expected] of widerProvisioning) {
+  check(`"${text.slice(0, 52)}"`, PROVISIONING_RULES.some((rule) => rule.test(text)), expected)
+}
+
 console.log('free tier, czyli przycisk kontra zdanie o cenniku')
 const buttonOnly: Case[] = [
   ['Get started for free', true],

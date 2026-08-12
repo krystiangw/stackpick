@@ -47,7 +47,12 @@ const BOT_DEFENCE_SIGNATURES: Record<string, RegExp> = {
  * token at /docs/api/access-tokens and never writes "api key" on the page, and a rule that only
  * knew that spelling read their API reference as silence.
  */
-const CREDENTIAL = String.raw`(?:api[- ]?key|api[- ]?token|access[- ]token|personal[- ]access[- ]token|service[- ]account|auth[- ]token|secret[- ]key)`
+// Separator-tolerant on purpose: `access_token` in a code sample is the same noun as "access
+// token" in the sentence above it, and `[- ]` saw neither. The spellings after the first four
+// come from an audit of what the vendors we failed actually write: mux.com issues a signing key,
+// tigrisdata.com an access key, planetscale.com a service token, medusajs.com a publishable key.
+// Every one of them documents creating it through an API, and every one read as silence.
+const CREDENTIAL = String.raw`(?:api[-_ ]?key|api[-_ ]?token|access[-_ ]?token|personal[-_ ]?access[-_ ]?token|service[-_ ]?account|auth[-_ ]?token|secret[-_ ]?key|access[-_ ]?key|service[-_ ]?token|signing[-_ ]?key|publishable[-_ ]?key|client[-_ ]?key|licen[cs]e[-_ ]?key|project[-_ ]?token)`
 
 /**
  * Anything that makes a sentence about a machine rather than about a person at a screen. The
@@ -70,7 +75,11 @@ const PROGRAMMATIC_MARKER = String.raw`(?:(?:via|through|using|with) the api|(?:
  */
 const SAME_SENTENCE = String.raw`(?:(?!\.\s)[\s\S])`
 
-const CREATES_A_CREDENTIAL = String.raw`creat(?:e|es|ing)(?:\s+(?:and|or)\s+\w+)?\s+(?:an?|your|a new|new|the)?\s*${CREDENTIAL}`
+// The verb list is how a reference page introduces a whole CRUD section, and one conjunction was
+// not enough for it: mapbox.com writes "use the Tokens API to create, list, update, and delete
+// tokens programmatically", newrelic.com "programmatically create and manage the following types
+// of keys". Up to four comma-or-conjunction verbs, and the credential still has to be the object.
+const CREATES_A_CREDENTIAL = String.raw`creat(?:e|es|ing)(?:\s*,?\s*(?:and|or)?\s*(?:list|read|update|delete|rotate|revoke|manage|edit)){0,4}\s+(?:an?|your|a new|new|the|multiple|additional)?\s*${CREDENTIAL}`
 
 const PROVISIONING_PATTERNS = [
   /management api/i,
@@ -97,6 +106,12 @@ const PROVISIONING_PATTERNS = [
     'i',
   ),
   /service account/i,
+  // An API named after the credential, which is the same shape as "management api" and
+  // "account api" above and no looser than either. mapbox.com documents key creation as "use the
+  // Tokens API to create, list, update, and delete tokens programmatically": every word of the
+  // creation phrase is there and the object is a bare "tokens", which no credential spelling can
+  // safely cover, because "token" on its own appears on every authentication page ever written.
+  /\b(?:tokens?|api[-_ ]?keys?|credentials?)\s+api\b/i,
   new RegExp(String.raw`/v\d+/(?:api[-_]keys|access[-_]tokens)`, 'i'),
 ]
 
@@ -288,9 +303,10 @@ export const PROVISIONING_PATTERN_LABELS = [
   'account api',
   // Parenthesised because the sentence quotes each label as one phrase, and a comma-separated
   // list read as six: a vendor saw "1 of 7 provisioning phrases" followed by six things.
-  'create an api key (or api token, access token, personal access token, service account, auth token, secret key), next to something programmatic',
+  'create an api key (or api token, access token, personal access token, service account, auth token, secret key, access key, service token, signing key, publishable key, client key, licence key, project token), next to something programmatic',
   'programmatically create, in either word order',
   'service account',
+  'an api named after the credential, like "tokens api" or "keys api"',
   'a documented path like /v1/api_keys or /v2/access-tokens',
 ]
 
