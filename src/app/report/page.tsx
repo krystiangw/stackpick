@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { buildIndustryReport, type CheckTally } from '@/lib/industry'
+import { NOISE_FLOOR_PERCENT } from '@/lib/published'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
 
@@ -243,7 +244,7 @@ export default async function IndustryReportPage() {
           <li>
             Not thick enough for category rankings to be read as league tables. Most categories hold five or
             six vendors, so one of them moving is worth several points of the category share, which is more
-            than the 0.64 percent the whole corpus moves between two identical rescans. Compare a vendor with
+            than the {NOISE_FLOOR_PERCENT} percent the whole corpus moves between two identical rescans. Compare a vendor with
             its own past scans and with the named peers on its scorecard, not with a category average built
             on six rows.
           </li>

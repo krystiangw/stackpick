@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { NOISE_FLOOR_PERCENT } from '@/lib/published'
 import { AGENT_ENTRY_PATHS, PROVISIONING_PATTERN_LABELS } from '@/lib/scan/funnel'
 import { AI_CRAWLERS } from '@/lib/scan/robots'
 import { CHECKS, FORMULA_VERSION, MAX_SCORE, STAGES } from '@/lib/score'
@@ -147,9 +148,9 @@ export default async function MethodologyPage() {
           changed.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Measured three more times on 12 August 2026, on 170 domains: 0.27 percent, then 0.39, then
-          0.20. The last of those is 5 verdicts of 2,550, same formula on both sides and nothing changed
-          between the runs, and it is the number to use. The earlier ones are larger because a share of
+          Measured three more times on 12 August 2026, on 170 domains: 0.27 percent, then 0.39, then{' '}
+          {NOISE_FLOOR_PERCENT}. The last of those is 5 verdicts of 2,550, same formula on both sides and
+          nothing changed between the runs, and it is the number to use. The earlier ones are larger because a share of
           what they counted was ours.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">

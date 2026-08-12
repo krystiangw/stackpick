@@ -2,6 +2,18 @@ import { CURATED_DOMAINS } from './categories'
 import { getStore, type Report } from './store'
 
 /**
+ * How much the corpus moves between two identical rescans, as a percentage, measured rather than
+ * estimated. Lives here because it is quoted on two pages that drifted apart: /methodology was
+ * updated to 0.20 after we stopped counting our own truncated scans, and /report went on saying
+ * 0.64 for a day. A number stated in two places is a number that will disagree with itself.
+ *
+ * Measured on 12 August 2026: 5 of 2,550 verdicts, same formula on both sides, nothing changed
+ * between the runs. Rerun `npm run diff-corpus <snapshot>` after any change to the scanner and
+ * update this if it moves.
+ */
+export const NOISE_FLOOR_PERCENT = 0.2
+
+/**
  * The one definition of "the corpus". There were five, and they disagreed in public: the landing
  * page counted every curated scan we held, the corpus file counted only the majority formula
  * version, and the two numbers sat one page apart at 103 and 101.
