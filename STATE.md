@@ -9,23 +9,22 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 
 ## W locie w tej chwili (2026-08-12, noc)
 
-**Nic nie leci.** Formuła **8.9**, korpus w całości na 8.9, audyt czysty
-(`170 rows on formula 8.9, 0 contradictions`, `0 adrift`), drzewo czyste i wypchnięte.
+**Reseed 9.0 leci** (log `/tmp/reseed-9.0.log`), stan sprzed niego w `/tmp/corpus-before-9.0.json`,
+lista przewidywań w `/tmp/expect-9.0.txt` (32 pozycje). Po nim:
 
-**Następna pozycja merytoryczna:** z dziesięciu ruchów podłogi (runda 130) sonda MCP odpowiadała
-za trzy i **to jest zamknięte** (rundy 131-132). Zostaje drugie źródło: **`planetscale.com` rusza
-trzema checkami naraz**, bo raz znajdujemy jego stronę rejestracji, a raz nie. Zacznij tak samo
-jak przy MCP: pięć skanów z dyno pod rząd i sprawdzenie, czy `auth.planetscale.com/sign-up`
-odpowiada nam za każdym razem, zanim tkniesz regułę odkrywania.
+```
+npm run audit
+npm run diff-corpus /tmp/corpus-before-9.0.json -- --expect "$(cat /tmp/expect-9.0.txt)"
+```
 
-Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-8.9.json`, `/tmp/corpus-floor-before.json`.
+Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-8.9.json`.
 
 ## Stan na teraz, w dziesięciu liniach
 
 - Produkt nazywa się **Let Agents In** od 2026-08-10. Domena **nie jest kupiona**, adres to nadal
   `stackpick-f12d13a227ea.herokuapp.com`, a nazwa hosta zostaje świadomie do czasu zakupu.
   User-agent skanera to `LetAgentsIn/1.0`.
-- Formuła **8.9**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
+- Formuła **9.0**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
   `npm run audit` pilnuje **17 liczb i 3 twierdzeń nazywających firmy**, przy **0 sprzecznościach**,
   czyli każdą liczbę liczoną z danych, która trafia na publiczną stronę, i trzy zdania obok nich.
 - **Podłoga szumu korpusu: 0,64 procent** (15 zmian na 2338 przy dwóch reseedach bez zmiany reguły).
@@ -330,6 +329,32 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (133): „nie dotyczy" mówiło szesnastu firmom, że nie mają kont
+
+Drugie źródło szumu z rundy 130 to `planetscale.com`, który raz ma znajdowaną stronę rejestracji,
+a raz nie. Pięć skanów z dyno pod rząd: **5 na 5 dobrze**, więc migotanie jest rzadkie i nie do
+odtworzenia na żądanie. Ale stan awaryjny okazał się ciekawszy od samego migotania.
+
+Gdy skan nie znajdzie linku do rejestracji, publikujemy **„Not applicable: nothing on the site
+links to an account signup"**. To nie jest „nie znaleźliśmy", tylko **twierdzenie, że produkt nie
+ma kont**, i wyjmuje dwa checki z mianownika dostawcy. Takich wierszy jest **25**.
+
+Sprawdziłem każdy z nich, czytając stronę główną niezależnie od kodu odkrywania:
+**16 z 25 publikuje cennik**, a **trzy linkują rejestrację prosto ze strony głównej**
+(`filestack.com` → `/signup-free/`, `magicbell.com` → `app.magicbell.com`, `timekit.io` →
+`admin.timekit.io/create`). Przy okazji złapałem **własny fałszywy alarm**: `gandi.net` wyszedł
+w mojej sondzie jako „ma rejestrację", bo na stronie stoi „Register a domain", co jest rejestracją
+domeny, nie konta.
+
+Formuła **9.0**: produkt z cennikiem dostaje **niemierzalne** ze zdaniem nazywającym jego cennik
+(„we found no link to an account signup on the pages we read, while you publish prices at …"),
+a „nie dotyczy" zostaje tam, gdzie nie ma ani cennika, ani rejestracji, czyli u bibliotek
+(`editorjs.io`, `lexical.dev`, `prosemirror.net`, `slatejs.org`). **Punktacja się nie zmienia**,
+bo oba kształty i tak są poza mianownikiem; zmienia się to, co twierdzimy o cudzej firmie.
+
+Przewidywanie reseedu spisane co do wiersza: **32 zmiany werdyktu** (16 domen × 2 checki),
+zero zmian punktów.
 
 ## Runda 2026-08-12 (132): czterech dostawców, nie jeden, i guard, który zgłosił własne słownictwo
 
