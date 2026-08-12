@@ -434,7 +434,9 @@ export const CHECKS: Check[] = [
           1,
           oauth.unattendedGrant
             ? `registration_endpoint published, and client_credentials is among the ${grants.length} advertised grants, so an unattended agent has a documented path to a token`
-            : `registration_endpoint published, but none of the ${grants.length} advertised grants (${grants.slice(0, 3).join(', ')}) finishes without a person at a browser`,
+            : // The parenthetical is capped at three, so with more than that it has to say it is
+              // a sample. "None of the 6 grants (a, b, c)" reads as the whole list and is not.
+              `registration_endpoint published, but none of the ${grants.length} advertised grants (${grants.length > 3 ? 'including ' : ''}${grants.slice(0, 3).join(', ')}) finishes without a person at a browser`,
         )
       }
       if (oauth.metadataPublished) return yes(0, 'OAuth metadata published, but no registration_endpoint in it')

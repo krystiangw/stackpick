@@ -1,5 +1,6 @@
 import { checkRateLimit, clientKey, recordUse } from './rate-limit'
 import { publishedCorpus } from './published'
+import { RANKABLE_MEASURABLE } from './rankings'
 import { normalizeDomain } from './scan/discover'
 import { getStore, type Report } from './store'
 
@@ -41,7 +42,12 @@ export type Gate =
 /** The best scorecard we hold, so a refusal can still show what good looks like. */
 export async function bestExample(): Promise<ExampleReport | null> {
   // From the curated corpus only, and out of the same denominator as everywhere else.
-  const reports = (await publishedCorpus()).reports
+  const all = (await publishedCorpus()).reports
+  // The same floor the rankings use, and for the same reason: the highest share we hold is
+  // otherwise likely to be a domain that refused most of the card. "Look what good looks like"
+  // has to point at a domain we could actually read.
+  const deep = all.filter((report) => (report.scorecard.measurable ?? report.scorecard.max) >= RANKABLE_MEASURABLE)
+  const reports = deep.length > 0 ? deep : all
   const best = reports.reduce<Report | null>((held, report) => {
     if (!held) return report
     const share = (candidate: Report) =>

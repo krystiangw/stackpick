@@ -9,7 +9,23 @@ export type RankedEntry = {
   max: number
   reportId: string
   stages: Report['scorecard']['stages']
+  /** Too little of the card was reachable for this share to be compared with the others. */
+  undermeasured: boolean
 }
+
+/**
+ * How much of the seventeen-point card has to be reachable before a share is ranked against the
+ * others. Three quarters of it.
+ *
+ * Without a floor, refusing our requests is a way to win. bitmovin.com answers our user-agent
+ * with a 403 and a JavaScript challenge, which left eleven checks measurable instead of sixteen,
+ * and 9 of 11 put it top of Video hosting and streaming on 2026-08-12, above vendors we could
+ * read in full. A share is only a comparison when both sides were measured to a similar depth,
+ * so shallow rows are still published and still linked, and they sit below the comparable ones
+ * with the reason printed rather than silently leading a category.
+ */
+export const RANKABLE_MEASURABLE = 13
+
 export type RankedCategory = { category: Category; entries: RankedEntry[]; median: number }
 
 /**
@@ -72,17 +88,28 @@ export async function loadRankings(): Promise<RankingsView> {
     const entries = category.domains
       .map((domain) => latest.get(domain))
       .filter((report): report is Report => Boolean(report))
-      .map((report) => ({
-        domain: report.domain,
-        total: report.scorecard.total,
-        max: report.scorecard.measurable ?? report.scorecard.max,
-        reportId: report.id,
-        stages: report.scorecard.stages,
-      }))
+      .map((report) => {
+        const max = report.scorecard.measurable ?? report.scorecard.max
+        return {
+          domain: report.domain,
+          total: report.scorecard.total,
+          max,
+          reportId: report.id,
+          stages: report.scorecard.stages,
+          undermeasured: max < RANKABLE_MEASURABLE,
+        }
+      })
       // A site that refuses our requests scores against a smaller denominator, not a worse
       // number. Publishing a name next to a number we did not fully measure is the one place
-      // this tool could do real damage.
-      .sort((a, b) => b.total / b.max - a.total / a.max || b.total - a.total || a.domain.localeCompare(b.domain))
+      // this tool could do real damage, so the shallow rows sort below the comparable ones
+      // whatever their share, and only then by share.
+      .sort(
+        (a, b) =>
+          Number(a.undermeasured) - Number(b.undermeasured) ||
+          b.total / b.max - a.total / a.max ||
+          b.total - a.total ||
+          a.domain.localeCompare(b.domain),
+      )
 
     // The upper middle is not the median, and a median of raw totals is not comparable when
     // every row has its own denominator.

@@ -34,6 +34,15 @@ export function Rankings({ rankings }: { rankings: RankedCategory[] }) {
         the points we could measure on each domain, not out of sixteen: a site that refuses our requests
         scores against a smaller denominator, not a worse number.
       </p>
+      {/* Which also means the denominator is something a vendor can shrink, and a share over a
+          small one is easier to win. Marked and sorted last rather than removed: the measurement
+          happened and the row is real, it just is not a comparison. */}
+      <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-faint">
+        A score marked <span className="font-mono">*</span> comes from a domain where too little of the card
+        was reachable to compare it with the rest, usually because the site refused us. Those sit at the
+        bottom of their category whatever the percentage says, so that blocking the scanner cannot be a way
+        to lead it.
+      </p>
 
       <div className="mt-10 grid gap-10 md:grid-cols-2">
         {rankings.map(({ category, entries, median }) => (
@@ -58,8 +67,16 @@ export function Rankings({ rankings }: { rankings: RankedCategory[] }) {
                     <div className="h-1 w-14 bg-sunken sm:w-24">
                       <div className={`h-full ${tone(entry.total, entry.max)}`} style={{ width: `${(entry.total / entry.max) * 100}%` }} />
                     </div>
-                    <span className="w-10 text-right font-mono text-xs tabular-nums">
+                    <span
+                      className={`w-10 text-right font-mono text-xs tabular-nums ${entry.undermeasured ? 'text-ink-faint' : ''}`}
+                      title={
+                        entry.undermeasured
+                          ? 'Too little of the card was reachable here to compare this share with the others'
+                          : undefined
+                      }
+                    >
                       {entry.total}/{entry.max}
+                      {entry.undermeasured && '*'}
                     </span>
                   </div>
                 </li>
