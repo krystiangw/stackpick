@@ -148,16 +148,25 @@ export default async function MethodologyPage() {
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           Measured again on 12 August 2026, on 170 domains and with a formula change that provably touched
-          no row: 7 of 2,550 moved, which is 0.27 percent. Two measurements, two days apart, on a corpus
-          that grew by three domains in between. Take the larger of the two as the floor until a third
-          says otherwise.
+          no row: 7 of 2,550 moved, which is 0.27 percent. A third time the same day, same formula on both
+          sides and nothing changed between the runs: 10 of 2,550, which is 0.39 percent. Take 0.64 as the
+          floor, since it is the largest of the three.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          What moves is mostly not a verdict changing its mind. Five of those seven rows crossed the line
-          between measured and unmeasured in one direction or the other: a documentation page that refused
-          us the first time and answered the second, a pricing page that fell either side of the size we
-          read. The scanner asks a host for about nineteen documents inside a thirty second budget, which
-          is itself a burst, so some of this noise is ours rather than the internet&apos;s.
+          Some of it was ours, and we found that out by measuring rather than by assuming. The scanner
+          gives itself 27 seconds per domain, and a scan that runs out publishes several verdicts as
+          unmeasured, which is a fact about our clock and not about the vendor. One run published eleven
+          such verdicts across two domains, and repeating those two scans by hand cut that run&apos;s
+          movement from 23 rows to 12. A truncated scan is now retried rather than published, and the 0.39
+          percent above is the first measurement taken with that in place.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          What is left moves for two reasons, and neither is a verdict changing its mind about a vendor.
+          Rows cross the line between measured and unmeasured when a documentation page refuses us once and
+          answers the next time. And a handful of surfaces are simply unstable: in that last run three MCP
+          endpoints answered on one pass and not the other, and one vendor&apos;s signup page was found on
+          one pass and not the other, which moved three of its checks at once. We ask a host for about
+          nineteen documents inside that 27 second budget, which is itself a burst.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           It is not evenly spread. Nine of the fifteen sit in the three checks that depend on a host
