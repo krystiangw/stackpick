@@ -9,23 +9,16 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 
 ## W locie w tej chwili (2026-08-12, noc)
 
-**Reseed 8.8 leci** (log `/tmp/reseed-8.8.log`), stan sprzed niego w `/tmp/corpus-8.7.json`.
-**Przewidywanie: zero zmian werdyktu**, bo 8.8 zmienia wyłącznie zdanie (nazywa oba pliki
-`llms`, z których pochodzi próbka linków). To zarazem **czwarty pomiar podłogi szumu**.
+**Nic nie leci.** Formuła **8.8** na produkcji, korpus w całości na 8.8, audyt czysty
+(`170 rows on formula 8.8, 0 contradictions`, `17 stated numbers and 3 named-vendor claims
+checked against the data, 0 adrift`). Drzewo czyste, wypchnięte.
 
-Po reseedzie:
+**Uwaga do następnego reseedu:** `scripts/reseed.sh` ponawia od teraz skany **ucięte budżetem**,
+więc następny przebieg powinien mieć mniej „pogody" niż poprzednie. Jeśli tak będzie, podłogę
+szumu na `/methodology` (0,64 i 0,27 procent) trzeba będzie **przemierzyć**, bo poprzednie pomiary
+mogły liczyć nasze własne timeouty jako zmienność internetu.
 
-```
-npm run audit
-npm run diff-corpus /tmp/corpus-8.7.json
-```
-
-Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-8.7.json`.
-
-**Sposób pracy, którego trzymaj się dalej:** zmiana reguły idzie z przewidywaniem spisanym z góry,
-wiersz po wierszu, a `diff-corpus` ma zwrócić zero niespodzianek. Sprawdziło się pięć razy z rzędu
-(5/5, 0/0, 1/1, 0/0 i ten). Wszystko poza listą czyta się pojedynczo, bo tak znalazł się błąd
-karty MCP na telnyx.
+Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-8.8.json`.
 
 ## Stan na teraz, w dziesięciu liniach
 
@@ -337,6 +330,28 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (129): audyt oskarżył stronę, która miała rację, i pokazał dwie prawdziwe dziury
+
+Reseed 8.8 poszedł z przewidywaniem „zero zmian werdyktu" i pierwszy raz tej nocy **audyt zgłosił
+rozjazd**: `/findings: says 17 for grants an unattended agent can finish, data says 18`. Strona
+liczy to z danych, więc rozjazd znaczył, że któraś strona sporu jest źle napisana.
+
+**Rację miała strona.** Zdanie brzmi „**of the 66 vendors publishing a registration endpoint**,
+only N advertise a grant", czyli N to część wspólna, a strażnik liczył wszystkich z zapisanym
+grantem. Różnicę zrobił jeden wiersz: `launchdarkly.com` ma `unattendedGrant` z wcześniejszego
+skanu, a jego `oauth_dcr` w tym reseedzie wyszedł **niemierzalny, bo skan wyczerpał budżet
+27 sekund**. Strażnik naprawiony: liczy teraz część wspólną, tak jak zdanie.
+
+**Druga dziura jest poważniejsza i to ona zrobiła ten rozjazd.** Skan, który dobija do budżetu,
+publikuje pięć werdyktów „unmeasurable", które są faktem o **naszym zegarze**, nie o dostawcy,
+a reseed je publikował: w tym przebiegu **jedenaście werdyktów** na `launchdarkly.com` i
+`netim.com`. `scripts/reseed.sh` ponawia teraz skan **ucięty** tak samo, jak ponawia nieudany.
+Oba wiersze przeskanowałem ręcznie i oba wróciły kompletne.
+
+Po naprawie tych dwóch wierszy diff 8.7 → 8.8 spadł z **23 na 12 ruszonych werdyktów** (0,90 → 0,47
+procent), czyli **połowa „szumu" tego reseedu była nasza własna**, nie internetu. To zmienia sens
+poprzednich pomiarów podłogi: część z nich mogła zawierać uciętе skany.
 
 ## Runda 2026-08-12 (128): martwe linki w llms.txt to naprawdę dokumenty, nie załączniki
 
