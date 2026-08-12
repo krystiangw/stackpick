@@ -598,12 +598,22 @@ function looksLikeSignup(got: Fetched, homeUrl: string): boolean {
  * registrable name and still the answer to "where does an agent get an account".
  */
 /**
- * Sections whose pages carry signup words and are not a signup. Widening the hints to catch
- * `register_free` and trial pages also caught /events/registration, /webinars/registration and
- * /blog/register-for-the-webinar, and only three candidates per source are ever fetched, so a
- * webinar can push the real signup out of the sample.
+ * Pages that carry signup words and are not a signup. Two different mistakes live here.
+ *
+ * Widening the hints to catch `register_free` and trial pages also caught /events/registration,
+ * /webinars/registration and /blog/register-for-the-webinar, and only three candidates per
+ * source are ever fetched, so a webinar can push the real account out of the sample.
+ *
+ * The second is worse and it was mine. Preferring a candidate that renders a form was meant to
+ * beat document order; on mux.com it picked /newsletter/signup, whose form is real and server
+ * rendered and signs you up for an email, and we published "form renders in server HTML" about
+ * a company whose account signup is a JavaScript application. A newsletter box is the easiest
+ * form on any marketing site to render without JavaScript, so the preference finds it every
+ * time. Demo and contact forms are excluded on the same principle from the other direction:
+ * "request a demo" is the opposite of the thing this stage measures.
  */
-export const NOT_WHERE_ACCOUNTS_ARE_MADE = /\/(blog|events?|webinars?|news|press|community|careers?|jobs)(\/|$|-)/i
+export const NOT_WHERE_ACCOUNTS_ARE_MADE =
+  /\/(blog|events?|webinars?|news|press|community|careers?|jobs|newsletters?|subscribe|contact|demos?|request[-_]demo|waitlist)(\/|$|-)/i
 
 function signupLinksOn(html: string, base: string, vendor: VendorSite): string[] {
   const links = extractLinks(html, base).filter(

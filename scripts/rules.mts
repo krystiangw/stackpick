@@ -78,7 +78,11 @@ for (const [text, expected] of provisioning) {
 const widerProvisioning: Case[] = [
   ['Create a signing key with POST /system/v1/signing-keys', true],
   ['tigris access-keys create returns the key ID and secret. Use the CLI to create an access key.', true],
-  ['Use the Tokens API to create, list, update, and delete tokens programmatically', true],
+  // Withdrawn rather than fixed. The pattern that caught this also caught a documentation
+  // sidebar where "Creating and managing access tokens" and "Mapbox Tokens API" are two
+  // adjacent menu items, because SAME_SENTENCE stops at ". " and stripped navigation has none.
+  // A verdict whose evidence is a nav menu is one the vendor cannot reproduce.
+  ['Use the Tokens API to create, list, update, and delete tokens programmatically', false],
   ["Use NerdGraph's ApiAccess field to programmatically create and manage license keys", true],
   ['Set the access_token returned by POST /auth/login', false],
   // The name of an API is not a path to a key. Each of these would have earned two points on
@@ -86,6 +90,7 @@ const widerProvisioning: Case[] = [
   ['Rate limits for the Tokens API are documented below.', false],
   ['Send your client ID and secret to the Token API to obtain an access token.', false],
   ['Create your API key in the dashboard. The Credentials API is read-only.', false],
+  ['Creating and managing access tokens Mapbox Account Dashboard Mapbox Tokens API Rotating access tokens', false],
   ['To create a new sites API key, log in to your account and click the New API Key button.', false],
   ['use the Qdrant Cloud Console to create a Database API key for a cluster', false],
   ['This can be generated in the Data Studio within the user page', false],
@@ -328,6 +333,11 @@ check('rejestracja na webinar', notASignupSection('/events/registration'), true)
 check('wpis na blogu o zapisach', notASignupSection('/blog/register-for-the-webinar'), true)
 check('prawdziwy signup nie jest odsiany', notASignupSection('/users/register_free'), false)
 check('trial nie jest odsiany', notASignupSection('/free-datadog-trial/'), false)
+// mux.com: the newsletter box is the easiest form on any marketing site to render without
+// JavaScript, so preferring a candidate that renders a form finds it every time.
+check('zapis na newsletter to nie konto', notASignupSection('/newsletter/signup'), true)
+check('formularz kontaktowy to nie konto', notASignupSection('/contact-sales'), true)
+check('prosba o demo to nie samoobsluga', notASignupSection('/request-demo'), true)
 
 console.log('provisioning, czyli czy w ogole zajrzelismy tam, gdzie klucze')
 const prov = CHECKS.find((c) => c.id === 'programmatic_provisioning')!

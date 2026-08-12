@@ -102,22 +102,6 @@ const PROVISIONING_PATTERNS = [
     'i',
   ),
   /service account/i,
-  // An API named after the credential, next to a word about creating one. mapbox.com documents
-  // key creation as "use the Tokens API to create, list, update, and delete tokens
-  // programmatically": every word of the creation phrase is there and the object is a bare
-  // "tokens", which no credential spelling can safely cover, because "token" on its own appears
-  // on every authentication page ever written.
-  //
-  // The name alone is not enough and shipping it that way was a two-point false pass waiting to
-  // happen: "Rate limits for the Tokens API are documented below", or a bare sidebar link
-  // reading "Tokens API", would each have earned the heaviest check on the card in full. Worse
-  // for `credentials api`, since exchanging client_credentials for a token is what every OAuth
-  // page describes and is the opposite of issuing a credential of your own.
-  new RegExp(
-    String.raw`(?:tokens?|api[-_ ]?keys?|credentials?)\s+api${SAME_SENTENCE}{0,80}creat` +
-      String.raw`|creat${SAME_SENTENCE}{0,80}(?:tokens?|api[-_ ]?keys?|credentials?)\s+api`,
-    'i',
-  ),
   new RegExp(String.raw`/v\d+/(?:api[-_]keys|access[-_]tokens)`, 'i'),
 ]
 
@@ -312,7 +296,6 @@ export const PROVISIONING_PATTERN_LABELS = [
   'create an api key (or api token, access token, personal access token, service account, auth token, secret key, access key, service token, signing key, publishable key, client key, licence key, project token), next to something programmatic',
   'programmatically create, in either word order',
   'service account',
-  'an api named after the credential, like "tokens api" or "keys api"',
   'a documented path like /v1/api_keys or /v2/access-tokens',
 ]
 
