@@ -99,7 +99,7 @@ export default async function AuditIndexPage() {
             What it costs
           </Link>
           <a
-            href="mailto:gwizdala.kr@gmail.com?subject=Full%20agent%20audit"
+            href="mailto:hello@letagentsin.com?subject=Full%20agent%20audit"
             className="border border-ink/40 px-5 py-3 font-mono text-sm transition-colors hover:border-brass hover:text-brass"
           >
             Ask what your brief would be

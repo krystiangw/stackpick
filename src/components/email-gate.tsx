@@ -108,8 +108,8 @@ export function EmailGate({
       <p className="mt-3 font-mono text-xs text-ink-faint">
         One email with the report, and one follow-up asking what you did with it. No newsletter, no sequence.
         Delete on request at{' '}
-        <a href="mailto:gwizdala.kr@gmail.com" className="text-brass underline underline-offset-4">
-          gwizdala.kr@gmail.com
+        <a href="mailto:hello@letagentsin.com" className="text-brass underline underline-offset-4">
+          hello@letagentsin.com
         </a>
         .
       </p>

@@ -10,7 +10,7 @@ export function GET() {
       title: 'Let Agents In',
       version: '1.0.0',
       description: `Scores a domain on agent readiness across ${STAGES.length} funnel stages, using ${CHECKS.length} deterministic HTTP checks. ${MAX_SCORE} points exist on paper; the score is out of \`measurable\`, the points that both applied and could be evaluated. No account, no key.`,
-      contact: { email: 'gwizdala.kr@gmail.com', url: `${BASE}/methodology` },
+      contact: { email: 'hello@letagentsin.com', url: `${BASE}/methodology` },
     },
     servers: [{ url: BASE }],
     paths: {

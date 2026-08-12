@@ -46,7 +46,7 @@ const TIERS: readonly Tier[] = [
       'Sixty minutes to walk through it with whoever owns the fix',
     ],
     note: 'Credited in full against a Full audit booked within 90 days.',
-    cta: { label: 'Ask about a diagnostic', href: 'mailto:gwizdala.kr@gmail.com?subject=Diagnostic' },
+    cta: { label: 'Ask about a diagnostic', href: 'mailto:hello@letagentsin.com?subject=Diagnostic' },
   },
   {
     name: 'Full audit',
@@ -61,7 +61,7 @@ const TIERS: readonly Tier[] = [
       'A re-measure after 60 days on the same brief, the same scaffold and pinned model versions, with any model change reported as a confound rather than as a result',
     ],
     featured: true,
-    cta: { label: 'Ask about an audit', href: 'mailto:gwizdala.kr@gmail.com?subject=Full%20agent%20audit' },
+    cta: { label: 'Ask about an audit', href: 'mailto:hello@letagentsin.com?subject=Full%20agent%20audit' },
   },
 ]
 
@@ -222,8 +222,8 @@ export default async function PricingPage() {
           . An audit is run by me, not by a team you never meet, and the raw runs go to you with the report.
         </p>
         <p className="mt-4 font-mono text-sm">
-          <a href="mailto:gwizdala.kr@gmail.com" className="text-brass underline underline-offset-4">
-            gwizdala.kr@gmail.com
+          <a href="mailto:hello@letagentsin.com" className="text-brass underline underline-offset-4">
+            hello@letagentsin.com
           </a>
         </p>
       </section>
