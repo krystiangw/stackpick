@@ -4,7 +4,14 @@ import { OPENAPI_PATHS } from './scan/machine'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '9.3'
+/**
+ * 9.4 rather than a second 9.3 on purpose. A partial 9.3 reseed ran against code carrying five
+ * defects a review then found, and rows measured by two different scanners under one version
+ * string are exactly what this constant exists to prevent. The abandoned rows keep the 9.3
+ * label, fall out of the published majority as the new ones land, and stay honest about which
+ * scanner produced them.
+ */
+export const FORMULA_VERSION = '9.4'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
