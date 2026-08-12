@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-12 (po poludniu, formula 9.2, wlasna domena)
+# Let Agents In: stan na 2026-08-12 (po poludniu, formula 9.2, wlasna domena, monitoring)
 
 Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
 **Dwie sekcje na dole tego bloku, "Co zostało z audytów" i "Następne kroki merytoryczne", są
@@ -354,6 +354,44 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (144): przewidywalismy, ze zmiana nazwy poruszy korpus. Nie poruszyla
+
+**Reseed po przeprowadzce na `letagentsin.com`, formula 9.2: 2550 werdyktow, ruszylo 7
+(0,27 procent), w podlodze szumu.** Przewidywanie **3 z 3 potwierdzone**: `porkbun.com` wychodzi
+z „nie dotyczy" na `signup_reachable` pass, `signup_no_captcha` fail (reCaptcha i Turnstile) oraz
+`self_serve` niemierzalne. Czyli regula od rejestracji za strona logowania robi dokladnie to,
+co zmierzylem wczesniej na 25 domenach: **1 wiersz, nie wiecej**.
+
+**Wynik negatywny, wart wiecej niz pozytywny, bo obala moja wlasna teze.** Zapowiadalem, ze ten
+reseed poruszy wiecej wierszy niz zwykle, bo **user-agent skanera jest cytowany w zdaniach
+o odmowach** i czesc WAF-ow reaguje na konkretny ciag. **Nie poruszyl.** Cztery niespodzianki to
+znane chwiejne wiersze (`froala.com` i `vonage.com` na 403/200, `postmarkapp.com` na naszym 429,
+`getunleash.io` na captchy montowanej warunkowo), a nie efekt nowej nazwy. Wniosek do zapamietania:
+**zmiana wlasnego user-agenta nie jest zdarzeniem pomiarowym**, wiec kolejnym razem nie ma powodu
+robic z tego osobnego reseeda ani osobnego przewidywania.
+
+**Zbudowany monitoring** (`src/lib/watch.ts`, `watch-email.ts`, `/api/watch`, `/api/cron/watch`,
+`/watch/confirm/<id>`, `/watch/stop/<id>`, formularz na kazdej stronie `/v/<domena>`):
+- **Adres i domena, zero konta i hasla.** Nie skromnosc, tylko konsekwencja: karzemy kazdego
+  dostawce punktem za sciane przed nieobsadzona rejestracja, wiec nasza musi byc do przejscia
+  przez agenta. Rezygnacja jednym kliknieciem, bo prosba o zalogowanie przed wypisaniem to ta
+  sama sciana ustawiona przy wyjsciu.
+- **Mail tylko przy ruchu werdyktu**, nigdy przy pierwszym sprawdzeniu, nigdy „bez zmian".
+  Cotygodniowy mail o niczym uczy czlowieka, zeby przestal otwierac takze ten wazny.
+- **Spadek do „niemierzalne" jest zglaszany, ale nigdy nazwany strata**, bo mowi o naszym
+  zasiegu, nie o ich stronie. Oblozone testami razem z „nowy check nie jest zmiana z niczego".
+- **Jedna domena na wywolanie crona**: Heroku ubija ciche zadanie po 30 s, skan trwa do 27.
+
+**Decyzja cennikowa (Krystian, 2026-08-12): monitoring 99 USD/mies. za domene.** Struktura:
+darmowy skan → monitoring → audyt na rozmowe. Argument, ktory ja przewazyl: **cena nie decyduje
+o konwersji, bo nikt jeszcze nie wie, ze ma ten problem**; kto rozumie problem, zaplaci 99 bez
+mrugniecia, a kto nie rozumie, nie kupi i za 29. Niska cena nie kupuje konwersji, tylko obniza
+przychod od tych nielicznych, ktorzy i tak zaplaca.
+
+**Otwarte, czeka na Krystiana: Stripe czy Paddle.** Stripe od reki, ale VAT OSS od klientow z UE
+rozliczamy sami. Paddle jest sprzedawca formalnym i zdejmuje VAT calkowicie, za wyzsza prowizje
+i po ich weryfikacji (kilka dni). To decyzja ksiegowa, nie techniczna.
 
 ## Runda 2026-08-12 (143): własna domena, i 170 pomiarów, do których nie było jak dojść
 
