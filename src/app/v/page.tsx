@@ -9,7 +9,8 @@ import { SITE_URL } from '@/lib/site'
  * is what makes them worth crawling, and it is also the only place a person can see the whole
  * corpus without downloading a file.
  */
-export const dynamic = 'force-dynamic'
+/** Cached for the same reason as the pages it links: it is a crawler's first stop. */
+export const revalidate = 600
 
 export const metadata: Metadata = {
   title: 'Every vendor we have measured · Let Agents In',

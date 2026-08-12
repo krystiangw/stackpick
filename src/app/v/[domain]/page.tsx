@@ -13,8 +13,13 @@ import { WatchForm } from '@/components/watch-form'
  * measurement and stops being true the moment we reseed, which is every few days; anybody who
  * cited us was citing a page about to be replaced. This one names the company and always shows
  * the newest scan we hold, so it can be linked, indexed and argued with.
+ *
+ * Cached rather than rendered per request. A crawler reading a hundred of these at once is the
+ * normal case now that they are in the sitemap, and on 2026-08-12 that was enough to take one
+ * dyno down: every page was a database read. Ten minutes is far shorter than the gap between
+ * two scans of the same domain, so nothing here is ever meaningfully stale.
  */
-export const dynamic = 'force-dynamic'
+export const revalidate = 600
 
 const measurableOf = (card: { total: number; measurable?: number; max: number }) => card.measurable ?? card.max
 

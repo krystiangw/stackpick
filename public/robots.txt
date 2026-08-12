@@ -1,6 +1,17 @@
 # Let Agents In measures whether sites welcome agents. It would be absurd to block them here.
 User-agent: *
 Allow: /
+Allow: /v/
+Allow: /methodology
+Allow: /corpus.json
+
+# One scan each, superseded the moment we rescan, and there are thousands. The page for a
+# company is /v/<domain> and it always holds the newest measurement. Meta's crawler read
+# seventy of these in parallel on 2026-08-12 and took the site down, which is a fair thing to
+# have learned about ourselves from the outside.
+Disallow: /r/
+# Personal links from an email. Nothing here is secret and none of it is worth an index entry.
+Disallow: /watch/
 
 Content-Signal: search=yes, ai-input=yes, ai-train=yes
 
