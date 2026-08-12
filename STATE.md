@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-11 (wieczór)
+# Let Agents In: stan na 2026-08-12 (nad ranem, po nocy 8.4 → 9.0)
 
 Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
 **Dwie sekcje na dole tego bloku, "Co zostało z audytów" i "Następne kroki merytoryczne", są
@@ -38,27 +38,33 @@ Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-after-breaker.json`
 - Formuła **9.0**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
   `npm run audit` pilnuje **17 liczb i 3 twierdzeń nazywających firmy**, przy **0 sprzecznościach**,
   czyli każdą liczbę liczoną z danych, która trafia na publiczną stronę, i trzy zdania obok nich.
-- **Podłoga szumu korpusu: 0,64 procent** (15 zmian na 2338 przy dwóch reseedach bez zmiany reguły).
-  Opublikowana na `/methodology`. Każda różnica mniejsza to pogoda, nie zmiana. Trzy reseedy tej
-  nocy: 8.0 → 8.1 ruszyło **0,98 procent**, 8.1 → 8.2 **0,78**, 8.2 → 8.3 **0,43**, 8.3 → 8.4
-  **1,53** i to jest największa pojedyncza zmiana od tygodnia, bo **29 wierszy** straciło kredyt
-  za zdanie o klikaniu w panelu.
+- **Podłoga szumu korpusu: 0,20 procent** (5 zmian na 2550, ta sama formuła po obu stronach),
+  mierzona cztery razy: **0,64 → 0,27 → 0,39 → 0,20**. Spadek nie jest wygładzaniem: między dwoma
+  ostatnimi leżą trzy poprawki tego, co liczyliśmy jako szum internetu, a było nasze (ucięte skany,
+  brzeg połykający POST-y, „nie dotyczy" dla firm z cennikiem). Liczba żyje jako
+  `NOISE_FLOOR_PERCENT` w `src/lib/published.ts` i czytają ją `/methodology` oraz `/report`.
 - Jedenaście przebiegów adwersaryjnych: **16,7 → 2,2 → 3,9 → 2,0 → 0,94 → 7,9 → 1,4 → 1,29 → 0,77 →
-  0,39 procent**, jedenasty bez wspólnej metryki, bo atakował trzy powierzchnie osobno: dwa
-  fałszywe twierdzenia w skanerze (patrz runda 102) i **31,8 procent błędu w trasowaniu**.
+  0,39 procent**, jedenasty bez wspólnej metryki. Noc 2026-08-12 (rundy 115-139) była dwunastym
+  przebiegiem prowadzonym inaczej: **każda zmiana reguły szła z przewidywaniem spisanym wiersz po
+  wierszu**, a `npm run diff-corpus` sprawdzał je po reseedzie. Sześć reseedów, przewidywania
+  sprawdziły się **5/5, 0/0, 1/1, 1/1, 32/32**, a każda niespodzianka poza listą była czytana
+  pojedynczo. Tak znalazły się: karta MCP telnyx, brzeg połykający POST-y u czterech dostawców,
+  „nie dotyczy" u szesnastu firm z cennikiem i wildcard DNS hovera.
 - Opublikowane liczby: **5 ze 170** przechodzi wszystkie trzy bariery, **42 jest o jeden wymóg od
   tego** (w nocy 5 → 7 → 5: poszerzenie `programmatic_provisioning` dodało dwóch, a wymóg markera
-  programowego zabrał ich i jeszcze jednego), **19 z 66** publikujących endpoint rejestracji ma grant, który agent dokończy bez
+  programowego zabrał ich i jeszcze jednego), **19 z 68** publikujących endpoint rejestracji ma grant, który agent dokończy bez
   człowieka, **0 ze 170** serwuje agentom mniej tekstu niż przeglądarce.
 - **67 żywych serwerów MCP, 52 z nich publikuje RFC 7591** (68 w całym korpusie). DCR przyszło
   z wymogu specyfikacji MCP, nie z decyzji o wpuszczeniu agentów, a dwie trzecie tych drzwi i tak
   wymaga człowieka.
 - Odmowy rejestracji wymierzone w agenty: **0 udowodnionych na 170**. Bariera, którą umiemy
-  udowodnić, to **87** formularzy rejestracji, które bez JavaScriptu nie renderują niczego.
-- **Trasowanie `find_providers` to najsłabszy element produktu: 20 procent błędu** na pytaniach,
-  na których go nie strojono (poprzedni pomiar 31,8), przy 0,39 procent skanera. Liczba jest
-  w opisie narzędzia MCP, a `scripts/routing.mts` jest zapadką na jedenastu znanych błędach,
-  nie progiem zaliczenia. Wszystkie 149 pytań w tym pliku jest spalonych strojeniem.
+  udowodnić, to **88** formularzy rejestracji, które bez JavaScriptu nie renderują niczego.
+- **Trasowanie `find_providers` to najsłabszy element produktu: 59,3 procent błędu** na 59 pytaniach
+  napisanych przed przeczytaniem reguł (`npm run routing-fresh`, runda 126). Wcześniejsze „20
+  procent" pochodziło z czterech pytań. Odpowiada na 27 z 59 i 8 z tych odpowiedzi jest złych;
+  **cała ta liczba jest w opisie narzędzia MCP**. Mechanizm jest u sufitu: próg i profil zbudowany
+  z opisów dostawców zmierzone i odrzucone (runda 127). `scripts/routing.mts` (149 pytań) jest
+  zapadką, nie progiem, i cały jest spalony strojeniem.
 - Skanujemy sami siebie: **12 z 13 mierzalnych**, oblewamy `oauth_dcr` i piszemy o tym wprost.
   **Nie zmieniamy reguły, która poprawiłaby nasz własny wynik.**
 - Budżet skanu **27 s** (router Heroku zabija ciche żądanie po 30). Reseed **raz na zestaw zmian**:
