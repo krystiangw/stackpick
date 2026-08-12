@@ -477,6 +477,19 @@ export const CHECKS: Check[] = [
                 : 'answers JSON'
         return yes(1, `Live MCP endpoint at ${first.url}, ${how}`)
       }
+      // Nothing was measured, so nothing is claimed. kinde.com's edge answers every POST from our
+      // data centre with 202 and an empty body, including one to a path nobody registered, while
+      // the same address answers 401 from a laptop. "Nothing answered at six addresses" reads as
+      // a finding about their product when it is a finding about their edge and our network.
+      if (f.funnel.mcpPostsSwallowed) {
+        return {
+          points: 0,
+          detail:
+            'Unmeasurable: every JSON-RPC POST we sent came back with an empty 2xx, including one to a path nobody registered, so what answered was your edge rather than your server',
+          inconclusive: true,
+          unblock: 'Nothing for you to do if your server is reachable from other networks. Whether an MCP server is there becomes measurable from a network your edge does not intercept.',
+        }
+      }
       if (f.machine.wellKnown.mcp_server_card) {
         // Only when we actually read the address out of the card. telnyx.com published this
         // sentence during the 8.5 reseed while its card named api.telnyx.com/v2/mcp, which

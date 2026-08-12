@@ -446,6 +446,8 @@ export type FunnelFindings = {
   mcpProbed: boolean
   /** The addresses the vendor's own card named, empty when we could not read it. */
   mcpCardNamed: string[]
+  /** True when every POST we sent came back an empty 2xx, control included, so we measured nothing. */
+  mcpPostsSwallowed: boolean
   signup: SignupFindings
   provisioning: {
     programmatic: string[]
@@ -848,6 +850,8 @@ type McpProbe = {
   answered: boolean
   /** Whether the card named an address for us, as opposed to us guessing at hostnames. */
   cardNamed: string[]
+  /** Their edge answered every POST, including to a path nobody registered, with an empty 2xx. */
+  swallowsPosts: boolean
 }
 
 /** Whether the handshake was forwarded to another origin, which no MCP server does to its own POST. */
@@ -1010,11 +1014,13 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
         (dedicatedHost || got.status !== control?.status)
       // 202 Accepted to a JSON-RPC POST, which is Streamable HTTP taking the message and answering
       // on a stream rather than in the response body. It reads as silence to every rule above,
-      // because it is neither an auth challenge nor JSON nor the wrong method, and that is why
-      // kinde.com moved between reseeds: from our data centre mcp.kinde.com answers 202, from a
-      // laptop the same address answers 401, and we published "no MCP surface" on the 202. The
-      // control carries the whole weight here, as it does for the credential shapes: a namespace
-      // that accepts any POST is talking about itself and not about a server.
+      // because it is neither an auth challenge nor JSON nor the wrong method.
+      //
+      // The control carries the whole weight, as it does for the credential shapes, and kinde.com
+      // is why: from our data centre every POST to mcp.kinde.com comes back 202 with an empty
+      // body, including one to a path nobody registered, while the same address answers 401 from
+      // a laptop. That is their edge swallowing our request, not their server accepting it, and
+      // the flag below reports it as unmeasurable rather than as a verdict either way.
       const acceptsHandshake = got.status === 202 && !looksLikeHtml(got) && got.status !== control?.status
       if (!authenticating && !wrongMethod && !speaksJson && !demandsCredentials && !acceptsHandshake) return null
       return {
@@ -1042,7 +1048,26 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
   )
   // A status of zero is a host that never answered, which is the one case where we genuinely
   // found nothing out rather than found nothing.
-  return { endpoints: routedFirst, answered: results.some((got) => got.status !== 0), cardNamed: fromCard }
+  // Every POST answered the same way at a path nobody registered, with nothing in it. A site
+  // whose edge does that has told us about itself and not about MCP, and calling that "nothing
+  // answered at six addresses" is a claim we cannot support from here.
+  const swallowed = results.filter((got, index) => {
+    const control = nonsense.get(controlFor(candidates[index]))
+    return (
+      got.status >= 200 &&
+      got.status < 300 &&
+      got.body.trim().length === 0 &&
+      control !== undefined &&
+      control.status === got.status &&
+      control.body.trim().length === 0
+    )
+  })
+  return {
+    endpoints: routedFirst,
+    answered: results.some((got) => got.status !== 0),
+    cardNamed: fromCard,
+    swallowsPosts: routedFirst.length === 0 && swallowed.length > 0,
+  }
 }
 
 export type FunnelInput = {
@@ -1164,6 +1189,7 @@ export async function scanFunnel({
     mcpEndpoints,
     mcpProbed: mcp.answered,
     mcpCardNamed: mcp.cardNamed,
+    mcpPostsSwallowed: mcp.swallowsPosts,
     signup,
     provisioning: {
       programmatic: matching(PROVISIONING_PATTERNS, await corpus, PROVISIONING_PATTERN_LABELS),
