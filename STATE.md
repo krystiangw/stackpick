@@ -7,30 +7,23 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
-## W locie w tej chwili (2026-08-12, noc)
+## W locie w tej chwili (2026-08-12, nad ranem)
 
-**Reseed leci** po zmianie bezpiecznika (log `/tmp/reseed-breaker.log`, stan sprzed:
-`/tmp/corpus-before-breaker.json`). `hover.com` przeskanowany ręcznie przed nim, więc jego ruch
-już się dokonał; **każda inna domena, która się ruszy, ma ten sam kształt co hover** (wildcard DNS
-albo host przyjmujący połączenia i milczący) i warto ją wypisać.
+**Nic nie leci.** Formuła **9.0**, korpus w całości na 9.0, audyt czysty
+(`170 rows on formula 9.0, 0 contradictions`, `0 adrift`), drzewo czyste i wypchnięte.
+Podłoga szumu **0,20 procent**, opublikowana z uzasadnieniem.
 
-Formuła **9.0**, audyt czysty, drzewo czyste i wypchnięte. Podłoga szumu: **0,20 procent**,
-opublikowana na `/methodology` razem z powodem, dla którego wcześniejsze pomiary były wyższe.
-
-**Stan pracy nocnej:** oba źródła szumu z rundy 130 zamknięte, podłoga przemierzona dwa razy,
-trasowanie zmierzone uczciwie (59,3 procent błędu, liczba opublikowana w opisie narzędzia MCP)
-i zamknięte z dwiema odrzuconymi próbami naprawy.
-
-**Otwarte i warte następnej sesji:**
+**Otwarte, w kolejności wagi:**
 1. **Decyzja produktowa dla Krystiana:** `find_providers` użyteczny (odpowiada często, myli się
-   w 8 na 27) czy bezpieczny (wymaga dwóch słów, nie myli się, odpowiada o połowę rzadziej).
-2. `hover.com` ma sześć checków trwale niemierzalnych przez budżet 27 s. Do rozważenia osobny,
-   dłuższy budżet dla domen, które ucinają się powtarzalnie.
-3. Blokery po stronie Krystiana bez zmian (domena, nadawca w Resend, licencja korpusu, model
-   sprzedaży).
+   w 8 na 27) czy bezpieczny (wymaga dwóch słów z jednej kategorii, nie myli się wcale,
+   odpowiada o połowę rzadziej). Obie opcje zmierzone na dwóch zestawach pytań.
+2. **Blokery po stronie Krystiana** bez zmian: domena `letagentsin.com`, zweryfikowany nadawca
+   w Resend, ścieżka zakupu inna niż `mailto:`, licencja korpusu, model sprzedaży.
+3. Trasowanie ma **59,3 procent błędu** na zestawie odłożonym i mechanizm jest u sufitu; dwie
+   próby naprawy odrzucone pomiarem (rundy 126-127). Kolejna próba wymaga **nowego rodzaju
+   dowodu**, nie kolejnych słów w `VOCABULARY`.
 
-Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-9.0.json` (ostatnia:
-`/tmp/corpus-floor2-before.json`).
+Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-after-breaker.json`.
 
 ## Stan na teraz, w dziesięciu liniach
 
@@ -342,6 +335,23 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (137): bilans nocy w jednej liczbie, i nie jest to liczba punktów
+
+Reseed po bezpieczniku: **8 ruszonych werdyktów, 0,31 procent, zero uciętych skanów** (poprzednie
+przebiegi miały po trzy do pięciu). Sześć z ośmiu ruchów to **niemierzalne → zmierzone**, czyli
+bezpiecznik oddał budżet checkom, które wcześniej nie zdążyły zapytać: `weglot.com` ma znowu
+mierzalną rejestrację (`dashboard.weglot.com/register`), `postmarkapp.com` provisioning,
+`bitmovin.com` i `name.com` punkt wejścia, `uploadcare.com` provisioning.
+
+Efekt na całym korpusie: **2419 → 2428 mierzalnych punktów**, **257 → 252 werdyktów niemierzalnych**.
+
+**Ale najważniejsza liczba nocy idzie w drugą stronę i tak ma być.** Rano korpus miał **226**
+werdyktów niemierzalnych, teraz ma **252**. Przybyło ich **26**, bo tej nocy systematycznie
+zamieniałem twierdzenia, których nie umiemy udowodnić, na uczciwe „nie zmierzyliśmy tego":
+szesnastu firmom przestaliśmy mówić, że nie mają kont, czterem, że nie mają serwera MCP,
+a jednej, że żaden agent nie dociera do jej strony. To jest cena wiarygodności i jedyna cena,
+jaką warto tu płacić.
 
 ## Runda 2026-08-12 (136): hover nie był wolny, tylko ma wildcard DNS
 
