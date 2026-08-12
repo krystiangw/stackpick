@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-12 (przed poludniem, formula 9.1)
+# Let Agents In: stan na 2026-08-12 (po poludniu, formula 9.2, wlasna domena)
 
 Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
 **Dwie sekcje na dole tego bloku, "Co zostało z audytów" i "Następne kroki merytoryczne", są
@@ -7,48 +7,43 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
-## W locie w tej chwili (2026-08-12, przed południem) - DOMENA KUPOWANA, KORPUS NA 9.1
+## W locie w tej chwili (2026-08-12, po południu) - DOMENA ŻYJE, KORPUS RESEEDUJE SIĘ NA 9.2
 
-**Korpus jest na 9.1, zweryfikowany i czysty** (170 wierszy, 0 sprzeczności, ruch 0,35 procent
-w granicach szumu). Runda 142 opisuje regułę i pomiar.
+**Leci reseed na formule 9.2 pod nowym user-agentem.** Snapshot sprzed: `before-9.2.json`
+w scratchpadzie. Po nim diff i audyt. **Przy diffie rozdziel dwie przyczyny:** ruchy w
+`answers_plain_request` i wszędzie, gdzie cytowany jest user-agent, to zmiana nazwy; ruchy
+w `signup_*` na `porkbun.com` to reguła z rundy 143.
 
-**DOMENA KUPIONA: `letagentsin.com`, Porkbun, 2026-08-12 09:20:12Z**, wygasa 2027-08-12,
-auto-renew ON, blokada transferu ON, WHOIS privacy działa. Odnowienie 11,08 USD.
+**DOMENA DZIAŁA: `https://letagentsin.com` (i `www`), certyfikat ACM wystawiony.**
+Porkbun, kupiona 2026-08-12 09:20:12Z, wygasa 2027-08-12, auto-renew ON, blokada transferu ON,
+WHOIS privacy działa, odnowienie 11,08 USD. Klucze API w `.env.local`
+(`PORKBUN_API_KEY`, `PORKBUN_SECRET_KEY`), DNS ustawiany przez ich API.
 
-**Stan podłączania (blokada: rekordy DNS po stronie Krystiana):**
-- ✅ obie nazwy dodane do Heroku. Cele DNS, **różne dla apeksu i www**:
-  - `ALIAS` @ → `secure-lizard-r4n06y4pnhu02fpb5i4gcsjy.herokudns.com`
-  - `CNAME` www → `trapezoidal-junglefowl-mz9dvzld86acoc4fmkglhens.herokudns.com`
-- ⏳ w Porkbunie trzeba **skasować pięć rekordów parkingowych** (`A` na 207.207.210.36 i .50)
-  **oraz URL FORWARDING**, które jest „Configured" i przywróci parking, jeśli zostanie.
-- ⏳ opcja szybsza: Krystian włącza `API ACCESS` i zapisuje klucze do `.env.local`
-  (`PORKBUN_API_KEY`, `PORKBUN_SECRET_KEY`), wtedy DNS ustawia agent i sam weryfikuje.
-- ⏳ potem: ACM, `STACKPICK_BASE_URL`, `BASE` w `reseed.sh`, **drugi reseed** (user-agent skanera
-  jest cytowany w zdaniach o odmowach), nadawca w Resend, nasz własny wiersz w korpusie.
+**Zrobione przy przeprowadzce:** ALIAS na apeksie i CNAME dla www (cele Heroku są **różne**),
+skasowane przekierowanie na `letagentsin-com.l.ink` (zabrało ze sobą oba rekordy, które je
+trzymały), `STACKPICK_BASE_URL`, fallback w `src/lib/site.ts`, `BASE` w `reseed.sh`, oraz
+**pięć plików w `public/`, które miały stary host wpisany na sztywno** i nie idą przez `SITE_URL`.
 
-**Podział pracy jest tu sztywny:** zakup domeny to wpisanie danych karty, czego **agent nie robi
-i nie będzie robił**. Ja przygotowuję wszystko dookoła, klika Krystian.
+**Zostawione świadomie w DNS:** `MX` na `fwd1/fwd2.porkbun.com` (darmowe przekierowanie poczty,
+kandydat na `hello@`), `TXT` z SPF Porkbuna (do zmiany przy Resendzie), dwa `_acme-challenge`.
 
-**Co trzeba przełączyć PO zakupie (pełna lista, nigdzie indziej jej nie ma):**
-1. `STACKPICK_BASE_URL` w configu Heroku. To jedno miejsce, ale ciągnie za sobą wszystko:
-   `src/lib/site.ts` podaje `SITE_URL` do **user-agenta skanera** (`LetAgentsIn/1.0 (+…/methodology)`),
-   do audytu i do adresów kart wyników.
-2. DNS na Heroku plus certyfikat (ACM), potem sprawdzić `/api/health` pod nową nazwą.
-3. `scripts/reseed.sh` ma stary host w `BASE` jako domyślny.
-4. **Reseed po przełączeniu**, bo user-agent skanera zmienia treść i wszystkie wiersze cytują go
-   w zdaniach o odmowach. Bez tego korpus mówi o adresie, który już nie istnieje.
-5. Nadawca w Resend na nowej domenie (SPF/DKIM), a potem wymiana **prywatnego Gmaila** na karcie
-   wyniku i w stopce, bo dziś widzi go każdy odwiedzający.
-6. Nasz własny wiersz w korpusie (skanujemy siebie) trzeba przeskanować na nowo pod nową nazwą.
+**Blokady po stronie Krystiana, obie małe:**
+- `hello@letagentsin.com` w panelu Porkbuna (EMAIL → Manage). **W API tego nie ma**, sprawdzone
+  w ich specu: jest tylko `/email/setPassword`. To zdejmuje prywatny Gmail z kart wyników.
+- Kod weryfikacyjny Search Console. Rekord TXT dopisze agent przez API.
 
-Kopie korpusów do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-after-breaker.json`.
+**Nasz własny wynik, zmierzony własnym skanerem na formule 9.2: 12/13 mierzalnych (92 procent).**
+W korpusie 170 firm lepsze są **trzy** (openrouter.ai, cloudflare.com, zenrows.com po 93), przy
+medianie 60. Jedyna prawdziwa porażka to `oauth_dcr` 0/1 i jest uczciwa: nie mamy kont.
+Trzy niemierzalne (`signup_*`, `typed_package`) z tego samego powodu. **Nasz własny skan wytyka
+nam to, co blokuje sprzedaż:** „publikujesz cennik pod /pricing, a nie znaleźliśmy rejestracji".
 
 ## Stan na teraz, w dziesięciu liniach
 
-- Produkt nazywa się **Let Agents In** od 2026-08-10. Domena **nie jest kupiona**, adres to nadal
-  `stackpick-f12d13a227ea.herokuapp.com`, a nazwa hosta zostaje świadomie do czasu zakupu.
-  User-agent skanera to `LetAgentsIn/1.0`.
-- Formuła **9.1**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
+- Produkt nazywa się **Let Agents In** od 2026-08-10 i od 2026-08-12 stoi na
+  **`https://letagentsin.com`**. Nazwa apki na Heroku (`stackpick`) i repo zostają, bo zmiana
+  nic nie kupuje. User-agent skanera to `LetAgentsIn/1.0 (+https://letagentsin.com/methodology)`.
+- Formuła **9.2**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
   `npm run audit` pilnuje **17 liczb i 3 twierdzeń nazywających firmy**, przy **0 sprzecznościach**,
   czyli każdą liczbę liczoną z danych, która trafia na publiczną stronę, i trzy zdania obok nich.
 - **Podłoga szumu korpusu: 0,20 procent** (5 zmian na 2550, ta sama formuła po obu stronach),
@@ -359,6 +354,48 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (143): własna domena, i 170 pomiarów, do których nie było jak dojść
+
+**Domena kupiona i podłączona w jednej sesji.** Rekomendacja rejestratora oparta na trzech
+rzeczach, których nasz skan **nie mierzy** i które sprawdziłem ręcznie: **ALIAS na apeksie**
+(twardy wymóg Heroku, apeksu nie wskażesz CNAME-em), cena rejestracji równa cenie odnowienia
+(11,08 USD, sprawdzone w publicznym API cen Porkbuna), WHOIS privacy w cenie. Ironia jest
+warta zapisania: **korpus dawał Porkbunowi 6/13, bo nasz własny skaner nie widział ich speca**
+(patrz runda 142), czyli o mało nie odrzuciliśmy najlepiej przygotowanego rejestratora
+na podstawie własnego błędu.
+
+**Pułapka, której nie było w planie:** to nie były rekordy parkingowe `A`, tylko przekierowanie
+na `letagentsin-com.l.ink` trzymane przez `ALIAS` i `CNAME *`. Skasowanie **samego
+przekierowania** zabrało oba rekordy ze sobą. Gdybym kasował rekordy pojedynczo, przekierowanie
+odtworzyłoby je.
+
+**Druga pułapka, znaleziona przez skan samych siebie godzinę po przeprowadzce:** `SITE_URL`
+przestawia się jedną zmienną, ale **pięć plików w `public/` ma adres wpisany na sztywno**
+(`robots.txt`, `agents.md`, `agent-signup.md`, `.well-known/mcp.json`, `.well-known/agent-access.json`
+z ośmioma wystąpieniami). Nasza karta MCP ogłaszała serwer pod starym hostem. To jest **dokładnie
+ta klasa błędu, którą sprzedajemy**: karta obiecująca serwer tam, gdzie go nie ma. Kandydat na
+nową regułę: sprawdzać, czy adres w karcie MCP zgadza się ze skanowaną domeną.
+
+**Nasz własny wynik: 12/13 mierzalnych, 92 procent, trzecie miejsce w korpusie 170 firm**
+(lepsze tylko openrouter.ai, cloudflare.com i zenrows.com po 93, mediana 60). Jedyna prawdziwa
+porażka `oauth_dcr` jest uczciwa: nie mamy kont.
+
+**Naprawiona dziura, która kasowała cały nasz dorobek pomiarowy:** każda karta wyniku żyła pod
+`/r/<id>`, czyli adresem **jednego skanu**, a reseed robimy co kilka dni i mintujemy nowe `id`.
+Każdy, kto by nas zacytował, linkowałby stronę na chwilę przed zniknięciem. W sitemapie było
+**11 adresów** przy **170 pomiarach**. Teraz `/v/<domena>` pokazuje najnowszy skan pod stałym
+adresem, `/v` linkuje wszystkie (sitemap mówi, że strony istnieją, dopiero linki mówią, że są
+coś warte), `corpus.json` ma `vendorUrl` obok `scorecardUrl`, a sitemap ma **181 adresów**.
+
+**Rozmowa o cenniku, do zapamiętania, bo wróci:** teza „full audit kosztuje grosze, więc dajmy
+$29" jest prawdziwa o **skanie** (koszt krańcowy ~0, i już jest darmowy) i fałszywa o **audycie**,
+bo audyt to N=6 izolowanych przebiegów agentowych plus czytanie transkryptów przez człowieka;
+compute to kilkanaście dolarów, koszt to godziny. W `harness/` są cztery briefy i **jeden** plik
+wyniku, więc ten produkt jest zbudowany w kilku procentach. Jednorazowe $29 jest najgorszym
+punktem skali (za drogo na bezmyślne kliknięcie, za tanio na uwagę człowieka) i przesuwa nas
+z kotwicy „audyt bezpieczeństwa" na „gadżet SEO". Kierunek do przetestowania: **monitoring
+cykliczny**, w pełni automatyczny, zgodny z dowodami rynkowymi już zapisanymi niżej.
 
 ## Runda 2026-08-12 (142): sprzedajemy wykrywanie speców, a własnego rejestratora oskarżyliśmy o brak speca
 
