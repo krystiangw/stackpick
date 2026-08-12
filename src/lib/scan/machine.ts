@@ -1,4 +1,4 @@
-import { fetchUrl, inParallel, isRealTextFile } from './http'
+import { fetchUrl, inParallel, isRealTextFile, type Fetched } from './http'
 
 export const WELL_KNOWN_PATHS = {
   api_catalog_rfc9727: '/.well-known/api-catalog',
@@ -10,7 +10,7 @@ export const WELL_KNOWN_PATHS = {
   security_txt: '/.well-known/security.txt',
 } as const
 
-const OPENAPI_PATHS = ['/openapi.json', '/openapi.yaml', '/swagger.json', '/api/openapi.json', '/v1/openapi.json']
+export const OPENAPI_PATHS = ['/openapi.json', '/openapi.yaml', '/swagger.json', '/api/openapi.json', '/v1/openapi.json']
 
 export type LlmsFile = { present: boolean; bytes: number; links: number; truncated: boolean }
 
@@ -26,6 +26,12 @@ export type MachineFindings = {
   llmsLinks?: { sampled: number; dead: number; firstDead: string | null }
   wellKnown: Record<string, boolean>
   openapi: string[]
+  /**
+   * A spec the docs page points at, rather than one we guessed the path of. Porkbun publishes
+   * theirs at /api/json/v3/spec and declares it twice, in a Link header and in the head of the
+   * page; we scored them "no OpenAPI spec" for six weeks because neither is a path we probe.
+   */
+  openapiDeclared?: { url: string; rel: string }
   /** Which pages were asked, so a vendor can rerun the exact request behind the verdict. */
   /** Where the files actually answered, so a verdict names a URL instead of a filename. */
   llmsUrls?: string[]
@@ -88,6 +94,63 @@ async function sampleLlmsLinks(corpus: string): Promise<MachineFindings['llmsLin
 const MOST_NEGOTIATION_RETRIES = 2
 
 /**
+ * Link relations that mean "the machine description of this thing", from RFC 8631 and RFC 8288.
+ * Not "alternate": every localised page on the web uses it for hreflang, so on its own it says
+ * nothing, and it only counts below when the type and the wording both point at a spec.
+ */
+const SPEC_RELATIONS = ['service-desc', 'describedby']
+
+const SPEC_WORDING = /openapi|swagger|\bspec\b/i
+
+/** Enough to reach a declared spec and its one plausible alternate; more would be guessing again. */
+const MOST_SPEC_CANDIDATES = 2
+
+/**
+ * What the docs page says its own machine description is, from the Link header first and the
+ * head of the document second. Both are declarations, not proof: nothing here scores until the
+ * URL is fetched and the body turns out to be a spec.
+ */
+export function declaredSpecs(page: { url: string; body: string; headers: Record<string, string> }): { url: string; rel: string }[] {
+  const found: { url: string; rel: string }[] = []
+  const add = (href: string, rel: string) => {
+    try {
+      const target = new URL(href, page.url)
+      // A "javascript:" href resolves happily and is not something to send a request at.
+      if (target.protocol !== 'http:' && target.protocol !== 'https:') return
+      const url = target.toString()
+      if (!found.some((seen) => seen.url === url)) found.push({ url, rel })
+    } catch {
+      /* an href we cannot resolve is not a declaration we can follow */
+    }
+  }
+
+  for (const entry of (page.headers.link ?? '').split(/,(?=\s*<)/)) {
+    const target = entry.match(/<([^>]+)>/)?.[1]
+    const rel = entry.match(/rel\s*=\s*"?([a-z-]+)"?/i)?.[1]?.toLowerCase()
+    if (target && rel && SPEC_RELATIONS.includes(rel)) add(target, rel)
+  }
+
+  for (const tag of page.body.slice(0, 200_000).match(/<link\b[^>]*>/gi) ?? []) {
+    const href = tag.match(/href\s*=\s*["']([^"']+)["']/i)?.[1]
+    const rel = tag.match(/rel\s*=\s*["']([^"']+)["']/i)?.[1]?.toLowerCase()
+    if (!href || !rel) continue
+    if (SPEC_RELATIONS.includes(rel)) add(href, rel)
+    // The overloaded one, admitted only when the media type and the label agree it is a spec.
+    else if (rel === 'alternate' && /json|yaml/i.test(tag) && SPEC_WORDING.test(`${href} ${tag.match(/title\s*=\s*["']([^"']+)["']/i)?.[1] ?? ''}`)) {
+      add(href, 'alternate')
+    }
+  }
+
+  return found.slice(0, MOST_SPEC_CANDIDATES)
+}
+
+/** The same test the guessed paths face: a URL is a spec when its body says it is. */
+function readsAsSpec(got: Fetched): boolean {
+  const head = got.body.slice(0, 2000).toLowerCase()
+  return isRealTextFile(got, 20) && (head.includes('openapi') || head.includes('swagger'))
+}
+
+/**
  * The two ways a page can hand a machine markdown. Asked of the documentation front page, which is
  * the page least likely to answer: it is a navigation shell, and on a docs host its ".md" twin is
  * not even a URL - docs.strapi.io/.md is nothing. The pages under it do answer, and the same scan
@@ -96,7 +159,7 @@ const MOST_NEGOTIATION_RETRIES = 2
  */
 async function negotiatesMarkdown(
   url: string,
-): Promise<{ acceptHeader: boolean; dotMdSuffix: boolean; answeredAt: string | null }> {
+): Promise<{ acceptHeader: boolean; dotMdSuffix: boolean; answeredAt: string | null; declared: { url: string; rel: string }[] }> {
   const suffixUrl = `${url.replace(/\/$/, '')}.md`
   const [viaAccept, viaSuffix] = await Promise.all([
     fetchUrl(url, { accept: 'text/markdown' }),
@@ -104,7 +167,13 @@ async function negotiatesMarkdown(
   ])
   const acceptHeader = (viaAccept.headers['content-type'] ?? '').includes('markdown')
   const dotMdSuffix = isRealTextFile(viaSuffix, 200)
-  return { acceptHeader, dotMdSuffix, answeredAt: acceptHeader ? url : dotMdSuffix ? suffixUrl : null }
+  return {
+    acceptHeader,
+    dotMdSuffix,
+    answeredAt: acceptHeader ? url : dotMdSuffix ? suffixUrl : null,
+    // Free: this is the page we just fetched, read for what it says about itself.
+    declared: declaredSpecs(viaAccept),
+  }
 }
 
 export async function scanMachineContext(
@@ -195,7 +264,9 @@ export async function scanMachineContext(
   const mcpUrls = [...corpus.matchAll(/https?:\/\/[^\s)"']*mcp[^\s)"']*/gi)].map((m) => m[0])
   const uniqueMcpUrls = [...new Set(mcpUrls)].slice(0, 5)
 
-  const negotiation = { ...frontPage, probed: [docsUrl] }
+  const { declared: frontPageDeclared, ...frontPageNegotiation } = frontPage
+  const negotiation = { ...frontPageNegotiation, probed: [docsUrl] }
+  const declared = [...frontPageDeclared]
   if (!negotiation.acceptHeader && !negotiation.dotMdSuffix) {
     const deeper = (await deeperDocsPages).slice(0, MOST_NEGOTIATION_RETRIES)
     const retries = await inParallel(deeper, (url) => negotiatesMarkdown(url))
@@ -204,7 +275,20 @@ export async function scanMachineContext(
       negotiation.dotMdSuffix ||= retry.dotMdSuffix
       negotiation.answeredAt ??= retry.answeredAt
       negotiation.probed.push(deeper[index])
+      if (declared.length === 0) declared.push(...retry.declared)
     }
+  }
+
+  const openapi = openapiHits.filter((path): path is string => path !== null)
+  // Only when guessing found nothing: a vendor who serves /openapi.json has already been counted,
+  // and this costs a request per candidate on the domains that are hardest to read anyway.
+  let openapiDeclared: MachineFindings['openapiDeclared']
+  if (openapi.length === 0) {
+    const confirmations = await inParallel(declared, (candidate) =>
+      fetchUrl(candidate.url, { accept: 'application/json' }),
+    )
+    const at = confirmations.findIndex(readsAsSpec)
+    if (at !== -1) openapiDeclared = declared[at]
   }
 
   return {
@@ -215,7 +299,8 @@ export async function scanMachineContext(
       hasLlmsFullTxt: Object.entries(llms).some(([label, f]) => label.includes('full') && f.present),
       llmsLinks,
       wellKnown: Object.fromEntries(wellKnownEntries),
-      openapi: openapiHits.filter((path): path is string => path !== null),
+      openapi,
+      openapiDeclared,
       markdownNegotiation: negotiation,
       mcp: {
         // ckeditor.com's llms-full.txt is 7.08 MB and we read the first 400 kB of it, counted 108

@@ -3,6 +3,7 @@ import { categoryForJob } from '../src/lib/lookup'
 import { FRESH_QUESTIONS } from './routing-questions'
 import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
+import { declaredSpecs } from '../src/lib/scan/machine'
 import {
   BOT_DEFENCE_RULES,
   PROVISIONING_RULES,
@@ -117,6 +118,39 @@ for (const [text, expected] of procedure) {
 // The floor is on length and nothing else, so a one-line file naming two things is still not a
 // procedure a machine can follow.
 check('za krótki plik mimo dwóch sygnałów', describesAProcedure('Get an API key and POST https://a.test'), false)
+
+console.log('deklarowany spec, czyli co strona mowi o sobie sama')
+const declaredAt = (body: string, link = '') =>
+  declaredSpecs({ url: 'https://vendor.test/api/docs', body, headers: link ? { link } : {} })
+    .map((found) => `${found.rel} ${found.url}`)
+    .join(' | ')
+// RFC 8631: the relation that means "the machine description of this". Porkbun sends it as a
+// header and repeats it in the head; either one alone has to be enough.
+check(
+  'naglowek Link z describedby',
+  declaredAt('', '<https://vendor.test/spec>; rel="describedby"'),
+  'describedby https://vendor.test/spec',
+)
+check(
+  'service-desc w head, sciezka wzgledna',
+  declaredAt('<link rel="service-desc" href="/v3/spec">'),
+  'service-desc https://vendor.test/v3/spec',
+)
+// The reason "alternate" cannot count on its own: every localised page on the web declares one,
+// and admitting them would have handed the point to docs.github.com for publishing Spanish.
+check('alternate z hreflang to nie spec', declaredAt('<link rel="alternate" hrefLang="es" href="/es/rest">'), '')
+check(
+  'alternate liczy sie tylko z typem json i slowem spec',
+  declaredAt('<link rel="alternate" type="application/json" title="OpenAPI spec" href="/api/spec">'),
+  'alternate https://vendor.test/api/spec',
+)
+check('alternate json bez slowa spec', declaredAt('<link rel="alternate" type="application/json" href="/feed.json">'), '')
+// Only schemes we can actually request. Writing this case is what found the hole: a javascript:
+// href resolves without complaint and would have been handed to fetchUrl.
+check('href z innym schematem', declaredAt('<link rel="service-desc" href="javascript:alert(1)">'), '')
+// A broken href must not take the scan down with it; it resolves to a URL that then fails to
+// confirm, which is the same outcome by a cheaper route.
+check('href ktorego nie da sie rozwiazac', declaredAt('<link rel="service-desc" href="http://[bad">'), '')
 
 console.log('crawl-delay, czyli czyja grupa obowiązuje')
 const delay = (body: string) => crawlDelayForAgents(parseRobots(body))

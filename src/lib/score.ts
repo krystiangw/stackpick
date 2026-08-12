@@ -1,9 +1,10 @@
 import { PROVISIONING_PATTERN_COUNT } from './scan/funnel'
 import { AGENT_UA } from './scan/http'
+import { OPENAPI_PATHS } from './scan/machine'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '9.0'
+export const FORMULA_VERSION = '9.1'
 
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on
@@ -935,6 +936,10 @@ export const CHECKS: Check[] = [
       // The path alone is ambiguous on a vendor whose docs and site are different hosts, and
       // it is the sentence a sceptic reruns first.
       if (f.machine.openapi.length > 0) return yes(1, `OpenAPI at ${f.site}${f.machine.openapi[0]}`)
+      const declared = f.machine.openapiDeclared
+      // Naming the relation matters: it is the difference between us guessing a path and the
+      // vendor telling us, and it is what another vendor copies to get the same point.
+      if (declared) return yes(1, `OpenAPI at ${declared.url}, which your docs page declares with rel="${declared.rel}"`)
       const fakesMarkdown = f.funnel.catchAll?.markdown ?? f.funnel.servesCatchAll
       if ((negotiation.acceptHeader || negotiation.dotMdSuffix) && !fakesMarkdown) {
         // Naming the page matters more here than anywhere else: on nearly every domain that
@@ -954,8 +959,14 @@ export const CHECKS: Check[] = [
         return { points: 0, detail: 'Unmeasurable behind the WAF',
           unblock: 'Let ordinary HTTP through to your public pages and this becomes measurable.', inconclusive: true }
       }
-      // "Not found on your domain" is what we measured. "Does not exist" is not.
-      return yes(0, 'No OpenAPI spec and no markdown negotiation found on this domain')
+      // "Not found on your domain" is what we measured. "Does not exist" is not, and the
+      // difference is the whole reason we now read what the page says about itself: porkbun.com
+      // published a spec at a path nobody would guess and we called it absent.
+      return {
+        points: 0,
+        detail: `No OpenAPI spec at the ${OPENAPI_PATHS.length} usual paths, none declared by ${f.discovered.docs ?? f.site}, and no markdown negotiation`,
+        unblock: 'Point at your spec from your docs page with rel="service-desc" and an agent finds it without guessing.',
+      }
     },
   },
 ]
