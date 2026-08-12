@@ -7,28 +7,37 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
-## W locie w tej chwili (2026-08-12, nad ranem)
+## W locie w tej chwili (2026-08-12, rano) - NASTĘPNY KROK: DOMENA
 
-**Nic nie leci.** Formuła **9.0**, korpus w całości na 9.0, audyt czysty
-(`170 rows on formula 9.0, 0 contradictions`, `0 adrift`), drzewo czyste i wypchnięte.
-Podłoga szumu **0,20 procent**, opublikowana z uzasadnieniem.
+**Nic nie leci.** Formuła **9.0**, korpus w całości na 9.0, audyt czysty, drzewo czyste,
+wszystko wypchnięte, produkcja zdrowa. Publiczna ścieżka skanu sprawdzona end-to-end (runda 141).
 
-**Zrobione po rundzie 137:** rozjazd podłogi szumu (138) i dwa nieprawdziwe zdania na
-`/methodology` (139). Przegląd obu stron zamknięty: na `/report` każda liczba jest liczona
-z danych, na `/methodology` zostały już tylko liczby **datowane i historyczne** (pomiary
-z 10 i 12 sierpnia, 70 checków cudzego narzędzia), które z założenia się nie przeliczają.
+**Krystian powiedział „jedziemy z domeną". Stan rozpoznania na 2026-08-12 08:20:**
+`letagentsin.com` jest **wolna** (whois: `No match for domain "LETAGENTSIN.COM"`).
 
-**Otwarte, w kolejności wagi:**
-1. **Decyzja produktowa dla Krystiana:** `find_providers` użyteczny (odpowiada często, myli się
-   w 8 na 27) czy bezpieczny (wymaga dwóch słów z jednej kategorii, nie myli się wcale,
-   odpowiada o połowę rzadziej). Obie opcje zmierzone na dwóch zestawach pytań.
-2. **Blokery po stronie Krystiana** bez zmian: domena `letagentsin.com`, zweryfikowany nadawca
-   w Resend, ścieżka zakupu inna niż `mailto:`, licencja korpusu, model sprzedaży.
-3. Trasowanie ma **59,3 procent błędu** na zestawie odłożonym i mechanizm jest u sufitu; dwie
-   próby naprawy odrzucone pomiarem (rundy 126-127). Kolejna próba wymaga **nowego rodzaju
-   dowodu**, nie kolejnych słów w `VOCABULARY`.
+**Podział pracy jest tu sztywny:** zakup domeny to wpisanie danych karty, czego **agent nie robi
+i nie będzie robił**. Ja przygotowuję wszystko dookoła, klika Krystian.
 
-Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-after-breaker.json`.
+**Co mogę zrobić przed zakupem:**
+- Porównanie rejestratorów **z naszych własnych danych**: w korpusie mamy `porkbun.com`,
+  `dynadot.com`, `namecheap.com`, `gandi.net`, `hover.com`, `name.com`, `njal.la`, `inwx.com`,
+  `netim.com`, `godaddy.com`. Wiemy o nich to, czego nie wie żadna porównywarka: **czy agent
+  dokończy u nich rejestrację bez człowieka**. To jest zarazem gotowy materiał na tekst.
+- Ceny odnowienia i to, czy rejestrator bierze osobno za WHOIS privacy.
+
+**Co trzeba przełączyć PO zakupie (pełna lista, nigdzie indziej jej nie ma):**
+1. `STACKPICK_BASE_URL` w configu Heroku. To jedno miejsce, ale ciągnie za sobą wszystko:
+   `src/lib/site.ts` podaje `SITE_URL` do **user-agenta skanera** (`LetAgentsIn/1.0 (+…/methodology)`),
+   do audytu i do adresów kart wyników.
+2. DNS na Heroku plus certyfikat (ACM), potem sprawdzić `/api/health` pod nową nazwą.
+3. `scripts/reseed.sh` ma stary host w `BASE` jako domyślny.
+4. **Reseed po przełączeniu**, bo user-agent skanera zmienia treść i wszystkie wiersze cytują go
+   w zdaniach o odmowach. Bez tego korpus mówi o adresie, który już nie istnieje.
+5. Nadawca w Resend na nowej domenie (SPF/DKIM), a potem wymiana **prywatnego Gmaila** na karcie
+   wyniku i w stopce, bo dziś widzi go każdy odwiedzający.
+6. Nasz własny wiersz w korpusie (skanujemy siebie) trzeba przeskanować na nowo pod nową nazwą.
+
+Kopie korpusów do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-after-breaker.json`.
 
 ## Stan na teraz, w dziesięciu liniach
 
