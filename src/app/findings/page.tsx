@@ -343,6 +343,9 @@ export default async function FindingsPage() {
               <Link href="/report" className="text-brass underline underline-offset-4">
                 The whole market, aggregated
               </Link>
+              <Link href="/v" className="text-brass underline underline-offset-4">
+                Every vendor, one page each
+              </Link>
               <a href="/corpus.json" className="text-brass underline underline-offset-4">
                 or every row of it as data
               </a>

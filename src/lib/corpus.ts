@@ -43,6 +43,8 @@ export type CorpusRow = {
    */
   measuredOn: string | null
   scorecardUrl: string
+  /** Stable per-vendor address. Unlike scorecardUrl it does not change when we rescan. */
+  vendorUrl: string
   checks: { id: string; verdict: CorpusVerdict; points: number; max: number; detail: string }[]
 }
 
@@ -86,7 +88,10 @@ export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus 
         unattendedGrant: report.findings?.funnel?.oauth?.grantTypes
           ? Boolean(report.findings.funnel.oauth.unattendedGrant)
           : null,
+        // The scan that produced the row, and the address that survives the next reseed. A
+        // citation pointing at /r/<id> rots the moment we rescan, which is every few days.
         scorecardUrl: `${baseUrl}/r/${report.id}`,
+        vendorUrl: `${baseUrl}/v/${report.domain}`,
         checks: report.scorecard.checks.map((check) => ({
           id: check.id,
           verdict: verdictOf(check),
