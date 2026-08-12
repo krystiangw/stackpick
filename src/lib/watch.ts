@@ -67,6 +67,20 @@ export function worthTelling(changes: WatchChange[]): boolean {
   return changes.length > 0
 }
 
+/**
+ * Whether two scorecards are a before and an after at all. They are not when the formula moved
+ * between them: we reseed every few days and the rules move with the reseed, so comparing across
+ * versions mails every watcher a list of verdicts that changed because we changed our mind, under
+ * a subject line saying their site lost ground. On formula 9.3 that would have been the first
+ * email several people ever got from us.
+ */
+export function comparableScorecards(
+  before: { formulaVersion: string } | null | undefined,
+  after: { formulaVersion: string },
+): boolean {
+  return before?.formulaVersion === after.formulaVersion
+}
+
 export function newWatch(email: string, domain: string, now: string): Watch {
   return {
     id: randomBytes(16).toString('hex'),

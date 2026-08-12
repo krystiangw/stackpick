@@ -3,7 +3,7 @@ import { scanDomain } from '@/lib/scan'
 import { scoreFindings } from '@/lib/score'
 import { getStore, reportId, type Report } from '@/lib/store'
 import { sendEmail } from '@/lib/email'
-import { changesBetween, measurableOf, worthTelling } from '@/lib/watch'
+import { changesBetween, comparableScorecards, measurableOf, worthTelling } from '@/lib/watch'
 import { changeEmail } from '@/lib/watch-email'
 
 export const maxDuration = 60
@@ -55,10 +55,16 @@ export async function POST(request: Request) {
     await store.saveReport(report)
 
     const previous = watch.lastReportId ? await store.getReport(watch.lastReportId) : null
-    const changes = previous ? changesBetween(previous.scorecard.checks, report.scorecard.checks) : []
+    // Two scorecards from two formula versions are not a before and an after. We reseed the
+    // corpus every few days and the rules move with it, so without this the first rescan after
+    // every formula change mails every watcher a list of verdicts that moved because we changed
+    // our mind, under a subject line saying their site lost ground. The baseline is replaced
+    // silently and the next comparison is like for like.
+    const comparable = comparableScorecards(previous?.scorecard, report.scorecard)
+    const changes = previous && comparable ? changesBetween(previous.scorecard.checks, report.scorecard.checks) : []
     // Nothing is mailed on the first check: there is no before, and "here is your score again"
     // is the email that teaches somebody to stop reading us.
-    if (previous && worthTelling(changes)) {
+    if (previous && comparable && worthTelling(changes)) {
       const { subject, text } = changeEmail(watch, report, changes)
       const sent = await sendEmail(watch.email, subject, text)
       if (sent.delivered) mailed += 1

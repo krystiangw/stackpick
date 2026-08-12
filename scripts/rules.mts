@@ -4,7 +4,7 @@ import { FRESH_QUESTIONS } from './routing-questions'
 import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
-import { changesBetween } from '../src/lib/watch'
+import { changesBetween, comparableScorecards } from '../src/lib/watch'
 import { CHECKS } from '../src/lib/score'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS } from '../src/lib/scan'
 import { rendersUsableForm } from '../src/lib/scan/funnel'
@@ -225,6 +225,11 @@ check('bez zmiany nie ma o czym pisac', moved([verdict(1, 1)], [verdict(1, 1)]).
 check('przejscie w niemierzalne to nie oskarzenie', moved([verdict(1, 1)], [verdict(0, 1, { inconclusive: true })])[0]?.worse, false)
 // A check the earlier scan never had must not be reported as a change from nothing.
 check('nowy check nie jest zmiana', moved([], [verdict(1, 1)]).length, 0)
+
+// A reseed moves rules, and a rule that moved is not news about the vendor.
+check('inna wersja formuly to nie porownanie', comparableScorecards({ formulaVersion: '9.2' }, { formulaVersion: '9.3' }), false)
+check('ta sama wersja to porownanie', comparableScorecards({ formulaVersion: '9.3' }, { formulaVersion: '9.3' }), true)
+check('brak poprzedniego pomiaru to nie porownanie', comparableScorecards(null, { formulaVersion: '9.3' }), false)
 
 console.log('llms.txt, czyli ile zgnilizny wolno mapie')
 const llms = CHECKS.find((c) => c.id === 'llms_txt')!
