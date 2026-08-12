@@ -35,51 +35,33 @@ const TIERS: readonly Tier[] = [
     cta: { label: 'Scan your domain', href: '/' },
   },
   {
-    name: 'Diagnostic',
-    price: '$2,900',
-    cadence: 'one week',
-    pitch: 'One behavioural cell, not a better version of the free file.',
+    name: 'Monitoring',
+    price: '$99',
+    cadence: 'per domain, per month',
+    pitch: 'The failures here are the kind nobody notices until an integration stops working.',
     includes: [
-      'Three real agent runs on one brief we design with you, recorded',
-      'Whether you are in the candidate set at all, or absent from it',
-      'The words used to reject you, quoted where the run left a quotable sentence and labelled as our summary where it did not',
-      'Sixty minutes to walk through it with whoever owns the fix',
+      'The same checks, rerun every week, so a verdict that moves is caught within days',
+      'One email when something changes, naming the check, what it says now and what it said before',
+      'Nothing when nothing changed, which is most weeks',
+      'No account and no card. One link in every email stops it',
     ],
-    note: 'Credited in full against a Full audit booked within 90 days.',
-    cta: { label: 'Ask about a diagnostic', href: 'mailto:hello@letagentsin.com?subject=Diagnostic' },
-  },
-  {
-    name: 'Full audit',
-    price: '$11,000',
-    cadence: 'two to three weeks',
-    pitch: 'What agents actually do when nobody is watching.',
-    includes: [
-      'Three experiment cells (model × condition × brief), four runs each, recorded',
-      'A brief designed for your category: on the same cheaper model, one brief produced 0 of 10 runs that read any documentation and another produced 3 of 3, because the second decision turned on a licence',
-      'Which provider gets picked over you, and the words used to reject you',
-      'Where an agent stalls: registration, credentials, or the first integration',
-      'A re-measure after 60 days on the same brief, the same scaffold and pinned model versions, with any model change reported as a confound rather than as a result',
-    ],
+    note: 'Free while we are building it, and we will ask before it ever costs anything.',
     featured: true,
-    cta: { label: 'Ask about an audit', href: 'mailto:hello@letagentsin.com?subject=Full%20agent%20audit' },
-  },
-]
-
-const AFTER = [
-  {
-    name: 'Fix sprint',
-    price: '$7,500 to $16,000',
-    body: 'Implementation, not advice: documentation that answers the question agents actually ask, llms.txt worth reading, an entry point built for a machine, a credential path that does not need a human.',
+    cta: { label: 'Watch a domain', href: '/#watch' },
   },
   {
-    name: 'MCP build',
-    price: '$14,000 to $28,000',
-    body: 'An MCP server for your API, scoped from the audit rather than from a wishlist. MVP or a standard build with OAuth and write access.',
-  },
-  {
-    name: 'Retainer',
-    price: '$3,000 / month',
-    body: 'Quarterly re-measurement, alerts when your score moves, and priority access. Only worth buying after an audit, because before one there is nothing to compare against.',
+    name: 'Agent audit',
+    price: 'By conversation',
+    cadence: 'one to three weeks',
+    pitch: 'What real agents do on your product when nobody is watching, which no scanner can see.',
+    includes: [
+      'Real agent runs on a brief designed for your category, recorded and handed over',
+      'Whether you are in the candidate set at all, and which provider gets picked instead',
+      'The words used to reject you, quoted where a run left a quotable sentence',
+      'Where a run stalls: registration, credentials, or the first integration',
+    ],
+    note: 'Four figures, scoped once we agree what to measure. It is a conversation, not a checkout, because the brief is most of the work.',
+    cta: { label: 'Ask what it would cost', href: 'mailto:hello@letagentsin.com?subject=Agent%20audit' },
   },
 ]
 
@@ -90,11 +72,12 @@ export default async function PricingPage() {
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Pricing</p>
         <h1 className="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-tight tracking-tight">
-          The scan is free because it costs us nothing. The audit is not, because it cannot be automated.
+          Everything a machine can check is free. You pay to be told when it breaks.
         </h1>
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
-          Everything a scanner can check, you can have for nothing, including the formula. What you pay for is
-          the part that requires running real agents against real code and reading what they did.
+          The scan costs us bandwidth and nothing else, so it costs you nothing and the formula is published
+          with it. The only thing worth charging for is the part that keeps working after you close the tab:
+          rerunning it every week and telling you the day a verdict moves.
         </p>
       </section>
 
@@ -170,7 +153,7 @@ export default async function PricingPage() {
       <section className="border-b border-rule py-12">
         <h2 className="text-lg font-semibold tracking-tight">Who does the work</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          One person, and you should know that before you weigh a five-figure engagement.{' '}
+          One person, and you should know that before you put an audit through procurement.{' '}
           <a
             href="https://krystiangw.github.io/krystiangw/"
             className="text-brass underline underline-offset-4"
@@ -191,20 +174,12 @@ export default async function PricingPage() {
       <section className="border-b border-rule py-12">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">After the findings</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          An audit that ends in a document changes nothing. These are scoped from what the audit found, so the
-          work is already argued for before it starts.
+          An audit that ends in a document changes nothing, so the implementation is available too: docs that
+          answer the question agents actually ask, an entry point built for a machine, a credential path that
+          does not need a human, or an MCP server for your API. Each is quoted from what the audit found rather
+          than from a price list, because a fix sprint scoped before the measurement is guesswork with an
+          invoice attached.
         </p>
-        <div className="mt-8 flex flex-col">
-          {AFTER.map((item) => (
-            <div key={item.name} className="grid gap-2 border-t border-rule py-5 sm:grid-cols-[14rem_1fr] sm:gap-8">
-              <div className="flex flex-col gap-1">
-                <h3 className="font-mono text-sm font-medium">{item.name}</h3>
-                <p className="font-mono text-sm tabular-nums text-brass">{item.price}</p>
-              </div>
-              <p className="max-w-2xl text-sm leading-relaxed text-ink-soft">{item.body}</p>
-            </div>
-          ))}
-        </div>
       </section>
 
       <section className="border-b border-rule py-12">
@@ -233,8 +208,12 @@ export default async function PricingPage() {
         <dl className="mt-6 flex flex-col">
           {[
             [
+              'Monitoring says $99 and also says free. Which is it?',
+              'Free today, for everyone, and the price is printed so you know what it will become rather than finding out later. Nobody is charged without being asked first, and there is no card on file to charge.',
+            ],
+            [
               'Do you bill hourly?',
-              'For work outside a package, $250 an hour with an eight hour minimum. It is rarely the right shape: the value here is a measurement and a decision, not time at a desk.',
+              'For work outside a package, $250 an hour. It is rarely the right shape: the value here is a measurement and a decision, not time at a desk.',
             ],
             [
               'What if the audit finds nothing?',

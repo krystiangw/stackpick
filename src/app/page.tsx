@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { FunnelMark } from '@/components/funnel-mark'
 import { Rankings } from '@/components/rankings'
 import { ScanForm } from '@/components/scan-form'
+import { WatchForm } from '@/components/watch-form'
 import { loadRankings } from '@/lib/rankings'
 import { CHECKS, MAX_SCORE, STAGES } from '@/lib/score'
 import { recordVisit } from '@/lib/visits'
@@ -53,16 +54,16 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
     <main className="mx-auto max-w-5xl px-6">
       <section className="border-b border-rule py-16 sm:py-24">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">
-          The signup and credential path, measured
+          Agent readiness, measured from outside
         </p>
         <h1 className="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">
-          Your next customer is an agent, and it already decided without asking you.
+          Find out where an AI agent gets stuck on your product, before it quietly picks somebody else.
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-soft">
-          When a developer says “add file uploads”, an agent picks the provider, reads the docs, and writes
-          the integration. Google and Cloudflare will both tell you for free whether your documentation is
-          machine readable. Neither asks the next question, which is the one all eighteen of our agent runs
-          died on: can an unattended client register and get a key?
+          Type your domain and {CHECKS.length} checks run against it in half a minute, telling you which step
+          an unattended agent dies on: finding you, reading your docs, creating an account, getting a key, or
+          the first API call. When a developer says “add file uploads”, an agent picks the provider and writes
+          the integration. It never files a support ticket to tell you it gave up.
         </p>
         {coverage.signupNeedsJavaScript > 0 && (
           <p className="mt-4 max-w-2xl font-mono text-sm leading-relaxed text-ink-soft">
@@ -164,23 +165,21 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
               <ScanForm />
             </div>
           </div>
-          <div className="flex flex-col gap-3 bg-ground p-8">
-            <h3 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Full audit</h3>
-            <p className="text-2xl font-semibold tracking-tight">What an agent actually does</p>
+          <div id="watch" className="flex scroll-mt-8 flex-col gap-3 bg-ground p-8">
+            <h3 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Monitoring</h3>
+            <p className="text-2xl font-semibold tracking-tight">When it breaks, you hear it from us</p>
             <p className="text-sm leading-relaxed text-ink-soft">
-              Real agents, real runs, recorded. Which provider they pick over you and in which words they
-              reject you. Then the fix list, and a re-measure to prove it moved.
+              An edge rule that starts refusing agents changes nothing a person sees in a browser, so the first
+              sign is usually an integration that quietly stopped working. We rerun the checks weekly and write
+              only when a verdict moves, naming what it says now and what it said before.
             </p>
             <p className="text-sm leading-relaxed text-ink-soft">
-              This is the part no scanner can give you, because it is a measurement of behaviour, not of files.
-              One brief costs $2,900 and a full study $11,000, both scoped before you pay.
+              Free while we are building it, and we will ask before it ever costs anything. No account, no card,
+              and one link in every email stops it.
             </p>
-            <Link
-              href="/pricing"
-              className="mt-2 w-fit border border-ink px-5 py-2.5 font-mono text-sm transition-colors hover:bg-ink hover:text-ground"
-            >
-              What the audit includes
-            </Link>
+            <div className="mt-2">
+              <WatchForm />
+            </div>
           </div>
         </div>
       </section>
