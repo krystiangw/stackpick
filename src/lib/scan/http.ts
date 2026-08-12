@@ -44,7 +44,7 @@ export const AGENT_UA = `LetAgentsIn/1.0 (+${SITE_URL}/methodology)`
 const TIMEOUT_MS = 8_000
 
 /** Three eight second waits is most of the budget already; a fourth buys nothing. */
-const MOST_TIMEOUTS_PER_HOST = 3
+const MOST_TIMEOUTS_PER_SITE = 3
 const MAX_BYTES = 400_000
 
 /**
@@ -107,11 +107,15 @@ type ScanState = {
    */
   hostHealth: Map<string, 'ok' | 'dead'>
   /**
-   * Timeouts per host, because "answered once" is not the same as "is answering". hover.com
-   * serves its home page and then hangs on nearly everything else, and at eight seconds a
-   * request that ate the entire 27 second budget: six of its eleven checks published as
-   * unmeasured on every attempt, four attempts in a row. A host is written off after three
-   * timeouts here, which is enough to survive one slow page and not enough to lose the scan.
+   * Timeouts per site, not per hostname, and that distinction is the whole point. hover.com
+   * answers its own pages in under four seconds and still spent the entire 27 second budget:
+   * it has wildcard DNS, so mcp.hover.com, api.hover.com, docs.hover.com and a control named
+   * mcp-letagentsin-control-8f3a1c.hover.com all accept a connection and then say nothing,
+   * eight seconds each. Counted per hostname this never reaches three, because every one of
+   * them is a different name asked once.
+   *
+   * The block only applies to hostnames that have not answered in this scan, so a site whose
+   * apex is healthy keeps being read while its imaginary subdomains stop being waited for.
    */
   timeouts: Map<string, number>
   slots: Map<string, HostSlots>
@@ -327,8 +331,12 @@ async function runFetch(url: string, options: FetchOptions, state: ScanState | n
       if (state?.hostHealth.get(attempted) === 'dead') {
         return empty(url, `${attempted} would not accept a connection earlier in this scan`)
       }
-      if ((state?.timeouts.get(attempted) ?? 0) >= MOST_TIMEOUTS_PER_HOST) {
-        return empty(url, `${attempted} timed out ${MOST_TIMEOUTS_PER_HOST} times earlier in this scan`)
+      const site = registrableDomain(attempted)
+      if (
+        state?.hostHealth.get(attempted) !== 'ok' &&
+        (state?.timeouts.get(site) ?? 0) >= MOST_TIMEOUTS_PER_SITE
+      ) {
+        return empty(url, `${site} left ${MOST_TIMEOUTS_PER_SITE} requests unanswered earlier in this scan`)
       }
 
       // Held for the whole request, including the body read, and keyed on the host of the
@@ -372,7 +380,8 @@ async function runFetch(url: string, options: FetchOptions, state: ScanState | n
     // Only ever a first impression: a host that has already answered something is never
     // written off on a later failure, so one reset cannot end the scan of a live site.
     if (state && attempted && (error as Error)?.name === 'AbortError') {
-      state.timeouts.set(attempted, (state.timeouts.get(attempted) ?? 0) + 1)
+      const site = registrableDomain(attempted)
+      state.timeouts.set(site, (state.timeouts.get(site) ?? 0) + 1)
     }
     if (state && attempted && !state.hostHealth.has(attempted)) state.hostHealth.set(attempted, 'dead')
     return empty(url, error instanceof Error ? `${error.name}: ${error.message}` : String(error))
