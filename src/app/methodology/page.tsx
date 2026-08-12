@@ -147,26 +147,28 @@ export default async function MethodologyPage() {
           changed.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Measured again on 12 August 2026, on 170 domains and with a formula change that provably touched
-          no row: 7 of 2,550 moved, which is 0.27 percent. A third time the same day, same formula on both
-          sides and nothing changed between the runs: 10 of 2,550, which is 0.39 percent. Take 0.64 as the
-          floor, since it is the largest of the three.
+          Measured three more times on 12 August 2026, on 170 domains: 0.27 percent, then 0.39, then
+          0.20. The last of those is 5 verdicts of 2,550, same formula on both sides and nothing changed
+          between the runs, and it is the number to use. The earlier ones are larger because a share of
+          what they counted was ours.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Some of it was ours, and we found that out by measuring rather than by assuming. The scanner
-          gives itself 27 seconds per domain, and a scan that runs out publishes several verdicts as
-          unmeasured, which is a fact about our clock and not about the vendor. One run published eleven
-          such verdicts across two domains, and repeating those two scans by hand cut that run&apos;s
-          movement from 23 rows to 12. A truncated scan is now retried rather than published, and the 0.39
-          percent above is the first measurement taken with that in place.
+          How much of it was ours we found out by measuring rather than by assuming. The scanner gives
+          itself 27 seconds per domain, and a scan that runs out publishes several verdicts as unmeasured,
+          which is a fact about our clock and not about the vendor. One run published eleven such verdicts
+          across two domains, and repeating those two scans by hand cut that run&apos;s movement from 23
+          rows to 12. Truncated scans are retried now. Two other repairs followed from reading what still
+          moved: a vendor whose edge answers every one of our POSTs with an empty 202, ours included to a
+          path nobody registered, is reported as unmeasured instead of as having no MCP server, and a
+          product that publishes prices is no longer told it has no accounts merely because we could not
+          find the link. The floor fell from 0.39 to 0.20 across those three.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          What is left moves for two reasons, and neither is a verdict changing its mind about a vendor.
-          Rows cross the line between measured and unmeasured when a documentation page refuses us once and
-          answers the next time. And a handful of surfaces are simply unstable: in that last run three MCP
-          endpoints answered on one pass and not the other, and one vendor&apos;s signup page was found on
-          one pass and not the other, which moved three of its checks at once. We ask a host for about
-          nineteen documents inside that 27 second budget, which is itself a burst.
+          What is left is five rows, and none of them is a verdict changing its mind about a vendor. Two
+          are MCP endpoints that answer one pass and not the next, two are documentation pages that refuse
+          us once and answer the second time, and one is a docs page that renders differently depending on
+          which of a vendor&apos;s pages we land on. We ask a host for about nineteen documents inside that
+          27 second budget, which is itself a burst, so some of what remains is still ours.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           It is not evenly spread. Nine of the fifteen sit in the three checks that depend on a host
