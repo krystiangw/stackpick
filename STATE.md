@@ -9,18 +9,24 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 
 ## W locie w tej chwili (2026-08-12, noc)
 
-**Nic nie leci.** Formuła **9.0**, korpus w całości na 9.0, audyt czysty
-(`170 rows on formula 9.0, 0 contradictions`, `0 adrift`), drzewo czyste i wypchnięte.
+**Nic nie leci.** Formuła **9.0**, korpus w całości na 9.0, audyt czysty, drzewo czyste
+i wypchnięte. Podłoga szumu: **0,20 procent**, opublikowana na `/methodology` razem z powodem,
+dla którego wcześniejsze pomiary były wyższe.
 
-**Uwaga: `hover.com` ma sześć checków trwale niemierzalnych** (ucina się na budżecie 27 s przy
-każdej próbie, sprawdzone cztery razy). To nie jest do naprawienia ponawianiem i tak też jest
-teraz napisane w jego wierszu.
+**Stan pracy nocnej:** oba źródła szumu z rundy 130 zamknięte, podłoga przemierzona dwa razy,
+trasowanie zmierzone uczciwie (59,3 procent błędu, liczba opublikowana w opisie narzędzia MCP)
+i zamknięte z dwiema odrzuconymi próbami naprawy.
 
-**Następna pozycja:** oba źródła szumu z rundy 130 są zamknięte (MCP w rundach 131-132, odkrywanie
-rejestracji w 133). Warto przemierzyć podłogę jeszcze raz na 9.0, bo od ostatniego pomiaru
-(0,39 procent) doszły trzy poprawki dotykające właśnie tego, co migotało.
+**Otwarte i warte następnej sesji:**
+1. **Decyzja produktowa dla Krystiana:** `find_providers` użyteczny (odpowiada często, myli się
+   w 8 na 27) czy bezpieczny (wymaga dwóch słów, nie myli się, odpowiada o połowę rzadziej).
+2. `hover.com` ma sześć checków trwale niemierzalnych przez budżet 27 s. Do rozważenia osobny,
+   dłuższy budżet dla domen, które ucinają się powtarzalnie.
+3. Blokery po stronie Krystiana bez zmian (domena, nadawca w Resend, licencja korpusu, model
+   sprzedaży).
 
-Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-8.9.json`, `/tmp/corpus-before-9.0.json`.
+Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-9.0.json` (ostatnia:
+`/tmp/corpus-floor2-before.json`).
 
 ## Stan na teraz, w dziesięciu liniach
 
@@ -332,6 +338,25 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (135): podłoga szumu spadła z 0,64 na 0,20 procent i wiadomo dlaczego
+
+Czwarty pomiar, ta sama formuła 9.0 po obu stronach: **5 werdyktów z 2550, czyli 0,20 procent**.
+Ciąg wygląda tak: **0,64 → 0,27 → 0,39 → 0,20**, i to nie jest przypadek ani wygładzanie liczby.
+Między 0,39 a 0,20 leżą **trzy poprawki znalezione przez czytanie, co się rusza**, a nie przez
+liczenie, ile się rusza: ponawianie uciętych skanów (129, 134), brzeg połykający POST-y raportowany
+jako niemierzalny zamiast „brak serwera MCP" (131-132) i „nie dotyczy" tylko dla firm bez cennika
+(133).
+
+`/methodology` mówi teraz **0,20 jako liczbę do użycia** i tłumaczy, że wcześniejsze były większe,
+bo część tego, co liczyły, była nasza. Zdjęcie asekuracyjnego „bierz największą z trzech" jest tu
+świadome: trzymanie 0,64 po naprawieniu własnego zegara byłoby chowaniem się za pomiarem, o którym
+wiemy, że jest zawyżony.
+
+**Co zostało w tych pięciu wierszach:** dwa serwery MCP odpowiadające raz tak, raz nie
+(`kinde.com` przeszedł tym razem z niemierzalnego na żywy 401, czyli ich brzeg raz połyka POST-a,
+a raz nie), dwie strony dokumentacji odmawiające za pierwszym razem i odpowiadające za drugim,
+i jedna strona renderująca się różnie zależnie od tego, na którą podstronę trafimy.
 
 ## Runda 2026-08-12 (134): 32 z 32 przewidzianych, a niespodzianki pokazały dziurę w mojej łatce
 
