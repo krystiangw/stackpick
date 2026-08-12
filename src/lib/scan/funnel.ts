@@ -388,7 +388,7 @@ export type McpEndpoint = {
    * instance in the corpus, and it is kept because the shape is real and the control below can
    * now tell the two apart.
    */
-  evidence: 'challenges' | 'rejects-get' | 'answers-json' | 'browser-only'
+  evidence: 'challenges' | 'rejects-get' | 'answers-json' | 'accepts-handshake' | 'browser-only'
 }
 
 /** A refusal that names the browser mechanism doing it, rather than a credential we could get. */
@@ -1008,7 +1008,15 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
         (got.status === 401 || got.status === 403) &&
         !looksLikeHtml(got) &&
         (dedicatedHost || got.status !== control?.status)
-      if (!authenticating && !wrongMethod && !speaksJson && !demandsCredentials) return null
+      // 202 Accepted to a JSON-RPC POST, which is Streamable HTTP taking the message and answering
+      // on a stream rather than in the response body. It reads as silence to every rule above,
+      // because it is neither an auth challenge nor JSON nor the wrong method, and that is why
+      // kinde.com moved between reseeds: from our data centre mcp.kinde.com answers 202, from a
+      // laptop the same address answers 401, and we published "no MCP surface" on the 202. The
+      // control carries the whole weight here, as it does for the credential shapes: a namespace
+      // that accepts any POST is talking about itself and not about a server.
+      const acceptsHandshake = got.status === 202 && !looksLikeHtml(got) && got.status !== control?.status
+      if (!authenticating && !wrongMethod && !speaksJson && !demandsCredentials && !acceptsHandshake) return null
       return {
         // The address that answered, not the one we asked. pinecone.io/mcp is a redirect stub
         // and www.pinecone.io/mcp is the server, and a vendor checking our sentence has to be
@@ -1020,7 +1028,9 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
             ? ('challenges' as const)
             : wrongMethod
               ? ('rejects-get' as const)
-              : ('answers-json' as const),
+              : acceptsHandshake
+                ? ('accepts-handshake' as const)
+                : ('answers-json' as const),
       }
     })
     .filter((endpoint): endpoint is McpEndpoint => endpoint !== null)

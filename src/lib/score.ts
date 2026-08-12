@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '8.8'
+export const FORMULA_VERSION = '8.9'
 
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on
@@ -472,7 +472,9 @@ export const CHECKS: Check[] = [
             ? `answered ${first.status} with an auth challenge`
             : first.evidence === 'rejects-get'
               ? `answered ${first.status} to a JSON-RPC initialize, and answers an unrouted path differently`
-              : 'answers JSON'
+              : first.evidence === 'accepts-handshake'
+                ? 'accepted a JSON-RPC initialize with 202 and answers on a stream, where an unrouted path on the same host does not'
+                : 'answers JSON'
         return yes(1, `Live MCP endpoint at ${first.url}, ${how}`)
       }
       if (f.machine.wellKnown.mcp_server_card) {
