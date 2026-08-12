@@ -3,7 +3,7 @@ import { AGENT_UA } from './scan/http'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
-export const FORMULA_VERSION = '8.9'
+export const FORMULA_VERSION = '9.0'
 
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on
@@ -545,12 +545,24 @@ export const CHECKS: Check[] = [
               inconclusive: true,
               unblock: 'Let ordinary HTTP through to your public pages and this becomes measurable.',
             }
-          : {
-              points: 0,
-              detail: 'Not applicable: nothing on the site links to an account signup, so there is no gate to measure',
-              notApplicable: true,
-              unblock: 'If accounts are created somewhere else, tell us where and we will rescan.',
-            }
+          : f.discovered.pricing
+            ? {
+                points: 0,
+                // "Not applicable" says the product has no accounts. A product that publishes
+                // prices has accounts, so on those rows the sentence was a claim about the vendor
+                // made out of our own failure to find a link. Sixteen of the twenty five rows
+                // carrying it publish a pricing page, and three of them link signup straight from
+                // the home page: filestack.com, magicbell.com and timekit.io.
+                detail: `Unmeasurable: we found no link to an account signup on the pages we read, while you publish prices at ${f.discovered.pricing}, so this is a gap in our reading rather than a finding about you`,
+                inconclusive: true,
+                unblock: 'Link signup from your home page or your pricing page and this becomes measurable.',
+              }
+            : {
+                points: 0,
+                detail: 'Not applicable: nothing on the site links to pricing or to an account signup, so there is no gate to measure',
+                notApplicable: true,
+                unblock: 'If accounts are created somewhere else, tell us where and we will rescan.',
+              }
       }
       if (f.funnel.signup.captcha.length > 0) {
         return yes(
@@ -597,12 +609,24 @@ export const CHECKS: Check[] = [
               inconclusive: true,
               unblock: 'Let ordinary HTTP through to your public pages and this becomes measurable.',
             }
-          : {
-              points: 0,
-              detail: 'Not applicable: nothing on the site links to an account signup',
-              notApplicable: true,
-              unblock: 'A product with no accounts cannot fail this. If yours has them elsewhere, point us at the page.',
-            }
+          : f.discovered.pricing
+            ? {
+                points: 0,
+                // "Not applicable" says the product has no accounts. A product that publishes
+                // prices has accounts, so on those rows the sentence was a claim about the vendor
+                // made out of our own failure to find a link. Sixteen of the twenty five rows
+                // carrying it publish a pricing page, and three of them link signup straight from
+                // the home page: filestack.com, magicbell.com and timekit.io.
+                detail: `Unmeasurable: we found no link to an account signup on the pages we read, while you publish prices at ${f.discovered.pricing}, so this is a gap in our reading rather than a finding about you`,
+                inconclusive: true,
+                unblock: 'Link signup from your home page or your pricing page and this becomes measurable.',
+              }
+            : {
+                points: 0,
+                detail: 'Not applicable: nothing on the site links to pricing or to an account signup',
+                notApplicable: true,
+                unblock: 'A product with no accounts cannot fail this. If yours has them elsewhere, point us at the page.',
+              }
       }
       if (!signup.reachable) {
         const seen = signup.consistent ? `${signup.status}` : `${signup.statusesSeen.join(', ')}`
