@@ -347,6 +347,26 @@ których agent nie ma prawa rozstrzygnąć sam.**
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
 
+## Runda 2026-08-12 (141): publiczna ścieżka sprawdzona, bo całą noc chodziłem konsolą
+
+Kilkanaście wdrożeń tej nocy weryfikowałem **endpointem konsoli z tokenem**, czyli nie tą drogą,
+którą idzie gość ze strony. Przeszedłem ją więc od początku do końca:
+
+- **Skan bez tokenu**: HTTP 200, pełna karta na formule 9.0, `example.com` 3/9 z sensownymi
+  werdyktami (m.in. „nothing on the site links to pricing or to an account signup", czyli nowa
+  gałąź z rundy 133 zachowuje się poprawnie także na stronie, która naprawdę nie ma kont).
+- **Izolacja korpusu trzyma się w danych, nie tylko w zdaniu**: po tym skanie korpus ma dalej
+  **170 wierszy** i `example.com` nie ma w nim. Obietnica „twój skan nie dołącza do naszych
+  danych" jest prawdziwa.
+- **Karta wyniku renderuje się** (78 kB, nagłówek „agent readiness 3/9", sekcja mailowa na miejscu).
+- **Okno ponownego użycia działa**: drugi skan tej samej domeny w ciągu 15 minut oddał **ten sam
+  identyfikator**, czyli nie skanujemy dwa razy tego samego na cudze życzenie.
+
+Limity dla obcych: 5 skanów na domenę na godzinę, 30 na wołającego. Nic tu nie zmieniałem.
+
+**Jedno do odnotowania dla Krystiana:** karta publicznego skanu podaje **prywatnego Gmaila** jako
+adres do usunięcia danych. To ta sama pozycja co ścieżka zakupu i siedzi na liście blokerów.
+
 ## Runda 2026-08-12 (140): liczby o trasowaniu w opisie narzędzia oblewają teraz build
 
 Ryzyko, które sam stworzyłem w rundzie 127: opis narzędzia `find_providers` cytuje **siedem liczb**
