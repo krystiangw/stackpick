@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-12 (nad ranem, po nocy 8.4 → 9.0)
+# Let Agents In: stan na 2026-08-12 (przed poludniem, formula 9.1)
 
 Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
 **Dwie sekcje na dole tego bloku, "Co zostało z audytów" i "Następne kroki merytoryczne", są
@@ -7,23 +7,19 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
-## W locie w tej chwili (2026-08-12, rano) - NASTĘPNY KROK: DOMENA
+## W locie w tej chwili (2026-08-12, przed południem) - DOMENA KUPOWANA, KORPUS NA 9.1
 
-**Nic nie leci.** Formuła **9.0**, korpus w całości na 9.0, audyt czysty, drzewo czyste,
-wszystko wypchnięte, produkcja zdrowa. Publiczna ścieżka skanu sprawdzona end-to-end (runda 141).
+**Leci reseed korpusu na formułę 9.1** (dwa przebiegi, log w scratchpadzie `reseed-9.1.log`).
+Po nim: `npm run diff-corpus before-9.1.json --expect porkbun.com:machine_readable_api,postmarkapp.com:machine_readable_api`
+i `npm run audit`. Przewidywanie zapisane **przed** reseedem, patrz runda 142.
 
-**Krystian powiedział „jedziemy z domeną". Stan rozpoznania na 2026-08-12 08:20:**
-`letagentsin.com` jest **wolna** (whois: `No match for domain "LETAGENTSIN.COM"`).
+**Domena: Krystian jest w koszyku Porkbuna**, `letagentsin.com` za 10,08 USD (odnowienie 11,08,
+WHOIS privacy gratis). Rekomendacja oparta na trzech rzeczach, których nasz skan nie mierzy:
+**ALIAS na apex** (twardy wymóg Heroku, bo apeksu nie wskażesz CNAME-em), cena rejestracji równa
+cenie odnowienia, prywatność w cenie. Odrzucone: `.net` w pakiecie, hosting, e-mail, SSL.
 
 **Podział pracy jest tu sztywny:** zakup domeny to wpisanie danych karty, czego **agent nie robi
 i nie będzie robił**. Ja przygotowuję wszystko dookoła, klika Krystian.
-
-**Co mogę zrobić przed zakupem:**
-- Porównanie rejestratorów **z naszych własnych danych**: w korpusie mamy `porkbun.com`,
-  `dynadot.com`, `namecheap.com`, `gandi.net`, `hover.com`, `name.com`, `njal.la`, `inwx.com`,
-  `netim.com`, `godaddy.com`. Wiemy o nich to, czego nie wie żadna porównywarka: **czy agent
-  dokończy u nich rejestrację bez człowieka**. To jest zarazem gotowy materiał na tekst.
-- Ceny odnowienia i to, czy rejestrator bierze osobno za WHOIS privacy.
 
 **Co trzeba przełączyć PO zakupie (pełna lista, nigdzie indziej jej nie ma):**
 1. `STACKPICK_BASE_URL` w configu Heroku. To jedno miejsce, ale ciągnie za sobą wszystko:
@@ -44,7 +40,7 @@ Kopie korpusów do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-after-bre
 - Produkt nazywa się **Let Agents In** od 2026-08-10. Domena **nie jest kupiona**, adres to nadal
   `stackpick-f12d13a227ea.herokuapp.com`, a nazwa hosta zostaje świadomie do czasu zakupu.
   User-agent skanera to `LetAgentsIn/1.0`.
-- Formuła **9.0**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
+- Formuła **9.1**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
   `npm run audit` pilnuje **17 liczb i 3 twierdzeń nazywających firmy**, przy **0 sprzecznościach**,
   czyli każdą liczbę liczoną z danych, która trafia na publiczną stronę, i trzy zdania obok nich.
 - **Podłoga szumu korpusu: 0,20 procent** (5 zmian na 2550, ta sama formuła po obu stronach),
@@ -355,6 +351,44 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (142): sprzedajemy wykrywanie speców, a własnego rejestratora oskarżyliśmy o brak speca
+
+Wybierając rejestratora pod `letagentsin.com` sprawdziłem, co nasz korpus mówi o dziesięciu z nich,
+i **Porkbun wyszedł na przeciętniaka (6/13)** z trzema porażkami, w tym „No OpenAPI spec". Poszedłem
+to zweryfikować przed rekomendacją i **to my się myliliśmy**.
+
+**Co Porkbun naprawdę publikuje:** spec pod `/api/json/v3/spec` (200, `application/json`),
+`llms.txt`, `llms-full.txt`, klucze API ograniczane do IP i domen, darmowy sandbox. Deklaruje to
+**dwa razy**: nagłówkiem `Link: <…/spec>; rel="describedby"` i w `<head>` strony docs. My
+sprawdzaliśmy **wyłącznie pięć zgadywanych ścieżek** (`/openapi.json` i spółka), więc każdy, kto
+trzyma spec pod własnym adresem i uczciwie go deklaruje, dostawał od nas zero.
+
+**Reguła po zmianie** (RFC 8631 i RFC 8288): stronę dokumentacji, którą **i tak już pobieramy**,
+czytamy pod kątem `rel="service-desc"` i `rel="describedby"`, w nagłówku i w `<head>`.
+Deklaracja **nie jest dowodem**: URL trzeba pobrać i ciało musi się czytać jak spec, tym samym
+testem co zgadywane ścieżki. `rel="alternate"` wpuszczamy tylko z typem JSON/YAML **i** słowem
+mówiącym o specu, bo inaczej punkt dostałby `docs.github.com` za publikowanie wersji hiszpańskiej.
+
+**Pomiar przed wdrożeniem** (63 domeny korpusu bez speca, skan lokalny): **2 zyskały punkt
+z deklaracji** (`porkbun.com` przez `describedby`, `postmarkapp.com` przez dwa `service-desc`
+w nagłówku), 2 kolejne (`locationiq.com`, `sentry.io`) przechodzą przez negocjację markdown,
+czyli to szum, nie zasługa tej zmiany. **Zero skanów wyczerpało budżet czasu**, mimo dwóch
+dodatkowych żądań na domenę.
+
+**Test znalazł dziurę, której nie szukałem:** pisząc przypadek „href, którego nie da się
+rozwiązać" zobaczyłem, że `javascript:alert(1)` **rozwiązuje się bez błędu** i poszedłby prosto
+do `fetchUrl`. Stąd filtr na schemat. To jest argument za pisaniem przypadków, które mają **nie**
+trafić, a nie tylko tych, które mają.
+
+**Znalezione przy okazji, do następnej rundy, z dowodami:** `porkbun.com` linkuje `/account`,
+a rejestracja stoi pod `/account/create` (200, formularz w serwerowym HTML, **Turnstile i
+reCaptcha**). Nasze wykrywanie szuka słów `signup`/`register`, więc nie widzi nic i publikuje
+„nothing on the site links to pricing or to an account signup". Skutek jest **gorszy niż zero
+punktów**: trzy sprawdzenia wychodzą jako „nie dotyczy", czyli mówimy firmie, że nie ma
+rejestracji, podczas gdy ona ją ma i zamyka captchą. To jest dokładnie to zdanie, po które
+klient do nas przychodzi. **Nie doklejałem tego do tej zmiany**, bo wtedy nie da się rozdzielić,
+co przesunęło korpus.
 
 ## Runda 2026-08-12 (141): publiczna ścieżka sprawdzona, bo całą noc chodziłem konsolą
 
