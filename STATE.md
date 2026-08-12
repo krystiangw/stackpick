@@ -13,6 +13,10 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 (`170 rows on formula 9.0, 0 contradictions`, `0 adrift`), drzewo czyste i wypchnięte.
 Podłoga szumu **0,20 procent**, opublikowana z uzasadnieniem.
 
+**Zrobione po rundzie 137:** rozjazd podłogi szumu między `/report` a `/methodology` (runda 138).
+**Warte następnej sesji:** przejrzeć resztę liczb na `/report` i `/methodology` tak samo, bo
+strażnik pilnuje wyłącznie `/findings`, a obie te strony niosą twierdzenia liczbowe.
+
 **Otwarte, w kolejności wagi:**
 1. **Decyzja produktowa dla Krystiana:** `find_providers` użyteczny (odpowiada często, myli się
    w 8 na 27) czy bezpieczny (wymaga dwóch słów z jednej kategorii, nie myli się wcale,
@@ -335,6 +339,21 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (138): liczba podana w dwóch miejscach zaczęła się kłócić sama ze sobą
+
+Pozycje 1 i 2 z listy są na Krystianie, więc wziąłem to, czego nikt nie pilnuje: liczby na
+`/report` i `/methodology`. `npm run audit` sprawdza **17 liczb, wszystkie na `/findings`**,
+a te dwie strony nie mają strażnika.
+
+Znalezione od razu: `/report` mówił czytelnikom, żeby ignorowali różnice mniejsze niż
+**0,64 procent**, podczas gdy `/methodology` od kilku rund mówi **0,20**. Ta sama wielkość, dwie
+strony, dwie wartości, i akurat ta służy do decydowania, czy ruch w wynikach coś znaczy.
+
+Naprawione **konstrukcją, nie strażnikiem**: podłoga żyje teraz jako `NOISE_FLOOR_PERCENT`
+w `src/lib/published.ts`, obok zapisu, z czego została zmierzona, a obie strony ją czytają.
+Liczba podana w dwóch miejscach to liczba, która się kiedyś pokłóci; strażnik wykryłby to po
+fakcie, a stała nie pozwala temu zajść.
 
 ## Runda 2026-08-12 (137): bilans nocy w jednej liczbie, i nie jest to liczba punktów
 
