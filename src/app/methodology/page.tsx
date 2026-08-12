@@ -24,7 +24,7 @@ export default async function MethodologyPage() {
   // watches /findings, so a hardcoded number here is a number nothing recomputes.
   const report = await buildIndustryReport()
   const shareOf = (stage: string) =>
-    Math.round(report?.stages.find((row) => row.stage === stage)?.share ?? 0)
+    Math.round((report?.stages.find((row) => row.stage === stage)?.share ?? 0) * 100)
   const discoveryShare = shareOf('discovery')
   const entryShare = shareOf('entry')
   recordVisit('/methodology', (await headers()).get('user-agent'))
