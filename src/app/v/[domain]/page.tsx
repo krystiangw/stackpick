@@ -6,6 +6,7 @@ import { normalizeDomain } from '@/lib/scan/discover'
 import { categoryFor } from '@/lib/categories'
 import { SITE_URL } from '@/lib/site'
 import { CHECKS, STAGES, type ScoredCheck } from '@/lib/score'
+import { WatchForm } from '@/components/watch-form'
 
 /**
  * The address for a vendor, as opposed to the address for one scan of it. /r/<id> names a
@@ -108,6 +109,18 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
           )
         })}
       </div>
+
+      <section className="mt-10 border-t border-rule pt-6">
+        <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">Tell me when this changes</h2>
+        <p className="mt-3 max-w-2xl leading-relaxed">
+          The failures here are the kind nobody notices. An edge rule that starts refusing agents changes
+          nothing a person sees in a browser, so the first sign is usually an integration that quietly stopped
+          working. We rescan weekly and write only when a verdict moves.
+        </p>
+        <div className="mt-4 max-w-2xl">
+          <WatchForm domain={name} />
+        </div>
+      </section>
 
       <section className="mt-10 border-t border-rule pt-6 text-sm text-ink-soft">
         <p className="max-w-2xl leading-relaxed">

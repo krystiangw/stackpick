@@ -4,6 +4,7 @@ import { FRESH_QUESTIONS } from './routing-questions'
 import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
+import { changesBetween } from '../src/lib/watch'
 import {
   BOT_DEFENCE_RULES,
   PROVISIONING_RULES,
@@ -208,5 +209,20 @@ check('odpowiedzi tam, gdzie należało odmówić', shouldHaveRefused, quoted(/a
 check('udzielonych odpowiedzi', answered, quoted(/it gave an answer to (\d+) of the/))
 check('złych odpowiedzi razem', wrongCategory + shouldHaveRefused, quoted(/and (\d+) of those answers were wrong/))
 
+console.log('obserwacja domeny, czyli co jest warte maila')
+const verdict = (points: number, max: number, extra: Record<string, unknown> = {}) =>
+  ({ id: 'a', label: 'a', stage: 'discovery', why: '', detail: 'x', points, max, ...extra }) as never
+const moved = (before: never[], after: never[]) => changesBetween(before, after)
+// The whole point of the alert: something the vendor passed last week now fails.
+check('pass na fail to strata', moved([verdict(1, 1)], [verdict(0, 1)])[0]?.worse, true)
+check('fail na pass to nie strata', moved([verdict(0, 1)], [verdict(1, 1)])[0]?.worse, false)
+check('bez zmiany nie ma o czym pisac', moved([verdict(1, 1)], [verdict(1, 1)]).length, 0)
+// A check going unmeasured is news, but it is usually about our reach and never called a loss.
+check('przejscie w niemierzalne to nie oskarzenie', moved([verdict(1, 1)], [verdict(0, 1, { inconclusive: true })])[0]?.worse, false)
+// A check the earlier scan never had must not be reported as a change from nothing.
+check('nowy check nie jest zmiana', moved([], [verdict(1, 1)]).length, 0)
+
+
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)
+

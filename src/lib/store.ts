@@ -4,6 +4,7 @@ import path from 'node:path'
 import { MongoStore } from './store-mongo'
 import type { ScanFindings } from './scan'
 import type { Scorecard } from './score'
+import type { Watch } from './watch'
 
 export type Report = {
   id: string
@@ -35,6 +36,11 @@ export interface Store {
   latestPerDomain(limit: number, seededOnly?: boolean): Promise<Report[]>
   saveLead(lead: Lead): Promise<void>
   listLeads(limit: number): Promise<Lead[]>
+  saveWatch(watch: Watch): Promise<void>
+  getWatch(id: string): Promise<Watch | null>
+  /** Every watch that is confirmed and not stopped, oldest check first. */
+  listWatchesDue(limit: number): Promise<Watch[]>
+  listWatchesForEmail(email: string): Promise<Watch[]>
   /** One counter per day and path. Upserted, so a page render costs one small write. */
   recordVisit(visit: { day: string; path: string }): Promise<void>
   listVisits(days: number): Promise<{ day: string; path: string; count: number }[]>
@@ -112,6 +118,40 @@ class FileStore implements Store {
       .map((line) => JSON.parse(line) as Lead)
       .reverse()
       .slice(0, limit)
+  }
+
+  private async watches(): Promise<Watch[]> {
+    const dir = await this.dir('watches')
+    const raw = await readFile(path.join(dir, 'watches.jsonl'), 'utf8').catch(() => '')
+    // Last line wins, so a rewritten watch replaces the one before it without a rewrite of the file.
+    const held = new Map<string, Watch>()
+    for (const line of raw.split('\n').filter(Boolean)) {
+      const watch = JSON.parse(line) as Watch
+      held.set(watch.id, watch)
+    }
+    return [...held.values()]
+  }
+
+  async saveWatch(watch: Watch) {
+    const dir = await this.dir('watches')
+    const file = path.join(dir, 'watches.jsonl')
+    const existing = await readFile(file, 'utf8').catch(() => '')
+    await writeFile(file, `${existing}${JSON.stringify(watch)}\n`)
+  }
+
+  async getWatch(id: string) {
+    return (await this.watches()).find((watch) => watch.id === id) ?? null
+  }
+
+  async listWatchesDue(limit: number) {
+    return (await this.watches())
+      .filter((watch) => watch.confirmedAt !== null && watch.stoppedAt === null)
+      .sort((a, b) => (a.checkedAt ?? '').localeCompare(b.checkedAt ?? ''))
+      .slice(0, limit)
+  }
+
+  async listWatchesForEmail(email: string) {
+    return (await this.watches()).filter((watch) => watch.email === email.toLowerCase())
   }
 }
 

@@ -1,6 +1,7 @@
 import { MongoClient, type Collection, type Db } from 'mongodb'
 import { REGISTRY_TTL_MS, installSharedCache, type SharedCache } from './scan/http'
 import type { Fetched } from './scan/http'
+import type { Watch } from './watch'
 import type { Lead, Report, Store } from './store'
 
 type ReportDoc = Report & { _id: string }
@@ -28,24 +29,30 @@ async function collections(): Promise<{
   leads: Collection<Lead>
   answers: Collection<CachedAnswer>
   visits: Collection<{ day: string; path: string; count: number }>
+  watches: Collection<Watch>
 }> {
   const database = await db()
   const reports = database.collection<ReportDoc>('reports')
   const leads = database.collection<Lead>('leads')
   const answers = database.collection<CachedAnswer>('registryAnswers')
   const visits = database.collection<{ day: string; path: string; count: number }>('visits')
+  const watches = database.collection<Watch>('watches')
 
   indexesReady ??= Promise.all([
     reports.createIndex({ domain: 1, scannedAt: -1 }),
     reports.createIndex({ scannedAt: -1 }),
     leads.createIndex({ createdAt: -1 }),
     visits.createIndex({ day: -1, path: 1 }, { unique: true }),
+    watches.createIndex({ id: 1 }, { unique: true }),
+    // One person watching one domain once. Two rows would mail them the same change twice.
+    watches.createIndex({ email: 1, domain: 1 }, { unique: true }),
+    watches.createIndex({ checkedAt: 1 }),
     // Mongo expires them, so nothing here has to remember to.
     answers.createIndex({ at: 1 }, { expireAfterSeconds: REGISTRY_TTL_MS / 1000 }),
   ]).then(() => undefined)
   await indexesReady
 
-  return { reports, leads, answers, visits }
+  return { reports, leads, answers, visits, watches }
 }
 
 const registryAnswers: SharedCache = {
@@ -122,6 +129,32 @@ export class MongoStore implements Store {
   async saveLead(lead: Lead) {
     const { leads } = await collections()
     await leads.insertOne(lead)
+  }
+
+  async saveWatch(watch: Watch) {
+    const { watches } = await collections()
+    await watches.replaceOne({ id: watch.id }, watch, { upsert: true })
+  }
+
+  async getWatch(id: string) {
+    const { watches } = await collections()
+    return (await watches.findOne({ id }, withoutId)) as Watch | null
+  }
+
+  async listWatchesDue(limit: number) {
+    const { watches } = await collections()
+    return (await watches
+      .find({ confirmedAt: { $ne: null }, stoppedAt: null }, withoutId)
+      // Never checked first, then longest since. A new watch hearing from us the same day it is
+      // made is the whole reason somebody believes the next email will arrive too.
+      .sort({ checkedAt: 1 })
+      .limit(limit)
+      .toArray()) as Watch[]
+  }
+
+  async listWatchesForEmail(email: string) {
+    const { watches } = await collections()
+    return (await watches.find({ email: email.toLowerCase() }, withoutId).toArray()) as Watch[]
   }
 
   async recordVisit(visit: { day: string; path: string }) {
