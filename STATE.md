@@ -355,6 +355,42 @@ których agent nie ma prawa rozstrzygnąć sam.**
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
 
+## Runda 2026-08-12 (145): audyt UX w przegladarce znalazl cztery rzeczy, a produkcja piata
+
+**Audyt przeszedl przez Chrome, nie przez czytanie kodu**, i to jest jedyny powod, dla ktorego
+te rzeczy wyszly.
+
+1. **`/v/<domena>` publikowal KAZDY skan, jaki ktokolwiek kiedykolwiek uruchomil.** `vercel.com`
+   pokazywal wynik z **formuly 8.0** sprzed doby, ze zdaniami cytujacymi **martwy adres
+   herokuapp**, pod tytulem „Is vercel.com ready for AI agents?". Nieaktualny werdykt przebrany
+   za aktualny to dokladnie ten blad, ktorego wykrywanie sprzedajemy. Teraz: banner o starej
+   formule, `robots: noindex`, link do przeskanowania.
+2. **Domena, ktorej nie mierzylismy, dostawala gole 404.** To najgorsza mozliwa odpowiedz dla
+   jedynego odwiedzajacego, na ktorym nam zalezy: **kogos, kto wpisuje wlasna domene**. Teraz
+   dostaje ofere skanu z polem juz wypelnionym (`/?domain=…`).
+3. **Formularz obserwacji nie mowil nic o cenie.** Obiecywal usluge i milczal o koszcie, czyli
+   po cichu sugerowal darmowe. Teraz mowi wprost, ze jest darmowe w fazie budowy i **zapytamy,
+   zanim cokolwiek zacznie kosztowac**.
+4. Etykieta przycisku lamala sie na dwie linie.
+
+**Piata rzecz znalazla sie sama, w trakcie audytu: PRODUKCJA PADLA.** Rano opublikowalismy
+**181 adresow** i zglosilismy sitemap. Crawler Meta (`57.141.20.x`) przeczytal **70 stron `/r/`
+i 52 strony `/v/` rownolegle**, kazda `force-dynamic` i kazda z odczytem z Mongo, i jedno dyno
+przez minute odpowiadalo 503 **na wszystko**. Naprawione: `robots.txt` odcina `/r/` (to strony
+pojedynczych skanow, sa ich tysiace i kazda jest nieaktualna po reseedzie) oraz osobiste linki
+`/watch/`, a strony `/v/` sa **cache'owane na 10 minut** (znacznie krocej niz odstep miedzy
+dwoma skanami tej samej domeny, wiec nic tam nie jest przeterminowane). Czasy po naprawie:
+`/v/stripe.com` 0,28 s, `/v` 0,37 s.
+
+**Wniosek, ktory boli i wart jest zapamietania:** nasza wlasna karta wyniku przechodzi
+`no_crawl_delay` i `user_agents_allowed`, bo **wpuszczamy wszystkich**. I wlasnie wpuszczanie
+wszystkich nas przewrocilo. **Otwartosc jest zobowiazaniem wydajnosciowym, nie tylko polityka**,
+i nasza metodologia tego nie mierzy: dajemy punkt za brak `Crawl-delay`, nie sprawdzajac, czy
+strona to uniesie. Kandydat na przyszla dyskusje, nie na szybka regule.
+
+**Otwarte:** jedno dyno to jedyny serwer; przy kolejnej fali crawlerow trzeba bedzie rozwazyc
+drugie (decyzja kosztowa Krystiana). Platnosci (Stripe vs Paddle) nadal nietkniete.
+
 ## Runda 2026-08-12 (144): przewidywalismy, ze zmiana nazwy poruszy korpus. Nie poruszyla
 
 **Reseed po przeprowadzce na `letagentsin.com`, formula 9.2: 2550 werdyktow, ruszylo 7
