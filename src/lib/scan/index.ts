@@ -138,8 +138,14 @@ export type ScanFindings = {
 
 export class UnreachableDomainError extends Error {}
 
-const CREDENTIAL_PAGE_HINTS =
-  /(api[-_ ]?(?:app[-_ ]?)?keys?|authentication|auth(\/|$)|credential|token|management|provisioning|admin|account|getting[-_ ]?started|quickstart|reference)/i
+// Every credential word a vendor actually uses in a path, not only the api-prefixed one. This
+// filter decides which pages are eligible at all, so a word missing from it makes a page
+// unreachable however well it would have ranked. newrelic.com documents key creation at
+// /docs/apis/nerdgraph/examples/use-nerdgraph-manage-license-keys-user-keys/, which carried
+// none of the old words: "license-keys" is not "api-keys", and the page was filtered out before
+// anything ranked it. Same for mux.com's signing keys and tigrisdata.com's access keys.
+export const CREDENTIAL_PAGE_HINTS =
+  /(api[-_ ]?(?:app[-_ ]?)?keys?|access[-_ ]?keys?|licen[cs]e[-_ ]?keys?|signing[-_ ]?keys?|service[-_ ]?(?:tokens?|accounts?)|authentication|auth(\/|$)|credential|token|management|provisioning|admin|account|getting[-_ ]?started|quickstart|reference)/i
 
 /**
  * We read three documentation pages out of what can be hundreds, so which three decides the
@@ -152,6 +158,7 @@ const HINT_PRIORITY = [
   // datadoghq.com files theirs at /account_management/api-app-keys, which "api-key" does not
   // match, so the page the check is asking about ranked below their access-control page.
   /api[-_ ]?(?:app[-_ ]?)?keys?/i,
+  /access[-_ ]?keys?|licen[cs]e[-_ ]?keys?|signing[-_ ]?keys?|service[-_ ]?(?:tokens?|accounts?)/i,
   /credential/i,
   /provisioning/i,
   /token/i,
@@ -171,8 +178,18 @@ const HINT_PRIORITY = [
  */
 const THIRD_PARTY_CREDENTIAL_PAGES = /resource[-_]catalog|\/integrations?\/|(^|[/_])(aws|gcp|azure|google|alibaba)[-_]/i
 
-function hintRank(pathname: string): number {
-  if (THIRD_PARTY_CREDENTIAL_PAGES.test(pathname)) return HINT_PRIORITY.length + 1
+/**
+ * Pages that carry a credential word and are not documentation of one. mux.com's three
+ * best-ranked candidates were two changelog posts and a React Native quickstart, and the check
+ * then reported that its documentation says nothing about creating a key. Ranked below
+ * everything rather than filtered out, so a site whose only matching pages are these still gets
+ * read rather than dropping to "no candidates".
+ */
+const DATED_RATHER_THAN_DOCUMENTED = /\/(changelog|blog|news|release[-_]notes|whats[-_]new|announcements?)(\/|$|-)/i
+
+export function hintRank(pathname: string): number {
+  if (THIRD_PARTY_CREDENTIAL_PAGES.test(pathname)) return HINT_PRIORITY.length + 2
+  if (DATED_RATHER_THAN_DOCUMENTED.test(pathname)) return HINT_PRIORITY.length + 1
   const index = HINT_PRIORITY.findIndex((pattern) => pattern.test(pathname))
   return index === -1 ? HINT_PRIORITY.length : index
 }

@@ -6,7 +6,7 @@ import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
 import { changesBetween } from '../src/lib/watch'
 import { CHECKS } from '../src/lib/score'
-import { isEdgeRefusal } from '../src/lib/scan'
+import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS } from '../src/lib/scan'
 import { rendersUsableForm } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS } from '../src/lib/scan/discover'
 import {
@@ -339,6 +339,22 @@ check(
   provisioningMatches('To create an API key, send a POST request to /v1/api_keys'),
   true,
 )
+
+console.log('wybor stron dokumentacji, czyli czego w ogole nie mozemy przeczytac')
+const eligible = (path: string) => CREDENTIAL_PAGE_HINTS.test(path)
+// newrelic.com documents key creation here and the page was filtered out before ranking, because
+// "license-keys" is not "api-keys". Nine of fifteen audited failures had no eligible page at all.
+check('newrelic license keys', eligible('/docs/apis/nerdgraph/examples/use-nerdgraph-manage-license-keys-user-keys/'), true)
+check('mux signing keys', eligible('/docs/api-reference/system/signing-keys'), true)
+check('tigris access keys', eligible('/docs/cli/access-keys/create/'), true)
+check('grafana service accounts', eligible('/docs/grafana/latest/administration/service-accounts/'), true)
+// The filter still has to be capable of saying no, or every page on the site becomes a candidate.
+check('post na blogu o czyms innym', eligible('/blog/how-we-scaled-postgres'), false)
+const outranks = (better: string, worse: string) => hintRank(better) < hintRank(worse)
+// mux.com's three best-ranked candidates were two changelog posts and a quickstart.
+check('strona o kluczach bije changelog', outranks('/docs/api-keys', '/changelog/new-api-keys-ui'), true)
+check('changelog i tak jest kandydatem', hintRank('/changelog/new-api-keys-ui') < Number.MAX_SAFE_INTEGER, true)
+check('cudze klucze na koncu', outranks('/changelog/api-keys', '/docs/integrations/aws-api-key'), true)
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)
