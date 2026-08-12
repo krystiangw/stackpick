@@ -10,6 +10,7 @@ import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS } from '../src/lib/scan'
 import { rendersUsableForm } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE } from '../src/lib/scan/discover'
 import {
+  provisioningMatches,
   BOT_DEFENCE_RULES,
   PROVISIONING_RULES,
   SELF_SERVE_PATTERNS,
@@ -371,17 +372,34 @@ check(
 // Below two pages the check was already refusing to conclude, and still is.
 check('jedna strona to za malo, cokolwiek na niej jest', readPages(['https://v.test/docs/api-keys']).inconclusive, true)
 // plausible.io: log in, click the button, and then a word that used to make it pass.
-const provisioningMatches = (text: string) => PROVISIONING_RULES.some((rule) => rule.test(text))
+const provisioningPhraseIn = (text: string) => PROVISIONING_RULES.some((rule) => rule.test(text))
 check(
   'panel plus slowo request to nie sciezka programowa',
-  provisioningMatches('To create a new sites API key, log in to your account and click the New API Key button. After creating an API key, you can authenticate your request.'),
+  provisioningPhraseIn('To create a new sites API key, log in to your account and click the New API Key button. After creating an API key, you can authenticate your request.'),
   false,
 )
 check(
   'POST do /v1/api_keys nadal sie liczy',
-  provisioningMatches('To create an API key, send a POST request to /v1/api_keys'),
+  provisioningPhraseIn('To create an API key, send a POST request to /v1/api_keys'),
   true,
 )
+
+console.log('proza kontra nawigacja, czyli czy granica bloku konczy zdanie')
+// The mapbox.com sidebar, in the markup it actually has. Two menu items, and between them a rule
+// that wants one sentence used to see none.
+const mapboxSidebar = `<ul>
+  <li><a href="/accounts/guides/tokens/">Creating and managing access tokens</a></li>
+  <li><a href="/accounts/">Mapbox Account Dashboard</a></li>
+  <li><a href="/api/accounts/tokens/">Mapbox Tokens API</a></li>
+  <li><a href="/accounts/guides/tokens/#rotate">Rotating access tokens</a></li>
+</ul>`
+check('menu nie jest zdaniem', provisioningMatches(mapboxSidebar).length, 0)
+// The same words as prose, which is a real documented path and has to keep counting.
+const realSentence = '<p>You can create an API key with the CLI, or POST to /v1/api_keys.</p>'
+check('zdanie nadal jest zdaniem', provisioningMatches(realSentence).length > 0, true)
+// Two list items whose words would form a false sentence if run together.
+const dashboardList = `<ul><li>Click Generate key in the dashboard.</li><li>Management API</li></ul>`
+check('dwie pozycje listy to nie jedno zdanie', provisioningMatches(dashboardList).includes('management api'), true)
 
 console.log('wybor stron dokumentacji, czyli czego w ogole nie mozemy przeczytac')
 const eligible = (path: string) => CREDENTIAL_PAGE_HINTS.test(path)

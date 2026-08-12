@@ -734,6 +734,46 @@ function visibleText(html: string): string {
     .replace(/\s+/g, ' ')
 }
 
+/**
+ * Tags that end a thought. A list item is not a clause of the list item above it, and a table
+ * cell is not a clause of the one beside it.
+ */
+const BLOCK_BOUNDARY =
+  /<\/?(?:li|p|div|br|hr|h[1-6]|td|th|tr|section|article|nav|header|footer|aside|dt|dd|option|figcaption|blockquote|form|label|summary)\b[^>]*>/gi
+
+/**
+ * The same reduction as visibleText, except that block boundaries become full stops.
+ *
+ * Every provisioning rule reasons about a sentence: a creation phrase counts only with something
+ * programmatic beside it, because "click Generate key" beside "creates an API key" is a dashboard.
+ * That reasoning is only sound if the text has sentences in it, and stripping tags to spaces
+ * leaves navigation as one unbroken run. On 2026-08-13 that let a documentation sidebar reading
+ *
+ *   Creating and managing access tokens | Mapbox Account Dashboard | Mapbox Tokens API
+ *
+ * satisfy a rule that wanted a creation verb and a credential-named API in one sentence. Mapbox
+ * documents exactly that, so the verdict was right and its evidence was a table of contents,
+ * which is the kind of wrong a vendor cannot argue with.
+ *
+ * Kept separate from visibleText rather than replacing it: the pricing heuristics next door count
+ * question marks and buttons across a page whose structure is the signal, and inserting full
+ * stops into that would be changing a different measurement to fix this one.
+ */
+function visibleProse(html: string): string {
+  return stripCodeBlocks(html)
+    .replace(BLOCK_BOUNDARY, '. ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/(?:\.\s+){2,}/g, '. ')
+}
+
+export function provisioningMatches(html: string): string[] {
+  const text = visibleProse(html)
+  return PROVISIONING_PATTERNS.map((pattern, index) =>
+    pattern.test(text) ? PROVISIONING_PATTERN_LABELS[index] : null,
+  ).filter((label): label is string => label !== null)
+}
+
 function matching(patterns: RegExp[], html: string, labels?: string[]): string[] {
   const text = visibleText(html)
   return patterns
@@ -1203,7 +1243,7 @@ export async function scanFunnel({
     mcpPostsSwallowed: mcp.swallowsPosts,
     signup,
     provisioning: {
-      programmatic: matching(PROVISIONING_PATTERNS, await corpus, PROVISIONING_PATTERN_LABELS),
+      programmatic: provisioningMatches(await corpus),
       selfServeSignals: matching(SELF_SERVE_PATTERNS, pricingText),
       selfServeQuotes: quoting(SELF_SERVE_PATTERNS, pricingText),
       selfServeIsButtonOnly: everyFreeSignalIsAButton(SELF_SERVE_PATTERNS, visibleText(pricingText)),
