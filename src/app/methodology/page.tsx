@@ -149,7 +149,7 @@ export default async function MethodologyPage() {
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           Measured three more times on 12 August 2026, on 170 domains: 0.27 percent, then 0.39, then{' '}
-          {NOISE_FLOOR_PERCENT}. The last of those is 5 verdicts of 2,550, same formula on both sides and
+          {NOISE_FLOOR_PERCENT.toFixed(2)}. The last of those is 5 verdicts of 2,550, same formula on both sides and
           nothing changed between the runs, and it is the number to use. The earlier ones are larger because a share of
           what they counted was ours.
         </p>
