@@ -56,6 +56,13 @@ try:
 except Exception:
     print('ERR')
 " 2>/dev/null)
+  # A scan that hit the 27 second budget publishes five "unmeasurable" verdicts that are about our
+  # clock and not about the vendor, so it is retried like a failure rather than published. The 8.8
+  # reseed lost eleven verdicts this way across launchdarkly.com and netim.com.
+  if printf '%s' "$out" | grep -q 'ran out of time'; then
+    fail=$((fail + 1)); failed="$failed $domain"; printf '%-24s TRUNCATED\n' "$domain"
+    sleep "$PAUSE"; continue
+  fi
   case "$line" in
     ERR*|"") fail=$((fail + 1)); failed="$failed $domain"; printf '%-24s FAILED\n' "$domain" ;;
     *) ok=$((ok + 1)); printf '%-24s %s\n' "$domain" "$line" ;;

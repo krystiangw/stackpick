@@ -159,7 +159,14 @@ const withRegistration = corpus.rows.filter((row) => {
   const check = row.checks.find((c) => c.id === 'oauth_dcr')
   return check !== undefined && check.points === check.max
 }).length
-const unattendedGrant = corpus.rows.filter((row) => row.unattendedGrant === true).length
+// The sentence says "of the vendors publishing a registration endpoint, only N advertise a grant",
+// so N is the intersection and not everyone with a grant recorded. Counting them separately made
+// the guard cry drift at a page that was right: launchdarkly.com kept `unattendedGrant` from a
+// scan whose oauth_dcr then timed out, so it was in one count and out of the other.
+const unattendedGrant = corpus.rows.filter((row) => {
+  const check = row.checks.find((c) => c.id === 'oauth_dcr')
+  return row.unattendedGrant === true && check !== undefined && check.points === check.max
+}).length
 
 // Currently zero, which is exactly why it needs a guard: a number nobody watches can stop being
 // zero on one side without the other noticing. The sentence and the data have to move together.
