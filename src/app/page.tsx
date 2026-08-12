@@ -40,8 +40,10 @@ const EVIDENCE = [
   },
 ]
 
-export default async function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ domain?: string }> }) {
   recordVisit('/', (await headers()).get('user-agent'))
+  // Somebody arriving from a vendor page we have not measured, with their own domain in hand.
+  const asked = (await searchParams).domain ?? ''
   const { categories, coverage } = await loadRankings()
   // The stage list is abstract until it has a shape next to it, and the shape has to come from
   // a domain anyone can open and check rather than from an invented example.
@@ -72,7 +74,7 @@ export default async function Home() {
           </p>
         )}
         <div className="mt-8 max-w-xl">
-          <ScanForm autoFocus />
+          <ScanForm autoFocus initialDomain={asked} />
         </div>
         <p className="mt-3 font-mono text-xs text-ink-faint">
           Free. No account. Reads only what you publish.

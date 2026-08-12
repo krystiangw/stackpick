@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+
 import { getStore } from '@/lib/store'
 import { normalizeDomain } from '@/lib/scan/discover'
 import { categoryFor } from '@/lib/categories'
 import { SITE_URL } from '@/lib/site'
-import { CHECKS, STAGES, type ScoredCheck } from '@/lib/score'
+import { CHECKS, FORMULA_VERSION, STAGES, type ScoredCheck } from '@/lib/score'
 import { WatchForm } from '@/components/watch-form'
 
 /**
@@ -22,10 +22,15 @@ export async function generateMetadata({ params }: { params: Promise<{ domain: s
   const { domain } = await params
   const name = normalizeDomain(decodeURIComponent(domain))
   const report = await getStore().latestForDomain(name)
-  if (!report) return { title: `${name}: not measured yet · Let Agents In` }
+  if (!report) return { title: `${name}: not measured yet · Let Agents In`, robots: { index: false } }
 
   const { scorecard } = report
   const measurable = measurableOf(scorecard)
+  // A number from a superseded formula is not comparable with the ones we publish, so it is
+  // shown to whoever asked for it and kept out of the index rather than competing with them.
+  if (scorecard.formulaVersion !== FORMULA_VERSION) {
+    return { title: `${name}: measured under an older formula · Let Agents In`, robots: { index: false } }
+  }
   return {
     title: `Is ${name} ready for AI agents? ${scorecard.total}/${measurable} · Let Agents In`,
     description:
@@ -34,6 +39,30 @@ export async function generateMetadata({ params }: { params: Promise<{ domain: s
     alternates: { canonical: `${SITE_URL}/v/${name}` },
     openGraph: { title: `${name} · ${scorecard.total}/${measurable}`, type: 'article' },
   }
+}
+
+/** Nobody has scanned it yet, which is a thing they can fix in twenty-seven seconds. */
+function NotMeasured({ domain }: { domain: string }) {
+  return (
+    <main className="mx-auto flex max-w-2xl flex-col px-6 py-24">
+      <h1 className="text-3xl font-semibold">We have not measured {domain}</h1>
+      <p className="mt-4 leading-relaxed">
+        Nobody has run it through the checks yet, so there is nothing here to show. The scan takes under
+        half a minute, needs no account and publishes nothing about you: only the curated corpus is
+        published, and a scan you run yourself does not join it.
+      </p>
+      <p className="mt-6 font-mono text-sm">
+        <Link href={`/?domain=${encodeURIComponent(domain)}`} className="text-brass underline underline-offset-4">
+          Scan {domain} now
+        </Link>
+      </p>
+      <p className="mt-10 text-sm text-ink-soft">
+        <Link href="/v" className="text-brass underline underline-offset-4">
+          The companies we have measured
+        </Link>
+      </p>
+    </main>
+  )
 }
 
 function verdictTone(check: ScoredCheck) {
@@ -48,7 +77,9 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
   const { domain } = await params
   const name = normalizeDomain(decodeURIComponent(domain))
   const report = await getStore().latestForDomain(name)
-  if (!report) notFound()
+  // A bare 404 here is the wrong answer to the only visitor who matters: somebody typing their
+  // own domain, which is exactly the company we want measuring itself. They get the scan instead.
+  if (!report) return <NotMeasured domain={name} />
 
   const { scorecard } = report
   const measurable = measurableOf(scorecard)
@@ -62,6 +93,22 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
         Agent readiness{category ? ` · ${category.label}` : ''}
       </p>
       <h1 className="mt-3 text-3xl font-semibold">{name}</h1>
+
+      {scorecard.formulaVersion !== FORMULA_VERSION && (
+        <div className="mt-6 border-l-2 border-warn bg-surface p-6">
+          <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">Measured under an older formula</h2>
+          <p className="mt-3 max-w-2xl leading-relaxed">
+            This scan ran under formula {scorecard.formulaVersion} and we are on {FORMULA_VERSION} now, so the
+            number below is not comparable with the corpus and the sentences may quote addresses we have since
+            moved. We keep the page rather than delete it, and keep it out of search rather than publish it.{' '}
+            <Link href={`/?domain=${encodeURIComponent(name)}`} className="text-brass underline underline-offset-4">
+              Rescan it
+            </Link>{' '}
+            and this page catches up.
+          </p>
+        </div>
+      )}
+
       <p className="mt-4 max-w-2xl leading-relaxed">
         <strong>
           {scorecard.total} of {measurable} measurable points
@@ -116,6 +163,10 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
           The failures here are the kind nobody notices. An edge rule that starts refusing agents changes
           nothing a person sees in a browser, so the first sign is usually an integration that quietly stopped
           working. We rescan weekly and write only when a verdict moves.
+        </p>
+        <p className="mt-3 max-w-2xl text-sm text-ink-soft">
+          Free while we are building this, and we will ask before it ever costs anything. No card, no account,
+          and one link in every email that stops it.
         </p>
         <div className="mt-4 max-w-2xl">
           <WatchForm domain={name} />

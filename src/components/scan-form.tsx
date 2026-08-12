@@ -7,9 +7,9 @@ import { LimitReached } from './limit-reached'
 type Step = { label: string; done: number; total: number }
 type Limited = { error: string; example: { id: string; domain: string; total: number; max: number } | null; domain: string }
 
-export function ScanForm({ autoFocus = false }: { autoFocus?: boolean }) {
+export function ScanForm({ autoFocus = false, initialDomain = '' }: { autoFocus?: boolean; initialDomain?: string }) {
   const router = useRouter()
-  const [domain, setDomain] = useState('')
+  const [domain, setDomain] = useState(initialDomain)
   const [scanning, setScanning] = useState(false)
   const [steps, setSteps] = useState<Step[]>([])
   const [error, setError] = useState<string | null>(null)
