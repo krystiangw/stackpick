@@ -13,7 +13,7 @@
     {
       "name": "scan",
       "method": "POST",
-      "url": "https://stackpick-f12d13a227ea.herokuapp.com/api/scan",
+      "url": "https://letagentsin.com/api/scan",
       "request": {
         "domain": "example.com"
       },
@@ -23,7 +23,7 @@
     {
       "name": "scan_streaming",
       "method": "POST",
-      "url": "https://stackpick-f12d13a227ea.herokuapp.com/api/scan/stream",
+      "url": "https://letagentsin.com/api/scan/stream",
       "request": {
         "domain": "example.com"
       },
@@ -32,7 +32,7 @@
     {
       "name": "mcp",
       "method": "POST",
-      "url": "https://stackpick-f12d13a227ea.herokuapp.com/mcp",
+      "url": "https://letagentsin.com/mcp",
       "request": "JSON-RPC 2.0: initialize, tools/list, tools/call with scan_domain",
       "response": "JSON-RPC 2.0 result, text content plus structuredContent carrying the scorecard",
       "notes": "Streamable HTTP, no authentication. Same scan and same limits as /api/scan."
@@ -40,15 +40,15 @@
     {
       "name": "corpus",
       "method": "GET",
-      "url": "https://stackpick-f12d13a227ea.herokuapp.com/corpus.json",
+      "url": "https://letagentsin.com/corpus.json",
       "response": "Every published scan as data: one row per domain, one entry per check, one formula version. CSV at /corpus.csv",
       "notes": "No authentication, no rate limit. Free to use and quote with attribution."
     }
   ],
-  "human_readable_report": "https://stackpick-f12d13a227ea.herokuapp.com/r/{id}",
-  "methodology": "https://stackpick-f12d13a227ea.herokuapp.com/methodology",
-  "openapi": "https://stackpick-f12d13a227ea.herokuapp.com/openapi.json",
-  "instructions_for_agents": "https://stackpick-f12d13a227ea.herokuapp.com/agents.md",
+  "human_readable_report": "https://letagentsin.com/r/{id}",
+  "methodology": "https://letagentsin.com/methodology",
+  "openapi": "https://letagentsin.com/openapi.json",
+  "instructions_for_agents": "https://letagentsin.com/agents.md",
   "refusals": [
     "IP literals, private ranges and non-resolving hosts are refused on purpose.",
     "Redirects are re-checked at every hop against the resolved address."

@@ -12,14 +12,14 @@ cost us every agent that cannot get past it, and buy nothing.
 ## What to do instead
 
 ```
-POST https://stackpick-f12d13a227ea.herokuapp.com/api/scan
+POST https://letagentsin.com/api/scan
 Content-Type: application/json
 
 {"domain": "example.com"}
 ```
 
 That is the whole procedure. The response carries a report id; the readable version lives at
-`https://stackpick-f12d13a227ea.herokuapp.com/r/{id}` and is a permanent link you can hand to a human.
+`https://letagentsin.com/r/{id}` and is a permanent link you can hand to a human.
 
 ## Limits, stated up front so you can plan around them
 

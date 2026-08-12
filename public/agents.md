@@ -5,7 +5,7 @@ You can use Let Agents In without a browser and without an account.
 ## Scan a domain
 
 ```
-POST https://stackpick-f12d13a227ea.herokuapp.com/api/scan
+POST https://letagentsin.com/api/scan
 Content-Type: application/json
 
 {"domain": "example.com"}
@@ -28,7 +28,7 @@ silent.
 
 ## Or call it as a tool
 
-There is an MCP server at `https://stackpick-f12d13a227ea.herokuapp.com/mcp`: Streamable HTTP,
+There is an MCP server at `https://letagentsin.com/mcp`: Streamable HTTP,
 JSON-RPC 2.0, no authentication, one tool called `scan_domain` that takes the same `format`
 argument. The card describing it is at `/.well-known/mcp.json`.
 
