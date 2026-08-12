@@ -316,7 +316,7 @@ export type SignupFindings = {
  * whole check is whether an agent finds something to submit. Testing for the opening tag scored
  * that as a signup rendering without JavaScript, on the one page where being wrong is worst.
  */
-function rendersUsableForm(body: string): boolean {
+export function rendersUsableForm(body: string): boolean {
   for (const form of body.matchAll(/<form\b([^>]*)>([\s\S]*?)<\/form>/gi)) {
     const fields = [...form[2].matchAll(/<(?:input|select|textarea)\b[^>]*>/gi)].map((field) => field[0])
     const asksWhoYouAre = fields.filter(isFillable).some(identifiesTheCaller)

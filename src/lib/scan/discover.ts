@@ -1,5 +1,6 @@
 import { fetchUrl, inParallel, isRealTextFile, looksLikeHtml, registrableDomain, visibleTextLength, type Fetched , stripCodeBlocks } from './http'
 import { fetchPackageFacts } from './npm'
+import { rendersUsableForm } from './funnel'
 
 export type NpmSource = 'site' | 'docs' | 'llms' | 'registry-search'
 export type LinkSource = 'site' | 'llms-txt' | 'fallback-path' | 'subdomain'
@@ -81,13 +82,23 @@ const DEVELOPER_HINTS = [
   /\/api(\/|$)/i,
 ]
 const PRICING_HINTS = [/\/pricing/i, /\/plans(\/|$)/i]
-const SIGNUP_HINTS = [
+export const SIGNUP_HINTS = [
   /\/sign[_-]?up/i,
-  /\/register(\/|$)/i,
-  /\/registration/i,
+  // Not anchored on a trailing slash: elastic.co puts its account behind /serverless-registration,
+  // and `register_free` is a whole word Rails writes that `\/register(\/|$)` cannot see.
+  /\/register(_|-|\/|$)/i,
+  /registration(\/|\?|$)/i,
   /\/create[_-]account/i,
   // The other word order, which is what Rails scaffolds and what porkbun.com uses.
   /\/accounts?\/(create|new)(\/|\?|$)/i,
+  /\/users?\/(new|register)/i,
+  // A trial page is a signup with a marketing name on it. datadoghq.com serves a real form in
+  // the HTML at /free-datadog-trial/ while its /signup is an application shell, so the vendor
+  // has the thing we say they lack and we were looking at the wrong address. Only followed from
+  // links we already hold: guessing these as paths costs every scan two requests and, measured
+  // across all 88 failing rows, found nothing.
+  /\/(free[_-])?trial(\/|$)/i,
+  /\/free[_-][a-z0-9-]+[_-]trial/i,
   /\/join(\/|$)/i,
   /\/get[_-]started/i,
 ]
@@ -669,11 +680,18 @@ async function firstRealSignup(
   const unique = [...new Set(candidates)].slice(0, MOST_CANDIDATES_PER_SOURCE)
   if (unique.length === 0) return null
   const pages = await inParallel(unique, (url) => fetchUrl(url))
-  for (const [index, page] of pages.entries()) {
-    // The link as the vendor wrote it, because the route fragment survives a fetch that drops it.
-    if (looksLikeSignup(page, homeUrl)) return { url: unique[index], source }
-  }
-  return null
+  const found = [...pages.entries()].filter(([, page]) => looksLikeSignup(page, homeUrl))
+  if (found.length === 0) return null
+  // Document order decided this, and document order is not evidence. cronofy.com links two
+  // addresses matching the same hint from its home page: /sign_up, which redirects to a page
+  // offering only OAuth, and /sign_up/developer, which serves a real Rails form with an email
+  // and a password field. We published "its form needs JavaScript" about a company whose form
+  // is in the HTML, one link away. The pages are already fetched, so preferring the one with a
+  // form an agent can fill costs nothing.
+  const withAForm = found.find(([, page]) => rendersUsableForm(page.body))
+  const [index] = withAForm ?? found[0]
+  // The link as the vendor wrote it, because the route fragment survives a fetch that drops it.
+  return { url: unique[index], source }
 }
 
 /**

@@ -81,6 +81,14 @@ export type ScanFindings = {
    */
   botChallenge: boolean
   /**
+   * The named on-demand agents an edge admits while it challenges us. Only probed when we were
+   * challenged, because that is the only branch where it changes an answer, and it changes the
+   * harshest sentence the product publishes. bitmovin.com challenges every unknown user-agent
+   * and is on Cloudflare's verified-bot allowlist, so ChatGPT-User and Claude-User read it in
+   * full while we published "no agent reaches the site at all" about it.
+   */
+  challengeAdmits: { name: string; status: number }[]
+  /**
    * Set when the domain we were asked about serves another company's site, so every measurement
    * below is off that other site and says so. Null on nearly every scan.
    */
@@ -356,6 +364,16 @@ function docsWithoutJs(docsUrl: string | null, pages: Fetched[]): { chars: numbe
 
 export type ScanProgress = (step: { label: string; done: number; total: number }) => void
 
+/**
+ * A status that means an edge turned a named agent away, as opposed to one that means the page
+ * is not there. Not 429: that is our own load, and the rest of this scanner already says so.
+ * Not 404 either. workos.com answers Claude-User a repeatable 404 at /docs while serving it
+ * every other documentation page, including markdown written for agents, and we published that
+ * as "on-demand agents blocked". A missing route is a routing miss; a closed door says 401, 403
+ * or 451 and means it.
+ */
+export const isEdgeRefusal = (status: number) => status >= 400 && status !== 404 && status !== 429
+
 const STEPS = 5
 
 /** Well inside the scan budget, so a slow registry cannot take the rest of the scan with it. */
@@ -583,6 +601,19 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     !botChallenge &&
     asAgent.statusesSeen.length > 0 &&
     asAgent.statusesSeen.every((status) => status === 429)
+  // Two requests, and only for the handful of sites that challenged us. Asking every site this
+  // would double the door test for an answer that is already visible everywhere else.
+  const challengeAdmits = botChallenge
+    ? (
+        await inParallel([...NAMED_CRAWLERS], async (crawler) => ({
+          name: crawler.name,
+          got: await fetchUrl(found.site, { ua: crawler.ua, fresh: true }),
+        }))
+      )
+        .filter(({ got }) => got.status >= 200 && got.status < 400)
+        .map(({ name, got }) => ({ name, status: got.status }))
+    : []
+
   report('Scoring', STEPS)
 
   const readable = docsWithoutJs(found.docs, [...(docsPage ? [docsPage] : []), ...deeperDocs.pages])
@@ -612,7 +643,7 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     // ChatGPT-User on the strength of one, and answers every named agent 200 when asked once.
     crawlersRefused: docsPage?.ok
       ? namedCrawlers
-          .filter(({ got }) => got.status >= 400 && got.status !== 429)
+          .filter(({ got }) => isEdgeRefusal(got.status))
           .map(({ name, got }) => ({ name, status: got.status }))
       : [],
     readAnything:
@@ -623,6 +654,7 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
       Boolean(funnel.signup.url),
     rateLimitedUs,
     botChallenge,
+    challengeAdmits,
     resolvedElsewhere: found.resolvedElsewhere,
     durationMs: Date.now() - startedAt,
     discovered: {

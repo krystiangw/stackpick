@@ -6,6 +6,9 @@ import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
 import { changesBetween } from '../src/lib/watch'
 import { CHECKS } from '../src/lib/score'
+import { isEdgeRefusal } from '../src/lib/scan'
+import { rendersUsableForm } from '../src/lib/scan/funnel'
+import { SIGNUP_HINTS } from '../src/lib/scan/discover'
 import {
   BOT_DEFENCE_RULES,
   PROVISIONING_RULES,
@@ -242,6 +245,56 @@ check('mapa bez martwych linkow', withDeadLinks(0).points, 1)
 check('jeden martwy link nie kosztuje punktu', withDeadLinks(1).points, 1)
 check('jeden martwy link jest jednak nazwany', withDeadLinks(1).detail.includes('https://example.test/gone'), true)
 check('dwa martwe linki kosztuja punkt', withDeadLinks(2).points, 0)
+
+console.log('krawedz, czyli co jest odmowa a co brakiem trasy')
+// The whole reason this predicate exists: workos.com serves Claude-User every docs page it has
+// and answers one index 404, which we published as "on-demand agents blocked".
+check('404 to nie odmowa', isEdgeRefusal(404), false)
+check('429 to nasza wlasna seria', isEdgeRefusal(429), false)
+check('403 to zamkniete drzwi', isEdgeRefusal(403), true)
+check('451 tez', isEdgeRefusal(451), true)
+check('200 nie jest odmowa', isEdgeRefusal(200), false)
+
+console.log('dokumentacja bez JS, czyli gdzie konczy sie skorupa')
+const docs = CHECKS.find((c) => c.id === 'docs_without_js')!
+const rendering = (chars: number) =>
+  docs.evaluate({
+    discovered: { docs: 'https://vendor.test/docs' },
+    docsTextChars: chars,
+    docsTextCharsFrom: 'https://vendor.test/docs',
+    docsThinnerForAgents: null,
+  } as never).points
+// Measured across the corpus: the genuine shells render 31 to 126 characters, and the smallest
+// page we were wrongly failing renders 647. The line sits in that gap, not above it.
+check('pusta skorupa SPA', rendering(126), 0)
+check('krotka, ale kompletna strona', rendering(647), 1)
+check('prosemirror i njal.la przechodza', rendering(1117), 1)
+
+console.log('challenge na krawedzi, czyli kogo ta krawedz jednak wpuszcza')
+const door = CHECKS.find((c) => c.id === 'answers_plain_request')!
+const challenged = (admits: { name: string; status: number }[]) =>
+  door.evaluate({ botChallenge: true, agentStatus: 403, agentStatusesSeen: [403, 403, 403], challengeAdmits: admits } as never)
+// bitmovin.com: challenged us, served ChatGPT-User and Claude-User fifteen thousand characters.
+check('wpuszcza nazwanych agentow', challenged([{ name: 'Claude-User', status: 200 }]).points, 1)
+check('i mowi to w zdaniu', challenged([{ name: 'Claude-User', status: 200 }]).detail.includes('Claude-User 200'), true)
+// namecheap.com and contentful.com refuse the named crawlers too, and keep the zero.
+check('nikogo nie wpuszcza', challenged([]).points, 0)
+
+console.log('signup, czyli ktory kandydat wygrywa')
+// cronofy.com links /sign_up (OAuth only) and /sign_up/developer (a real Rails form) from the
+// same page. Document order used to decide it, and document order is not evidence.
+const withForm = '<form method="post" action="/sign_up"><input type="email" name="email"><input type="password"><button>Go</button></form>'
+check('formularz z polem tozsamosci i submitem', rendersUsableForm(withForm), true)
+check('pusta skorupa SPA nie ma formularza', rendersUsableForm('<div id="root"></div>'), false)
+check('sam baner cookie to nie signup', rendersUsableForm('<form action="/cookies"><input type="checkbox" name="analytics"><button>OK</button></form>'), false)
+const hits = (path: string) => SIGNUP_HINTS.some((hint) => hint.test(path))
+check('rails register_free', hits('/users/register_free'), true)
+check('rails user/new', hits('/user/new'), true)
+check('elastic serverless-registration', hits('/serverless-registration'), true)
+check('datadog free-datadog-trial', hits('/free-datadog-trial/'), true)
+// The hint list decides which pages we pay to fetch, so it has to stay capable of saying no.
+check('blog o rejestracji domen to nie signup', hits('/blog/how-we-built-it'), false)
+check('cennik to nie signup', hits('/pricing'), false)
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

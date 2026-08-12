@@ -9,6 +9,9 @@ export const FORMULA_VERSION = '9.3'
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
 
+/** Characters of text below which a documentation page is a shell and not short prose. */
+const DOCS_SHELL_FLOOR = 500
+
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on
  * kinde.com the one it left out is the one that answers: api.kinde.com/mcp challenges with a
@@ -71,6 +74,18 @@ export const CHECKS: Check[] = [
         return yes(
           1,
           `Answered ${letUsIn} to ${AGENT_UA}${tries}, so an agent reaches the site: the JavaScript challenge came only after we had asked three times in a row, which is our load rather than your wall`,
+        )
+      }
+      // An edge on a verified-bot allowlist challenges every user-agent it has no rule for,
+      // which is ours, and admits the two the product is actually about. bitmovin.com serves
+      // ChatGPT-User and Claude-User fifteen thousand characters while challenging us, and we
+      // published "no agent reaches the site at all" about it: the harshest sentence here, and
+      // false. The unknown-client wall is still worth naming, so the sentence keeps it.
+      const admits = f.challengeAdmits ?? []
+      if (f.botChallenge && admits.length > 0) {
+        return yes(
+          1,
+          `Answered ${f.agentStatus} to ${AGENT_UA}${tries} with a JavaScript challenge, but your edge admits the agents it has heard of: ${admits.map((agent) => `${agent.name} ${agent.status}`).join(' and ')}. A client with a user-agent nobody has written a rule for is still turned away`,
         )
       }
       // A challenge is not a limit. The edge is asking the caller to run JavaScript, which every
@@ -210,9 +225,15 @@ export const CHECKS: Check[] = [
           `${entry} serves ${Math.round(thinner * 100)} percent less text to ${AGENT_UA} than to a Chrome user-agent, at the same URL and the same moment`,
         )
       }
-      return f.docsTextChars >= 2000
+      // The line is where an empty shell stops and a short page begins, and it sat at 2,000
+      // characters, which is inside the honest population rather than below it. Measured across
+      // the corpus on 2026-08-12: the genuine shells render 31, 38, 63 and 126 characters, while
+      // the smallest page we were wrongly failing renders 647. njal.la ships no bundle at all and
+      // its whole documentation set tops out at 1,697 characters per page, so no sampling change
+      // rescues it and only the threshold does. 500 sits in the gap, five times either way.
+      return f.docsTextChars >= DOCS_SHELL_FLOOR
         ? yes(1, `${chars} characters of text without JS${where}`)
-        : yes(0, `Only ${chars} characters render without JS${where}`)
+        : yes(0, `Only ${chars} characters render without JS${where}, which is a page shell rather than a page`)
     },
   },
   {
@@ -615,7 +636,11 @@ export const CHECKS: Check[] = [
     id: 'signup_reachable',
     stage: 'signup',
     label: 'Signup reachable without a browser',
-    why: 'If a bare HTTP request gets a 403, the agent never sees the form at all.',
+    // The old sentence promised a comparison this check does not run. All 88 failures in the
+    // 9.2 corpus were the same finding, and none of them was a 403: the page answers 200 and
+    // carries no form until a bundle builds one. That is worth a point either way, but a vendor
+    // reading "if a bare HTTP request gets a 403" goes looking for a block that is not there.
+    why: 'An agent fetches HTML and submits what it finds. A signup page that answers 200 and builds its form in the browser has nothing in it to fill, which is the same dead end as a refusal and much harder to notice.',
     max: 1,
     evaluate: (f) => {
       const signup = f.funnel.signup
