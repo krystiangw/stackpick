@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { buildIndustryReport } from '@/lib/industry'
 import { NOISE_FLOOR_PERCENT } from '@/lib/published'
 import { AGENT_ENTRY_PATHS, PROVISIONING_PATTERN_LABELS } from '@/lib/scan/funnel'
 import { AI_CRAWLERS } from '@/lib/scan/robots'
@@ -18,6 +19,14 @@ const CLASS_COST: Record<string, string> = {
 }
 
 export default async function MethodologyPage() {
+  // Computed, because both numbers were written by hand in a sentence comparing us to another
+  // tool, and one of them had drifted from 95 to 91 without anybody noticing. The guard only
+  // watches /findings, so a hardcoded number here is a number nothing recomputes.
+  const report = await buildIndustryReport()
+  const shareOf = (stage: string) =>
+    Math.round(report?.stages.find((row) => row.stage === stage)?.share ?? 0)
+  const discoveryShare = shareOf('discovery')
+  const entryShare = shareOf('entry')
   recordVisit('/methodology', (await headers()).get('user-agent'))
   return (
     <main className="mx-auto max-w-5xl px-6">
@@ -181,10 +190,11 @@ export default async function MethodologyPage() {
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           The uncomfortable consequence, printed because it is true: our own adversarial audits put the
-          error rate in these verdicts at 0.39 percent, which is below this floor. Those are different
-          measurements, a wrong rule against an unstable network, but it does mean no single row is
-          evidence on its own. Rescan before you act on one, and treat the checks above the fold as the
-          durable part.
+          error rate in these verdicts at 0.39 percent, which is now the larger of the two. It sat below
+          the floor until the floor moved, and the floor moved because we stopped counting our own
+          truncated scans against the internet. They are different measurements, a wrong rule against an
+          unstable network, and together they mean no single row is evidence on its own. Rescan before you
+          act on one, and treat the checks above the fold as the durable part.
         </p>
       </section>
 
@@ -216,8 +226,9 @@ export default async function MethodologyPage() {
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           Their published specification contains the words signup, provisioning and CAPTCHA zero times. Their
           own summary is discovery, structure, context: can an agent find your pages, parse them, understand
-          them. That is the stage this corpus measures as 95 percent solved. Ours starts at the next one,
-          where the same corpus measures 26 percent, and the difference is not a disagreement about scoring:
+          them. That is the stage this corpus measures as {discoveryShare} percent solved. Ours starts at
+          the next one, where the same corpus measures {entryShare} percent, and the difference is not a
+          disagreement about scoring:
           they answer whether an agent can read you, we answer whether one can join you.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
