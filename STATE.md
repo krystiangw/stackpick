@@ -9,16 +9,17 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 
 ## W locie w tej chwili (2026-08-12, noc)
 
-**Nic nie leci.** Formuła **8.8** na produkcji, korpus w całości na 8.8, audyt czysty
-(`170 rows on formula 8.8, 0 contradictions`, `17 stated numbers and 3 named-vendor claims
-checked against the data, 0 adrift`). Drzewo czyste, wypchnięte.
+**Nic nie leci.** Formuła **8.8**, korpus w całości na 8.8, audyt czysty, drzewo czyste
+i wypchnięte. Podłoga szumu przemierzona (runda 130): **0,39 procent** na przebiegu, który
+ponawia ucięte skany; `/methodology` podaje trzy pomiary i zostawia 0,64 jako podłogę.
 
-**Uwaga do następnego reseedu:** `scripts/reseed.sh` ponawia od teraz skany **ucięte budżetem**,
-więc następny przebieg powinien mieć mniej „pogody" niż poprzednie. Jeśli tak będzie, podłogę
-szumu na `/methodology` (0,64 i 0,27 procent) trzeba będzie **przemierzyć**, bo poprzednie pomiary
-mogły liczyć nasze własne timeouty jako zmienność internetu.
+**Najwyższa nieukończona pozycja merytoryczna** (z rundy 130): sześć z dziesięciu ruchów podłogi
+siedzi w **dwóch niestabilnych miejscach** - sondowaniu MCP (trzy wiersze) i odkrywaniu strony
+rejestracji (`planetscale.com`, trzy checki naraz). Stabilizacja tych dwóch zbije szum bardziej
+niż jakakolwiek zmiana reguły. Zacznij od zmierzenia, **ile razy z pięciu skanów** ten sam adres
+MCP odpowiada, bo dziś nie wiemy, czy to sieć, czy nasz sposób pytania.
 
-Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-8.8.json`.
+Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-8.8.json`, `/tmp/corpus-floor-before.json`.
 
 ## Stan na teraz, w dziesięciu liniach
 
@@ -330,6 +331,27 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (130): podłoga szumu przemierzona po naprawie naszego zegara
+
+Przebieg z **tą samą formułą 8.8 po obu stronach**, nic między nimi nie zmienione, pierwszy
+z ponawianiem skanów uciętych: **10 z 2550 werdyktów, 0,39 procent**. Trzy skany faktycznie
+zostały ucięte i ponowione zamiast opublikowane, i żaden z nich nie pojawił się w różnicy.
+
+Trzy pomiary podłogi: **0,64 → 0,27 → 0,39 procent**. Na `/methodology` zostaje **0,64 jako
+podłoga**, bo jest największa z trzech, ale strona mówi teraz też, **ile z tego było nasze**:
+jeden przebieg opublikował jedenaście werdyktów „unmeasurable" z powodu budżetu 27 sekund,
+a ręczne powtórzenie dwóch skanów ścięło ruch tego przebiegu z 23 wierszy do 12.
+
+**Resztka nie jest rozłożona równo i to jest użyteczna wiedza:** z dziesięciu ruchów **trzy to
+serwery MCP**, które odpowiadają na jednym przebiegu i milczą na drugim (`chargebee.com`,
+`kinde.com`, `medusajs.com`), a **trzy to jeden dostawca** (`planetscale.com`), któremu raz
+znajdujemy stronę rejestracji, a raz nie, co rusza trzy jego checki naraz. Reszta to pojedyncze
+strony dokumentacji, które raz odpowiadają, a raz nie.
+
+Wniosek na przyszłość: **poprawa stabilności odkrywania strony rejestracji i sondowania MCP zbije
+podłogę szumu bardziej niż jakakolwiek zmiana reguły**, bo sześć z dziesięciu ruchów siedzi
+w tych dwóch miejscach.
 
 ## Runda 2026-08-12 (129): audyt oskarżył stronę, która miała rację, i pokazał dwie prawdziwe dziury
 
