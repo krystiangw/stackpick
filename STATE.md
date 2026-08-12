@@ -9,15 +9,11 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 
 ## W locie w tej chwili (2026-08-12, noc)
 
-**Nic nie leci.** Formuła **8.8**, korpus w całości na 8.8, audyt czysty, drzewo czyste
-i wypchnięte. Podłoga szumu przemierzona (runda 130): **0,39 procent** na przebiegu, który
-ponawia ucięte skany; `/methodology` podaje trzy pomiary i zostawia 0,64 jako podłogę.
-
-**Najwyższa nieukończona pozycja merytoryczna** (z rundy 130): sześć z dziesięciu ruchów podłogi
-siedzi w **dwóch niestabilnych miejscach** - sondowaniu MCP (trzy wiersze) i odkrywaniu strony
-rejestracji (`planetscale.com`, trzy checki naraz). Stabilizacja tych dwóch zbije szum bardziej
-niż jakakolwiek zmiana reguły. Zacznij od zmierzenia, **ile razy z pięciu skanów** ten sam adres
-MCP odpowiada, bo dziś nie wiemy, czy to sieć, czy nasz sposób pytania.
+**Nic nie leci, ale korpus jest mieszany:** formuła **8.9** jest na produkcji, a wiersze pochodzą
+z 8.8 poza kilkoma przeskanowanymi ręcznie. **Następny krok to reseed 8.9** z przewidywaniem:
+`kinde.com:mcp_present` (fail → unmeasured) i możliwe drobne ruchy tam, gdzie jakiś inny brzeg
+połyka POST-y albo odpowiada 202 inaczej niż kontrolka. Po nim `npm run audit` i
+`npm run diff-corpus /tmp/corpus-floor-before.json -- --expect kinde.com:mcp_present`.
 
 Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-8.8.json`, `/tmp/corpus-floor-before.json`.
 
@@ -26,7 +22,7 @@ Kopie do porównań: `/tmp/corpus-8.4.json` … `/tmp/corpus-8.8.json`, `/tmp/co
 - Produkt nazywa się **Let Agents In** od 2026-08-10. Domena **nie jest kupiona**, adres to nadal
   `stackpick-f12d13a227ea.herokuapp.com`, a nazwa hosta zostaje świadomie do czasu zakupu.
   User-agent skanera to `LetAgentsIn/1.0`.
-- Formuła **8.8**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
+- Formuła **8.9**, korpus **170 domen w 25 kategoriach**, **15 checków**, **17 punktów na papierze**.
   `npm run audit` pilnuje **17 liczb i 3 twierdzeń nazywających firmy**, przy **0 sprzecznościach**,
   czyli każdą liczbę liczoną z danych, która trafia na publiczną stronę, i trzy zdania obok nich.
 - **Podłoga szumu korpusu: 0,64 procent** (15 zmian na 2338 przy dwóch reseedach bez zmiany reguły).
@@ -331,6 +327,37 @@ których agent nie ma prawa rozstrzygnąć sam.**
    w jednorazowym audycie (ogłoszenie Iterable wprost: „This role is not about one-time audits";
    Scope zrobił 24k MRR w cztery tygodnie na subskrypcji). Dziś sprzedajemy jednorazowy audyt za
    11 000 USD. **Zmiana cennika to decyzja biznesowa, nie naprawa błędu**, więc czeka.
+
+## Runda 2026-08-12 (131): trzy razy pomyliłem się co do kinde, zanim zmierzyłem właściwą rzecz
+
+Sonda MCP odpowiadała za trzy z dziesięciu ruchów podłogi, więc wziąłem ją na warsztat. Droga do
+odpowiedzi jest tu ważniejsza niż sama poprawka, bo **dwie pierwsze hipotezy były błędne i obie
+wyglądały na potwierdzone**.
+
+1. **„To sieć albo wolne serwery".** Pięć sond na adres z tej maszyny: `chargebee`, `kinde`,
+   `medusajs` i cztery kontrolne adresy odpowiadają **5 na 5, identycznie, poniżej sekundy**.
+   Hipoteza obalona.
+2. **„To nasz limit czasu w skanie".** Pięć skanów z dyno: `chargebee` 5 na 5 dobrze,
+   `kinde` **1 na 5**. Po czterech minutach przerwy nadal źle, więc to nie chwilowy limit.
+3. **„To 202, którego nie znamy".** Z dyno `mcp.kinde.com/mcp` odpowiada **202**, a z laptopa
+   **401**. Dopisałem regułę o 202 i **nic to nie dało**, bo kontrolka na nieistniejącej ścieżce
+   też odpowiada 202. Reguła o 202 została (jest poprawna, gdy kontrolka mówi co innego), ale
+   diagnoza była zła.
+4. **Prawdziwa przyczyna:** brzeg kinde **połyka każdy POST z naszej sieci**, odpowiadając 202
+   z **zerowym ciałem**, i robi to na ścieżce MCP, na ścieżce, której nikt nie zarejestrował,
+   **oraz na nieistniejącej subdomenie**. Nie zmierzyliśmy niczego, a publikowaliśmy
+   „No MCP surface: nothing answered at six addresses", czyli twierdzenie o ich produkcie zrobione
+   z pomiaru ich brzegu.
+
+Formuła **8.9**: taki przypadek jest teraz **niemierzalny** i wypada z mianownika, dokładnie jak
+odmowa, która dotyka tak samo przeglądarki jak agenta. Sprawdzone na produkcji: `kinde.com` czyta
+„every JSON-RPC POST we sent came back with an empty 2xx, including one to a path nobody
+registered", a `chargebee.com` dalej „Live MCP endpoint".
+
+**Poprawka do poprawki, warta zapamiętania:** pierwsza wersja flagi nie zapaliła się nigdy, bo
+patrzyła tylko na kontrolkę per-ścieżka, a host połykający POST-y dyskredytuje kandydata już na
+regule wildcard, zanim ta kontrolka w ogóle poleci. Sprawdzenie „czy na pewno zadziałało"
+kosztowało jeden skan i było jedyną rzeczą, która to wychwyciła.
 
 ## Runda 2026-08-12 (130): podłoga szumu przemierzona po naprawie naszego zegara
 
