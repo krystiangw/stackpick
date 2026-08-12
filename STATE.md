@@ -9,14 +9,22 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 
 ## W locie w tej chwili (2026-08-12, przed południem) - DOMENA KUPOWANA, KORPUS NA 9.1
 
-**Leci reseed korpusu na formułę 9.1** (dwa przebiegi, log w scratchpadzie `reseed-9.1.log`).
-Po nim: `npm run diff-corpus before-9.1.json --expect porkbun.com:machine_readable_api,postmarkapp.com:machine_readable_api`
-i `npm run audit`. Przewidywanie zapisane **przed** reseedem, patrz runda 142.
+**Korpus jest na 9.1, zweryfikowany i czysty** (170 wierszy, 0 sprzeczności, ruch 0,35 procent
+w granicach szumu). Runda 142 opisuje regułę i pomiar.
 
-**Domena: Krystian jest w koszyku Porkbuna**, `letagentsin.com` za 10,08 USD (odnowienie 11,08,
-WHOIS privacy gratis). Rekomendacja oparta na trzech rzeczach, których nasz skan nie mierzy:
-**ALIAS na apex** (twardy wymóg Heroku, bo apeksu nie wskażesz CNAME-em), cena rejestracji równa
-cenie odnowienia, prywatność w cenie. Odrzucone: `.net` w pakiecie, hosting, e-mail, SSL.
+**DOMENA KUPIONA: `letagentsin.com`, Porkbun, 2026-08-12 09:20:12Z**, wygasa 2027-08-12,
+auto-renew ON, blokada transferu ON, WHOIS privacy działa. Odnowienie 11,08 USD.
+
+**Stan podłączania (blokada: rekordy DNS po stronie Krystiana):**
+- ✅ obie nazwy dodane do Heroku. Cele DNS, **różne dla apeksu i www**:
+  - `ALIAS` @ → `secure-lizard-r4n06y4pnhu02fpb5i4gcsjy.herokudns.com`
+  - `CNAME` www → `trapezoidal-junglefowl-mz9dvzld86acoc4fmkglhens.herokudns.com`
+- ⏳ w Porkbunie trzeba **skasować pięć rekordów parkingowych** (`A` na 207.207.210.36 i .50)
+  **oraz URL FORWARDING**, które jest „Configured" i przywróci parking, jeśli zostanie.
+- ⏳ opcja szybsza: Krystian włącza `API ACCESS` i zapisuje klucze do `.env.local`
+  (`PORKBUN_API_KEY`, `PORKBUN_SECRET_KEY`), wtedy DNS ustawia agent i sam weryfikuje.
+- ⏳ potem: ACM, `STACKPICK_BASE_URL`, `BASE` w `reseed.sh`, **drugi reseed** (user-agent skanera
+  jest cytowany w zdaniach o odmowach), nadawca w Resend, nasz własny wiersz w korpusie.
 
 **Podział pracy jest tu sztywny:** zakup domeny to wpisanie danych karty, czego **agent nie robi
 i nie będzie robił**. Ja przygotowuję wszystko dookoła, klika Krystian.
@@ -380,6 +388,17 @@ dodatkowych żądań na domenę.
 rozwiązać" zobaczyłem, że `javascript:alert(1)` **rozwiązuje się bez błędu** i poszedłby prosto
 do `fetchUrl`. Stąd filtr na schemat. To jest argument za pisaniem przypadków, które mają **nie**
 trafić, a nie tylko tych, które mają.
+
+**Weryfikacja po reseedzie: 9.0 → 9.1, 2550 werdyktów, ruszyło 9 (0,35 procent), w normie
+podłogi szumu (0,20-0,64).** Z przewidywanych dwóch potwierdził się **jeden**: `porkbun.com`
+fail → pass. `postmarkapp.com` **nie ruszył i to nie jest kontrprzykład**: w tym samym przebiegu
+jego dwa inne checki zeszły do „niemierzalne" z powodu **429, czyli naszej własnej serii żądań**,
+więc strona docs nie odpowiedziała i nie było czego czytać. Skan pojedynczy, poza serią,
+potwierdza regułę: `OpenAPI at https://postmarkapp.com/swagger/server.yml, which your docs page
+declares with rel="service-desc"`. Wiersz doskanowany osobno przez konsolę produkcyjną.
+**Do zapamiętania: reseed sam sobie robi rate limit i to podszywa się pod porażkę reguły.**
+Audyt po wszystkim: 170 wierszy na 9.1, 0 sprzeczności, 17 liczb i 3 twierdzenia o nazwanych
+dostawcach zgodne z danymi.
 
 **Znalezione przy okazji, do następnej rundy, z dowodami:** `porkbun.com` linkuje `/account`,
 a rejestracja stoi pod `/account/create` (200, formularz w serwerowym HTML, **Turnstile i
