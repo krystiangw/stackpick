@@ -14,15 +14,20 @@ export type RankedEntry = {
 }
 
 /**
- * How much of the seventeen-point card has to be reachable before a share is ranked against the
- * others. Three quarters of it.
+ * How much of the seventeen-point card has to have been readable before a share is ranked
+ * against the others. Three quarters of it.
  *
  * Without a floor, refusing our requests is a way to win. bitmovin.com answers our user-agent
  * with a 403 and a JavaScript challenge, which left eleven checks measurable instead of sixteen,
  * and 9 of 11 put it top of Video hosting and streaming on 2026-08-12, above vendors we could
- * read in full. A share is only a comparison when both sides were measured to a similar depth,
- * so shallow rows are still published and still linked, and they sit below the comparable ones
- * with the reason printed rather than silently leading a category.
+ * read in full. A share is only a comparison when both sides were measured to a similar depth.
+ *
+ * Counted against what we could not read, never against what does not apply. Those are two
+ * different denominators wearing the same number: prosemirror.net is an open-source library with
+ * no account to make and no key to issue, so four of its checks are not questions about it at
+ * all, and its 4 of 10 is a complete measurement. The first version of this floor read the
+ * denominator alone and marked the whole editor category unreliable, which was a worse mistake
+ * than the one it fixed.
  */
 export const RANKABLE_MEASURABLE = 13
 
@@ -90,13 +95,14 @@ export async function loadRankings(): Promise<RankingsView> {
       .filter((report): report is Report => Boolean(report))
       .map((report) => {
         const max = report.scorecard.measurable ?? report.scorecard.max
+        const doesNotApply = report.scorecard.checks.filter((check) => check.notApplicable).length
         return {
           domain: report.domain,
           total: report.scorecard.total,
           max,
           reportId: report.id,
           stages: report.scorecard.stages,
-          undermeasured: max < RANKABLE_MEASURABLE,
+          undermeasured: max + doesNotApply < RANKABLE_MEASURABLE,
         }
       })
       // A site that refuses our requests scores against a smaller denominator, not a worse

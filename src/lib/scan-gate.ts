@@ -46,7 +46,12 @@ export async function bestExample(): Promise<ExampleReport | null> {
   // The same floor the rankings use, and for the same reason: the highest share we hold is
   // otherwise likely to be a domain that refused most of the card. "Look what good looks like"
   // has to point at a domain we could actually read.
-  const deep = all.filter((report) => (report.scorecard.measurable ?? report.scorecard.max) >= RANKABLE_MEASURABLE)
+  const deep = all.filter(
+    (report) =>
+      (report.scorecard.measurable ?? report.scorecard.max) +
+        report.scorecard.checks.filter((check) => check.notApplicable).length >=
+      RANKABLE_MEASURABLE,
+  )
   const reports = deep.length > 0 ? deep : all
   const best = reports.reduce<Report | null>((held, report) => {
     if (!held) return report

@@ -38,10 +38,11 @@ export function Rankings({ rankings }: { rankings: RankedCategory[] }) {
           small one is easier to win. Marked and sorted last rather than removed: the measurement
           happened and the row is real, it just is not a comparison. */}
       <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-faint">
-        A score marked <span className="font-mono">*</span> comes from a domain where too little of the card
-        was reachable to compare it with the rest, usually because the site refused us. Those sit at the
-        bottom of their category whatever the percentage says, so that blocking the scanner cannot be a way
-        to lead it.
+        A score marked <span className="font-mono">*</span> comes from a domain where too much of the card
+        was unreadable to compare it with the rest, which almost always means the site refused us. Checks
+        that simply do not apply, like an account on a library you install rather than sign up for, are not
+        counted against it. Those rows sit at the bottom of their category whatever the percentage says, so
+        that blocking the scanner cannot be a way to lead it.
       </p>
 
       <div className="mt-10 grid gap-10 md:grid-cols-2">
@@ -71,7 +72,7 @@ export function Rankings({ rankings }: { rankings: RankedCategory[] }) {
                       className={`w-10 text-right font-mono text-xs tabular-nums ${entry.undermeasured ? 'text-ink-faint' : ''}`}
                       title={
                         entry.undermeasured
-                          ? 'Too little of the card was reachable here to compare this share with the others'
+                          ? 'Too much of the card was unreadable here to compare this share with the others'
                           : undefined
                       }
                     >

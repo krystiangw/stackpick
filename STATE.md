@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-12 (wieczor, formula 9.2, wlasna domena, monitoring)
+# Let Agents In: stan na 2026-08-12 (noc, formula 9.3, weekend autonomiczny)
 
 Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
 **Dwie sekcje na dole tego bloku, "Co zostało z audytów" i "Następne kroki merytoryczne", są
@@ -7,44 +7,103 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
-## W locie w tej chwili (2026-08-12, po poludniu) - NIC NIE LECI, NASTEPNY KROK: PLATNOSCI
+## W locie w tej chwili (2026-08-12, noc) - LECI RESEED NA 9.3
 
-**Wszystko wypchniete, drzewo czyste, produkcja zdrowa, korpus 170 wierszy na 9.2, audyt czysty.**
+**Krystian wyjechal na weekend i zlecil prace autonomiczna do poniedzialku.** Cel, jego slowami:
+"poprawa jakosci danych az do zadowalajacych efektow" i "musimy byc gotowi na prawdziwych
+klientow". Watchdog chodzi co 30 minut (`CronCreate`, wygasa po 7 dniach).
 
-**Dzien w skrocie:** kupiona i podlaczona domena `letagentsin.com` (Porkbun, ALIAS na apeksie,
-ACM), przeniesione wszystkie publikowane adresy, poczta wychodzaca zweryfikowana w Resendzie
-(DKIM i SPF na `send.`, wysylka sprawdzona end-to-end przez wlasny `/api/lead`), `hello@`
-przekierowany, prywatny Gmail zdjety z 11 miejsc, Search Console zweryfikowana i sitemap
-zgloszony, 170 stron `/v/<domena>` opublikowanych, monitoring zbudowany i dzialajacy,
-audyt UX w przegladarce z pieciooma naprawami. Rundy 143-145.
+**LECI TERAZ: reseed 170 domen na formule 9.3**, log w scratchpadzie sesji
+(`reseed-9.3.log`), dwa przebiegi, okolo 3-4 godzin. Migawka przed reseedem lezy jako
+`before-9.2.json`, przewidywanie jako `expect-9.3.txt`. **Po reseedzie: `npm run diff-corpus
+before-9.2.json --expect "$(cat expect-9.3.txt)"`, potem `npm run audit`.**
 
-**NASTEPNY KROK: platnosci.** Decyzja cennikowa zapadla (**monitoring 99 USD/mies. za domene**,
-runda 144), kod monitoringu dziala i **jest dzis darmowy, co strona mowi wprost**. Brakuje
-tylko pobierania pieniedzy.
+**NIE WDRAZAJ nic w trakcie reseedu.** Commit `3340c56` (szersza kwalifikacja stron
+dokumentacji) czeka niewdrozony wlasnie dlatego: reseed mierzy kod, ktory stoi na produkcji.
+Kolejnosc: reseed konczy sie, diff sie zgadza, dopiero wtedy deploy i **drugi** reseed.
+
+**Zrobione tej nocy i na produkcji (rundy 146-148):**
+- **Naglowek landingu** mowi wreszcie, czym to jest: "Find out where an AI agent gets stuck on
+  your product, before it quietly picks somebody else". Poprzedni byl teza o biznesie czytelnika,
+  nie opisem produktu. Prosba Krystiana.
+- **Cennik przestal straszyc.** Bylo 2 900 i 11 000 USD wielka czcionka na gorze strony. Jest
+  0 USD (skan), 99 USD/mies. (monitoring, dzis darmowy i tak napisane) i audyt "po rozmowie".
+  Monitoring jest teraz produktem platnym, ma formularz na landingu (`#watch`) i na stronie
+  raportu po wyslaniu scorecardu. Druga prosba Krystiana.
+- **Cron monitoringu wreszcie kogos ma.** GitHub Actions `.github/workflows/watch.yml`, codziennie
+  4:17, petla az `remaining` spadnie do zera. Sekret `STACKPICK_CRON_TOKEN` ustawiony przez
+  `gh secret set`. Sprawdzone: przeskanowal `stripe.com` i `vercel.com`. **Dodatek Heroku
+  Scheduler zostal zalozony i jest nieuzywany** (`scheduler-perpendicular-66235`), do skasowania.
+- **Cala petla monitoringu przetestowana end to end** na `gwizdala.kr+watchtest@` i
+  `+stoptest@`: formularz, mail, potwierdzenie, przeskan, wypisanie sie. Dziala.
+- **Cache korpusu** (`src/lib/published.ts`, 5 minut, wspoldzielony in-flight). Landing jest
+  `force-dynamic` i czytal caly korpus przy kazdym wejsciu, co jest dokladnie mechanizmem
+  awarii z 12.08.
+- **Podloga porownywalnosci w rankingu** (`RANKABLE_MEASURABLE = 13`). Znaleziony realny blad:
+  **bitmovin.com prowadzil w swojej kategorii, bo blokuje nasz skaner**. Odmowa zmniejsza
+  mianownik, mniejszy mianownik podbija procent. Blokowanie skanera nie moze byc sposobem na
+  wygranie rankingu.
+- **Sciezka sprostowania** na kazdej stronie `/v/<domena>`.
+
+**Trzy audyty regulek przez subagentow (to byl glowny wysilek nocy).** Kazdy dostal liste
+opublikowanych oskarzen i weryfikowal je recznie curlem przeciwko zywym stronom:
+1. **`docs_without_js` + krawedz**: 11 potwierdzonych, 3 blednych, 8 niesprawiedliwych.
+2. **`signup_reachable`** (88 oskarzen): zdanie prawdziwe we **wszystkich 88** (regula odtworzona
+   niezaleznie w Pythonie), ale 2 pudla w wyszukiwaniu i 15-25 wierszy wskazuje URL, ktory nie
+   jest rejestracja tej firmy.
+3. **`programmatic_provisioning`** (77 oskarzen): **okolo 50 prawdopodobnie blednych**. Argument
+   nie wymaga oceny per firma: w 9 z 15 sprawdzonych skan nie otworzyl **zadnej** strony, ktorej
+   adres zawiera slowo o kluczach.
+
+**Co z tego weszlo do formuly 9.3:**
+- `llms_txt`: jeden martwy link na dwanascie nie kasuje juz punktu (12 z 19 dostawcow z plikiem
+  stalo rowno z tymi, ktorzy nie maja nic).
+- `answers_plain_request`: strony z challenge sa teraz pytane jako ChatGPT-User i Claude-User,
+  zanim napiszemy "no agent reaches the site at all". **bitmovin.com** dostawal to zdanie i jest
+  ono falszywe: jego krawedz serwuje nazwanym agentom 15 tys. znakow.
+- `docs_without_js`: prog skorupy 2000 -> 500 znakow. Prawdziwe skorupy w korpusie maja 31-126
+  znakow, najmniejsza niesluszne oblana strona 647.
+- `user_agents_allowed`: 404 przestal byc odmowa (`isEdgeRefusal`). workos.com byl oskarzony o
+  blokowanie agentow na podstawie jednego brakujacego indeksu.
+- `signup_reachable`: kandydat wybierany po tym, czy renderuje formularz, a nie po kolejnosci w
+  dokumencie (cronofy.com). Szersze hinty: `register_free`, `/users/new`, `serverless-registration`,
+  strony trialowe. Poprawione `why`, ktore obiecywalo porownanie z przegladarka, ktorego ten
+  check nie robi.
+- `programmatic_provisioning`: jesli **zadna** przeczytana strona nie jest o kluczach, check jest
+  niemierzalny zamiast obliczony na zero. Osobno usuniete slowo `request` z markera programowego,
+  bo przepuszczalo plausible.io, ktorego klucze sa wylacznie z panelu.
+
+**Kazda z tych regul ma test w `scripts/rules.mts`**, ktory oblewa build, jesli regula przestanie
+sie tak zachowywac.
+
+**NASTEPNY KROK po reseedzie:** zweryfikowac przewidywanie, wdrozyc `3340c56`, zrobic drugi
+reseed, i dopiero wtedy brac kolejna pozycje.
 
 **Blokada na Krystianie, decyzja ksiegowa a nie techniczna: Stripe czy Paddle.**
 - **Stripe:** uruchamiam od reki, ale **VAT OSS od klientow z UE rozliczasz sam**.
 - **Paddle:** sprzedawca formalny, zdejmuje VAT calkowicie, wyzsza prowizja, **weryfikacja
   konta trwa kilka dni**.
 Po decyzji: Checkout, webhook ustawiajacy `plan: 'paid'` i `subscriptionId` na `Watch`
-(pola juz istnieja w `src/lib/watch.ts`), oraz przepisanie `/pricing` na trzy poziomy.
-
-**Druga rzecz do zrobienia bez pytania nikogo: cron nie jest jeszcze uruchomiony.**
-`/api/cron/watch` dziala i jest chroniony `STACKPICK_CRON_TOKEN` (ustawiony na Heroku), ale
-**nikt go nie wola**. Skanuje jedna domene na wywolanie. Do wyboru: Heroku Scheduler (dodatek,
-nie ma go jeszcze) albo cron po stronie maszyny Krystiana.
+(pola juz istnieja w `src/lib/watch.ts`). Monitoring jest dzis darmowy i strona to mowi, wiec
+to **nie blokuje** przyjmowania prawdziwych uzytkownikow.
 
 **Otwarte, mniejsze:**
-- **Jedno dyno to jedyny serwer.** Crawler Meta polozyl je dzis raz. `robots.txt` i cache
-  zalatwily objaw; przy realnym ruchu trzeba bedzie drugiego (koszt).
-- **Widok mobilny niesprawdzony.** Rozszerzenie do Chrome robi zrzuty w stalej szerokosci
-  niezaleznie od rozmiaru okna, wiec audyt UX zweryfikowal tylko desktop.
+- **Jedno dyno to jedyny serwer.** Cache korpusu zdjal najgorszy przypadek, ale przy realnym
+  ruchu trzeba bedzie drugiego (koszt).
+- **Widok mobilny niesprawdzony.**
 - **Nie mierzymy, czy strona uniesie crawl.** Dajemy punkt za brak `Crawl-delay` nie sprawdzajac
-  wydajnosci. Kandydat na dyskusje o formule, nie na szybka regule.
+  wydajnosci.
+- **Reszta rekomendacji z audytow, niezrobiona:** wybor hosta dokumentacji (docs.<domena>, ktory
+  jest pusta skorupa, wygrywa z prawdziwa dokumentacja: crowdin.com, scrapingbee.com);
+  probkowanie stron dla `docs_without_js` dziedziczone po hintach pisanych dla provisioningu;
+  llms.txt jako indeks stron do czytania (Modal wskazuje w nim dokladnie te strone, ktorej nam
+  brakuje); potwierdzanie odmowy na drugim URL-u; szersze wzorce provisioningu (lista konkretnych
+  regexow jest w raporcie subagenta, nie zostala wpisana do kodu).
 
-**Pomiarowa lekcja o kosztach (nowa, 2026-08-12):** audyt w przegladarce to **najdrozsza rzecz,
-jaka robimy kontekstowo**. Zrzuty ekranu z `browser_batch` zjadly ~390k tokenow, czyli 39
-procent okna, w kilkanascie wywolan. Robic go celowo i krotko, nie eksploracyjnie.
+**Pomiarowa lekcja o kosztach (2026-08-12):** audyt w przegladarce to **najdrozsza rzecz, jaka
+robimy kontekstowo**. Zrzuty z `browser_batch` zjadly ~390k tokenow, 39 procent okna, w
+kilkanascie wywolan. Subagenci sa duzo tansi: trzy audyty regulek kosztowaly lacznie ~400k
+tokenow **ich** kontekstu, a do mnie wrocily trzy raporty po kilka tysiecy.
 
 ## Stan na teraz, w dziesięciu liniach
 
