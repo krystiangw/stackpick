@@ -148,8 +148,12 @@ const oneAway = corpus.rows.filter((row) => {
   return legs.every((leg) => leg.known) && legs.filter((leg) => !leg.met).length === 1
 }).length
 
+// Two sentences describe a file with dead entries now that one dead link no longer costs the
+// point: the failing one ends "are gone, starting with", the passing one "One is gone:". The
+// guard read only the first and reported the page as adrift while the page was right, which is
+// the failure mode that teaches you to stop believing the guard.
 const staleLlms = corpus.rows.filter((row) =>
-  /links we sampled[^.]*are gone/.test(row.checks.find((check) => check.id === 'llms_txt')?.detail ?? ''),
+  /links we sampled[^.]*are gone|One is gone:/.test(row.checks.find((check) => check.id === 'llms_txt')?.detail ?? ''),
 ).length
 const cloaked = corpus.rows.filter((row) =>
   /percent less text/.test(row.checks.find((check) => check.id === 'docs_without_js')?.detail ?? ''),
