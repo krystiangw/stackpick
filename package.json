@@ -18,7 +18,8 @@
     "typecheck": "tsc --noEmit",
     "rules": "tsx scripts/rules.mts",
     "diff-corpus": "tsx scripts/diff-corpus.mts",
-    "routing-fresh": "tsx scripts/routing-fresh.mts"
+    "routing-fresh": "tsx scripts/routing-fresh.mts",
+    "audit-remedies": "tsx scripts/audit-remedies.mts"
   },
   "dependencies": {
     "mongodb": "^7.5.0",

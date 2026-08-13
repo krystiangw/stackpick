@@ -761,9 +761,27 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
 
   **Nietknięte i warte ataku:** reguła `browser-only` w MCP (wprowadzona po jednym przypadku,
   `njal.la`, i nigdy nie sprawdzona na innych), sondowanie `/api/mcp` poza tym jednym wierszem,
-  rozgałęzione `REMEDIES` w `fixfirst.ts` (pięć rad przepisanych jednej nocy, żadna nie
-  zweryfikowana na vendorze, którego dotyczy), oraz `find_providers` na **świeżych** pytaniach,
+  ~~rozgałęzione `REMEDIES` w `fixfirst.ts`~~ **zrobione 2026-08-13, patrz niżej**,
+  oraz `find_providers` na **świeżych** pytaniach,
   bo oba istniejące zestawy są spalone dostrajaniem.
+
+- ~~**Rozgałęzione `REMEDIES`**~~ **zrobione 2026-08-13.** `npm run audit-remedies` generuje radę
+  dla każdego vendora z żywego korpusu i **grupuje po zdaniu, nie po checku**: dopiero to pokazuje
+  gałąź, której nikt nigdy nie wziął, a to inne ryzyko niż gałąź błędna. Dwa znaleziska, oba tego
+  samego kształtu co dwa błędy zgłoszone wcześniej przez czytelników, czyli rada sprzeczna
+  z werdyktem obok:
+  - **`signup_reachable`, 85 vendorów**: zdanie kończyło się „and stop refusing non-browser
+    requests to it", a 84 z 85 odpowiada 200 i jest osiągalnych. Nikt niczego nie odmawia.
+    Komentarz przy samym checku mówi to od 9.2 („none of them was a 403"), rada trzy linijki niżej
+    mówiła coś przeciwnego. Tania gałąź wysiłku była **martwa z konstrukcji**: formularz renderujący
+    się bez JS zalicza check, więc `minutes` nie da się osiągnąć z wiersza, który oblewa.
+  - **`answers_plain_request`, 3 vendorów**: contentful.com i pandadoc.com dostają 429 i dają 429
+    przeglądarce, namecheap.com 403 do obu. Rada nazywała regułę wymierzoną w agenty, której dane
+    nie pokazują, i kazała firmie **już zwracającej 429** „rate limit instead of refusing".
+  - Predykcja zapisana przed zmianą i trafiona: 85 z 85 i 3 z 3 zmienia zdanie, **żaden wysiłek się
+    nie rusza**, więc żaden plan nie zmienia kolejności i żaden wynik nie drgnął.
+  - Rady **nie miały żadnych testów**. Obie poprawione gałęzie są przypięte w `scripts/rules.mts`
+    i oba asserty sprawdzone na czerwono wobec zdań, które zastępują.
 
 - **Dwunasty przebieg adwersaryjny, do zrobienia.** Powierzchnie, których jedenasty nie ruszył,
   w kolejności wagi:
