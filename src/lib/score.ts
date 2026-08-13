@@ -11,7 +11,7 @@ import type { ScanFindings } from './scan'
  * what this constant exists to prevent, and the cost of being wrong about that is a vendor who
  * cannot reproduce a number we published about them.
  */
-export const FORMULA_VERSION = '9.6'
+export const FORMULA_VERSION = '9.7'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1

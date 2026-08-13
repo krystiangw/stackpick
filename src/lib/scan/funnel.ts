@@ -735,11 +735,17 @@ function visibleText(html: string): string {
 }
 
 /**
- * Tags that end a thought. A list item is not a clause of the list item above it, and a table
- * cell is not a clause of the one beside it.
+ * Tags that end a thought. Deliberately only the ones that build lists, menus and tables: a list
+ * item is not a clause of the list item above it, and a table cell is not a clause of the one
+ * beside it.
+ *
+ * Paragraphs, divs and headings were in here for one reseed and the corpus said no. A heading is
+ * not a boundary, it is the subject of the sentence under it: mux.com's reference puts "Create a
+ * signing key" in a heading and `POST /system/v1/signing-keys` in the body below, telnyx.com and
+ * stytch.com do the same on their key pages, and cutting between them lost four vendors who
+ * document exactly what we were asking about. Menus are lists; documentation is not.
  */
-const BLOCK_BOUNDARY =
-  /<\/?(?:li|p|div|br|hr|h[1-6]|td|th|tr|section|article|nav|header|footer|aside|dt|dd|option|figcaption|blockquote|form|label|summary)\b[^>]*>/gi
+const BLOCK_BOUNDARY = /<\/?(?:li|td|th|tr|option|dt|dd|nav|menu)\b[^>]*>/gi
 
 /**
  * The same reduction as visibleText, except that block boundaries become full stops.

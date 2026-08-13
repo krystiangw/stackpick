@@ -400,6 +400,11 @@ check('zdanie nadal jest zdaniem', provisioningMatches(realSentence).length > 0,
 // Two list items whose words would form a false sentence if run together.
 const dashboardList = `<ul><li>Click Generate key in the dashboard.</li><li>Management API</li></ul>`
 check('dwie pozycje listy to nie jedno zdanie', provisioningMatches(dashboardList).includes('management api'), true)
+// A heading is not a boundary, it is the subject of the sentence under it. mux.com, telnyx.com
+// and stytch.com all document key creation this way, and a reseed with headings as boundaries
+// lost every one of them.
+const headingThenBody = '<h2>Create a signing key</h2><p>Send a POST to /system/v1/signing-keys.</p>'
+check('naglowek i jego tresc to jedno', provisioningMatches(headingThenBody).length > 0, true)
 
 console.log('wybor stron dokumentacji, czyli czego w ogole nie mozemy przeczytac')
 const eligible = (path: string) => CREDENTIAL_PAGE_HINTS.test(path)
