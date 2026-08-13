@@ -14,6 +14,13 @@ Strona, korpus i skanowanie dzialaja; nic sie nie zapisuje i kazda sciezka mowi 
 
 ### 1. Baza (blokuje wszystko inne) - REKOMENDACJA ZMIENIONA 13.08 rano
 
+**Blokada wrocila DRUGI raz w polowie reseedu, 13.08 po poludniu.** Zapisy ustapily same,
+ruszyl pelny reseed na 9.11, **zapisalo sie 45 z 181 domen i 41 dostalo NOT SAVED**. Korpus jest
+teraz rozbity na trzy wersje formuly, a publikujemy wersje wiekszosciowa, wiec strona pokazuje
+**87 ze 181 vendorow**. Strona mowi o tym wprost („we hold 170; the rest are waiting for a rescan"),
+wiec nie klamie, ale to jest polowa produktu. **Decyzja jest na boardzie jako zadanie #42.**
+Nie uruchamiaj reseedu ponownie przed rozwiazaniem bazy: kazda proba dokłada rozbicia.
+
 **Blokada NIE jest samonaprawialna, i to jest nowy fakt.** Ustapila na kilkanascie minut, wiec
 uruchomilem reseed odzyskujacy; **wrocila po okolo 1,7 MB zapisow**, czyli po jednym przebiegu.
 Sam czekanie nie wystarczy: kazdy powazniejszy zapis natychmiast zapycha ja z powrotem.
