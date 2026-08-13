@@ -97,11 +97,14 @@ lokalnym skanerem:
 `isEdgeRefusal` przeniesiony do warstwy http, zeby oba wywolania mialy jedna definicje zamiast
 rozjezdzac sie ponownie.
 
+5. **Pliki llms.txt liczyly sie jako "documentation pages"** i przekraczaly bramke `pages >= 2`
+   same z siebie. shopify.com: "none of the 3 documentation pages" obok "no documentation page
+   could be found", oba zbudowane z tych samych trzech plikow. Teraz liczone osobno; grep nadal
+   czyta oba, bo fraza potrafi siedziec w llms-full.txt. Zweryfikowane: shopify mowi to samo co
+   jego wlasny sasiedni werdykt, auth0 nadal przechodzi z "4 documentation pages and 3
+   machine-readable files".
+
 **NIENAPRAWIONE z tego audytu, do zrobienia:**
-- **Pliki llms.txt licza sie jako "documentation pages"** (`documentsRead` w `scan/index.ts`).
-  shopify.com: "none of the 3 documentation pages" obok "no documentation page could be found".
-  Gorsze niz zdanie: **bramka `pages >= 2` da sie przekroczyc samym llms.txt + llms-full.txt.**
-  Dotyczy licznika we wszystkich 55 scoreowanych wierszach.
 - **`rateLimited` w korpusie jest false na wierszach cytujacych 429** (4 wiersze), a nota wprost
   zaleca konsumentom filtrowanie po tym polu. Liczone tylko z door-testu.
 - **`measuredOn: null`, gdy scoreowany URL jest na innej domenie rejestrowalnej** (dropboxsign.com
