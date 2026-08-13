@@ -49,7 +49,17 @@ async function collections(): Promise<{
     watches.createIndex({ checkedAt: 1 }),
     // Mongo expires them, so nothing here has to remember to.
     answers.createIndex({ at: 1 }, { expireAfterSeconds: REGISTRY_TTL_MS / 1000 }),
-  ]).then(() => undefined)
+  ])
+    .then(() => undefined)
+    // Creating an index is a write, and awaiting it made every read depend on the cluster
+    // accepting writes. On 2026-08-13 the cluster hit its quota and refused them, so reading one
+    // report failed, the health check failed, prerendering /methodology failed, and the build
+    // itself would not compile: a full outage caused by a startup nicety for indexes that have
+    // existed for months. They are created once per process and are idempotent, so a failure
+    // here is worth a line in the log and nothing more.
+    .catch((error) => {
+      console.error('indexes not created, continuing without them', (error as Error).message)
+    })
   await indexesReady
 
   return { reports, leads, answers, visits, watches }
