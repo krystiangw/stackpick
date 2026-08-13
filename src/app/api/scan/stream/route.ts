@@ -65,7 +65,21 @@ export async function POST(request: Request) {
           findings,
           scorecard,
         }
-        await getStore().saveReport(report)
+        // The measurement is finished by here and storing it is what gives it an address. When the
+        // cluster stopped accepting writes, this threw into the catch below and the page showed all
+        // five steps completing and then "The scan failed. Try again in a moment.", which is false
+        // twice: it did not fail, and trying again will not help. The number is theirs either way.
+        const measurable = scorecard.measurable ?? scorecard.max
+        try {
+          await getStore().saveReport(report)
+        } catch (error) {
+          console.error('stream scan ran but could not be saved', error)
+          send('failed', {
+            error: `${report.domain} scored ${scorecard.total} of ${measurable}, and we could not store the result, so it has no page. That is our problem and not yours: write to hello@letagentsin.com and we will send it to you.`,
+          })
+          controller.close()
+          return
+        }
         send('done', { id: report.id, domain: report.domain, total: scorecard.total, max: scorecard.max })
       } catch (error) {
         const message =
