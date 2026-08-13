@@ -50,13 +50,22 @@ export async function POST(request: Request) {
     } catch {
       return NextResponse.json({ error: 'That does not look like a domain.' }, { status: 400 })
     }
-    await store.saveLead({
-      email: body.email,
-      domain,
-      reportId: '',
-      createdAt: new Date().toISOString(),
-      source: body.source ?? 'unknown',
-    })
+    // Nothing to send here, so a failed write is the whole transaction and has to be said.
+    try {
+      await store.saveLead({
+        email: body.email,
+        domain,
+        reportId: '',
+        createdAt: new Date().toISOString(),
+        source: body.source ?? 'unknown',
+      })
+    } catch (error) {
+      console.error('queued lead could not be recorded', error)
+      return NextResponse.json(
+        { error: 'We could not record it, which is our problem and not yours. Write to hello@letagentsin.com.' },
+        { status: 503 },
+      )
+    }
     return NextResponse.json({ ok: true, delivered: false, queued: true })
   }
 
@@ -65,13 +74,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'That report no longer exists. Run the scan again.' }, { status: 404 })
   }
 
-  await store.saveLead({
-    email: body.email,
-    domain: report.domain,
-    reportId: report.id,
-    createdAt: new Date().toISOString(),
-    source: body.source ?? 'unknown',
-  })
+  // Best effort, and deliberately not awaited into the visitor's path. The lead is our record of
+  // them; the scorecard is what they asked for. When the cluster stopped accepting writes this
+  // threw, the route answered 500, and somebody who wanted their own report was told the send had
+  // failed because our CRM row would not save. Their email is the product here, ours is bookkeeping.
+  await store
+    .saveLead({
+      email: body.email,
+      domain: report.domain,
+      reportId: report.id,
+      createdAt: new Date().toISOString(),
+      source: body.source ?? 'unknown',
+    })
+    .catch((error) => console.error('lead not recorded, sending the scorecard anyway', error))
 
   const { subject, text, html } = scorecardEmail(report)
   const result = await sendEmail(body.email, subject, text, html)

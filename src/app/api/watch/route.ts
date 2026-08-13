@@ -50,7 +50,22 @@ export async function POST(request: Request) {
     watch.stoppedAt = null
     watch.confirmedAt = null
   }
-  await store.saveWatch(watch)
+  // Saved before the mail is sent, and the mail is not sent if it was not: a confirmation link
+  // for a row that does not exist is worse than no email, because it fails at the moment someone
+  // decided to trust us. The message says what happened rather than "try again in a moment",
+  // which was a promise we could not keep while the cluster refused writes for hours.
+  try {
+    await store.saveWatch(watch)
+  } catch (error) {
+    console.error('watch could not be saved', error)
+    return NextResponse.json(
+      {
+        error:
+          'We could not record it, which is our problem and not yours. Nothing was signed up and no email was sent. Write to hello@letagentsin.com and we will set it up by hand.',
+      },
+      { status: 503 },
+    )
+  }
 
   const { subject, text } = confirmEmail(watch)
   const sent = await sendEmail(watch.email, subject, text)
