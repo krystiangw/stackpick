@@ -289,8 +289,14 @@ Teraz dostaje swoja liczbe i prawde: *"val.town scored 10 of 16, and we could no
 result, so it has no page. That is our problem and not yours: write to hello@letagentsin.com and
 we will send it to you."* Sprawdzone na produkcji.
 
-Cztery sciezki, ktore w trakcie awarii klamaly, sa juz wszystkie uczciwe: JSON API, zapis na
-monitoring, mail ze scorecardem i teraz strumien. **Wzorzec wart zapamietania: kazda z nich robila
+**Szesc sciezek zapisu, szesc uczciwych odpowiedzi:** JSON API, zapis na monitoring, mail ze
+scorecardem, strumien skanu, **potwierdzenie obserwacji i wypisanie sie**. Dwie ostatnie znalazlem
+czytajac kod, nie testujac: obie pisza do bazy i obie renderowalyby strone bledu. Przy
+potwierdzeniu to czlowiek, ktory wlasnie kliknal nasz link i nie dowiaduje sie, czy zadzialalo.
+Przy **wypisaniu sie jest gorzej**: patrzy na crash i nie wie, czy przestaniemy do niego pisac,
+a to jedyna rzecz, co do ktorej unsubscribe nie moze byc dwuznaczny. Strona wypisania **zaklada
+teraz najgorsze na jego korzysc** ("musimy zalozyc, ze nadal jestes na liscie") i proponuje
+zrobienie tego recznie dzisiaj. **Wzorzec wart zapamietania: kazda z nich robila
 zapis w drodze uzytkownika i zadna nie miala odpowiedzi na nieudany zapis.** Awaria byla lepszym
 audytorem niz cztery audyty, ktore zamowilem.
 
