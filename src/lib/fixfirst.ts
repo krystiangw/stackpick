@@ -42,11 +42,16 @@ type Remedy = {
   how: (findings: ScanFindings, check: ScoredCheck) => string
 }
 
-const REMEDIES: Record<string, Remedy> = {
+export const REMEDIES: Record<string, Remedy> = {
   answers_plain_request: {
     effort: (f) => (f.browserStatus >= 200 && f.browserStatus < 400 ? 'an afternoon' : 'a project'),
+    // "Exempt them from that rule" describes a rule aimed at agents, and on every row failing this
+    // check today the browser is refused with the identical status. Worse, the sentence told two
+    // vendors already answering 429 to "rate limit instead of refusing".
     how: (f) =>
-      `Your public pages answer ${f.browserStatus} to Chrome and ${f.agentStatus} to an agent user-agent. Exempt them from that rule and rate limit instead of refusing.`,
+      f.browserStatus === f.agentStatus
+        ? `Your edge answers ${f.agentStatus} to a browser user-agent as well as to an agent, so this is not a rule aimed at agents: nothing without a JavaScript runtime gets in, from any address like ours. Whatever your bot manager is scoring, it is scoring the request rather than the client.`
+        : `Your public pages answer ${f.browserStatus} to Chrome and ${f.agentStatus} to an agent user-agent. Exempt them from that rule and rate limit instead of refusing.`,
   },
   llms_txt: {
     // Keyed on why the check failed, not on which check failed. It used to tell a vendor whose
@@ -132,11 +137,15 @@ const REMEDIES: Record<string, Remedy> = {
       `Trigger ${f.funnel.signup.captcha[0] ?? 'the challenge'} on a risk signal instead of on every signup, or open an API path to an account. A CAPTCHA is a hard stop, not a speed bump.`,
   },
   signup_reachable: {
-    // A 403 on a page that already has a form is a rule change. A form that only exists
-    // after JavaScript runs is a rewrite, and calling that "an afternoon" was nonsense.
-    effort: (f) => (f.funnel.signup.rendersFormWithoutJs ? 'minutes' : 'a project'),
+    // Neither the cheap effort nor the refusal clause had an addressee, and both survived because
+    // nobody read the advice next to the row it lands on. A form rendering without JavaScript
+    // passes the check, so 'minutes' cannot be reached from here; and every failing row answers
+    // 200 or 202 with reachable=true, so "stop refusing non-browser requests" told 85 vendors to
+    // stop doing something they were not doing. Rows that genuinely refuse us come out
+    // inconclusive, and the fix plan drops inconclusive checks before it gets here.
+    effort: 'a project',
     how: (f) =>
-      `Let ${f.funnel.signup.url ?? 'your signup page'} render its form in server HTML and stop refusing non-browser requests to it.`,
+      `${f.funnel.signup.url ?? 'Your signup page'} answers ${f.funnel.signup.status} and carries no form until a bundle builds one, so an agent that fetches it finds nothing to fill in. Render the fields in server HTML, or open an API path to an account.`,
   },
   programmatic_provisioning: {
     effort: 'an afternoon',

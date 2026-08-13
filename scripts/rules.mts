@@ -7,6 +7,7 @@ import { declaredSpecs } from '../src/lib/scan/machine'
 import { changesBetween, comparableScorecards } from '../src/lib/watch'
 import { CHECKS } from '../src/lib/score'
 import { forStorage } from '../src/lib/store'
+import { REMEDIES } from '../src/lib/fixfirst'
 import { sawRateLimit, otherDomainsNamed } from '../src/lib/corpus'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
 import { rendersUsableForm } from '../src/lib/scan/funnel'
@@ -567,6 +568,31 @@ check('strona o kluczach bije changelog', outranks('/docs/api-keys', '/changelog
 check('changelog i tak jest kandydatem', hintRank('/changelog/new-api-keys-ui') < Number.MAX_SAFE_INTEGER, true)
 check('cudze klucze na koncu', outranks('/changelog/api-keys', '/docs/integrations/aws-api-key'), true)
 
+console.log('rada naprawcza nie moze przeczyc werdyktowi obok')
+// Both bugs this section exists for were reported by readers, not by us: the advice read fine on
+// its own and contradicted the row it sat next to.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const remedy = (id: string, findings: unknown) => REMEDIES[id].how(findings as any, { points: 0 } as any)
+
+const jsOnlySignup = { funnel: { signup: { url: 'https://example.test/signup', status: 200, reachable: true, rendersFormWithoutJs: false } } }
+check(
+  'strona rejestracji odpowiada 200, wiec nikt nie odmawia',
+  remedy('signup_reachable', jsOnlySignup).includes('refus'),
+  false,
+)
+check('mowi za to, czego tam nie ma', remedy('signup_reachable', jsOnlySignup).includes('no form'), true)
+
+// Telling a vendor already answering 429 to "rate limit instead of refusing" was the whole bug.
+check(
+  'ten sam status dla przegladarki i agenta to nie regula wymierzona w agenty',
+  remedy('answers_plain_request', { browserStatus: 429, agentStatus: 429 }).includes('rate limit instead'),
+  false,
+)
+check(
+  'rozne statusy nadal dostaja zdanie o wyjatku',
+  remedy('answers_plain_request', { browserStatus: 200, agentStatus: 403 }).includes('Exempt them'),
+  true,
+)
+
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)
-
