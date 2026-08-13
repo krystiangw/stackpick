@@ -740,7 +740,7 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
    * and only on the sites we are about to accuse.
    */
   const secondDocsPage = deeperDocs.pages.find((page) => page.ok && page.url !== found.docs)
-  const confirmedRefusals = await phase('docs', async () => {
+  const refusalsToPublish = await phase('docs', async () => {
     const refused = docsPage?.ok ? namedCrawlers.filter(({ got }) => isEdgeRefusal(got.status)) : []
     if (refused.length === 0 || !secondDocsPage) return refused.map(({ name, got }) => ({ name, status: got.status }))
     const again = await inParallel(refused, async ({ name, got }) => ({
@@ -797,7 +797,7 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     // Not 429. That is our own load speaking, and the rest of this scanner already says so: a 429
     // makes a check unmeasurable rather than failed. savvycal.com was published as refusing
     // ChatGPT-User on the strength of one, and answers every named agent 200 when asked once.
-    crawlersRefused: confirmedRefusals,
+    crawlersRefused: refusalsToPublish,
     readAnything:
       docsText.length > 0 ||
       machine.findings.hasLlmsTxt ||
