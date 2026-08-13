@@ -196,6 +196,19 @@ export default async function MethodologyPage() {
           unstable network, and together they mean no single row is evidence on its own. Rescan before you
           act on one, and treat the checks above the fold as the durable part.
         </p>
+        {/* Kept as a separate paragraph rather than folded into the figure above it. Averaging a
+            newer pass into an older rate would hide which families have been attacked and which
+            have not, and that is the part a reader needs to weigh a row. */}
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          The most recent pass, on 13 August 2026, checked 282 published verdicts against the live
+          sites by hand and found no errors: every CAPTCHA we name is in the signup page we name it
+          on, every link we call dead answers 404, every domain we say publishes no OAuth metadata
+          publishes none on nine hosts, and every domain we say has no agent entry file has none on
+          nine paths. Each of those probes carries a control that finds the positive case, because a
+          check that can only return “nothing here” proves nothing. That pass does not replace the
+          0.39 percent: it covers the families it covers, and the rate above still stands for the
+          rules it was measured on.
+        </p>
       </section>
 
       <section className="border-b border-rule py-12">
