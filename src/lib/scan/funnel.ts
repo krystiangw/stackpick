@@ -1013,8 +1013,26 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
         .map(controlFor),
     ),
   ]
-  const controls = await inParallel(needsControl, (url) => fetchUrl(url, handshake))
+  // A second control, for the 405 shape only. The unrouted control cannot judge a 405: it answers
+  // 404, or 200 on a single-page app, so it differs from the endpoint either way and the
+  // difference means nothing. The front page is the opposite kind of control, a path that is
+  // certainly routed, and it separates the two cleanly. openrouter.ai, medusajs.com and
+  // posthog.com answer 405 with no Allow header at their own front page, at /docs, /models and
+  // /pricing, because that is what Next.js on Vercel does with a POST to a static route, and all
+  // three were published as running a live MCP server on that signal alone. The three hosts that
+  // really do run one answer their front page 404 or 200, never the endpoint's status.
+  const routedControlFor = (url: string) => `${new URL(url).origin}/`
+  const needsRoutedControl = [
+    ...new Set(
+      candidates.filter((_, index) => results[index].status === 405 && !looksLikeHtml(results[index])).map(routedControlFor),
+    ),
+  ]
+  const [controls, routedControls] = await Promise.all([
+    inParallel(needsControl, (url) => fetchUrl(url, handshake)),
+    inParallel(needsRoutedControl, (url) => fetchUrl(url, handshake)),
+  ])
   const nonsense = new Map(needsControl.map((url, index) => [url, controls[index]]))
+  const routed = new Map(needsRoutedControl.map((url, index) => [url, routedControls[index]]))
 
   const endpoints = results
     .map((got, index) => {
@@ -1048,10 +1066,8 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
       // Allow header at all. A server does not forward its own JSON-RPC POST to somebody else's
       // origin, so a probe that ended up on another origin is reading a documentation page.
       const wrongMethod =
-        got.status === 405 &&
-        !looksLikeHtml(got) &&
-        !/\bGET\b/i.test(got.headers['allow'] ?? '') &&
-        !leftTheEndpoint(candidates[index], got.url)
+        !leftTheEndpoint(candidates[index], got.url) &&
+        methodRefusalIsRouted(got, routed.get(routedControlFor(candidates[index]))?.status)
       const speaksJson = got.ok && (got.headers['content-type'] ?? '').includes('json')
       // A 401 that an unrouted path on the same origin does not get. contentful.com and
       // datadoghq.com both answer their MCP path with {"error":"invalid_token"} and answer a
@@ -1140,6 +1156,28 @@ export type FunnelInput = {
   signupUrl: string | null
   alreadyFetchedPricing?: Fetched | null
   pricesVisibleWithoutJs?: boolean | null
+}
+
+
+/**
+ * Whether a 405 says anything about this path, as opposed to about the framework serving it.
+ *
+ * `frontPageStatus` is the site's own front page answering the same JSON-RPC POST: a path that is
+ * certainly routed, which is what the unrouted control cannot be. Next.js on Vercel answers every
+ * POST to a static route with 405 and no Allow header, so on those sites the signal is the
+ * platform talking and it published three vendors as running an MCP server at a documentation
+ * page. On two of them it also hid the real one, because the docs URL sorted first among the
+ * candidates and took the verdict's address with it.
+ */
+export function methodRefusalIsRouted(
+  got: { status: number; headers: Record<string, string>; body: string },
+  frontPageStatus: number | undefined,
+): boolean {
+  if (got.status !== 405) return false
+  // A page that only serves GET usually says so, and saying so is proof this is an ordinary page.
+  if (/\bGET\b/i.test(got.headers['allow'] ?? '')) return false
+  if (looksLikeHtml(got as Fetched)) return false
+  return frontPageStatus !== got.status
 }
 
 export async function scanFunnel({

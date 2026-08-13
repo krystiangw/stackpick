@@ -13,6 +13,7 @@ import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } fro
 import { rendersUsableForm } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
 import {
+  methodRefusalIsRouted,
   provisioningMatches,
   BOT_DEFENCE_RULES,
   PROVISIONING_RULES,
@@ -593,6 +594,16 @@ check(
   remedy('answers_plain_request', { browserStatus: 200, agentStatus: 403 }).includes('Exempt them'),
   true,
 )
+
+console.log('405 na POST: serwer czy tak dziala ich framework')
+// openrouter.ai, medusajs.com i posthog.com odpowiadaly 405 bez naglowka Allow na /docs, /models,
+// /pricing i na wlasnej stronie glownej. Wszystkie trzy byly opublikowane jako zywy serwer MCP.
+const refusal = (headers: Record<string, string> = {}, body = '{"error":"Method not allowed"}') => ({ status: 405, headers, body })
+check('strona glowna odpowiada tak samo, wiec to framework', methodRefusalIsRouted(refusal(), 405), false)
+check('strona glowna odpowiada inaczej, wiec to ta sciezka', methodRefusalIsRouted(refusal(), 404), true)
+check('zwykla strona mowi Allow: GET', methodRefusalIsRouted(refusal({ allow: 'GET, HEAD' }), 404), false)
+check('HTML to strona z bledem, nie serwer', methodRefusalIsRouted(refusal({}, '<!DOCTYPE html><html><body>Nope</body></html>'), 404), false)
+check('inny status niz 405 nie przechodzi ta droga', methodRefusalIsRouted({ ...refusal(), status: 404 }, 200), false)
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)
