@@ -14,15 +14,20 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   const started = Date.now()
   try {
-    const reports = await getStore().listReports(1)
+    const store = getStore()
+    const [reports, writable] = await Promise.all([store.listReports(1), store.writable()])
+    // A store that reads and will not write is not healthy, and answering ok because the pages
+    // still render is how a whole night of refused scans went unnoticed.
     return Response.json(
       {
-        status: 'ok',
+        status: writable === true ? 'ok' : 'degraded',
         store: reports.length > 0 ? 'readable' : 'empty',
+        writable: writable === true,
+        ...(writable === true ? {} : { writeError: writable }),
         latestScan: reports[0]?.scannedAt ?? null,
         ms: Date.now() - started,
       },
-      { headers: { 'cache-control': 'no-store' } },
+      { status: writable === true ? 200 : 503, headers: { 'cache-control': 'no-store' } },
     )
   } catch (error) {
     return Response.json(

@@ -75,6 +75,20 @@ export class MongoStore implements Store {
     installSharedCache(registryAnswers)
   }
 
+  async writable(): Promise<true | string> {
+    const database = await db()
+    try {
+      // One document, replaced in place every time, so the probe never grows the collection it
+      // is testing. An upsert is the cheapest thing that fails the same way a real write fails.
+      await database
+        .collection('health')
+        .updateOne({ _id: 'writable' as never }, { $set: { at: new Date().toISOString() } }, { upsert: true })
+      return true
+    } catch (error) {
+      return (error as Error).message
+    }
+  }
+
   async saveReport(report: Report) {
     const { reports } = await collections()
     await reports.updateOne({ _id: report.id }, { $set: forStorage(report) }, { upsert: true })

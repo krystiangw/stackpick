@@ -72,5 +72,11 @@ export async function POST(request: Request) {
     scorecard: scan.report.scorecard,
     ...(scan.reused ? { reused: true } : {}),
     ...(truncation ? { truncation } : {}),
+    // Said out loud rather than left to a broken link. The measurement is complete and correct;
+    // what failed is our storage, so the caller gets the score and the warning that the id above
+    // will not resolve.
+    ...(scan.kept === false
+      ? { saved: false, warning: 'We could not store this scan, so its permanent link will not work. The scorecard above is complete.' }
+      : {}),
   })
 }

@@ -43,6 +43,15 @@ export interface Store {
   listWatchesForEmail(email: string): Promise<Watch[]>
   /** One counter per day and path. Upserted, so a page render costs one small write. */
   recordVisit(visit: { day: string; path: string }): Promise<void>
+  /**
+   * Whether the store would accept a write, asked without leaving one behind that matters.
+   *
+   * "Readable" was the only thing the health check knew, and on 2026-08-13 the cluster hit its
+   * quota and refused every write for hours while the check kept answering ok: the site served
+   * its pages, and every scan, watch and lead a visitor submitted was thrown away. A product
+   * that cannot write is down whatever its home page renders.
+   */
+  writable(): Promise<true | string>
   listVisits(days: number): Promise<{ day: string; path: string; count: number }[]>
 }
 
@@ -124,6 +133,15 @@ class FileStore implements Store {
 
   /** The local store exists so a developer can run without Mongo; counting visits there is noise. */
   async recordVisit() {}
+
+  async writable(): Promise<true | string> {
+    try {
+      await this.dir('reports')
+      return true
+    } catch (error) {
+      return (error as Error).message
+    }
+  }
 
   async listVisits() {
     return []
