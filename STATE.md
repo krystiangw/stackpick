@@ -897,6 +897,32 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   budzet tak samo. `oramasearch.com` traci punkt na dwoch martwych linkach do wlasnych repozytoriow
   GitHuba, ktore sa prywatne albo skasowane.
 
+- ~~**Sciezka odwiedzajacego przy zablokowanych zapisach**~~ **zrobione 2026-08-13.** Przetestowana
+  na produkcji, nie zalozona, i byla najgorsza rzecza, jaka strona wtedy robila: wpisujesz domene,
+  czekasz pol minuty, widzisz piec ukonczonych krokow i dostajesz **„scored 11 of 15, and we could
+  not store the result, so it has no page, write to hello@letagentsin.com"**. Uczciwe zdanie, ktore
+  wyrzuca skonczony pomiar trzymany w pamieci, przez nasz problem z baza.
+  - Ostatnie 50 niezapisanych raportow zostaje na dynie, `/r/<id>` do nich sie:ga, wiec odwiedzajacy
+    dostaje **zwykla strone raportu**. To nie cache i nie kolejka: kolejnosc wstawiania, limit,
+    czysci sie przy kazdym deployu. Held-only nie trafia do indeksu.
+  - **Pulapka warta zapamietania: `Map` na poziomie modulu NIE jest wspoldzielona miedzy route
+    handlerem a strona.** Next bunduje je osobno, wiec kazde dostaje wlasna instancje modulu
+    i wlasna mape: skan pisal do jednej, `/r/<id>` czytal druga, a objawem byl czysty 404, ktorego
+    nie da sie wyczytac z kodu. Rozwiazanie: `globalThis`.
+  - **Dwie hipotezy rozroznione testem, nie zgadywaniem:** pierwszy test wypadl w tej samej minucie
+    co restart po deployu, wiec „restart zjadl raport" bylo rownie dobrym wyjasnieniem. Powtorzenie
+    na ustabilizowanym dynie dalo ten sam 404 i to wykluczylo restart.
+  - Zweryfikowane na produkcji: `/r/railway-app-...` zwraca 200, pelny raport 12/14 z banerem
+    „This link will not last".
+
+- **Zmierzone i ODRZUCONE 2026-08-13: karmienie wyszukiwania rejestracji linkami z llms.txt.**
+  Druga polowa znaleziska o llms.txt jako mapie wygladala na oczywista kontynuacje i **nie jest
+  warta zrobienia**. Na 17 wierszy mowiacych „nie znalezlismy linku do rejestracji" tylko 3 maja
+  w llms.txt adres lapiacy sie na `SIGNUP_HINTS`, **a dwa z tych trzech to falszywe trafienia**:
+  `signoz.io` przez „get-started" w sciezce dokumentacji, `stytch.com` przez „registration"
+  w slugu wpisu blogowego. Jedyny prawdziwy przypadek to `oramasearch.com`, ktorego adres i tak
+  zwraca 401. Zysk 1 wiersz, koszt 2 nowe falszywe trafienia.
+
 - **Dwunasty przebieg adwersaryjny, do zrobienia.** Powierzchnie, których jedenasty nie ruszył,
   w kolejności wagi:
   1. ~~**Trasowanie po raz drugi.**~~ **zrobione w rundzie 105: 35 → 20 procent.** Wszystkie 149
