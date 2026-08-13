@@ -90,6 +90,14 @@ echo "done: $ok ok, $fail failed"
 # A domain that failed once usually answers on a second ask, and leaving it out of the corpus
 # is worse than the extra minute: the published row would be older than every other row.
 if [ -n "$failed" ]; then
+  # A retry is a real fetch of somebody else's site. When the store is refusing writes, every one
+  # of them is spent on a row that cannot be saved: this loop scanned 138 vendors that way on
+  # 2026-08-14 before anybody noticed. Ask the store first and stop if it cannot keep anything.
+  if ! curl -s --max-time 20 "$BASE/api/health" | grep -q '"writable":true'; then
+    echo "store nie przyjmuje zapisow, ponowienia pominiete: $(echo "$failed" | wc -w) domen" >&2
+    echo "  wznow pozniej: DOMAINS=\$(npx tsx scripts/stale-domains.mts) bash scripts/reseed.sh" >&2
+    exit 1
+  fi
   echo "retrying:$failed"
   for domain in $failed; do
     sleep 5
