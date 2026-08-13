@@ -74,6 +74,39 @@ Potem `npx tsx scripts/diff-corpus.mts <migawka> https://letagentsin.com/corpus.
 **Zamrozone do tego czasu: zmiany w skanerze.** Kazda kolejna zmiana formuly powieksza rozjazd,
 ktorego nie da sie zamknac bez reseedu.
 
+### Audyt sprzecznosci WEWNATRZ jednego wiersza (13.08), formula 9.10
+
+Poprzednie audyty sprawdzaly kazda regule osobno. Ten pytal, czy pietnascie werdyktow w jednym
+wierszu **da sie jednoczesnie utrzymac**. Znalazl siedem, cztery naprawione i zweryfikowane
+lokalnym skanerem:
+1. **contentful.com i pandadoc.com placily punktem za NASZ rate limit.** Door test karal 429
+   z markerem challenge, a check signupu obok nazywal ten sam 429 "a limit we triggered rather
+   than a rule about agents". Challenge zlozony z samych 429 jest teraz niemierzalny; 403 nadal
+   kosztuje punkt. Zdanie przestalo tez mowic "the site" na podstawie jednego zadania do jednego
+   hosta, obok robots.txt wlasnie przeczytanego z tego samego origin (namecheap.com).
+2. **`signup_no_captcha` opisywal server HTML na 11 wierszach, ktorych rodzenstwo mowilo, ze
+   strona odpowiedziala 403 wszystkim.** Nieszkodliwe przy dwoch unmeasured i jedna galaz od
+   scoreowanego fail z sygnatury CAPTCHA w tresci bledu WAF.
+3. **`agent_entry_point` liczyl 429 jako odmowe**, wbrew `isEdgeRefusal`, ktorego reszta skanera
+   uzywa wlasnie dlatego, ze 429 to nasze obciazenie. name.com byl raportowany jako odmawiajacy
+   wszystkich dziewieciu sciezek na origin, ktorego llms.txt przeczytalismy w calosci; **on
+   publikuje skill.md** i teraz to widac.
+4. `signup_reachable` ignorowal 2xx wsrod prob, choc door test nauczyl sie tego w sierpniu
+   (weglot.com: "answers 403, 403, 200 ... so nothing gets in from here").
+
+`isEdgeRefusal` przeniesiony do warstwy http, zeby oba wywolania mialy jedna definicje zamiast
+rozjezdzac sie ponownie.
+
+**NIENAPRAWIONE z tego audytu, do zrobienia:**
+- **Pliki llms.txt licza sie jako "documentation pages"** (`documentsRead` w `scan/index.ts`).
+  shopify.com: "none of the 3 documentation pages" obok "no documentation page could be found".
+  Gorsze niz zdanie: **bramka `pages >= 2` da sie przekroczyc samym llms.txt + llms-full.txt.**
+  Dotyczy licznika we wszystkich 55 scoreowanych wierszach.
+- **`rateLimited` w korpusie jest false na wierszach cytujacych 429** (4 wiersze), a nota wprost
+  zaleca konsumentom filtrowanie po tym polu. Liczone tylko z door-testu.
+- **`measuredOn: null`, gdy scoreowany URL jest na innej domenie rejestrowalnej** (dropboxsign.com
+  → app.hellosign.com, swell.is → swell.store, sentry.io → mcp.sentry.dev).
+
 ### Przeglad wszystkich powierzchni podajacych rozmiar korpusu (13.08)
 
 Cztery miejsca drukowaly **88** tak, jakby to byla calosc naszej pracy, i zadne nie mowilo, ze to
