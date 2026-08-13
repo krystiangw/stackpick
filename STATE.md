@@ -1036,6 +1036,30 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   `POST /api/watch` zwraca 503 i „Nothing was signed up and no email was sent", z adresem
   kontaktowym. Nic do naprawy.
 
+- ~~**Dwie hipotezy o remisach z rundy 105**~~ **przetestowane 2026-08-13, jedna wdrozona, jedna
+  obalona.** Obie byly zapisane jako reguly o swiecie, nie o pytaniach, wlasnie po to, zeby dalo
+  sie je sprawdzic na zestawie napisanym pozniej.
+  - **`chrome` = infrastruktura przegladarkowa: wdrozone.** Warte jedno pytanie na `HELD_OUT_2`
+    (31 -> 32). Uczciwe zastrzezenie: **`HELD_OUT_3` nie zawiera slowa „chrome", wiec nie dodaje
+    tu dowodu w zadna strone.**
+  - **„Kanal dostawy wygrywa remis": OBALONE, nie powtarzaj.** Odpala sie na trzech pytaniach
+    w obu zestawach i **myli sie na wszystkich trzech**: ktos, komu support weryfikuje tozsamosc
+    mailem, chce `auth`; ktos, kto o bledach dowiaduje sie z maila od klienta, chce
+    `error-monitoring`. Slowo „email" w prawdziwym pytaniu opisuje zwykle to, jak ludzie sie
+    kontaktuja, a nie produkt.
+  - **Pulapka pomiarowa warta zapamietania: wynik punktowy sie NIE zmienil.** Te trzy pytania byly
+    juz bledne jako milczenie, wiec licznik nie odroznia „nic nie odpowiedzialem" od
+    „odpowiedzialem transactional-email z pewnoscia siebie". Patrzac na sume, uznalbym regule za
+    neutralna i wdrozyl. **Trzeba bylo przeczytac, na czym sie odpala.**
+
+- **Publikowana trafnosc trasowania stoi teraz na `HELD_OUT_3`: 29 z 58.** To jedyny zestaw,
+  ktorego zadna decyzja jeszcze nie dotknela. Napisany 13.08 przez subagenta odcietego od
+  `lookup.ts`, obu wczesniejszych zestawow i STATE.md, **celowo naszpikowany slowami nalezacymi do
+  dwoch kategorii naraz**, bo remisy sa dominujaca porazka. Dziewiec odpowiedzi w zlej kategorii
+  wobec czterech na `HELD_OUT_2` (32 z 58). **Opis narzedzia MCP podaje obie liczby**, bo pojedyncza
+  albo schlebia narzedziu, albo je oczernia, zaleznie od tego, z ktorego zestawu pochodzi.
+  `FRESH_QUESTIONS` i `HELD_OUT_2` sa od teraz zestawami regresyjnymi (`BURNED=1`), nie miara.
+
 - **Dwunasty przebieg adwersaryjny, do zrobienia.** Powierzchnie, których jedenasty nie ruszył,
   w kolejności wagi:
   1. ~~**Trasowanie po raz drugi.**~~ **zrobione w rundzie 105: 35 → 20 procent.** Wszystkie 149
