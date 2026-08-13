@@ -923,6 +923,31 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   w slugu wpisu blogowego. Jedyny prawdziwy przypadek to `oramasearch.com`, ktorego adres i tak
   zwraca 401. Zysk 1 wiersz, koszt 2 nowe falszywe trafienia.
 
+- ~~**Rodzina `signup_no_captcha`**~~ **zaatakowana 2026-08-13, utrzymala sie w calosci.**
+  Siedemnascie wierszy nazywa konkretnego dostawce CAPTCHA na konkretnej stronie rejestracji, czyli
+  zarzut w pelni falsyfikowalny. **17 z 17 potwierdzonych recznie**: recaptcha albo turnstile jest
+  naprawde w serwowanym HTML tej strony, tym samym user-agentem. Zero falszywych oskarzen.
+  *(Pierwszy przebieg tego testu pokazal 17 z 17 NEGATYWNYCH i byl bledem mojego parsowania
+  w shellu, kazde ciało mialo 1 bajt. Wynik „wszystko falszywe" jest podejrzany z definicji.)*
+
+- **Zmierzone i ZOSTAWIONE 2026-08-13: precyzja adresu rejestracji.** Przy okazji wyszlo, ze
+  **5 z 84 wierszy** nazywa „formularzem rejestracji" cos innego: goly host (`cloud.directus.com`,
+  `dashboard.radar.com`, `cloud.temporal.io`) albo strone logowania (`firecrawl.dev/signin`,
+  `cloud.trigger.dev/login`). Sprawdzone: dla `trigger.dev`, `directus` i `temporal` **lepszy adres
+  nie istnieje** (404 na `/signup`), a `firecrawl.dev` ma rejestracje pod `/signin?view=signup`,
+  czyli to ta sama strona i nasz werdykt („formularz renderuje sie w HTML") jest poprawny.
+  Nieprecyzyjny jest wylacznie rzeczownik. Nie warto zmieniac kodu.
+
+- ~~**Strona glowna sugerowala, ze publikowane wiersze sa na biezacej formule**~~ **naprawione
+  2026-08-13.** Zdanie brzmialo „we hold 170; the rest are waiting for a rescan **under the current
+  formula**", co stawia opublikowane wiersze na biezacej formule przez implikacje. Nie sa:
+  publikujemy wersje wiekszosciowa, ktora utknela na **9.8**, podczas gdy skaner chodzi na **9.12**.
+  Odwiedzajacy mogl przeskanowac wlasna domene, dostac inna odpowiedz niz wiersz obok i nie miec na
+  stronie nic, co by to tlumaczylo. Klauzula nazywa teraz obie wersje i **znika sama**, gdy reseed
+  je zrowna. **Nie zmienilem tego, ktore wiersze publikujemy**: preferowanie biezacej wersji
+  serwowaloby strone z kohorty prawie pustej, a mieszanie wersji jest dokladnie tym, przed czym
+  chroni regula jednej wersji.
+
 - **Dwunasty przebieg adwersaryjny, do zrobienia.** Powierzchnie, których jedenasty nie ruszył,
   w kolejności wagi:
   1. ~~**Trasowanie po raz drugi.**~~ **zrobione w rundzie 105: 35 → 20 procent.** Wszystkie 149
