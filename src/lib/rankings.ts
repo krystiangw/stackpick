@@ -1,4 +1,4 @@
-import { refusesAgentsAtSignup, signupNeedsJavaScript } from './score'
+import { refusesAgentsAtSignup, signupNeedsJavaScript, FORMULA_VERSION } from './score'
 import { CATEGORIES, CURATED_DOMAINS, type Category } from './categories'
 import { publishedCorpus } from './published'
 import type { Report } from './store'
@@ -45,6 +45,15 @@ export type CorpusCoverage = {
   max: number
   averageMeasurable: number
   fullyMeasurable: number
+  /**
+   * The formula the published rows were measured under, and the one the scanner runs now. They
+   * are the same whenever a reseed has finished. While one is stuck they are not, and the page
+   * said "the rest are waiting for a rescan under the current formula", which reads as a promise
+   * that the published rows are current. On 13 August they were three versions behind, including
+   * the version that stopped calling three documentation pages live MCP servers.
+   */
+  publishedFormula: string
+  currentFormula: string
   /** The stage the free scanners from Google and Cloudflare both stop short of. */
   signupRefusesAgents: number
   signupNeedsJavaScript: number
@@ -70,7 +79,7 @@ export async function loadRankings(): Promise<RankingsView> {
     console.error('rankings: corpus unreadable, rendering without them', error)
     return {
       categories: [],
-      coverage: { domains: 0, curated: CURATED_DOMAINS.size, max: 0, averageMeasurable: 0, fullyMeasurable: 0, signupRefusesAgents: 0, signupNeedsJavaScript: 0 },
+      coverage: { domains: 0, curated: CURATED_DOMAINS.size, publishedFormula: FORMULA_VERSION, currentFormula: FORMULA_VERSION, max: 0, averageMeasurable: 0, fullyMeasurable: 0, signupRefusesAgents: 0, signupNeedsJavaScript: 0 },
     }
   }
   const latest = new Map(reports.map((report) => [report.domain, report]))
@@ -79,6 +88,8 @@ export async function loadRankings(): Promise<RankingsView> {
   const coverage: CorpusCoverage = {
     domains: scanned.length,
     curated: CURATED_DOMAINS.size,
+    publishedFormula: scanned[0]?.scorecard.formulaVersion ?? FORMULA_VERSION,
+    currentFormula: FORMULA_VERSION,
     max: scanned[0]?.scorecard.max ?? 0,
     averageMeasurable:
       scanned.length === 0

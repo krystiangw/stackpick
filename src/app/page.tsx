@@ -67,7 +67,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
         </p>
         {coverage.signupNeedsJavaScript > 0 && (
           <p className="mt-4 max-w-2xl font-mono text-sm leading-relaxed text-ink-soft">
-            Of {coverage.domains} vendors we can compare today{coverage.curated > coverage.domains ? ` (we hold ${coverage.curated}; the rest are waiting for a rescan under the current formula)` : ''}, {coverage.signupNeedsJavaScript} serve a signup form
+            Of {coverage.domains} vendors we can compare today{coverage.curated > coverage.domains ? ` (we hold ${coverage.curated}; the rest are waiting for a rescan)` : ''}
+            {coverage.publishedFormula !== coverage.currentFormula
+              ? `, measured under formula ${coverage.publishedFormula} while the scanner runs ${coverage.currentFormula}, so a scan you run today can disagree with the row below it`
+              : ''}, {coverage.signupNeedsJavaScript} serve a signup form
             that renders nothing without JavaScript,{' '}
             {coverage.signupRefusesAgents > 0
               ? `and ${coverage.signupRefusesAgents} answer an agent with a refusal where a browser gets through.`
