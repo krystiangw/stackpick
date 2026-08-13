@@ -1,7 +1,7 @@
 import { scanDomain, UnreachableDomainError } from '@/lib/scan'
 import { scoreFindings } from '@/lib/score'
 import { gateScan } from '@/lib/scan-gate'
-import { getStore, reportId, type Report } from '@/lib/store'
+import { getStore, reportId, type Report , holdUnsaved } from '@/lib/store'
 
 export const maxDuration = 60
 
@@ -74,8 +74,15 @@ export async function POST(request: Request) {
           await getStore().saveReport(report)
         } catch (error) {
           console.error('stream scan ran but could not be saved', error)
-          send('failed', {
-            error: `${report.domain} scored ${scorecard.total} of ${measurable}, and we could not store the result, so it has no page. That is our problem and not yours: write to hello@letagentsin.com and we will send it to you.`,
+          // The measurement is done and we are holding it. Sending them away with an email address
+          // threw away work they waited half a minute for, over a database problem that is ours.
+          holdUnsaved(report)
+          send('done', {
+            id: report.id,
+            domain: report.domain,
+            total: scorecard.total,
+            max: scorecard.max,
+            temporary: true,
           })
           controller.close()
           return

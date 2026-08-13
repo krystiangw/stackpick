@@ -1,7 +1,7 @@
 import { scanDomain, UnreachableDomainError } from './scan'
 import { scoreFindings } from './score'
 import { gateScan } from './scan-gate'
-import { getStore, reportId, type Report } from './store'
+import { getStore, reportId, type Report , holdUnsaved } from './store'
 
 /**
  * One scan path for every surface that offers a scan. The REST endpoint and the MCP tool were
@@ -56,6 +56,8 @@ export async function runScan(request: Request, domain: string): Promise<ScanRun
       .then(() => true)
       .catch((error) => {
         console.error('scan ran but could not be saved', error)
+        // Held on the dyno so the id above still resolves, for as long as this dyno lives.
+        holdUnsaved(report)
         return false
       })
     return { kind: 'ok', report, reused: false, kept }

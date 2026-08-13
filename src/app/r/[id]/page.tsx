@@ -8,7 +8,7 @@ import { EmailGate } from '@/components/email-gate'
 import { FixFirst } from '@/components/fix-first'
 import { FunnelMark } from '@/components/funnel-mark'
 import { buildFixPlan } from '@/lib/fixfirst'
-import { getStore } from '@/lib/store'
+import { getStore , heldReport, isHeldOnly } from '@/lib/store'
 import { pickHeadline } from '@/lib/headline'
 import { ShareRow } from '@/components/share-row'
 import { CHECKS, STAGES, type ScoredCheck } from '@/lib/score'
@@ -17,11 +17,13 @@ export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
-  const report = await getStore().getReport(id)
+  const report = (await getStore().getReport(id)) ?? heldReport(id)
   if (!report) return { title: 'Scorecard not found: Let Agents In' }
 
   const headline = pickHeadline(report.findings, report.scorecard)
   return {
+    // A page that disappears on the next deploy has no business in an index.
+    ...(isHeldOnly(id) ? { robots: { index: false } } : {}),
     title: `${report.domain}: agent readiness ${report.scorecard.total}/${report.scorecard.measurable ?? report.scorecard.max}`,
     description: headline.claim,
     openGraph: {
@@ -83,7 +85,7 @@ function verdictTone(check: ScoredCheck) {
 
 export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const report = await getStore().getReport(id)
+  const report = (await getStore().getReport(id)) ?? heldReport(id)
   if (!report) notFound()
 
   const { scorecard, findings } = report
@@ -110,6 +112,22 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
   return (
     <main className="mx-auto max-w-5xl px-6">
+      {/* Everything below is a real measurement. Only its address is provisional, and saying which
+          one is the difference between a caveat somebody can act on and a vague warning. */}
+      {isHeldOnly(id) && (
+        <div className="mt-8 border-l-2 border-warn bg-surface p-6">
+          <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">This link will not last</h2>
+          <p className="mt-3 max-w-2xl leading-relaxed">
+            Our database is full and refused to store this scan, so the report is being held in memory and the
+            address stops working the next time we deploy. The measurement itself is exactly the one everybody
+            else gets. Save the page or run it again once we have sorted the storage out, and write to{' '}
+            <a href="mailto:hello@letagentsin.com" className="text-brass underline underline-offset-4">
+              hello@letagentsin.com
+            </a>{' '}
+            if you need a permanent copy sooner.
+          </p>
+        </div>
+      )}
       <section className="border-b border-rule py-12">
         <div className="flex flex-wrap items-baseline justify-between gap-4">
           <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Agent readiness · {report.domain}</p>

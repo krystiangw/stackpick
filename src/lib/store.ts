@@ -199,6 +199,34 @@ let cached: Store | null = null
  * Filesystem locally so the app runs with no external accounts; Mongo wherever
  * MONGODB_URI exists, because Heroku dynos lose the disk on every restart.
  */
+
+/**
+ * Reports the database refused, kept on the dyno so the visitor still gets their page.
+ *
+ * The scan is finished by the time a write fails. Throwing it away and telling somebody who waited
+ * half a minute to email us was the worst thing the site did while the cluster was full: we had
+ * their scorecard in hand. This is deliberately not a cache and not a queue. It holds the last few
+ * unsaved reports for as long as this dyno lives, the page says the link is temporary, and a
+ * deploy clears it.
+ */
+const HELD_LIMIT = 50
+const held = new Map<string, Report>()
+
+export function holdUnsaved(report: Report): void {
+  held.set(report.id, report)
+  // Insertion order, so the oldest goes first and one busy afternoon cannot grow this without end.
+  while (held.size > HELD_LIMIT) held.delete(held.keys().next().value as string)
+}
+
+export function heldReport(id: string): Report | null {
+  return held.get(id) ?? null
+}
+
+/** Whether this id only exists in memory, which is what the page warns about. */
+export function isHeldOnly(id: string): boolean {
+  return held.has(id)
+}
+
 export function getStore(): Store {
   cached ??= process.env.MONGODB_URI ? new MongoStore() : new FileStore()
   return cached

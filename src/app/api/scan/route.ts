@@ -76,7 +76,11 @@ export async function POST(request: Request) {
     // what failed is our storage, so the caller gets the score and the warning that the id above
     // will not resolve.
     ...(scan.kept === false
-      ? { saved: false, warning: 'We could not store this scan, so its permanent link will not work. The scorecard above is complete.' }
+      ? {
+          saved: false,
+          warning:
+            'We could not store this scan. The scorecard above is complete and the link works for now, but it is held in memory and stops resolving the next time we deploy.',
+        }
       : {}),
   })
 }
