@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-13 (formula 9.8, weekend autonomiczny)
+# Let Agents In: stan na 2026-08-13 (kod na formule 9.9, korpus rozbity 9.8/9.9, zapisy do bazy ZABLOKOWANE)
 
 Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
 **Dwie sekcje na dole tego bloku, "Co zostało z audytów" i "Następne kroki merytoryczne", są
@@ -6,6 +6,69 @@ kontraktem dla watchdoga. Aktualizuj je przy każdej zamkniętej pozycji, inacze
 listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, nie listą zadań.
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
+
+## PONIEDZIALEK: trzy decyzje i jedna komenda
+
+**Produkcja dziala w trybie zdegradowanym. Zapisy do bazy sa odrzucane od nocy 12/13.08.**
+Strona, korpus i skanowanie dzialaja; nic sie nie zapisuje i kazda sciezka mowi o tym wprost.
+
+### 1. Baza (blokuje wszystko inne)
+
+Atlas: **5120 MB z 5120 MB, zapisy zablokowane**. Klaster dzielony z equity-analyst.
+
+**Rekomendacja: NIE kasowac na slepo. Najpierw zajrzyj w konsole Atlasa** i zobacz rozbicie
+zajetosci, bo tylko tam widac oplog, do ktorego nie mam uprawnien. Pomiar: nasze kolekcje to
+**757 MB**, equity-analyst 1501 MB, razem 2258 MB. Brakujace ~2,8 GB to prawie na pewno oplog,
+rozdmuchany dziewiecioma reseedami po 185 kB na raport.
+- Jesli to oplog: **nic nie kasujemy**, przyczyna jest juz naprawiona (raport wazy teraz ~5 kB).
+- Jesli to jednak nasze kolekcje: kasujemy **19 140 przedawnionych raportow (~684 MB)**, partiami
+  z przerwami, bo **kasowanie samo jest zapisem**. Zostawiamy 1 719 skanow odwiedzajacych
+  (obiecalismy trwaly link) i najnowszy wiersz kazdej ze 181 domen.
+- Trzecia droga: platny tier. Przy dwoch rosnacych projektach 5 GB bedzie wracac.
+
+### 2. Platnosci: Stripe czy Paddle
+
+Decyzja ksiegowa, nie techniczna. Stripe: uruchamiam od reki, **VAT OSS od klientow z UE
+rozliczasz sam**. Paddle: sprzedawca formalny, zdejmuje VAT, wyzsza prowizja, weryfikacja kilka
+dni. Pola `plan` i `subscriptionId` czekaja w `src/lib/watch.ts`. **Nie blokuje przyjmowania
+uzytkownikow**, bo monitoring jest darmowy i strona to mowi.
+
+### 3. Drugie dyno
+
+Koszt. Jedno dyno to jedyny serwer; cache korpusu zdjal najgorszy przypadek.
+
+### Komenda po odblokowaniu zapisow
+
+```
+cd ~/projects/stackpick && STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) PASSES=2 PAUSE=3 bash scripts/reseed.sh
+```
+
+**To jest pierwsza rzecz do zrobienia.** Przerwany reseed zostawil korpus rozbity: ~75 wierszy na
+9.9, 95 na 9.8, a publikujemy wiekszosc, wiec **strona pokazuje 95 dostawcow zamiast 170**. Audyt
+czysty (0 rozjazdow), wiec nic nie jest falszywe, tylko mniejsze. Jeden reseed to zamyka.
+Potem `npx tsx scripts/diff-corpus.mts <migawka> https://letagentsin.com/corpus.json`.
+
+**Zamrozone do tego czasu: zmiany w skanerze.** Kazda kolejna zmiana formuly powieksza rozjazd,
+ktorego nie da sie zamknac bez reseedu.
+
+### Co ten weekend dal, w trzech liczbach
+
+- **Oskarzenia o obce firmy w dol:** `programmatic_provisioning` 77 -> 32, `docs_without_js`
+  11 -> 2, `llms_txt` 47 -> 36, `user_agents_allowed` 5 -> 3. Formula 9.2 -> 9.9.
+- **Szesc sciezek zapisu**, z ktorych **kazda** klamala przy zepsutej bazie, mowi teraz prawde.
+- **46 commitow**, monitoring produkcji co godzine, widok mobilny i mail naprawione.
+
+### Trzy rzeczy, ktorych nie wiedzialem, a ktore kosztowaly najwiecej
+
+1. **Reseed pokazuje, na CZYM regula sie dopasowala, i tylko to.** Wzorzec provisioningu trafial
+   na **menu nawigacyjne** u mapbox.com, a werdykt byl przy tym prawdziwy. Zaden audyt statyczny
+   tego nie zlapie.
+2. **Zmiana reguly ma dwie ceny, a korpus pokazuje te, ktorej szukasz.** Przewidywanie dla 9.6
+   zgadzalo sie co do liczby i kierunku, a polowa ruchu byla szkoda. Czytaj wiersze, nie sume.
+3. **Awaria byla lepszym audytorem niz cztery audyty, ktore zamowilem.** Tamte znalazly zle
+   werdykty o obcych firmach; ta znalazla szesc miejsc, w ktorych okłamywalismy wlasnego klienta.
+
+---
 
 ## Incydent 2026-08-13: baza zapchana, zapisy odrzucane przez ~godzine (JUZ DZIALA)
 
