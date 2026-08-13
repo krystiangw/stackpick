@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-13 (noc, formula 9.5, weekend autonomiczny)
+# Let Agents In: stan na 2026-08-13 (formula 9.7, weekend autonomiczny)
 
 Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
 **Dwie sekcje na dole tego bloku, "Co zostało z audytów" i "Następne kroki merytoryczne", są
@@ -7,9 +7,42 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
-## W locie w tej chwili (2026-08-13, noc) - NIC NIE LECI
+## W locie w tej chwili (2026-08-13) - NIC NIE LECI
 
-**Korpus: 170 wierszy na formule 9.5, audyt czysty (0 rozjazdow, 0 sprzecznosci), drzewo czyste.**
+**Korpus: 170 wierszy na formule 9.7, audyt czysty (0 rozjazdow, 0 sprzecznosci), drzewo czyste.**
+
+### Runda po 9.5: "menu nie jest zdaniem" (9.6 -> 9.7), pozycja 1 z listy otwartych ZAMKNIETA
+
+Kazda regula provisioningu opiera sie na pojeciu zdania, a `visibleText` zamienial kazdy tag na
+spacje, wiec nawigacja byla jednym nieprzerwanym ciagiem bez kropki. Reguly czytaly spisy tresci
+jak proze. Nowa redukcja `visibleProse` zamienia granice blokow na kropki, **tylko dla
+provisioningu**; heurystyki cennikowe licza znaki zapytania i przyciski na strukturze strony i
+wstawianie im kropek zmienialoby inny pomiar przy okazji naprawiania tego.
+
+**Dwa przebiegi, bo pierwszy byl za szeroki, i to jest lekcja rundy:**
+- **9.6** traktowal takze `p`, `div` i `h1-h6` jako granice. Przewidywanie sprawdzilo sie co do
+  liczby (12 wierszy, jeden check, wszystkie w dol, zakres mowil 4-12). **Gdybym poprzestal na
+  liczbie, uznalbym to za sukces.** Przeczytanie tych dwunastu pokazalo druga cene: naglowek nie
+  jest granica, tylko podmiotem zdania pod nim. mux.com ma "Create a signing key" w naglowku i
+  `POST /system/v1/signing-keys` w tresci; stytch.com i meilisearch.com tak samo.
+- **9.7** zawezil granice do tagow budujacych listy, menu i tabele (`li td th tr option dt dd nav
+  menu`). Zmierzone lokalnym skanerem PRZED wypuszczeniem. Diff potwierdzil: **7 wierszy
+  odzyskalo fraze** (elastic.co, honeycomb.io, maptiler.com, meilisearch.com, mux.com,
+  stytch.com, tolgee.io), a cloudflare.com i telnyx.com zostaly na dole, bo ich dowod **naprawde**
+  byl nawigacja. telnyx.com serwuje 409 kB identycznego szkieletu SPA pod kazdym adresem
+  dokumentacji, wiec nie ma tam prozy do przeczytania.
+
+**Lekcja do zapamietania: zmiana reguly ma dwie ceny, a korpus pokazuje tylko te, ktorej
+szukales.** Liczba i kierunek sie zgadzaly, a polowa ruchu byla szkoda. Czytaj wiersze, nie
+podsumowanie.
+
+**Znane, nienaprawione po tej rundzie:** cloudflare.com prawie na pewno dokumentuje programowe
+tworzenie tokenow, a my go teraz niedoszacowujemy, bo prawdziwe zdanie nie znalazlo sie na
+zadnej z 8 przeczytanych stron. To problem **doboru stron**, nie dopasowania: pozycje 2 i 4 nizej.
+
+**Stan checkow po 9.7** (dla porownania z 9.2, gdzie provisioning mial 77 oskarzen):
+`programmatic_provisioning` pass 27 / partial 50 / **fail 34** / unmeasured 59.
+`docs_without_js` fail 5 (bylo 11). `llms_txt` fail 37 (bylo 47). `answers_plain_request` fail 4.
 
 **Krystian wyjechal na weekend i zlecil prace autonomiczna do poniedzialku.** Cel jego slowami:
 "poprawa jakosci danych az do zadowalajacych efektow" i "musimy byc gotowi na prawdziwych
@@ -91,15 +124,13 @@ wyglada to jak blad reguly.**
 przyjmowania uzytkownikow, bo monitoring jest darmowy i strona to mowi.
 
 **Otwarte, nienaprawione, w kolejnosci wagi:**
-1. **`SAME_SENTENCE` czyta nawigacje jak proze** - dotyczy wszystkich wzorcow provisioningu, nie
-   tylko wycofanego. Potrzebny pomiar, nie szybka latka.
-2. **Wybor hosta dokumentacji**: `docs.<domena>`, ktory jest pusta skorupa, wygrywa z prawdziwa
+1. **Wybor hosta dokumentacji**: `docs.<domena>`, ktory jest pusta skorupa, wygrywa z prawdziwa
    dokumentacja (crowdin.com, scrapingbee.com).
-3. **Probkowanie stron dla `docs_without_js`** dziedziczone po hintach pisanych dla provisioningu.
-4. **llms.txt jako indeks stron do czytania** (Modal wskazuje w nim dokladnie te strone, ktorej
+2. **Probkowanie stron dla `docs_without_js`** dziedziczone po hintach pisanych dla provisioningu.
+3. **llms.txt jako indeks stron do czytania** (Modal wskazuje w nim dokladnie te strone, ktorej
    nam brakuje). Zero dodatkowych pobran na odkrycie.
-5. **Potwierdzanie odmowy na drugim URL-u** przed publikacja `user_agents_allowed: fail`.
-6. Jedno dyno, widok mobilny niesprawdzony, nie mierzymy czy strona uniesie crawl.
+4. **Potwierdzanie odmowy na drugim URL-u** przed publikacja `user_agents_allowed: fail`.
+5. Jedno dyno, widok mobilny niesprawdzony, nie mierzymy czy strona uniesie crawl.
 
 **Koszty kontekstu (zmierzone):** audyt w przegladarce ~390k tokenow (39 procent okna) w
 kilkanascie wywolan - **najdrozsza rzecz, jaka robimy**. Cztery audyty subagentami tej nocy:
