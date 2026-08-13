@@ -854,6 +854,49 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
     remisy. Obie hipotezy z rundy 105 (kanał dostawy wygrywa remis z dziedziną; `chrome` to słowo
     infrastruktury przeglądarkowej) **nadal nietestowane** i wymagają własnego świeżego zestawu.
 
+- ~~**Sondowanie adresow MCP poza tym jednym wierszem**~~ **zrobione 2026-08-13.**
+  `npm run audit-mcp-probes` ocenia kandydata po tym, na ilu wierszach byl **jedynym**, ktory
+  cokolwiek znalazl, a nie po surowych trafieniach. `mcp.<domain>/mcp` jest jedyny na 27 wierszach,
+  `mcp.<domain>` na 8, wersjonowany na 4, `api.<domain>/mcp` na 4, `<site>/mcp` na 2.
+  **`<site>/api/mcp` nie znalazl niczego: zero na 170 wierszach korpusu i zero na 567 skanach
+  odwiedzajacych.** Zostaje mimo to, bo dodano go po zgloszeniu czytelnika, ktoremu nazwalismy
+  zywy serwer nieistniejacym, a nasz korpus to vendorzy z dedykowanym hostem `mcp.*`, czyli nie ta
+  populacja. Pomiar jest zapisany przy samym kandydacie: to pierwsze zadanie do ciecia, gdyby
+  budzet 27 sekund zaczal uwierac.
+
+- ~~**llms.txt czytany jako mapa, nie jako znaczek**~~ **zrobione 2026-08-13, formula 9.12.**
+  Najwazniejsze znalezisko tej rundy. Pobieramy `llms.txt` przy kazdym skanie i probkujemy jego
+  linki, zeby sprawdzic, czy odpowiadaja, **po czym nigdy nie patrzymy, dokad prowadza**.
+  - Zasieg: **143 ze 170 wierszy publikuje llms.txt, 142 z nich oblewa co najmniej jeden check
+    o drzwiach dla maszyny, a 72 pliki nazywaja wprost adres o kluczach albo rejestracji.**
+    `inngest.com` podaje `/platform/api-keys` i `/platform/signing-keys`, `bunny.net`
+    `/docs/account/api-keys`, `cloudinary.com` swoj endpoint provisioningu, `meilisearch.com`
+    i `mongodb.com` adresy rejestracji. Wszystkim mowilismy, ze nie znalezlismy strony o kluczach.
+  - Dwa powody. Parser lapal **wylacznie skladnie markdown** `[tekst](url)`, a `oramasearch.com`
+    podaje gole adresy, w tym **endpoint rejestracji dla agenta**, podczas gdy nasz werdykt mowil
+    „nie znalezlismy linku do rejestracji". Drugi: kandydat musial wygladac jak strona
+    dokumentacji, co wykluczalo dokladnie te uzyteczne, bo endpoint provisioningu Cloudinary
+    i strona rejestracji Meilisearch dokumentacja nie sa.
+  - **Zasada, ktora z tego wynika: link w llms.txt nie jest naszym zgadywaniem, tylko mapa, ktora
+    vendor opublikowal dla agentow.** Zasluguje na przeczytanie na ich slowo, nie na nasze.
+    Pozostanie na ich wlasnej domenie nadal obowiazuje.
+  - **Wycofane w tej samej sesji, w ktorej to napisalem:** straznik trzymajacy jedna stron z
+    rankingu wsrod kandydatow, dopisany, bo `oramasearch.com` spadl z dwoch czytanych stron do
+    zera. Test tej zmiany przeciwko samej sobie pokazal, ze spadek wystepuje ze straznikiem, bez
+    straznika i bez calej tej pracy: ich dokumentacja przestala byc wykrywalna, a wiersz w korpusie
+    pochodzi sprzed tego. **Straznik nie naprawial niczego i kosztowal cloudinary.com oraz
+    bunny.net po jednej stronie.** Nie dopisuj go ponownie bez sprawdzenia `docs=` w VERBOSE.
+  - **Nie widac tego w korpusie, dopoki baza nie przyjmie reseedu.** Dziala za to od razu dla
+    odwiedzajacego, ktory skanuje wlasna domene, czyli dla klienta.
+
+- ~~**Rodzina zarzutow o martwe linki w llms.txt**~~ **zaatakowana 2026-08-13, utrzymala sie.**
+  Dziesiec wierszy stawia zarzut w formie „N z M probkowanych linkow nie zyje, poczawszy od <url>".
+  **Wszystkie dziesiec nazwanych adresow zwraca 404**, sprawdzone recznie tym samym user-agentem.
+  Zero falszywych oskarzen. Dwa z nich to cudze serwisy (YouTube dla `dnsimple.com`, GitHub dla
+  `oramasearch.com`): to nadal wina vendora, bo on decyduje, co linkuje, a agent idacy w 404 traci
+  budzet tak samo. `oramasearch.com` traci punkt na dwoch martwych linkach do wlasnych repozytoriow
+  GitHuba, ktore sa prywatne albo skasowane.
+
 - **Dwunasty przebieg adwersaryjny, do zrobienia.** Powierzchnie, których jedenasty nie ruszył,
   w kolejności wagi:
   1. ~~**Trasowanie po raz drugi.**~~ **zrobione w rundzie 105: 35 → 20 procent.** Wszystkie 149
