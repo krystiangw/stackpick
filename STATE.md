@@ -278,6 +278,29 @@ liczby licza sie z korpusu, wiec nic nie jest falszywe, tylko mniejsze.
 formuly powieksza rozjazd, ktorego nie da sie zamknac bez reseedu. Jeden reseed po odblokowaniu
 naprawia wszystko naraz.
 
+### Widok mobilny sprawdzony po raz pierwszy (2026-08-13)
+
+**Kazda strona dostawcy przewijala sie w poziomie na telefonie, a winny ciag byl NASZ.** Bare `1fr`
+to `minmax(auto,1fr)`, wiec kolumna rozpycha sie do najdluzszego niepodzielnego tokenu. Tym tokenem
+jest nasz wlasny user-agent: kazda karta zaczyna sie od "Answered 200 to LetAgentsIn/1.0
+(+https://letagentsin.com/methodology)", **274 px monospace w kolumnie majacej 223**. Dotyczylo to
+170 stron dostawcow i kazdego raportu ze skanu.
+
+Naprawione: `minmax(0,1fr)` + `wrap-anywhere`. **Zweryfikowane pomiarem, nie zrzutem:** szerokosc
+minimalna zdan werdyktu spadla z 274 px do **10 px**, przy budzecie 247 px na 375 px.
+
+Pozostale szesc znalezisk: trzy z czterech pol formularza mialy 14 px, a **iOS przybliza strone,
+gdy pole ma mniej niz 16 px, i nie oddala jej z powrotem** (jedno z nich to formularz monitoringu,
+czyli zapis na rzecz, za ktora bierzemy pieniadze); komorka wyniku ma 56 px i renderuje slowa "not
+measured"; przyciski udostepniania mialy 32 px, a nawigacja 16 px celu dotyku, na stronie, ktorej
+caly sens to bycie przekazana dalej; naglowek etapu na `/methodology` byl czteroelementowym
+rzedem bez zawijania; domena w `h1` nie ma gdzie sie zlamac.
+
+**Metoda warta powtorzenia:** audyt przez **czytanie kodu** (subagent, ~150k tokenow JEGO kontekstu)
+zamiast przez zrzuty ekranu (~390k MOJEGO w poprzedniej rundzie). Weryfikacja przez zmierzenie
+`min-content` w konsoli zamiast ogladania: trzy wywolania zamiast kilkunastu zrzutow. Rozszerzenie
+Chrome i tak renderuje w stalej szerokosci 1440, wiec zrzuty **nie odpowiedzialyby na to pytanie**.
+
 **Otwarte, nienaprawione, w kolejnosci wagi:**
 0. **BAZA: Atlas pelny, zapisy odrzucane. Decyzja Krystiana** (kasowanie 19 140 przedawnionych
    raportow ~684 MB, albo platny tier). Do tego czasu: brak reseedu, korpus jest mieszanka 9.8
