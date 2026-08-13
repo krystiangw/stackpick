@@ -774,6 +774,11 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       const found = f.funnel.provisioning.programmatic.length
       const pages = f.docsPagesRead ?? 0
+      // Named separately in every sentence below, because a count of "documents we read" that
+      // silently mixed pages with llms files is how shopify.com came to be told that none of
+      // three documentation pages was about keys on a scan that found no documentation page.
+      const files = f.machineFilesRead ?? 0
+      const alsoFiles = files > 0 ? ` and ${files} machine-readable ${files === 1 ? 'file' : 'files'}` : ''
       // A 404 is our own bad pick, not a refusal. We choose these three pages out of a sitemap or
       // a docs index, so a link that is gone says our selection is stale and says nothing at all
       // about the vendor, and calling it "refused our request" was flatly untrue: mapbox.com's one
@@ -808,7 +813,7 @@ export const CHECKS: Check[] = [
         const named = f.funnel.provisioning.programmatic.map((phrase) => `"${phrase}"`).join(', ')
         return yes(
           found >= 2 ? 2 : 1,
-          `${found} of ${PROVISIONING_PATTERN_COUNT} provisioning phrases across the ${pages} documents we read: ${named}`,
+          `${found} of ${PROVISIONING_PATTERN_COUNT} provisioning phrases across the ${pages} documentation ${pages === 1 ? 'page' : 'pages'}${alsoFiles} we read: ${named}`,
         )
       }
       if (found > 0) {
@@ -870,7 +875,7 @@ export const CHECKS: Check[] = [
       }
       return yes(
         0,
-        `None of the ${PROVISIONING_PATTERN_COUNT} provisioning phrases appears in the ${pages} documents we read, including ${looked.slice(0, 2).join(' and ')}`,
+        `None of the ${PROVISIONING_PATTERN_COUNT} provisioning phrases appears in the ${pages} documentation ${pages === 1 ? 'page' : 'pages'}${alsoFiles} we read, including ${looked.slice(0, 2).join(' and ')}`,
       )
     },
   },

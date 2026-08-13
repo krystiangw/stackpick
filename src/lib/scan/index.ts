@@ -121,6 +121,8 @@ export type ScanFindings = {
   docsTextCharsFrom: string | null
   /** How many documents the provisioning grep actually had to read. */
   docsPagesRead: number
+  /** llms.txt and llms-full.txt are read for the same words and are not documentation pages. */
+  machineFilesRead?: number
   /** Which ones. A verdict about documentation is only reproducible if we name what we read. */
   docsPagesReadUrls: string[]
   /**
@@ -755,11 +757,17 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
   report('Scoring', STEPS)
 
   const readable = docsWithoutJs(found.docs, [...(docsPage ? [docsPage] : []), ...deeperDocs.pages])
-  const documentsRead = [
+  // Pages and files, counted apart. The provisioning grep reads both, and rightly: a phrase can
+  // sit in llms-full.txt. But the check gates on "at least two documentation pages" before it
+  // will conclude anything, and llms.txt plus llms-full.txt cleared that gate on their own, so
+  // shopify.com published "none of the 3 documentation pages we reached is about keys" beside
+  // "no documentation page could be found to read". Both sentences were built from the same
+  // three files and neither was a documentation page.
+  const docPagesRead = [
     ...(docsPage?.ok && found.docs ? [found.docs] : []),
     ...deeperDocs.pages.map((page) => page.url),
-    ...machine.llmsUrls,
   ]
+  const documentsRead = [...docPagesRead, ...machine.llmsUrls]
 
   return {
     domain,
@@ -807,8 +815,9 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     docsTextCharsFrom: readable.from,
     // The corpus and the count of what it was read from have to be the same thing, or the
     // sentence describes a body of evidence the verdict was not taken from.
-    docsPagesRead: documentsRead.length,
+    docsPagesRead: docPagesRead.length,
     docsPagesReadUrls: documentsRead,
+    machineFilesRead: machine.llmsUrls.length,
     docsPagesUnread: deeperDocs.unreadable,
     docsPagesUnreadStatuses: deeperDocs.unreadStatuses,
     robots,

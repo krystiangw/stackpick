@@ -444,6 +444,23 @@ check('brak odpowiedzi tez nie jest dowodem', askedDocs(0).inconclusive, true)
 check('strona odpowiedziala i nic nie deklaruje', askedDocs(200).inconclusive, undefined)
 check('i wtedy to jest zero', askedDocs(200).points, 0)
 
+console.log('provisioning: strony dokumentacji kontra pliki maszynowe')
+const prov2 = CHECKS.find((c) => c.id === 'programmatic_provisioning')!
+const readPagesAndFiles = (pages: string[], files: number) =>
+  prov2.evaluate({
+    funnel: { provisioning: { programmatic: [] } },
+    docsPagesRead: pages.length,
+    docsPagesReadUrls: pages,
+    machineFilesRead: files,
+    docsPagesUnreadStatuses: [],
+    docsPagesUnread: 0,
+  } as never)
+// shopify.com: three llms files, zero documentation pages, and a verdict that called them
+// "3 documentation pages" beside a sibling saying no documentation page could be found.
+check('same pliki llms nie przekraczaja bramki dwoch stron', readPagesAndFiles([], 3).inconclusive, true)
+check('dwie prawdziwe strony przekraczaja', readPagesAndFiles(['https://v.test/docs/api-keys', 'https://v.test/docs/x'], 3).inconclusive, undefined)
+check('zdanie liczy strony i pliki osobno', readPagesAndFiles(['https://v.test/docs/api-keys', 'https://v.test/docs/x'], 3).detail.includes('3 machine-readable files'), true)
+
 console.log('sprzecznosci wewnatrz jednego wiersza')
 const doorCheck = CHECKS.find((c) => c.id === 'answers_plain_request')!
 // contentful.com read "no agent reaches the site at all" here and "a limit we triggered rather
