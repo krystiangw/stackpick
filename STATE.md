@@ -12,9 +12,21 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 **Produkcja dziala w trybie zdegradowanym. Zapisy do bazy sa odrzucane od nocy 12/13.08.**
 Strona, korpus i skanowanie dzialaja; nic sie nie zapisuje i kazda sciezka mowi o tym wprost.
 
-### 1. Baza (blokuje wszystko inne)
+### 1. Baza (blokuje wszystko inne) - REKOMENDACJA ZMIENIONA 13.08 rano
 
-Atlas: **5120 MB z 5120 MB, zapisy zablokowane**. Klaster dzielony z equity-analyst.
+**Blokada NIE jest samonaprawialna, i to jest nowy fakt.** Ustapila na kilkanascie minut, wiec
+uruchomilem reseed odzyskujacy; **wrocila po okolo 1,7 MB zapisow**, czyli po jednym przebiegu.
+Sam czekanie nie wystarczy: kazdy powazniejszy zapis natychmiast zapycha ja z powrotem.
+**Trzeba podjac decyzje** - kasowanie albo platny tier - inaczej korpus zostanie rozbity na
+zawsze, bo reseedu nie da sie dokonczyc.
+
+**Drugi wniosek z tej proby, gorszy: reseed zaraportowal 340 udanych pomiarow, a nie zapisal
+ANI JEDNEGO.** Skan zwraca teraz pelna karte i `saved:false`, gdy baza odmawia (moja zmiana
+z tej nocy, sluszna wobec odwiedzajacego), a skrypt sprawdzal tylko obecnosc karty. Naprawione:
+`"saved":false` liczy sie jako porazka i idzie do ponowien. **Reseed, ktory nic nie zmienil, nie
+moze wygladac jak reseed, ktory zadzialal.**
+
+Atlas: **5120 MB z 5120 MB**. Klaster dzielony z equity-analyst.
 
 **Rekomendacja: NIE kasowac na slepo. Najpierw zajrzyj w konsole Atlasa** i zobacz rozbicie
 zajetosci, bo tylko tam widac oplog, do ktorego nie mam uprawnien. Pomiar: nasze kolekcje to

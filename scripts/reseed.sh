@@ -56,6 +56,15 @@ try:
 except Exception:
     print('ERR')
 " 2>/dev/null)
+  # A scan that ran and could not be stored is not a reseeded row. The scan API answers with the
+  # full scorecard and `saved:false` when the database refuses the write, which is right for a
+  # visitor and a trap here: on 2026-08-13 this script reported 340 successful measurements while
+  # the cluster was over quota and not one of them was written. A reseed that changes nothing must
+  # not look like a reseed that worked.
+  if printf '%s' "$out" | grep -q '"saved":false'; then
+    fail=$((fail + 1)); failed="$failed $domain"; printf '%-24s NOT SAVED\n' "$domain"
+    sleep "$PAUSE"; continue
+  fi
   # A scan that hit the 27 second budget publishes five "unmeasurable" verdicts that are about our
   # clock and not about the vendor, so it is retried like a failure rather than published. The 8.8
   # reseed lost eleven verdicts this way across launchdarkly.com and netim.com.
@@ -92,6 +101,7 @@ if [ -n "$failed" ]; then
         -d "{\"domain\":\"$domain\"}")
       printf '%s' "$out" | grep -q 'ran out of time' && printf '%-24s STILL TRUNCATED\n' "$domain" && continue
     fi
+    if printf '%s' "$out" | grep -q '"saved":false'; then printf '%-24s STILL NOT SAVED\n' "$domain"; continue; fi
     printf '%s' "$out" | grep -q '"scorecard"' && printf '%-24s recovered\n' "$domain" || printf '%-24s STILL FAILING\n' "$domain"
   done
 fi
