@@ -28,15 +28,42 @@ moze wygladac jak reseed, ktory zadzialal.**
 
 Atlas: **5120 MB z 5120 MB**. Klaster dzielony z equity-analyst.
 
-**Rekomendacja: NIE kasowac na slepo. Najpierw zajrzyj w konsole Atlasa** i zobacz rozbicie
-zajetosci, bo tylko tam widac oplog, do ktorego nie mam uprawnien. Pomiar: nasze kolekcje to
-**757 MB**, equity-analyst 1501 MB, razem 2258 MB. Brakujace ~2,8 GB to prawie na pewno oplog,
-rozdmuchany dziewiecioma reseedami po 185 kB na raport.
-- Jesli to oplog: **nic nie kasujemy**, przyczyna jest juz naprawiona (raport wazy teraz ~5 kB).
-- Jesli to jednak nasze kolekcje: kasujemy **19 140 przedawnionych raportow (~684 MB)**, partiami
-  z przerwami, bo **kasowanie samo jest zapisem**. Zostawiamy 1 719 skanow odwiedzajacych
-  (obiecalismy trwaly link) i najnowszy wiersz kazdej ze 181 domen.
-- Trzecia droga: platny tier. Przy dwoch rosnacych projektach 5 GB bedzie wracac.
+**Rekomendacja z 13.08 rano ("nie kasowac, to prawie na pewno oplog") byla bledna i jest
+wycofana.** Czytalem `storageSize`, czyli rozmiar PO kompresji. Atlas Flex nalicza limit wedlug
+rozmiaru logicznego dokumentow, a te dwie liczby rozjezdzaja sie na naszych raportach trzykrotnie:
+
+| baza | logicznie | na dysku |
+|---|---|---|
+| equity-analyst | 2728 MB | 1513 MB |
+| stackpick | 2310 MB | 757 MB |
+| **razem** | **5039 MB** | **2271 MB** |
+
+Suma logiczna trafia w limit 5120 MB z dokladnoscia do 1,6%. Suma skompresowana nie tlumaczy
+niczego i to ona kazala mi szukac ogloga, do ktorego i tak nie mam uprawnien. Zadnej zagadki
+nie ma: **to sa nasze raporty**.
+
+**Rekomendacja: skasowac przedawnione skany.** Liczba jest zmierzona przez `$bsonSize`, czyli
+dokladnie ta, ktora Atlas nalicza, a nie oszacowana:
+
+```
+MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/prune-reports.mts
+  21179 raportow, 195 najnowszych na domene, 737 zostaje
+  20442 przedawnionych skanow domen z korpusu = 2272 MB logicznie
+```
+
+Zwalnia **2272 MB**, czyli klaster spada z 5039 do 2767 MB (54% limitu). Zostaje najnowszy skan
+kazdej domeny i **wszystkie 542 skany domen spoza korpusu**, bo to sa odwiedzajacy, ktorym
+obiecalismy trwaly link `/r/<id>`. Skrypt domyslnie tylko czyta; kasuje dopiero z `--delete`,
+partiami po 500, bo kasowanie samo jest zapisem.
+
+Przyczyna jest juz naprawiona osobno: raport wazyl 185 kB przez surowy HTML sond, teraz ~5 kB.
+Te 20 tysiecy wierszy to dlug z dziewieciu reseedow sprzed tej poprawki.
+
+**Nie uruchamiam tego bez Twojej zgody** (guardrail: operacje destrukcyjne). Jedna komenda:
+`... npx tsx scripts/prune-reports.mts --delete`.
+
+- Trzecia droga: platny tier. Przy dwoch rosnacych projektach 5 GB bedzie wracac, ale samo
+  kasowanie kupuje duzo czasu, bo nowe raporty sa 37x lzejsze od tych, ktore zapchaly klaster.
 
 ### 2. Platnosci: Stripe czy Paddle
 
