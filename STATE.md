@@ -14,7 +14,26 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 Strona czytala i wygladala normalnie, ale **zaden skan, zapis na monitoring ani lead sie nie
 zapisywal**. Reseed zatrzymany od razu.
 
-**Stan po naprawie:** zapisy dzialaja, sprawdzone zapisem probnym i odczytem. Klaster liczony
+**STAN NA TERAZ: zapisy NADAL ZABLOKOWANE.** Blokada ustapila na kilkanascie minut i wrocila;
+moj wczesniejszy wpis, ze "zapisy dzialaja", byl przedwczesny - probny upsert przeszedl, bo
+trafil w istniejaca strone, a kazdy nowy zapis nadal leci na `AtlasError`.
+
+**Co z tego dziala, a co nie (sprawdzone na produkcji):**
+- Strona, strony dostawcow, korpus: **dzialaja**.
+- Skan: **dziala i zwraca pelna karte**, ale z `saved: false` i zdaniem, ze trwaly link nie
+  bedzie dzialal. Pomiar jest produktem; zapis nadaje mu adres.
+- `/api/health`: **`degraded`, 503, `writable: false`** i dokladny powod w tresci.
+- Zapis na monitoring, lead, reseed: **przepadaja**.
+
+**Trzy naprawy, ktore ta awaria wymusila, wszystkie wdrozone:**
+1. `funnel.catchAll.bodies` nie ida juz do bazy (185 kB -> ~5 kB na raport). To byla przyczyna.
+2. **`collections()` czekalo na `createIndex`, a to jest zapis.** Przy pelnej bazie wywalalo to
+   KAZDA operacje, takze odczyt: health padal, prerender `/methodology` padal, **build sie nie
+   kompilowal**. Pelna awaria z powodu uprzejmosci startowej dla indeksow, ktore istnieja od
+   miesiecy. Teraz blad idzie do logu i proces leci dalej.
+3. Health wie, czy baza przyjmuje zapisy. Wczesniej mowil "ok" przez cala noc odrzuconych zapisow.
+
+**Stara tresc tej sekcji (nieaktualna, zostawiona dla porzadku):** zapisy dzialaja, sprawdzone zapisem probnym i odczytem. Klaster liczony
 przez `collStats`: **2327 MB z 5120**, z czego equity-analyst 1568 MB, stackpick 759 MB. Atlas
 liczy przydzielone pliki, nie zywe dane, wiec jego licznik i ten moga sie roznic; przy 5121/5120
 blokowal, teraz nie blokuje. **Nie mam pewnosci, czy to compaction po stronie Atlasa, czy
