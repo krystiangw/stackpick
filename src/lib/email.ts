@@ -61,10 +61,12 @@ export function scorecardEmail(report: Report): { subject: string; text: string;
   // Without the charset every non-ASCII character in a headline or a detail renders as
   // mojibake in clients that do not sniff, and the middot below is in every stage label.
   const html = `<!doctype html>
-<html><head><meta charset="utf-8"><meta name="color-scheme" content="light"></head>
-<body style="margin:0;background:#faf9f6;padding:32px 16px">
+<html><head><meta charset="utf-8"><meta name="color-scheme" content="light">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>@media (max-width:480px){.pad{padding-left:20px!important;padding-right:20px!important}}</style></head>
+<body style="margin:0;background:#faf9f6;padding:32px 16px;word-break:break-word;overflow-wrap:anywhere">
 <table role="presentation" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #dedbd2">
-  <tr><td style="padding:32px 32px 0">
+  <tr><td class="pad" style="padding:32px 32px 0">
     <div style="font:12px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:2px;text-transform:uppercase;color:#9a7318">
       Let Agents In &middot; agent readiness &middot; ${escape(domain)}
     </div>
@@ -76,7 +78,7 @@ export function scorecardEmail(report: Report): { subject: string; text: string;
     </p>
   </td></tr>
 
-  <tr><td style="padding:28px 32px 0">
+  <tr><td class="pad" style="padding:28px 32px 0">
     <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-top:1px solid #dedbd2;padding-top:20px">
       <tr><td style="padding-top:20px">
         <span style="font:700 44px ui-sans-serif,system-ui,sans-serif;color:${scoreTone(
@@ -131,7 +133,7 @@ export function scorecardEmail(report: Report): { subject: string; text: string;
 
   ${
     plan
-      ? `<tr><td style="padding:24px 32px 0">
+      ? `<tr><td class="pad" style="padding:24px 32px 0">
     <div style="border-top:1px solid #dedbd2;padding-top:20px">
       <div style="font:12px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:1.5px;text-transform:uppercase;color:#9a7318">Fix this first</div>
       <p style="margin:12px 0 0;font:600 18px/1.4 ui-sans-serif,system-ui,sans-serif;color:#16181c">${escape(plan.claim)}</p>
@@ -148,7 +150,7 @@ export function scorecardEmail(report: Report): { subject: string; text: string;
       : ''
   }
 
-  <tr><td style="padding:28px 32px 32px">
+  <tr><td class="pad" style="padding:28px 32px 32px">
     <a href="${url}" style="display:inline-block;background:#16181c;color:#faf9f6;text-decoration:none;padding:12px 22px;font:14px ui-monospace,SFMono-Regular,Menlo,monospace">
       Open the full scorecard
     </a>
