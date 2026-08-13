@@ -7,11 +7,18 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
-## !!! PRODUKCJA: BAZA PELNA, ZAPISY ZABLOKOWANE (2026-08-13, noc) !!!
+## Incydent 2026-08-13: baza zapchana, zapisy odrzucane przez ~godzine (JUZ DZIALA)
 
-**MongoDB Atlas: 5121 MB z 5120 MB. Klaster odrzuca KAZDY zapis.** Strona czyta i wyglada
-normalnie, ale **skan sie nie zapisze, zapis na monitoring sie nie zapisze, lead sie nie zapisze**.
-Wykryte, gdy reseed 9.9 zaczal zwracac 42 porazki na 54 wiersze. Reseed zatrzymany.
+**Objaw:** reseed 9.9 zaczal zwracac 42 porazki na 54 wiersze. W logach Heroku:
+`MongoServerError: you are over your space quota, using 5121 MB of 5120 MB. Writes are blocked`.
+Strona czytala i wygladala normalnie, ale **zaden skan, zapis na monitoring ani lead sie nie
+zapisywal**. Reseed zatrzymany od razu.
+
+**Stan po naprawie:** zapisy dzialaja, sprawdzone zapisem probnym i odczytem. Klaster liczony
+przez `collStats`: **2327 MB z 5120**, z czego equity-analyst 1568 MB, stackpick 759 MB. Atlas
+liczy przydzielone pliki, nie zywe dane, wiec jego licznik i ten moga sie roznic; przy 5121/5120
+blokowal, teraz nie blokuje. **Nie mam pewnosci, czy to compaction po stronie Atlasa, czy
+opoznienie licznika** - i to jest powod, zeby nie uznawac sprawy za zamknieta.
 
 **Klaster jest WSPOLDZIELONY z innym projektem Krystiana** (bazy `equity-analyst`: `news_items`
 246 MB, `forecast_accuracy` 26 MB, ...). StackPick zajmuje ~760 MB z 5 GB, reszta nalezy do
@@ -25,7 +32,8 @@ odbija sciezke; **nic ich nie czyta pozniej**. 21 040 raportow, 97 procent kolek
 Commit `9bdf31a` usuwa je na granicy zapisu, dla kazdego pisarza wlacznie z cronem. Nowy raport
 wazy ~5 kB zamiast 185.
 
-**CZEGO NIE ZROBILEM I DLACZEGO: kasowania danych z produkcyjnej bazy.** To operacja
+**CZEGO NIE ZROBILEM I DLACZEGO: kasowania danych z produkcyjnej bazy.** Po ustapieniu blokady
+nie jest juz pilne, ale zostaje jako sprzatanie i jako zapas na przyszlosc. To operacja
 destrukcyjna, a guardrail mowi wprost, ze takie wymagaja zgody. Liczby sa policzone i gotowe:
 
 | co | ile | uwaga |
@@ -41,9 +49,14 @@ przedawnione pomiary, zostawia kazdy skan odwiedzajacego i najnowszy wiersz kazd
 
 **Alternatywa bez kasowania:** platny tier w Atlasie. To tez decyzja Krystiana (pieniadze).
 
-**Do czasu decyzji:** nie uruchamiac reseedu (zapisy i tak przepadaja), nie obiecywac nikomu
-skanu. Po zwolnieniu miejsca: pelny reseed 9.9, bo ostatni przerwal sie w polowie i czesc wierszy
-w korpusie jest na 9.8, czesc na 9.9.
+**Co zostalo do zrobienia po incydencie:** pelny reseed 9.9, bo poprzedni przerwal sie w polowie
+i korpus jest mieszanka 9.8 i 9.9. Teraz jest tani: raport wazy ~5 kB zamiast 185, wiec caly
+reseed dopisuje ~2 MB zamiast ~60.
+
+**Czego to uczy poza samym bugiem:** przez dziewiec reseedow tej nocy nikt nie patrzyl na rozmiar
+bazy, bo nic tego nie mierzy. Nie mamy zadnego alertu ani liczby na `/api/health` o zajetosci
+klastra. **Kandydat na nastepna robote:** `store` w healthchecku zwraca "readable", a nie wie nic
+o tym, czy jest "writable".
 
 ## W locie w tej chwili (2026-08-13) - RESEED 9.9 PRZERWANY, PATRZ WYZEJ
 
