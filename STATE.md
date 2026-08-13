@@ -759,8 +759,8 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   grantach (66 twierdzeń odtworzonych niezależnie, znalezione i naprawione 2), każda liczba na
   `/findings` i `/report` (kilkanaście, wszystkie zgodne), spójność `corpus.csv` z `corpus.json`.
 
-  **Nietknięte i warte ataku:** reguła `browser-only` w MCP (wprowadzona po jednym przypadku,
-  `njal.la`, i nigdy nie sprawdzona na innych), sondowanie `/api/mcp` poza tym jednym wierszem,
+  **Nietknięte i warte ataku:** ~~reguła `browser-only` w MCP~~ **przejrzana 2026-08-13, patrz
+  niżej**, sondowanie `/api/mcp` poza tym jednym wierszem,
   ~~rozgałęzione `REMEDIES` w `fixfirst.ts`~~ **zrobione 2026-08-13, patrz niżej**,
   oraz `find_providers` na **świeżych** pytaniach,
   bo oba istniejące zestawy są spalone dostrajaniem.
@@ -782,6 +782,31 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
     nie rusza**, więc żaden plan nie zmienia kolejności i żaden wynik nie drgnął.
   - Rady **nie miały żadnych testów**. Obie poprawione gałęzie są przypięte w `scripts/rules.mts`
     i oba asserty sprawdzone na czerwono wobec zdań, które zastępują.
+
+- ~~**MCP: reguła `browser-only` i klasa dowodu `rejects-get`**~~ **zrobione 2026-08-13.**
+  Przelot po wszystkich klasach dowodu w korpusie: `challenges` 77, `answers-json` 18,
+  `rejects-get` 3, **`browser-only` 0**.
+  - **`rejects-get`, 3 wiersze, wszystkie fałszywe.** posthog.com, openrouter.ai i medusajs.com
+    odpowiadały na JSON-RPC POST statusem 405 bez nagłówka `Allow`. Sprawdzone ręcznie: **tak samo
+    odpowiadają na `/docs`, `/models`, `/pricing` i na własnej stronie głównej**, bo tak działa
+    Next.js na Vercelu przy POST do statycznej trasy. Przesłanka reguły („strona serwująca tylko
+    GET mówi o tym w `Allow`") jest na tym stacku fałszywa.
+  - **Dlaczego przetrwało dwa wcześniejsze zwężenia tej samej reguły:** kontrolka jest ścieżką
+    **nieistniejącą**, a ona nie umie ocenić 405. Odpowiada 404, albo 200 na SPA, więc **różni się
+    od endpointu w obie strony**. Zadziałała dopiero kontrolka odwrotnego rodzaju: strona główna,
+    czyli ścieżka na pewno otrasowana. Wszystkie trzy fałszywe trafienia mają tam identyczny 405,
+    a wszystkie trzy prawdziwe serwery 404 albo 200. Koszt: trzy żądania na cały korpus, bo pytamy
+    tylko przy kandydacie, który w ogóle odpowiedział 405.
+  - **Predykcja była błędna i to jest jej najciekawsza część.** Zapowiedziałem trzy stracone punkty;
+    dwa vendory punkt **zachowały i zmieniły adres**. openrouter.ai i posthog.com naprawdę mają
+    serwery, na `mcp.openrouter.ai/mcp` i `mcp.posthog.com/mcp`. Strona dokumentacji sortowała się
+    pierwsza wśród kandydatów i zostawała jako `live[0]`, więc **fałszywy 405 nie tylko dawał zły
+    punkt, ale przesłaniał prawdziwy serwer i drukował zły adres**. Punkt traci sam medusajs.com.
+  - **`browser-only` zostaje mimo zera adresatów.** Detektor wymaga 2xx, treści nie-HTML, frazy
+    o CSRF/Referer i kontrolki, która tego nie mówi, więc jest wąski, nie niesolidny. Usunięcie go
+    kazałoby prawdziwemu serwerowi tylko-dla-przeglądarki czytać się jako „nic nie odpowiedziało".
+    **Ale nadal nie jest potwierdzony na żadnym rzeczywistym wierszu** i jego jedyny przypadek
+    źródłowy (njal.la) okazał się fałszywy, więc nie traktuj go jako sprawdzonego.
 
 - **Dwunasty przebieg adwersaryjny, do zrobienia.** Powierzchnie, których jedenasty nie ruszył,
   w kolejności wagi:
