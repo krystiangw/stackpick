@@ -210,7 +210,15 @@ let cached: Store | null = null
  * deploy clears it.
  */
 const HELD_LIMIT = 50
-const held = new Map<string, Report>()
+/**
+ * On globalThis, not in a module variable, and that difference is the whole thing working. Next
+ * bundles route handlers and pages separately, so each gets its own instance of this module and
+ * its own Map: the scan stored the report in one and /r/<id> looked in the other, which is a 404
+ * that no amount of reading the code explains. Measured on production, then confirmed against a
+ * dyno that had not just restarted, because a deploy landed in the same minute as the first test
+ * and was the other candidate.
+ */
+const held: Map<string, Report> = ((globalThis as { __heldReports?: Map<string, Report> }).__heldReports ??= new Map())
 
 export function holdUnsaved(report: Report): void {
   held.set(report.id, report)
