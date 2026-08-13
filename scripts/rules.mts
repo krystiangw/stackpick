@@ -7,7 +7,7 @@ import { declaredSpecs } from '../src/lib/scan/machine'
 import { changesBetween, comparableScorecards } from '../src/lib/watch'
 import { CHECKS } from '../src/lib/score'
 import { forStorage } from '../src/lib/store'
-import { sawRateLimit } from '../src/lib/corpus'
+import { sawRateLimit, otherDomainsNamed } from '../src/lib/corpus'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
 import { rendersUsableForm } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
@@ -444,6 +444,20 @@ check('brak odpowiedzi tez nie jest dowodem', askedDocs(0).inconclusive, true)
 // A page that answered and declares nothing is a finding about the vendor, and stays one.
 check('strona odpowiedziala i nic nie deklaruje', askedDocs(200).inconclusive, undefined)
 check('i wtedy to jest zero', askedDocs(200).points, 0)
+
+console.log('inne domeny nazwane przez wiersz')
+// Joined, because the assertion helper compares with === and two arrays never are.
+const named = (details: string[], domain: string, measuredOn: string | null = null) =>
+  otherDomainsNamed(details.map((detail) => ({ detail })), domain, measuredOn).join(',')
+// dropboxsign.com is failed on a form at app.hellosign.com, and nothing in the row said so.
+check('signup na cudzej domenie jest wymieniony', named(['https://app.hellosign.com/account/signUp is reachable, but its form needs JavaScript'], 'dropboxsign.com'), 'hellosign.com')
+// Subdomains of the row's own domain are the row, not another company.
+check('wlasna subdomena to nie inna domena', named(['Live MCP endpoint at https://mcp.stripe.com/mcp'], 'stripe.com'), '')
+// measuredOn already carries the redirect case and must not be repeated.
+check('measuredOn nie jest powtarzany', named(['read at https://orama.com/pricing'], 'oramasearch.com', 'orama.com'), '')
+// A dead link inside a vendor's own llms.txt is not a domain we measured them on... but it is
+// named in the sentence, so it is listed. Recorded here so the field is not read as more than it is.
+check('adres cytowany z ich pliku tez sie liczy', named(['1 of 12 links are gone, starting with https://youtube.com/watch'], 'dnsimple.com'), 'youtube.com')
 
 console.log('flaga rateLimited, czyli czy mowi to, co obiecuje nota')
 // nylas.com published "answered 429, which is a limit we triggered rather than a rule about

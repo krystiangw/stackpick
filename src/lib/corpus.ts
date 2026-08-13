@@ -1,4 +1,5 @@
 import type { ScanFindings } from './scan'
+import { registrableDomain } from './scan/http'
 import { categoryFor , CURATED_DOMAINS } from './categories'
 import { publishedCorpus } from './published'
 import { checkHelpUri, CHECKS, MAX_SCORE, refusesAgentsAtSignup, type ScoredCheck } from './score'
@@ -43,6 +44,8 @@ export type CorpusRow = {
    * dataset is what anybody computing a market number reads.
    */
   measuredOn: string | null
+  /** Other registrable domains this row's own sentences name, so cross-corpus counting can see them. */
+  alsoNames: string[]
   scorecardUrl: string
   /** Stable per-vendor address. Unlike scorecardUrl it does not change when we rescan. */
   vendorUrl: string
@@ -91,6 +94,35 @@ export function sawRateLimit(findings: ScanFindings | undefined): boolean {
   return seen.includes(429)
 }
 
+
+/**
+ * Registrable domains other than this row's that its published sentences actually name.
+ *
+ * `measuredOn` only fires when the home page itself landed elsewhere, and plenty of rows are
+ * scored on another company's name without that: dropboxsign.com is failed on a form at
+ * app.hellosign.com, swell.is on swell.store, sentry.io passes MCP on mcp.sentry.dev. The note
+ * beside measuredOn warns that anything counted across the corpus counts those files twice, and
+ * that warning was unavailable on exactly the rows that need it.
+ *
+ * Read out of the details we publish rather than out of the findings, because the sentence is the
+ * evidence: a domain named in a verdict is a domain that verdict was measured on.
+ */
+export function otherDomainsNamed(checks: { detail: string }[], domain: string, measuredOn: string | null): string[] {
+  const found = new Set<string>()
+  for (const check of checks) {
+    for (const match of check.detail.matchAll(/https?:\/\/([^\s/"'),]+)/g)) {
+      let registrable: string
+      try {
+        registrable = registrableDomain(match[1])
+      } catch {
+        continue
+      }
+      if (registrable && registrable !== domain && registrable !== measuredOn) found.add(registrable)
+    }
+  }
+  return [...found].sort()
+}
+
 export function verdictOf(check: ScoredCheck): CorpusVerdict {
   if (check.notApplicable) return 'notApplicable'
   if (check.inconclusive) return 'unmeasured'
@@ -116,6 +148,11 @@ export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus 
         rateLimited: sawRateLimit(report.findings),
         refusesAgentsAtSignup: report.findings ? refusesAgentsAtSignup(report.findings) : false,
         measuredOn: report.findings?.resolvedElsewhere?.finalDomain ?? null,
+        alsoNames: otherDomainsNamed(
+          report.scorecard.checks,
+          report.domain,
+          report.findings?.resolvedElsewhere?.finalDomain ?? null,
+        ),
         unattendedGrant: report.findings?.funnel?.oauth?.grantTypes
           ? Boolean(report.findings.funnel.oauth.unattendedGrant)
           : null,
@@ -150,6 +187,7 @@ export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus 
       'A verdict of unmeasured means we could not evaluate the check, and notApplicable means it does not apply to a product of this kind. Neither is a failure and neither counts in measurable.',
       'unattendedGrant is null when a vendor publishes no registration endpoint or no grant list, false when every advertised grant needs a person at a browser, true when client_credentials is among them. device_code counts as false: approving on another screen is still a person.',
       'rateLimited means a 429 came back anywhere in that scan, at the door, at the signup or at a documentation page, so some checks are unmeasured for a reason that is ours and not theirs. Those rows are thinner than the site, and filtering them out is reasonable.',
+      'alsoNames lists the other registrable domains a row\'s own sentences name, which is how a row can be scored on a form at app.hellosign.com under the name dropboxsign.com. Anything counted across the corpus should read it for the same reason it reads measuredOn.',
       'measuredOn names the domain a row was actually read on, when the home page landed somewhere else. Those rows describe the journey an agent takes from the domain in the name, and the files they score belong to the domain in measuredOn: sendgrid.com answers robots.txt with a redirect to twilio.com/robots.txt, and twilio.com is a row of its own, so anything counted across the corpus counts that file twice.',
       'These are vendors we have no relationship with. Every check is one HTTP request with a published rule, so any row here can be reproduced or disputed.',
     ],
