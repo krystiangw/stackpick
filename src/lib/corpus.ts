@@ -1,3 +1,4 @@
+import type { ScanFindings } from './scan'
 import { categoryFor , CURATED_DOMAINS } from './categories'
 import { publishedCorpus } from './published'
 import { checkHelpUri, CHECKS, MAX_SCORE, refusesAgentsAtSignup, type ScoredCheck } from './score'
@@ -68,6 +69,28 @@ export type Corpus = {
   rows: CorpusRow[]
 }
 
+
+/**
+ * Whether this scan met a 429 anywhere, which is what the note beside this field promises and
+ * what a consumer filtering on it needs.
+ *
+ * It used to be `rateLimitedUs`, which is true only when every try of the door test was a 429.
+ * A 429 at the signup, at a documentation page or at robots.txt leaves the row just as thin and
+ * left the flag false: nylas.com published "answered 429, which is a limit we triggered rather
+ * than a rule about agents" with `rateLimited: false` beside it, so anybody who took our own
+ * advice and filtered on the field kept exactly the rows it was meant to remove.
+ */
+export function sawRateLimit(findings: ScanFindings | undefined): boolean {
+  if (!findings) return false
+  if (findings.rateLimitedUs) return true
+  const seen = [
+    ...(findings.agentStatusesSeen ?? []),
+    ...(findings.docsPagesUnreadStatuses ?? []),
+    ...(findings.funnel?.signup?.statusesSeen ?? []),
+  ]
+  return seen.includes(429)
+}
+
 export function verdictOf(check: ScoredCheck): CorpusVerdict {
   if (check.notApplicable) return 'notApplicable'
   if (check.inconclusive) return 'unmeasured'
@@ -90,7 +113,7 @@ export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus 
         max: report.scorecard.max,
         share: measurable > 0 ? Number((report.scorecard.total / measurable).toFixed(4)) : null,
         scannedAt: report.scannedAt,
-        rateLimited: Boolean(report.findings?.rateLimitedUs),
+        rateLimited: sawRateLimit(report.findings),
         refusesAgentsAtSignup: report.findings ? refusesAgentsAtSignup(report.findings) : false,
         measuredOn: report.findings?.resolvedElsewhere?.finalDomain ?? null,
         unattendedGrant: report.findings?.funnel?.oauth?.grantTypes
@@ -126,7 +149,7 @@ export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus 
       'share is total divided by measurable, not by max. A domain that refused our requests has a smaller denominator, not a worse number, so ranking on total alone would be wrong.',
       'A verdict of unmeasured means we could not evaluate the check, and notApplicable means it does not apply to a product of this kind. Neither is a failure and neither counts in measurable.',
       'unattendedGrant is null when a vendor publishes no registration endpoint or no grant list, false when every advertised grant needs a person at a browser, true when client_credentials is among them. device_code counts as false: approving on another screen is still a person.',
-      'rateLimited means the host answered 429 during that scan, so some checks are unmeasured for a reason that is ours and not theirs. Those rows are thinner than the site, and filtering them out is reasonable.',
+      'rateLimited means a 429 came back anywhere in that scan, at the door, at the signup or at a documentation page, so some checks are unmeasured for a reason that is ours and not theirs. Those rows are thinner than the site, and filtering them out is reasonable.',
       'measuredOn names the domain a row was actually read on, when the home page landed somewhere else. Those rows describe the journey an agent takes from the domain in the name, and the files they score belong to the domain in measuredOn: sendgrid.com answers robots.txt with a redirect to twilio.com/robots.txt, and twilio.com is a row of its own, so anything counted across the corpus counts that file twice.',
       'These are vendors we have no relationship with. Every check is one HTTP request with a published rule, so any row here can be reproduced or disputed.',
     ],

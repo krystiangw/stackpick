@@ -7,6 +7,7 @@ import { declaredSpecs } from '../src/lib/scan/machine'
 import { changesBetween, comparableScorecards } from '../src/lib/watch'
 import { CHECKS } from '../src/lib/score'
 import { forStorage } from '../src/lib/store'
+import { sawRateLimit } from '../src/lib/corpus'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
 import { rendersUsableForm } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
@@ -443,6 +444,15 @@ check('brak odpowiedzi tez nie jest dowodem', askedDocs(0).inconclusive, true)
 // A page that answered and declares nothing is a finding about the vendor, and stays one.
 check('strona odpowiedziala i nic nie deklaruje', askedDocs(200).inconclusive, undefined)
 check('i wtedy to jest zero', askedDocs(200).points, 0)
+
+console.log('flaga rateLimited, czyli czy mowi to, co obiecuje nota')
+// nylas.com published "answered 429, which is a limit we triggered rather than a rule about
+// agents" with rateLimited:false beside it, and the note tells consumers to filter on that field.
+check('429 przy signupie podnosi flage', sawRateLimit({ funnel: { signup: { statusesSeen: [429, 429] } } } as never), true)
+check('429 na stronie dokumentacji podnosi flage', sawRateLimit({ docsPagesUnreadStatuses: [429] } as never), true)
+check('429 w door tescie podnosi flage', sawRateLimit({ agentStatusesSeen: [200, 200, 429] } as never), true)
+check('skan bez 429 nie podnosi flagi', sawRateLimit({ agentStatusesSeen: [200], docsPagesUnreadStatuses: [404] } as never), false)
+check('brak findings to nie rate limit', sawRateLimit(undefined), false)
 
 console.log('provisioning: strony dokumentacji kontra pliki maszynowe')
 const prov2 = CHECKS.find((c) => c.id === 'programmatic_provisioning')!
