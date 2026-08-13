@@ -948,7 +948,7 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   serwowaloby strone z kohorty prawie pustej, a mieszanie wersji jest dokladnie tym, przed czym
   chroni regula jednej wersji.
 
-- ~~**Trzynasty przebieg adwersaryjny**~~ **zrobiony 2026-08-13: 221 werdyktow sprawdzonych
+- ~~**Trzynasty przebieg adwersaryjny**~~ **zrobiony 2026-08-13: 282 werdykty sprawdzone
   niezaleznie, 0 bledow.** Celowany w rodziny stawiajace zarzuty najlatwiejsze do obalenia, kazda
   z **wlasna kontrolka udowadniajaca, ze sonda umie powiedziec „tak"** (regula 2 tego projektu).
   - **`oauth_dcr`, 44 wiersze**: „No OAuth metadata on any of the 8/9 hosts probed". Przesondowane
@@ -974,7 +974,21 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
     ekstrakcji (wyciagnalem adres cennika ze zdania „nie znalezlismy linku do rejestracji").
     **Wniosek: reguly skanera sa ostrozniejsze niz ich naiwna reimplementacja.** Kto bedzie je
     atakowal, musi sprawdzac wypelnialnosc pola i zasieg formularza, nie sama obecnosc `<form>`.
+  - **`llms_txt`, 16 oskarzen + 20 kontrolnych**: „nie publikujecie llms.txt". Przesondowane na
+    5 hostach x 2 pliki, z odrzucaniem HTML-owych powlok. **16 z 16 i 20 z 20.** Jedyna niezgoda,
+    `crowdin.com`, byla brakiem hosta `support.` w MOJEJ liscie: plik jest dokladnie pod adresem,
+    ktory nasz werdykt podaje.
+  - **`self_serve`, 5 oskarzen + 20 kontrolnych**: „No free tier or no-card wording at <url>".
+    **5 z 5**, kontrolka 18 z 20 (dwa pudla to moje wezsze wyrazenie, nie blad skanera).
   - `signup_no_captcha` 17 z 17 i martwe linki w llms.txt 10 z 10, opisane wyzej.
+  - **Wniosek, ktory powtorzyl sie CZTERY razy w jednym przebiegu i jest wazniejszy niz same
+    liczby: kiedy moja niezalezna sonda nie zgadzala sie ze skanerem, za kazdym razem myliła sie
+    sonda.** `api.video` (pole `disabled`), `browserless.io` (input poza formularzem),
+    `payloadcms.com` (newsletter z wylaczonym przyciskiem), `medusajs.com` i `name.com` (`$0.3 / 1M`
+    i `$0.00` zlapane przez `\$0\b` jako darmowy poziom), `crowdin.com` (brak hosta w mojej liscie),
+    `name.com` (adres cennika wyciagniety ze zdania o braku rejestracji). **Reguly maja w sobie
+    rozroznienia, ktorych szybki regex nie ma.** Praktyczny wniosek na przyszlosc: gdy audyt
+    zglasza bledy, najpierw sprawdz audyt.
   - **Metodyczna uwaga, dwa razy w jednej sesji:** wynik „wszystko negatywne" jest podejrzany
     z definicji. Pierwszy przebieg testu CAPTCHA pokazal 17 z 17 falszywych oskarzen i byl bledem
     parsowania w shellu (kazde cialo mialo 1 bajt). **Przy wyniku zerowym najpierw udowodnij, ze
