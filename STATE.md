@@ -1130,6 +1130,21 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   - **Konsekwencja dla weryfikacji recznej:** sprawdzajac werdykt przez powtorny skan, odczekaj
     minute, inaczej mierzysz wlasne obciazenie. Tak wlasnie powstala anomalia `sinch.com`.
 
+- ~~**Strony audytow (`/audit`) sprawdzone**~~ **2026-08-14, wszystko sie zgadza.** To jedyna
+  powierzchnia z realnymi twierdzeniami, ktorej nie ruszalem, a sprzedaje platny produkt.
+  - Liczby na `/audit` sa **wyliczane** z `src/data/audits/*.json`, wiec nie moga sie rozjechac.
+    Sprawdzone recznie: **18 przebiegow w czterech plikach, 12 z niepustym `blockedBy`**, i kazda
+    z tych dwunastu blokad to naprawde krok wymagajacy czlowieka (zalozenie konta, mail
+    weryfikacyjny, 2FA, klikniecie w konsoli, karta platnicza). Szesc niezablokowanych to dokladnie
+    kategoria edytorow, ktora konta nie potrzebuje, czyli zgadza sie ze zdaniem na stronie glownej.
+  - **Znalezione ryzyko: strona glowna cytuje te same przebiegi jako `18 / 18` i `0 / 12` wpisane
+    RECZNIE.** Dzis prawdziwe, ale **piaty audyt unieważnilby oba zdania, nie dotykajac zadnej
+    z tych stron.** Obie liczby sa teraz pilnowane przez `npm run audit` (19 pilnowanych liczb
+    zamiast 17), zakotwiczone na samym twierdzeniu, bo gole `N / 18` pasowaloby do dowolnego wyniku
+    na stronie. Sprawdzone, ze straznik zapala sie przy rozjezdzie.
+  - **Pulapka: audyt czyta strone PRODUKCYJNA**, wiec zmiana lokalnego zrodla go nie zapala.
+    Zeby udowodnic, ze straznik dziala, trzeba rozjechac strone danych, nie strone prozy.
+
 - **Dwunasty przebieg adwersaryjny, do zrobienia.** Powierzchnie, których jedenasty nie ruszył,
   w kolejności wagi:
   1. ~~**Trasowanie po raz drugi.**~~ **zrobione w rundzie 105: 35 → 20 procent.** Wszystkie 149
