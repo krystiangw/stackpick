@@ -948,6 +948,28 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   serwowaloby strone z kohorty prawie pustej, a mieszanie wersji jest dokladnie tym, przed czym
   chroni regula jednej wersji.
 
+- ~~**Trzynasty przebieg adwersaryjny**~~ **zrobiony 2026-08-13: 137 werdyktow sprawdzonych
+  niezaleznie, 0 bledow.** Celowany w rodziny stawiajace zarzuty najlatwiejsze do obalenia, kazda
+  z **wlasna kontrolka udowadniajaca, ze sonda umie powiedziec „tak"** (regula 2 tego projektu).
+  - **`oauth_dcr`, 44 wiersze**: „No OAuth metadata on any of the 8/9 hosts probed". Przesondowane
+    niezaleznie: 9 hostow (apex, www, api, auth, accounts, id, login, app, mcp) x 2 sciezki
+    (`/.well-known/oauth-authorization-server`, `/.well-known/openid-configuration`), z parsowaniem
+    JSON i wymogiem `issuer` albo `authorization_endpoint`. **Zero trafien, 44 z 44 potwierdzone.**
+    Kontrolka: ta sama sonda znajduje metadane u `chargebee.com` (bez `registration_endpoint`,
+    dokladnie jak mowi nasz werdykt), `apify.com`, `api.video` i `bitmovin.com` (z endpointem).
+  - **`agent_entry_point`, 66 wierszy**: „None of the 9 known agent entry paths returns a file
+    rather than your page shell". Przesondowane niezaleznie, z odrzucaniem HTML-owych powlok
+    **i z kontrolka na sciezce, ktorej nikt nie zarejestrowal**, zeby catch-all nie liczyl sie jako
+    plik. **Zero trafien, 66 z 66 potwierdzone.** Kontrolka: znajduje pliki u wszystkich siedmiu
+    vendorow, ktorym je zaliczamy (cloudflare, resend, pinecone, sentry, inngest, neon) oraz
+    u nas. Przy okazji niezalezne potwierdzenie liczby z rady naprawczej: nasz `/agent-signup.md`
+    ma **1728 bajtow**, a rada mowi „1.7 kB".
+  - `signup_no_captcha` 17 z 17 i martwe linki w llms.txt 10 z 10, opisane wyzej.
+  - **Metodyczna uwaga, dwa razy w jednej sesji:** wynik „wszystko negatywne" jest podejrzany
+    z definicji. Pierwszy przebieg testu CAPTCHA pokazal 17 z 17 falszywych oskarzen i byl bledem
+    parsowania w shellu (kazde cialo mialo 1 bajt). **Przy wyniku zerowym najpierw udowodnij, ze
+    narzedzie umie znalezc cokolwiek.**
+
 - **Dwunasty przebieg adwersaryjny, do zrobienia.** Powierzchnie, których jedenasty nie ruszył,
   w kolejności wagi:
   1. ~~**Trasowanie po raz drugi.**~~ **zrobione w rundzie 105: 35 → 20 procent.** Wszystkie 149
