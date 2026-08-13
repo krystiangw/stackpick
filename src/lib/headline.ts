@@ -1,5 +1,6 @@
 import type { ScanFindings } from './scan'
-import { DOCS_SHELL_FLOOR, type Scorecard } from './score'
+import { type Scorecard } from './score'
+import { DOCS_SHELL_FLOOR } from './scan/http'
 
 export type Headline = {
   /** One sentence a stranger would forward to a colleague. Specific, checkable, unflattering. */

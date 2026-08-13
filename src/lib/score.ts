@@ -1,5 +1,5 @@
 import { PROVISIONING_PATTERN_COUNT } from './scan/funnel'
-import { AGENT_UA } from './scan/http'
+import { AGENT_UA, DOCS_SHELL_FLOOR } from './scan/http'
 import { OPENAPI_PATHS } from './scan/machine'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
@@ -11,13 +11,12 @@ import type { ScanFindings } from './scan'
  * what this constant exists to prevent, and the cost of being wrong about that is a vendor who
  * cannot reproduce a number we published about them.
  */
-export const FORMULA_VERSION = '9.7'
+export { DOCS_SHELL_FLOOR }
+
+export const FORMULA_VERSION = '9.8'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
-
-/** Characters of text below which a documentation page is a shell and not short prose. */
-export const DOCS_SHELL_FLOOR = 500
 
 /**
  * A documentation path that promises to talk about credentials. Deliberately narrower than the

@@ -8,7 +8,7 @@ import { changesBetween, comparableScorecards } from '../src/lib/watch'
 import { CHECKS } from '../src/lib/score'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS } from '../src/lib/scan'
 import { rendersUsableForm } from '../src/lib/scan/funnel'
-import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE } from '../src/lib/scan/discover'
+import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable } from '../src/lib/scan/discover'
 import {
   provisioningMatches,
   BOT_DEFENCE_RULES,
@@ -405,6 +405,22 @@ check('dwie pozycje listy to nie jedno zdanie', provisioningMatches(dashboardLis
 // lost every one of them.
 const headingThenBody = '<h2>Create a signing key</h2><p>Send a POST to /system/v1/signing-keys.</p>'
 check('naglowek i jego tresc to jedno', provisioningMatches(headingThenBody).length > 0, true)
+
+console.log('host dokumentacji, czyli czy pusta skorupa jest dokumentacja')
+const page = (url: string) => ({ url })
+const shell = { rank: 3_000_000, chars: 38, page: page('https://docs.v.test'), requested: 'https://docs.v.test' }
+const real = { rank: 1_000_000, chars: 8431, page: page('https://support.v.test/developer/'), requested: 'https://developer.v.test' }
+const leaderOf = (c: typeof shell) => ({ page: c.page, rank: c.rank, requested: c.requested })
+// crowdin.com: docs.crowdin.com serves 38 characters of an in-app help application and outranks
+// by a million points, and four checks read whichever page this returns.
+check('pusta skorupa przegrywa z trescia', bestReadable(leaderOf(shell), [shell, real])?.page.url, 'https://support.v.test/developer/')
+// twilio.com/en-us/developers carries more prose than twilio.com/docs, where the key page lives.
+// Content is not allowed to reorder anything except a leader with nothing in it.
+const richer = { rank: 1_000_000, chars: 40_000, page: page('https://v.test/marketing'), requested: 'https://v.test/marketing' }
+const properDocs = { rank: 3_000_000, chars: 4_000, page: page('https://docs.v.test'), requested: 'https://docs.v.test' }
+check('bogatsza strona nie przebija wlasciwej', bestReadable(leaderOf(properDocs), [properDocs, richer])?.page.url, 'https://docs.v.test')
+// When every candidate is a shell the shell stays: that is a finding about the vendor.
+check('same skorupy zostaja skorupa', bestReadable(leaderOf(shell), [shell])?.page.url, 'https://docs.v.test')
 
 console.log('wybor stron dokumentacji, czyli czego w ogole nie mozemy przeczytac')
 const eligible = (path: string) => CREDENTIAL_PAGE_HINTS.test(path)

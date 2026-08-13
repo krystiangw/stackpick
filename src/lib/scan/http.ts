@@ -34,6 +34,15 @@ export const NAMED_CRAWLERS = [
   { name: 'Claude-User', ua: 'Mozilla/5.0 (compatible; Claude-User/1.0; +Claude-User@anthropic.com)' },
 ] as const
 
+/**
+ * Characters of visible text below which a page is a shell rather than a short page. Measured
+ * across the corpus on 2026-08-12: the genuine shells render 31 to 126 characters, and the
+ * smallest real page we were wrongly failing renders 647. Lives here because both the scoring of
+ * a documentation page and the choosing of one need the same line, and the scanner cannot import
+ * the scorer.
+ */
+export const DOCS_SHELL_FLOOR = 500
+
 export const AGENT_UA = `LetAgentsIn/1.0 (+${SITE_URL}/methodology)`
 
 /**

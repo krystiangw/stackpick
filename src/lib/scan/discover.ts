@@ -1,4 +1,4 @@
-import { fetchUrl, inParallel, isRealTextFile, looksLikeHtml, registrableDomain, visibleTextLength, type Fetched , stripCodeBlocks } from './http'
+import { fetchUrl, inParallel, isRealTextFile, looksLikeHtml, registrableDomain, visibleTextLength, DOCS_SHELL_FLOOR, type Fetched , stripCodeBlocks } from './http'
 import { fetchPackageFacts } from './npm'
 import { rendersUsableForm } from './funnel'
 
@@ -274,6 +274,30 @@ function documentationTier(url: string, vendor: VendorSite, confirmedDocsOrigins
  * questions, each worth more than everything under it, and content last: every wrong pick in the
  * audit read richer than the page it beat.
  */
+
+type DocsCandidate<T> = { rank: number | null; chars: number; page: T; requested: string }
+
+/**
+ * The tie-break, as a decision that can be checked without a network. Returns the leader
+ * unchanged unless the leader renders nothing and something else, ranked lower, renders enough
+ * to read: then the highest-ranked page with content wins.
+ */
+export function bestReadable<T extends { url: string }>(
+  leader: { page: T; rank: number; requested: string } | null,
+  candidates: DocsCandidate<T>[],
+): { page: T; rank: number; requested: string } | null {
+  if (!leader || candidates.find((c) => c.page.url === leader.page.url && c.chars >= DOCS_SHELL_FLOOR)) return leader
+  let readable: { page: T; rank: number; requested: string } | null = null
+  for (const candidate of candidates) {
+    if (candidate.page.url === leader.page.url || candidate.rank === null) continue
+    if (candidate.chars < DOCS_SHELL_FLOOR) continue
+    if (!readable || candidate.rank > readable.rank) {
+      readable = { page: candidate.page, rank: candidate.rank, requested: candidate.requested }
+    }
+  }
+  return readable ?? leader
+}
+
 function documentationRank(page: Fetched, vendor: VendorSite, confirmedDocsOrigins: ReadonlySet<string>): number | null {
   if (!page.ok) return null
   // A file a vendor publishes for machines is not one of "the N documentation pages we read":
@@ -380,6 +404,26 @@ async function bestDocs(
     if (rank === null) continue
     if (!best || rank > best.rank) best = { page, rank, requested: unique[index] }
   }
+  // A documentation host that renders nothing is not the documentation, whatever its address
+  // says. The tier is absolute by design, because content cannot settle the ordinary case:
+  // twilio.com/en-us/developers carries more prose than twilio.com/docs, where the API key page
+  // lives. But absolute means an empty shell on the canonical host beats a section that renders
+  // in full, and it did: crowdin.com links support.crowdin.com/developer, which serves 8,431
+  // characters, and never links docs.crowdin.com, which serves 38 and is an in-app help
+  // application. scrapingbee.com is the same shape at 126 against 88,765. Four checks read
+  // whichever page this returns, so one wrong pick is four wrong verdicts.
+  //
+  // Content is still not allowed to order the candidates, only to break the tie where the winner
+  // has no content at all.
+  best = bestReadable(
+    best,
+    pages.map((page, index) => ({
+      rank: documentationRank(page, vendor, confirmedDocsOrigins),
+      chars: page.ok ? visibleTextLength(page.body) : 0,
+      page,
+      requested: unique[index],
+    })),
+  )
   // The URL we landed on rather than the one we asked for, so the report names the page that was
   // actually read and machine.ts probes llms.txt on the origin that served it. The one we asked
   // for comes back too, because that is the one that says where the URL came from.
@@ -517,8 +561,11 @@ async function answeringHosts(domain: string, prefixes: string[], vendor: Vendor
     }
     if (!found.includes(got.url)) found.push(got.url)
     // The host the vendor themselves called docs.<domain> is their answer to the question, so
-    // the guesses behind it are not worth waiting for.
-    if (isCanonicalDocsHost(got.url, vendor)) break
+    // the guesses behind it are not worth waiting for. Unless it answers with nothing:
+    // docs.crowdin.com serves 38 characters of an in-app help application, and stopping here
+    // meant developer.crowdin.com, which serves 8,431, was never even a candidate. The requests
+    // are already on the wire, so reading two more of them costs nothing.
+    if (isCanonicalDocsHost(got.url, vendor) && visibleTextLength(got.body) >= DOCS_SHELL_FLOOR) break
   }
   return found
 }
