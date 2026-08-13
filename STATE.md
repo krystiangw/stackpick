@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-13 (formula 9.7, weekend autonomiczny)
+# Let Agents In: stan na 2026-08-13 (formula 9.8, weekend autonomiczny)
 
 Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
 **Dwie sekcje na dole tego bloku, "Co zostało z audytów" i "Następne kroki merytoryczne", są
@@ -9,7 +9,46 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 
 ## W locie w tej chwili (2026-08-13) - NIC NIE LECI
 
-**Korpus: 170 wierszy na formule 9.7, audyt czysty (0 rozjazdow, 0 sprzecznosci), drzewo czyste.**
+**Korpus: 170 wierszy na formule 9.8, audyt czysty (0 rozjazdow, 0 sprzecznosci), drzewo czyste.**
+
+### Runda 9.8: pusta skorupa nie jest dokumentacja. Pozycja 2 z listy ZAMKNIETA
+
+Cztery checki czytaja te sama strone (`docs_without_js`, `machine_readable_api`,
+`programmatic_provisioning`, `user_agents_allowed`), wiec **jeden zly wybor strony to cztery zle
+werdykty**, a jedna naprawa rusza cztery naraz.
+
+**Prawdziwa przyczyna byla linijke wyzej niz wskazywal audyt.** Audyt mowil, ze pusty szkielet na
+`docs.<domena>` wygrywa rankingiem. To prawda, ale u crowdin.com nie o to chodzilo: sonda
+subdomen **przerywala szukanie**, gdy `docs.crowdin.com` odpowiedzialo, wiec
+`developer.crowdin.com` (8 431 znakow) nigdy nie trafial na liste kandydatow. Naprawione oba:
+sonda nie przerywa na pustce, a lider bez tresci przegrywa z najwyzej ocenionym kandydatem, ktory
+tresc ma (`bestReadable`, przetestowane bez sieci).
+
+**Zasada zachowana:** tresc nadal niczego nie porzadkuje, tylko zrywa remis, w ktorym lider nie ma
+nic. `twilio.com/en-us/developers` ma wiecej prozy niz `twilio.com/docs`, gdzie lezy strona o
+kluczach, wiec gdyby tresc decydowala, wybieralibysmy folder marketingowy.
+
+**Diff (0,67 procent, 11 dostawcow, 17 werdyktow), przewidywanie trafione co do skali i kierunku:**
+- crowdin.com: **trzy checki w gore naraz** (llms_txt, docs_without_js, provisioning).
+- scrapingbee.com: dwa **falszywe oskarzenia** zniknely (docs_without_js i user_agents_allowed;
+  jego 403 dla nazwanych agentow byl na pustym hoscie `docs.`, nie na dokumentacji).
+- mongodb.com, dynadot.com, deepl.com, kinde.com, medusajs.com: w gore.
+- locationiq.com i stytch.com spadly i **odbudowaly sie w pojedynczym skanie** - szum.
+- vonage.com: 403 i dla nas, i dla Chrome, wiec niemierzalne i to jest poprawne.
+
+**pandadoc.com wart osobnego zdania:** u niego KAZDY kandydat jest szkieletem, wiec szkielet
+zostaje. To ustalenie o nich, nie luka u nas.
+
+**ZNANY, NIENAPRAWIONY WIERSZ: postmarkapp.com.** Po szostym reseedzie tej nocy jego strona
+odpowiada nam statusem 0, wiec `programmatic_provisioning` jest niezmierzone, a
+`machine_readable_api` oblane. **Sprawdzone recznie: postmark nadal serwuje naglowek
+`link: </swagger/server.yml>; rel="service-desc"` i spec odpowiada 200.** To nasze obciazenie, nie
+ich blad. **Do zrobienia: pojedynczy skan konsola, gdy ucichnie.** Trzeci raz tej nocy ten sam
+dostawca degraduje sie na naszym ruchu - to jest ta zapisana lekcja w praktyce.
+
+**Stan checkow po 9.8** (porownanie z 9.2 w nawiasach): `programmatic_provisioning` fail **32**
+(bylo 77), `docs_without_js` fail **2** (bylo 11), `llms_txt` fail **36** (bylo 47),
+`user_agents_allowed` fail **3** (bylo 5), `signup_reachable` fail 85 (bylo 88).
 
 ### Runda po 9.5: "menu nie jest zdaniem" (9.6 -> 9.7), pozycja 1 z listy otwartych ZAMKNIETA
 
@@ -127,10 +166,10 @@ przyjmowania uzytkownikow, bo monitoring jest darmowy i strona to mowi.
 1. **Wybor hosta dokumentacji**: `docs.<domena>`, ktory jest pusta skorupa, wygrywa z prawdziwa
    dokumentacja (crowdin.com, scrapingbee.com).
 2. **Probkowanie stron dla `docs_without_js`** dziedziczone po hintach pisanych dla provisioningu.
-3. **llms.txt jako indeks stron do czytania** (Modal wskazuje w nim dokladnie te strone, ktorej
+2. **llms.txt jako indeks stron do czytania** (Modal wskazuje w nim dokladnie te strone, ktorej
    nam brakuje). Zero dodatkowych pobran na odkrycie.
-4. **Potwierdzanie odmowy na drugim URL-u** przed publikacja `user_agents_allowed: fail`.
-5. Jedno dyno, widok mobilny niesprawdzony, nie mierzymy czy strona uniesie crawl.
+3. **Potwierdzanie odmowy na drugim URL-u** przed publikacja `user_agents_allowed: fail`.
+4. Jedno dyno, widok mobilny niesprawdzony, nie mierzymy czy strona uniesie crawl.
 
 **Koszty kontekstu (zmierzone):** audyt w przegladarce ~390k tokenow (39 procent okna) w
 kilkanascie wywolan - **najdrozsza rzecz, jaka robimy**. Cztery audyty subagentami tej nocy:
