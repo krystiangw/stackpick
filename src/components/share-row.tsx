@@ -25,8 +25,8 @@ export function ShareRow({ domain, headline, url }: { domain: string; headline: 
     `${headline}\n\nThe full scorecard, every check reproducible with one HTTP request:\n${link}\n`,
   )}`
 
-  const primary = 'bg-ink px-3 py-2 font-mono text-xs text-ground transition-opacity hover:opacity-85'
-  const button = 'border border-ink/40 px-3 py-2 font-mono text-xs transition-colors hover:border-brass hover:text-brass'
+  const primary = 'bg-ink px-3 py-3 font-mono text-xs text-ground transition-opacity hover:opacity-85'
+  const button = 'border border-ink/40 px-3 py-3 font-mono text-xs transition-colors hover:border-brass hover:text-brass'
 
   return (
     <div className="flex flex-wrap items-center gap-2">

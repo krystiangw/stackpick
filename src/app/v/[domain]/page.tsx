@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: { params: Promise<{ domain: s
 function NotMeasured({ domain }: { domain: string }) {
   return (
     <main className="mx-auto flex max-w-2xl flex-col px-6 py-24">
-      <h1 className="text-3xl font-semibold">We have not measured {domain}</h1>
+      <h1 className="text-2xl font-semibold wrap-anywhere sm:text-3xl">We have not measured {domain}</h1>
       <p className="mt-4 leading-relaxed">
         Nobody has run it through the checks yet, so there is nothing here to show. The scan takes under
         half a minute, needs no account and publishes nothing about you: only the curated corpus is
@@ -97,7 +97,7 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
       <p className="font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">
         Agent readiness{category ? ` · ${category.label}` : ''}
       </p>
-      <h1 className="mt-3 text-3xl font-semibold">{name}</h1>
+      <h1 className="mt-3 text-2xl font-semibold wrap-anywhere sm:text-3xl">{name}</h1>
 
       {scorecard.formulaVersion !== FORMULA_VERSION && (
         <div className="mt-6 border-l-2 border-warn bg-surface p-6">
@@ -146,11 +146,15 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
                 {checks.map((check) => {
                   const tone = verdictTone(check)
                   return (
-                    <li key={check.id} className="grid grid-cols-[5.5rem_1fr] gap-4">
+                    // minmax(0,1fr) rather than 1fr, because a bare 1fr is minmax(auto,1fr) and inflates to
+                    // the longest unbreakable token in it. That token is ours: every scorecard opens with
+                    // "Answered 200 to LetAgentsIn/1.0 (+https://letagentsin.com/methodology)", 274px of
+                    // monospace in a 223px column, so every vendor page scrolled sideways on a phone.
+                    <li key={check.id} className="grid grid-cols-[4rem_minmax(0,1fr)] gap-4 sm:grid-cols-[5.5rem_minmax(0,1fr)]">
                       <span className={`font-mono text-xs font-semibold ${tone.className}`}>{tone.label}</span>
                       <div className="flex flex-col gap-1">
                         <span className="text-sm font-medium">{check.label}</span>
-                        <span className="font-mono text-xs text-ink-soft">{check.detail}</span>
+                        <span className="font-mono text-xs wrap-anywhere text-ink-soft">{check.detail}</span>
                         {check.unblock && <span className="text-xs italic text-ink-faint">{check.unblock}</span>}
                       </div>
                     </li>

@@ -346,7 +346,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                     />
                   )}
                 </div>
-                <span className="w-14 text-right font-mono text-sm tabular-nums">
+                <span className="w-auto shrink-0 text-right font-mono text-sm tabular-nums sm:w-14">
                   {stage.measurable === 0 ? 'not measured' : `${stage.points}/${stage.measurable}`}
                 </span>
               </div>
@@ -380,15 +380,15 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                   {checks.map((check) => {
                     const tone = verdictTone(check)
                     return (
-                      <li key={check.id} className="grid grid-cols-[3.2rem_1fr] gap-4">
+                      <li key={check.id} className="grid grid-cols-[3.2rem_minmax(0,1fr)] gap-4">
                         <span className={`font-mono text-xs font-semibold ${tone.className}`}>{tone.label}</span>
                         <div className="flex flex-col gap-1">
                           <span className="text-sm font-medium">{check.label}</span>
-                          <span className="font-mono text-xs text-ink-soft">{check.detail}</span>
+                          <span className="font-mono text-xs wrap-anywhere text-ink-soft">{check.detail}</span>
                           {check.points < check.max && !check.inconclusive && !check.notApplicable && (
                             <span className="text-xs italic text-ink-faint">{check.why}</span>
                           )}
-                          {check.unblock && <span className="text-xs italic text-ink-faint">{check.unblock}</span>}
+                          {check.unblock && <span className="text-xs italic wrap-anywhere text-ink-faint">{check.unblock}</span>}
 
                         </div>
                       </li>

@@ -33,7 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/" className="font-mono text-base font-semibold tracking-tight">
               Let Agents <span className="text-brass">In</span>
             </Link>
-            <nav className="flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs uppercase tracking-widest text-ink-faint">
+            <nav className="flex flex-wrap gap-x-5 gap-y-2 font-mono text-xs [&>a]:py-1.5 uppercase tracking-widest text-ink-faint">
               <Link href="/docs" className="hover:text-ink">
                 Docs
               </Link>

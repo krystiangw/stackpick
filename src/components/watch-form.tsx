@@ -80,7 +80,7 @@ export function WatchForm({ domain, initialEmail }: { domain?: string; initialEm
             onChange={(event) => setSite(event.target.value)}
             placeholder="yourdomain.com"
             aria-label="Domain to watch"
-            className="w-full border border-rule bg-surface px-4 py-3 font-mono text-sm sm:w-1/2"
+            className="w-full border border-rule bg-surface px-4 py-3 font-mono text-base sm:text-sm sm:w-1/2"
           />
         )}
         <input
@@ -90,7 +90,7 @@ export function WatchForm({ domain, initialEmail }: { domain?: string; initialEm
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@company.com"
           aria-label="Where to send the alerts"
-          className="w-full border border-rule bg-surface px-4 py-3 font-mono text-sm"
+          className="w-full border border-rule bg-surface px-4 py-3 font-mono text-base sm:text-sm"
         />
         <button
           type="submit"

@@ -101,7 +101,7 @@ export function EmailGate({
           placeholder="you@company.com"
           disabled={state === 'sending'}
           aria-label="Your email"
-          className="min-w-0 flex-1 border border-rule bg-ground px-4 py-3 font-mono text-sm placeholder:text-ink-faint disabled:opacity-60"
+          className="min-w-0 flex-1 border border-rule bg-ground px-4 py-3 font-mono text-base sm:text-sm placeholder:text-ink-faint disabled:opacity-60"
         />
         <button
           type="submit"

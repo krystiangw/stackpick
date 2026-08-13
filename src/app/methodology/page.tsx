@@ -55,11 +55,11 @@ export default async function MethodologyPage() {
             const stageMax = checks.reduce((sum, check) => sum + check.max, 0)
             return (
               <div key={stage.id}>
-                <h3 className="flex items-baseline gap-3 border-b border-rule pb-2">
+                <h3 className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-rule pb-2">
                   <span className="font-mono text-sm text-brass">{stage.letter}</span>
                   <span className="font-mono text-sm font-medium">{stage.title}</span>
                   <span className="text-xs text-ink-faint">{stage.question}</span>
-                  <span className="ml-auto font-mono text-xs tabular-nums text-ink-faint">{stageMax} pts</span>
+                  <span className="w-full sm:ml-auto sm:w-auto font-mono text-xs tabular-nums text-ink-faint">{stageMax} pts</span>
                 </h3>
                 <ul className="mt-4 flex flex-col gap-4">
                   {checks.map((check) => (
