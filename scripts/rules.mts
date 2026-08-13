@@ -8,6 +8,7 @@ import { changesBetween, comparableScorecards } from '../src/lib/watch'
 import { CHECKS } from '../src/lib/score'
 import { forStorage } from '../src/lib/store'
 import { REMEDIES } from '../src/lib/fixfirst'
+import { ERRATA, erratumFor } from '../src/lib/errata'
 import { sawRateLimit, otherDomainsNamed } from '../src/lib/corpus'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
 import { rendersUsableForm } from '../src/lib/scan/funnel'
@@ -604,6 +605,17 @@ check('strona glowna odpowiada inaczej, wiec to ta sciezka', methodRefusalIsRout
 check('zwykla strona mowi Allow: GET', methodRefusalIsRouted(refusal({ allow: 'GET, HEAD' }), 404), false)
 check('HTML to strona z bledem, nie serwer', methodRefusalIsRouted(refusal({}, '<!DOCTYPE html><html><body>Nope</body></html>'), 404), false)
 check('inny status niz 405 nie przechodzi ta droga', methodRefusalIsRouted({ ...refusal(), status: 404 }, 200), false)
+
+console.log('errata wygasa sama, gdy wiersz zostanie zmierzony ponownie')
+// The whole design rests on this: nobody has to remember to delete an entry. If the comparison
+// were string-based, "9.8" would sort after "9.12" and every correction would vanish too early.
+for (const entry of ERRATA) {
+  check(`${entry.domain} nadal wymaga sprostowania na starej formule`, erratumFor(entry.domain, entry.checkId, '9.8') !== null, true)
+  check(`${entry.domain} nie wymaga go po naprawie`, erratumFor(entry.domain, entry.checkId, entry.fixedIn) !== null, false)
+  check(`${entry.domain} nie wymaga go na nowszej formule`, erratumFor(entry.domain, entry.checkId, '10.0') !== null, false)
+}
+check('sprostowanie nie wycieka na inny check', erratumFor(ERRATA[0].domain, 'llms_txt', '9.8') !== null, false)
+check('ani na inna domene', erratumFor('example.com', ERRATA[0].checkId, '9.8') !== null, false)
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

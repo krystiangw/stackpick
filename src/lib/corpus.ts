@@ -3,6 +3,7 @@ import { registrableDomain } from './scan/http'
 import { SITE_URL } from './site'
 import { categoryFor , CURATED_DOMAINS } from './categories'
 import { publishedCorpus } from './published'
+import { erratumFor } from './errata'
 import { checkHelpUri, CHECKS, MAX_SCORE, refusesAgentsAtSignup, type ScoredCheck } from './score'
 
 /**
@@ -50,7 +51,15 @@ export type CorpusRow = {
   scorecardUrl: string
   /** Stable per-vendor address. Unlike scorecardUrl it does not change when we rescan. */
   vendorUrl: string
-  checks: { id: string; verdict: CorpusVerdict; points: number; max: number; detail: string }[]
+  checks: {
+    id: string
+    verdict: CorpusVerdict
+    points: number
+    max: number
+    detail: string
+    /** Present only while a row we know is wrong is waiting for a rescan to withdraw it. */
+    correction?: string
+  }[]
 }
 
 export type Corpus = {
@@ -168,13 +177,19 @@ export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus 
         // citation pointing at /r/<id> rots the moment we rescan, which is every few days.
         scorecardUrl: `${baseUrl}/r/${report.id}`,
         vendorUrl: `${baseUrl}/v/${report.domain}`,
-        checks: report.scorecard.checks.map((check) => ({
-          id: check.id,
-          verdict: verdictOf(check),
-          points: check.points,
-          max: check.max,
-          detail: check.detail,
-        })),
+        checks: report.scorecard.checks.map((check) => {
+          // A machine reading this file cannot see the note we render on the page, and it is the
+          // reader most likely to quote a verdict we no longer stand behind.
+          const erratum = erratumFor(report.domain, check.id, report.scorecard.formulaVersion)
+          return {
+            id: check.id,
+            verdict: verdictOf(check),
+            points: check.points,
+            max: check.max,
+            detail: check.detail,
+            ...(erratum ? { correction: erratum.says } : {}),
+          }
+        }),
       }
     })
     .sort((a, b) => a.domain.localeCompare(b.domain))

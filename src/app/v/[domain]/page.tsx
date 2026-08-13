@@ -7,6 +7,7 @@ import { categoryFor } from '@/lib/categories'
 import { SITE_URL } from '@/lib/site'
 import { CHECKS, FORMULA_VERSION, STAGES, type ScoredCheck } from '@/lib/score'
 import { WatchForm } from '@/components/watch-form'
+import { erratumFor } from '@/lib/errata'
 
 /**
  * The address for a vendor, as opposed to the address for one scan of it. /r/<id> names a
@@ -145,6 +146,9 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
               <ul className="mt-3 flex flex-col gap-3">
                 {checks.map((check) => {
                   const tone = verdictTone(check)
+                  // Marked rather than quietly left standing. A row we know is wrong and cannot
+                  // rescan is still a published claim about somebody else's product.
+                  const erratum = erratumFor(name, check.id, scorecard.formulaVersion)
                   return (
                     // minmax(0,1fr) rather than 1fr, because a bare 1fr is minmax(auto,1fr) and inflates to
                     // the longest unbreakable token in it. That token is ours: every scorecard opens with
@@ -156,6 +160,12 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
                         <span className="text-sm font-medium">{check.label}</span>
                         <span className="font-mono text-xs wrap-anywhere text-ink-soft">{check.detail}</span>
                         {check.unblock && <span className="text-xs italic text-ink-faint">{check.unblock}</span>}
+                        {erratum && (
+                          <span className="border-l-2 border-warn pl-3 text-xs leading-relaxed text-ink-soft">
+                            <strong className="font-mono uppercase tracking-[0.1em] text-warn">Correction. </strong>
+                            {erratum.says}
+                          </span>
+                        )}
                       </div>
                     </li>
                   )
