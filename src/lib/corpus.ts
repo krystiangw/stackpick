@@ -1,4 +1,4 @@
-import { categoryFor } from './categories'
+import { categoryFor , CURATED_DOMAINS } from './categories'
 import { publishedCorpus } from './published'
 import { checkHelpUri, CHECKS, MAX_SCORE, refusesAgentsAtSignup, type ScoredCheck } from './score'
 
@@ -52,6 +52,14 @@ export type Corpus = {
   formulaVersion: string
   generatedAt: string
   domains: number
+  /**
+   * How many vendors we hold in total, against the `domains` we could publish under one formula.
+   * Never omitted: a machine reading this file has no other way to tell a corpus of 88 from a
+   * corpus of 170 caught mid-reseed, and this product exists to argue that machines should be
+   * told things rather than left to infer them.
+   */
+  curated: number
+  awaitingRescan: number
   max: number
   methodology: string
   terms: string
@@ -107,11 +115,14 @@ export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus 
     formulaVersion,
     generatedAt: now,
     domains: rows.length,
+    curated: CURATED_DOMAINS.size,
+    awaitingRescan: Math.max(0, CURATED_DOMAINS.size - rows.length),
     max: MAX_SCORE,
     methodology: `${baseUrl}/methodology`,
     terms: 'Free to use, quote and republish with attribution to Let Agents In and a link to the methodology.',
     notes: [
       'One row per domain, the most recent scan we hold, scored under a single formula version.',
+      'domains is how many we can publish under one formula and curated is how many we hold. When they differ, a reseed is part way through: scores from two formula versions are not comparable, so the rest wait for their next scan rather than appear here under a number that cannot be compared with the others.',
       'share is total divided by measurable, not by max. A domain that refused our requests has a smaller denominator, not a worse number, so ranking on total alone would be wrong.',
       'A verdict of unmeasured means we could not evaluate the check, and notApplicable means it does not apply to a product of this kind. Neither is a failure and neither counts in measurable.',
       'unattendedGrant is null when a vendor publishes no registration endpoint or no grant list, false when every advertised grant needs a person at a browser, true when client_credentials is among them. device_code counts as false: approving on another screen is still a person.',
