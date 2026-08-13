@@ -255,13 +255,16 @@ const stated: { page: string; pattern: RegExp; expected: number; what: string }[
   { page: '/findings', pattern: /it now covers (\d+) vendors/, expected: corpus.rows.length, what: 'corpus size' },
   {
     page: '/',
-    pattern: /Of (\d+) vendors we have scanned/,
+    // "we have scanned" became "we can compare today" when the hero learned to say that the
+    // published set is not the whole corpus during a reseed. Anchored on the count and the noun,
+    // which are the parts that carry the claim.
+    pattern: /Of (\d+) vendors we can compare/,
     expected: corpus.rows.length,
     what: 'corpus size in the hero',
   },
   {
     page: '/',
-    pattern: /vendors we have scanned, (\d+) serve a signup form/,
+    pattern: /(\d+) serve a signup form\s+that renders nothing without JavaScript/,
     expected: needsJavaScript,
     what: 'signup forms needing JavaScript',
   },
