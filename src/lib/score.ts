@@ -1,6 +1,7 @@
 import { PROVISIONING_PATTERN_COUNT } from './scan/funnel'
 import { AGENT_UA, DOCS_SHELL_FLOOR } from './scan/http'
 import { OPENAPI_PATHS } from './scan/machine'
+import { CREDENTIAL_PATH } from './scan'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
 
@@ -17,18 +18,6 @@ export const FORMULA_VERSION = '9.9'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
-
-/**
- * A documentation path that promises to talk about credentials. Deliberately narrower than the
- * hints that choose which pages to read: `management`, `account`, `getting-started` and
- * `reference` all pick pages, and none of them means the page is about a key.
- */
-// A bare `token` was in here and it is a word this industry uses for three unrelated things.
-// /docs/tokenizer, /docs/design-tokens and /docs/tokens-and-pricing all satisfied a gate whose
-// whole job is to stop us arguing from an absence on pages that could never have carried the
-// evidence, and every LLM vendor and every design system in the corpus has one.
-const CREDENTIAL_PATH =
-  /(api[-_ ]?(?:app[-_ ]?)?keys?|access[-_ ]?keys?|service[-_ ]?(?:tokens?|accounts?)|signing[-_ ]?keys?|credentials?|(?:access|api|auth|service|personal|bearer|project|signing)[-_ ]?tokens?|authentication|(^|\/)auth(\/|$)|provisioning)/i
 
 /**
  * Every address the probe actually tries. The sentence used to name two of the five, and on

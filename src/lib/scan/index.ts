@@ -8,11 +8,13 @@ import {
 } from './discover'
 import {
   AGENT_UA,
+  DOCS_SHELL_FLOOR,
   fetchUrl,
   fetchWithRetries,
   inParallel,
   inPhase,
   isBotChallenge,
+  isRealTextFile,
   looksLikeHtml,
   NAMED_CRAWLERS,
   ranOutOfTime,
@@ -285,8 +287,82 @@ async function sitemapCandidates(domain: string, docsUrl: string, seen: Set<stri
 }
 
 /** Follows a few same-host documentation links that look like they discuss credentials. */
+
+/**
+ * The vendor's own index of their documentation, used to choose which pages to read.
+ *
+ * Thirty-six percent of the corpus could not be measured for programmatic provisioning on
+ * formula 9.8, and the reason is always the same: we read three pages a ranking guessed at and
+ * none of them was about keys. A published llms.txt is the vendor telling us where everything
+ * is, in a file we already treat as evidence, and the pages it names are the ones they think
+ * matter. modal.com's file names /docs/cli/latest/token.md, the single page that answers the
+ * question we could not answer about them.
+ *
+ * Two requests at most, both of which the machine probe asks for later in the same scan and
+ * therefore reads out of the response cache rather than off the wire.
+ */
+async function llmsIndexCandidates(site: string, docsUrl: string): Promise<string[]> {
+  const origins = [...new Set([new URL(docsUrl).origin, site])]
+  const files = await inParallel(origins, (origin) => fetchUrl(`${origin}/llms.txt`, { accept: 'text/plain' }))
+  const found: string[] = []
+  for (const file of files) {
+    if (!isRealTextFile(file, 200)) continue
+    for (const match of file.body.matchAll(/\]\((https?:\/\/[^\s)]+)\)/g)) {
+      const url = match[1].split('#')[0]
+      let parsed: URL
+      try {
+        parsed = new URL(url)
+      } catch {
+        continue
+      }
+      if (!CREDENTIAL_PAGE_HINTS.test(parsed.pathname)) continue
+      if (!isDocumentationPage(url, docsUrl)) continue
+      if (!found.includes(url)) found.push(url)
+    }
+  }
+  return found.sort(byHint).slice(0, 3)
+}
+
+
+/**
+ * Where a credential page lives when nothing links it.
+ *
+ * The ranking reads what a site publishes about itself, and on a third of the corpus that was
+ * not enough: grafana.com documents service accounts at
+ * /docs/grafana/latest/administration/service-accounts/, its llms.txt does not name the page and
+ * its sitemap ranked three unrelated ones above it. These are the addresses the convention puts
+ * it at, asked directly. Five requests, in parallel with everything else in the phase, and only
+ * the ones that answer become candidates.
+ */
+/**
+ * A documentation path that promises to talk about credentials. Deliberately narrower than the
+ * hints that choose which pages to read: `management`, `account`, `getting-started` and
+ * `reference` all pick pages, and none of them means the page is about a key.
+ */
+// A bare `token` was in here and it is a word this industry uses for three unrelated things.
+// /docs/tokenizer, /docs/design-tokens and /docs/tokens-and-pricing all satisfied a gate whose
+// whole job is to stop us arguing from an absence on pages that could never have carried the
+// evidence, and every LLM vendor and every design system in the corpus has one.
+export const CREDENTIAL_PATH =
+  /(api[-_ ]?(?:app[-_ ]?)?keys?|access[-_ ]?keys?|service[-_ ]?(?:tokens?|accounts?)|signing[-_ ]?keys?|credentials?|(?:access|api|auth|service|personal|bearer|project|signing)[-_ ]?tokens?|authentication|(^|\/)auth(\/|$)|provisioning)/i
+
+
+const CREDENTIAL_PATHS = ['/api-keys', '/authentication', '/api/authentication', '/access-tokens', '/api-reference/authentication']
+
+async function guessedCredentialPages(docsUrl: string): Promise<string[]> {
+  const base = new URL(docsUrl)
+  const section = base.pathname.split('/').filter(Boolean)[0]
+  const roots = [...new Set([`${base.origin}${section ? `/${section}` : ''}`, base.origin])]
+  const tried = roots.flatMap((root) => CREDENTIAL_PATHS.map((path) => `${root}${path}`))
+  const pages = await inParallel(tried.slice(0, 6), (url) => fetchUrl(url))
+  return pages
+    .filter((page) => page.ok && looksLikeHtml(page) && visibleTextLength(page.body) >= DOCS_SHELL_FLOOR)
+    .map((page) => page.url)
+}
+
 async function readDeeper(
   domain: string,
+  site: string,
   docsUrl: string,
   html: string,
   /**
@@ -321,7 +397,27 @@ async function readDeeper(
   // the question are in its sitemap, which we never opened because three links were enough.
   const fromSitemap = await sitemapCandidates(domain, docsUrl, seen, 3)
   const onBrand = (url: string) => !mustMention || url.toLowerCase().includes(mustMention)
-  const candidates = [...fromLinks, ...fromSitemap].filter(onBrand).sort(byHint).slice(0, 3)
+  const ranked = [...new Set([...fromLinks, ...fromSitemap])].filter(onBrand).sort(byHint)
+
+  // Only when what the site publishes about itself has not produced a page about credentials.
+  // Ranked alongside the others they did the opposite of their job: a guessed /authentication
+  // page carries the best hint there is, so it took a slot from the page that had the phrases,
+  // and stripe.com, resend.com and cloudinary.com all lost ground the first time this shipped.
+  // Three pages is the budget; these buy a place in it only when the alternative is measuring
+  // nothing at all.
+  const looksMeasurable = ranked
+    .slice(0, 3)
+    .some((url) => {
+      try {
+        return CREDENTIAL_PATH.test(new URL(url).pathname)
+      } catch {
+        return false
+      }
+    })
+  const fallback = looksMeasurable
+    ? []
+    : (await Promise.all([llmsIndexCandidates(site, docsUrl), guessedCredentialPages(docsUrl)])).flat()
+  const candidates = [...new Set([...fallback, ...ranked])].filter(onBrand).sort(byHint).slice(0, 3)
 
   const pages = await inParallel(candidates, (url) => fetchUrl(url))
   const readable = pages.filter((page) => page.ok)
@@ -543,7 +639,7 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
   // SendGrid's, and a scorecard headed sendgrid.com must not be measuring Twilio Chat.
   const docsPending = phase('docs', async () =>
     docsPage?.ok && found.docs
-      ? readDeeper(domain, found.docs, docsPage.body, brandOnHost)
+      ? readDeeper(domain, found.site, found.docs, docsPage.body, brandOnHost)
       : { pages: [], unreadable: 0, unreadStatuses: [] },
   )
   const robotsPending = phase('robots', () => scanRobots(found.site))
