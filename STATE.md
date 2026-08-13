@@ -187,8 +187,19 @@ dopasowuje, nic nie sprawdza. `npm run audit` powiedzial to wprost przy nastepny
 Dwie linie nizej w tym samym pliku jest komentarz o tym samym zdarzeniu z sierpnia.
 
 **NIENAPRAWIONE z tego audytu, do zrobienia:**
-- **`measuredOn: null`, gdy scoreowany URL jest na innej domenie rejestrowalnej** (dropboxsign.com
-  → app.hellosign.com, swell.is → swell.store, sentry.io → mcp.sentry.dev).
+- ~~**`measuredOn: null`, gdy scoreowany URL jest na innej domenie rejestrowalnej**~~ **zamkniete
+  2026-08-14 jako ZALATWIONE PRZEZ `alsoNames`, swiadomie bez zmiany kodu.** Wszystkie trzy
+  wymienione przypadki widac dzis w korpusie: `dropboxsign.com → hellosign.com`,
+  `swell.is → swell.store`, `sentry.io → sentry.dev`.
+  **Rozszerzenie `measuredOn` byloby bledem, nie poprawka.** To pole znaczy „domena, na ktorej
+  wyladowala STRONA GLOWNA" i niesie ostrzezenie o podwojnym liczeniu plikow (`sendgrid.com`
+  oddaje `robots.txt` przekierowaniem na `twilio.com`, ktory jest osobnym wierszem). Tymczasem
+  `sentry.io` ma na `sentry.dev` **jeden endpoint MCP**, a `dropboxsign.com` na `app.hellosign.com`
+  **jeden formularz rejestracji**. Wpisanie tam `measuredOn` twierdziloby, ze caly wiersz zmierzono
+  gdzie indziej, co jest nieprawda i zawyzaloby ostrzezenie o podwojnym liczeniu.
+  `alsoNames` mowi dokladnie tyle, ile wiemy: **ktore obce domeny nazywaja wlasne zdania wiersza**,
+  bez twierdzenia, ze wiersz tam zmierzono. Notatki w `corpus.json` juz to tlumacza czytelnikowi
+  maszynowemu.
 
 ### Przeglad wszystkich powierzchni podajacych rozmiar korpusu (13.08)
 
