@@ -193,9 +193,11 @@ const auditFiles = await Promise.all([
   import('../src/data/audits/uploadcare-storage.json', { with: { type: 'json' } }),
   import('../src/data/audits/workos-auth.json', { with: { type: 'json' } }),
 ])
+/** Only the field this guard reads. The four files have four inferred shapes and no common one. */
+type AuditRun = { blockedBy?: string | null }
 const auditRunsNeedingAnAccount = auditFiles
-  .flatMap((file) => file.default.runs)
-  .filter((run: { blockedBy?: string | null }) => Boolean(run.blockedBy)).length
+  .flatMap((file) => file.default.runs as AuditRun[])
+  .filter((run) => Boolean(run.blockedBy)).length
 const auditRuns = (await import('../src/data/audits/froala-editors.json', { with: { type: 'json' } })).default.runs.length +
   (await import('../src/data/audits/paddle-payments.json', { with: { type: 'json' } })).default.runs.length +
   (await import('../src/data/audits/uploadcare-storage.json', { with: { type: 'json' } })).default.runs.length +
