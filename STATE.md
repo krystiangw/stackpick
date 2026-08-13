@@ -74,6 +74,15 @@ Potem `npx tsx scripts/diff-corpus.mts <migawka> https://letagentsin.com/corpus.
 **Zamrozone do tego czasu: zmiany w skanerze.** Kazda kolejna zmiana formuly powieksza rozjazd,
 ktorego nie da sie zamknac bez reseedu.
 
+### `corpus.json` zaniżał nas wobec maszyn (13.08)
+
+Plik podawal `domains: 88` i nic o tym, ile trzymamy, wiec czytajacy w trakcie reseedu nie mial
+**zadnego** sposobu odroznic korpusu z 88 firm od korpusu ze 170 zlapanego w polowie. A czytelnikami,
+na ktorych nam zalezy, sa agenci. **Caly ten produkt argumentuje, ze maszynie nalezy rzeczy
+powiedziec, a nie zostawiac ich do wywnioskowania**, i wlasny plik zostawial do wywnioskowania
+najbardziej podstawowy fakt o swojej kompletnosci. Dodane `curated` i `awaitingRescan` obok
+`domains` plus nota tlumaczaca roznice. Sprawdzone: `domains: 88 | curated: 170 | awaitingRescan: 82`.
+
 ### Strona przestala zaniżać sama siebie (13.08)
 
 `/v` drukowalo tyle wierszy, ile ma opublikowany korpus, i przy rozbiciu na dwie formuly bylo to
