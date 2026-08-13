@@ -815,6 +815,45 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
     **Ale nadal nie jest potwierdzony na żadnym rzeczywistym wierszu** i jego jedyny przypadek
     źródłowy (njal.la) okazał się fałszywy, więc nie traktuj go jako sprawdzonego.
 
+- ~~**Trasowanie `find_providers` na świeżych pytaniach**~~ **zrobione 2026-08-13.**
+  **Uwaga: zdanie „runda 105: 35 → 20 procent" myliło.** Te 20 procent dotyczyło zestawu
+  `routing.mts`, spalonego dostrajaniem. Na zestawie odłożonym trasowanie miało **24 z 59**, czyli
+  59 procent błędu. **Opublikowana liczba była przy tym uczciwa**: opis narzędzia MCP podawał
+  dokładnie te wartości i pilnuje ich strażnik w buildzie. Mylące było streszczenie w STATE.md.
+  - **Dwa błędy mechaniczne, nie słownikowe.** `stem()` wracał po pierwszej pasującej regule, więc
+    liczba mnoga nigdy nie była też odmieniana: `embeddings` → `embedding`, a słownikowe
+    `embedding` → `embedd`. **Dziesięć słów było nieosiągalnych w liczbie mnogiej**, m.in.
+    embeddings, meetings, bookings, signings, tracings. Run raportował to jako „nic nie punktuje",
+    co wskazywało na słownik zamiast na stemmer.
+  - `sameTerm` dopuszczał różnicę jednego `e` (dla `geocoding` → `geocode`). Teraz zasługuje na nią
+    tylko słowo, które stemmer faktycznie skrócił. `local` w „the local disk" to gołe słowo o jedno
+    `e` od `locale` i punktowało lokalizację dziesięcioma punktami, remisując z file-storage.
+  - **Wynik: 24 → 27 z 59 na zestawie strojonym, 31 → 31 z 58 na odłożonym.** Zero zysku poza
+    zestawem, ale to są naprawy błędu i nic nie kosztują.
+  - **ZMIERZONE I ODRZUCONE, nie powtarzaj bez nowego pomysłu:** czterdzieści słów dodanych do
+    słownika (`scim`, `mfa`, `receipt`, `gpt`, `claude`, `token`, `retry`, `backoff`, `digest`,
+    `bold`, `italic`, `toolbar`, `markdown`, `timezone`, `slot`, `recording`) plus usunięcie
+    `model` z `llm-infrastructure`. **Zestaw strojony 27 → 34, zestaw odłożony 31 → 30.** Siedem
+    punktów kupionych na pytaniach, które oglądałem, jeden stracony na tych, których nie. Do tego
+    „odpowiedział, gdy powinien odmówić" wzrosło z 2 do 6. Kilka z tych słów jest wieloznacznych
+    w sposób oczywisty po fakcie: **`token` to klucz API, `receipt` to paragon płatniczy, `digest`
+    to mail zbiorczy, `markdown` to dokumentacja**. Następna próba powinna filtrować listę
+    definicyjnie, PRZED pomiarem, i mieć własny świeży zestaw.
+  - **`FRESH_QUESTIONS` jest od dziś spalony** (przeczytałem jego porażki i na nich naprawiałem).
+    Miarą jest `HELD_OUT_2`, 58 pytań napisanych tego samego dnia przez subagenta, któremu
+    zabroniono otwierać `lookup.ts` i skrypty routingu. Strażnik w buildzie i opis narzędzia MCP
+    wskazują teraz na niego. `BURNED=1 npx tsx scripts/routing-fresh.mts` uruchamia stary zestaw
+    jako regresyjny.
+  - **Ograniczenie tego pomiaru, zapisane wprost:** liczby zbiorczej `HELD_OUT_2` użyłem raz, żeby
+    zdecydować „zostawić czy wycofać dodania słownikowe". To jest wybór modelu na zbiorze
+    odłożonym i lekko go nadgryza, choć znacznie mniej niż strojenie pytanie po pytaniu.
+    Pojedynczych porażek tego zestawu **nie oglądałem**.
+  - **Nadal otwarte:** dominującą porażką są **remisy 10-10**, gdzie jedno trafienie jest
+    przypadkowe („stack traces … crashes" remisuje error-monitoring z observability, „slack, email
+    or nothing" remisuje notifications z transactional-email). Reguła celowo odmawia rozstrzygać
+    remisy. Obie hipotezy z rundy 105 (kanał dostawy wygrywa remis z dziedziną; `chrome` to słowo
+    infrastruktury przeglądarkowej) **nadal nietestowane** i wymagają własnego świeżego zestawu.
+
 - **Dwunasty przebieg adwersaryjny, do zrobienia.** Powierzchnie, których jedenasty nie ruszył,
   w kolejności wagi:
   1. ~~**Trasowanie po raz drugi.**~~ **zrobione w rundzie 105: 35 → 20 procent.** Wszystkie 149
