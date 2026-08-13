@@ -1,5 +1,5 @@
 import { refusesAgentsAtSignup, signupNeedsJavaScript } from './score'
-import { CATEGORIES, type Category } from './categories'
+import { CATEGORIES, CURATED_DOMAINS, type Category } from './categories'
 import { publishedCorpus } from './published'
 import type { Report } from './store'
 
@@ -40,6 +40,8 @@ export type RankedCategory = { category: Category; entries: RankedEntry[]; media
  */
 export type CorpusCoverage = {
   domains: number
+  /** How many we hold, against the `domains` we can publish under one formula version. */
+  curated: number
   max: number
   averageMeasurable: number
   fullyMeasurable: number
@@ -68,7 +70,7 @@ export async function loadRankings(): Promise<RankingsView> {
     console.error('rankings: corpus unreadable, rendering without them', error)
     return {
       categories: [],
-      coverage: { domains: 0, max: 0, averageMeasurable: 0, fullyMeasurable: 0, signupRefusesAgents: 0, signupNeedsJavaScript: 0 },
+      coverage: { domains: 0, curated: CURATED_DOMAINS.size, max: 0, averageMeasurable: 0, fullyMeasurable: 0, signupRefusesAgents: 0, signupNeedsJavaScript: 0 },
     }
   }
   const latest = new Map(reports.map((report) => [report.domain, report]))
@@ -76,6 +78,7 @@ export async function loadRankings(): Promise<RankingsView> {
   const scanned = [...latest.values()]
   const coverage: CorpusCoverage = {
     domains: scanned.length,
+    curated: CURATED_DOMAINS.size,
     max: scanned[0]?.scorecard.max ?? 0,
     averageMeasurable:
       scanned.length === 0

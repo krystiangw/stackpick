@@ -67,7 +67,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
         </p>
         {coverage.signupNeedsJavaScript > 0 && (
           <p className="mt-4 max-w-2xl font-mono text-sm leading-relaxed text-ink-soft">
-            Of {coverage.domains} vendors we have scanned, {coverage.signupNeedsJavaScript} serve a signup form
+            Of {coverage.domains} vendors we can compare today{coverage.curated > coverage.domains ? ` (we hold ${coverage.curated}; the rest are waiting for a rescan under the current formula)` : ''}, {coverage.signupNeedsJavaScript} serve a signup form
             that renders nothing without JavaScript,{' '}
             {coverage.signupRefusesAgents > 0
               ? `and ${coverage.signupRefusesAgents} answer an agent with a refusal where a browser gets through.`
