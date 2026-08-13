@@ -7,7 +7,7 @@ import { declaredSpecs } from '../src/lib/scan/machine'
 import { changesBetween, comparableScorecards } from '../src/lib/watch'
 import { CHECKS } from '../src/lib/score'
 import { forStorage } from '../src/lib/store'
-import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS } from '../src/lib/scan'
+import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
 import { rendersUsableForm } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
 import {
@@ -443,6 +443,16 @@ check('brak odpowiedzi tez nie jest dowodem', askedDocs(0).inconclusive, true)
 // A page that answered and declares nothing is a finding about the vendor, and stays one.
 check('strona odpowiedziala i nic nie deklaruje', askedDocs(200).inconclusive, undefined)
 check('i wtedy to jest zero', askedDocs(200).points, 0)
+
+console.log('odmowa, czyli czy powtorzyla sie na drugiej stronie')
+// "Your edge answered ChatGPT-User 403" is an accusation about a named company built from one
+// fetch of one page. savvycal.com was published as blocking ChatGPT-User on the strength of a
+// single 429 and answers every named agent 200 when asked once.
+check('403 dwa razy zostaje oskarzeniem', confirmedRefusals([{ name: 'ChatGPT-User', status: 403, second: 403 }]).length, 1)
+check('403 raz, potem 200, znika', confirmedRefusals([{ name: 'ChatGPT-User', status: 403, second: 200 }]).length, 0)
+check('404 na drugiej stronie to nie potwierdzenie', confirmedRefusals([{ name: 'Claude-User', status: 403, second: 404 }]).length, 0)
+// The published status stays the one we met first, because that is the page the sentence names.
+check('cytujemy pierwszy status', confirmedRefusals([{ name: 'Claude-User', status: 401, second: 403 }])[0]?.status, 401)
 
 console.log('adres rejestracji, czyli czy cytujemy im wlasny tracking')
 // Every one of these is a URL we published about a real company on formula 9.8.

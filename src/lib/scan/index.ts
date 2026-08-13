@@ -487,6 +487,16 @@ export type ScanProgress = (step: { label: string; done: number; total: number }
  */
 export const isEdgeRefusal = (status: number) => status >= 400 && status !== 404 && status !== 429
 
+/**
+ * Which refusals survive being asked a second time, at another page of the same documentation.
+ * Only ever removes one: a crawler that got through the second time was not blocked, and a
+ * crawler refused twice is a finding we are willing to print under a company's name.
+ */
+export function confirmedRefusals(seen: { name: string; status: number; second: number }[]) {
+  return seen.filter(({ second }) => isEdgeRefusal(second)).map(({ name, status }) => ({ name, status }))
+}
+
+
 const STEPS = 5
 
 /** Well inside the scan budget, so a slow registry cannot take the rest of the scan with it. */
@@ -720,6 +730,31 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
   // filter drops it, and the check publishes "no agent reaches the site at all" on the strength
   // of our own clock. That sentence is the harshest thing this product says, and the sites it
   // applies to are the slow ones by construction: they challenged us first.
+  /**
+   * A refusal seen once at one address, asked again somewhere else before it is published.
+   *
+   * "Your edge answered ChatGPT-User 403" is an accusation about how a company treats agents,
+   * built from a single fetch of a single page. The scanner already refuses to make it out of a
+   * 429, for exactly this reason, and savvycal.com was once published as blocking ChatGPT-User
+   * on the strength of one. A second documentation page costs one request per refused crawler
+   * and only on the sites we are about to accuse.
+   */
+  const secondDocsPage = deeperDocs.pages.find((page) => page.ok && page.url !== found.docs)
+  const confirmedRefusals = await phase('docs', async () => {
+    const refused = docsPage?.ok ? namedCrawlers.filter(({ got }) => isEdgeRefusal(got.status)) : []
+    if (refused.length === 0 || !secondDocsPage) return refused.map(({ name, got }) => ({ name, status: got.status }))
+    const again = await inParallel(refused, async ({ name, got }) => ({
+      name,
+      status: got.status,
+      // The same crawler, a different page of the same documentation.
+      second: await fetchUrl(secondDocsPage.url, {
+        ua: NAMED_CRAWLERS.find((crawler) => crawler.name === name)?.ua,
+        fresh: true,
+      }),
+    }))
+    return confirmedRefusals(again.map(({ name, status, second }) => ({ name, status, second: second.status })))
+  })
+
   const challengeAdmits = botChallenge
     ? await phase('door', async () =>
         (
@@ -762,11 +797,7 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     // Not 429. That is our own load speaking, and the rest of this scanner already says so: a 429
     // makes a check unmeasurable rather than failed. savvycal.com was published as refusing
     // ChatGPT-User on the strength of one, and answers every named agent 200 when asked once.
-    crawlersRefused: docsPage?.ok
-      ? namedCrawlers
-          .filter(({ got }) => isEdgeRefusal(got.status))
-          .map(({ name, got }) => ({ name, status: got.status }))
-      : [],
+    crawlersRefused: confirmedRefusals,
     readAnything:
       docsText.length > 0 ||
       machine.findings.hasLlmsTxt ||
