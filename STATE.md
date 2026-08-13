@@ -278,6 +278,22 @@ liczby licza sie z korpusu, wiec nic nie jest falszywe, tylko mniejsze.
 formuly powieksza rozjazd, ktorego nie da sie zamknac bez reseedu. Jeden reseed po odblokowaniu
 naprawia wszystko naraz.
 
+### Ostatnie klamstwo w produkcie, i bylo w najgorszym miejscu (2026-08-13)
+
+Strona skanuje przez `/api/scan/stream`, a ta trasa zapisywala raport **przed** ogloszeniem
+wyniku. Przy zablokowanych zapisach odwiedzajacy ogladal **wszystkie piec krokow konczacych sie
+pomyslnie**, a potem dostawal "The scan failed. Try again in a moment." Oba czlony falszywe: skan
+sie udal, a probowanie za chwile nic nie da. **To glowne wezwanie do dzialania na calej stronie.**
+
+Teraz dostaje swoja liczbe i prawde: *"val.town scored 10 of 16, and we could not store the
+result, so it has no page. That is our problem and not yours: write to hello@letagentsin.com and
+we will send it to you."* Sprawdzone na produkcji.
+
+Cztery sciezki, ktore w trakcie awarii klamaly, sa juz wszystkie uczciwe: JSON API, zapis na
+monitoring, mail ze scorecardem i teraz strumien. **Wzorzec wart zapamietania: kazda z nich robila
+zapis w drodze uzytkownika i zadna nie miala odpowiedzi na nieudany zapis.** Awaria byla lepszym
+audytorem niz cztery audyty, ktore zamowilem.
+
 ### Monitoring produkcji: cos wreszcie patrzy (2026-08-13)
 
 `.github/workflows/health.yml`, co godzine. Sprawdza trzy rzeczy i **oblewa**, gdy ktorakolwiek
