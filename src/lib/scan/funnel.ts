@@ -935,6 +935,12 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
     // The framework convention, and the one that cost us a correct verdict: a Next.js app puts
     // its route at app/api/mcp/route.ts, so the server answers at /api/mcp and nowhere we asked.
     // Reported by a reader whose server we called absent while it answered 200 one path away.
+    //
+    // Measured 2026-08-13 (npm run audit-mcp-probes): this is the only candidate here that has
+    // never found anything, zero across 170 corpus rows and 567 visitor scans, while every other
+    // one is the sole address that reaches a server on at least two rows. It stays because a
+    // reader told us their server was there and our corpus is not the population that would show
+    // it, but it is the first request to cut if the 27-second budget starts costing other checks.
     `${site}/api/mcp`,
   ].filter((url, index, all) => all.indexOf(url) === index)
   const handshake = {
