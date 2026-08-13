@@ -457,6 +457,8 @@ check('wlasna subdomena to nie inna domena', named(['Live MCP endpoint at https:
 check('measuredOn nie jest powtarzany', named(['read at https://orama.com/pricing'], 'oramasearch.com', 'orama.com'), '')
 // A dead link inside a vendor's own llms.txt is not a domain we measured them on... but it is
 // named in the sentence, so it is listed. Recorded here so the field is not read as more than it is.
+// Our own address is quoted in the door-test sentence on every single row.
+check('nasz wlasny adres nie jest cudza domena', named(['Answered 200 to LetAgentsIn/1.0 (+https://letagentsin.com/methodology)'], 'agora.io'), '')
 check('adres cytowany z ich pliku tez sie liczy', named(['1 of 12 links are gone, starting with https://youtube.com/watch'], 'dnsimple.com'), 'youtube.com')
 
 console.log('flaga rateLimited, czyli czy mowi to, co obiecuje nota')

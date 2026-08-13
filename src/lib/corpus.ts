@@ -1,5 +1,6 @@
 import type { ScanFindings } from './scan'
 import { registrableDomain } from './scan/http'
+import { SITE_URL } from './site'
 import { categoryFor , CURATED_DOMAINS } from './categories'
 import { publishedCorpus } from './published'
 import { checkHelpUri, CHECKS, MAX_SCORE, refusesAgentsAtSignup, type ScoredCheck } from './score'
@@ -107,6 +108,8 @@ export function sawRateLimit(findings: ScanFindings | undefined): boolean {
  * Read out of the details we publish rather than out of the findings, because the sentence is the
  * evidence: a domain named in a verdict is a domain that verdict was measured on.
  */
+const OURS = registrableDomain(new URL(SITE_URL).hostname)
+
 export function otherDomainsNamed(checks: { detail: string }[], domain: string, measuredOn: string | null): string[] {
   const found = new Set<string>()
   for (const check of checks) {
@@ -117,7 +120,12 @@ export function otherDomainsNamed(checks: { detail: string }[], domain: string, 
       } catch {
         continue
       }
-      if (registrable && registrable !== domain && registrable !== measuredOn) found.add(registrable)
+      // Our own address is in every row: the door-test sentence quotes the user agent, which is
+      // "LetAgentsIn/1.0 (+https://letagentsin.com/methodology)". Verifying on production rather
+      // than trusting the fixtures is what caught it, on all 88 rows at once.
+      if (registrable && registrable !== domain && registrable !== measuredOn && registrable !== OURS) {
+        found.add(registrable)
+      }
     }
   }
   return [...found].sort()
