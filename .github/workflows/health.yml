@@ -1,0 +1,49 @@
+name: Is production actually working
+
+# On 2026-08-13 the database refused every write for hours. The pages rendered, the health check
+# answered ok because it only ever read, and the outage surfaced when a reseed happened to return
+# forty-two failures. Nobody was watching, because nothing was watching. A failed scheduled run
+# emails the repository owner, which is the whole alerting system and costs nothing.
+on:
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: The store must read and write
+        run: |
+          set -euo pipefail
+          body=$(curl -sS --max-time 30 https://letagentsin.com/api/health || true)
+          echo "$body"
+          test -n "$body" || { echo "::error::health endpoint returned nothing"; exit 1; }
+          status=$(echo "$body" | jq -r '.status // "unreachable"')
+          writable=$(echo "$body" | jq -r '.writable // false')
+          if [ "$status" != "ok" ] || [ "$writable" != "true" ]; then
+            echo "::error::store is $status, writable=$writable: $(echo "$body" | jq -r '.writeError // "no reason given"')"
+            exit 1
+          fi
+
+      - name: The corpus must not have quietly shrunk
+        run: |
+          set -euo pipefail
+          rows=$(curl -sS --max-time 30 https://letagentsin.com/corpus.json | jq '.rows | length')
+          echo "corpus rows: $rows"
+          # An interrupted reseed splits the corpus across two formula versions and we publish only
+          # the majority, which took the site from 170 vendors to 95 without a single error anywhere.
+          if [ "$rows" -lt 150 ]; then
+            echo "::error::corpus is down to $rows rows, which usually means a reseed stopped half way"
+            exit 1
+          fi
+
+      - name: A scan must still run end to end
+        run: |
+          set -euo pipefail
+          body=$(curl -sS --max-time 90 -X POST https://letagentsin.com/api/scan \
+            -H 'content-type: application/json' -d '{"domain":"example.com"}')
+          total=$(echo "$body" | jq -r '.scorecard.total // "none"')
+          echo "example.com scored $total"
+          test "$total" != "none" || { echo "::error::scan returned no scorecard: $body"; exit 1; }
