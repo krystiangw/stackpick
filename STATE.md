@@ -948,7 +948,7 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   serwowaloby strone z kohorty prawie pustej, a mieszanie wersji jest dokladnie tym, przed czym
   chroni regula jednej wersji.
 
-- ~~**Trzynasty przebieg adwersaryjny**~~ **zrobiony 2026-08-13: 137 werdyktow sprawdzonych
+- ~~**Trzynasty przebieg adwersaryjny**~~ **zrobiony 2026-08-13: 221 werdyktow sprawdzonych
   niezaleznie, 0 bledow.** Celowany w rodziny stawiajace zarzuty najlatwiejsze do obalenia, kazda
   z **wlasna kontrolka udowadniajaca, ze sonda umie powiedziec „tak"** (regula 2 tego projektu).
   - **`oauth_dcr`, 44 wiersze**: „No OAuth metadata on any of the 8/9 hosts probed". Przesondowane
@@ -964,6 +964,16 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
     vendorow, ktorym je zaliczamy (cloudflare, resend, pinecone, sentry, inngest, neon) oraz
     u nas. Przy okazji niezalezne potwierdzenie liczby z rady naprawczej: nasz `/agent-signup.md`
     ma **1728 bajtow**, a rada mowi „1.7 kB".
+  - **`signup_reachable`, 64 oskarzenia + 20 kontrolnych**: „the signup form at <url> is not in the
+    server HTML". **Kontrolka 20 z 20**, oskarzenia **64 z 64**. Cztery pozorne niezgody okazaly sie
+    naiwnoscia mojej sondy, a kazda odpowiada pulapce juz opisanej komentarzem w kodzie:
+    `api.video` renderuje formularz, ale jego pole e-mail ma `disabled=""`, wiec bez JS nikt go nie
+    wypelni; `browserless.io` ma input e-mail **poza** formularzem, a jedyny formularz to baner
+    ciasteczek; `payloadcms.com/get-started` ma formularz `NewsletterSignUp` z wylaczonym
+    przyciskiem, czyli nie jest to nawet rejestracja konta; `name.com` byl artefaktem mojej
+    ekstrakcji (wyciagnalem adres cennika ze zdania „nie znalezlismy linku do rejestracji").
+    **Wniosek: reguly skanera sa ostrozniejsze niz ich naiwna reimplementacja.** Kto bedzie je
+    atakowal, musi sprawdzac wypelnialnosc pola i zasieg formularza, nie sama obecnosc `<form>`.
   - `signup_no_captcha` 17 z 17 i martwe linki w llms.txt 10 z 10, opisane wyzej.
   - **Metodyczna uwaga, dwa razy w jednej sesji:** wynik „wszystko negatywne" jest podejrzany
     z definicji. Pierwszy przebieg testu CAPTCHA pokazal 17 z 17 falszywych oskarzen i byl bledem
