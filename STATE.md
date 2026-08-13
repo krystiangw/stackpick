@@ -232,6 +232,16 @@ wyglada to jak blad reguly.**
 **Blokada na Krystianie: Stripe czy Paddle** (decyzja ksiegowa, nie techniczna). Nie blokuje
 przyjmowania uzytkownikow, bo monitoring jest darmowy i strona to mowi.
 
+**Zrobione mimo blokady bazy, czesc druga: trzy sciezki zapisu w drodze odwiedzajacego nie mialy
+odpowiedzi na nieudany zapis.** Przez kilka godzin oznaczalo to 500 i komunikat "try again in a
+moment", czyli obietnice, ktorej nie moglismy dotrzymac.
+- `/api/watch`: mowi teraz wprost, ze nic nie zostalo zapisane, zaden mail nie poszedl, i podaje
+  adres. Kolejnosc byla juz dobra (zapis przed mailem), wiec nikt nie dostal linku
+  potwierdzajacego do wiersza, ktory nie istnieje. Sprawdzone na produkcji: 503 z ta trescia.
+- `/api/lead`: **odwrocone**. Zapis leada to nasza ksiegowosc, a wyslanie raportu to rzecz,
+  o ktora czlowiek poprosil, wiec lead, ktory sie nie zapisze, idzie do logu, a mail wychodzi.
+- Licznik odwiedzin juz wczesniej nie przewracal strony, zostawiony.
+
 **Zrobione mimo blokady bazy (skan dziala, tylko sie nie zapisuje):** adresy rejestracji
 przestaly cytowac dostawcom ich wlasny tracking. 12 z 85 opublikowanych oskarzen nosilo
 `?ref=nav`, `?utm_source=...`, `?_gl=...`, `?cta=Get+Started`. Werdykt byl prawdziwy i
