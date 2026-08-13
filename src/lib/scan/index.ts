@@ -311,8 +311,11 @@ async function llmsIndexCandidates(site: string, docsUrl: string): Promise<strin
   const found: string[] = []
   for (const file of files) {
     if (!isRealTextFile(file, 200)) continue
-    for (const match of file.body.matchAll(/\]\((https?:\/\/[^\s)]+)\)/g)) {
-      const url = match[1].split('#')[0]
+    // Bare URLs as well as markdown links. The spec is markdown and plenty of real files are not:
+    // oramasearch.com lists its endpoints as bare addresses, one of which is an agent signup API,
+    // while we told them we had found no link to a signup anywhere.
+    for (const match of file.body.matchAll(/https?:\/\/[^\s)"'\]]+/g)) {
+      const url = match[0].replace(/[.,`*]+$/, '').split('#')[0]
       let parsed: URL
       try {
         parsed = new URL(url)
@@ -320,7 +323,11 @@ async function llmsIndexCandidates(site: string, docsUrl: string): Promise<strin
         continue
       }
       if (!CREDENTIAL_PAGE_HINTS.test(parsed.pathname)) continue
-      if (!isDocumentationPage(url, docsUrl)) continue
+      // A link in llms.txt is not a guess of ours, it is the map the vendor published for agents,
+      // so it does not have to look like a documentation page to be worth reading. The guard that
+      // required one was excluding exactly the useful addresses: api.cloudinary.com's provisioning
+      // endpoint and cloud.meilisearch.com's register page are neither of them docs. Staying on
+      // the vendor's own domain is still required, by onBrand where these are used.
       if (!found.includes(url)) found.push(url)
     }
   }
