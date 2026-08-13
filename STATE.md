@@ -74,6 +74,16 @@ Potem `npx tsx scripts/diff-corpus.mts <migawka> https://letagentsin.com/corpus.
 **Zamrozone do tego czasu: zmiany w skanerze.** Kazda kolejna zmiana formuly powieksza rozjazd,
 ktorego nie da sie zamknac bez reseedu.
 
+### Strona przestala zaniżać sama siebie (13.08)
+
+`/v` drukowalo tyle wierszy, ile ma opublikowany korpus, i przy rozbiciu na dwie formuly bylo to
+**88 ze 170**, wygladajace jak calosc naszej pracy. Nic na stronie tego nie prostowalo. Zadna
+liczba nie byla falszywa, bo wszystkie licza sie z korpusu, ale byla **mniejsza od prawdy bez
+wyjasnienia**, a przy temacie "ile zmierzylismy" to jest wlasna odmiana wprowadzania w blad.
+Jedno zdanie, pokazywane tylko gdy zbior opublikowany jest mniejszy od kuratorowanego. Sprawdzone
+na produkcji: *"We hold 170 vendors in total. The 82 not listed here were last measured under an
+older formula..."*
+
 ### Stan zweryfikowany 13.08 (po 48 commitach)
 
 Osiem publicznych stron: **wszystkie 200**, 0,26-0,46 s. Drzewo czyste, nic niewypchniete.
