@@ -1085,6 +1085,25 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
     z rankingu byl przez to napisany i wycofany DWUKROTNIE** - nie pisz go po raz trzeci bez
     uprzedniego testu izolujacego.
 
+- **Niestabilnosc skanu miedzy dwoma przebiegami, zmierzona 2026-08-13.** Wyszlo z anomalii
+  `sinch.com` w podgladzie reseedu.
+  - **3 z 15 domen nie zgadza sie samo ze soba** przy dwoch skanach plecami do siebie, i
+    **wszystkie trzy pogarszaja sie w drugim przebiegu** (`logto.io` 10/15 -> 9/13, `timekit.io`
+    7/14 -> 6/11, `pandadoc.com` 4/8 -> 4/7). Za kazdym razem spada **mianownik**, czyli checki
+    wpadaja w „nieoznaczalne": sygnatura wyczerpanego budzetu albo limitowania naszych zadan,
+    a nie zmiany werdyktu.
+  - **75 sekund przerwy naprawia 2 z 3.** `logto.io` i `timekit.io` daja wtedy identyczny wynik.
+    `pandadoc.com` waha sie nadal, ale ta domena odpowiada 429 na wszystko, wiec ma wlasna
+    przyczyne.
+  - **Czego to NIE dowodzi, i to jest wazniejsze niz sam pomiar:** reseed nie skanuje domeny dwa
+    razy pod rzad. Przy 170 domenach w przebiegu odstep miedzy dwoma skanami tej samej domeny to
+    kilkanascie minut, wiec **ten pomiar nie podwaza dwoch przebiegow reseedu**. Dotyczy sytuacji,
+    w ktorej ktos skanuje te sama domene dwa razy z rzedu, zeby „sprawdzic": wtedy drugi wynik
+    jest systematycznie gorszy od pierwszego. Odwiedzajacego chroni przed tym cache swiezego skanu
+    w `gateScan`, ktory oddaje poprzedni raport zamiast skanowac ponownie.
+  - **Konsekwencja dla weryfikacji recznej:** sprawdzajac werdykt przez powtorny skan, odczekaj
+    minute, inaczej mierzysz wlasne obciazenie. Tak wlasnie powstala anomalia `sinch.com`.
+
 - **Dwunasty przebieg adwersaryjny, do zrobienia.** Powierzchnie, których jedenasty nie ruszył,
   w kolejności wagi:
   1. ~~**Trasowanie po raz drugi.**~~ **zrobione w rundzie 105: 35 → 20 procent.** Wszystkie 149
