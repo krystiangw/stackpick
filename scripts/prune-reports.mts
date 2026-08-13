@@ -23,7 +23,7 @@ await client.connect()
 // cluster is a different project's database entirely: the first dry run counted 0 reports there.
 const database = client.db(process.env.MONGODB_DB ?? 'stackpick')
 console.log(`baza: ${database.databaseName}`)
-const reports = database.collection('reports')
+const reports = database.collection<{ _id: string; domain: string }>('reports')
 
 const mb = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(0)} MB`
 
@@ -33,21 +33,20 @@ const mb = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(0)} MB`
  * it themselves and holds a /r/<id> link to it.
  */
 const keep = new Set<string>()
-const domains = (await reports.distinct('domain')) as string[]
+const domains = await reports.distinct('domain')
 for (const domain of domains) {
   const newest = await reports.findOne({ domain }, { sort: { scannedAt: -1 }, projection: { _id: 1 } })
-  if (newest) keep.add(newest._id as string)
+  if (newest) keep.add(newest._id)
 }
 
 let superseded = 0
 let logicalBytes = 0
 const doomed: string[] = []
 for await (const doc of reports.find({}, { projection: { _id: 1, domain: 1 } })) {
-  const id = doc._id as string
-  if (keep.has(id)) continue
-  if (!CURATED_DOMAINS.has(doc.domain as string)) continue
+  if (keep.has(doc._id)) continue
+  if (!CURATED_DOMAINS.has(doc.domain)) continue
   superseded += 1
-  doomed.push(id)
+  doomed.push(doc._id)
 }
 
 // bsonSize is the number Atlas charges for, and the only way to total it is to ask the server.
