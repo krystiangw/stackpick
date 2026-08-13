@@ -105,17 +105,39 @@ const NO_INFORMATION = new Set([
  * tied commerce against file storage because neither inflected word reached its own vocabulary.
  * Both sides of every comparison go through here, so the rule is symmetric.
  */
+/**
+ * Each rule used to return, so a plural was never also de-conjugated: "embeddings" became
+ * "embedding" while the filed "embedding" became "embedd", and the two never met. Ten filed terms
+ * were unreachable in the plural that way, including meetings, bookings and embeddings, and the
+ * run reported them as questions nothing scored on rather than as a stemmer that cannot match
+ * itself. Strip the plural first, then the tense.
+ */
 function stem(word: string): string {
-  if (/(?:s|x|z|ch|sh)es$/.test(word) && word.length > 4) return word.slice(0, -2)
-  if (word.endsWith('s') && !word.endsWith('ss') && word.length > 3) return word.slice(0, -1)
-  if (word.endsWith('ing') && word.length > 6) return word.slice(0, -3)
-  if (word.endsWith('ed') && word.length > 5) return word.slice(0, -2)
-  return word
+  let out = word
+  if (/(?:s|x|z|ch|sh)es$/.test(out) && out.length > 4) out = out.slice(0, -2)
+  else if (out.endsWith('s') && !out.endsWith('ss') && out.length > 3) out = out.slice(0, -1)
+  if (out.endsWith('ing') && out.length > 6) out = out.slice(0, -3)
+  else if (out.endsWith('ed') && out.length > 5) out = out.slice(0, -2)
+  return out
 }
 
-/** "geocoding" stems to "geocod" and we filed "geocode". Both stems, either side missing its e. */
-function sameTerm(word: string, term: string): boolean {
-  return word === term || `${word}e` === term || word === `${term}e`
+/**
+ * "geocoding" stems to "geocod" and we filed "geocode", so a stem may be one e short of the term.
+ * That flexibility is only earned by a word the stemmer actually shortened. A bare word gets an
+ * exact match and nothing more: "local", in "the local disk", is one e away from the filed
+ * "locale" and was scoring translation software ten points, tying it against file storage and
+ * making the question unroutable.
+ */
+function sameTerm(stemmed: Stemmed, term: string): boolean {
+  if (stemmed.word === term) return true
+  if (!stemmed.inflected) return false
+  return `${stemmed.word}e` === term || stemmed.word === `${term}e`
+}
+
+type Stemmed = { word: string; inflected: boolean }
+const stemmed = (word: string): Stemmed => {
+  const out = stem(word)
+  return { word: out, inflected: out !== word }
 }
 
 /** What a caller says, mapped to what we filed it under. Only terms our own prose does not carry. */
@@ -241,13 +263,13 @@ export function explainJob(job: string): { words: number; top: { id: string; str
   const asked = job.toLowerCase().replace(/\bsign(?:s|ed|ing)? ?up\b/g, ' ')
   const words = asked
     .split(/[^a-z0-9]+/)
-    .map(stem)
-    .filter((word) => (word.length > 2 || FILED.has(word)) && !NO_INFORMATION.has(word))
+    .map(stemmed)
+    .filter(({ word }) => (word.length > 2 || FILED.has(word)) && !NO_INFORMATION.has(word))
   const top = CATEGORIES.map((category) => {
     const vocabulary = (VOCABULARY[category.id] ?? []).map(stem)
     const strong = words.filter((word) => vocabulary.some((term) => sameTerm(word, term))).length * 10
     const prose = proseWords(category)
-    const weak = words.filter((word) => !vocabulary.some((term) => sameTerm(word, term)) && prose.has(word)).length
+    const weak = words.filter(({ word }, index) => !vocabulary.some((term) => sameTerm(words[index], term)) && prose.has(word)).length
     return { id: category.id, strong, score: strong + weak }
   })
     .filter((row) => row.score > 0)
@@ -271,8 +293,8 @@ export function categoryForJob(job: string): Category | null {
 
   const words = asked
     .split(/[^a-z0-9]+/)
-    .map(stem)
-    .filter((word) => (word.length > 2 || FILED.has(word)) && !NO_INFORMATION.has(word))
+    .map(stemmed)
+    .filter(({ word }) => (word.length > 2 || FILED.has(word)) && !NO_INFORMATION.has(word))
   if (words.length === 0) return null
   const scored = CATEGORIES.map((category) => {
     const vocabulary = (VOCABULARY[category.id] ?? []).map(stem)
@@ -281,7 +303,7 @@ export function categoryForJob(job: string): Category | null {
     const strong = words.filter((word) => vocabulary.some((term) => sameTerm(word, term))).length * 10
     const prose = proseWords(category)
     const weak = words.filter(
-      (word) => !vocabulary.some((term) => sameTerm(word, term)) && prose.has(word),
+      (word) => !vocabulary.some((term) => sameTerm(word, term)) && prose.has(word.word),
     ).length
     return { category, strong, score: strong + weak }
   }).sort((a, b) => b.score - a.score)

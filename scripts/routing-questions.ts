@@ -71,3 +71,74 @@ export const FRESH_QUESTIONS: Question[] = [
   { asked: 'manage our AWS bill', expect: null },
   { asked: 'chat widget for the website', expect: null },
 ]
+
+/**
+ * The second held-out set, written 2026-08-13 by a run that was told not to open lookup.ts or any
+ * of the routing scripts, from the category list alone, and labelled before anything scored it.
+ *
+ * FRESH_QUESTIONS above stops being held out the moment its failures are read and fixed, which is
+ * what happened on 2026-08-13, so the honest number moves here. Two of the nulls sit deliberately
+ * between two categories rather than outside all of them (an alert on a rising error rate, and
+ * semantic retrieval over a help centre): those are the questions where guessing hands a caller
+ * the wrong vendors with our name on it, which is the case worth keeping.
+ */
+export const HELD_OUT_2: Question[] = [
+  { asked: 'our s3 costs are climbing because every upload proxies through the api server first and we want direct presigned uploads from the browser instead', expect: 'file-storage' },
+  { asked: 'users keep getting an error when they try to attach anything bigger than a few mb to their profile', expect: 'file-storage' },
+  { asked: 'we want to drop a wysiwyg component into our notes feature that supports markdown shortcuts and live collaborative cursors', expect: 'rich-text-editors' },
+  { asked: 'support keeps getting complaints that pasting formatted text from google docs into our comment box breaks the whole layout', expect: 'rich-text-editors' },
+  { asked: 'we need to add sso with saml for our enterprise customers without building the whole login flow ourselves', expect: 'auth' },
+  { asked: 'customers keep getting locked out and support ends up manually verifying identity over email just to unlock an account', expect: 'auth' },
+  { asked: 'our password reset emails are landing in spam and we suspect it is because we are sending straight from the app server via smtp', expect: 'transactional-email' },
+  { asked: 'customers say they never got the order confirmation even though the order clearly went through', expect: 'transactional-email' },
+  { asked: 'we want to track which onboarding steps people drop off at and build funnels without shipping a custom event pipeline', expect: 'product-analytics' },
+  { asked: 'the pm keeps asking which features people actually use after signup and honestly we have no way to answer that', expect: 'product-analytics' },
+  { asked: 'we are embedding our support docs and need somewhere to store and query millions of embeddings with sub-100ms latency', expect: 'vector-search' },
+  { asked: 'our chatbot gives generic answers because it cannot find the relevant paragraph from our docs before it responds', expect: 'vector-search' },
+  { asked: 'we need to handle subscription upgrades with proration and dunning without writing our own billing engine', expect: 'payments' },
+  { asked: 'finance is manually reconciling invoices in a spreadsheet every month and it eats a full day', expect: 'payments' },
+  { asked: 'we want stack traces with source maps and breadcrumbs surfaced automatically the moment the frontend throws', expect: 'error-monitoring' },
+  { asked: 'we only find out about production bugs when a customer emails support, which is way too late', expect: 'error-monitoring' },
+  { asked: 'we want to roll the new checkout out to 5 percent of traffic and be able to kill it instantly if error rates spike', expect: 'feature-flags' },
+  { asked: 'every release we are stuck redeploying just to turn a broken feature back off for everyone', expect: 'feature-flags' },
+  { asked: 'our postgres full text search is timing out on the product catalog once we hit a few hundred thousand rows', expect: 'search' },
+  { asked: 'customers say they cannot find a product even when they type the exact name, just slightly misspelled', expect: 'search' },
+  { asked: 'we need to send appointment reminder texts and handle opt-outs and delivery receipts properly', expect: 'communications' },
+  { asked: 'no-shows dropped when someone manually texted people to remind them, but that obviously does not scale', expect: 'communications' },
+  { asked: 'marketing wants to edit landing page copy and images without a deploy, and we do not want to build an admin panel ourselves', expect: 'headless-cms' },
+  { asked: 'every time marketing wants to change a headline on the homepage they have to file a ticket and wait for a developer', expect: 'headless-cms' },
+  { asked: 'we need retries with exponential backoff for webhook processing plus visibility into which jobs are stuck', expect: 'background-jobs' },
+  { asked: 'our nightly report generation sometimes just silently fails and nobody notices until a customer complains', expect: 'background-jobs' },
+  { asked: 'we want to fall back to a different provider automatically when our primary model call gets rate limited', expect: 'llm-infrastructure' },
+  { asked: 'our openai bill tripled last month and nobody can tell me which feature is actually driving it', expect: 'llm-infrastructure' },
+  { asked: 'we need adaptive bitrate streaming for course videos without maintaining our own transcoding pipeline', expect: 'video' },
+  { asked: 'instructors keep uploading lecture videos and students complain playback stutters constantly on mobile', expect: 'video' },
+  { asked: 'we need headless chrome instances at scale to render pdfs from html without babysitting our own puppeteer fleet', expect: 'browser-infrastructure' },
+  { asked: 'our competitor price tracker keeps breaking every time they add a captcha or tweak their page layout', expect: 'browser-infrastructure' },
+  { asked: 'we want one api to send push, in-app, and email for the same event instead of three separate integrations', expect: 'notifications' },
+  { asked: 'users say they are getting the same alert five times because every team built their own notification logic', expect: 'notifications' },
+  { asked: 'we need to check availability across google and outlook calendars and generate booking links with buffer times', expect: 'scheduling' },
+  { asked: 'our sales reps are still going back and forth over email trying to find a time that works for a demo', expect: 'scheduling' },
+  { asked: 'we need to turn a freeform address into lat and long and snap it to the nearest delivery zone', expect: 'maps-geo' },
+  { asked: 'our delivery estimates are wrong because we are guessing straight line distance instead of using real routes', expect: 'maps-geo' },
+  { asked: 'we are outgrowing our single postgres instance and need read replicas and automated failover without running it ourselves', expect: 'databases' },
+  { asked: 'someone is on call every weekend just in case the database server we host ourselves falls over', expect: 'databases' },
+  { asked: 'we want distributed tracing across our microservices so we can see where a slow request actually spends its time', expect: 'observability' },
+  { asked: 'when something breaks in prod we are grepping through log files on three different servers trying to piece together what happened', expect: 'observability' },
+  { asked: 'we need to generate a contract pdf from a template and collect a legally binding signature through an api', expect: 'documents-signature' },
+  { asked: 'closing a deal still means printing a contract, signing it, scanning it, and emailing it back', expect: 'documents-signature' },
+  { asked: 'we need a storefront with cart, inventory, and checkout that we can customize without building the whole thing from scratch', expect: 'commerce' },
+  { asked: 'we are selling merch through a google form and manually invoicing people, it is not scaling at all', expect: 'commerce' },
+  { asked: 'we need to manage ui strings across 12 locales without hardcoding them and let non-engineers update copy per language', expect: 'localization' },
+  { asked: 'our german users keep complaining half the app is still in english after we supposedly launched there', expect: 'localization' },
+  { asked: 'we need to programmatically provision subdomains for each new customer workspace and manage their dns records via api', expect: 'domains-dns' },
+  { asked: 'setting up a new customer custom domain still means someone manually logging into the registrar to add records', expect: 'domains-dns' },
+  { asked: 'our engineering team still tracks sprint work in a shared spreadsheet and we want boards with dependencies and assignees', expect: null },
+  { asked: 'sales has no shared view of the deal pipeline, everyone just keeps their own list of who they talked to', expect: null },
+  { asked: 'support requests come in through a shared inbox and there is no way to see who is handling what or how old a ticket is', expect: null },
+  { asked: 'closing the books each month is still someone manually copying numbers between spreadsheets', expect: null },
+  { asked: 'our checkout page takes forever to load for customers in singapore because everything is served from a single region in virginia', expect: null },
+  { asked: 'we have api keys sitting in a .env file that has been committed to the repo more than once', expect: null },
+  { asked: 'we want an alert the moment our checkout error rate creeps above its normal baseline', expect: null },
+  { asked: 'we want people to type a question in plain english into the help center and get the right article back, not just keyword matches', expect: null },
+]

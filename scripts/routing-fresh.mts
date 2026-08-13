@@ -1,5 +1,5 @@
 import { categoryForJob, explainJob } from '../src/lib/lookup'
-import { FRESH_QUESTIONS } from './routing-questions'
+import { FRESH_QUESTIONS, HELD_OUT_2 } from './routing-questions'
 
 /**
  * Questions the routing rules have never seen.
@@ -18,7 +18,9 @@ import { FRESH_QUESTIONS } from './routing-questions'
  * needs its own fresh set. That is the cost of measuring this honestly and it is worth paying.
  */
 
-const QUESTIONS = FRESH_QUESTIONS
+// FRESH_QUESTIONS stopped being held out on 2026-08-13, when its failures were read and the
+// stemmer fixed against them. It stays as a regression set. HELD_OUT_2 is the one that measures.
+const QUESTIONS = process.env.BURNED ? FRESH_QUESTIONS : HELD_OUT_2
 
 const results = QUESTIONS.map((question) => {
   const got = categoryForJob(question.asked)?.id ?? null

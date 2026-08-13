@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { categoryForJob } from '../src/lib/lookup'
-import { FRESH_QUESTIONS } from './routing-questions'
+import { HELD_OUT_2 } from './routing-questions'
 import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
@@ -226,7 +226,7 @@ let silent = 0
 let wrongCategory = 0
 let shouldHaveRefused = 0
 let answered = 0
-for (const question of FRESH_QUESTIONS) {
+for (const question of HELD_OUT_2) {
   const got = categoryForJob(question.asked)?.id ?? null
   if (got !== null) answered += 1
   if (got === question.expect) right += 1
@@ -236,7 +236,7 @@ for (const question of FRESH_QUESTIONS) {
 }
 const described = readFileSync('src/app/mcp/route.ts', 'utf8')
 const quoted = (pattern: RegExp) => Number(described.match(pattern)?.[1] ?? -1)
-check('pytań w zestawie odłożonym', FRESH_QUESTIONS.length, quoted(/Measured on (\d+) questions written before/))
+check('pytań w zestawie odłożonym', HELD_OUT_2.length, quoted(/Measured on (\d+) questions written before/))
 check('odpowiedzi poprawnych', right, quoted(/it answered (\d+) correctly/))
 check('milczeń tam, gdzie należało odpowiedzieć', silent, quoted(/said nothing on (\d+) it should have answered/))
 check('złych kategorii', wrongCategory, quoted(/sent (\d+) to the wrong category/))
