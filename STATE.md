@@ -278,6 +278,20 @@ liczby licza sie z korpusu, wiec nic nie jest falszywe, tylko mniejsze.
 formuly powieksza rozjazd, ktorego nie da sie zamknac bez reseedu. Jeden reseed po odblokowaniu
 naprawia wszystko naraz.
 
+### Monitoring produkcji: cos wreszcie patrzy (2026-08-13)
+
+`.github/workflows/health.yml`, co godzine. Sprawdza trzy rzeczy i **oblewa**, gdy ktorakolwiek
+nie gra, a oblany workflow wysyla maila do wlasciciela repo, czyli to jest caly system alertowania
+i kosztuje zero:
+1. `/api/health` musi byc `ok` **i** `writable`;
+2. `/corpus.json` musi miec **co najmniej 150 wierszy** (przerwany reseed zabral nam 170 -> 95
+   nie generujac ani jednego bledu nigdzie w systemie);
+3. skan `example.com` musi wrocic z kartą wynikową.
+
+**Sprawdzone: uruchomiony recznie, oblal i podal powod** ("store is degraded, writable=false: you
+are over your space quota"). **UWAGA: bedzie wysylal maila co godzine, dopoki baza jest pelna.**
+To alert dzialajacy poprawnie w trakcie prawdziwej awarii, a nie halas do wyciszenia.
+
 ### Widok mobilny sprawdzony po raz pierwszy (2026-08-13)
 
 **Kazda strona dostawcy przewijala sie w poziomie na telefonie, a winny ciag byl NASZ.** Bare `1fr`
