@@ -994,6 +994,31 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
     parsowania w shellu (kazde cialo mialo 1 bajt). **Przy wyniku zerowym najpierw udowodnij, ze
     narzedzie umie znalezc cokolwiek.**
 
+- ~~**Errata dla wierszy, o ktorych wiemy, ze sa bledne**~~ **zrobione 2026-08-13**,
+  `src/lib/errata.ts`. Wczesniej cos takiego nie bylo potrzebne, bo **poprawka i sprostowanie byly
+  tym samym aktem**: zle wiersz sie przeskanowywalo. Przy zablokowanych zapisach korpus stoi na
+  9.8, skaner poszedl do 9.12, a trzy wiersze stoja na stronie i przypisuja zywy serwer MCP
+  stronie dokumentacji. Sprawdzone recznie tego samego dnia. Zostawienie ich bez adnotacji byloby
+  publikowaniem twierdzenia o cudzym produkcie, w ktore juz nie wierzymy.
+  - `posthog.com` i `openrouter.ai` **maja** serwery (`mcp.posthog.com/mcp`, `mcp.openrouter.ai/mcp`)
+    i nota je nazywa, bo wiersz myli sie na ich korzysc co do adresu. `medusajs.com` nie ma zadnego,
+    wiec jego nota mowi, ze wiersz go zawyza.
+  - Renderuje sie na `/v/<domena>` przy poprawianym checku **i jedzie w `corpus.json` jako pole
+    `correction`**, bo maszyna cytujaca werdykt nie widzi strony.
+  - **Wpisy wygasaja same**: nota znika, gdy wiersz zostanie zmierzony pod formula, ktora to
+    naprawila, wiec skonczony reseed oprozni te liste bez niczyjej pamieci. To jest czesc przypieta
+    testami, razem z tym, ze **9.8 jest starsze niz 9.12**, czego porownanie tekstowe nie widzi
+    i co wygasiloby kazde sprostowanie za wczesnie.
+  - **Wpis nalezy sie wierszowi BLEDNEMU, nie po prostu staremu.** Wiersze na przedawnionej formule
+    sa juz oznaczone wszedzie, gdzie sie pojawiaja.
+  - Zweryfikowane na produkcji: trzy strony vendorow pokazuja note, kazda na innej formule sprzed
+    9.12 (9.11, 9.9, 9.8). W `corpus.json` jest jedno z trzech i **tak ma byc**: plik publikuje
+    jedna wersje, a dwa pozostale maja nowsze zapisane wiersze i wypadaja poza opublikowany zbior.
+
+- **Sciezka zapisu na monitorowanie przy zablokowanych zapisach: sprawdzona 2026-08-13, w porzadku.**
+  `POST /api/watch` zwraca 503 i „Nothing was signed up and no email was sent", z adresem
+  kontaktowym. Nic do naprawy.
+
 - **Dwunasty przebieg adwersaryjny, do zrobienia.** Powierzchnie, których jedenasty nie ruszył,
   w kolejności wagi:
   1. ~~**Trasowanie po raz drugi.**~~ **zrobione w rundzie 105: 35 → 20 procent.** Wszystkie 149
