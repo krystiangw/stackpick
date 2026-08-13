@@ -232,7 +232,17 @@ wyglada to jak blad reguly.**
 **Blokada na Krystianie: Stripe czy Paddle** (decyzja ksiegowa, nie techniczna). Nie blokuje
 przyjmowania uzytkownikow, bo monitoring jest darmowy i strona to mowi.
 
+**Zrobione mimo blokady bazy (skan dziala, tylko sie nie zapisuje):** adresy rejestracji
+przestaly cytowac dostawcom ich wlasny tracking. 12 z 85 opublikowanych oskarzen nosilo
+`?ref=nav`, `?utm_source=...`, `?_gl=...`, `?cta=Get+Started`. Werdykt byl prawdziwy i
+nieodtwarzalny naraz. Parametry funkcjonalne zostaja (`?plan=free`, `?module=fme`), parametry
+w hashu SPA tez sa czyszczone. **Bez podbicia formuly:** zaden werdykt ani punkt sie nie zmienia,
+a podbicie oznaczyloby 170 stron jako przedawnione bez mozliwosci reseedu.
+
 **Otwarte, nienaprawione, w kolejnosci wagi:**
+0. **BAZA: Atlas pelny, zapisy odrzucane. Decyzja Krystiana** (kasowanie 19 140 przedawnionych
+   raportow ~684 MB, albo platny tier). Do tego czasu: brak reseedu, korpus jest mieszanka 9.8
+   i 9.9, skany dzialaja ale nie maja trwalego linku.
 1. **Wybor hosta dokumentacji**: `docs.<domena>`, ktory jest pusta skorupa, wygrywa z prawdziwa
    dokumentacja (crowdin.com, scrapingbee.com).
 2. **Probkowanie stron dla `docs_without_js`** dziedziczone po hintach pisanych dla provisioningu.
