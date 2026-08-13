@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { CATEGORIES } from '@/lib/categories'
+import { CATEGORIES, CURATED_DOMAINS } from '@/lib/categories'
 import { publishedCorpus } from '@/lib/published'
 import { SITE_URL } from '@/lib/site'
 
@@ -31,6 +31,18 @@ export default async function VendorIndex() {
         won out of points we could measure, so a small denominator means a site we could not fully read rather
         than a vendor doing badly.
       </p>
+      {/* Two formula versions are never comparable, so we publish whichever covers the most domains
+          and the rest wait for their next scan. A reseed converts them one at a time, and one that
+          stops half way leaves this number looking like our whole corpus when it is not. Saying so
+          costs a sentence; leaving it unsaid understates the work and invites the reader to think
+          we have measured far less than we have. */}
+      {scores.size < CURATED_DOMAINS.size && (
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-faint">
+          We hold {CURATED_DOMAINS.size} vendors in total. The {CURATED_DOMAINS.size - scores.size} not listed
+          here were last measured under an older formula, and scores from two formulas are not comparable, so
+          they wait for their next scan rather than sit in a ranking they cannot be ranked in.
+        </p>
+      )}
 
       {CATEGORIES.map((category) => {
         const measured = category.domains.filter((domain) => scores.has(domain))
