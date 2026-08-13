@@ -184,7 +184,38 @@ const unattendedGrant = corpus.rows.filter((row) => {
 // guard reported a drift that was only the two sides measuring different things.
 const signupRefusals = corpus.rows.filter((row) => row.refusesAgentsAtSignup).length
 
+// The landing page quotes the agent runs as two hardcoded figures while the audit pages compute
+// theirs from the same files. Verified by hand on 2026-08-14 and correct, which is exactly when a
+// number is worth guarding: a fifth audit would silently make both of them false.
+const auditFiles = await Promise.all([
+  import('../src/data/audits/froala-editors.json', { with: { type: 'json' } }),
+  import('../src/data/audits/paddle-payments.json', { with: { type: 'json' } }),
+  import('../src/data/audits/uploadcare-storage.json', { with: { type: 'json' } }),
+  import('../src/data/audits/workos-auth.json', { with: { type: 'json' } }),
+])
+const auditRunsNeedingAnAccount = auditFiles
+  .flatMap((file) => file.default.runs)
+  .filter((run: { blockedBy?: string | null }) => Boolean(run.blockedBy)).length
+const auditRuns = (await import('../src/data/audits/froala-editors.json', { with: { type: 'json' } })).default.runs.length +
+  (await import('../src/data/audits/paddle-payments.json', { with: { type: 'json' } })).default.runs.length +
+  (await import('../src/data/audits/uploadcare-storage.json', { with: { type: 'json' } })).default.runs.length +
+  (await import('../src/data/audits/workos-auth.json', { with: { type: 'json' } })).default.runs.length
+
 const stated: { page: string; pattern: RegExp; expected: number; what: string }[] = [
+  {
+    // Anchored on the claim itself. A bare "N / 18" would match any score on the page.
+    page: '/',
+    pattern: /(\d+)\s*\/\s*\d+\s+\d+\s*\/\s*\d+\s+Every run shipped an integration/,
+    expected: auditRuns,
+    what: 'agent runs behind the landing page figure',
+  },
+  {
+    page: '/',
+    pattern: /\d+\s*\/\s*\d+\s+\d+\s*\/\s*(\d+)\s+Every run shipped an integration/,
+    expected: auditRunsNeedingAnAccount,
+    what: 'runs that needed a credential nobody could get',
+  },
+
   {
     page: '/findings',
     pattern: /signup\s+form is rare:\s*(\d+)\s+vendors do it/,
