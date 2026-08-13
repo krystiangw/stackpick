@@ -74,6 +74,23 @@ Potem `npx tsx scripts/diff-corpus.mts <migawka> https://letagentsin.com/corpus.
 **Zamrozone do tego czasu: zmiany w skanerze.** Kazda kolejna zmiana formuly powieksza rozjazd,
 ktorego nie da sie zamknac bez reseedu.
 
+### Przeglad wszystkich powierzchni podajacych rozmiar korpusu (13.08)
+
+Cztery miejsca drukowaly **88** tak, jakby to byla calosc naszej pracy, i zadne nie mowilo, ze to
+tylko tyle, ile da sie porownac pod jedna formula. Wszystkie naprawione i sprawdzone na produkcji:
+1. `/v` - "We hold 170 vendors in total. The 82 not listed here..."
+2. `corpus.json` - `curated` i `awaitingRescan` obok `domains`
+3. **MCP `find_providers`** - mowilo agentowi *"0 vendors measured, **which is what we hold**"*
+   dla kategorii, w ktorej trzymamy szesciu dostawcow. **To bylo zdanie wprost falszywe**, i to
+   powiedziane czytelnikowi, ktory nie moze dopytac.
+4. strona glowna - "Of 88 vendors we can compare today (we hold 170; the rest are waiting...)"
+
+**Wzorzec, ktory sie za tym kryje i ktory powtorzyl sie dzis kilkanascie razy:** problemem nie
+bylo klamstwo, tylko **prawda podana bez kontekstu, ktory czyni ja zrozumiala**. "The scan failed"
+po udanym skanie, "Stopped" bez zapisania, 88 firm bez wyjasnienia. Za kazdym razem system mowil
+cos technicznie obronnego i za kazdym razem odbiorca wyciagal falszywy wniosek. **Najwiecej
+precyzji jestesmy winni temu, kto nie moze zadac pytania uzupelniajacego**, czyli agentowi.
+
 ### `corpus.json` zaniżał nas wobec maszyn (13.08)
 
 Plik podawal `domains: 88` i nic o tym, ile trzymamy, wiec czytajacy w trakcie reseedu nie mial
