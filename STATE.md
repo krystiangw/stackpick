@@ -7,7 +7,45 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
-## W locie w tej chwili (2026-08-13) - NIC NIE LECI
+## !!! PRODUKCJA: BAZA PELNA, ZAPISY ZABLOKOWANE (2026-08-13, noc) !!!
+
+**MongoDB Atlas: 5121 MB z 5120 MB. Klaster odrzuca KAZDY zapis.** Strona czyta i wyglada
+normalnie, ale **skan sie nie zapisze, zapis na monitoring sie nie zapisze, lead sie nie zapisze**.
+Wykryte, gdy reseed 9.9 zaczal zwracac 42 porazki na 54 wiersze. Reseed zatrzymany.
+
+**Klaster jest WSPOLDZIELONY z innym projektem Krystiana** (bazy `equity-analyst`: `news_items`
+246 MB, `forecast_accuracy` 26 MB, ...). StackPick zajmuje ~760 MB z 5 GB, reszta nalezy do
+tamtego projektu. To znaczy, ze sam StackPick nie moze zwolnic wystarczajaco duzo, jesli tamten
+projekt tez rosnie.
+
+**Przyczyna po naszej stronie, znaleziona i NAPRAWIONA na przyszlosc:** kazdy raport nosil
+`funnel.catchAll.bodies`, czyli surowe strony pobrane przez sonde sciezek-bzdur. **180 kB z 185 kB
+raportu.** Sonda potrzebuje ich w trakcie skanu, zeby odroznic prawdziwy plik od szablonu, ktory
+odbija sciezke; **nic ich nie czyta pozniej**. 21 040 raportow, 97 procent kolekcji to rusztowanie.
+Commit `9bdf31a` usuwa je na granicy zapisu, dla kazdego pisarza wlacznie z cronem. Nowy raport
+wazy ~5 kB zamiast 185.
+
+**CZEGO NIE ZROBILEM I DLACZEGO: kasowania danych z produkcyjnej bazy.** To operacja
+destrukcyjna, a guardrail mowi wprost, ze takie wymagaja zgody. Liczby sa policzone i gotowe:
+
+| co | ile | uwaga |
+|---|---|---|
+| razem raportow | 21 040 | 752 MB |
+| skany odwiedzajacych (`seeded: false`) | 1 719 | **NIE RUSZAC**, obiecalismy trwaly link |
+| nasze najnowsze na domene (korpus) | 181 | to publikujemy |
+| **nasze przedawnione reseedy** | **19 140** | **do skasowania, zwalnia ~684 MB** |
+
+Gotowe polecenie (do uruchomienia po zgodzie Krystiana), kasuje wylacznie nasze wlasne
+przedawnione pomiary, zostawia kazdy skan odwiedzajacego i najnowszy wiersz kazdej domeny:
+`db.reports.deleteMany({ seeded: true, $nor: [ ...najnowszy (domain, scannedAt) dla kazdej domeny ] })`
+
+**Alternatywa bez kasowania:** platny tier w Atlasie. To tez decyzja Krystiana (pieniadze).
+
+**Do czasu decyzji:** nie uruchamiac reseedu (zapisy i tak przepadaja), nie obiecywac nikomu
+skanu. Po zwolnieniu miejsca: pelny reseed 9.9, bo ostatni przerwal sie w polowie i czesc wierszy
+w korpusie jest na 9.8, czesc na 9.9.
+
+## W locie w tej chwili (2026-08-13) - RESEED 9.9 PRZERWANY, PATRZ WYZEJ
 
 **Korpus: 170 wierszy na formule 9.8, audyt czysty (0 rozjazdow, 0 sprzecznosci), drzewo czyste.**
 
