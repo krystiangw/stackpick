@@ -1065,6 +1065,26 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   albo schlebia narzedziu, albo je oczernia, zaleznie od tego, z ktorego zestawu pochodzi.
   `FRESH_QUESTIONS` i `HELD_OUT_2` sa od teraz zestawami regresyjnymi (`BURNED=1`), nie miara.
 
+- **Podglad tego, co reseed na 9.12 zmieni, zrobiony BEZ zapisu (2026-08-13).** Skanowanie co
+  piatej domeny i porownanie z zapisanym wierszem: **6 z 34 zmienia wynik**. Dwa najwieksze ruchy
+  sprawdzone werdykt po werdykcie:
+  - **`sinch.com` 10/13 -> 7/11 okazalo sie SZUMEM.** Powtorzony skan dal z powrotem 10/13.
+    Trzypunktowy skok na jednej domenie, nieodtwarzalny. **Wniosek przed reseedem: pojedynczy
+    przebieg potrafi zapisac wynik, ktorego druga proba nie potwierdza**, a opublikowany prog szumu
+    (0,2 procent) jest liczony na parach identycznych przebiegow calego korpusu, wiec nie mowi nic
+    o wahaniu pojedynczego wiersza.
+  - **`cockroachlabs.com` 10/15 -> 7/13 jest PRAWDZIWE i w pelni wytlumaczone.** `llms_txt` 1 -> 0,
+    bo **wszystkie 12 probkowanych linkow jest martwych**: ich plik wypisuje adresy na
+    `docs.cockroachlabs.com`, a dokumentacja stoi pod `www.cockroachlabs.com` (sprawdzone recznie,
+    tresc pod `www` odpowiada 200). `programmatic_provisioning` 2/2 -> nieoznaczalne, bo czytamy
+    tylko jedna strone dokumentacji. Arytmetyka sie zgadza co do punktu: 10-1-2 = 7, 15-2 = 13.
+  - **Ta sama bledna hipoteza postawiona DWA razy w jednym dniu: „kandydaci z llms.txt wypychaja
+    czytelne strony dokumentacji z limitu trzech".** Raz przy `oramasearch.com`, raz przy
+    `cockroachlabs.com`. Za kazdym razem obalona dwuminutowym testem izolujacym (skan z filtrem
+    `isDocumentationPage` i bez niego dal **identyczny** wynik). **Straznik trzymajacy jedna strone
+    z rankingu byl przez to napisany i wycofany DWUKROTNIE** - nie pisz go po raz trzeci bez
+    uprzedniego testu izolujacego.
+
 - **Dwunasty przebieg adwersaryjny, do zrobienia.** Powierzchnie, których jedenasty nie ruszył,
   w kolejności wagi:
   1. ~~**Trasowanie po raz drugi.**~~ **zrobione w rundzie 105: 35 → 20 procent.** Wszystkie 149
