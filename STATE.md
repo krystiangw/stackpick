@@ -26,15 +26,20 @@ Strona, korpus i skanowanie dzialaja; nic sie nie zapisuje i kazda sciezka mowi 
 - **Trasowanie zmierzone uczciwie**: 24 z 59 na zestawie odlozonym, a nie 20 procent bledu, jak
   mowilo streszczenie. Opublikowana liczba byla przy tym prawidlowa.
 
+**Uwaga na liczbe kuratorowanych domen: jest ich 170** (`CURATED_DOMAINS.size`). Przez caly
+weekend pisalem w tym pliku 181, raz zdanie obok cytatu ze strony mowiacego „we hold 170".
+**181 to liczba adresow w sitemapie**, czyli strony vendorow plus reszta serwisu, i te dwa
+wystapienia nizej sa poprawne.
+
 **Czego NIE robic przed rozwiazaniem bazy:** nie uruchamiaj reseedu. Kazda proba dokłada rozbicia
 korpusu; dwie proby juz to zrobily.
 
 ### 1. Baza (blokuje wszystko inne) - REKOMENDACJA PRZEPISANA 13.08, druga wersja jest ta wlasciwa
 
 **Blokada wrocila DRUGI raz w polowie reseedu, 13.08 po poludniu.** Zapisy ustapily same,
-ruszyl pelny reseed na 9.11, **zapisalo sie 45 z 181 domen i 41 dostalo NOT SAVED**. Korpus jest
+ruszyl pelny reseed na 9.11, **zapisalo sie 45 z 170 domen i 41 dostalo NOT SAVED**. Korpus jest
 teraz rozbity na trzy wersje formuly, a publikujemy wersje wiekszosciowa, wiec strona pokazuje
-**87 ze 181 vendorow**. Strona mowi o tym wprost („we hold 170; the rest are waiting for a rescan"),
+**87 ze 170 vendorow**. Strona mowi o tym wprost („we hold 170; the rest are waiting for a rescan"),
 wiec nie klamie, ale to jest polowa produktu. **Decyzja jest na boardzie jako zadanie #42.**
 Nie uruchamiaj reseedu ponownie przed rozwiazaniem bazy: kazda proba dokłada rozbicia.
 
@@ -110,7 +115,7 @@ DOMAINS=$(npx tsx scripts/stale-domains.mts) PASSES=1 PAUSE=3 bash scripts/resee
 ```
 
 `stale-domains.mts` wypisuje **tylko te domeny, ktorych najnowszy pomiar nie jest na aktualnej
-formule**: dzis 88 ze 181. Pelny reseed to 340 zapisow, ten to 88, czyli okolo 440 kB zamiast
+formule**: dzis 88 ze 170. Pelny reseed to 340 zapisow, ten to 88, czyli okolo 440 kB zamiast
 1,7 MB. **Przy tak cienkim zapasie to jest roznica miedzy dokonczeniem a ponownym zablokowaniem.**
 
 `PASSES=1` swiadomie: drugi przebieg istnieje po to, by rejestr npm odpowiadal z cieplego cache
@@ -288,7 +293,7 @@ destrukcyjna, a guardrail mowi wprost, ze takie wymagaja zgody. Liczby sa policz
 |---|---|---|
 | razem raportow | 21 040 | 752 MB |
 | skany odwiedzajacych (`seeded: false`) | 1 719 | **NIE RUSZAC**, obiecalismy trwaly link |
-| nasze najnowsze na domene (korpus) | 181 | to publikujemy |
+| nasze najnowsze na domene (korpus) | 170 | to publikujemy |
 | **nasze przedawnione reseedy** | **19 140** | **do skasowania, zwalnia ~684 MB** |
 
 Gotowe polecenie (do uruchomienia po zgodzie Krystiana), kasuje wylacznie nasze wlasne
