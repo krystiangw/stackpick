@@ -6,6 +6,7 @@ import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
 import { changesBetween, comparableScorecards } from '../src/lib/watch'
 import { CHECKS } from '../src/lib/score'
+import { forStorage } from '../src/lib/store'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS } from '../src/lib/scan'
 import { rendersUsableForm } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable } from '../src/lib/scan/discover'
@@ -405,6 +406,20 @@ check('dwie pozycje listy to nie jedno zdanie', provisioningMatches(dashboardLis
 // lost every one of them.
 const headingThenBody = '<h2>Create a signing key</h2><p>Send a POST to /system/v1/signing-keys.</p>'
 check('naglowek i jego tresc to jedno', provisioningMatches(headingThenBody).length > 0, true)
+
+console.log('zapis raportu, czyli czego nie trzymamy w bazie')
+// 180 kB of the 185 kB a report occupied were raw probe bodies nothing reads after the scan.
+// Twenty-one thousand reports later the cluster refused every write in production.
+const withBodies = {
+  id: 'r1',
+  findings: { funnel: { catchAll: { markdown: true, json: false, bodies: { markdown: 'x'.repeat(50_000), json: '', text: '' } } } },
+} as never
+const stored = forStorage(withBodies)
+check('surowe cialka sond nie ida do bazy', JSON.stringify(stored).length < 500, true)
+check('werdykty z tej sondy zostaja', (stored as { findings: { funnel: { catchAll: { markdown: boolean } } } }).findings.funnel.catchAll.markdown, true)
+// A report that never carried them is returned untouched rather than rebuilt.
+const without = { id: 'r2', findings: { funnel: { catchAll: { markdown: false } } } } as never
+check('raport bez cialek przechodzi bez zmian', forStorage(without), without)
 
 console.log('opis API, czyli czy brak deklaracji jest o nich czy o nas')
 const api = CHECKS.find((c) => c.id === 'machine_readable_api')!

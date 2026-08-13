@@ -46,6 +46,26 @@ export interface Store {
   listVisits(days: number): Promise<{ day: string; path: string; count: number }[]>
 }
 
+
+/**
+ * What a report looks like on disk, which is not what it looks like in memory.
+ *
+ * `funnel.catchAll.bodies` holds the raw pages the nonsense-path probe fetched, so that the
+ * entry-file check can tell a real file from a template that echoes the path it refuses. That
+ * comparison happens inside the scan and nothing reads the bodies afterwards, yet they were
+ * persisted with every report: 180 kB of the 185 kB each one occupied. Twenty-one thousand
+ * reports later the cluster hit its quota and every write in production was refused, including
+ * the scans and signups of anybody who happened to be using the site.
+ *
+ * Stripped here rather than in the scanner so it holds for every writer, including the cron.
+ */
+export function forStorage(report: Report): Report {
+  const catchAll = report.findings.funnel.catchAll
+  if (!catchAll?.bodies) return report
+  const { bodies: _bodies, ...rest } = catchAll
+  return { ...report, findings: { ...report.findings, funnel: { ...report.findings.funnel, catchAll: rest } } }
+}
+
 const DATA_DIR = path.join(process.cwd(), 'data')
 
 class FileStore implements Store {
@@ -57,7 +77,7 @@ class FileStore implements Store {
 
   async saveReport(report: Report) {
     const dir = await this.dir('reports')
-    await writeFile(path.join(dir, `${report.id}.json`), JSON.stringify(report, null, 2))
+    await writeFile(path.join(dir, `${report.id}.json`), JSON.stringify(forStorage(report), null, 2))
   }
 
   async getReport(id: string) {

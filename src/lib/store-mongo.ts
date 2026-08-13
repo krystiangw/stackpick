@@ -2,7 +2,7 @@ import { MongoClient, type Collection, type Db } from 'mongodb'
 import { REGISTRY_TTL_MS, installSharedCache, type SharedCache } from './scan/http'
 import type { Fetched } from './scan/http'
 import type { Watch } from './watch'
-import type { Lead, Report, Store } from './store'
+import { forStorage, type Lead, type Report, type Store } from './store'
 
 type ReportDoc = Report & { _id: string }
 /** One npm registry answer, kept so a deploy does not send us back to asking npm for all of it. */
@@ -77,7 +77,7 @@ export class MongoStore implements Store {
 
   async saveReport(report: Report) {
     const { reports } = await collections()
-    await reports.updateOne({ _id: report.id }, { $set: report }, { upsert: true })
+    await reports.updateOne({ _id: report.id }, { $set: forStorage(report) }, { upsert: true })
   }
 
   async getReport(id: string) {
