@@ -22,10 +22,17 @@ if [ -z "$TOKEN" ]; then
   exit 2
 fi
 
-domains=$(npx tsx -e "
+# A list can be passed in, which is how a half-finished reseed is finished without rewriting the
+# rows that are already current. scripts/stale-domains.mts prints exactly those domains.
+if [ -n "${DOMAINS:-}" ]; then
+  domains="$DOMAINS"
+  echo "== tylko $(echo "$domains" | grep -c .) domen podanych z zewnatrz"
+else
+  domains=$(npx tsx -e "
 import { CURATED_DOMAINS } from './src/lib/categories'
 console.log([...CURATED_DOMAINS].join('\n'))
 ") || { echo "could not read the curated list" >&2; exit 1; }
+fi
 
 # Two passes, and the second is the one that counts. The registry cache lives in the dyno's
 # memory, so every deploy empties it, and a cold pass asks npm about nineteen documents per

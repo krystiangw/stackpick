@@ -49,11 +49,22 @@ uzytkownikow**, bo monitoring jest darmowy i strona to mowi.
 
 Koszt. Jedno dyno to jedyny serwer; cache korpusu zdjal najgorszy przypadek.
 
-### Komenda po odblokowaniu zapisow
+### Komenda po odblokowaniu zapisow (MINIMALNA, 88 domen zamiast 170)
 
 ```
-cd ~/projects/stackpick && STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) PASSES=2 PAUSE=3 bash scripts/reseed.sh
+cd ~/projects/stackpick
+export STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick)
+export MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick)
+DOMAINS=$(npx tsx scripts/stale-domains.mts) PASSES=1 PAUSE=3 bash scripts/reseed.sh
 ```
+
+`stale-domains.mts` wypisuje **tylko te domeny, ktorych najnowszy pomiar nie jest na aktualnej
+formule**: dzis 88 ze 181. Pelny reseed to 340 zapisow, ten to 88, czyli okolo 440 kB zamiast
+1,7 MB. **Przy tak cienkim zapasie to jest roznica miedzy dokonczeniem a ponownym zablokowaniem.**
+
+`PASSES=1` swiadomie: drugi przebieg istnieje po to, by rejestr npm odpowiadal z cieplego cache
+(zimny kosztuje ~26 domen ich pakietu). Przy odzyskiwaniu wazniejsze jest, zeby przebieg sie
+skonczyl. Jesli po nim `typed_package` wyglada na zaniżony, mozna dobic drugim przebiegiem.
 
 **To jest pierwsza rzecz do zrobienia.** Przerwany reseed zostawil korpus rozbity: ~75 wierszy na
 9.9, 95 na 9.8, a publikujemy wiekszosc, wiec **strona pokazuje 95 dostawcow zamiast 170**. Audyt
