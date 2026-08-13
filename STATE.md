@@ -249,6 +249,35 @@ nieodtwarzalny naraz. Parametry funkcjonalne zostaja (`?plan=free`, `?module=fme
 w hashu SPA tez sa czyszczone. **Bez podbicia formuly:** zaden werdykt ani punkt sie nie zmienia,
 a podbicie oznaczyloby 170 stron jako przedawnione bez mozliwosci reseedu.
 
+### Rekomendacja w sprawie kasowania (pytanie Krystiana, 2026-08-13)
+
+**ODRADZAM kasowanie na teraz.** Pomiar:
+- nasze kolekcje: **757 MB plikow** (2311 MB zywych danych, kompresja ~3x), equity-analyst 1501 MB,
+  razem **2258 MB**. Atlas naliczal **5121 MB**. Czyli **~2,8 GB to cos, czego nie widze** i na co
+  nie mam uprawnien: prawie na pewno oplog (baza `local`).
+- Blokada **koreluje z reseedem, nie z iloscia danych**: ustapila gdy zatrzymalem reseed, wrocila
+  gdy wznowilem. Licznik zszedl 5121 -> 5120 przez 40 minut ciszy, wiec cos sie saczy samo.
+- **Kasowanie jest zapisem.** 19 140 usuniec to 19 140 nowych wpisow do oploga, czyli do tego, co
+  prawdopodobnie jest pelne. Moze przedluzyc blokade zamiast ja skrocic. Zwolnilo by najwyzej
+  690 MB z 757 MB naszych kolekcji, czyli cwierc problemu.
+- Przyczyna po naszej stronie **jest juz naprawiona**: raport 185 kB -> 5 kB, 36x mniej ruchu.
+
+**Kolejnosc dzialan:** (1) Krystian zaglada do konsoli Atlasa i patrzy na rozbicie zajetosci, bo
+tylko tam widac oplog; (2) jesli to jednak nasze kolekcje, kasujemy **partiami z przerwami**,
+wlasnie dlatego ze kasowanie jest zapisem; (3) niezaleznie: klaster dzielony z equity-analyst,
+ktory zajmuje dwa razy wiecej niz StackPick, wiec 5 GB bedzie wracac.
+
+### Skutek uboczny blokady: korpus rozbity na dwie wersje
+
+Przerwany reseed 9.9 zostawil ~75 wierszy na 9.9 i 95 na 9.8. `publishedCorpus` publikuje
+wiekszosc, wiec **strona pokazuje 95 dostawcow zamiast 170**, a strony wierszy 9.8 nosza baner
+"measured under an older formula" i sa poza indeksem. **Audyt czysty: 0 rozjazdow**, bo wszystkie
+liczby licza sie z korpusu, wiec nic nie jest falszywe, tylko mniejsze.
+
+**DECYZJA: zamrazam zmiany w skanerze do czasu odblokowania zapisow.** Kazda kolejna zmiana
+formuly powieksza rozjazd, ktorego nie da sie zamknac bez reseedu. Jeden reseed po odblokowaniu
+naprawia wszystko naraz.
+
 **Otwarte, nienaprawione, w kolejnosci wagi:**
 0. **BAZA: Atlas pelny, zapisy odrzucane. Decyzja Krystiana** (kasowanie 19 140 przedawnionych
    raportow ~684 MB, albo platny tier). Do tego czasu: brak reseedu, korpus jest mieszanka 9.8
