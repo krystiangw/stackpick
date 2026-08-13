@@ -17,10 +17,35 @@ export default async function ConfirmWatch({ params }: { params: Promise<{ id: s
   const watch = await store.getWatch(id)
   if (!watch) notFound()
 
+  let confirmed = true
   if (!watch.confirmedAt) {
     watch.confirmedAt = new Date().toISOString()
     watch.stoppedAt = null
-    await store.saveWatch(watch)
+    confirmed = await store
+      .saveWatch(watch)
+      .then(() => true)
+      .catch((error) => {
+        console.error('could not record a confirmation', error)
+        return false
+      })
+  }
+
+  // Throwing here put an error page in front of somebody who had just clicked a link we sent
+  // them, at the moment they decided to trust us, and told them nothing about whether it worked.
+  if (!confirmed) {
+    return (
+      <main className="mx-auto flex max-w-2xl flex-col px-6 py-24">
+        <h1 className="text-3xl font-semibold">We could not switch it on</h1>
+        <p className="mt-4 leading-relaxed">
+          Something on our side would not record it, so {watch.domain} is not being watched yet and the link
+          above will keep working. Try it again in an hour, or write to{' '}
+          <a href="mailto:hello@letagentsin.com?subject=Watch%20confirmation" className="text-brass underline underline-offset-4">
+            hello@letagentsin.com
+          </a>{' '}
+          and we will set it up by hand.
+        </p>
+      </main>
+    )
   }
 
   return (
