@@ -31,8 +31,23 @@ weekend pisalem w tym pliku 181, raz zdanie obok cytatu ze strony mowiacego „w
 **181 to liczba adresow w sitemapie**, czyli strony vendorow plus reszta serwisu, i te dwa
 wystapienia nizej sa poprawne.
 
-**Czego NIE robic przed rozwiazaniem bazy:** nie uruchamiaj reseedu. Kazda proba dokłada rozbicia
-korpusu; dwie proby juz to zrobily.
+**Reseed WOLNO uruchamiac, i to jest korekta mojej wczesniejszej notatki.** Napisalem „nie
+uruchamiaj, kazda proba dokłada rozbicia" i to bylo za ostrozne. Korpus publikuje wersje
+**wiekszosciowa**, wiec dopoki 9.12 ma mniej wierszy niz najwieksza kohorta, opublikowany zbior
+**nie zmienia sie wcale**. Sprawdzone 14.08: po 33 zapisach na 9.12 strona nadal pokazywala te
+same 87 wierszy na 9.8. Czesciowy reseed jest dzis neutralny, a nie szkodliwy. Szkoda z 13.08
+wziela sie z innego stanu wyjsciowego, gdy wiekszosc przeskoczyla w polowie przebiegu.
+
+**Stan kohort (14.08): 9.8 - 87, 9.9 - 38, 9.12 - 33, 9.11 - 12. Do przelaczenia korpusu na 9.12
+brakuje 55 zapisow.** Kazde okno zapisu dawalo dotad 33-45 zapisow, a lista wznawialna je kumuluje,
+wiec **dwa kolejne okna wystarcza i nie trzeba niczego kasowac**. Procedura przy kazdym oknie:
+
+    DOMAINS=$(npx tsx scripts/stale-domains.mts) STACKPICK_CONSOLE_TOKEN=... PASSES=1 bash scripts/reseed.sh
+
+**Wzorzec blokady, trzy pomiary:** ustepuje na kilka-kilkanascie minut i wraca po 0, 45 i 33
+zapisanych domenach. **To nie jest kwestia wolnego miejsca w megabajtach** - przy trzeciej probie
+bylo 85 MB zapasu, czyli tyle samo co przy drugiej, a zapisalismy lacznie ~165 kB. Atlas daje
+okno laski i je cofa.
 
 ### 1. Baza (blokuje wszystko inne) - REKOMENDACJA PRZEPISANA 13.08, druga wersja jest ta wlasciwa
 
