@@ -104,9 +104,18 @@ rozjezdzac sie ponownie.
    jego wlasny sasiedni werdykt, auth0 nadal przechodzi z "4 documentation pages and 3
    machine-readable files".
 
+6. **`rateLimited` nie znaczyl tego, co obiecuje nota obok niego.** Nota mowi "the host answered
+   429 during that scan" i zaleca filtrowanie po tym polu; pole bylo `rateLimitedUs`, prawdziwe
+   tylko gdy KAZDA proba door-testu byla 429. nylas.com publikowal "answered 429, which is a limit
+   we triggered" z `rateLimited: false` obok. **Kto posluchal naszej wlasnej rady i przefiltrowal,
+   zostawal dokladnie z tymi wierszami, ktore mial usunac.** Teraz czyta kazdy status skanu.
+
+**Przy okazji: guard zlapal moja wlasna zmiane.** Przepisanie zdania w hero na "we can compare
+today" zostawilo dwa z siedemnastu pilnowanych numerow bez dopasowania, a wzorzec, ktory nic nie
+dopasowuje, nic nie sprawdza. `npm run audit` powiedzial to wprost przy nastepnym uruchomieniu.
+Dwie linie nizej w tym samym pliku jest komentarz o tym samym zdarzeniu z sierpnia.
+
 **NIENAPRAWIONE z tego audytu, do zrobienia:**
-- **`rateLimited` w korpusie jest false na wierszach cytujacych 429** (4 wiersze), a nota wprost
-  zaleca konsumentom filtrowanie po tym polu. Liczone tylko z door-testu.
 - **`measuredOn: null`, gdy scoreowany URL jest na innej domenie rejestrowalnej** (dropboxsign.com
   → app.hellosign.com, swell.is → swell.store, sentry.io → mcp.sentry.dev).
 
