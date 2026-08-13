@@ -300,6 +300,17 @@ zrobienie tego recznie dzisiaj. **Wzorzec wart zapamietania: kazda z nich robila
 zapis w drodze uzytkownika i zadna nie miala odpowiedzi na nieudany zapis.** Awaria byla lepszym
 audytorem niz cztery audyty, ktore zamowilem.
 
+### Mail ze scorecardem tez nigdy nie byl otwarty na telefonie (2026-08-13)
+
+Brak `meta viewport`, wiec klienci pocztowi ukladajacy w szerokosci desktopowej oddalali cala
+karte i podawali komus wynik w nieczytelnej wielkosci. Do tego 32 px paddingu z kazdej strony
+karty 560 px i **brak lamania dlugich tokenow**, czyli dokladnie ten sam blad, ktory strony
+dostawcow mialy do dzis rana: cytowane zdania nosza nasz wlasny user-agent i adresy dostawcy.
+Naprawione, zweryfikowane wyrenderowaniem prawdziwego zapisanego raportu przez szablon.
+
+**Zdanie warte zapamietania:** mowimy dostawcom, ze ich rejestracja ma dzialac bez przegladarki,
+a sami nigdy nie otworzylismy wlasnego maila na telefonie.
+
 ### Monitoring produkcji: cos wreszcie patrzy (2026-08-13)
 
 `.github/workflows/health.yml`, co godzine. Sprawdza trzy rzeczy i **oblewa**, gdy ktorakolwiek
