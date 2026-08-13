@@ -13,7 +13,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.8'
+export const FORMULA_VERSION = '9.9'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -1050,6 +1050,20 @@ export const CHECKS: Check[] = [
       if (blindedBy(f)) {
         return { points: 0, detail: 'Unmeasurable behind the WAF',
           unblock: 'Let ordinary HTTP through to your public pages and this becomes measurable.', inconclusive: true }
+      }
+      // A page that would not answer cannot be a page that declares nothing. The check next
+      // door has said so about a 429 since August and this one had no such guard, so on the
+      // same scan postmarkapp.com read "a 429 is our own burst rather than an answer about
+      // agents" beside "none declared by postmarkapp.com/developer". By hand, at that moment, it
+      // was serving `link: </swagger/server.yml>; rel="service-desc"` and the spec answered 200.
+      const docsStatus = f.machine.markdownNegotiation.docsStatus
+      if (docsStatus !== undefined && (docsStatus === 0 || docsStatus >= 400)) {
+        return {
+          points: 0,
+          detail: `Unmeasurable: ${f.discovered.docs ?? f.site} answered ${docsStatus === 0 ? 'nothing' : docsStatus} when we asked it for markdown${docsStatus === 429 ? ', and a 429 is our own burst rather than an answer about you' : ''}, so what it declares about your API is not something this scan read`,
+          inconclusive: true,
+          unblock: 'Nothing for you to do if this was a 429. We will rescan later and this becomes measurable.',
+        }
       }
       // "Not found on your domain" is what we measured. "Does not exist" is not, and the
       // difference is the whole reason we now read what the page says about itself: porkbun.com

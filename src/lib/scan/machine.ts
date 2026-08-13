@@ -42,6 +42,13 @@ export type MachineFindings = {
     /** The page that actually answered. The front page usually is not it, and a verdict that
      * cannot name a URL sends a vendor to test the one page that disproves us. */
     answeredAt: string | null
+    /**
+     * What the documentation page said when we asked it for markdown. Absence of a declaration
+     * is only a finding when the page that would carry it answered: postmarkapp.com publishes
+     * `link: </swagger/server.yml>; rel="service-desc"` and answered us 429 after a night of
+     * reseeding, and we published "none declared by postmarkapp.com/developer" about it.
+     */
+    docsStatus: number
   }
   mcp: {
     /** Exact, over the files we read in full. A number off a truncated body is not a fact. */
@@ -159,7 +166,13 @@ function readsAsSpec(got: Fetched): boolean {
  */
 async function negotiatesMarkdown(
   url: string,
-): Promise<{ acceptHeader: boolean; dotMdSuffix: boolean; answeredAt: string | null; declared: { url: string; rel: string }[] }> {
+): Promise<{
+  acceptHeader: boolean
+  dotMdSuffix: boolean
+  answeredAt: string | null
+  docsStatus: number
+  declared: { url: string; rel: string }[]
+}> {
   const suffixUrl = `${url.replace(/\/$/, '')}.md`
   const [viaAccept, viaSuffix] = await Promise.all([
     fetchUrl(url, { accept: 'text/markdown' }),
@@ -171,6 +184,7 @@ async function negotiatesMarkdown(
     acceptHeader,
     dotMdSuffix,
     answeredAt: acceptHeader ? url : dotMdSuffix ? suffixUrl : null,
+    docsStatus: viaAccept.status,
     // Free: this is the page we just fetched, read for what it says about itself.
     declared: declaredSpecs(viaAccept),
   }

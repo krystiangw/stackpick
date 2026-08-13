@@ -406,6 +406,29 @@ check('dwie pozycje listy to nie jedno zdanie', provisioningMatches(dashboardLis
 const headingThenBody = '<h2>Create a signing key</h2><p>Send a POST to /system/v1/signing-keys.</p>'
 check('naglowek i jego tresc to jedno', provisioningMatches(headingThenBody).length > 0, true)
 
+console.log('opis API, czyli czy brak deklaracji jest o nich czy o nas')
+const api = CHECKS.find((c) => c.id === 'machine_readable_api')!
+const askedDocs = (docsStatus: number) =>
+  api.evaluate({
+    site: 'https://v.test',
+    discovered: { docs: 'https://v.test/developer' },
+    machine: {
+      openapi: [],
+      openapiDeclared: null,
+      markdownNegotiation: { acceptHeader: false, dotMdSuffix: false, answeredAt: null, docsStatus },
+    },
+    funnel: { servesCatchAll: false },
+    readAnything: true,
+  } as never)
+// postmarkapp.com published `link: </swagger/server.yml>; rel="service-desc"` while answering us
+// 429 after a night of reseeding, and we published "none declared by postmarkapp.com/developer".
+check('429 na stronie docs nie jest brakiem deklaracji', askedDocs(429).inconclusive, true)
+check('i mowi wprost, ze to nasz ruch', askedDocs(429).detail.includes('our own burst'), true)
+check('brak odpowiedzi tez nie jest dowodem', askedDocs(0).inconclusive, true)
+// A page that answered and declares nothing is a finding about the vendor, and stays one.
+check('strona odpowiedziala i nic nie deklaruje', askedDocs(200).inconclusive, undefined)
+check('i wtedy to jest zero', askedDocs(200).points, 0)
+
 console.log('host dokumentacji, czyli czy pusta skorupa jest dokumentacja')
 const page = (url: string) => ({ url })
 const shell = { rank: 3_000_000, chars: 38, page: page('https://docs.v.test'), requested: 'https://docs.v.test' }
