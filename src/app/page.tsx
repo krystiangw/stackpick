@@ -184,8 +184,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
         </div>
       </section>
 
-      {/* A price and a name were both two clicks down a page of rankings, and a buyer who wants to
-          know who is behind a four-figure invoice should not have to hunt for it. */}
+      {/* A price and a name were both two clicks down a page of rankings, and somebody deciding
+          whether to pay for an audit should not have to hunt for who would be doing it. */}
       <section className="border-t border-rule py-10">
         <p className="max-w-2xl leading-relaxed text-ink-soft">
           Run by Krystian Gwizdała. The scanner, the formula, the agent runs and every number on this site are
