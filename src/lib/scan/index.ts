@@ -13,7 +13,9 @@ import {
   fetchWithRetries,
   inParallel,
   inPhase,
+  confirmedRefusals,
   isBotChallenge,
+  isEdgeRefusal,
   isRealTextFile,
   looksLikeHtml,
   NAMED_CRAWLERS,
@@ -477,26 +479,6 @@ function docsWithoutJs(docsUrl: string | null, pages: Fetched[]): { chars: numbe
 
 export type ScanProgress = (step: { label: string; done: number; total: number }) => void
 
-/**
- * A status that means an edge turned a named agent away, as opposed to one that means the page
- * is not there. Not 429: that is our own load, and the rest of this scanner already says so.
- * Not 404 either. workos.com answers Claude-User a repeatable 404 at /docs while serving it
- * every other documentation page, including markdown written for agents, and we published that
- * as "on-demand agents blocked". A missing route is a routing miss; a closed door says 401, 403
- * or 451 and means it.
- */
-export const isEdgeRefusal = (status: number) => status >= 400 && status !== 404 && status !== 429
-
-/**
- * Which refusals survive being asked a second time, at another page of the same documentation.
- * Only ever removes one: a crawler that got through the second time was not blocked, and a
- * crawler refused twice is a finding we are willing to print under a company's name.
- */
-export function confirmedRefusals(seen: { name: string; status: number; second: number }[]) {
-  return seen.filter(({ second }) => isEdgeRefusal(second)).map(({ name, status }) => ({ name, status }))
-}
-
-
 const STEPS = 5
 
 /** Well inside the scan budget, so a slow registry cannot take the rest of the scan with it. */
@@ -857,3 +839,4 @@ async function resolvePackage(domain: string, found: Discovered): Promise<NpmFin
 }
 
 export { normalizeDomain }
+export { isEdgeRefusal, confirmedRefusals } from './http'

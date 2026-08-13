@@ -444,6 +444,32 @@ check('brak odpowiedzi tez nie jest dowodem', askedDocs(0).inconclusive, true)
 check('strona odpowiedziala i nic nie deklaruje', askedDocs(200).inconclusive, undefined)
 check('i wtedy to jest zero', askedDocs(200).points, 0)
 
+console.log('sprzecznosci wewnatrz jednego wiersza')
+const doorCheck = CHECKS.find((c) => c.id === 'answers_plain_request')!
+// contentful.com read "no agent reaches the site at all" here and "a limit we triggered rather
+// than a rule about agents" from the signup check, on the same scan, about the same 429.
+const challenged429 = doorCheck.evaluate({
+  botChallenge: true, agentStatus: 429, agentStatusesSeen: [429, 429, 429], site: 'https://v.test', challengeAdmits: [],
+} as never)
+check('challenge zlozony z samych 429 to nasz ruch', challenged429.inconclusive, true)
+// A 403 challenge is still the vendor's wall and still costs the point.
+check('challenge na 403 nadal kosztuje punkt', doorCheck.evaluate({
+  botChallenge: true, agentStatus: 403, agentStatusesSeen: [403, 403, 403], site: 'https://v.test', challengeAdmits: [],
+} as never).points, 0)
+// And the sentence stops claiming the whole site from one request to one host.
+check('zdanie mowi o adresie, nie o calej stronie', doorCheck.evaluate({
+  botChallenge: true, agentStatus: 403, agentStatusesSeen: [403], site: 'https://v.test', challengeAdmits: [],
+} as never).detail.includes('https://v.test'), true)
+
+const gates = CHECKS.find((c) => c.id === 'signup_no_captcha')!
+// Eleven rows described server HTML from a page that had answered 403 to everyone.
+check('bramki strony, ktorej nie dostalismy, sa niemierzalne', gates.evaluate({
+  funnel: { signup: { url: 'https://v.test/signup', reachable: false, captcha: ['recaptcha'], rendersFormWithoutJs: false } },
+} as never).inconclusive, true)
+check('bramki strony, ktora dostalismy, sa mierzalne', gates.evaluate({
+  funnel: { signup: { url: 'https://v.test/signup', reachable: true, captcha: ['recaptcha'], rendersFormWithoutJs: true } },
+} as never).points, 0)
+
 console.log('odmowa, czyli czy powtorzyla sie na drugiej stronie')
 // "Your edge answered ChatGPT-User 403" is an accusation about a named company built from one
 // fetch of one page. savvycal.com was published as blocking ChatGPT-User on the strength of a

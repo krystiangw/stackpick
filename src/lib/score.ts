@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.9'
+export const FORMULA_VERSION = '9.10'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -98,10 +98,25 @@ export const CHECKS: Check[] = [
       // A challenge is not a limit. The edge is asking the caller to run JavaScript, which every
       // browser does invisibly and no HTTP client does at all, so it is the sharpest possible
       // answer to this check rather than an excuse for skipping it.
+      //
+      // Unless every try was a 429, in which case this branch and the one below it disagreed about
+      // the same response: contentful.com read "no agent reaches the site at all" here and
+      // "answered 429, which is a limit we triggered rather than a rule about agents" from the
+      // signup check, on the same scan, about the same edge. One of those cost them a point.
+      if (f.botChallenge && f.agentStatusesSeen?.length && f.agentStatusesSeen.every((status) => status === 429)) {
+        return {
+          points: 0,
+          detail: `Unmeasurable: answered 429 to ${AGENT_UA}${tries} behind a challenge, and a 429 is our own burst rather than an answer about agents`,
+          inconclusive: true,
+          unblock: 'Nothing for you to do. We will rescan later and this becomes measurable.',
+        }
+      }
       if (f.botChallenge) {
+        // "The site" was a claim about every host we read, and namecheap.com carried it next to a
+        // robots.txt we had just read from the same origin. The measurement is one request.
         return yes(
           0,
-          `Answered ${f.agentStatus} to ${AGENT_UA}${tries} with a JavaScript challenge from your edge, so no agent reaches the site at all`,
+          `Answered ${f.agentStatus} to ${AGENT_UA}${tries} with a JavaScript challenge from your edge, so an agent does not get past ${f.site}`,
         )
       }
       if (f.rateLimitedUs) {
@@ -613,6 +628,19 @@ export const CHECKS: Check[] = [
                 unblock: 'If accounts are created somewhere else, tell us where and we will rescan.',
               }
       }
+      // A page nobody was served has no server HTML to read gates out of. Eleven rows said "the
+      // signup form is not in the server HTML, so its gates are not either" beside a sibling
+      // saying the same URL answered 403 to everyone, which describes reading a page we never
+      // got. Harmless while both are unmeasured and not harmless one branch away: a CAPTCHA
+      // signature inside a WAF error body would have scored a fail on a page we never saw.
+      if (!f.funnel.signup.reachable) {
+        return {
+          points: 0,
+          detail: `Unmeasurable: ${f.funnel.signup.url} did not serve us the signup page, so its gates are not something we read`,
+          inconclusive: true,
+          unblock: 'Let ordinary HTTP reach your signup page and this becomes measurable.',
+        }
+      }
       if (f.funnel.signup.captcha.length > 0) {
         return yes(
           0,
@@ -684,6 +712,19 @@ export const CHECKS: Check[] = [
       if (!signup.reachable) {
         const seen = signup.consistent ? `${signup.status}` : `${signup.statusesSeen.join(', ')}`
         const tried = signup.statusesSeen.length > 0 ? signup.statusesSeen : [signup.status]
+        // The door test settled this in August: a 2xx anywhere in the sequence disproves the
+        // sentence that follows it, whatever the last try said. This branch had not learned it,
+        // so weglot.com read "answers 403, 403, 200 to an agent ... so nothing gets in from here",
+        // a sentence that lists the 200 it is denying.
+        const letUsIn = tried.find((status) => status >= 200 && status < 400)
+        if (letUsIn !== undefined) {
+          return {
+            points: 0,
+            detail: `Unmeasurable: ${signup.url} answered ${seen} to an agent, so one of our three tries got in and the two refusals are as likely to be our own burst as a rule about agents`,
+            inconclusive: true,
+            unblock: 'Nothing for you to do. We will rescan later and this becomes measurable.',
+          }
+        }
         // Our own rule everywhere else: a 429 is us asking too often, never a finding about them.
         if (tried.every((status) => status === 429)) {
           return {

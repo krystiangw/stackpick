@@ -1,4 +1,4 @@
-import { AGENT_UA, BROWSER_UA, fetchUrl, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, timeLeftMs, visibleTextLength, type Fetched } from './http'
+import { AGENT_UA, BROWSER_UA, fetchUrl, isEdgeRefusal, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, timeLeftMs, visibleTextLength, type Fetched } from './http'
 
 export const AGENT_ENTRY_PATHS = [
   '/agent-signup.md',
@@ -1188,7 +1188,10 @@ export async function scanFunnel({
     const sameAsNonsense =
       sameTemplate || (controlLength !== undefined && controlLength > 0 && got.body.length === controlLength)
     const present = !sameAsNonsense && isRealTextFile(got, 30)
-    const refused = got.status >= 400 && got.status !== 404
+    // The same predicate the rest of the scanner uses. This one counted a 429 as a refusal,
+    // which is our own load: name.com answered the door test (200, 200, 429) and was reported as
+    // refusing all nine entry paths on the origin whose llms.txt we had just read in full.
+    const refused = isEdgeRefusal(got.status)
     return [path, present, present && describesAProcedure(got.body), got.body, refused] as const
   })
 
