@@ -74,6 +74,17 @@ Potem `npx tsx scripts/diff-corpus.mts <migawka> https://letagentsin.com/corpus.
 **Zamrozone do tego czasu: zmiany w skanerze.** Kazda kolejna zmiana formuly powieksza rozjazd,
 ktorego nie da sie zamknac bez reseedu.
 
+### Stan zweryfikowany 13.08 (po 48 commitach)
+
+Osiem publicznych stron: **wszystkie 200**, 0,26-0,46 s. Drzewo czyste, nic niewypchniete.
+Audyt: **0 sprzecznosci, 0 rozjazdow**. Skan oddaje pelna karte na formule 9.9 z uczciwym
+`saved: false`. Monitoring chodzi co godzine i **poprawnie oblewa**.
+
+**Nie ma juz nic, co dalo by sie zrobic bez decyzji Krystiana.** Zamrozenie skanera obowiazuje,
+bo kazda zmiana formuly powieksza rozjazd korpusu. Rozwazylem wyciszenie godzinowych maili
+z monitoringu i **odrzucilem to**: alert, ktory milczy w trakcie awarii, jest gorszy niz alert
+halasliwy, a powiadomienia w repo wycisza sie jednym kliknieciem.
+
 ### Co ten weekend dal, w trzech liczbach
 
 - **Oskarzenia o obce firmy w dol:** `programmatic_provisioning` 77 -> 32, `docs_without_js`
