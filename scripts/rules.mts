@@ -9,7 +9,7 @@ import { CHECKS } from '../src/lib/score'
 import { forStorage } from '../src/lib/store'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS } from '../src/lib/scan'
 import { rendersUsableForm } from '../src/lib/scan/funnel'
-import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable } from '../src/lib/scan/discover'
+import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
 import {
   provisioningMatches,
   BOT_DEFENCE_RULES,
@@ -443,6 +443,18 @@ check('brak odpowiedzi tez nie jest dowodem', askedDocs(0).inconclusive, true)
 // A page that answered and declares nothing is a finding about the vendor, and stays one.
 check('strona odpowiedziala i nic nie deklaruje', askedDocs(200).inconclusive, undefined)
 check('i wtedy to jest zero', askedDocs(200).points, 0)
+
+console.log('adres rejestracji, czyli czy cytujemy im wlasny tracking')
+// Every one of these is a URL we published about a real company on formula 9.8.
+check('utm z paska nawigacji', routeUrl('https://app.harness.io/auth/#/signup?module=fme&utm_source=split_io&utm_medium=nav_bar'), 'https://app.harness.io/auth/#/signup?module=fme')
+check('ref z nawigacji', routeUrl('https://app.inngest.com/sign-up?ref=nav'), 'https://app.inngest.com/sign-up')
+check('google analytics', routeUrl('https://dashboard.plaid.com/signup?_gl=1*k2v2l9*_gcl_au*MTI1'), 'https://dashboard.plaid.com/signup')
+check('cta i cta_page', routeUrl('https://cloud.saleor.io/signup?cta=Get+Started&cta_page=%2F'), 'https://cloud.saleor.io/signup')
+// Parameters that are part of the address stay, because the page we test has to be the page we
+// print: browserless.io serves a different plan behind ?plan=free and maptiler needs its ?next=.
+check('parametr funkcjonalny zostaje', routeUrl('https://www.browserless.io/signup/email?plan=free'), 'https://www.browserless.io/signup/email?plan=free')
+check('next zostaje nietkniety, bez przekodowania', routeUrl('https://cloud.maptiler.com/auth/widget?next=https://cloud.maptiler.com/maps/'), 'https://cloud.maptiler.com/auth/widget?next=https://cloud.maptiler.com/maps/')
+check('adres bez parametrow bez zmian', routeUrl('https://stripe.com/signup'), 'https://stripe.com/signup')
 
 console.log('host dokumentacji, czyli czy pusta skorupa jest dokumentacja')
 const page = (url: string) => ({ url })

@@ -221,7 +221,50 @@ function routeSegments(url: string): string[] {
 }
 
 /** Keeps a route fragment, because it is the page; drops an anchor, because it is a scroll position. */
-const routeUrl = (url: string) => (/#\/\S/.test(url) ? url : url.split('#')[0])
+/**
+ * Parameters a marketing team puts on its own links, which are not part of the address.
+ *
+ * Twelve of the eighty-five signup failures we published named a URL carrying the vendor's own
+ * analytics: `?ref=nav`, `?utm_source=split_io&utm_medium=nav_bar`, `?_gl=1*k2v2l9*_gcl_au*...`,
+ * `?cta=Get+Started&cta_page=%2F`. The verdict was true and unreproducible at the same time,
+ * because a vendor checking it is handed back a tracking link from their own navigation and
+ * reasonably concludes we do not know what we measured. Stripped before the fetch, not after, so
+ * that the address we test is the address we print.
+ */
+const CAMPAIGN_PARAM = /^(utm_\w+|mtm_\w+|ref|referrer|source|cta|cta_page|pg|plcmt|aid|sitelocation|gclid|fbclid|msclkid|_gl|_ga|hsa_\w+|campaign)$/i
+
+const withoutCampaignParams = (url: string): string => {
+  try {
+    const parsed = new URL(url)
+    let dropped = false
+    for (const key of [...parsed.searchParams.keys()]) {
+      if (!CAMPAIGN_PARAM.test(key)) continue
+      parsed.searchParams.delete(key)
+      dropped = true
+    }
+    // A single-page route carries its own query behind the hash, where searchParams cannot see
+    // it: split.io's signup is app.harness.io/auth/#/signup?module=fme&utm_source=split_io.
+    const [route, hashQuery] = parsed.hash.split('?')
+    if (hashQuery) {
+      const kept = hashQuery
+        .split('&')
+        .filter((pair) => !CAMPAIGN_PARAM.test(pair.split('=')[0]))
+        .join('&')
+      if (kept !== hashQuery) {
+        parsed.hash = kept ? `${route}?${kept}` : route
+        dropped = true
+      }
+    }
+    // Rebuilt from the parsed URL only when something was dropped, because the round trip
+    // re-encodes parameters a vendor wrote by hand and a rewritten address is a different one.
+    return dropped ? parsed.toString().replace(/\?(?=#|$)/, '') : url
+  } catch {
+    return url
+  }
+}
+
+export const routeUrl = (url: string) =>
+  withoutCampaignParams(/#\/\S/.test(url) ? url : url.split('#')[0])
 
 const DOCS_SEGMENT = /^(docs?|documentation|api-?docs?|api-?reference|reference|manual|handbook)$/i
 const DEVELOPER_SEGMENT = /^(developers?|dev|api|sdks?)$/i
