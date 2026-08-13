@@ -164,7 +164,10 @@ const VOCABULARY: Record<string, string[]> = {
   video: ['video', 'stream', 'livestream', 'webinar', 'broadcast', 'encode', 'transcode', 'player', 'play', 'playback'],
   // Not "headless": it modifies a CMS, a commerce platform and a browser, and "headless commerce"
   // tied against the category it names.
-  'browser-infrastructure': ['scrape', 'crawl', 'crawler', 'browser', 'puppeteer', 'playwright', 'proxy', 'screenshot'],
+  // "chrome" is browser vocabulary in a question, whatever it means in our own prose about a
+  // button's chrome. Held back since round 105 as a rule about the world rather than about the
+  // questions we had, and worth one question on the held-out set when finally tested.
+  'browser-infrastructure': ['scrape', 'crawl', 'crawler', 'browser', 'puppeteer', 'playwright', 'proxy', 'screenshot', 'chrome'],
   // Not "alerting": an alert about an exception is error monitoring and an alert about latency is
   // observability, so the word decided nothing and tied all three.
   // Not "webhook": every category delivers them and none of them is asked for by that word, so it
@@ -314,6 +317,11 @@ export function categoryForJob(job: string): Category | null {
   if (scored[0].strong === 0) return null
   // A tie between two categories is a question we cannot route, and guessing would send a caller
   // a list of the wrong vendors with our name on it.
+  // Tested and refuted 2026-08-13: letting a named delivery channel take the tie. It fired on
+  // three questions across both held-out sets and was wrong on all three, because "email" in a
+  // real question is usually incidental (people emailing support) rather than the product being
+  // asked for. It scored the same only because those three were already wrong, and a confident
+  // wrong answer is worse than the silence it replaced.
   if (scored[0].score === scored[1]?.score) return null
   return scored[0].category
 }
