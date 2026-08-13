@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-13 (kod na formule 9.9, korpus rozbity 9.8/9.9, zapisy do bazy ZABLOKOWANE)
+# Let Agents In: stan na 2026-08-13 wieczorem (kod na formule 9.12, korpus rozbity 9.8/9.9/9.11, zapisy do bazy ZABLOKOWANE)
 
 Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
 **Dwie sekcje na dole tego bloku, "Co zostało z audytów" i "Następne kroki merytoryczne", są
@@ -12,7 +12,24 @@ czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko 
 **Produkcja dziala w trybie zdegradowanym. Zapisy do bazy sa odrzucane od nocy 12/13.08.**
 Strona, korpus i skanowanie dzialaja; nic sie nie zapisuje i kazda sciezka mowi o tym wprost.
 
-### 1. Baza (blokuje wszystko inne) - REKOMENDACJA ZMIENIONA 13.08 rano
+**Co sie zmienilo przez sobote i niedziele, w skrocie (szczegoly nizej):**
+- **Baza jest JEDYNA rzecza, ktora czeka na Ciebie.** Rekomendacja z rana byla bledna i jest
+  wycofana: to nie oplog, to nasze raporty. Liczba zmierzona, nie oszacowana. **Zadanie #42.**
+- **Formula poszla 9.10 -> 9.12.** Naprawione: trzy strony dokumentacji publikowane jako zywe
+  serwery MCP, dwie rady naprawcze sprzeczne z werdyktem obok, `llms.txt` czytany wreszcie jako
+  mapa a nie znaczek, `alsoNames` wypelnione nasza wlasna domena na 88 z 88 wierszy.
+- **Odwiedzajacy dostaje swoj raport mimo zablokowanej bazy.** Wczesniej po polminutowym skanie
+  dostawal „napisz do nas mailem", a my mielismy jego karte wynikow w reku.
+- **282 werdykty sprawdzone niezaleznie, 0 bledow** (trzynasty przebieg adwersaryjny).
+- **Errata**: trzy wiersze, o ktorych wiemy, ze sa bledne, sa oznaczone na stronie i w
+  `corpus.json`, a noty **wygasaja same** po reseedzie.
+- **Trasowanie zmierzone uczciwie**: 24 z 59 na zestawie odlozonym, a nie 20 procent bledu, jak
+  mowilo streszczenie. Opublikowana liczba byla przy tym prawidlowa.
+
+**Czego NIE robic przed rozwiazaniem bazy:** nie uruchamiaj reseedu. Kazda proba dokłada rozbicia
+korpusu; dwie proby juz to zrobily.
+
+### 1. Baza (blokuje wszystko inne) - REKOMENDACJA PRZEPISANA 13.08, druga wersja jest ta wlasciwa
 
 **Blokada wrocila DRUGI raz w polowie reseedu, 13.08 po poludniu.** Zapisy ustapily same,
 ruszyl pelny reseed na 9.11, **zapisalo sie 45 z 181 domen i 41 dostalo NOT SAVED**. Korpus jest
