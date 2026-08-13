@@ -25,6 +25,12 @@ export type Lookup = {
   category: { id: string; label: string; jobToBeDone: string }
   /** How much of the category we hold. Never presented as the whole market. */
   measured: number
+  /**
+   * How many vendors this category holds against how many we could answer with. They differ while
+   * a reseed is part way through, and the tool said "which is what we hold" about the smaller
+   * number, which is a false sentence told to an agent that cannot check it.
+   */
+  inCategory: number
   clear: Reachability[]
   blocked: Reachability[]
   unknown: Reachability[]
@@ -322,6 +328,7 @@ export async function lookup(job: string): Promise<Lookup | null> {
   return {
     category: { id: category.id, label: category.label, jobToBeDone: category.jobToBeDone },
     measured: held.length,
+    inCategory: category.domains.length,
     clear: held.filter((entry) => entry.barriers.length === 0 && !entry.unknown),
     blocked: held.filter((entry) => entry.barriers.length > 0),
     unknown: held.filter((entry) => entry.barriers.length === 0 && entry.unknown),

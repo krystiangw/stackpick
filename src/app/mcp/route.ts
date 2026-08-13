@@ -143,7 +143,14 @@ export async function POST(request: Request) {
       const line = (entry: { domain: string; barriers: string[]; measuredAt: string; evidence: string }) =>
         `  ${entry.domain}${entry.barriers.length > 0 ? `: stops at ${entry.barriers.join('; ')}` : ''} (measured ${entry.measuredAt}, evidence ${publicBaseUrl(request)}${entry.evidence})`
       const text = [
-        `${found.category.label}: ${found.measured} vendors measured, which is what we hold and not the whole market.`,
+        // "What we hold" stopped being true the moment a reseed was interrupted: we hold more than
+        // we can answer with, because scores from two formula versions cannot be compared. An agent
+        // has no way to catch that, which is exactly why it has to be said rather than implied.
+        `${found.category.label}: ${found.measured} vendors measured, which is what we can compare and not the whole market.${
+          found.inCategory > found.measured
+            ? ` We hold ${found.inCategory} here; the other ${found.inCategory - found.measured} were last measured under an older formula and are waiting for a rescan.`
+            : ''
+        }`,
         '',
         `Cleared every barrier we test (${found.clear.length}):`,
         ...(found.clear.length > 0 ? found.clear.map(line) : ['  none']),
