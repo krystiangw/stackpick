@@ -1600,6 +1600,33 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   5. **Werdykt może być dobry, a zdanie fałszywe.** Czwarty przebieg znalazł sześć takich przy
      MCP. Nic w liczbach nie wygląda źle, więc łapie to tylko czytanie zdań obok dowodów.
 
+## ODPOWIEDZ KLIENTA WRACALA ODBICIEM (14.08, naprawione i wdrozone)
+
+Wyszlo z pytania, ktorego nikt nie zadal: **maile wychodza od `scorecards@letagentsin.com`, a ludzie
+odpowiadaja na maile.** Zmierzone, nie zalozone.
+
+| adres | wynik sondy |
+|---|---|
+| `hello@letagentsin.com` | **delivered**, wladowal sie do skrzynki odbiorczej Krystiana o 16:07:53 |
+| `scorecards@letagentsin.com` | **BOUNCED** |
+
+Czyli do dzis **kazda odpowiedz klienta na maila z monitoringu wracala odbiciem**, a zaden z nas by
+sie o tym nie dowiedzial: nadawca nie byl nigdzie publikowany i nikt nigdy nie sprawdzil, czy
+odbiera. Adres, ktory reklamujemy w cenniku, na stronie raportu i w komunikacie o nieudanym
+zapisie, to `hello@`, i ten dziala.
+
+**Naprawione:** `sendEmail` ustawia `Reply-To` (domyslnie `hello@letagentsin.com`, nadpisywalne
+przez `LETAGENTSIN_REPLY_TO`). Zweryfikowane **na produkcji**: mail potwierdzajacy obserwacje
+wyszedl z naglowkiem `Reply-To: hello@letagentsin.com`.
+
+**Reszta sciezki klienta przemierzona tego samego dnia, cala na produkcji:**
+- **Skan odwiedzajacego bez konta:** `POST /api/scan` zapisuje raport, `/r/<id>` oddaje 200 i 73 kB
+  z sekcjami „Fix this first", rozbiciem na etapy i pelna lista checkow.
+- **Monitoring:** zapis → mail z wlasciwej domeny → `/watch/confirm` (200, `confirmedAt`) →
+  `/watch/stop` (200, `stoppedAt`). Testowane na wlasnej skrzynce i na **naszej wlasnej domenie**,
+  zeby nie generowac ruchu u obcych.
+- **Sciezka platnego audytu** konczy sie na `mailto:hello@letagentsin.com` i ten adres dociera.
+
 ## Zablokowane na Krystianie (lista z 2026-08-08, PRZEJRZANA 2026-08-14)
 
 **Dwie z pieciu pozycji byly juz nieaktualne i nikt tego nie odnotowal.** Punkt 1 (domena) zamknal
