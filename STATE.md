@@ -45,6 +45,13 @@ kohorcie**, wiec wiekszosc topnieje w trakcie i opublikowany zbior maleje, dopok
 przeciecie. Zmierzone: po 33 zapisach strona pokazywala nadal 87 wierszy (stad moj bledny
 wniosek), po kolejnych 40 **spadla do 75**.
 
+**Kolejnosc reseedu ma teraz znaczenie i jest wymuszona w kodzie (14.08).**
+`scripts/stale-domains.mts` sortuje **najwieksza przedawniona kohorta najpierw**: wiersz z niej
+przesuwa przeciecie o dwa (jeden odchodzi liderowi, jeden dochodzi biezacej wersji), a wiersz
+z malej kohorty o jeden. Przy 75 wierszach na 9.8 i 23 na 9.9 sama kolejnosc decyduje, czy krotkie
+okno kupi poprawny korpus, czy tylko mniejszy. Skrypt wypisuje kohorty na stderr, zeby kolejnosc
+byla widoczna, a nie domyslna.
+
 **To jest dolek przejsciowy, nie szkoda trwala.** Stan 14.08 04:10Z: 9.8 - 75, 9.12 - 72, 9.9 - 23.
 **Do przeciecia brakuje 2-3 zapisow**, po czym korpus przeskakuje na 9.12 i rosnie dalej z kazdym
 kolejnym. Nastepne okno to zalatwi z duzym zapasem.
