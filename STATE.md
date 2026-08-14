@@ -1600,6 +1600,33 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   5. **Werdykt może być dobry, a zdanie fałszywe.** Czwarty przebieg znalazł sześć takich przy
      MCP. Nic w liczbach nie wygląda źle, więc łapie to tylko czytanie zdań obok dowodów.
 
+## 9.15 WYSZLA WBREW MOJEMU WSTRZYMANIU, I CZEGO TO UCZY
+
+Wstrzymalem wdrozenie 9.15 do wygasniecia bariery reseedu, **commitujac bez wypychania na Heroku**.
+Godzine pozniej wdrozylem niezwiazana poprawke komunikatu limitu i **Heroku wziela cala galaz**,
+wiec 9.15 pojechala razem z nia. **Wstrzymanie przez niewypychanie nie jest wstrzymaniem**, jesli
+zmiana siedzi na galezi, ktora wdrazasz. Albo osobna galaz, albo godzisz sie, ze pojedzie z
+najblizszym deployem.
+
+**Sprawdzajac to, dalem sie nabrac cache czwarty raz tego dnia:** anonimowy skan zwrocil formule
+9.14 i uznalem, ze 9.15 nie wyszla. Odpowiedz miala `reused: true`, czyli byla z 15-minutowego
+cache. Swiezy skan z konsoli pokazal **9.15 i `lexical.dev` z poprawnym „nie dotyczy"** na
+`oauth_dcr`.
+
+**Skutek uboczny okna rozjazdu, ktory zlapal nasz wlasny audyt:** ten jeden swiezy skan
+`lexical.dev` na 9.15 sprawil, ze **dwie nasze liczby zaczely sobie przeczyc**. Strona liczy
+„domeny porownywalne dzis" jako **169** (pomija wiersz zmierzony nowsza formula), a `corpus.json`
+publikuje kohorte 9.14 i ma ich **170**. Obie definicje sa obronne osobno, ale czytelnik widzi
+sprzecznosc.
+
+**Nie ruszam prozy.** To jest dokladnie przypadek z porannej lekcji: audyt w trakcie migracji mierzy
+migracje. Rozjazd znika sam po reseedzie na 9.15. **Strona w miedzyczasie mowi o tym uczciwie**:
+„measured under formula 9.14 while the scanner runs 9.15, so a scan you run today can disagree with
+the row below it".
+
+**Do zrobienia po wygasnieciu bariery (okolo 4 h):** reseed na 9.15, potem `npm run audit`
+(oczekiwane: 0 rozjazdow) i `npm run regressions`.
+
 ## RADY PRZY WERDYKTACH PRZECZYTANE PIERWSZY RAZ (0 sprzecznosci na 66)
 
 Plan naprawczy ma swoj audyt od sierpnia, ale **zdania `unblock`, doczepiane do kazdego nieudanego
