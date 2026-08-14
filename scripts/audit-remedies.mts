@@ -27,7 +27,7 @@ const shapeOf = (sentence: string) =>
     .replace(/\s+/g, ' ')
     .trim()
 
-type Seen = { effort: string; domains: string[] }
+type Seen = { effort: string; domains: string[]; points: Set<number>; namesAUrl: Set<boolean> }
 const branches = new Map<string, Map<string, Seen>>()
 
 let read = 0
@@ -39,8 +39,16 @@ for (const domain of CURATED_DOMAINS) {
   for (const step of plan?.steps ?? []) {
     const perCheck = branches.get(step.checkId) ?? new Map<string, Seen>()
     const shape = shapeOf(step.how)
-    const seen = perCheck.get(shape) ?? { effort: step.effort, domains: [] }
+    const seen = perCheck.get(shape) ?? { effort: step.effort, domains: [], points: new Set<number>(), namesAUrl: new Set<boolean>() }
     seen.domains.push(domain)
+    // What the verdict beside this sentence actually said. Four contradictions in one day were
+    // all the same shape: one sentence serving a row that scored and a row that scored nothing,
+    // so the advice told somebody to add the thing we had just found on their page.
+    const verdict = report.scorecard.checks.find((c) => c.id === step.checkId)
+    if (verdict) {
+      seen.points.add(verdict.points)
+      seen.namesAUrl.add(/https?:\/\//.test(verdict.detail))
+    }
     perCheck.set(shape, seen)
     branches.set(step.checkId, perCheck)
   }
@@ -48,11 +56,28 @@ for (const domain of CURATED_DOMAINS) {
 
 console.log(`${read} raportow przeczytanych\n`)
 const order = [...branches.entries()].sort((a, b) => b[1].size - a[1].size)
+let suspect = 0
 for (const [checkId, shapes] of order) {
   console.log(`\n=== ${checkId} (${shapes.size} ${shapes.size === 1 ? 'galaz' : 'galezie'})`)
-  for (const [shape, { effort, domains }] of [...shapes.entries()].sort((a, b) => b[1].domains.length - a[1].domains.length)) {
+  for (const [shape, seen] of [...shapes.entries()].sort((a, b) => b[1].domains.length - a[1].domains.length)) {
+    const { effort, domains } = seen
     console.log(`\n  [${effort}] ${domains.length} vendorow: ${domains.slice(0, 6).join(', ')}${domains.length > 6 ? ' ...' : ''}`)
     console.log(`  ${shape}`)
+    if (seen.points.size > 1) {
+      suspect += 1
+      // The strong signal. It is what four of today's contradictions had in common: a row that
+      // scored and a row that scored nothing hearing the same instruction.
+      console.log(`  ^^ MOCNY SYGNAL: jedno zdanie dla wierszy o roznej liczbie punktow (${[...seen.points].sort().join(', ')})`)
+    }
+    if (seen.namesAUrl.size > 1) {
+      suspect += 1
+      // The weak one. Its first hit was benign: filestack.com names two URLs because we measured
+      // a different page than usual, and the advice is true for all three rows either way. Kept as
+      // a prompt to read, not as a finding.
+      console.log('  ^^ slaby sygnal: czesc wierszy nazywa przeczytana strone, a czesc nie')
+    }
   }
 }
+console.log(`\n${suspect} zdan obsluguje wiersze o roznych werdyktach; kazde przeczytaj obok jego wierszy.`)
+console.log('Mocny sygnal znalazl dzis 2 prawdziwe sprzecznosci; slaby jak dotad tylko nieszkodliwe roznice.')
 process.exit(0)
