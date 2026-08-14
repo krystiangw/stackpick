@@ -39,6 +39,13 @@ fi
 # every user agent and bitmovin.com refused robots.txt, both having answered that morning. Neither
 # is measurable now, and neither change is about their product. The comment below has said "reseed
 # once per set of changes" since August; this makes it cost something to ignore.
+#
+# It reads corpus.json on purpose, not the database. A single console scan run to verify a fix is
+# newer than every corpus row and does not age it, so the number below is time since the last
+# SWEEP rather than time since the last request, which is what the cooldown is about: one visit to
+# check a vendor is not what teaches them to block us, and 340 in an hour is. Measured on
+# 2026-08-15, the two differed by more than two hours during a formula divergence, and the corpus
+# figure was the correct one.
 newest=$(curl -s --max-time 30 "$BASE/corpus.json" | python3 -c "
 import sys, json, datetime
 rows = json.load(sys.stdin).get('rows', [])
