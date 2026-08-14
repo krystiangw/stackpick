@@ -43,6 +43,13 @@ brakuje 55 zapisow.** Kazde okno zapisu dawalo dotad 33-45 zapisow, a lista wzna
 wiec **dwa kolejne okna wystarcza i nie trzeba niczego kasowac**. Procedura przy kazdym oknie:
 
     DOMAINS=$(npx tsx scripts/stale-domains.mts) STACKPICK_CONSOLE_TOKEN=... PASSES=1 bash scripts/reseed.sh
+    curl -sS -X POST https://letagentsin.com/api/scan -H 'content-type: application/json' -d '{"domain":"letagentsin.com"}'
+
+**Drugie polecenie jest tam nieprzypadkowo.** Rada naprawcza mowi vendorom „ours is at
+/agent-signup.md and this scanner scores it like anyone else's", a `/v/letagentsin.com` pokazuje
+skan z **formuly 9.2**, czyli dziesiec wersji wstecz. Baner o przedawnieniu jest uczciwy, ale to
+slaby dowod na zdanie, ktore ma budowac zaufanie. **Zwyklym skanem, nie przez konsole**: nie
+dopisujemy sie do `CURATED_DOMAINS`, bo ocenialibysmy sami siebie w rankingu obok ocenianych.
 
 **Wzorzec blokady, trzy pomiary:** ustepuje na kilka-kilkanascie minut i wraca po 0, 45 i 33
 zapisanych domenach. **To nie jest kwestia wolnego miejsca w megabajtach** - przy trzeciej probie
@@ -1169,6 +1176,18 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   serwowac strone, ktora tego pola nie czyta. Trzymamy teraz dokladnie to, co poszloby do bazy.
   Zweryfikowane na produkcji: strona raportu nadal renderuje sie w calosci (200, 72 kB, baner na
   miejscu).
+
+- **Zmierzylismy sami siebie wlasnym skanerem (14.08): 11/17.** Warte odnotowania, bo pokazuje
+  granice dwoch regul na przykladzie, ktorego nie da sie zbyc.
+  - `signup_reachable` i `signup_no_captcha` mowia o nas „nie znalezlismy linku do rejestracji,
+    **choc publikujecie ceny**, wiec to luka w naszym czytaniu". **My po prostu nie mamy
+    rejestracji**: skan jest darmowy i bez konta, a nasz `/agent-signup.md` mowi to wprost.
+    Zalozenie „kto publikuje cennik, ten ma konta" jest obalone przez nasza wlasna strone.
+    **Nie zmieniam reguly**: zdanie jest ostrozne, oznacza sie jako nieoznaczalne i nie oskarza,
+    a jedyny sposob, zeby je naprawic, prowadzilby przez dopasowanie do naszego wlasnego pliku.
+  - `programmatic_provisioning` czyta u nas **jedna** strone dokumentacji, ta sama granica co przy
+    `cockroachlabs.com`.
+  - `oauth_dcr` oblewamy tak samo jak inni i tak ma byc.
 
 - **Dwunasty przebieg adwersaryjny, do zrobienia.** Powierzchnie, których jedenasty nie ruszył,
   w kolejności wagi:
