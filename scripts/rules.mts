@@ -713,5 +713,26 @@ check('a postgres w tym samym zdaniu trafia w bazy', categoryForJob('we are runn
 check('google sheet nie jest pytaniem o logowanie', categoryForJob('the copy team works out of a google sheet')?.id, undefined)
 check('ale sens zdania o znaczeniu zostaje', categoryForJob('recommend similar articles based on meaning not keywords')?.id, 'vector-search')
 
+// froala.com answers 403 and contentful.com 429, and both were published as "no documentation page
+// could be found", which reads as a fact about their product and is a fact about their edge. The
+// check next door named the status on the same scan; these two never did.
+const docsJs = CHECKS.find((c) => c.id === 'docs_without_js')!
+const noDocs = (docsStatus?: number) =>
+  docsJs.evaluate({ site: 'https://v.test', discovered: {}, machine: { markdownNegotiation: { docsStatus } } } as never).detail
+check('403 przy szukaniu dokumentacji jest nazwane', noDocs(403).includes('answered 403'), true)
+check('429 tak samo', noDocs(429).includes('answered 429'), true)
+check('brak odpowiedzi tez, slowem nie zerem', noDocs(0).includes('answered nothing'), true)
+check('ale 200 zostaje przy starym zdaniu', noDocs(200).includes('no documentation page could be found'), true)
+check('i brak pomiaru tez', noDocs(undefined).includes('no documentation page could be found'), true)
+const prov3 = CHECKS.find((c) => c.id === 'programmatic_provisioning')!
+const provRefused = (docsStatus?: number) =>
+  prov3.evaluate({
+    site: 'https://v.test', funnel: { provisioning: { programmatic: [] } }, docsPagesRead: 0,
+    docsPagesReadUrls: [], machineFilesRead: 0, docsPagesUnreadStatuses: [], docsPagesUnread: 0,
+    machine: { markdownNegotiation: { docsStatus } },
+  } as never).detail
+check('provisioning tez nazywa odmowe', provRefused(403).includes('answered 403'), true)
+check('a bez odmowy mowi to co dawniej', provRefused(200).includes('could not read a single documentation page'), true)
+
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

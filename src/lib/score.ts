@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.13'
+export const FORMULA_VERSION = '9.14'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -60,6 +60,19 @@ export type Check = {
 }
 
 const yes = (points: number, detail: string): CheckResult => ({ points, detail })
+
+/**
+ * The status a vendor's edge gave us when we asked for a page, when that status is a refusal
+ * rather than an answer. Two checks published "no documentation could be found" about sites that
+ * had answered 403 and 429, which is a claim about their product built from a measurement of ours.
+ */
+function refusedUs(f: ScanFindings): number | null {
+  // Optional all the way down because the rule fixtures build a findings object with only the
+  // fields their check reads, and a guard that crashes on a partial one is a guard nobody runs.
+  const status = f.machine?.markdownNegotiation?.docsStatus
+  if (status === undefined) return null
+  return status === 0 || status >= 400 ? status : null
+}
 
 export const CHECKS: Check[] = [
   {
@@ -222,6 +235,21 @@ export const CHECKS: Check[] = [
     evaluate: (f) => {
       // Zero characters we never fetched is not thin documentation, it is no measurement.
       if (!f.discovered.docs) {
+        // And a site that turned us away is not a site without documentation. froala.com answers
+        // 403 and contentful.com 429, and both read "no documentation page could be found" while
+        // the check next door on the same scan named the status it got. The rule was already
+        // written for the neighbour and never carried across.
+        // Explicitly against null: status 0 means the edge gave us nothing at all, and it is
+        // falsy, so the obvious truthiness test silently dropped the worst refusal of the three.
+        const refused = refusedUs(f)
+        if (refused !== null) {
+          return {
+            points: 0,
+            detail: `Unmeasurable: ${f.site} answered ${refused === 0 ? 'nothing' : refused} when we asked for a page, so we never got as far as looking for documentation`,
+            unblock: refused === 429 ? 'Nothing for you to do if this was a burst. We rescan later and this becomes measurable.' : 'Let ordinary HTTP through to your public pages and this becomes measurable.',
+            inconclusive: true,
+          }
+        }
         return { points: 0, detail: 'Unmeasurable: no documentation page could be found to read',
           unblock: 'Link your documentation from your home page or list it in llms.txt.', inconclusive: true }
       }
@@ -831,7 +859,9 @@ export const CHECKS: Check[] = [
           points: 0,
           detail:
             pages === 0
-              ? 'Unmeasurable: we could not read a single documentation page, so there was nothing to look in'
+              ? refusedUs(f) !== null
+                ? `Unmeasurable: ${f.site} answered ${refusedUs(f) === 0 ? 'nothing' : refusedUs(f)} when we asked for a page, so there was nothing to look in and that is our reading of your edge rather than a finding about your docs`
+                : 'Unmeasurable: we could not read a single documentation page, so there was nothing to look in'
               : `Unmeasurable: only ${pages} documentation page could be read, which is too little to conclude anything`,
           inconclusive: true,
           unblock: 'Link your API reference from your docs index or from llms.txt and this becomes measurable.',
