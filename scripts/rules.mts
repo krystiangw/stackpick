@@ -734,5 +734,16 @@ const provRefused = (docsStatus?: number) =>
 check('provisioning tez nazywa odmowe', provRefused(403).includes('answered 403'), true)
 check('a bez odmowy mowi to co dawniej', provRefused(200).includes('could not read a single documentation page'), true)
 
+// An npm library has no server to issue tokens, so "no registration_endpoint" reads as a
+// deficiency where there is no facility. The signup checks and self_serve already draw this line
+// for the same eight rows; oauth_dcr was still charging them for it.
+const dcr = CHECKS.find((c) => c.id === 'oauth_dcr')!
+const dcrFor = (discovered: Record<string, unknown>) =>
+  dcr.evaluate({ oauth: { probedHosts: 8, metadataPublished: false, dynamicClientRegistration: false }, discovered, blocksPlainRequests: false } as never)
+check('biblioteka bez cennika i konta: nie dotyczy', dcrFor({}).notApplicable, true)
+check('vendor z cennikiem dostaje werdykt', dcrFor({ pricing: 'https://v.test/pricing' }).notApplicable, undefined)
+check('vendor z rejestracja tez', dcrFor({ signup: 'https://v.test/signup' }).notApplicable, undefined)
+check('i nadal jest to odmowa, nie milczenie', dcrFor({ pricing: 'https://v.test/pricing' }).inconclusive, undefined)
+
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

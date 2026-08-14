@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.14'
+export const FORMULA_VERSION = '9.15'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -531,6 +531,18 @@ export const CHECKS: Check[] = [
           detail: 'Unmeasurable: no OAuth metadata on the apex, and no other host we could follow',
           unblock: 'Publish /.well-known/oauth-authorization-server on the host that issues your tokens, or send us that host and we will rescan.',
           inconclusive: true,
+        }
+      }
+      // An npm library has no server to issue tokens and nothing to register a client against, so
+      // "no registration endpoint" reads as a deficiency where there is no facility. The same
+      // eight rows we already tell "there is no gate to measure" were being charged for this, and
+      // the line is copied from self_serve rather than invented: the signup checks drew it first.
+      if (!f.discovered.pricing && !f.discovered.signup && !f.blocksPlainRequests) {
+        return {
+          points: 0,
+          detail: 'Not applicable: nothing on the site links to pricing or to an account, so there is no client for an agent to register',
+          notApplicable: true,
+          unblock: 'If you do issue tokens, publish /.well-known/oauth-authorization-server on the host that issues them and we will rescan.',
         }
       }
       return yes(0, `No OAuth metadata on any of the ${oauth.probedHosts} hosts probed, including the usual auth and api subdomains`)
