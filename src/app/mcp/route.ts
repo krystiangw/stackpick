@@ -15,7 +15,7 @@ export const maxDuration = 60
  */
 const PROTOCOL_VERSION = '2025-06-18'
 
-const TOOL = {
+export const TOOL = {
   name: 'scan_domain',
   title: 'Scan a domain for agent readiness',
   description:
@@ -50,7 +50,7 @@ const TOOL = {
  * measure, and we sell those same vendors the fix, so a ranking from us would be a judgement we
  * never made sold by someone with an interest in it.
  */
-const FIND_TOOL = {
+export const FIND_TOOL = {
   name: 'find_providers',
   title: 'Find providers an unattended agent can actually finish with',
   description:

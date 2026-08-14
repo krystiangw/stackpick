@@ -14,7 +14,10 @@
 
 - [/agent-signup.md](/agent-signup.md): why there is no signup and what to do instead
 - [/.well-known/agent-access.json](/.well-known/agent-access.json): endpoints, limits and refusals, machine readable
-- [/mcp](/mcp): MCP server, Streamable HTTP, no authentication, one tool `scan_domain`
+- [/mcp](/mcp): MCP server, Streamable HTTP, no authentication, two tools. `scan_domain` scores one
+  domain; `find_providers` takes the problem in your own words and returns the vendors we measured
+  in that category, split by where an unattended run stops. Routing a sentence to a category is the
+  weakest part and the tool description carries its measured accuracy
 - `POST /api/scan` and the MCP tool both take `format`: `json` (default), `sarif` for SARIF 2.1.0
   that a code-scanning pipeline can ingest, `agent` for markdown tasks you can act on directly
 - [/.well-known/mcp.json](/.well-known/mcp.json): the card describing it
