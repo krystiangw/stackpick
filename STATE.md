@@ -218,6 +218,41 @@ co zaktualizowany odczyt.**
 (do 10 minut), zanim uruchomi audyt, i mowi wprost, gdy sie nie doczekal. Poprzednio skrypt sam
 zapraszal do tego falszywego alarmu.
 
+## RESEED SAM PSUJE WERDYKTY, I NIKT BY NIE ZAJRZAL (14.08, naprawione)
+
+Po reseedzie na 9.13 porownalem kazdy wiersz z pomiarem poprzednim. **Piec werdyktow wyszlo gorzej
+niz przed reseedem i tylko JEDEN byl prawdziwy.**
+
+| domena | check | co publikowalismy | po jednym przeskanowaniu |
+|---|---|---|---|
+| sendlayer.com | `mcp_present` | „brak serwera" | **1 pkt**, `mcp.sendlayer.com` odpowiada 401 |
+| sendlayer.com | `signup_reachable` | „nie znalezlismy linku do rejestracji" | **1 pkt**, formularz w HTML |
+| sendlayer.com | `signup_no_captcha` | niemierzalne | **1 pkt** |
+| sentry.io | `user_agents_allowed` | „wasz brzeg odmowil nam robots.txt" | **1 pkt**, nikt nie jest blokowany |
+| sentry.io | `no_crawl_delay` | niemierzalne, bo robots.txt odmowiony | **1 pkt** |
+| name.com | `agent_entry_point` | brak pliku wejsciowego | **0 pkt takze na swiezym skanie: PRAWDZIWE** |
+
+**Przyczyna: to my.** Reseed pyta 170 hostow o to samo dwa razy w ciagu godziny, a czesc z nich
+odpowiada odmowa. Publikowalismy wiec o sentry.io, ze **ich brzeg nas odmawia**, podczas gdy to my
+ich zalalismy, i o sendlayer.com, ze **nie maja serwera MCP**, podczas gdy `mcp.sendlayer.com`
+odpowiada JSON-RPC 401 kazdemu, kto zapyta raz. To sa twierdzenia o cudzym produkcie zrobione
+z pomiaru naszego wlasnego obciazenia, czyli dokladnie ten sam blad co przy kinde w rundzie 131.
+
+**Naprawione u zrodla, nie recznie:** `scripts/regressions.mts` (`npm run regressions`) porownuje
+kazdy wiersz z poprzednim pomiarem tej samej domeny i wypisuje wszystko, co stracilo punkty.
+**Wpiete w `reseed.sh`**, ktory sam dociaga `MONGODB_URI`, bo guard uruchamiany tylko wtedy, gdy
+ktos pamieta o zmiennej srodowiskowej, to guard nieuruchamiany. Wynik po naprawach: **0 werdyktow
+gorszych**.
+
+**Regula: werdykt, ktory pogorszyl sie w reseedzie, jest najpierw kandydatem do przeskanowania,
+a dopiero potem regresem vendora.** Dzis proporcja wyniosla 5 do 1 na korzysc naszej flaki.
+
+**Stan koncowy: 170 wierszy na 9.13, 0 sprzecznosci, 0 rozjazdow, 69 zywych serwerow MCP.**
+Doszly `statsig.com` (naprawiona luka w sondowaniu) i `kinde.com`, ktory po raz pierwszy dal sie
+zmierzyc z dyna: jego brzeg przestal polykac nasze POST-y, wiec „niemierzalne" zamienilo sie
+w zaliczone. Sonda z laptopa wskazywala go poprawnie juz wczesniej i **odrzucilem ja slusznie**
+(runda 131 opisywala realne zachowanie brzegu), ale powod odrzucenia sie zdezaktualizowal.
+
 ## CZTERNASTY PRZEBIEG ADWERSARYJNY (14.08, na swiezym korpusie 9.12)
 
 Trzynasty przebieg byl **przed** reseedem, wiec wszystkie 170 wierszy zmierzonych rano pod 9.12
