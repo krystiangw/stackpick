@@ -1600,16 +1600,43 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   5. **Werdykt może być dobry, a zdanie fałszywe.** Czwarty przebieg znalazł sześć takich przy
      MCP. Nic w liczbach nie wygląda źle, więc łapie to tylko czytanie zdań obok dowodów.
 
-## Zablokowane na Krystianie, stan 2026-08-08 wieczorem
+## Zablokowane na Krystianie (lista z 2026-08-08, PRZEJRZANA 2026-08-14)
+
+**Dwie z pieciu pozycji byly juz nieaktualne i nikt tego nie odnotowal.** Punkt 1 (domena) zamknal
+sie razem z `letagentsin.com`, a punkt 2 (nadawca w Resend) **12 sierpnia**: domena jest w Resend
+zweryfikowana z wlaczona wysylka, a `LETAGENTSIN_FROM` na Heroku wskazuje
+`Let Agents In <scorecards@letagentsin.com>`. Przez dwa dni lista blokerow straszyla czyms, co bylo
+zrobione. **Przy kazdym przejrzeniu tej listy sprawdz stan, zamiast czytac wpis.**
+
+**Cala sciezka monitoringu zweryfikowana od konca do konca na produkcji 14.08**, na wlasnej
+skrzynce testowej i na naszej wlasnej domenie, zeby nie generowac ruchu u obcych:
+
+| krok | wynik |
+|---|---|
+| `POST /api/watch` na adres spoza konta Resend | `{"ok":true,"delivered":true}` |
+| mail | wyszedl z `scorecards@letagentsin.com`, z linkiem potwierdzajacym i zatrzymujacym |
+| `/watch/confirm/<token>` | 200, `confirmedAt` zapisane |
+| `/watch/stop/<token>` | 200, `stoppedAt` zapisane |
+
+**Falszywy alarm po drodze, wart zapisania, bo to trzeci raz ten sam ksztalt:** najpierw zmierzylem
+wysylke **lokalnie, bez `LETAGENTSIN_FROM`**, wiec kod spadl na nadawce testowego
+`onboarding@resend.dev` i dostalem 403 „mozesz wysylac tylko na wlasny adres". Wniosek brzmialby
+„monitoring nie dziala dla zadnego klienta" i bylby falszywy. **Testowalem inna konfiguracje niz
+produkcyjna**, dokladnie tak jak wczesniej sondowalem z laptopa zamiast z dyna. Zanim ogloszisz,
+ze cos jest zepsute na produkcji, uruchom to ze srodowiskiem produkcji.
+
+**Zostaja trzy pozycje, wszystkie decyzje, nie kod:** sciezka zakupu, nazwanie licencji korpusu
+i model sprzedazy (patrz sekcja o przepakowaniu cennika).
+
+### Oryginalna lista z 2026-08-08
 
 Produkt jest technicznie gotowy: korpus 156 domen na formule 5.0, audyt czysty, każdy werdykt
 nazywa adres, który da się odpalić curl-em. **Do startu w poniedziałek brakuje wyłącznie rzeczy,
 których agent nie ma prawa rozstrzygnąć sam.**
 
-1. **Domena `stackpick.ai`** (albo inna). Wszystko na stronie pokazuje dziś
-   `stackpick-f12d13a227ea.herokuapp.com`, łącznie z `helpUri` w SARIF i adresami w `/corpus.json`.
-2. **Zweryfikowany nadawca w Resend.** Bez tego dostarczanie scorecardów mailem jest wyłączone,
-   a to jedyny mechanizm zbierania leadów, jaki mamy.
+1. ~~**Domena `stackpick.ai`** (albo inna).~~ **ZROBIONE:** `letagentsin.com`.
+2. ~~**Zweryfikowany nadawca w Resend.**~~ **ZROBIONE 12.08**, potwierdzone dostarczeniem na adres
+   spoza konta Resend 14.08.
 3. **Ścieżka zakupu inna niż `mailto:` na prywatnego Gmaila.** Za 11 000 USD nikt nie napisze na
    adres z gmail.com.
 4. **Licencja korpusu.** Terms mówią dziś „free to use, quote and republish with attribution",
