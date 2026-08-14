@@ -141,6 +141,20 @@ narzedzie szukac ksztaltu.
   narzedzie mowi to wprost, zeby nie uczyc nikogo ignorowania alertow.
 - Po wszystkich trzech dzisiejszych poprawkach **mocny sygnal nie zglasza juz nic**.
 
+**Naglowki raportow przejrzane (14.08, `npm run audit-headlines`): wynik NEGATYWNY, nic do
+naprawy.** Ta sama technika co przy radach, zastosowana do pierwszego zdania, ktore czyta vendor.
+- **87 ze 170 wierszy dzieli jeden naglowek** („you publish files for machines to read, but nothing
+  that tells one how to become a customer"). Sprawdzone: jest **prawdziwy na wszystkich 87**
+  (kazdy publikuje jakis plik dla maszyn) i **zaden z nich nie ma gorszego znaleziska**, ktore
+  kolejnosc by przeskoczyla. Polowa korpusu ma po prostu ten sam najgorszy problem, co jest faktem
+  o rynku, a nie wada generatora.
+- **Moja sonda twierdzila, ze 63 z nich maja cos gorszego. Mylila sie**, bo liczyla `notApplicable`
+  i `inconclusive` jako porazki: `slatejs.org` nie ma zadnej rejestracji, a `tigrisdata.com` ma ja
+  osiagalna, tylko wymagajaca JavaScriptu. **Szosty falszywy alarm z mojego audytu w ten weekend,
+  przy zerze ze strony skanera.**
+- Skrypt zostaje z wynikiem wpisanym w komentarz, zeby ostrzezenie o szerokim rozrzucie punktow
+  **nie bylo czytane jako wada** przez nastepna osobe.
+
 **Co zostaje na Ciebie, w kolejnosci wagi:**
 1. **Sciezka zakupu.** Skan jest gotowy na klientow, platny audyt nie: konczy sie `mailto:` na
    prywatnego Gmaila. Do tego zweryfikowany nadawca w Resend i domena.
