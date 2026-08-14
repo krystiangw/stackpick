@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google'
 import Link from 'next/link'
+import { SITE_URL } from '@/lib/site'
 import './globals.css'
 
 const plexSans = IBM_Plex_Sans({
@@ -28,6 +29,44 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={`${plexSans.variable} ${plexMono.variable} font-sans antialiased`}>
+        {/* Organization and the dataset, and deliberately nothing else. Review or AggregateRating
+            markup would tell a search engine we rate these products; we measure whether an agent
+            gets through, which the pages say in words and a schema must not contradict. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@graph': [
+                {
+                  '@type': 'Organization',
+                  '@id': `${SITE_URL}#org`,
+                  name: 'Let Agents In',
+                  url: SITE_URL,
+                  email: 'hello@letagentsin.com',
+                  founder: { '@type': 'Person', name: 'Krystian Gwizdała' },
+                  description:
+                    'Measures whether an AI coding agent can find, register with and integrate a product, using deterministic HTTP checks with published rules.',
+                },
+                {
+                  '@type': 'Dataset',
+                  '@id': `${SITE_URL}#corpus`,
+                  name: 'Agent readiness corpus',
+                  description:
+                    'Every published scan as data: one row per vendor and check, scored under a single formula version, with the sentence behind each verdict.',
+                  url: `${SITE_URL}/report`,
+                  creator: { '@id': `${SITE_URL}#org` },
+                  isAccessibleForFree: true,
+                  license: `${SITE_URL}/terms`,
+                  distribution: [
+                    { '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: `${SITE_URL}/corpus.json` },
+                    { '@type': 'DataDownload', encodingFormat: 'text/csv', contentUrl: `${SITE_URL}/corpus.csv` },
+                  ],
+                },
+              ],
+            }),
+          }}
+        />
         <header className="border-b border-rule">
           <div className="mx-auto flex max-w-5xl flex-wrap items-baseline justify-between gap-x-4 gap-y-2 px-6 py-4">
             <Link href="/" className="font-mono text-base font-semibold tracking-tight">
