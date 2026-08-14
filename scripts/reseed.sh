@@ -142,3 +142,17 @@ done
 # my own. Non-fatal on purpose: a reseed that finished is still worth having.
 echo "== sprawdzam opublikowane liczby"
 npm run --silent audit || echo "audyt zglosil rozjazd, korpus jest zaciagniety, liczby wymagaja sprawdzenia"
+
+# A reseed asks 170 hosts the same questions twice within the hour, and some of them answer that
+# with a refusal. On 2026-08-14 five verdicts came out worse than the measurement before them and
+# only one was real: sentry.io was published as refusing our request for robots.txt and
+# sendlayer.com as having no MCP server and no reachable signup, all three restored by a single
+# rescan. Nobody would have looked. This prints the list so somebody does.
+echo
+echo "== werdykty gorsze niz poprzedni pomiar"
+# Reads the database rather than the site, so it needs the connection string. Fetched here rather
+# than required of the caller, because a guard that only runs when somebody remembers to export a
+# variable is a guard that does not run.
+MONGODB_URI="${MONGODB_URI:-$(heroku config:get MONGODB_URI -a stackpick 2>/dev/null)}" \
+  npm run --silent regressions || echo "guard regresji nie wystartowal"
+echo "Powyzsze przeskanuj pojedynczo (console /api/scan) ZANIM uznasz je za regres vendora." 
