@@ -29,6 +29,25 @@ uruchomiony w trakcie migracji mierzy migracje, nie dane.** Naprawa to dokonczen
 dawal kilkunastominutowe okna laski. Przy trzeciej probie bylo 85 MB pozornego zapasu i zapisy
 i tak leciały. Dopiero realne zejscie ponizej limitu odblokowalo to na stale.
 
+**Weryfikacja swiezego korpusu 9.12 (14.08, po reseedzie):**
+- **Nasz wlasny wiersz jest juz aktualny**: `/v/letagentsin.com` pokazuje **11/12 na 9.12**, bez
+  banera o przedawnieniu i znow indeksowalny. Wczesniej stal na 9.2, dziesiec wersji wstecz, przy
+  radzie mowiacej vendorom, ze oceniamy sie tak samo jak ich.
+- **`mcp_present`: zaden z 67 zaliczonych serwerow nie stoi na 405.** 53 to wyzwanie
+  uwierzytelniajace, 14 to pelny uscisk dloni. Klasa dowodu, ktora we wrzesniowym korpusie dala
+  trzy falszywe trafienia (strony dokumentacji zaliczone jako serwery), **nie zalicza juz nikogo**.
+  To pierwsze zastosowanie poprawki z 9.12 do calych 170 wierszy.
+- **Rodziny oskarzen w nowym korpusie:** `agent_entry_point` 140, `oauth_dcr` 102, `mcp_present` 99,
+  `signup_reachable` 85, `machine_readable_api` 48, `programmatic_provisioning` 39. Pierwsze dwie
+  byly weryfikowane 13.08 na mniejszym zbiorze (66/66 i 44/44) i ich reguly sie od tego czasu nie
+  zmienily.
+- **Czwarty falszywy alarm z mojej wlasnej sondy w tym weekendzie**, warty zapisania obok trzech
+  poprzednich: porownalem zaliczony endpoint ze strona glowna **tego samego hosta** i dostalem 23
+  „podejrzanych". Wszystkie to hosty dedykowane (`mcp.stripe.com` i podobne), gdzie kazda sciezka
+  odpowiada 401 - **to jest sygnatura serwera MCP za OAuth, opisana w kodzie**, a nie zbieznosc.
+  Kontrolka „strona glowna" ma sens tylko dla apeksu serwisu marketingowego, czyli dokladnie tam,
+  gdzie ja wprowadzilem, i nigdzie indziej.
+
 **Co zostaje na Ciebie, w kolejnosci wagi:**
 1. **Sciezka zakupu.** Skan jest gotowy na klientow, platny audyt nie: konczy sie `mailto:` na
    prywatnego Gmaila. Do tego zweryfikowany nadawca w Resend i domena.
