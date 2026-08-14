@@ -1600,6 +1600,56 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   5. **Werdykt może być dobry, a zdanie fałszywe.** Czwarty przebieg znalazł sześć takich przy
      MCP. Nic w liczbach nie wygląda źle, więc łapie to tylko czytanie zdań obok dowodów.
 
+## PIETNASTY PRZEBIEG ADWERSARYJNY (14.08): 48 na 48, i znalezisko obok
+
+**Cel: `machine_readable_api`**, jedyny z wielkich oskarzycieli, ktory nigdy nie przeszedl
+udokumentowanego przebiegu, i najtanszy do obalenia, bo specyfikacja albo odpowiada pod adresem,
+albo nie.
+
+**Wynik: 48 oskarzen sprawdzonych niezaleznie OBIEMA drogami, ktorymi ten check zalicza, zero
+niezgod.** Specyfikacja: 4 hosty (apex, www, api, docs) x 12 sciezek na domene, **kontrolka 8 na 8**
+na wierszach, ktore zaliczamy przez OpenAPI. Negocjacja markdownu: `Accept: text/markdown` i sufiks
+`.md` na trzech kandydatach na dokumentacje, **kontrolka 3 na 4** (czwarta tlumaczy sie zawezeniem
+mojej sondy do `/docs`, gdy nasz wiersz wskazuje konkretna podstrone).
+
+**Zdanie tego checku jest napisane uczciwie i to okazalo sie wazne:** „No OpenAPI spec at the
+**5 usual paths**, none declared by …". Komentarz obok mowi wprost: mierzymy „nie znalezlismy
+u ciebie", a nie „nie istnieje". Gdyby moja sonda cos znalazla, **nie obalilaby tego zdania**,
+tylko pokazala luke w pokryciu. Nie znalazla.
+
+## SITE, KTORY NAS ODMOWIL, TO NIE SITE BEZ DOKUMENTACJI (formula 9.14)
+
+Prawdziwe znalezisko wyszlo obok, z pytania „dlaczego 51 wierszy `programmatic_provisioning` jest
+niemierzalnych". Rozbicie: 27 razy „zadna z przeczytanych stron nie jest o kluczach", 14 razy „tylko
+jedna strona", **9 razy „ani jednej"**. Te dziewiec ma `discovered.docs = BRAK`, a sa wsrod nich
+`contentful.com` i `shopify.com`, ktore maja dokumentacji ogrom.
+
+Sprawdzone recznie: **`froala.com` odpowiada 403, `contentful.com` 429.** A wiersz mowil:
+
+> Unmeasurable: no documentation page could be found to read
+> Unmeasurable: we could not read a single documentation page, so there was nothing to look in
+
+**Ten sam skan, ta sama domena, dwie rozne historie:** sasiedni `machine_readable_api` pisal
+uczciwie „froala.com answered 403 when we asked it for markdown". Regula byla wiec **juz napisana**
+(„A page that would not answer is not a page that declares nothing", sierpien) i **nikt jej nie
+przeniosl** do dwoch sasiadow. To jest twierdzenie o cudzym produkcie zrobione z pomiaru naszego
+wlasnego dostepu, czyli ten sam blad co przy kinde w rundzie 131 i przy sendlayerze dzis rano.
+**Froala jest jednym z czterech opublikowanych audytow.**
+
+**Naprawione, formula 9.14:** oba checki czytaja teraz status i nazywaja go. Zweryfikowane na
+produkcji: froala czyta „https://froala.com answered 403 when we asked for a page, so we never got
+as far as looking for documentation".
+
+**Blad w mojej wlasnej poprawce, zlapany przez test, nie przeze mnie:** status **0** (brzeg nie dal
+nic) jest w JS falsywy, wiec `if (refused)` po cichu przepuszczal **najgorsza z trzech odmow** do
+starego zdania. Test na `answered nothing` to wywrocil. Warunek jest teraz jawnie przeciw `null`.
+
+**Do zrobienia osobno** (nie zmieszczone w tej rundzie): `lexical.dev` i `editorjs.io` naprawde maja
+dokumentacje, tylko pod sciezkami, ktorych nie zgadujemy (`/docs/intro`, `/base-concepts/`), a
+`shopify.com` i `livekit.com` trzymaja ja **na siostrzanej domenie** (`shopify.dev`, `docs.livekit.io`),
+ktora regula on-brand slusznie odrzuca. Pierwsze to poszerzenie listy sciezek, drugie wymaga
+zaufania linkowi z wlasnej strony glownej vendora i nazwania tego w werdykcie.
+
 ## TRASOWANIE: UCZCIWE 50 PROCENT BLEDU I TRZY OBALONE POMYSLY (14.08)
 
 `find_providers` myli sie na **polowie pytan**, i to nie jest artefakt jednego zestawu: 29/58 na
