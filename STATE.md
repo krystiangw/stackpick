@@ -1600,6 +1600,49 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   5. **Werdykt może być dobry, a zdanie fałszywe.** Czwarty przebieg znalazł sześć takich przy
      MCP. Nic w liczbach nie wygląda źle, więc łapie to tylko czytanie zdań obok dowodów.
 
+## PRZEGLAD CALEGO DZISIEJSZEGO DIFFA PRZEZ SUBAGENTA: piec defektow, formula 9.16
+
+Dzis poszlo na produkcje 77 commitow i **1350 linii bez ani jednego przegladu**, wbrew stalej
+zasadzie z CLAUDE.md. Nadrobione: subagent read-only przejrzal caly diff. Znalazl piec rzeczy,
+ktorych nie zlapal ani `tsc`, ani `rules.mts`.
+
+**1. `prune-reports.mts` kasowal wiersze, ktore publikuje korpus (wysokie, skrypt DESTRUKCYJNY).**
+Zbior zachowywanych bral najnowszy wiersz **per domena**, a korpus czyta najnowszy **zasiany**
+(`latestPerDomain(1000, true)`). Wystarczyl wiec **jeden odwiedzajacy skanujacy domene kuratorowana**,
+zeby jego wlasny, niezasiany wiersz stal sie najnowszy, a wiersz korpusowy przeszedl do skasowania.
+Efekt: vendor znika z `corpus.json`, z rankingow i ze wszystkich licznikow do nastepnego reseedu.
+**Zmierzylem ekspozycje na zero** - minute po reseedzie, gdy wszedzie najnowszy jest zasiany - i to
+byl snapshot, nie obalenie. **Suchy przebieg po poprawce od razu zachowuje jeden wiersz**, ktory
+wczesniej by przepadl.
+
+**2. `refusedUs` obwinial vendora za nasz wlasny zegar (moja dzisiejsza poprawka).** Traktowalem
+status **0** jako odmowe krawedzi, a `http.ts` zwraca 0 takze wtedy, gdy **skanowi skonczyl sie
+budzet czasu**, gdy sami odrzucilismy przekierowanie i gdy host wczesniej nie odpowiadal. Zdanie
+„your site answered nothing when we asked for a page" jest wiec **dokladnie ta klasa bledu, ktora ta
+poprawka miala usuwac**. Zawezone do statusow >= 400, czyli do odpowiedzi, ktora krawedz naprawde
+wyslala.
+
+**3. Dwa z trzech wpisow erraty lapaly zdanie POPRAWNE.** `/posthog\.com\/mcp/` pasuje do
+`mcp.posthog.com/mcp`, wiec wiersz **juz naprawiony** dostalby sprostowanie mowiace, ze wskazuje
+strone dokumentacji. To ten sam blad, dla ktorego `wrongWhen` w ogole powstalo, a przypiety testem
+byl tylko `openrouter.ai`, ktorego regex przypadkiem nie pasowal. Teraz przypiete sa wszystkie trzy
+i **udowodnilem, ze test lapie regres**.
+
+**4. Alarm o kwocie milknie, gdy jest potrzebny.** `catch` wokol `db.stats()` zwracal 0 MB dla
+**kazdego** bledu, nie tylko dla `local` i `admin`. Timeout na naszej bazie w chwili, gdy klaster
+jest pod obciazeniem, dawalby wiec „0 MB", werdykt `ok` i zielony workflow. Teraz milczy wylacznie
+dla tych dwoch baz, a reszta rzuca.
+
+**5. Komentarz klamal o harmonogramie** (pisal „daily", workflow chodzi tygodniowo) i mail o kwocie
+przy pustym odczycie napisalby „Largest is undefined".
+
+Wszystko zbudowane, przetestowane, wdrozone i sprawdzone na produkcji (**formula 9.16**).
+
+**Wniosek procesowy: przeglad znalazl piec rzeczy w kodzie, ktory przeszedl typecheck i wlasne testy,
+w tym jeden defekt w skrypcie kasujacym dane i jeden w poprawce napisanej dwie godziny wczesniej
+wlasnie po to, zeby nie obwiniac vendorow za nasze pomiary.** Zasada „subagent przeglada, zanim
+uznasz za gotowe" zarobila dzis na siebie.
+
 ## 9.15 WYSZLA WBREW MOJEMU WSTRZYMANIU, I CZEGO TO UCZY
 
 Wstrzymalem wdrozenie 9.15 do wygasniecia bariery reseedu, **commitujac bez wypychania na Heroku**.
