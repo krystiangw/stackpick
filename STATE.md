@@ -48,6 +48,21 @@ i tak leciały. Dopiero realne zejscie ponizej limitu odblokowalo to na stale.
   Kontrolka „strona glowna" ma sens tylko dla apeksu serwisu marketingowego, czyli dokladnie tam,
   gdzie ja wprowadzilem, i nigdzie indziej.
 
+**Przeglad tego, co wystawiamy AGENTOM (14.08) - trzy bledy w plikach recznie pisanych:**
+- **`/.well-known/mcp.json` deklarowala JEDNO narzedzie, a serwer serwuje dwa.** `find_providers`
+  bylo niewidoczne dla kazdego agenta, ktory znalazl nas dokladnie tak, jak KAZEMY szukac vendorom.
+  Ta sama karta mowila „Sixteen points" przy `MAX_SCORE` 17.
+- **`/llms.txt` mowil „one tool", 14 checkow (jest 15) i „thirty-four runs" (jest thirty-eight).**
+- **Wspolna przyczyna: to byly pliki statyczne w `public/`**, wiec nic w aplikacji nie mogło
+  zobaczyc, ze sie starzeja. Karta jest teraz **generowana z tych samych definicji narzedzi, ktore
+  rejestruje serwer MCP**, i z `MAX_SCORE`; liczba checkow w `llms.txt` jest pilnowana przez
+  `npm run audit` (20 pilnowanych liczb).
+- **Ironia warta zapisania:** sprawdzamy u innych, czy publikuja karte i czy jest prawdziwa, a nasza
+  wlasna przez tygodnie ukrywala polowe serwera.
+- **Realne dziury, ktore ZOSTAJA** (swiadomie, nie z przeoczenia): brak `/.well-known/api-catalog`
+  (RFC 9727), ktory sami sondujemy u innych, oraz brak kanalu zmian dla korpusu. To drugie
+  zostawiam do czasu, az ktos naprawde cos na korpusie zbuduje.
+
 **Co zostaje na Ciebie, w kolejnosci wagi:**
 1. **Sciezka zakupu.** Skan jest gotowy na klientow, platny audyt nie: konczy sie `mailto:` na
    prywatnego Gmaila. Do tego zweryfikowany nadawca w Resend i domena.
