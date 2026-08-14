@@ -196,6 +196,51 @@ wybor byl stabilny.
 niestabilnosc ISTNIEJE (obserwacja pozytywna), ale nie zeby podac jej wielkosc. Nie nazywaj tego
 progiem szumu na wzor 0,2 procent dla skanu deterministycznego.
 
+## CZTERNASTY PRZEBIEG ADWERSARYJNY (14.08, na swiezym korpusie 9.12)
+
+Trzynasty przebieg byl **przed** reseedem, wiec wszystkie 170 wierszy zmierzonych rano pod 9.12
+nie bylo sprawdzone reka. Przebieg celowany w dwie rodziny, ktore zmienily sie miedzy 9.10 a 9.12,
+bo tylko tam moglo cos sie zepsuc.
+
+**Rodzina 1: `mcp_present`, regula z 9.11, ktora ZAOSTRZYLA kryterium.** Zaostrzenie moze zawiesc
+tylko w jedna strone, wiec przesondowalem **wszystkie 99 wierszy mowiacych „brak serwera"**
+prawdziwym `initialize` JSON-RPC na szesciu adresach kazdy. **Kontrolka 8 na 8** (sonda znajduje
+serwery, ktore zaliczamy) - bez niej wynik zerowy nie znaczylby nic.
+
+**Znaleziony jeden falszywy negatyw: `statsig.com`.** Odpowiada 401 z naglowkiem
+`WWW-Authenticate: Bearer realm="statsig", resource="https://api.statsig.com/v1/mcp"` i publikuje
+metadane RFC 9728 (`{"resource":"https://api.statsig.com/v1/mcp"}`), a my publikowalismy, ze nie
+maja serwera. **Kontrolka odrozniajaca go od bramy API** (dokladnie pulapka, ktora naprawila 9.11):
+sciezki niezarejestrowane na tym hoscie zwracaja **403 bez zadnego wyzwania**, a zarejestrowana
+**401 z wyzwaniem wskazujacym samą siebie**.
+
+**Przyczyna: luka w pokryciu, nie blad reguly.** Skaner sondowal `mcp.<domena>/v1/mcp`
+(z komentarzem tlumaczacym, po co) i `api.<domena>/mcp`, ale **nikt nie przeniosl argumentu
+o wersjonowaniu na host `api`**. Dolozony `api.<domena>/v1/mcp`, **formula 9.13**, precedens
+identyczny (6.4 → 6.5 po trzecim przebiegu, ten sam powod). Zweryfikowane na produkcji: statsig
+dostaje 1 pkt pod adresem `https://api.statsig.com/v1/mcp`.
+
+**Rodzina 2: adresy publikowane jako dowod, regula z 9.12, ktora ROZLUZNILA kryterium.** 9.12
+czyta linki z llms.txt i nazywa je w werdyktach, wiec moze zawiesc przez **zaliczenie** czegos,
+czego nie ma. Sprawdzone **736 adresow** z werdyktow punktowanych: **0 nie odpowiada**.
+
+**Bilans przebiegu: 99 + 736 sprawdzonych, 1 blad w danych.**
+
+**Najwazniejsza lekcja tego przebiegu dotyczy MOJEGO narzedzia, nie danych.** Audyt adresow zglosil
+kolejno **48, potem 16, potem 3, na koncu 0** znalezisk, i kazde ciecie bylo naprawa mojej sondy:
+1. **Koncowy dwukropek** w ekstrakcji (`https://qdrant.tech/pricing:`) - **ta sama pulapka jest
+   spisana w STATE.md z wczesniejszego przebiegu, napisalem o niej komentarz w tym skrypcie
+   i i tak ja powtorzylem.** Przyciecie mieszka teraz obok zadania, nie w potoku wolajacego.
+2. **401 liczone jako martwy adres** - 20 zywych serwerow MCP oskarzonych o zepsuty link.
+3. **GET na endpoincie POST-owym** - `betterstack.com`, `telnyx.com` i `qdrant.tech` odpowiadaja
+   404/406 na GET i `serverInfo` na handshake, ktory nasz werdykt opisuje.
+4. **Audytowanie checku, ktorego zadaniem jest zglaszanie martwych linkow.** `llms_txt` sam pisze
+   „One is gone: <url>", wiec sonda flagowala nasze wlasne poprawne raportowanie gnicia u vendora.
+
+**Regula do zapamietania: audyt, ktory zglasza wiecej znalezisk niz skaner ma bledow, mierzy
+najczesciej wlasna metode.** Zanim zglosisz N sprzecznosci, sprawdz, czy Twoja sonda pyta o to samo,
+o czym mowi zdanie, ktore obalasz - tym samym czasownikiem HTTP i o ten sam zasob.
+
 ## OSTRZEZENIE PRZED ZAPCHANIEM BAZY (zrobione 14.08, na produkcji)
 
 Awaria z 13.08 nie miala ostrzezenia i nadal by go nie miala: `/api/health` mowi, **czy zapis sie
