@@ -31,6 +31,12 @@ weekend pisalem w tym pliku 181, raz zdanie obok cytatu ze strony mowiacego „w
 **181 to liczba adresow w sitemapie**, czyli strony vendorow plus reszta serwisu, i te dwa
 wystapienia nizej sa poprawne.
 
+**Kontrola wydania 14.08 03:30 UTC, wszystko zielone:** repo czyste, produkcja stoi na tym samym
+commicie co `HEAD`, build i `npm run rules` przechodza, `npm run audit` daje **0 sprzecznosci
+i 0 rozjazdow** na 19 pilnowanych liczbach, a wszystkie 13 publicznych powierzchni (strony,
+`corpus.json`, `corpus.csv`, `sitemap.xml`, `agent-signup.md`, `llms.txt`) odpowiadaja 200.
+**Jedyne, co jest nie tak, to zablokowane zapisy i zamrozony korpus.**
+
 **Reseed WOLNO uruchamiac, i to jest korekta mojej wczesniejszej notatki.** Napisalem „nie
 uruchamiaj, kazda proba dokłada rozbicia" i to bylo za ostrozne. Korpus publikuje wersje
 **wiekszosciowa**, wiec dopoki 9.12 ma mniej wierszy niz najwieksza kohorta, opublikowany zbior
