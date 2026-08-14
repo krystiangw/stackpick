@@ -196,6 +196,38 @@ wybor byl stabilny.
 niestabilnosc ISTNIEJE (obserwacja pozytywna), ale nie zeby podac jej wielkosc. Nie nazywaj tego
 progiem szumu na wzor 0,2 procent dla skanu deterministycznego.
 
+## OSTRZEZENIE PRZED ZAPCHANIEM BAZY (zrobione 14.08, na produkcji)
+
+Awaria z 13.08 nie miala ostrzezenia i nadal by go nie miala: `/api/health` mowi, **czy zapis sie
+udal**, a to jest prawda az do momentu, gdy przestaje nia byc. Doszedl pomiar liczby, ktora rusza
+sie pierwsza.
+
+- `/api/cron/quota` (token cronowy) mierzy **`dataSize` + indeksy** kazdej bazy na klastrze
+  i **mailuje dopiero powyzej 80 procent**. Codzienne „nadal dobrze" to mail, ktory uczy filtrowac
+  nadawce, wiec cicha odpowiedz jest normalna.
+- Harmonogram: `.github/workflows/quota.yml`, poniedzialki 05:41Z. Workflow **oblewa rowniez
+  wtedy, gdy werdykt nie jest `ok`**, wiec alarm przezyje dostawce poczty, ktory po cichu przestal
+  dostarczac. To jest dokladnie ta awaria, ktora zastepuje.
+- Progi: ostrzezenie na 80 procent, krytyczne na 92. Dobrane pod to, ze **klaster dzielimy
+  z projektem, ktorego nie zapisujemy i nie mozemy przyciac**, wiec zapas potrafi zniknac bez
+  jednego naszego wiersza.
+- **Zweryfikowane na produkcji:** endpoint zwraca 55,6 procent i `mailed: false`, bez tokenu 401,
+  workflow zielony. Wynik zerowy nie jest dowodem, wiec osobno **udowodniona sciezka wysylki**:
+  spreparowany odczyt 84 procent poszedl mailem na skrzynke Krystiana, `delivered: true`. Nadawca
+  `onboarding@resend.dev` dowozi do wlasciciela konta Resend, czyli dokladnie tam, gdzie alarm ma
+  trafiac, wiec **ten alarm nie czeka na zweryfikowana domene**.
+- Test progu **udowodniony, ze potrafi oblac**: po podniesieniu `WARN_AT` na 0,99 `scripts/rules.mts`
+  konczy sie kodem 1. Test powtarzajacy progi zamiast wolac `verdictFor` wyrzucilem, bo nie mogl
+  oblac.
+
+**Pomylka warta zapisania, bo kosztowala juz dwa razy w obie strony:** `scripts/space.mts`
+drukowal `storageSize` jako pierwsza kolumne. 13.08 przeczytalem ja jako kwote i **nie doszacowalem**
+zapchanej bazy; 14.08 przeczytalem zostawione po prune 1457 MB jako **1424 MB nagłego przyrostu**
+i podnioslem falszywy alarm, odwolany jedna komenda. Skrypt pokazuje teraz **`LICZONE DO KWOTY`
+jako pierwsze**, dysk osobno i podpisany „nie liczone", plus jedna linia podsumowania
+(`2848,9 MB z 5120, 55,6 procent`). Po duzym kasowaniu **te dwie liczby roznia sie o rzad
+wielkosci** i to jest normalne: Flex nie kompaktuje.
+
 ## PRZEPAKOWANIE CENNIKA (pomysl Krystiana: darmowy skan + darmowy monitoring, platne przebiegi agenta)
 
 **Koszt strony deterministycznej zmierzony, nie zalozony** (`scripts/watch-cost.mts`, 14.08, 170 wierszy):
