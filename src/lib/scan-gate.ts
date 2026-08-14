@@ -71,6 +71,17 @@ export async function bestExample(): Promise<ExampleReport | null> {
   }
 }
 
+/**
+ * The budget is per registrable name, so the sentence has to name that rather than the host the
+ * caller typed. Asking once for docs.acme.com after colleagues had spent the hour on acme.com and
+ * app.acme.com was answered with "docs.acme.com has been scanned 5 times in the last hour", which
+ * is false about the only name the reader recognises.
+ */
+export function overDomainBudget(domain: string, budget: string, minutes: number): string {
+  const subject = budget === domain ? `${domain} has` : `${budget} and its subdomains have`
+  return `${subject} been scanned ${PER_DOMAIN_PER_HOUR} times in the last hour. The next one is free in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}.`
+}
+
 export async function gateScan(request: Request, rawDomain: string, bypass = false): Promise<Gate> {
   let domain: string
   try {
@@ -98,7 +109,7 @@ export async function gateScan(request: Request, rawDomain: string, bypass = fal
     return {
       kind: 'limited',
       error: !perDomain.allowed
-        ? `${domain} has been scanned ${PER_DOMAIN_PER_HOUR} times in the last hour. The next one is free in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}.`
+        ? overDomainBudget(domain, budget, minutes)
         : `That is ${PER_CALLER_PER_HOUR} scans in an hour from this address, which is where we stop. The next one is free in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}.`,
       retryAfterSeconds: blocked.retryAfterSeconds,
       example: await bestExample(),

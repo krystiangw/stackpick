@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { overDomainBudget } from '../src/lib/scan-gate'
 import { categoryForJob } from '../src/lib/lookup'
 import { HELD_OUT_4 } from './routing-questions'
 import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
@@ -748,6 +749,13 @@ check('biblioteka bez cennika i konta: nie dotyczy', dcrFor({}).notApplicable, t
 check('vendor z cennikiem dostaje werdykt', dcrFor({ pricing: 'https://v.test/pricing' }).notApplicable, undefined)
 check('vendor z rejestracja tez', dcrFor({ signup: 'https://v.test/signup' }).notApplicable, undefined)
 check('i nadal jest to odmowa, nie milczenie', dcrFor({ pricing: 'https://v.test/pricing' }).inconclusive, undefined)
+
+// The scan budget is per registrable name and the message named the host the caller typed, so a
+// first-ever scan of docs.acme.com was told that docs.acme.com had been scanned five times.
+check('apex mowi o sobie', overDomainBudget('acme.com', 'acme.com', 3).startsWith('acme.com has been scanned'), true)
+check('subdomena mowi o domenie i jej subdomenach', overDomainBudget('docs.acme.com', 'acme.com', 3).startsWith('acme.com and its subdomains have been scanned'), true)
+check('subdomena NIE twierdzi, ze skanowano wlasnie ja', overDomainBudget('docs.acme.com', 'acme.com', 3).includes('docs.acme.com has'), false)
+check('jedna minuta w liczbie pojedynczej', overDomainBudget('acme.com', 'acme.com', 1).endsWith('in 1 minute.'), true)
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)
