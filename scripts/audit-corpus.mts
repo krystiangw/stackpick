@@ -7,7 +7,7 @@ import { SITE_URL } from '../src/lib/site'
  * not a check: anything it prints is a bug in the scanner or in a verdict sentence.
  */
 type Check = { id: string; verdict: string; points: number; max: number; detail: string }
-type Row = { domain: string; total: number; measurable: number; max: number; unattendedGrant: boolean | null; refusesAgentsAtSignup: boolean; checks: Check[] }
+type Row = { domain: string; total: number; measurable: number; max: number; unattendedGrant: boolean | null; refusesAgentsAtSignup: boolean; npmSource: string | null; checks: Check[] }
 
 const url = process.argv[2] ?? `${SITE_URL}/corpus.json`
 
