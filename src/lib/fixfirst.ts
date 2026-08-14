@@ -169,6 +169,14 @@ export const REMEDIES: Record<string, Remedy> = {
       if (f.npm.staleMonths !== undefined && f.npm.staleMonths >= 24) {
         return `Cut a release of ${f.npm.package}. Last publish was ${f.npm.staleMonths} months ago, and agents read that as abandoned.`
       }
+      // The verdict already says when the name came from a registry search rather than from a
+      // link they gave us, and the advice used to drop that caveat and give an order instead:
+      // namecheap.com was told to ship types with node-vault-client, which is a Vault client that
+      // happens to share their publisher. On those rows the first fix is the link, and it is the
+      // fix that also stops us guessing.
+      if (f.discovered.npmSource === 'registry-search') {
+        return `We matched ${f.npm.package} to you by who publishes it, not by a link on your site, so check that is the package your users install. If it is, ship types with it through the exports map; if it is not, link the right one from your docs and this stops being a guess. Types are how an agent checks its own work.`
+      }
       return `Ship types with ${f.npm.package}, declared through the exports map. Types are how an agent checks its own work.`
     },
   },

@@ -596,6 +596,24 @@ check(
   true,
 )
 
+// The verdict says when a package name came from a registry search; the advice used to give an
+// order anyway. namecheap.com was told to ship types with node-vault-client, a Vault client that
+// happens to share their publisher.
+const npmRow = (npmSource: string) => ({
+  npm: { package: 'node-vault-client', found: true, bundledTypes: false },
+  discovered: { npmSource },
+})
+check(
+  'nazwa z wyszukiwarki rejestru: rada mowi, ze zgadlismy',
+  remedy('typed_package', npmRow('registry-search')).includes('not by a link on your site'),
+  true,
+)
+check(
+  'nazwa z ich wlasnej strony: rada nie hedguje',
+  remedy('typed_package', npmRow('site-link')).includes('not by a link on your site'),
+  false,
+)
+
 console.log('405 na POST: serwer czy tak dziala ich framework')
 // openrouter.ai, medusajs.com i posthog.com odpowiadaly 405 bez naglowka Allow na /docs, /models,
 // /pricing i na wlasnej stronie glownej. Wszystkie trzy byly opublikowane jako zywy serwer MCP.
