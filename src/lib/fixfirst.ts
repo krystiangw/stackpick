@@ -149,8 +149,14 @@ export const REMEDIES: Record<string, Remedy> = {
   },
   programmatic_provisioning: {
     effort: 'an afternoon',
-    how: () =>
-      'Document how a key is created without opening a dashboard: management API, service account or CLI. If no such path exists, that gap is the finding, not the docs.',
+    // Two situations, and one sentence used to serve both. 52 of the 91 rows in the plan are
+    // partial: we found provisioning language on their pages and they are one phrase short, and
+    // telling them to document a management API when we just matched "management api" reads as
+    // advice from somebody who did not look. The other rows found nothing at all.
+    how: (_f, check) =>
+      check.points > 0
+        ? 'You are one phrase away. We found provisioning language on the pages we read but nothing describing the step that creates the credential itself: the endpoint, the CLI command or the service account that turns no key into a key. Write that step where the phrase already is.'
+        : 'Document how a key is created without opening a dashboard: management API, service account or CLI. If no such path exists, that gap is the finding, not the docs.',
   },
   self_serve: {
     // A page whose only free wording is a button is a copy change, not a pricing decision, and

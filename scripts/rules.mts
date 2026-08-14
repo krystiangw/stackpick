@@ -614,6 +614,13 @@ check(
   false,
 )
 
+// 52 of 91 rows in the plan are partial: provisioning language found, one phrase short. Telling
+// them to document a management API when we just matched "management api" reads as not having looked.
+const provRemedy = (points: number) => REMEDIES['programmatic_provisioning'].how({} as never, { points } as never)
+check('wiersz czesciowy slyszy, ze jest o krok', provRemedy(1).includes('one phrase away'), true)
+check('wiersz bez niczego slyszy, zeby udokumentowac', provRemedy(0).includes('Document how a key is created'), true)
+check('i te dwa zdania nie sa tym samym', provRemedy(1) === provRemedy(0), false)
+
 console.log('405 na POST: serwer czy tak dziala ich framework')
 // openrouter.ai, medusajs.com i posthog.com odpowiadaly 405 bez naglowka Allow na /docs, /models,
 // /pricing i na wlasnej stronie glownej. Wszystkie trzy byly opublikowane jako zywy serwer MCP.
