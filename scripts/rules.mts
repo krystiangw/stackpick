@@ -722,7 +722,9 @@ const noDocs = (docsStatus?: number) =>
   docsJs.evaluate({ site: 'https://v.test', discovered: {}, machine: { markdownNegotiation: { docsStatus } } } as never).detail
 check('403 przy szukaniu dokumentacji jest nazwane', noDocs(403).includes('answered 403'), true)
 check('429 tak samo', noDocs(429).includes('answered 429'), true)
-check('brak odpowiedzi tez, slowem nie zerem', noDocs(0).includes('answered nothing'), true)
+// Zero is not a refusal: http.ts returns it for our own expired scan budget as well, so this
+// falls back to the sentence that blames nobody.
+check('zero NIE jest odmowa, bo to takze nasz timeout', noDocs(0).includes('no documentation page could be found'), true)
 check('ale 200 zostaje przy starym zdaniu', noDocs(200).includes('no documentation page could be found'), true)
 check('i brak pomiaru tez', noDocs(undefined).includes('no documentation page could be found'), true)
 const prov3 = CHECKS.find((c) => c.id === 'programmatic_provisioning')!
@@ -756,6 +758,16 @@ check('apex mowi o sobie', overDomainBudget('acme.com', 'acme.com', 3).startsWit
 check('subdomena mowi o domenie i jej subdomenach', overDomainBudget('docs.acme.com', 'acme.com', 3).startsWith('acme.com and its subdomains have been scanned'), true)
 check('subdomena NIE twierdzi, ze skanowano wlasnie ja', overDomainBudget('docs.acme.com', 'acme.com', 3).includes('docs.acme.com has'), false)
 check('jedna minuta w liczbie pojedynczej', overDomainBudget('acme.com', 'acme.com', 1).endsWith('in 1 minute.'), true)
+
+// Only openrouter.ai was pinned, and its regex happened not to match the corrected sentence. Its
+// two siblings did: /posthog\.com\/mcp/ matches "mcp.posthog.com/mcp", so a row that had already
+// been fixed would have carried a correction saying it names a documentation page.
+for (const domain of ['posthog.com', 'medusajs.com']) {
+  const good = `Live MCP endpoint at https://mcp.${domain}/mcp, answers JSON`
+  const bad = `Live MCP endpoint at https://${domain}/mcp, answers JSON`
+  check(`${domain}: poprawne zdanie NIE dostaje sprostowania`, erratumFor(domain, 'mcp_present', '9.9', good) !== null, false)
+  check(`${domain}: zle zdanie dostaje`, erratumFor(domain, 'mcp_present', '9.9', bad) !== null, true)
+}
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

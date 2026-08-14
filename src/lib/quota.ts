@@ -57,7 +57,9 @@ export async function measureQuota(): Promise<QuotaReading> {
  */
 export function quotaEmail(reading: QuotaReading): { subject: string; text: string } {
   const worst = reading.databases[0]
-  const lines = reading.databases.filter((d) => d.mb > 0).map((d) => `  ${d.name}: ${d.mb} MB`)
+  // Every database, not only those over half a megabyte: lines that do not add up to the total
+  // invite the reader to distrust the total, and the total is the point of the mail.
+  const lines = reading.databases.map((d) => `  ${d.name}: ${d.mb} MB`)
   return {
     subject: `Atlas ${reading.percent}% of ${reading.quotaMb} MB (${reading.verdict})`,
     text: [
@@ -66,7 +68,7 @@ export function quotaEmail(reading: QuotaReading): { subject: string; text: stri
       'By database:',
       ...lines,
       '',
-      `Largest is ${worst?.name}. If that is stackpick, run:`,
+      `Largest is ${worst?.name ?? 'unknown, because the reading came back empty'}. If that is stackpick, run:`,
       '  MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/prune-reports.mts --delete',
       'If it is another project, this cluster is shared and the space has to come from there.',
       '',

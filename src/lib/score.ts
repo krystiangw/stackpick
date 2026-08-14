@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.15'
+export const FORMULA_VERSION = '9.16'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -71,7 +71,12 @@ function refusedUs(f: ScanFindings): number | null {
   // fields their check reads, and a guard that crashes on a partial one is a guard nobody runs.
   const status = f.machine?.markdownNegotiation?.docsStatus
   if (status === undefined) return null
-  return status === 0 || status >= 400 ? status : null
+  // Only a status the edge actually sent. Zero is our own word for "no HTTP answer", and
+  // http.ts returns it when the scan budget ran out, when we refused a redirect and when a host
+  // had already left too many requests unanswered. The first version of this guard called all of
+  // that "your site answered nothing when we asked", which blames a vendor for our clock: the
+  // exact sentence this guard was added to stop us publishing.
+  return status >= 400 ? status : null
 }
 
 export const CHECKS: Check[] = [
@@ -245,7 +250,7 @@ export const CHECKS: Check[] = [
         if (refused !== null) {
           return {
             points: 0,
-            detail: `Unmeasurable: ${f.site} answered ${refused === 0 ? 'nothing' : refused} when we asked for a page, so we never got as far as looking for documentation`,
+            detail: `Unmeasurable: ${f.site} answered ${refused} when we asked for a page, so we never got as far as looking for documentation`,
             unblock: refused === 429 ? 'Nothing for you to do if this was a burst. We rescan later and this becomes measurable.' : 'Let ordinary HTTP through to your public pages and this becomes measurable.',
             inconclusive: true,
           }
@@ -872,7 +877,7 @@ export const CHECKS: Check[] = [
           detail:
             pages === 0
               ? refusedUs(f) !== null
-                ? `Unmeasurable: ${f.site} answered ${refusedUs(f) === 0 ? 'nothing' : refusedUs(f)} when we asked for a page, so there was nothing to look in and that is our reading of your edge rather than a finding about your docs`
+                ? `Unmeasurable: ${f.site} answered ${refusedUs(f)} when we asked for a page, so there was nothing to look in and that is our reading of your edge rather than a finding about your docs`
                 : 'Unmeasurable: we could not read a single documentation page, so there was nothing to look in'
               : `Unmeasurable: only ${pages} documentation page could be read, which is too little to conclude anything`,
           inconclusive: true,

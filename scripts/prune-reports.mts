@@ -45,9 +45,24 @@ for await (const watch of watches.find({}, { projection: { lastReportId: 1 } }))
 }
 const watched = keep.size
 const domains = await reports.distinct('domain')
+let corpusRows = 0
 for (const domain of domains) {
   const newest = await reports.findOne({ domain }, { sort: { scannedAt: -1 }, projection: { _id: 1 } })
   if (newest) keep.add(newest._id)
+  // The newest row and the published row are not the same row. The corpus reads the newest
+  // *seeded* scan (published.ts -> latestPerDomain(1000, true)), so one visitor scanning a curated
+  // domain makes their own unseeded row the newest and leaves the corpus row superseded and
+  // deletable. Deleting it drops that vendor out of corpus.json, the rankings and every counter
+  // on /findings until the next reseed. Zero domains were exposed when this was found, because a
+  // reseed had just finished; the exposure grows with every hour after one.
+  const newestSeeded = await reports.findOne(
+    { domain, seeded: true },
+    { sort: { scannedAt: -1 }, projection: { _id: 1 } },
+  )
+  if (newestSeeded) {
+    if (!keep.has(newestSeeded._id)) corpusRows += 1
+    keep.add(newestSeeded._id)
+  }
 }
 
 let superseded = 0
@@ -72,7 +87,10 @@ if (doomed.length > 0) {
 }
 
 const total = await reports.countDocuments()
-console.log(`${total} raportow, ${keep.size} zachowanych (w tym ${watched} punktow odniesienia obserwacji), ${total - superseded} zostaje`)
+console.log(
+  `${total} raportow, ${keep.size} zachowanych (w tym ${watched} punktow odniesienia obserwacji ` +
+    `i ${corpusRows} wierszy korpusu, ktore nie sa juz najnowsze), ${total - superseded} zostaje`,
+)
 console.log(`${superseded} przedawnionych skanow domen z korpusu = ${mb(logicalBytes)} logicznie`)
 
 if (!DELETE) {

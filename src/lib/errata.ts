@@ -36,7 +36,7 @@ export const ERRATA: Erratum[] = [
     domain: 'posthog.com',
     checkId: 'mcp_present',
     fixedIn: '9.12',
-    wrongWhen: /posthog\.com\/mcp/,
+    wrongWhen: /(?<!mcp\.)posthog\.com\/mcp/,
     says:
       'This row names a documentation page as their MCP server. It is not one: that address answers 405 to any POST, exactly as their /docs and /pricing do, because that is what their framework does with a POST to a static route. They do run a server, at mcp.posthog.com/mcp, and the corrected scan names it.',
   },
@@ -52,7 +52,7 @@ export const ERRATA: Erratum[] = [
     domain: 'medusajs.com',
     checkId: 'mcp_present',
     fixedIn: '9.12',
-    wrongWhen: /medusajs\.com\/mcp/,
+    wrongWhen: /(?<!mcp\.)medusajs\.com\/mcp/,
     says:
       'This row credits a live MCP server on a 405 that their framework returns for every static route. A corrected scan finds none, so this point is one they have not earned and the row overstates them.',
   },

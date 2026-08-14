@@ -39,9 +39,12 @@ export async function clusterUsage(): Promise<{ name: string; mb: number }[]> {
       try {
         const stats = (await client.db(name).stats()) as { dataSize: number; indexSize: number }
         return { name, mb: (stats.dataSize + stats.indexSize) / 1024 / 1024 }
-      } catch {
+      } catch (error) {
         // `local` and `admin` refuse stats to an Atlas application user, and neither is ours.
-        return { name, mb: 0 }
+        // Anything else has to surface: swallowing a timeout on our own database reports 0 MB,
+        // which reads as headroom and silences the alarm in exactly the conditions that need it.
+        if (name === 'local' || name === 'admin') return { name, mb: 0 }
+        throw new Error(`db.stats() failed for ${name}: ${(error as Error).message}`)
       }
     }),
   )

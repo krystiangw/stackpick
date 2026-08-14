@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
  *
  * `/api/health` answers whether a write succeeds, which is true right up to the moment it is
  * false, so it can only report an outage that has already started. This measures the number that
- * moves first, and it is scheduled daily rather than polled because the quota moves over days.
+ * moves first, and it is scheduled weekly rather than polled because the quota moves over days.
  *
  * It mails only when there is something to do. A daily "still fine" is the message that teaches
  * somebody to filter the sender, and then the one that matters is filtered too.
