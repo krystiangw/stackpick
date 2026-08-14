@@ -221,7 +221,11 @@ const HELD_LIMIT = 50
 const held: Map<string, Report> = ((globalThis as { __heldReports?: Map<string, Report> }).__heldReports ??= new Map())
 
 export function holdUnsaved(report: Report): void {
-  held.set(report.id, report)
+  // The same shape the database would have taken, not the raw one. forStorage drops the probe
+  // bodies, which are 180 kB of the 185 kB a report weighs and the reason the cluster filled up in
+  // the first place. Holding fifty raw reports would have parked nine megabytes on a dyno to serve
+  // pages that never read that field.
+  held.set(report.id, forStorage(report))
   // Insertion order, so the oldest goes first and one busy afternoon cannot grow this without end.
   while (held.size > HELD_LIMIT) held.delete(held.keys().next().value as string)
 }
