@@ -148,7 +148,7 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
                   const tone = verdictTone(check)
                   // Marked rather than quietly left standing. A row we know is wrong and cannot
                   // rescan is still a published claim about somebody else's product.
-                  const erratum = erratumFor(name, check.id, scorecard.formulaVersion)
+                  const erratum = erratumFor(name, check.id, scorecard.formulaVersion, check.detail)
                   return (
                     // minmax(0,1fr) rather than 1fr, because a bare 1fr is minmax(auto,1fr) and inflates to
                     // the longest unbreakable token in it. That token is ours: every scorecard opens with

@@ -180,7 +180,7 @@ export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus 
         checks: report.scorecard.checks.map((check) => {
           // A machine reading this file cannot see the note we render on the page, and it is the
           // reader most likely to quote a verdict we no longer stand behind.
-          const erratum = erratumFor(report.domain, check.id, report.scorecard.formulaVersion)
+          const erratum = erratumFor(report.domain, check.id, report.scorecard.formulaVersion, check.detail)
           return {
             id: check.id,
             verdict: verdictOf(check),

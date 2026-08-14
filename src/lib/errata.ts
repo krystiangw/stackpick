@@ -19,6 +19,14 @@ export type Erratum = {
   checkId: string
   /** The formula that corrected it. The row is wrong only while it was measured before this. */
   fixedIn: string
+  /**
+   * What the wrong row actually says. A version test alone is not enough and published a false
+   * correction: openrouter.ai's stored row was measured under 9.9, before the fix, and already
+   * named mcp.openrouter.ai/mcp, so the page carried "Live MCP endpoint at mcp.openrouter.ai/mcp"
+   * with a note underneath saying the row names a documentation page. A correction has to be
+   * checked against the sentence it corrects, which is the whole point of the mechanism.
+   */
+  wrongWhen: RegExp
   /** What the row says, and what a scan says now, in the vendor's favour where they differ. */
   says: string
 }
@@ -28,6 +36,7 @@ export const ERRATA: Erratum[] = [
     domain: 'posthog.com',
     checkId: 'mcp_present',
     fixedIn: '9.12',
+    wrongWhen: /posthog\.com\/mcp/,
     says:
       'This row names a documentation page as their MCP server. It is not one: that address answers 405 to any POST, exactly as their /docs and /pricing do, because that is what their framework does with a POST to a static route. They do run a server, at mcp.posthog.com/mcp, and the corrected scan names it.',
   },
@@ -35,6 +44,7 @@ export const ERRATA: Erratum[] = [
     domain: 'openrouter.ai',
     checkId: 'mcp_present',
     fixedIn: '9.12',
+    wrongWhen: /openrouter\.ai\/docs/,
     says:
       'This row names a documentation page as their MCP server, on the same framework artefact as posthog.com. Their real server is at mcp.openrouter.ai/mcp and the corrected scan names it.',
   },
@@ -42,6 +52,7 @@ export const ERRATA: Erratum[] = [
     domain: 'medusajs.com',
     checkId: 'mcp_present',
     fixedIn: '9.12',
+    wrongWhen: /medusajs\.com\/mcp/,
     says:
       'This row credits a live MCP server on a 405 that their framework returns for every static route. A corrected scan finds none, so this point is one they have not earned and the row overstates them.',
   },
@@ -58,10 +69,19 @@ function isOlderThan(version: string, than: string): boolean {
   return false
 }
 
-export function erratumFor(domain: string, checkId: string, formulaVersion: string): Erratum | null {
+export function erratumFor(
+  domain: string,
+  checkId: string,
+  formulaVersion: string,
+  detail = '',
+): Erratum | null {
   return (
     ERRATA.find(
-      (entry) => entry.domain === domain && entry.checkId === checkId && isOlderThan(formulaVersion, entry.fixedIn),
+      (entry) =>
+        entry.domain === domain &&
+        entry.checkId === checkId &&
+        isOlderThan(formulaVersion, entry.fixedIn) &&
+        entry.wrongWhen.test(detail),
     ) ?? null
   )
 }

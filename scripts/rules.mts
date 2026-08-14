@@ -609,13 +609,29 @@ check('inny status niz 405 nie przechodzi ta droga', methodRefusalIsRouted({ ...
 console.log('errata wygasa sama, gdy wiersz zostanie zmierzony ponownie')
 // The whole design rests on this: nobody has to remember to delete an entry. If the comparison
 // were string-based, "9.8" would sort after "9.12" and every correction would vanish too early.
+// A row wrong enough to correct always names the address the correction is about, so the fixture
+// is the address itself. Anything else is a row that does not need this note.
+const wrongSentence = (entry: (typeof ERRATA)[number]) =>
+  `Live MCP endpoint at https://${entry.domain}/mcp, seen at https://${entry.domain}/docs/guides/overview/mcp-server`
 for (const entry of ERRATA) {
-  check(`${entry.domain} nadal wymaga sprostowania na starej formule`, erratumFor(entry.domain, entry.checkId, '9.8') !== null, true)
-  check(`${entry.domain} nie wymaga go po naprawie`, erratumFor(entry.domain, entry.checkId, entry.fixedIn) !== null, false)
-  check(`${entry.domain} nie wymaga go na nowszej formule`, erratumFor(entry.domain, entry.checkId, '10.0') !== null, false)
+  check(`${entry.domain} nadal wymaga sprostowania na starej formule`, erratumFor(entry.domain, entry.checkId, '9.8', wrongSentence(entry)) !== null, true)
+  check(`${entry.domain} nie wymaga go po naprawie`, erratumFor(entry.domain, entry.checkId, entry.fixedIn, wrongSentence(entry)) !== null, false)
+  check(`${entry.domain} nie wymaga go na nowszej formule`, erratumFor(entry.domain, entry.checkId, '10.0', wrongSentence(entry)) !== null, false)
 }
-check('sprostowanie nie wycieka na inny check', erratumFor(ERRATA[0].domain, 'llms_txt', '9.8') !== null, false)
-check('ani na inna domene', erratumFor('example.com', ERRATA[0].checkId, '9.8') !== null, false)
+check('sprostowanie nie wycieka na inny check', erratumFor(ERRATA[0].domain, 'llms_txt', '9.8', wrongSentence(ERRATA[0])) !== null, false)
+check('ani na inna domene', erratumFor('example.com', ERRATA[0].checkId, '9.8', wrongSentence(ERRATA[0])) !== null, false)
+// The bug this pins: openrouter.ai sat on formula 9.9, before the fix, with a row that already
+// named mcp.openrouter.ai/mcp, and the page told a reader that row points at documentation.
+check(
+  'wiersz na starej formule, ktory juz jest poprawny, NIE dostaje sprostowania',
+  erratumFor('openrouter.ai', 'mcp_present', '9.9', 'Live MCP endpoint at https://mcp.openrouter.ai/mcp, answered 401 with an auth challenge') !== null,
+  false,
+)
+check(
+  'a ten sam wiersz wskazujacy dokumentacje juz tak',
+  erratumFor('openrouter.ai', 'mcp_present', '9.9', 'Live MCP endpoint at https://openrouter.ai/docs/guides/overview/mcp-server') !== null,
+  true,
+)
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)
