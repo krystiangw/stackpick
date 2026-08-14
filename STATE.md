@@ -1600,6 +1600,47 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   5. **Werdykt może być dobry, a zdanie fałszywe.** Czwarty przebieg znalazł sześć takich przy
      MCP. Nic w liczbach nie wygląda źle, więc łapie to tylko czytanie zdań obok dowodów.
 
+## OSMIU VENDOROM KAZALISMY MIEC OAUTH, KTOREGO NIE MAJA GDZIE MIEC (9.15, CZEKA NA WDROZENIE)
+
+Wyszlo z pytania o **nasz wlasny wynik**: `letagentsin.com` ma 11/12 i traci punkt na `oauth_dcr`,
+choc nasz serwer MCP **nie wymaga zadnych poswiadczen**, wiec nie ma czego rejestrowac.
+
+Sprawdzone na korpusie: **osiem wierszy, ktorym sami mowimy „rejestracja nie dotyczy"** (biblioteki
+npm bez konta: `lexical.dev`, `quilljs.com`, `prosemirror.net`, `editorjs.io`, `slatejs.org`, plus
+`searchkit.co`, `tomtom.com`, `gandi.net`), dostawalo **twarde zero** za brak endpointu rejestracji
+OAuth i ladowalo z tym w mianowniku. Biblioteka npm nie ma serwera wydajacego tokeny.
+
+**Precedens byl juz w kodzie, przy `self_serve`:** „A library with nothing to buy has no free tier
+to state… **The signup checks already draw this line; this one was still charging open-source
+projects for our confusion.**" Uzylem tego samego sygnalu, nie wlasnego osadu o tym, co jest
+biblioteka.
+
+**Zmierzone na ZAPISANYCH danych, bez skanowania kogokolwiek:** przepuscilem 170 wierszy przez nowa
+regule i zmienia sie **dokladnie tych osiem**, 162 bez ruchu.
+
+**To drugi raz TEGO SAMEGO DNIA, gdy regula byla napisana dla sasiada i nieprzeniesiona dalej**
+(rano: „strona, ktora nas odmowila, to nie strona bez dokumentacji"). Warto przy nastepnej zmianie
+reguly zadac sobie pytanie, ktorzy sasiedzi maja ten sam problem.
+
+**Wdrozenie WSTRZYMANE do wygasniecia bariery szesciu godzin**, zeby wyszlo jednym reseedem razem
+z tym, co jeszcze dojdzie. To ta sama zasada, ktora dzis kosztowala nas froale i bitmovin.
+
+**Dwie pomylki wlasne z tej rundy, obie warte zapisania:**
+- Zacommitowalem **wywalajacy sie test**, bo `npx tsx ... | tail -2` oddaje kod wyjscia `tail`,
+  nie skryptu, wiec `&&` poszlo dalej. **Nie maskuj kodu wyjscia potokiem w lancuchu `&&`.**
+- Atrapa czytala `f.oauth` zamiast `f.funnel.oauth`. Po poprawce **udowodnilem, ze test potrafi
+  oblac**: z wylaczonym guardem `rules.mts` konczy sie kodem 1.
+
+**Zmierzone i ODRZUCONE w tej samej rundzie** (zeby nikt nie szedl tam drugi raz):
+- **Poszerzanie wykrywania dokumentacji.** Z dziewieciu domen bez dokumentacji tylko `shopify.com`
+  da sie odzyskac, i to lamiac jawna regule „przekierowanie poza domene nie moze byc punktowane".
+  `oramasearch.com/docs` przekierowuje do **panelu logowania** (21 znakow tekstu), wiec odrzucamy
+  je slusznie.
+- **Wiekszy budzet stron dokumentacji.** 27 wierszy mowi „zadna z przeczytanych stron nie jest
+  o kluczach". Sprawdzilem zgadywane adresy (`/api-keys`, `/authentication`, `/auth`, `/api-key`)
+  pod ich wlasnym korzeniem dokumentacji: **odpowiada 1 na 6**. Te wiersze sa uczciwie
+  niemierzalne, a nie zle zmierzone.
+
 ## KORPUS NA 9.14, I CENA DWOCH RESEEDOW W JEDEN DZIEN
 
 **170 wierszy na formule 9.14, 0 sprzecznosci, 0 rozjazdow, `awaitingRescan: 0`.** Reseed przeszedl
