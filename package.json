@@ -23,7 +23,8 @@
     "audit-mcp-probes": "tsx scripts/audit-mcp-probes.mts",
     "audit-headlines": "tsx scripts/audit-headlines.mts",
     "regressions": "tsx scripts/regressions.mts",
-    "audit-unblock": "tsx scripts/audit-unblock.mts"
+    "audit-unblock": "tsx scripts/audit-unblock.mts",
+    "audit-captcha": "tsx scripts/audit-captcha.mts"
   },
   "dependencies": {
     "mongodb": "^7.5.0",

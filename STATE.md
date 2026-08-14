@@ -1643,6 +1643,27 @@ w tym jeden defekt w skrypcie kasujacym dane i jeden w poprawce napisanej dwie g
 wlasnie po to, zeby nie obwiniac vendorow za nasze pomiary.** Zasada „subagent przeglada, zanim
 uznasz za gotowe" zarobila dzis na siebie.
 
+## SZESNASTY PRZEBIEG ADWERSARYJNY: 50 werdyktow, 0 bledow, kontrolka DWUSTRONNA
+
+Cel: `signup_no_captcha`, czyli **28 oskarzen o CAPTCHA przed rejestracja**. Nigdy nie przechodzil
+przebiegu, a jest jedna z dwoch liczb na stronie glownej, wiec pomylka jest pomylka publiczna.
+Twierdzenie jest tez nietypowo waskie: nazwany ciag albo jest w bajtach, ktore serwer wyslal,
+albo go nie ma.
+
+**Wynik: 28 na 28 oskarzen odtworzonych niezaleznie, 22 na 22 wiersze zaliczone czyste.**
+
+**Kontrolka dwustronna, i to jest tu najwazniejsze.** Sama zgodnosc oskarzen dowodzilaby tylko, ze
+wzorzec cos lapie; moglby lapac wszystko. Puszczenie tej samej sondy na wiersze, ktorym mowimy
+„czysta rejestracja", i **zero trafien tam**, dowodzi, ze wzorzec rozroznia. Probe, ktora umie
+powiedziec tylko „tak", jest rownie bezwartosciowa jak ta, ktora umie powiedziec tylko „nie" -
+o czym przekonalem sie dzis przy audycie rad, gdzie detektor nie mogl zapalic sie nigdy.
+
+Sonda pyta **tym samym user agentem, co skaner**, bo strona serwowana inaczej przegladarce to inny
+pomiar, a ten przebieg sprawdza nasz wiersz, nie cudza przegladarke. `npm run audit-captcha`.
+
+**Bilans piatnastu i szesnastu przebiegow razem: 48 + 736 + 50 werdyktow sprawdzonych, 1 blad
+w danych** (`statsig.com`), przy czym wiekszosc pozornych niezgod okazala sie wada metody, nie danych.
+
 ## DWA ZNALEZISKA Z PRZEGLADU DOMIERZONE (a nie przyjete na slowo)
 
 **Koszt dolozonej sondy MCP: zaden mierzalny.** Recenzent wskazal, ze `api.<domena>/v1/mcp` ciagnie
