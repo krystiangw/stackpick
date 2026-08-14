@@ -196,6 +196,28 @@ wybor byl stabilny.
 niestabilnosc ISTNIEJE (obserwacja pozytywna), ale nie zeby podac jej wielkosc. Nie nazywaj tego
 progiem szumu na wzor 0,2 procent dla skanu deterministycznego.
 
+## KORPUS NA 9.13, I FALSZYWY ALARM NA 11 LICZB (14.08)
+
+**Reseed zakonczony: 170 wierszy na formule 9.13, 0 sprzecznosci, 0 rozjazdow** na 20 pilnowanych
+liczbach i 3 twierdzeniach o nazwanych vendorach. Produkcja pokazuje `awaitingRescan: 0`.
+
+**Po drodze audyt zglosil 11 rozjazdow i wszystkie byly falszywe.** Kazdy o dokladnie jeden
+(„says 170, data says 169", „says 68 live MCP servers, data says 67"), bo brakowalo jednego wiersza:
+`netim.com`, zapisanego o 15:33:44. Wiersz **byl** w bazie, zasiany, na 9.13.
+
+**Przyczyna: `npm run audit` czyta `corpus.json` z ZYWEJ STRONY, a strona trzyma korpus w pamieci
+przez 5 minut** (`CORPUS_TTL_MS`). Audyt uruchomiony w sekunde po ostatnim skanie mierzy wiec cache,
+nie dane. Gdybym „naprawil" proze pod ten odczyt, przepisalbym **jedenascie poprawnych zdan**.
+
+To jest ta sama regula co przy porannym reseedzie („audyt w trakcie migracji mierzy migracje"),
+ale trafila w **ogon** migracji, nie w srodek, i dlatego wygladala wiarygodnie: reseed sie skonczyl,
+skrypt wypisal podsumowanie, wszystko wskazywalo na gotowy stan. **Zakonczony zapis to nie to samo,
+co zaktualizowany odczyt.**
+
+**Naprawione u zrodla:** `scripts/reseed.sh` czeka teraz, az strona zwroci `awaitingRescan: 0`
+(do 10 minut), zanim uruchomi audyt, i mowi wprost, gdy sie nie doczekal. Poprzednio skrypt sam
+zapraszal do tego falszywego alarmu.
+
 ## CZTERNASTY PRZEBIEG ADWERSARYJNY (14.08, na swiezym korpusie 9.12)
 
 Trzynasty przebieg byl **przed** reseedem, wiec wszystkie 170 wierszy zmierzonych rano pod 9.12

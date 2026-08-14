@@ -122,10 +122,23 @@ if [ -n "$failed" ]; then
 fi
 done
 
+# The audit reads corpus.json off the live site, and the site keeps the corpus in memory for five
+# minutes. Running it the second the last scan lands therefore measures the cache: on 2026-08-14 it
+# reported eleven numbers adrift, every one of them off by exactly the one row that had not yet
+# surfaced, and the fix would have been to rewrite eleven correct sentences. Wait for the site to
+# agree with the database before asking it anything.
+echo
+echo "== czekam, az strona zobaczy wszystkie wiersze"
+for _ in $(seq 1 40); do
+  waiting=$(curl -s --max-time 30 "$BASE/corpus.json" | sed -n 's/.*"awaitingRescan":\([0-9]*\).*/\1/p')
+  [ "${waiting:-1}" = "0" ] && echo "korpus zaciagniety w calosci" && break
+  sleep 15
+done
+[ "${waiting:-1}" = "0" ] || echo "po 10 minutach strona wciaz czeka na ${waiting} wierszy: audyt ponizej moze mierzyc to, a nie dane"
+
 # The moment the numbers change is the moment a stated number can start lying, so the guard runs
 # here rather than when somebody remembers. It found two real problems on 2026-08-11: a pattern
 # that had silently stopped matching after a sentence was rewritten, and a wrong expectation of
 # my own. Non-fatal on purpose: a reseed that finished is still worth having.
-echo
 echo "== sprawdzam opublikowane liczby"
 npm run --silent audit || echo "audyt zglosil rozjazd, korpus jest zaciagniety, liczby wymagaja sprawdzenia"
