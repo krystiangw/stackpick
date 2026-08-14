@@ -1145,6 +1145,18 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   - **Pulapka: audyt czyta strone PRODUKCYJNA**, wiec zmiana lokalnego zrodla go nie zapala.
     Zeby udowodnic, ze straznik dziala, trzeba rozjechac strone danych, nie strone prozy.
 
+- ~~**Cotygodniowy przebieg obserwacji przy zablokowanych zapisach**~~ **naprawione 2026-08-14.**
+  Sprawdzone, bo ta sciezka **wysyla maile do prawdziwych ludzi**, a bazy nie tknalem od strony crona.
+  - **Dobra wiadomosc: zaden blad nie mogl pojsc mailem.** `saveReport` rzuca wyjatkiem, zanim
+    cokolwiek zostanie porownane i wyslane, wiec zaden obserwujacy nie dostal nieprawdy.
+  - **Zla: wyjatek nie zmniejszal `remaining`, wiec harmonogram dzwonil 40 razy**, a kazde
+    ponowienie to pelny skan domeny klienta, 27 sekund zadan na jego serwerze. **Tej samej klasy
+    marnotrawstwo co w petli ponowien reseedu**, znalezione tego samego dnia i to ono kazalo mi tu
+    zajrzec.
+  - Store jest teraz pytany **przed pierwszym skanem**, a 503 zatrzymuje workflow na pierwszym
+    wywolaniu zamiast na czterdziestym. Zweryfikowane na produkcji: `503, skipped: 1`, czyli
+    **jedna obserwacja byla dzis wymagalna** i nocny przebieg naprawde by to zrobil.
+
 - **Dwunasty przebieg adwersaryjny, do zrobienia.** Powierzchnie, których jedenasty nie ruszył,
   w kolejności wagi:
   1. ~~**Trasowanie po raz drugi.**~~ **zrobione w rundzie 105: 35 → 20 procent.** Wszystkie 149
