@@ -24,7 +24,8 @@
     "audit-headlines": "tsx scripts/audit-headlines.mts",
     "regressions": "tsx scripts/regressions.mts",
     "audit-unblock": "tsx scripts/audit-unblock.mts",
-    "audit-captcha": "tsx scripts/audit-captcha.mts"
+    "audit-captcha": "tsx scripts/audit-captcha.mts",
+    "audit-llms": "tsx scripts/audit-llms.mts"
   },
   "dependencies": {
     "mongodb": "^7.5.0",

@@ -1643,6 +1643,25 @@ w tym jeden defekt w skrypcie kasujacym dane i jeden w poprawce napisanej dwie g
 wlasnie po to, zeby nie obwiniac vendorow za nasze pomiary.** Zasada „subagent przeglada, zanim
 uznasz za gotowe" zarobila dzis na siebie.
 
+## SIEDEMNASTY PRZEBIEG: llms.txt, 41 werdyktow, 0 bledow, i kontrolka ktora zarobila na siebie
+
+Cel: 27 wierszy mowiacych **„No llms.txt at any of the N locations probed"**. Rodzina nietykana,
+twierdzenie waskie: plik albo jest pod adresem, albo go nie ma. Sondowalem szerzej niz skaner
+(piec hostow x trzy sciezki), wymagajac prawdziwego pliku, a nie powloki strony.
+
+**Wynik: 27 na 27 odmow potwierdzonych, 14 na 14 kontrolek.**
+
+**Kontrolka zlapala wade mojej sondy, zanim zdazyla skazic wynik.** Pierwsza wersja uznala
+`imagekit.io` za nietrafiony, choc **nasz wiersz go zalicza**. Powod: oni publikuja pod
+`imagekit.io/docs/llms.txt`, czyli w katalogu dokumentacji, a moja sonda szukala tylko w korzeniach
+hostow. **Nasz skaner jest tam dokladniejszy ode mnie**, bo zna adres dokumentacji i tam zaglada.
+Po dolozeniu tego adresu kontrolka daje 14 na 14.
+
+Gdybym pusil sonde na oskarzeniach przed kontrolka, dostalbym „27 na 27 potwierdzonych" **z sondy,
+ktora nie umie znalezc pliku lezacego w najczestszym miejscu**, i nazwal to weryfikacja.
+
+**Bilans przebiegow 15-17: 875 werdyktow sprawdzonych, 1 blad w danych** (`statsig.com`, przebieg 14).
+
 ## SZESNASTY PRZEBIEG ADWERSARYJNY: 50 werdyktow, 0 bledow, kontrolka DWUSTRONNA
 
 Cel: `signup_no_captcha`, czyli **28 oskarzen o CAPTCHA przed rejestracja**. Nigdy nie przechodzil
