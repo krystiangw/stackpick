@@ -78,7 +78,28 @@ export type Corpus = {
   methodology: string
   terms: string
   notes: string[]
-  checks: { id: string; stage: string; label: string; max: number; helpUri: string }[]
+  checks: {
+    id: string
+    stage: string
+    label: string
+    max: number
+    helpUri: string
+    /**
+     * How the corpus divides on this check, published rather than left to be derived. Counting
+     * `points < max` is the obvious filter and it is wrong: it sweeps in the rows we could not
+     * measure and the rows the check does not apply to. That mistake was made six times in one
+     * weekend by the person who wrote the check, so it is not a trap only strangers fall into.
+     * `measured` is the honest denominator: pass + partial + fail.
+     */
+    tally: {
+      pass: number
+      partial: number
+      fail: number
+      unmeasured: number
+      notApplicable: number
+      measured: number
+    }
+  }[]
   rows: CorpusRow[]
 }
 
@@ -208,19 +229,33 @@ export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus 
       'domains is how many we can publish under one formula and curated is how many we hold. When they differ, a reseed is part way through: scores from two formula versions are not comparable, so the rest wait for their next scan rather than appear here under a number that cannot be compared with the others.',
       'share is total divided by measurable, not by max. A domain that refused our requests has a smaller denominator, not a worse number, so ranking on total alone would be wrong.',
       'A verdict of unmeasured means we could not evaluate the check, and notApplicable means it does not apply to a product of this kind. Neither is a failure and neither counts in measurable.',
+      'Each entry in checks carries a tally, so nobody has to derive one. Filtering rows on points < max is the obvious way to count failures and it is wrong: it sweeps in every row we could not measure and every row the check does not apply to. Use tally.fail, and tally.measured as the denominator.',
       'unattendedGrant is null when a vendor publishes no registration endpoint or no grant list, false when every advertised grant needs a person at a browser, true when client_credentials is among them. device_code counts as false: approving on another screen is still a person.',
       'rateLimited means a 429 came back anywhere in that scan, at the door, at the signup or at a documentation page, so some checks are unmeasured for a reason that is ours and not theirs. Those rows are thinner than the site, and filtering them out is reasonable.',
       'alsoNames lists the other registrable domains a row\'s own sentences name, which is how a row can be scored on a form at app.hellosign.com under the name dropboxsign.com. Anything counted across the corpus should read it for the same reason it reads measuredOn.',
       'measuredOn names the domain a row was actually read on, when the home page landed somewhere else. Those rows describe the journey an agent takes from the domain in the name, and the files they score belong to the domain in measuredOn: sendgrid.com answers robots.txt with a redirect to twilio.com/robots.txt, and twilio.com is a row of its own, so anything counted across the corpus counts that file twice.',
       'These are vendors we have no relationship with. Every check is one HTTP request with a published rule, so any row here can be reproduced or disputed.',
     ],
-    checks: CHECKS.map((check) => ({
-      id: check.id,
-      stage: check.stage,
-      label: check.label,
-      max: check.max,
-      helpUri: checkHelpUri(check.id, baseUrl),
-    })),
+    checks: CHECKS.map((check) => {
+      const verdicts = rows.map((row) => row.checks.find((c) => c.id === check.id)?.verdict)
+      const count = (want: string) => verdicts.filter((v) => v === want).length
+      const [pass, partial, fail] = [count('pass'), count('partial'), count('fail')]
+      return {
+        id: check.id,
+        stage: check.stage,
+        label: check.label,
+        max: check.max,
+        helpUri: checkHelpUri(check.id, baseUrl),
+        tally: {
+          pass,
+          partial,
+          fail,
+          unmeasured: count('unmeasured'),
+          notApplicable: count('notApplicable'),
+          measured: pass + partial + fail,
+        },
+      }
+    }),
     rows,
   }
 }

@@ -621,6 +621,22 @@ check('wiersz czesciowy slyszy, ze jest o krok', provRemedy(1).includes('one phr
 check('wiersz bez niczego slyszy, zeby udokumentowac', provRemedy(0).includes('Document how a key is created'), true)
 check('i te dwa zdania nie sa tym samym', provRemedy(1) === provRemedy(0), false)
 
+console.log('zliczenia w korpusie musza sie zgadzac same ze soba')
+// The tally exists so nobody counts failures with points < max. It is worth nothing if it can
+// disagree with the rows it summarises.
+const tallyRow = (verdicts: string[]) => ({ checks: verdicts.map((v) => ({ id: 'x', verdict: v })) })
+const tallyOf = (verdicts: string[]) => {
+  const count = (want: string) => verdicts.filter((v) => v === want).length
+  const [pass, partial, fail] = [count('pass'), count('partial'), count('fail')]
+  return { pass, partial, fail, unmeasured: count('unmeasured'), notApplicable: count('notApplicable'), measured: pass + partial + fail }
+}
+const sample = ['pass', 'pass', 'fail', 'partial', 'unmeasured', 'notApplicable']
+const t = tallyOf(sample)
+check('measured to suma pass+partial+fail', t.measured, 4)
+check('nieoznaczalne nie licza sie jako porazka', t.fail, 1)
+check('wszystkie werdykty sa policzone', t.pass + t.partial + t.fail + t.unmeasured + t.notApplicable, sample.length)
+void tallyRow
+
 console.log('405 na POST: serwer czy tak dziala ich framework')
 // openrouter.ai, medusajs.com i posthog.com odpowiadaly 405 bez naglowka Allow na /docs, /models,
 // /pricing i na wlasnej stronie glownej. Wszystkie trzy byly opublikowane jako zywy serwer MCP.
