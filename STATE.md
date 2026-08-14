@@ -129,6 +129,18 @@ wlasnie dopasowalismy `management api`, brzmi jak rada kogos, kto nie patrzyl.
   na siebie: **kod sie nie zmienil, zmienil sie korpus**, a zdanie stalo sie bledne dopiero na
   wierszach, ktorych przed reseedem nie bylo.
 
+**Audyt rad wykrywa teraz sam ten ksztalt bledu (14.08).** Cztery sprzecznosci „werdykt zastrzega,
+rada rozkazuje" w jeden dzien to wzorzec, nie pech, wiec zamiast szukac piatej recznie nauczylem
+narzedzie szukac ksztaltu.
+- **Mocny sygnal: jedno zdanie rady obok wierszy o ROZNEJ liczbie punktow.** To laczylo wszystkie
+  cztery: wiersz, ktory cos zdobyl, i wiersz z zerem slyszaly to samo polecenie. Zlapalby dzisiejsze
+  bledy w `programmatic_provisioning` i `typed_package`, zanim ktokolwiek je przeczytal.
+- **Slaby sygnal: czesc wierszy nazywa przeczytana strone, a czesc nie.** Pierwsze trafienie bylo
+  **nieszkodliwe** (`filestack.com` podaje dwa adresy, bo mierzylismy nietypowa strone, a rada jest
+  prawdziwa dla wszystkich trzech). Zostaje jako zacheta do przeczytania, nie jako znalezisko, i
+  narzedzie mowi to wprost, zeby nie uczyc nikogo ignorowania alertow.
+- Po wszystkich trzech dzisiejszych poprawkach **mocny sygnal nie zglasza juz nic**.
+
 **Co zostaje na Ciebie, w kolejnosci wagi:**
 1. **Sciezka zakupu.** Skan jest gotowy na klientow, platny audyt nie: konczy sie `mailto:` na
    prywatnego Gmaila. Do tego zweryfikowany nadawca w Resend i domena.
