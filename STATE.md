@@ -1600,6 +1600,41 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   5. **Werdykt może być dobry, a zdanie fałszywe.** Czwarty przebieg znalazł sześć takich przy
      MCP. Nic w liczbach nie wygląda źle, więc łapie to tylko czytanie zdań obok dowodów.
 
+## KORPUS NA 9.14, I CENA DWOCH RESEEDOW W JEDEN DZIEN
+
+**170 wierszy na formule 9.14, 0 sprzecznosci, 0 rozjazdow, `awaitingRescan: 0`.** Reseed przeszedl
+bez jednej nieudanej domeny (170 ok, 0 failed), a **obie dzisiejsze poprawki procesu zadzialaly
+same z siebie**: skrypt poczekal, az strona zobaczy wszystkie wiersze („korpus zaciagniety
+w calosci"), i dopiero potem uruchomil audyt, ktory wyszedl czysty za pierwszym razem.
+
+**Guard regresji zglosil 4 obnizenia. Przeskanowalem kazde pojedynczo i zadne nie jest flaka**,
+w przeciwienstwie do porannego reseedu, gdzie 5 z 6 nia bylo:
+
+| domena | check | co sie stalo |
+|---|---|---|
+| froala.com | `answers_plain_request` | **403 na trzy proby**, takze przegladarkowemu UA |
+| bitmovin.com | `user_agents_allowed` | brzeg odmawia nam `robots.txt` |
+| kinde.com | `mcp_present` | znow pusty 2xx na kazdy POST, jak w rundzie 131 |
+| telnyx.com | `llms_txt` | 2 z 12 probkowanych linkow martwe, zmiana po ich stronie |
+
+**Dwa pierwsze to prawdopodobnie NASZA wina.** Froala i bitmovin **odpowiadaly jeszcze rano**,
+a przestaly w dniu, w ktorym zrobilem **dwa pelne reseedy** (9.13 po poludniu, 9.14 wieczorem,
+kazdy po dwa przebiegi) plus recznie sondy. To 4-6 wizyt u kazdego vendora w kilka godzin.
+Zaden z tych wierszy nie oskarza ich o nic (oba mowia „niemierzalne"), ale **stracilismy dwa
+pomiary i nie odzyskamy ich, dopoki nas nie odblokuja**.
+
+**Sprawdzone przy okazji, bo watpliwosc byla powazna:** probkowanie 12 linkow z llms.txt jest
+**deterministyczne** (co N-ty link, zero losowosci), wiec zmiana u telnyx nie jest artefaktem
+losowania. Obietnica powtarzalnego pomiaru sie broni.
+
+**Naprawione u zrodla:** `reseed.sh` **odmawia startu, jesli najnowszy skan korpusu ma mniej niz
+6 godzin**, chyba ze `FORCE=1`. Komentarz „reseed raz na zestaw zmian" wisial tam od sierpnia
+i nic nie kosztowal; teraz kosztuje. Warunek przetestowany na progach 0,0 / 3,4 / 5,9 / 6,0 / 12,7
+godzin w obie strony z FORCE i bez.
+
+**Regula: zmiana formuly nie jest darmowa.** Kosztuje 340 wizyt u 170 obcych firm i czesc z nich
+odpowie blokada. Zbieraj zmiany formuly w jedna partie zamiast wdrazac je pojedynczo.
+
 ## PIETNASTY PRZEBIEG ADWERSARYJNY (14.08): 48 na 48, i znalezisko obok
 
 **Cel: `machine_readable_api`**, jedyny z wielkich oskarzycieli, ktory nigdy nie przeszedl

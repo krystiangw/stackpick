@@ -34,6 +34,28 @@ console.log([...CURATED_DOMAINS].join('\n'))
 ") || { echo "could not read the curated list" >&2; exit 1; }
 fi
 
+# Reseeding twice in a day is how a vendor stops answering us. On 2026-08-14 the corpus went to
+# 9.13 in the afternoon and 9.14 in the evening, and by the second run froala.com answered 403 to
+# every user agent and bitmovin.com refused robots.txt, both having answered that morning. Neither
+# is measurable now, and neither change is about their product. The comment below has said "reseed
+# once per set of changes" since August; this makes it cost something to ignore.
+newest=$(curl -s --max-time 30 "$BASE/corpus.json" | python3 -c "
+import sys, json, datetime
+rows = json.load(sys.stdin).get('rows', [])
+stamps = [r['scannedAt'] for r in rows if r.get('scannedAt')]
+if not stamps:
+    print(999)
+else:
+    newest = max(stamps).replace('Z', '+00:00')
+    age = datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.fromisoformat(newest)
+    print(round(age.total_seconds() / 3600, 1))
+" 2>/dev/null || echo 999)
+if [ "$(printf '%s\n' "$newest" | cut -d. -f1)" -lt 6 ] 2>/dev/null && [ -z "${FORCE:-}" ]; then
+  echo "ostatni skan korpusu ma $newest godzin. Reseed teraz uczy vendorow, ze nas maja blokowac." >&2
+  echo "Poczekaj albo uruchom z FORCE=1, jesli zmiana formuly naprawde tego wymaga." >&2
+  exit 3
+fi
+
 # Two passes, and the second is the one that counts. The registry cache lives in the dyno's
 # memory, so every deploy empties it, and a cold pass asks npm about nineteen documents per
 # domain across 156 domains. npm then refuses, and since a refusal is honestly "we do not know"
