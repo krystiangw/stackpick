@@ -227,6 +227,12 @@ const PHRASES: [RegExp, string][] = [
   // javascript errors and we have no idea which browser" scored error monitoring against browser
   // infrastructure and returned nothing.
   [/\bjavascript errors?\b|\bjs errors?\b/, 'error-monitoring'],
+  // The same shape, and the industry's own name for the category: Sentry, Rollbar and Bugsnag all
+  // sell "error tracking". "track" is product analytics vocabulary (tracking events), so "track
+  // errors in production" scored the two dead level and returned nothing, while "errors in
+  // production" routed correctly. The verb belongs to one category and the object to another, and
+  // here the object decides.
+  [/\berror[- ]track|\btrack(?:s|ing)? (?:\w+ )?(?:errors?|exceptions?|crashes)\b/, 'error-monitoring'],
 ]
 
 /**

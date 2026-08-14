@@ -697,5 +697,14 @@ check('i nadal ten bez wersji', statsig.includes('https://api.statsig.com/mcp'),
 check('adresy z karty vendora ida pierwsze', mcpCandidates('x.com', 'https://x.com', ['https://z.example/mcp'])[0], 'https://z.example/mcp')
 check('lista nie powtarza adresow', new Set(statsig).size, statsig.length)
 
+// "error tracking" is what this category calls itself, and the verb belongs to product analytics,
+// so the two scored dead level and the tool said nothing. The last two pin the half that must not
+// move: a caller who really means analytics still gets analytics.
+check('track errors trafia w monitoring bledow', categoryForJob('track errors in production')?.id, 'error-monitoring')
+check('error tracking tak samo', categoryForJob('we need error tracking for the mobile app')?.id, 'error-monitoring')
+check('tracking exceptions tak samo', categoryForJob('tracking exceptions across our services')?.id, 'error-monitoring')
+check('ale track klikniec zostaje w analityce', categoryForJob('track how many users click the upgrade button')?.id, 'product-analytics')
+check('i track lejkow tez', categoryForJob('track conversion funnels')?.id, 'product-analytics')
+
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)
