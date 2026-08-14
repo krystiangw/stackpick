@@ -12,6 +12,11 @@ import { CURATED_DOMAINS } from '../src/lib/categories'
  * scanner has since moved through nine rule changes, so quoting it as current would be quoting a
  * measurement of a different scanner.
  *
+ * Not a duplicate of `diff-corpus`, which answers a different question and needs a snapshot saved
+ * before the change: that one asks whether a rule change did what it was predicted to do. This one
+ * asks how much moves when nothing changed at all, and it needs nothing saved in advance, because
+ * the pair it reads is a by-product every reseed already leaves in the database.
+ *
  *   MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/noise-floor.mts 9.16
  */
 const wanted = process.argv[2]
