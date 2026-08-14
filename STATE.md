@@ -196,6 +196,53 @@ wybor byl stabilny.
 niestabilnosc ISTNIEJE (obserwacja pozytywna), ale nie zeby podac jej wielkosc. Nie nazywaj tego
 progiem szumu na wzor 0,2 procent dla skanu deterministycznego.
 
+## PRZEPAKOWANIE CENNIKA (pomysl Krystiana: darmowy skan + darmowy monitoring, platne przebiegi agenta)
+
+**Koszt strony deterministycznej zmierzony, nie zalozony** (`scripts/watch-cost.mts`, 14.08, 170 wierszy):
+mediana skanu **5,1 s**, najdluzszy 26,5 s, sredni wiersz **11,3 kB**.
+
+| obserwowanych domen | czas dyno na tydzien | baza, jesli trzymamy KAZDY tydzien |
+|---|---|---|
+| 100 | 0,1 h | 1 MB/tydz. |
+| 1 000 | 1,4 h | 11 MB/tydz. |
+| 10 000 | 14,3 h | 110 MB/tydz. |
+
+**Wniosek kosztowy: monitoring da sie rozdac za darmo.** Przy 1000 obserwowanych domen tygodniowy
+przebieg to 1,4 h jednego dyna, czyli miesci sie w dynie, ktorego juz placimy, a **baza jest plaska
+(22 MB), o ile trzymamy tylko najnowszy wiersz i punkt odniesienia** - dokladnie to, co prune teraz
+wymusza. Wersja „trzymamy kazdy tydzien" to 572 MB rocznie przy 1000 domen i **odtworzenie awarii,
+ktora wlasnie posprzatalismy**. Darmowy monitoring jest tani tylko razem z polityka retencji.
+
+**Argument ZA, mocniejszy niz koszt: 99 USD zabija jedyny kanal, jaki mamy.** Mail „wasz werdykt sie
+zmienil" to jedyny powracajacy kontakt z vendorem i jedyne cieple wejscie w platny audyt. Do tego
+**sami opublikowalismy narzedzie MCP `scan_domain`**, wiec techniczny kupujacy zbuduje sobie nasz
+monitoring w popoludnie. Sprzedawanie crona nad darmowa rzecza, ktorej API sami wystawilismy, to
+najslabsza linia dzisiejszego cennika, a nie audyt.
+
+**Argument PRZECIW, ktory trzeba podjac swiadomie: oddajemy jedyny zaprojektowany przychod
+powracajacy i zastepujemy go tym, ktory zmierzylismy jako niestabilny w polowie kategorii.**
+Subskrypcja przebiegow agenta obiecuje „powiemy, gdy wasza pozycja sie zmieni", a w storage i auth
+zmienia sie ona bez zadnego ruchu po stronie vendora (patrz prog szumu wyzej). Sprzedaz tej
+subskrypcji dzis w tych kategoriach to sprzedaz szumu jako sygnalu.
+
+**Rekomendacja (moja, do decyzji Krystiana):**
+1. **Skan i monitoring za 0 USD, z retencja dwoch wierszy na domene.** Nowe zdanie na `/pricing`
+   zamiast dzisiejszego „placisz za to, ze powiemy, gdy sie zepsuje": **darmowe jest wszystko, co
+   maszyna sprawdza deterministycznie; platne jest to, czego maszyna sprawdzic nie umie.** Ten
+   podzial jest uczciwszy, bo pokrywa sie z tym, gdzie faktycznie leza nasze koszty.
+2. **Jednorazowy przebieg agenta: sprzedawac tylko w kategoriach, w ktorych zmierzylismy
+   stabilnosc** (dzis editors i payments). Cena za **liczbe przebiegow potrzebnych do stabilnej
+   odpowiedzi**, nie za „audyt".
+3. **Subskrypcja przebiegow: nie sprzedawac, dopoki nie ma pomiaru stabilnosci per kategoria.**
+   Pomiar kosztuje 150-400 USD wydatku na model na kategorie i to jest decyzja Krystiana.
+4. **Audyt czlowieka jako premium: jedyna linia bez problemu kosztowego i bez problemu szumu**,
+   i jedyna, ktora sie nie skaluje. Strona glowna juz ja polsprzedaje („an audit is run by me").
+
+**Co to odblokowuje od reki:** trzy z czterech linii nie potrzebuja wtedy bramki platnosci. Darmowy
+skan i darmowy monitoring dzialaja dzis, a platne pozostaje rozmowa mailowa, ktora i tak prowadzimy.
+**Brak sciezki zakupu przestaje blokowac start**, a Stripe/Paddle robi sie decyzja na moment, w
+ktorym subskrypcja przebiegow ma juz pomiar.
+
 **Rekomendacja: subskrypcje przebiegow agenta sprzedawac PER KATEGORIA, po pomiarze stabilnosci**,
 a nie globalnie. Dwie kategorie juz wygladaja na bezpieczne, dwie nie.
 
