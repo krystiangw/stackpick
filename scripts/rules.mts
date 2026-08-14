@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { categoryForJob } from '../src/lib/lookup'
-import { HELD_OUT_3 } from './routing-questions'
+import { HELD_OUT_4 } from './routing-questions'
 import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
@@ -228,7 +228,7 @@ let silent = 0
 let wrongCategory = 0
 let shouldHaveRefused = 0
 let answered = 0
-for (const question of HELD_OUT_3) {
+for (const question of HELD_OUT_4) {
   const got = categoryForJob(question.asked)?.id ?? null
   if (got !== null) answered += 1
   if (got === question.expect) right += 1
@@ -238,7 +238,7 @@ for (const question of HELD_OUT_3) {
 }
 const described = readFileSync('src/app/mcp/route.ts', 'utf8')
 const quoted = (pattern: RegExp) => Number(described.match(pattern)?.[1] ?? -1)
-check('pytań w zestawie odłożonym', HELD_OUT_3.length, quoted(/Measured on (\d+) questions written before/))
+check('pytań w zestawie odłożonym', HELD_OUT_4.length, quoted(/Measured on (\d+) questions written before/))
 check('odpowiedzi poprawnych', right, quoted(/it answered (\d+) correctly/))
 check('milczeń tam, gdzie należało odpowiedzieć', silent, quoted(/said nothing on (\d+) it should have answered/))
 check('złych kategorii', wrongCategory, quoted(/sent (\d+) to the wrong category/))
@@ -705,6 +705,13 @@ check('error tracking tak samo', categoryForJob('we need error tracking for the 
 check('tracking exceptions tak samo', categoryForJob('tracking exceptions across our services')?.id, 'error-monitoring')
 check('ale track klikniec zostaje w analityce', categoryForJob('track how many users click the upgrade button')?.id, 'product-analytics')
 check('i track lejkow tez', categoryForJob('track conversion funnels')?.id, 'product-analytics')
+
+// "meaning" was filed for vector search and stems to "mean", so an ordinary sentence about what
+// something would mean scored vector databases level with the question it was really asking.
+check('would mean nie ciagnie juz do wektorow', categoryForJob('a failover would mean real downtime for us')?.id, undefined)
+check('a postgres w tym samym zdaniu trafia w bazy', categoryForJob('we are running postgres on a box and a failover would mean real downtime')?.id, 'databases')
+check('google sheet nie jest pytaniem o logowanie', categoryForJob('the copy team works out of a google sheet')?.id, undefined)
+check('ale sens zdania o znaczeniu zostaje', categoryForJob('recommend similar articles based on meaning not keywords')?.id, 'vector-search')
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

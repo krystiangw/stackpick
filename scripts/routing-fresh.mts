@@ -1,5 +1,5 @@
 import { categoryForJob, explainJob } from '../src/lib/lookup'
-import { FRESH_QUESTIONS, HELD_OUT_2, HELD_OUT_3 } from './routing-questions'
+import { FRESH_QUESTIONS, HELD_OUT_2, HELD_OUT_3, HELD_OUT_4 } from './routing-questions'
 
 /**
  * Questions the routing rules have never seen.
@@ -20,7 +20,7 @@ import { FRESH_QUESTIONS, HELD_OUT_2, HELD_OUT_3 } from './routing-questions'
 
 // FRESH_QUESTIONS stopped being held out on 2026-08-13, when its failures were read and the
 // stemmer fixed against them. It stays as a regression set. HELD_OUT_2 is the one that measures.
-const QUESTIONS = process.env.BURNED ? [...FRESH_QUESTIONS, ...HELD_OUT_2] : HELD_OUT_3
+const QUESTIONS = process.env.BURNED ? [...FRESH_QUESTIONS, ...HELD_OUT_2, ...HELD_OUT_3] : HELD_OUT_4
 
 const results = QUESTIONS.map((question) => {
   const got = categoryForJob(question.asked)?.id ?? null

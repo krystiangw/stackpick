@@ -143,10 +143,17 @@ const stemmed = (word: string): Stemmed => {
 /** What a caller says, mapped to what we filed it under. Only terms our own prose does not carry. */
 const VOCABULARY: Record<string, string[]> = {
   'file-storage': ['upload', 'file', 'image', 'photo', 'avatar', 'attachment', 'cdn', 'bucket', 's3', 'media'],
-  auth: ['login', 'signin', 'sign', 'authentication', 'authenticate', 'sso', 'oauth', 'identity', 'password', 'google', 'saml'],
+  // Not "google": it names a company selling fifty products, and "the copy team works out of a
+  // google sheet" scored authentication on it. A caller who means the login button says login,
+  // sign in or oauth, all of which are still here. Removing it turned a wrong answer into a
+  // silence and cost nothing on either set.
+  auth: ['login', 'signin', 'sign', 'authentication', 'authenticate', 'sso', 'oauth', 'identity', 'password', 'saml'],
   'transactional-email': ['email', 'mail', 'smtp', 'inbox', 'deliverability'],
   'product-analytics': ['analytics', 'track', 'funnel', 'retention', 'behaviour', 'behavior', 'event', 'click', 'replay', 'conversion', 'cohort'],
-  'vector-search': ['vector', 'embedding', 'semantic', 'rag', 'retrieval', 'similarity', 'similar', 'meaning'],
+  // Not "meaning": it stems to "mean", which is one of the commonest verbs in English, so
+  // "a failover would mean real downtime" scored vector databases level with the postgres question
+  // it was actually asking. "semantic" and the phrase rules carry the sense we wanted from it.
+  'vector-search': ['vector', 'embedding', 'semantic', 'rag', 'retrieval', 'similarity', 'similar'],
   payments: ['payment', 'charge', 'billing', 'subscription', 'checkout', 'invoice', 'card', 'money', 'pay'],
   'error-monitoring': ['error', 'exception', 'crash', 'stacktrace', 'bug'],
   'feature-flags': ['flag', 'toggle', 'rollout', 'experiment', 'experimentation'],
@@ -199,6 +206,10 @@ const VOCABULARY: Record<string, string[]> = {
  */
 const PHRASES: [RegExp, string][] = [
   [/\bsemantic search\b/, 'vector-search'],
+  // "meaning" as a noun in this construction is unambiguous, while the bare verb it stems to is
+  // not. Dropping the token cost "recommend similar articles based on meaning not keywords",
+  // where "similar" tied against the "article" in headless CMS and "meaning" broke the tie.
+  [/\b(?:based on|by|not) meaning\b|\bmeaning,? not keywords\b/, 'vector-search'],
   [/\bvector search\b/, 'vector-search'],
   [/\bvector (?:database|db|store)\b/, 'vector-search'],
   [/\bfull[- ]text search\b/, 'search'],

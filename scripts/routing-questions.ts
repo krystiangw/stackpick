@@ -211,3 +211,50 @@ export const HELD_OUT_3: Question[] = [
   { asked: 'we have user data scattered across six different tools and want one unified profile per customer that everything else can read from', expect: null },
   { asked: 'images and static assets load painfully slowly for customers on the other side of the world no matter how much we compress them', expect: null },
 ]
+
+/**
+ * Written 2026-08-14 by an agent that was given the category list and nothing else: not the
+ * vocabulary, not the phrase rules, not this repository. That distance is the point. HELD_OUT_3
+ * stopped measuring the moment its failures were read and one of them fixed, and whoever has
+ * read the rules cannot write an uncontaminated question about them.
+ *
+ * Eight of the thirty-four are labelled null on purpose: payroll, hiring, legal advice, a BI
+ * dashboard and a shared inbox are outside every category we hold, and answering them at all
+ * would hand a caller vendors with our name on it.
+ */
+export const HELD_OUT_4: Question[] = [
+  { asked: 'users need to attach photos to an inspection report and we need somewhere to put them so they can be pulled back later, right now someone base64s them into a postgres column and the table is 40gb', expect: 'file-storage' },
+  { asked: 'our support team writes help articles in a plain textarea in the admin panel and they keep asking for bold, headings and pasting screenshots straight in', expect: 'rich-text-editors' },
+  { asked: 'i am tired of babysitting our own password hashing and session code, and now a big customer wants their people to get in through okta', expect: 'auth' },
+  { asked: 'the password reset link never arrives for gmail users. we send from postfix on the same vps as the app and i suspect the ip is on a blocklist somewhere', expect: 'transactional-email' },
+  { asked: 'nobody in the company can tell me how many signups actually finish onboarding versus quit at the company details step', expect: 'product-analytics' },
+  { asked: 'we have 40k historical support tickets and i want to pull up the ones that mean roughly the same thing as a new one even when the wording has nothing in common', expect: 'vector-search' },
+  { asked: 'finance chases wire transfers every month and we want the app to just charge the card, handle plan upgrades mid-cycle and dunning when it fails', expect: 'payments' },
+  { asked: 'we found out checkout had been throwing 500s for three days because a user emailed us a screenshot. that is not a great way to run a shop', expect: 'error-monitoring' },
+  { asked: 'we want the redesigned dashboard live for 5% of accounts first, and be able to kill it instantly without waiting for a deploy', expect: 'feature-flags' },
+  { asked: 'our docs site is 3000 pages and the only way to find anything is ctrl+f on whatever page you happen to be on. we want a box at the top that tolerates typos and filters by product', expect: 'search' },
+  { asked: 'we need to text the customer a code when the driver pulls up, and older clients keep asking for an actual phone call instead', expect: 'communications' },
+  { asked: 'marketing pings us to change a headline on the homepage and it turns into a pull request and a deploy every single time', expect: 'headless-cms' },
+  { asked: 'the monthly export takes about four minutes to build so the request times out, and separately it should just run itself at 3am and land in the inbox', expect: 'background-jobs' },
+  { asked: 'we call three different model providers, each with its own sdk and rate limits, and no one can tell me what we spent last week or fail over when one is down', expect: 'llm-infrastructure' },
+  { asked: 'coaches upload 2gb training recordings and playback stutters badly on phones. we need it to degrade gracefully on a bad connection instead of buffering forever', expect: 'video' },
+  { asked: 'we pull prices off 200 retailer sites every night. half of them render everything client side and the rest ban our ip after twenty minutes', expect: 'browser-infrastructure' },
+  { asked: 'every feature team rolled their own alerts so a user gets a push, an email and an in-app badge for the same comment. we want one place that respects preferences and can batch the noise into a daily summary', expect: 'notifications' },
+  { asked: 'clients pick a slot with our consultants over email ping-pong, timezones get mixed up constantly and we double booked someone twice last week', expect: 'scheduling' },
+  { asked: 'we store delivery addresses as free text and now we need pins on a screen plus a rough drive time between stops', expect: 'maps-geo' },
+  { asked: 'our postgres lives on a droplet someone spun up in 2019, backups have never been restore-tested and nobody on the team wants to own the version upgrades', expect: 'databases' },
+  { asked: 'checkout was slow last tuesday and we still cannot say which service ate the time. logs sit on three different machines and we grep them over ssh', expect: 'observability' },
+  { asked: 'contracts get printed, signed with a pen, scanned crooked and emailed back, and then someone retypes the dates into the crm', expect: 'documents-signature' },
+  { asked: 'we sell about 40 physical products off a wordpress page with a paypal button. we need a real cart, stock counts and shipping options per country', expect: 'commerce' },
+  { asked: 'we are opening in france and japan next quarter. every string is hardcoded in the components and the copy team works out of a google sheet', expect: 'localization' },
+  { asked: 'the product is being renamed so we need the new address registered and the mail records pointing at the right place before the announcement', expect: 'domains-dns' },
+  { asked: 'each order should produce a filled-in pdf with the customer details and line items, right now someone edits a word template by hand and exports it', expect: 'documents-signature' },
+  { asked: 'half the team logs hours in a spreadsheet and the 25th of every month is chaos for whoever runs the transfers', expect: null },
+  { asked: 'we need somewhere to keep track of who is doing what this sprint. jira feels absurd for six people but the whiteboard is not working either', expect: null },
+  { asked: 'the board wants a weekly revenue by region chart and right now i export csvs from three systems and pivot them by hand on sunday night', expect: null },
+  { asked: 'everything lands in a shared gmail and two people end up replying to the same customer with different answers', expect: null },
+  { asked: 'we are getting 60 applications per opening and screening them in a spreadsheet with colour coding. it does not scale', expect: null },
+  { asked: 'our contractor agreements need someone who actually knows german employment law to look at them before we take anyone on there', expect: null },
+  { asked: 'honestly the whole stack feels dated and slow, we have some budget this quarter, what should we be looking at', expect: null },
+  { asked: 'the accountant keeps asking for receipts nobody can find and vat is due next friday', expect: null },
+]
