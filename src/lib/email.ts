@@ -4,6 +4,14 @@ import { buildMark, fillHeight, hasUnmeasured, MARK_PALETTE, scoreTone, UNMEASUR
 import type { Report } from './store'
 
 const FROM = process.env.LETAGENTSIN_FROM ?? 'Let Agents In <onboarding@resend.dev>'
+/**
+ * Every email we send invites a reply, and the from address is not one we publish anywhere or had
+ * ever tested for delivery. hello@ is the address on the pricing page, the report page and the
+ * message somebody sees when a signup fails, and a probe on 2026-08-14 landed in a human inbox.
+ * Sending from an address nobody reads is how a customer's answer disappears without either side
+ * knowing.
+ */
+const REPLY_TO = process.env.LETAGENTSIN_REPLY_TO ?? 'hello@letagentsin.com'
 const BASE_URL = process.env.STACKPICK_BASE_URL ?? 'http://localhost:3000'
 
 export type SendResult = { delivered: boolean; detail: string }
@@ -175,7 +183,7 @@ export async function sendEmail(to: string, subject: string, text: string, html?
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ from: FROM, to, subject, text, ...(html ? { html } : {}) }),
+    body: JSON.stringify({ from: FROM, to, reply_to: REPLY_TO, subject, text, ...(html ? { html } : {}) }),
   })
 
   if (!response.ok) {
