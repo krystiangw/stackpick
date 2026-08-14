@@ -1,0 +1,62 @@
+import { MongoClient } from 'mongodb'
+import { CURATED_DOMAINS } from '../src/lib/categories'
+
+/**
+ * How much a verdict moves when nothing about the vendor or the rules has changed.
+ *
+ * A reseed runs two passes over the same 170 domains minutes apart on one formula, so the pair it
+ * leaves in the database is a free measurement of our own repeatability: any check that differs
+ * between the two is noise, because neither the site nor the scoring moved in between.
+ *
+ * The published figure on /methodology is dated 12 August and was measured on formula 9.8. The
+ * scanner has since moved through nine rule changes, so quoting it as current would be quoting a
+ * measurement of a different scanner.
+ *
+ *   MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/noise-floor.mts 9.16
+ */
+const wanted = process.argv[2]
+if (!wanted) {
+  console.log('podaj wersje formuly, np. npx tsx scripts/noise-floor.mts 9.16')
+  process.exit(0)
+}
+
+const client = new MongoClient(process.env.MONGODB_URI!)
+await client.connect()
+const reports = client
+  .db(process.env.MONGODB_DB ?? 'stackpick')
+  .collection('reports')
+
+let pairs = 0
+let verdicts = 0
+let moved = 0
+const byCheck = new Map<string, number>()
+
+for (const domain of CURATED_DOMAINS) {
+  const rows = await reports
+    .find({ domain, seeded: true, 'scorecard.formulaVersion': wanted }, { sort: { scannedAt: -1 }, limit: 2 })
+    .toArray()
+  if (rows.length < 2) continue
+  pairs += 1
+  const [after, before] = rows as unknown as { scorecard: { checks: { id: string; points: number }[] } }[]
+  for (const check of after.scorecard.checks) {
+    const was = before.scorecard.checks.find((c) => c.id === check.id)
+    if (!was) continue
+    verdicts += 1
+    if (was.points !== check.points) {
+      moved += 1
+      byCheck.set(check.id, (byCheck.get(check.id) ?? 0) + 1)
+      console.log(`${domain.padEnd(20)} ${check.id.padEnd(26)} ${was.points} -> ${check.points}`)
+    }
+  }
+}
+
+if (pairs === 0) {
+  console.log(`brak domen z dwoma skanami na formule ${wanted}: nie ma czego porownac`)
+  await client.close()
+  process.exit(0)
+}
+console.log(`\n${pairs} domen z para skanow na formule ${wanted}, ${verdicts} porownanych werdyktow`)
+console.log(`${moved} ruszylo bez zmiany regul = ${((moved / verdicts) * 100).toFixed(2)} procent podlogi szumu`)
+for (const [id, n] of [...byCheck].sort((a, b) => b[1] - a[1])) console.log(`  ${id}: ${n}`)
+await client.close()
+process.exit(0)
