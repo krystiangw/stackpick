@@ -46,7 +46,14 @@ wziela sie z innego stanu wyjsciowego, gdy wiekszosc przeskoczyla w polowie prze
 
 **Stan kohort (14.08): 9.8 - 87, 9.9 - 38, 9.12 - 33, 9.11 - 12. Do przelaczenia korpusu na 9.12
 brakuje 55 zapisow.** Kazde okno zapisu dawalo dotad 33-45 zapisow, a lista wznawialna je kumuluje,
-wiec **dwa kolejne okna wystarcza i nie trzeba niczego kasowac**. Procedura przy kazdym oknie:
+wiec **dwa kolejne okna wystarcza i tego jednego przelaczenia da sie dokonac bez kasowania**.
+
+**Ale to NIE znaczy, ze kasowanie jest niepotrzebne, i moja wczesniejsza notatka „przestaje byc
+pilne" byla za optymistyczna.** Dwa okna w okolo 30 godzinach, srednio 39 zapisow na okno, czyli
+same z siebie zaladuja korpus dopiero w ciagu doby. Wazniejsze: **przyczyna zostaje**. Klaster jest
+pelny, a ten projekt zmienia formule co kilka dni - kazda taka zmiana wymaga 170 zapisow i uderzy
+w te sama sciane. Kasowanie albo platny tier jest **potrzebne przed nastepna zmiana formuly**,
+nawet jesli ta jedna przejdzie sama. Procedura przy kazdym oknie:
 
     DOMAINS=$(npx tsx scripts/stale-domains.mts) STACKPICK_CONSOLE_TOKEN=... PASSES=1 bash scripts/reseed.sh
     curl -sS -X POST https://letagentsin.com/api/scan -H 'content-type: application/json' -d '{"domain":"letagentsin.com"}'
