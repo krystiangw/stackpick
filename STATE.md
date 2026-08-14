@@ -1157,6 +1157,19 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
     wywolaniu zamiast na czterdziestym. Zweryfikowane na produkcji: `503, skipped: 1`, czyli
     **jedna obserwacja byla dzis wymagalna** i nocny przebieg naprawde by to zrobil.
 
+- **Przeglad wszystkich petli wykonujacych prace na cudzych serwerach (14.08): trzeciego
+  wystapienia NIE MA.** Jedyna petla skanujaca poza reseedem to cron obserwacji, juz naprawiony;
+  petle w samym skanerze siedza wewnatrz jednego pomiaru i tak maja byc. Wynik negatywny, ale
+  policzony, a nie zalozony.
+
+- ~~**Bufor trzymanych raportow trzymal surowy obiekt**~~ **naprawione 2026-08-14**, defekt
+  w kodzie, ktory sam dodalem dzien wczesniej. `holdUnsaved` zapisywal `report` w calosci, podczas
+  gdy `forStorage` obcina z niego ciala sond: **180 kB z 185 kB, ktore wazy raport, i dokladnie to
+  pole zapchalo klaster**. Piecdziesiat surowych raportow to **9 MB** zaparkowane na dynie, zeby
+  serwowac strone, ktora tego pola nie czyta. Trzymamy teraz dokladnie to, co poszloby do bazy.
+  Zweryfikowane na produkcji: strona raportu nadal renderuje sie w calosci (200, 72 kB, baner na
+  miejscu).
+
 - **Dwunasty przebieg adwersaryjny, do zrobienia.** Powierzchnie, których jedenasty nie ruszył,
   w kolejności wagi:
   1. ~~**Trasowanie po raz drugi.**~~ **zrobione w rundzie 105: 35 → 20 procent.** Wszystkie 149
