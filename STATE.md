@@ -1643,6 +1643,24 @@ w tym jeden defekt w skrypcie kasujacym dane i jeden w poprawce napisanej dwie g
 wlasnie po to, zeby nie obwiniac vendorow za nasze pomiary.** Zasada „subagent przeglada, zanim
 uznasz za gotowe" zarobila dzis na siebie.
 
+## EKSPORTY MASZYNOWE SPRAWDZONE (SARIF i CSV), plus dowod pakietu w arkuszu
+
+Nikt nigdy nie sprawdzil tego, co **konsumuja maszyny**, a zepsuty eksport to defekt, ktory zobaczy
+dopiero klient.
+
+**SARIF czysty:** `$schema` 2.1.0, jeden `run`, **15 regul i 15 wynikow**, zaden `ruleId` nie
+wychodzi poza liste regul, kazdy wynik ma `level`, `message.text` i `locations`, poziomy sa legalne
+(`none`, `warning`), a **kazda regula ma `helpUri` i `shortDescription`**. Wersja narzedzia zgadza
+sie z formula na produkcji.
+
+**CSV czyste:** 16 kolumn, 2520 wierszy, **ani jednego rozjechanego**. Zabezpieczenie przed
+wstrzykiem formuly do Excela dziala (cele zaczynajace sie od `@`, bo scope'y npm).
+
+**Dolozone:** kolumna `npm_source`, bo JSON od dzis mowi, na jakim dowodzie stoi wskazanie pakietu,
+a **vendor otwierajacy arkusz nie mial jak tego zobaczyc obok punktu, ktory to rozstrzyga**.
+Wypelniona tylko przy `typed_package` (132 / 9 / 7 / 6 / 14 pustych) i pusta w 2352 pozostalych
+wierszach, zweryfikowane na produkcji.
+
 ## OSIEMNASTY PRZEBIEG: `typed_package`, czyli na jak slabym dowodzie stoi jeden z checkow
 
 STATE.md od dawna trzymal te rodzine jako **niedowiedziona**. Zaczalem od dziewieciu odmow i od razu
