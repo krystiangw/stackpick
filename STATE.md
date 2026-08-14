@@ -103,6 +103,21 @@ drogi bez panelu".
 - **Piaty falszywy alarm z mojej wlasnej sondy w tym weekendzie.** Bilans: pięć razy sonda, zero
   razy skaner.
 
+**Trzecia sprzecznosc „werdykt zastrzega, rada rozkazuje" znaleziona i naprawiona (14.08).**
+Wyszla z ponownego uruchomienia `npm run audit-remedies` na swiezym korpusie 170 wierszy.
+- `typed_package` **werdykt** mowi, kiedy pakiet dopasowalismy po wydawcy, a nie po linku ze strony
+  vendora („matched from the registry by who publishes it rather than by a link on your site").
+  **Rada obok gubila to zastrzezenie i dawala rozkaz**: `namecheap.com` czytal „Ship types with
+  **node-vault-client**", czyli klient HashiCorp Vault, ktory dzieli z nimi tylko wydawce.
+  `godaddy.com` to samo z `warehouse.ai-api-client`.
+- Dziewiec wierszy ma taka podstawe. Dostaja teraz zastrzezenie **i naprawe, ktora naprawde pomaga**:
+  sprawdzcie, czy to pakiet instalowany przez waszych uzytkownikow, a jesli nie, podlinkujcie
+  wlasciwy, co przy okazji konczy nasze zgadywanie. Wiersze z nazwa wzieta z ich wlasnej strony
+  bez zmian. Obie galezie przypiete testem.
+- **To trzeci raz, gdy to narzedzie lapie ten sam ksztalt bledu.** Warto je uruchamiac po KAZDYM
+  reseedzie, nie tylko po zmianie regul: zmienil sie korpus, nie kod, a blad byl widoczny dopiero
+  na nowych wierszach.
+
 **Co zostaje na Ciebie, w kolejnosci wagi:**
 1. **Sciezka zakupu.** Skan jest gotowy na klientow, platny audyt nie: konczy sie `mailto:` na
    prywatnego Gmaila. Do tego zweryfikowany nadawca w Resend i domena.
