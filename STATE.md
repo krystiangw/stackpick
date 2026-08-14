@@ -1600,6 +1600,33 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   5. **Werdykt może być dobry, a zdanie fałszywe.** Czwarty przebieg znalazł sześć takich przy
      MCP. Nic w liczbach nie wygląda źle, więc łapie to tylko czytanie zdań obok dowodów.
 
+## GRANICA, KTORA WARTO MIEC SPISANA: „nie da sie" kontra „nie zrobili"
+
+Po poprawce `oauth_dcr` sprawdzilem empirycznie, **ktore inne checki stawiaja bibliotekom twarde
+zero**: `agent_entry_point` (5 na 5), `llms_txt` (4 na 5), `mcp_present` (4 na 5),
+`machine_readable_api` (4 na 5). Kuszace bylo potraktowac je tak samo. **Policzylem i to zly pomysl.**
+
+| domena | dzis | bez mcp i api | bez wszystkich czterech |
+|---|---|---|---|
+| lexical.dev | 4/10 | 4/8 | 4/5 |
+| quilljs.com | 5/10 | 5/9 | 5/6 |
+| prosemirror.net | 5/11 | 5/9 | 5/6 |
+| editorjs.io | 4/10 | 4/8 | 4/5 |
+| **slatejs.org** | **7/11** | 6/9 | **5/6** |
+
+**Rozstrzyga `slatejs.org`: on czesc z tych checkow ZALICZA.** Wykluczenie skasowaloby mu kredyt
+za prace, ktora wykonal, i zrownaloby go z biblioteka, ktora nie zrobila nic. Reszta tez by
+„awansowala" z okolo 40 do 80 procent udzialu bez zmiany czegokolwiek u siebie.
+
+**Zasada, ktora z tego wynika i ktora warto stosowac przy kazdym nastepnym `notApplicable`:**
+check wylacza sie tylko wtedy, gdy **udogodnienie nie moze u tego ksztaltu produktu istniec**,
+a nie wtedy, gdy vendor go po prostu nie zbudowal. Biblioteka npm **nie ma jak** wystawic
+endpointu rejestracji OAuth (stad 9.15), ale **ma jak** opublikowac `llms.txt`, plik wejsciowy dla
+agenta i dokumentacje serwowana maszynom, i jedna z nich to robi.
+
+Zmiana filozofii punktacji dla bibliotek to **decyzja Krystiana**, nie moja, i liczby wyzej sa po
+to, zeby byla latwa. Moja rekomendacja: **zostawic jak jest**.
+
 ## OSMIU VENDOROM KAZALISMY MIEC OAUTH, KTOREGO NIE MAJA GDZIE MIEC (9.15, CZEKA NA WDROZENIE)
 
 Wyszlo z pytania o **nasz wlasny wynik**: `letagentsin.com` ma 11/12 i traci punkt na `oauth_dcr`,
