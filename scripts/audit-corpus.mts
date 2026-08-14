@@ -206,6 +206,14 @@ const auditRuns = (await import('../src/data/audits/froala-editors.json', { with
 
 const stated: { page: string; pattern: RegExp; expected: number; what: string }[] = [
   {
+    // The share rests on the weakest of four evidence sources and moves with every reseed, so it
+    // is computed on the page and checked here rather than typed once and forgotten.
+    page: '/methodology',
+    pattern: /Weakest evidence first: (\d+) of the \d+ measured rows/,
+    expected: corpus.rows.filter((row) => row.npmSource === 'registry-search').length,
+    what: 'rows whose package was matched by publisher',
+  },
+  {
     // Hand-written and static, which is why it drifted: it said 14 checks against 15 and
     // thirty-four runs against thirty-eight, in the file an agent reads before anything else.
     page: '/llms.txt',

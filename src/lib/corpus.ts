@@ -33,6 +33,13 @@ export type CorpusRow = {
    */
   unattendedGrant: boolean | null
   /**
+   * How we decided which npm package is this vendor's. `registry-search` means we matched on who
+   * publishes it rather than on the vendor naming it, which is the weakest of the four and carries
+   * 134 of the 156 measured `typed_package` verdicts. It is published so a reader can weigh a
+   * verdict by the evidence under it instead of taking the point at face value.
+   */
+  npmSource: string | null
+  /**
    * Whether the signup refused an agent while serving a browser at the same URL. Published
    * because /findings states it and nothing in this file let a reader check it: the guard was
    * matching a sentence instead, and on 2026-08-11 the sentence and the computation disagreed.
@@ -194,6 +201,7 @@ export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus 
         unattendedGrant: report.findings?.funnel?.oauth?.grantTypes
           ? Boolean(report.findings.funnel.oauth.unattendedGrant)
           : null,
+        npmSource: report.findings?.discovered?.npmSource ?? null,
         // The scan that produced the row, and the address that survives the next reseed. A
         // citation pointing at /r/<id> rots the moment we rescan, which is every few days.
         scorecardUrl: `${baseUrl}/r/${report.id}`,

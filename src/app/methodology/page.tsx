@@ -3,6 +3,8 @@ import { buildIndustryReport } from '@/lib/industry'
 import { NOISE_FLOOR_PERCENT } from '@/lib/published'
 import { AGENT_ENTRY_PATHS, PROVISIONING_PATTERN_COUNT, PROVISIONING_PATTERN_LABELS } from '@/lib/scan/funnel'
 import { AI_CRAWLERS } from '@/lib/scan/robots'
+import { buildCorpus } from '@/lib/corpus'
+import { SITE_URL } from '@/lib/site'
 import { CHECKS, FORMULA_VERSION, MAX_SCORE, STAGES } from '@/lib/score'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
@@ -18,11 +20,28 @@ const CLASS_COST: Record<string, string> = {
   user: 'Blocking it stops your customer’s agent from reading your docs mid-integration.',
 }
 
+/**
+ * How many typed_package verdicts rest on the weakest of the four ways we identify a package.
+ * Computed on every render rather than written down, because the ratio moves with every reseed and
+ * a hand-typed share is a claim that quietly stops being true.
+ */
+function evidenceForPackages(rows: { npmSource: string | null; checks: { id: string; verdict: string }[] }[]) {
+  const measured = rows.filter((row) =>
+    row.checks.some((check) => check.id === 'typed_package' && ['pass', 'partial', 'fail'].includes(check.verdict)),
+  )
+  return {
+    measured: measured.length,
+    registrySearch: measured.filter((row) => row.npmSource === 'registry-search').length,
+  }
+}
+
 export default async function MethodologyPage() {
   // Computed, because both numbers were written by hand in a sentence comparing us to another
   // tool, and one of them had drifted from 95 to 91 without anybody noticing. The guard only
   // watches /findings, so a hardcoded number here is a number nothing recomputes.
   const report = await buildIndustryReport()
+  const corpus = await buildCorpus(SITE_URL, new Date().toISOString())
+  const packageEvidence = evidenceForPackages(corpus?.rows ?? [])
   const shareOf = (stage: string) =>
     Math.round((report?.stages.find((row) => row.stage === stage)?.share ?? 0) * 100)
   const discoveryShare = shareOf('discovery')
@@ -68,6 +87,18 @@ export default async function MethodologyPage() {
                       <div className="flex flex-col gap-1">
                         <span className="text-sm font-medium">{check.label}</span>
                         <span className="text-sm leading-relaxed text-ink-soft">{check.why}</span>
+                        {/* One check rests mostly on the weakest of its four ways of identifying a
+                            package, and a reader weighing a point should be told which. The share
+                            is computed rather than typed, because a number nobody recomputes is a
+                            number that drifts. */}
+                        {check.id === 'typed_package' && packageEvidence.registrySearch > 0 && (
+                          <span className="text-sm leading-relaxed text-ink-faint">
+                            Weakest evidence first: {packageEvidence.registrySearch} of the{' '}
+                            {packageEvidence.measured} measured rows name a package we matched by who publishes
+                            it, rather than by you naming it on your site, in llms.txt or in your docs. Every
+                            row says which, and <code>corpus.json</code> carries it as <code>npmSource</code>.
+                          </span>
+                        )}
                         {/* The anchor is the helpUri every machine-readable result points at. */}
                         <a href={`#${check.id}`} className="font-mono text-xs text-ink-faint hover:text-brass">
                           <code>{check.id}</code>
