@@ -63,6 +63,23 @@ i tak leciały. Dopiero realne zejscie ponizej limitu odblokowalo to na stale.
   (RFC 9727), ktory sami sondujemy u innych, oraz brak kanalu zmian dla korpusu. To drugie
   zostawiam do czasu, az ktos naprawde cos na korpusie zbuduje.
 
+**Widocznosc dla agentow i wyszukiwarek, zrobione 14.08:**
+- **`/.well-known/api-catalog` (RFC 9727)** opublikowany jako linkset RFC 9264, z kotwicami na API
+  i na endpoincie MCP. Sondowalismy te sciezke u kazdego vendora i sami jej nie mielismy.
+- **Dane strukturalne**: `Organization` i `Dataset` (korpus, z `corpus.json` i `corpus.csv` jako
+  dystrybucjami). **Swiadomie BEZ `Review` i `AggregateRating`**: taki znacznik mowilby
+  wyszukiwarce, ze oceniamy jakosc cudzych produktow, a kazda strona mowi, ze mierzymy wylacznie,
+  czy agent sie przebije. **Schemat nie moze przeczyc zdaniu obok niego.**
+  Pole `license` wskazywalo poczatkowo `/terms`, ktore jest 404; poprawione na `/methodology`,
+  gdzie warunki naprawde stoja.
+- **IndexNow**: klucz hostowany, **181 adresow zgloszonych, HTTP 202**. Zasilaja z tego Bing,
+  Yandex, Seznam i Naver. Google z IndexNow nie korzysta.
+- **170 stron vendorow jest znowu indeksowalnych** - `noindex` znikal automatycznie razem
+  z przejsciem wierszy na biezaca formule, wiec przez czas rozbicia korpusu byly niewidoczne.
+
+**Czego NIE zrobilem przy indeksowaniu, bo wymaga Ciebie:** Google Search Console (weryfikacja
+domeny), rejestr serwerow MCP i katalogi wymagajace zalozenia konta. **Agent nie zaklada kont.**
+
 **Co zostaje na Ciebie, w kolejnosci wagi:**
 1. **Sciezka zakupu.** Skan jest gotowy na klientow, platny audyt nie: konczy sie `mailto:` na
    prywatnego Gmaila. Do tego zweryfikowany nadawca w Resend i domena.
