@@ -919,9 +919,9 @@ function leftTheEndpoint(asked: string, landed: string): boolean {
   }
 }
 
-async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe> {
-  const fromCard = await cardEndpoints(site)
-  const candidates = [
+/** Split out of the probe so the addresses we ask for can be asserted without making requests. */
+export function mcpCandidates(domain: string, site: string, fromCard: string[] = []): string[] {
+  return [
     ...fromCard,
     `https://mcp.${domain}`,
     `https://mcp.${domain}/mcp`,
@@ -931,6 +931,12 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
     // the OAuth check was reading metadata off the very host this one called dead.
     `https://mcp.${domain}/v1/mcp`,
     `https://api.${domain}/mcp`,
+    // The same versioning argument as three lines up, which nobody carried across to the api host.
+    // statsig.com answers 401 with a WWW-Authenticate naming itself at api.statsig.com/v1/mcp and
+    // publishes protected-resource metadata for it, while we published that they run no server.
+    // Found by the fourteenth adversarial pass; the control that separates it from a gateway wall
+    // is that unregistered paths on that host answer 403 with no challenge at all.
+    `https://api.${domain}/v1/mcp`,
     `${site}/mcp`,
     // The framework convention, and the one that cost us a correct verdict: a Next.js app puts
     // its route at app/api/mcp/route.ts, so the server answers at /api/mcp and nowhere we asked.
@@ -943,6 +949,11 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
     // it, but it is the first request to cut if the 27-second budget starts costing other checks.
     `${site}/api/mcp`,
   ].filter((url, index, all) => all.indexOf(url) === index)
+}
+
+async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe> {
+  const fromCard = await cardEndpoints(site)
+  const candidates = mcpCandidates(domain, site, fromCard)
   const handshake = {
     accept: 'application/json, text/event-stream',
     method: 'POST' as const,

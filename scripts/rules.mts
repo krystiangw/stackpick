@@ -12,7 +12,7 @@ import { ERRATA, erratumFor } from '../src/lib/errata'
 import { FLEX_QUOTA_MB, quotaEmail, verdictFor } from '../src/lib/quota'
 import { sawRateLimit, otherDomainsNamed } from '../src/lib/corpus'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
-import { rendersUsableForm } from '../src/lib/scan/funnel'
+import { rendersUsableForm, mcpCandidates } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
 import {
   methodRefusalIsRouted,
@@ -688,6 +688,14 @@ check(
   }).text.includes('Largest is equity-analyst'),
   true,
 )
+
+// statsig.com answers only at the versioned address on the api host, and we published that they
+// run no server. The bare and versioned forms are different addresses on both hosts we probe.
+const statsig = mcpCandidates('statsig.com', 'https://statsig.com')
+check('sondujemy wersjonowany adres na hoscie api', statsig.includes('https://api.statsig.com/v1/mcp'), true)
+check('i nadal ten bez wersji', statsig.includes('https://api.statsig.com/mcp'), true)
+check('adresy z karty vendora ida pierwsze', mcpCandidates('x.com', 'https://x.com', ['https://z.example/mcp'])[0], 'https://z.example/mcp')
+check('lista nie powtarza adresow', new Set(statsig).size, statsig.length)
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)
