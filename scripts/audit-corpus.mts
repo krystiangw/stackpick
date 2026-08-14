@@ -1,3 +1,4 @@
+import { CHECKS } from '../src/lib/score'
 import { SITE_URL } from '../src/lib/site'
 /**
  * A scorecard has to hold together when read line by line, and it did not: rows claimed every
@@ -204,6 +205,14 @@ const auditRuns = (await import('../src/data/audits/froala-editors.json', { with
   (await import('../src/data/audits/workos-auth.json', { with: { type: 'json' } })).default.runs.length
 
 const stated: { page: string; pattern: RegExp; expected: number; what: string }[] = [
+  {
+    // Hand-written and static, which is why it drifted: it said 14 checks against 15 and
+    // thirty-four runs against thirty-eight, in the file an agent reads before anything else.
+    page: '/llms.txt',
+    pattern: /(\d+) deterministic checks/,
+    expected: CHECKS.length,
+    what: 'checks stated in llms.txt',
+  },
   {
     // Anchored on the claim itself. A bare "N / 18" would match any score on the page.
     page: '/',

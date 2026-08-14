@@ -5,7 +5,7 @@
 
 ## What it does
 
-- Free scan: 14 deterministic checks across five funnel stages (discovery, agent entry,
+- Free scan: 15 deterministic checks across five funnel stages (discovery, agent entry,
   registration, provisioning, integration). No language model is involved and no account is needed.
 - Paid audit: real agent runs against a real codebase, measuring which provider gets picked
   and in which words the others are rejected.
@@ -26,7 +26,7 @@
 ## Pages
 
 - [Methodology](/methodology): every check, its rule, its point value and why it costs a vendor money
-- [Findings](/findings): thirty-four agent runs across four studies, with the limits stated
+- [Findings](/findings): thirty-eight agent runs across five studies, with the limits stated
 - [Scan a domain](/): enter a domain, get a scorecard under a permanent link
 
 ## Notes for agents
