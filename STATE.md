@@ -168,6 +168,34 @@ a nie moich skryptow.
   czyli tyle, ile wierszy. Arytmetyka przypieta testem, bo zliczenie, ktore moze sie rozjechac
   z wierszami, jest ozdoba.
 
+**Prog szumu dla PRZEBIEGOW AGENTA, zmierzony 14.08 z danych, ktore juz mielismy (koszt: zero).**
+Wyszlo z pytania Krystiana o platna subskrypcje przebiegow agenta. Kazda opublikowana kategoria to
+juz powtorzone przebiegi tego samego briefu, wiec nie trzeba bylo kupowac nowych.
+
+| kategoria | zgodnosc wyboru | niezgoda W OBREBIE jednego modelu |
+|---|---|---|
+| editors | 6/6 Tiptap, oba modele | brak |
+| payments | 4/4 Stripe, oba modele | brak |
+| storage | 3/4 Cloudinary | **TAK** - Opus 5 wskazal raz R2, raz Cloudinary |
+| auth | 2/4 Auth0 | **TAK** - Sonnet 5 wskazal raz Firebase, raz Clerk |
+
+**Wniosek dla produktu: ten sam model, ten sam brief i ten sam scaffold potrafia wybrac innego
+dostawce.** Subskrypcja obiecujaca „powiemy, gdy wasza pozycja sie zmieni" raportowalaby w storage
+i w auth zmiany, ktore zachodza bez zadnej zmiany po stronie vendora. W edytorach i platnosciach
+wybor byl stabilny.
+
+**Uczciwe ograniczenie: n = 2 na model w kategorii.** To wystarcza, zeby stwierdzic, ze
+niestabilnosc ISTNIEJE (obserwacja pozytywna), ale nie zeby podac jej wielkosc. Nie nazywaj tego
+progiem szumu na wzor 0,2 procent dla skanu deterministycznego.
+
+**Rekomendacja: subskrypcje przebiegow agenta sprzedawac PER KATEGORIA, po pomiarze stabilnosci**,
+a nie globalnie. Dwie kategorie juz wygladaja na bezpieczne, dwie nie.
+
+**Korekta wlasnej wypowiedzi:** powiedzialem Krystianowi, ze ten pomiar da sie zrobic bez jego
+decyzji. Nieprawda dla wersji z nowymi przebiegami: `harness/docs/method.md` podaje **150-400 USD
+kosztow modeli na audyt**, wiec piec przebiegow to realny wydatek z jego konta i wymaga zgody.
+Wersja z danych archiwalnych kosztuje zero i to ona zostala zrobiona.
+
 **Co zostaje na Ciebie, w kolejnosci wagi:**
 1. **Sciezka zakupu.** Skan jest gotowy na klientow, platny audyt nie: konczy sie `mailto:` na
    prywatnego Gmaila. Do tego zweryfikowany nadawca w Resend i domena.
