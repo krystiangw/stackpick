@@ -77,8 +77,16 @@ i tak leciały. Dopiero realne zejscie ponizej limitu odblokowalo to na stale.
 - **170 stron vendorow jest znowu indeksowalnych** - `noindex` znikal automatycznie razem
   z przejsciem wierszy na biezaca formule, wiec przez czas rozbicia korpusu byly niewidoczne.
 
-**Czego NIE zrobilem przy indeksowaniu, bo wymaga Ciebie:** Google Search Console (weryfikacja
-domeny), rejestr serwerow MCP i katalogi wymagajace zalozenia konta. **Agent nie zaklada kont.**
+**Google Search Console: ZROBIONE przez Krystiana.** Domena zweryfikowana jako Domain property
+12.08, Google zaczal zbierac wyswietlenia tego samego dnia (potwierdzone mailem od `sc-noreply`).
+Sitemap jest znajdowany przez `robots.txt`, wiec nie ma tam nic do zgloszenia recznie.
+
+**Reszta zgloszen czeka na Ciebie i jest spisana w `outreach/listings.md`** z gotowym opisem do
+wklejenia. Kazdy adres z tej listy **sprawdzilem zadaniem przed wpisaniem**, a rejestr MCP
+odpytalem o nasza nazwe, wiec „nie ma nas tam" jest pomiarem, nie przypuszczeniem.
+`server.json` lezy w korzeniu repo i jego ksztalt porownalem z **zywym wpisem z rejestru**, a nie
+z wlasnym czytaniem schematu. Publikacja wymaga rekordu DNS, czyli Ciebie.
+**Agent nie zaklada kont** - to granica, nie niedoróbka.
 
 **Co zostaje na Ciebie, w kolejnosci wagi:**
 1. **Sciezka zakupu.** Skan jest gotowy na klientow, platny audyt nie: konczy sie `mailto:` na
