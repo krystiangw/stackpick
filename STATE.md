@@ -1600,6 +1600,30 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   5. **Werdykt może być dobry, a zdanie fałszywe.** Czwarty przebieg znalazł sześć takich przy
      MCP. Nic w liczbach nie wygląda źle, więc łapie to tylko czytanie zdań obok dowodów.
 
+## RADY PRZY WERDYKTACH PRZECZYTANE PIERWSZY RAZ (0 sprzecznosci na 66)
+
+Plan naprawczy ma swoj audyt od sierpnia, ale **zdania `unblock`, doczepiane do kazdego nieudanego
+checku, nie mial ich nigdy**, a to tez jest rada o cudzym produkcie. `npm run audit-unblock`.
+
+**Wynik: 0 prawdziwych sprzecznosci na 66 rad, ktore prosza o rzecz mozliwa do wykrycia.**
+
+**Pierwsza wersja tego audytu byla bezwartosciowa i o malo jej nie opublikowalem jako czystego
+konta.** Grupowala rady i szukala jednej obslugujacej wiersz zaliczony i niezaliczony, czyli
+dokladnie tak, jak audytujemy plan naprawczy. Zwrocila zero. Sprawdzilem, dlaczego, i **`unblock`
+nigdy nie wystepuje przy zaliczonym checku** (289 razy przy niemierzalnym, 50 przy odmowie, 24 przy
+„nie dotyczy", **0 przy zaliczeniu**), wiec ten detektor **nie mogl zapalic sie nigdy**. To trzeci
+raz w tej sesji, gdy wynik zerowy okazal sie wlasnoscia sondy, a nie danych.
+
+Wersja druga zapalila sie 15 razy, wersja trzecia raz, i **kazde trafienie bylo moja wina**:
+- „Link your **API reference** from your docs index" prosi o strone, ktorej nie przeczytalismy,
+  a ja porownywalem to z faktem posiadania **indeksu**. Dwie rozne rzeczy.
+- `discovered.pricing` trzyma adresy **zgadniete**, nie tylko zalinkowane, wiec `groq.com` wygladal
+  na sprzecznosc, choc jego werdykt mowi „we guessed" w tym samym zdaniu. Sprawdzone recznie:
+  `groq.com/pricing` **przekierowuje na strone glowna**, a jedyna kwota na niej to runda
+  finansowania. Werdykt i rada sa poprawne.
+
+Obie te granice sa teraz wpisane w kod sondy, nie w moja pamiec.
+
 ## GRANICA, KTORA WARTO MIEC SPISANA: „nie da sie" kontra „nie zrobili"
 
 Po poprawce `oauth_dcr` sprawdzilem empirycznie, **ktore inne checki stawiaja bibliotekom twarde
