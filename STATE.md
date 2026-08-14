@@ -191,6 +191,11 @@ progiem szumu na wzor 0,2 procent dla skanu deterministycznego.
 **Rekomendacja: subskrypcje przebiegow agenta sprzedawac PER KATEGORIA, po pomiarze stabilnosci**,
 a nie globalnie. Dwie kategorie juz wygladaja na bezpieczne, dwie nie.
 
+**Opublikowane 14.08 jako ograniczenie na `/findings`.** Lista ograniczen pokrywala liczebnosc
+proby, warianty promptu, modele i scaffold, a nie mowila **czy proporcja na tej stronie jest
+stabilna**. Teraz mowi, z liczbami, i wprost prosi czytelnika, zeby czytal „6 na 6" jako mocniejszy
+dowod niz „2 na 4", zamiast traktowac je jak te sama liczbe.
+
 **Korekta wlasnej wypowiedzi:** powiedzialem Krystianowi, ze ten pomiar da sie zrobic bez jego
 decyzji. Nieprawda dla wersji z nowymi przebiegami: `harness/docs/method.md` podaje **150-400 USD
 kosztow modeli na audyt**, wiec piec przebiegow to realny wydatek z jego konta i wymaga zgody.
