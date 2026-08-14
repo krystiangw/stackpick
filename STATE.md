@@ -155,6 +155,19 @@ naprawy.** Ta sama technika co przy radach, zastosowana do pierwszego zdania, kt
 - Skrypt zostaje z wynikiem wpisanym w komentarz, zeby ostrzezenie o szerokim rozrzucie punktow
   **nie bylo czytane jako wada** przez nastepna osobe.
 
+**`corpus.json` publikuje teraz zliczenia per check (14.08)**, i to jest naprawa **danych**,
+a nie moich skryptow.
+- Szesc falszywych alarmow z moich audytow w ten weekend mialo **jedna przyczyne**: liczylem
+  `points < max` i wciagalem w to wiersze **nieoznaczalne i nieadekwatne**. Notatka wyjasniajaca te
+  roznice byla w `corpus.json` od dawna, wiec **proza tego nie powstrzymuje** - popelnil ten blad
+  szesc razy czlowiek, ktory te dane napisal.
+- Kazdy check niesie teraz `tally`: `pass`, `partial`, `fail`, `unmeasured`, `notApplicable`
+  i `measured` (uczciwy mianownik = pass+partial+fail). Notatka obok mowi, ktorego pola uzyc
+  i ktorego filtra nie. **Poprawna liczba jest od teraz ta latwiejsza do wziecia.**
+- Zweryfikowane na produkcji: suma piecu kategorii dla **kazdego** checku wynosi dokladnie 170,
+  czyli tyle, ile wierszy. Arytmetyka przypieta testem, bo zliczenie, ktore moze sie rozjechac
+  z wierszami, jest ozdoba.
+
 **Co zostaje na Ciebie, w kolejnosci wagi:**
 1. **Sciezka zakupu.** Skan jest gotowy na klientow, platny audyt nie: konczy sie `mailto:` na
    prywatnego Gmaila. Do tego zweryfikowany nadawca w Resend i domena.
