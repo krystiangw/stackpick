@@ -220,11 +220,25 @@ o wersjonowaniu na host `api`**. Dolozony `api.<domena>/v1/mcp`, **formula 9.13*
 identyczny (6.4 → 6.5 po trzecim przebiegu, ten sam powod). Zweryfikowane na produkcji: statsig
 dostaje 1 pkt pod adresem `https://api.statsig.com/v1/mcp`.
 
+**Ograniczenie tego zamiatania, ktore trzeba czytac razem z wynikiem: sondowalem z laptopa,
+a skaner mierzy z dyna.** Wyszlo to przy czwartej rodzinie, czterech wierszach „niemierzalne".
+`kinde.com` odpowiada z laptopa **401 z wyzwaniem JSON**, wiec wygladal na piaty falszywy negatyw.
+Nie jest: runda 131 opisuje, ze **brzeg kinde polyka kazdy POST z naszej sieci** (202, zerowe
+cialo) na sciezce MCP, na sciezce niezarejestrowanej i na nieistniejacej subdomenie, a z laptopa
+odpowiada normalnie. „Niemierzalne" jest tam werdyktem **poprawnym i swiadomym**. Pozostale trzy
+(`quilljs.com`, `modal.com`, `pdfmonkey.io`) potwierdzily sie takze z laptopa: pusty 2xx.
+
+Wniosek: **wynik zerowy na 98 pozostalych domenach jest wazny dla punktu obserwacyjnego laptopa,
+nie dyna.** Znaleziony statsig jest odporny na ten zarzut, bo potwierdzilem go **przeskanowaniem
+na produkcji**, czyli z dyna. Nastepny przebieg tej rodziny ma leciec z dyna albo miec kontrolke
+porownujaca oba punkty; to jest kontrolka, ktorej w tym przebiegu nie mialem.
+
 **Rodzina 2: adresy publikowane jako dowod, regula z 9.12, ktora ROZLUZNILA kryterium.** 9.12
 czyta linki z llms.txt i nazywa je w werdyktach, wiec moze zawiesc przez **zaliczenie** czegos,
 czego nie ma. Sprawdzone **736 adresow** z werdyktow punktowanych: **0 nie odpowiada**.
 
-**Bilans przebiegu: 99 + 736 sprawdzonych, 1 blad w danych.**
+**Bilans przebiegu: 99 + 736 + 4 sprawdzonych, 1 blad w danych** (`statsig.com`), przy czym
+**siedem pozornych niezgod okazalo sie wada mojej metody**, nie danych.
 
 **Najwazniejsza lekcja tego przebiegu dotyczy MOJEGO narzedzia, nie danych.** Audyt adresow zglosil
 kolejno **48, potem 16, potem 3, na koncu 0** znalezisk, i kazde ciecie bylo naprawa mojej sondy:
