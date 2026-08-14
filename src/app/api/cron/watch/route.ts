@@ -39,6 +39,19 @@ export async function POST(request: Request) {
   )
   if (due.length === 0) return NextResponse.json({ checked: 0, mailed: 0, remaining: 0 })
 
+  // Asked before the first scan, not after it. saveReport throws when the cluster refuses writes,
+  // which aborts the request before anything is mailed, so no watcher is ever told something
+  // false. What it does instead is leave `remaining` unchanged, and the schedule calls back forty
+  // times: forty full scans of a customer's own site, spent on a row that cannot be stored. The
+  // same waste this project found in the reseed loop on 2026-08-14.
+  const writable = await store.writable()
+  if (writable !== true) {
+    return NextResponse.json(
+      { checked: 0, mailed: 0, remaining: 0, skipped: due.length, error: `store is not accepting writes: ${writable}` },
+      { status: 503 },
+    )
+  }
+
   let mailed = 0
   const done: string[] = []
   for (const watch of due.slice(0, MOST_PER_CALL)) {
