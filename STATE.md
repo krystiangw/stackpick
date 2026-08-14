@@ -1202,6 +1202,21 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
     `cockroachlabs.com`.
   - `oauth_dcr` oblewamy tak samo jak inni i tak ma byc.
 
+- **Errata sama wpadla w blad, przed ktorym miala chronic (14.08), naprawione.** Wpis kluczowal
+  po domenie, checku i wersji formuly, wiec `openrouter.ai` na 9.9 (czyli „sprzed poprawki")
+  dostawal note, choc **jego wiersz juz nazywal wlasciwy serwer**. Strona czytala „Live MCP
+  endpoint at mcp.openrouter.ai/mcp", a linijke nizej: „ten wiersz wskazuje strone dokumentacji".
+  **To bylo na produkcji.** Kazdy wpis nosi teraz adres, ktory bledny wiersz faktycznie podaje
+  (`wrongWhen`), i nota pojawia sie tylko wtedy, gdy werdykt to mowi.
+  - **Jak to wyszlo: przez weryfikacje mechanizmu, nie przez raport.** `posthog.com` zostal
+    przeskanowany na 9.12 w ostatnim oknie i jego nota **wygasla sama**, dokladnie jak
+    zaprojektowano. Dopiero to postawilo obok siebie wiersz bez noty i wiersz z nota, ktory jej nie
+    potrzebowal.
+  - Testy przepisane wokol przypadku, ktory przepuscily: **wiersz na starej formule, ktory juz jest
+    poprawny, nie dostaje sprostowania**, a ten sam wiersz wskazujacy dokumentacje nadal tak.
+  - Stan na produkcji po naprawie: `posthog.com` i `openrouter.ai` bez noty i z poprawnym adresem,
+    `medusajs.com` z nota, bo jego wiersz nadal zalicza 405 apeksu jako serwer.
+
 - **Dwunasty przebieg adwersaryjny, do zrobienia.** Powierzchnie, których jedenasty nie ruszył,
   w kolejności wagi:
   1. ~~**Trasowanie po raz drugi.**~~ **zrobione w rundzie 105: 35 → 20 procent.** Wszystkie 149
