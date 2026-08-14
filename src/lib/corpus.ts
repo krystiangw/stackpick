@@ -293,6 +293,11 @@ export function corpusToCsv(corpus: Corpus): string {
     'detail',
     'rate_limited',
     'measured_on',
+    // Only meaningful beside typed_package, but a spreadsheet has one row per check and no way to
+    // attach a column to one of them, and the alternative is a reader weighing that point without
+    // knowing that 86 per cent of them rest on who publishes the package rather than on the
+    // vendor naming it.
+    'npm_source',
   ]
   const lines = [header.join(',')]
   for (const row of corpus.rows) {
@@ -314,6 +319,7 @@ export function corpusToCsv(corpus: Corpus): string {
           check.detail,
           row.rateLimited ? 'true' : 'false',
           row.measuredOn,
+          check.id === 'typed_package' ? row.npmSource : null,
         ]
           .map(escape)
           .join(','),
