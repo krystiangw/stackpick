@@ -7,152 +7,36 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
-## PONIEDZIALEK: trzy decyzje i jedna komenda
+## PONIEDZIALEK: jedna decyzja podjeta, dwie zostaly
 
-**Produkcja dziala w trybie zdegradowanym. Zapisy do bazy sa odrzucane od nocy 12/13.08.**
-Strona, korpus i skanowanie dzialaja; nic sie nie zapisuje i kazda sciezka mowi o tym wprost.
+**BAZA ROZWIAZANA 14.08 ok. 08:00Z, za zgoda Krystiana.** Skasowane **20 560 przedawnionych
+skanow, zwolnione 2278 MB**. Baza `stackpick` spadla z 2310 MB do **32,9 MB**, caly klaster
+z 5039 do 2761 MB z 5120. Zapisy odblokowaly sie w niecale dwie minuty.
+Zostalo 737 raportow: najnowszy wiersz kazdej domeny i **wszystkie 542 skany odwiedzajacych**
+(obiecany trwaly link `/r/<id>`).
 
-**Co sie zmienilo przez sobote i niedziele, w skrocie (szczegoly nizej):**
-- **Baza jest JEDYNA rzecza, ktora czeka na Ciebie.** Rekomendacja z rana byla bledna i jest
-  wycofana: to nie oplog, to nasze raporty. Liczba zmierzona, nie oszacowana. **Zadanie #42.**
-- **Formula poszla 9.10 -> 9.12.** Naprawione: trzy strony dokumentacji publikowane jako zywe
-  serwery MCP, dwie rady naprawcze sprzeczne z werdyktem obok, `llms.txt` czytany wreszcie jako
-  mapa a nie znaczek, `alsoNames` wypelnione nasza wlasna domena na 88 z 88 wierszy.
-- **Odwiedzajacy dostaje swoj raport mimo zablokowanej bazy.** Wczesniej po polminutowym skanie
-  dostawal „napisz do nas mailem", a my mielismy jego karte wynikow w reku.
-- **282 werdykty sprawdzone niezaleznie, 0 bledow** (trzynasty przebieg adwersaryjny).
-- **Errata**: trzy wiersze, o ktorych wiemy, ze sa bledne, sa oznaczone na stronie i w
-  `corpus.json`, a noty **wygasaja same** po reseedzie.
-- **Trasowanie zmierzone uczciwie**: 24 z 59 na zestawie odlozonym, a nie 20 procent bledu, jak
-  mowilo streszczenie. Opublikowana liczba byla przy tym prawidlowa.
+**KORPUS: 170 wierszy na formule 9.12, jedna wersja, 0 sprzecznosci, 0 rozjazdow** na 19 pilnowanych
+liczbach. Wszystkie trzy mechanizmy samoczyszczace zadzialaly bez ingerencji: **errata zniknela**
+ze wszystkich trzech wierszy, a ze strony glownej same odpadly klauzule o brakujacych vendorach
+i o rozjezdzie formul.
 
-**Uwaga na liczbe kuratorowanych domen: jest ich 170** (`CURATED_DOMAINS.size`). Przez caly
-weekend pisalem w tym pliku 181, raz zdanie obok cytatu ze strony mowiacego „we hold 170".
-**181 to liczba adresow w sitemapie**, czyli strony vendorow plus reszta serwisu, i te dwa
-wystapienia nizej sa poprawne.
+**Pulapka warta zapamietania z tego przebiegu:** w polowie reseedu audyt zglosil **17 rozjazdow**
+w liczbach na stronie. **Zadna z nich nie byla bledna** - korpus miał wtedy 148 ze 170 wierszy.
+Gdybym „naprawil" proze pod stan posredni, zepsulbym siedemnascie poprawnych zdan naraz. **Audyt
+uruchomiony w trakcie migracji mierzy migracje, nie dane.** Naprawa to dokonczenie reseedu.
 
-**Kontrola wydania 14.08 03:30 UTC, wszystko zielone:** repo czyste, produkcja stoi na tym samym
-commicie co `HEAD`, build i `npm run rules` przechodza, `npm run audit` daje **0 sprzecznosci
-i 0 rozjazdow** na 19 pilnowanych liczbach, a wszystkie 13 publicznych powierzchni (strony,
-`corpus.json`, `corpus.csv`, `sitemap.xml`, `agent-signup.md`, `llms.txt`) odpowiadaja 200.
-**Jedyne, co jest nie tak, to zablokowane zapisy i zamrozony korpus.**
+**O samej blokadzie, bo mylila przez poltora dnia:** Atlas nie zwalnial miejsca stopniowo, tylko
+dawal kilkunastominutowe okna laski. Przy trzeciej probie bylo 85 MB pozornego zapasu i zapisy
+i tak leciały. Dopiero realne zejscie ponizej limitu odblokowalo to na stale.
 
-**Reseed WOLNO uruchamiac, ale NIE jest neutralny, i myle sie na tym drugi raz.** Najpierw
-napisalem „nie uruchamiaj, kazda proba dokłada rozbicia" (za ostroznie), potem „czesciowy reseed
-nie zmienia nic opublikowanego" (nieprawda). **Prawda jest posrodku i wynika z arytmetyki, ktorej
-nie zrobilem:** kazdy zapis nie tylko dodaje wiersz do 9.12, ale **zabiera go najwiekszej
-kohorcie**, wiec wiekszosc topnieje w trakcie i opublikowany zbior maleje, dopoki nie nastapi
-przeciecie. Zmierzone: po 33 zapisach strona pokazywala nadal 87 wierszy (stad moj bledny
-wniosek), po kolejnych 40 **spadla do 75**.
-
-**Kolejnosc reseedu ma teraz znaczenie i jest wymuszona w kodzie (14.08).**
-`scripts/stale-domains.mts` sortuje **najwieksza przedawniona kohorta najpierw**: wiersz z niej
-przesuwa przeciecie o dwa (jeden odchodzi liderowi, jeden dochodzi biezacej wersji), a wiersz
-z malej kohorty o jeden. Przy 75 wierszach na 9.8 i 23 na 9.9 sama kolejnosc decyduje, czy krotkie
-okno kupi poprawny korpus, czy tylko mniejszy. Skrypt wypisuje kohorty na stderr, zeby kolejnosc
-byla widoczna, a nie domyslna.
-
-**To jest dolek przejsciowy, nie szkoda trwala.** Stan 14.08 04:10Z: 9.8 - 75, 9.12 - 72, 9.9 - 23.
-**Do przeciecia brakuje 2-3 zapisow**, po czym korpus przeskakuje na 9.12 i rosnie dalej z kazdym
-kolejnym. Nastepne okno to zalatwi z duzym zapasem.
-
-**Rozwazone i ODRZUCONE 14.08: publikowac najnowsza formule zamiast wiekszosciowej.** Zdjeloby
-dolek natychmiast i bez zapisow (72 wiersze na 9.12 zamiast 75 na 9.8), a do tego usunelo erratę,
-bo wiersze na biezacej formule sa jedynymi, za ktorych werdyktami nadal stoimy. **Nie robie tego
-i to nie jest ostroznosc, tylko diagnoza.** Dolek pojawia sie po KAZDEJ zmianie formuly i przy
-zdrowej bazie trwa minuty, bo reseed 170 domen schodzi w jednym przebiegu. Trwa godzinami
-wylacznie dlatego, ze baza odrzuca zapisy. **Problemem jest baza, nie selektor**, a trwala zmiana
-semantyki publikowania zrobiona o szostej rano pod tymczasowa awarie to leczenie objawu. Przy
-przecieciu odleglym o trzy zapisy byłaby dodatkowo bezprzedmiotowa.
-
-**Czego sie z tego nauczyc:** „to nic nie zmieni" o operacji na danych trzeba **policzyc**, a nie
-uzasadnic slownie. Zdanie brzmialo przekonujaco i bylo falszywe, bo patrzylem tylko na jedna
-strone bilansu.
-
-**Stan kohort (14.08): 9.8 - 87, 9.9 - 38, 9.12 - 33, 9.11 - 12. Do przelaczenia korpusu na 9.12
-brakuje 55 zapisow.** Kazde okno zapisu dawalo dotad 33-45 zapisow, a lista wznawialna je kumuluje,
-wiec **dwa kolejne okna wystarcza i tego jednego przelaczenia da sie dokonac bez kasowania**.
-
-**Ale to NIE znaczy, ze kasowanie jest niepotrzebne, i moja wczesniejsza notatka „przestaje byc
-pilne" byla za optymistyczna.** Dwa okna w okolo 30 godzinach, srednio 39 zapisow na okno, czyli
-same z siebie zaladuja korpus dopiero w ciagu doby. Wazniejsze: **przyczyna zostaje**. Klaster jest
-pelny, a ten projekt zmienia formule co kilka dni - kazda taka zmiana wymaga 170 zapisow i uderzy
-w te sama sciane. Kasowanie albo platny tier jest **potrzebne przed nastepna zmiana formuly**,
-nawet jesli ta jedna przejdzie sama. Procedura przy kazdym oknie:
-
-    DOMAINS=$(npx tsx scripts/stale-domains.mts) STACKPICK_CONSOLE_TOKEN=... PASSES=1 bash scripts/reseed.sh
-    curl -sS -X POST https://letagentsin.com/api/scan -H 'content-type: application/json' -d '{"domain":"letagentsin.com"}'
-
-**Drugie polecenie jest tam nieprzypadkowo.** Rada naprawcza mowi vendorom „ours is at
-/agent-signup.md and this scanner scores it like anyone else's", a `/v/letagentsin.com` pokazuje
-skan z **formuly 9.2**, czyli dziesiec wersji wstecz. Baner o przedawnieniu jest uczciwy, ale to
-slaby dowod na zdanie, ktore ma budowac zaufanie. **Zwyklym skanem, nie przez konsole**: nie
-dopisujemy sie do `CURATED_DOMAINS`, bo ocenialibysmy sami siebie w rankingu obok ocenianych.
-
-**Wzorzec blokady, trzy pomiary:** ustepuje na kilka-kilkanascie minut i wraca po 0, 45 i 33
-zapisanych domenach. **To nie jest kwestia wolnego miejsca w megabajtach** - przy trzeciej probie
-bylo 85 MB zapasu, czyli tyle samo co przy drugiej, a zapisalismy lacznie ~165 kB. Atlas daje
-okno laski i je cofa.
-
-### 1. Baza (blokuje wszystko inne) - REKOMENDACJA PRZEPISANA 13.08, druga wersja jest ta wlasciwa
-
-**Blokada wrocila DRUGI raz w polowie reseedu, 13.08 po poludniu.** Zapisy ustapily same,
-ruszyl pelny reseed na 9.11, **zapisalo sie 45 z 170 domen i 41 dostalo NOT SAVED**. Korpus jest
-teraz rozbity na trzy wersje formuly, a publikujemy wersje wiekszosciowa, wiec strona pokazuje
-**87 ze 170 vendorow**. Strona mowi o tym wprost („we hold 170; the rest are waiting for a rescan"),
-wiec nie klamie, ale to jest polowa produktu. **Decyzja jest na boardzie jako zadanie #42.**
-Nie uruchamiaj reseedu ponownie przed rozwiazaniem bazy: kazda proba dokłada rozbicia.
-
-**Blokada NIE jest samonaprawialna, i to jest nowy fakt.** Ustapila na kilkanascie minut, wiec
-uruchomilem reseed odzyskujacy; **wrocila po okolo 1,7 MB zapisow**, czyli po jednym przebiegu.
-Sam czekanie nie wystarczy: kazdy powazniejszy zapis natychmiast zapycha ja z powrotem.
-**Trzeba podjac decyzje** - kasowanie albo platny tier - inaczej korpus zostanie rozbity na
-zawsze, bo reseedu nie da sie dokonczyc.
-
-**Drugi wniosek z tej proby, gorszy: reseed zaraportowal 340 udanych pomiarow, a nie zapisal
-ANI JEDNEGO.** Skan zwraca teraz pelna karte i `saved:false`, gdy baza odmawia (moja zmiana
-z tej nocy, sluszna wobec odwiedzajacego), a skrypt sprawdzal tylko obecnosc karty. Naprawione:
-`"saved":false` liczy sie jako porazka i idzie do ponowien. **Reseed, ktory nic nie zmienil, nie
-moze wygladac jak reseed, ktory zadzialal.**
-
-Atlas: **5120 MB z 5120 MB**. Klaster dzielony z equity-analyst.
-
-**Rekomendacja z 13.08 rano ("nie kasowac, to prawie na pewno oplog") byla bledna i jest
-wycofana.** Czytalem `storageSize`, czyli rozmiar PO kompresji. Atlas Flex nalicza limit wedlug
-rozmiaru logicznego dokumentow, a te dwie liczby rozjezdzaja sie na naszych raportach trzykrotnie:
-
-| baza | logicznie | na dysku |
-|---|---|---|
-| equity-analyst | 2728 MB | 1513 MB |
-| stackpick | 2310 MB | 757 MB |
-| **razem** | **5039 MB** | **2271 MB** |
-
-Suma logiczna trafia w limit 5120 MB z dokladnoscia do 1,6%. Suma skompresowana nie tlumaczy
-niczego i to ona kazala mi szukac ogloga, do ktorego i tak nie mam uprawnien. Zadnej zagadki
-nie ma: **to sa nasze raporty**.
-
-**Rekomendacja: skasowac przedawnione skany.** Liczba jest zmierzona przez `$bsonSize`, czyli
-dokladnie ta, ktora Atlas nalicza, a nie oszacowana:
-
-```
-MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/prune-reports.mts
-  21179 raportow, 195 najnowszych na domene, 737 zostaje
-  20442 przedawnionych skanow domen z korpusu = 2272 MB logicznie
-```
-
-Zwalnia **2272 MB**, czyli klaster spada z 5039 do 2767 MB (54% limitu). Zostaje najnowszy skan
-kazdej domeny i **wszystkie 542 skany domen spoza korpusu**, bo to sa odwiedzajacy, ktorym
-obiecalismy trwaly link `/r/<id>`. Skrypt domyslnie tylko czyta; kasuje dopiero z `--delete`,
-partiami po 500, bo kasowanie samo jest zapisem.
-
-Przyczyna jest juz naprawiona osobno: raport wazyl 185 kB przez surowy HTML sond, teraz ~5 kB.
-Te 20 tysiecy wierszy to dlug z dziewieciu reseedow sprzed tej poprawki.
-
-**Nie uruchamiam tego bez Twojej zgody** (guardrail: operacje destrukcyjne). Jedna komenda:
-`... npx tsx scripts/prune-reports.mts --delete`.
-
-- Trzecia droga: platny tier. Przy dwoch rosnacych projektach 5 GB bedzie wracac, ale samo
-  kasowanie kupuje duzo czasu, bo nowe raporty sa 37x lzejsze od tych, ktore zapchaly klaster.
+**Co zostaje na Ciebie, w kolejnosci wagi:**
+1. **Sciezka zakupu.** Skan jest gotowy na klientow, platny audyt nie: konczy sie `mailto:` na
+   prywatnego Gmaila. Do tego zweryfikowany nadawca w Resend i domena.
+2. **Stripe czy Paddle.** Rekomendacja: **Paddle**, bo jako sprzedawca formalny zdejmuje VAT OSS,
+   co przy 99-250 USD i jednoosobowej dzialalnosci jest tansze niz obsluga rozliczen w kilkunastu
+   krajach. Stripe tylko jesli chcesz ruszyc w tym tygodniu.
+3. **Rosnie equity-analyst: 2728 MB, ponad polowa limitu.** Kasowanie po naszej stronie tego nie
+   dotyka. Jesli tamten projekt rosnie dalej, platny tier wroci jako decyzja o dwoch projektach.
 
 ### 2. Platnosci: Stripe czy Paddle
 
