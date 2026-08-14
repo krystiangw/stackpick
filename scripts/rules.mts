@@ -739,7 +739,11 @@ check('a bez odmowy mowi to co dawniej', provRefused(200).includes('could not re
 // for the same eight rows; oauth_dcr was still charging them for it.
 const dcr = CHECKS.find((c) => c.id === 'oauth_dcr')!
 const dcrFor = (discovered: Record<string, unknown>) =>
-  dcr.evaluate({ oauth: { probedHosts: 8, metadataPublished: false, dynamicClientRegistration: false }, discovered, blocksPlainRequests: false } as never)
+  dcr.evaluate({
+    funnel: { oauth: { probedHosts: 8, metadataPublished: false, dynamicClientRegistration: false } },
+    discovered,
+    blocksPlainRequests: false,
+  } as never)
 check('biblioteka bez cennika i konta: nie dotyczy', dcrFor({}).notApplicable, true)
 check('vendor z cennikiem dostaje werdykt', dcrFor({ pricing: 'https://v.test/pricing' }).notApplicable, undefined)
 check('vendor z rejestracja tez', dcrFor({ signup: 'https://v.test/signup' }).notApplicable, undefined)
