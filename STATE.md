@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-13 wieczorem (kod na formule 9.12, korpus rozbity 9.8/9.9/9.11, zapisy do bazy ZABLOKOWANE)
+# Let Agents In: stan na 2026-08-15 rano (formula 9.16 na produkcji, korpus w trakcie reseedu na 9.16, baza zdrowa)
 
 Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
 **Dwie sekcje na dole tego bloku, "Co zostało z audytów" i "Następne kroki merytoryczne", są
@@ -6,6 +6,46 @@ kontraktem dla watchdoga. Aktualizuj je przy każdej zamkniętej pozycji, inacze
 listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, nie listą zadań.
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
+
+## WEEKEND W SKROCIE (dla Krystiana, poniedzialek rano)
+
+Ponizej jest 70 sekcji. Ta jedna wystarczy, zeby wiedziec, co sie zmienilo i co czeka na Ciebie.
+
+**Co czeka na Twoja decyzje (nic z tego nie jest kodem):**
+1. **Sciezka zakupu** inna niz `mailto:` - patrz sekcja o przepakowaniu cennika, z policzonym
+   kosztem darmowego monitoringu i rekomendacja.
+2. **Nazwanie licencji korpusu** (dzis opisana, nienazwana).
+3. **Model sprzedazy** - moja rekomendacja jest w sekcji cennikowej.
+4. **`equity-analyst` zajmuje 2807 MB** z 5120 na wspolnym klastrze. To nie nasza baza.
+
+**Dwa blokery z Twojej listy byly juz zrobione** (domena i zweryfikowany nadawca w Resend, od 12.08)
+i przez dwa dni straszyly skonczona robota. **Lista jest przejrzana.**
+
+**Co dziala i zostalo sprawdzone od konca do konca na produkcji:**
+- **Monitoring** (zapis → mail → potwierdzenie → zatrzymanie), na wlasnej skrzynce testowej.
+- **Skan odwiedzajacego** i strona raportu.
+- **Eksporty maszynowe**: SARIF (15 regul, 15 wynikow, komplet pol) i CSV (2520 wierszy, zero
+  rozjechanych).
+- **Zapora przed adresami wewnetrznymi**, lacznie z domena publiczna wskazujaca petle zwrotna.
+
+**Trzy rzeczy, ktore znalazlem i naprawilem, a ktore uderzalyby w klienta:**
+- **Odpowiedz na naszego maila wracala odbiciem.** Nadawca `scorecards@` nie odbiera; `Reply-To`
+  wskazuje teraz `hello@`, ktory dowozi do Twojej skrzynki.
+- **Komunikat o limicie skanow nazywal zla domene** („docs.acme.com skanowano 5 razy", gdy godzine
+  zuzyto na `acme.com`).
+- **Skrypt kasujacy dane mogl usunac wiersz, ktory publikuje korpus** (zachowywal najnowszy skan,
+  a korpus czyta najnowszy *zasiany*).
+
+**Jakosc danych:** **wszystkie 15 checkow ma teraz udokumentowany przebieg adwersaryjny**
+(przebiegi 14-19, okolo 900 werdyktow, **1 blad w danych**: `statsig.com`, naprawiony). Doszly trzy
+mechanizmy, ktore pilnuja tego dalej bez mojego udzialu: **alarm o zapasie kwoty Atlas**, **guard
+regresji po reseedzie** i **bariera 6 godzin miedzy reseedami** (dwa reseedy w jeden dzien
+kosztowaly nas `froala.com` i `bitmovin.com`, ktore zaczely nas blokowac).
+
+**Najslabszy punkt produktu, zmierzony uczciwie:** narzedzie MCP `find_providers` myli sie na
+**polowie pytan** (17/34 na zestawie pisanym przez kogos, kto nie widzial regul). Narzedzie **samo
+podaje te liczbe agentom**. Trzy pomysly na poprawe zmierzylem i odrzucilem, opisane w sekcji
+o trasowaniu.
 
 ## PONIEDZIALEK: jedna decyzja podjeta, dwie zostaly
 
