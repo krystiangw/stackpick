@@ -1643,6 +1643,26 @@ w tym jeden defekt w skrypcie kasujacym dane i jeden w poprawce napisanej dwie g
 wlasnie po to, zeby nie obwiniac vendorow za nasze pomiary.** Zasada „subagent przeglada, zanim
 uznasz za gotowe" zarobila dzis na siebie.
 
+## DWA ZNALEZISKA Z PRZEGLADU DOMIERZONE (a nie przyjete na slowo)
+
+**Koszt dolozonej sondy MCP: zaden mierzalny.** Recenzent wskazal, ze `api.<domena>/v1/mcp` ciagnie
+za soba wlasna kontrolke, czyli **dwa zadania** w budzecie 27 sekund. Zmierzone na zapisanych
+skanach, przed i po:
+
+| formula | n | mediana | p90 | obcietych |
+|---|---|---|---|---|
+| 9.12 (przed sonda) | 340 | 5,7 s | 12,3 s | 0 |
+| 9.13 (z sonda) | 344 | 5,7 s | 12,3 s | 1 |
+| 9.14 | 345 | 4,5 s | 10,5 s | 0 |
+
+Mediana i p90 **identyczne**, obciec 1 na 344 przy budzecie 27 s. Obawa jest sluszna co do zasady
+i **nieistotna w praktyce**, co dalo sie sprawdzic zamiast rozstrzygac dyskusja.
+
+**Zasieg bledu ze statusem 0: 8 wierszy na 1054.** Rozklad `docsStatus`: 990 w porzadku,
+**56 prawdziwych odmow** (20x 403, 19x 404, 17x 429) i **8 zer**. Te osiem to dokladnie wiersze,
+ktorym powiedzielibysmy „your site answered nothing when we asked", obwiniajac je za cos, co moze
+byc naszym timeoutem. Po poprawce dostaja zdanie, ktore nie obwinia nikogo.
+
 ## 9.15 WYSZLA WBREW MOJEMU WSTRZYMANIU, I CZEGO TO UCZY
 
 Wstrzymalem wdrozenie 9.15 do wygasniecia bariery reseedu, **commitujac bez wypychania na Heroku**.
