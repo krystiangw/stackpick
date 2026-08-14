@@ -1643,6 +1643,41 @@ w tym jeden defekt w skrypcie kasujacym dane i jeden w poprawce napisanej dwie g
 wlasnie po to, zeby nie obwiniac vendorow za nasze pomiary.** Zasada „subagent przeglada, zanim
 uznasz za gotowe" zarobila dzis na siebie.
 
+## OSIEMNASTY PRZEBIEG: `typed_package`, czyli na jak slabym dowodzie stoi jeden z checkow
+
+STATE.md od dawna trzymal te rodzine jako **niedowiedziona**. Zaczalem od dziewieciu odmow i od razu
+mialem „oczywisty" blad: `namecheap.com` → `node-vault-client`, co brzmi jak klient HashiCorp Vault.
+
+**Rejestr obalil moja intuicje, nie nasz wiersz.** `node-vault-client` publikuje **`namecheap_npm`**
+z repozytorium `github.com/namecheap/node-vault-client`, a `warehouse.ai-api-client` lezy pod
+`github.com/godaddy/`. Atrybucja jest poprawna u wszystkich szesciu sprawdzonych. **Kolejny raz
+dzis skaner mial racje, a ja nie.**
+
+Zostalo jednak pytanie prawdziwe: klient Vaulta **nie jest pakietem, ktory instaluje deweloper,
+zeby uzyc Namecheapa**. Zamiast spierac sie o pojedynczy wiersz, zmierzylem, **na czym stoi cala
+rodzina**:
+
+| jak dopasowalismy pakiet | zaliczone | odmowy |
+|---|---|---|
+| **`registry-search`** (po tym, KTO publikuje) | **125** | **9** |
+| vendor nazwal go na stronie | 9 | 0 |
+| w llms.txt | 7 | 0 |
+| w dokumentacji | 6 | 0 |
+
+**134 ze 156 zmierzonych werdyktow (86 procent) stoi na najslabszym z czterech dowodow.** Kazdy
+wiersz to ujawnial osobno, ale **zbiorczo nie mowilismy tego nigdzie**, a to jest liczba, ktora
+zmienia wage punktu.
+
+**Opublikowane, nie tylko zapisane:** `corpus.json` niesie teraz `npmSource` przy kazdym wierszu
+(132 / 9 / 7 / 6 / 14 bez pola), a `/methodology` mowi to zdaniem **wyliczanym przy kazdym
+renderze**, nie wpisanym recznie. **Audyt pilnuje teraz 21 liczb zamiast 20** i pokazuje 0 rozjazdow,
+co jest mocniejszym dowodem obecnosci zdania niz moj wlasny grep, ktory go nie znalazl.
+
+**Wpadka po drodze:** zacommitowalem i wypchnalem na origin kod, ktory sie nie kompilowal (lokalny
+typ `Row` w audycie nie znal nowego pola), bo uzylem `;` zamiast `&&` po buildzie. **Heroku
+odrzucilo push**, wiec produkcja nigdy tego nie zobaczyla. Druga dzis lekcja o maskowaniu kodu
+wyjscia.
+
 ## SIEDEMNASTY PRZEBIEG: llms.txt, 41 werdyktow, 0 bledow, i kontrolka ktora zarobila na siebie
 
 Cel: 27 wierszy mowiacych **„No llms.txt at any of the N locations probed"**. Rodzina nietykana,
