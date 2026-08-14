@@ -1643,6 +1643,33 @@ w tym jeden defekt w skrypcie kasujacym dane i jeden w poprawce napisanej dwie g
 wlasnie po to, zeby nie obwiniac vendorow za nasze pomiary.** Zasada „subagent przeglada, zanim
 uznasz za gotowe" zarobila dzis na siebie.
 
+## DZIEWIETNASTY PRZEBIEG: `self_serve`, i granica audytowania skanera czytaniem
+
+Ostatni nieweryfikowany oskarzyciel: **17 odmow** typu „na waszym cenniku nie ma darmowego progu".
+Dopasowanie ciagow byloby przepisaniem skanera, wiec moja zgoda nic by nie znaczyla. Uzylem metody
+**niezaleznej**: subagent, ktory nie widzial ani kodu, ani naszych werdyktow, przeczytal 22 strony
+cennikowe i odpowiadal z **wymogiem doslownego cytatu**.
+
+**Kontrolki 5 na 5** (stripe, resend, supabase, neon, cloudflare) - kazda z cytatem, wiec czytelnik
+umie powiedziec „tak".
+
+**Dwie niezgody na 17, obie wyjasnione, zero bledow w danych:**
+- **`xata.io`**: czytelnik znalazl „free forever" i „14-day free trial". W **tekscie widocznym**
+  tych fraz nie ma - siedza w `<script>` z payloadem Next.js. Jedyna widoczna wzmianka to
+  **zwiniete pytanie FAQ „Is there a free tier?"**, czyli dokladnie to, co mowi nasz werdykt.
+- **`savvycal.com`**: jedyne dopasowanie do naszego slownika tez jest pytaniem. Strona mowi
+  dodatkowo „**Kick the tires for free**", co jest prawdziwe i czego zaden nasz wzorzec nie lapie.
+  **Nie dodaje tego idiomu**, bo to byloby dopasowanie sie do jednego vendora.
+
+**Granica warta zapamietania: czytelnik LLM widzi rzeczy, ktorych nie widzi deterministyczny
+ekstraktor tekstu.** Czyta payload w `<script>` jak tresc strony, a agent bez JavaScriptu jej nie
+zobaczy. Audytujac skaner czytaniem, **kazda niezgode trzeba sprowadzic do tego samego wejscia**
+(tekst widoczny, nie surowy HTML), inaczej mierzy sie roznice narzedzi, a nie blad danych. Ten sam
+ksztalt co „sondowalem z laptopa, a skaner mierzy z dyna".
+
+**Wszystkie 15 checkow ma teraz udokumentowany przebieg adwersaryjny.** Bilans przebiegow 14-19:
+**~900 werdyktow sprawdzonych, 1 blad w danych** (`statsig.com`).
+
 ## EKSPORTY MASZYNOWE SPRAWDZONE (SARIF i CSV), plus dowod pakietu w arkuszu
 
 Nikt nigdy nie sprawdzil tego, co **konsumuja maszyny**, a zepsuty eksport to defekt, ktory zobaczy
