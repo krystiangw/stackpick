@@ -118,6 +118,17 @@ Wyszla z ponownego uruchomienia `npm run audit-remedies` na swiezym korpusie 170
   reseedzie, nie tylko po zmianie regul: zmienil sie korpus, nie kod, a blad byl widoczny dopiero
   na nowych wierszach.
 
+**Czwarta sprzecznosc tego samego ksztaltu, w najwiekszej rodzinie planu napraw (14.08).**
+`programmatic_provisioning` to 91 wierszy, z czego **52 sa CZESCIOWE**: znalezlismy u nich jezyk
+provisioningu, dostali punkt i brakuje im jednej frazy. Wszystkie 91 czytalo to samo zdanie
+„Document how a key is created: management API, service account or CLI", co dla firmy, u ktorej
+wlasnie dopasowalismy `management api`, brzmi jak rada kogos, kto nie patrzyl.
+- Wiersze czesciowe slysza teraz, **czego naprawde brakuje**: kroku, ktory zamienia brak klucza
+  w klucz, napisanego tam, gdzie fraza juz jest. Wiersze bez zadnego trafienia bez zmian.
+- **Trzecia poprawka w `fixfirst.ts` tego samego dnia, z tego samego audytu.** Narzedzie zarabia
+  na siebie: **kod sie nie zmienil, zmienil sie korpus**, a zdanie stalo sie bledne dopiero na
+  wierszach, ktorych przed reseedem nie bylo.
+
 **Co zostaje na Ciebie, w kolejnosci wagi:**
 1. **Sciezka zakupu.** Skan jest gotowy na klientow, platny audyt nie: konczy sie `mailto:` na
    prywatnego Gmaila. Do tego zweryfikowany nadawca w Resend i domena.
