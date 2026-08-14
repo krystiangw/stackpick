@@ -1600,6 +1600,34 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   5. **Werdykt może być dobry, a zdanie fałszywe.** Czwarty przebieg znalazł sześć takich przy
      MCP. Nic w liczbach nie wygląda źle, więc łapie to tylko czytanie zdań obok dowodów.
 
+## AUDYT WLASNYCH NARZEDZI MCP (14.08): „error tracking" nie trasowalo nigdzie
+
+Sprzedajemy gotowosc na agentow, wiec sciezka agenta u nas samych jest tą, na ktorej najmniej wolno
+nam zawiesc. Przemierzona na produkcji.
+
+**`scan_domain` dziala** i oddaje pelny wynik z odnosnikami do regul przy kazdym checku.
+
+**`find_providers`: 5 na 6 swiezych pytan trafnie**, a szoste ujawnilo prawdziwa dziure.
+„track errors in production and alert me" **nie trasowalo nigdzie**, mimo ze mamy kategorie
+`error-monitoring` z siedmioma vendorami.
+
+**Diagnoza, po przeczytaniu reguly zamiast zgadywania.** Trafienie w nasza wlasna proze nie
+wystarcza (`if (scored[0].strong === 0) return null`); liczy sie `VOCABULARY`, czyli slowa
+pytajacego. Slowo `error` **jest** w tym slowniku, wiec „errors in production" trasowalo poprawnie.
+Rozwalalo to dopiero **slowo „track"**, ktore nalezy do analityki produktowej („track events"), wiec
+czasownik i dopelnienie punktowaly rowno i **regula remisu slusznie milczala**. Tyle ze branzowa
+nazwa tej kategorii to doslownie **error tracking**: tak nazywaja sie Sentry, Rollbar i Bugsnag.
+
+**Naprawione idiomem, ktory juz tam byl:** wpis w `PHRASES` (gdzie mieszka juz `javascript errors`),
+bo to ten sam ksztalt: kwalifikator kontra podmiot, i decyduje podmiot. **Zero regresji** na zestawie
+routingowym (138/149 przed i po). Przypiete pieciu testami, w tym **dwoma kontrolkami**, ktore
+pilnuja, ze „track how many users click" i „track conversion funnels" zostaja w analityce.
+Zweryfikowane na produkcji w obie strony.
+
+**Falszywy trop po drodze, znowu moj:** pierwsze szesc pytan wyslalem z argumentem `problem`,
+a narzedzie przyjmuje `job`. Tool zachowal sie **poprawnie**, proszac o opis problemu, i wygladalo
+to jak awaria calego narzedzia. Schemat wolno przeczytac przed postawieniem diagnozy.
+
 ## ODPOWIEDZ KLIENTA WRACALA ODBICIEM (14.08, naprawione i wdrozone)
 
 Wyszlo z pytania, ktorego nikt nie zadal: **maile wychodza od `scorecards@letagentsin.com`, a ludzie
