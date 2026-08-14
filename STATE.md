@@ -1600,6 +1600,46 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
   5. **Werdykt może być dobry, a zdanie fałszywe.** Czwarty przebieg znalazł sześć takich przy
      MCP. Nic w liczbach nie wygląda źle, więc łapie to tylko czytanie zdań obok dowodów.
 
+## TRASOWANIE: UCZCIWE 50 PROCENT BLEDU I TRZY OBALONE POMYSLY (14.08)
+
+`find_providers` myli sie na **polowie pytan**, i to nie jest artefakt jednego zestawu: 29/58 na
+`HELD_OUT_3`, potem **17/34 na swiezym `HELD_OUT_4`**. Zestaw spalony pokazuje 7,4 procent i mierzy
+wylacznie to, jak dobrze slownik pamieta wlasna historie.
+
+**`HELD_OUT_4` napisal SUBAGENT, ktory nie widzial regul** ani tego repozytorium: dostal sama liste
+kategorii. To jedyny sposob, zeby zestaw byl uczciwy, bo kto przeczytal slowniki, ten nie napisze
+juz o nich czystego pytania. Osiem z 34 pytan ma poprawna odpowiedz „nie wiemy" (payroll, rekrutacja,
+prawo, dashboard BI, wspolna skrzynka), bo odmowa jest tu wynikiem, nie porazka.
+
+**Dwie poprawki, obie zmierzone, obie bez regresji:**
+- **`meaning` stemuje sie do `mean`**, jednego z najpospolitszych czasownikow. „a failover would
+  mean real downtime" punktowalo bazy wektorowe rowno z pytaniem o postgresa, ktore naprawde
+  zadawano. Sens zachowany fraza, bo goly czasownik i rzeczownik w „based on meaning" to dwie
+  rozne rzeczy.
+- **`google` nazywa firme sprzedajaca piecdziesiat produktow**, wiec „the copy team works out of
+  a google sheet" punktowalo uwierzytelnianie. Kto pyta o przycisk logowania, pisze login, sign in
+  albo oauth, i to zostalo. Zamienilo **bledna odpowiedz na milczenie** przy zerowym koszcie.
+- Wczesniej tego samego dnia: **fraza `error tracking`**, czyli branzowa nazwa kategorii, ktora do
+  niej nie trasowala.
+
+**Trzy pomysly ZMIERZONE I ODRZUCONE** (zapisane, zeby nikt nie szedl ta droga drugi raz):
+
+| pomysl | wynik |
+|---|---|
+| jedno trafienie w slownik nie wystarcza, potrzebne poparcie | **60,3 proc. bledu zamiast 50** i 58 regresji: zamienia 2 zle zgadywanki na 14 dodatkowych milczen |
+| skasowac `log` ze slownika obserwowalnosci | +2 regresje, zero zysku w trafieniach |
+| warstwa slow „wspierajacych" (3 pkt zamiast 10) dla `google`, `log`, `slow`, `dashboard`, `inbox` | swiezy zestaw 18/34, ale **5 regresji**: „why is production slow at 3am" i „log aggregation" to prawdziwe pytania o obserwowalnosc, w ktorych te slowa **sa** slowem decydujacym |
+
+**Wniosek, ktory z tego plynie i ktory jest wazniejszy od samych liczb:** te slowa nie sa slabe,
+one **decyduja zaleznie od kontekstu** („log aggregation" kontra „logs hours in a spreadsheet").
+Tego nie da sie naprawic chirurgia na liscie slow i **kolejna proba tej klasy jest strata czasu**.
+Realna poprawa wymaga czegos, co czyta podmiot zdania, a nie zbiór tokenow.
+
+**Opublikowana liczba zaktualizowana**: opis narzedzia MCP podaje agentom wlasny wskaznik bledu,
+a test w `rules.mts` pilnuje, zeby zgadzal sie z pomiarem. Przy okazji **pomylilem sie w arytmetyce**
+tej liczby (policzylem 23 udzielone odpowiedzi zamiast 18, pomijajac piec pytan, na ktorych narzedzie
+slusznie odmowilo) i **zlapal to test**, nie ja.
+
 ## AUDYT WLASNYCH NARZEDZI MCP (14.08): „error tracking" nie trasowalo nigdzie
 
 Sprzedajemy gotowosc na agentow, wiec sciezka agenta u nas samych jest tą, na ktorej najmniej wolno
