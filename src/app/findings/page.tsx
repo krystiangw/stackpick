@@ -289,6 +289,9 @@ export default async function FindingsPage() {
             'In the first study decisions were stated, not executed: nothing was installed, so it measured selection rather than integration. The three later studies did install and verify, and each choice there is confirmed from the files the run left behind.',
             'Two models from one family. Other coding tools may choose differently.',
             'One specific scaffold in the real-code condition. A different codebase gives a different answer, which is precisely the finding.',
+            // Measured on 14 August 2026 from the runs already published here, at no extra cost:
+            // every category is repeated runs of one brief, so the agreement was there to count.
+            'Runs of the same brief do not always agree with each other, and the disagreement can sit inside a single model. Counted across these studies: the editor choice was the same in all six runs and the payments choice in all four, but in storage one model picked Cloudflare R2 once and Cloudinary once, and in auth the other picked Firebase once and Clerk once. Two runs per model is enough to show the instability exists and not enough to size it, so read a 6 of 6 as stronger evidence than a 2 of 4 rather than as the same kind of number.',
           ].map((limit, index) => (
             <li key={limit} className="grid grid-cols-[2rem_1fr] gap-4">
               <span className="font-mono text-xs text-ink-faint">{String(index + 1).padStart(2, '0')}</span>
