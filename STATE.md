@@ -88,6 +88,21 @@ odpytalem o nasza nazwe, wiec „nie ma nas tam" jest pomiarem, nie przypuszczen
 z wlasnym czytaniem schematu. Publikacja wymaga rekordu DNS, czyli Ciebie.
 **Agent nie zaklada kont** - to granica, nie niedoróbka.
 
+**`programmatic_provisioning` zweryfikowane po zmianie z 9.12 (14.08): 10 z 10 poprawnych.**
+To rodzina, ktorej regule sam zmienilem (czytanie stron o kluczach wskazanych w `llms.txt`), wiec
+najmniej sprawdzona. **39 wierszy nazywa konkretny adres**, ktory przeczytalismy, i nadal oblewa,
+czyli stawia najostrzejszy mozliwy zarzut: „byliśmy na waszej stronie o kluczach API i nie ma tam
+drogi bez panelu".
+- Probka 10, czytana recznie. **Trzy pozorne niezgody, wszystkie na korzysc reguly:**
+  `chargebee.com` ma slowo „CLI" w **menu bocznym**, a zdanie o kluczu nie podaje drogi programowej;
+  `bunny.net` pisze „API key for **programmatic access**", co opisuje, do czego klucz sluzy, a nie
+  jak go zdobyc; `directus.com` tak samo („services need to access Directus programmatically").
+- **To jest dokladnie rozroznienie, dla ktorego istnieje okno 80 znakow wokol frazy** (runda 108):
+  „klucz do uzytku programowego" kontra „utworz klucz programowo". Bez niego wszystkie trzy
+  przeszlyby jako zaliczone.
+- **Piaty falszywy alarm z mojej wlasnej sondy w tym weekendzie.** Bilans: pięć razy sonda, zero
+  razy skaner.
+
 **Co zostaje na Ciebie, w kolejnosci wagi:**
 1. **Sciezka zakupu.** Skan jest gotowy na klientow, platny audyt nie: konczy sie `mailto:` na
    prywatnego Gmaila. Do tego zweryfikowany nadawca w Resend i domena.
