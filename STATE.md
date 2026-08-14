@@ -56,6 +56,15 @@ byla widoczna, a nie domyslna.
 **Do przeciecia brakuje 2-3 zapisow**, po czym korpus przeskakuje na 9.12 i rosnie dalej z kazdym
 kolejnym. Nastepne okno to zalatwi z duzym zapasem.
 
+**Rozwazone i ODRZUCONE 14.08: publikowac najnowsza formule zamiast wiekszosciowej.** Zdjeloby
+dolek natychmiast i bez zapisow (72 wiersze na 9.12 zamiast 75 na 9.8), a do tego usunelo erratę,
+bo wiersze na biezacej formule sa jedynymi, za ktorych werdyktami nadal stoimy. **Nie robie tego
+i to nie jest ostroznosc, tylko diagnoza.** Dolek pojawia sie po KAZDEJ zmianie formuly i przy
+zdrowej bazie trwa minuty, bo reseed 170 domen schodzi w jednym przebiegu. Trwa godzinami
+wylacznie dlatego, ze baza odrzuca zapisy. **Problemem jest baza, nie selektor**, a trwala zmiana
+semantyki publikowania zrobiona o szostej rano pod tymczasowa awarie to leczenie objawu. Przy
+przecieciu odleglym o trzy zapisy byłaby dodatkowo bezprzedmiotowa.
+
 **Czego sie z tego nauczyc:** „to nic nie zmieni" o operacji na danych trzeba **policzyc**, a nie
 uzasadnic slownie. Zdanie brzmialo przekonujaco i bylo falszywe, bo patrzylem tylko na jedna
 strone bilansu.
