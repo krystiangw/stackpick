@@ -15,6 +15,14 @@ z 5039 do 2761 MB z 5120. Zapisy odblokowaly sie w niecale dwie minuty.
 Zostalo 737 raportow: najnowszy wiersz kazdej domeny i **wszystkie 542 skany odwiedzajacych**
 (obiecany trwaly link `/r/<id>`).
 
+**Skutek uboczny kasowania, ktorego nie przewidzialem:** prune skasowal **punkt odniesienia
+zywej obserwacji** na stripe.com. Nikomu nic zlego nie doszlo, bo brak punktu odniesienia to
+brak maila, a nie zly mail (`previous = null` → cron nic nie wysyla i zapisuje nowa baze), ale
+obserwator stracil po cichu porownanie w tym cyklu. Skrypt **zachowuje teraz `lastReportId`
+kazdej obserwacji**; nastepny przebieg trzyma o 2 raporty wiecej. Lekcja ogolniejsza: przed
+operacja destrukcyjna wypisz, **kto jeszcze trzyma wskaznik** na kasowane wiersze, nie tylko
+ktore wiersze sa przedawnione.
+
 **KORPUS: 170 wierszy na formule 9.12, jedna wersja, 0 sprzecznosci, 0 rozjazdow** na 19 pilnowanych
 liczbach. Wszystkie trzy mechanizmy samoczyszczace zadzialaly bez ingerencji: **errata zniknela**
 ze wszystkich trzech wierszy, a ze strony glownej same odpadly klauzule o brakujacych vendorach

@@ -28,11 +28,22 @@ const reports = database.collection<{ _id: string; domain: string }>('reports')
 const mb = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(0)} MB`
 
 /**
- * Two rows are never deleted: the newest scan of any domain, because that is what /v/<domain> and
- * the corpus serve, and every scan of a domain nobody curated, because that is a visitor who ran
- * it themselves and holds a /r/<id> link to it.
+ * Three rows are never deleted: the newest scan of any domain, because that is what /v/<domain>
+ * and the corpus serve; every scan of a domain nobody curated, because that is a visitor who ran
+ * it themselves and holds a /r/<id> link to it; and any report an active watch is comparing
+ * against.
+ *
+ * The third was added after the fact. The first real run of this script, on 2026-08-14, deleted
+ * the baseline of a live watch on stripe.com. Nothing bad reached anybody: a missing baseline
+ * means no email rather than a wrong one, and the next rescan sets a new one. But the watcher
+ * silently lost the comparison that cycle, and this script exists to be run again.
  */
 const keep = new Set<string>()
+const watches = client.db(process.env.MONGODB_DB ?? 'stackpick').collection<{ lastReportId?: string | null }>('watches')
+for await (const watch of watches.find({}, { projection: { lastReportId: 1 } })) {
+  if (watch.lastReportId) keep.add(watch.lastReportId)
+}
+const watched = keep.size
 const domains = await reports.distinct('domain')
 for (const domain of domains) {
   const newest = await reports.findOne({ domain }, { sort: { scannedAt: -1 }, projection: { _id: 1 } })
@@ -61,7 +72,7 @@ if (doomed.length > 0) {
 }
 
 const total = await reports.countDocuments()
-console.log(`${total} raportow, ${keep.size} najnowszych na domene, ${total - superseded} zostaje`)
+console.log(`${total} raportow, ${keep.size} zachowanych (w tym ${watched} punktow odniesienia obserwacji), ${total - superseded} zostaje`)
 console.log(`${superseded} przedawnionych skanow domen z korpusu = ${mb(logicalBytes)} logicznie`)
 
 if (!DELETE) {
