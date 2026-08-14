@@ -1,0 +1,31 @@
+name: Check Atlas headroom
+
+# On 13 August the cluster refused writes for about an hour and the first sign was a visitor's
+# scan failing. The health check cannot catch that: it reports whether a write succeeds, which is
+# true until it is false. This asks the number that moves first, and the endpoint mails only when
+# it crosses the threshold, so a quiet run is the normal one.
+#
+# Weekly rather than daily because the quota moves over days and the cluster is shared with a
+# project we do not write to, so the figure changes without us.
+on:
+  schedule:
+    - cron: '41 5 * * 1'
+  workflow_dispatch:
+
+jobs:
+  quota:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ask how much room is left
+        env:
+          TOKEN: ${{ secrets.STACKPICK_CRON_TOKEN }}
+        run: |
+          set -euo pipefail
+          body=$(curl -sS --fail-with-body --max-time 60 -X POST \
+            https://letagentsin.com/api/cron/quota \
+            -H "authorization: Bearer $TOKEN")
+          echo "$body"
+          # Fail the run on a bad verdict as well as mailing, so the alarm survives a mail
+          # provider that silently stops delivering, which is exactly the failure this replaces.
+          [ "$(echo "$body" | jq -r '.verdict')" = "ok" ] || exit 1
