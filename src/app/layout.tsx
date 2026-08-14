@@ -57,7 +57,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   url: `${SITE_URL}/report`,
                   creator: { '@id': `${SITE_URL}#org` },
                   isAccessibleForFree: true,
-                  license: `${SITE_URL}/terms`,
+                  // The terms live in prose beside the data, and /terms is not a page we have.
+                  // A licence field pointing at a 404 is a claim about our own terms that fails.
+                  license: `${SITE_URL}/methodology`,
+                  conditionsOfAccess:
+                    'Free to use, quote and republish with attribution to Let Agents In and a link to the methodology.',
                   distribution: [
                     { '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: `${SITE_URL}/corpus.json` },
                     { '@type': 'DataDownload', encodingFormat: 'text/csv', contentUrl: `${SITE_URL}/corpus.csv` },
