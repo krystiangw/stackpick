@@ -24,6 +24,30 @@ async function db(): Promise<Db> {
   return client.db(process.env.MONGODB_DB ?? 'stackpick')
 }
 
+/**
+ * Billed size of every database on the cluster, largest question first: how much room is left.
+ *
+ * `dataSize` plus `indexSize` is what Atlas Flex charges for. `storageSize` is disk WiredTiger has
+ * not returned and is deliberately not counted, because reading it as the quota is the mistake
+ * this function exists to stop repeating.
+ */
+export async function clusterUsage(): Promise<{ name: string; mb: number }[]> {
+  const client = await connect()
+  const { databases } = await client.db().admin().listDatabases()
+  const sizes = await Promise.all(
+    databases.map(async ({ name }) => {
+      try {
+        const stats = (await client.db(name).stats()) as { dataSize: number; indexSize: number }
+        return { name, mb: (stats.dataSize + stats.indexSize) / 1024 / 1024 }
+      } catch {
+        // `local` and `admin` refuse stats to an Atlas application user, and neither is ours.
+        return { name, mb: 0 }
+      }
+    }),
+  )
+  return sizes
+}
+
 async function collections(): Promise<{
   reports: Collection<ReportDoc>
   leads: Collection<Lead>

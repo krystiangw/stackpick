@@ -9,6 +9,7 @@ import { CHECKS } from '../src/lib/score'
 import { forStorage } from '../src/lib/store'
 import { REMEDIES } from '../src/lib/fixfirst'
 import { ERRATA, erratumFor } from '../src/lib/errata'
+import { FLEX_QUOTA_MB, quotaEmail, verdictFor } from '../src/lib/quota'
 import { sawRateLimit, otherDomainsNamed } from '../src/lib/corpus'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
 import { rendersUsableForm } from '../src/lib/scan/funnel'
@@ -671,6 +672,20 @@ check(
 check(
   'a ten sam wiersz wskazujacy dokumentacje juz tak',
   erratumFor('openrouter.ai', 'mcp_present', '9.9', 'Live MCP endpoint at https://openrouter.ai/docs/guides/overview/mcp-server') !== null,
+  true,
+)
+
+// The alarm is worth having only if it fires before the wall, not on it. 4740 MB is where the
+// 13 August outage started; a threshold that only trips there would have warned nobody.
+check('dzisiejsze 2849 MB to jeszcze spokoj', verdictFor(2849), 'ok')
+check('4200 MB ostrzega, zanim zapisy padna', verdictFor(4200), 'warning')
+check('4740 MB, czyli poziom awarii z 13.08, jest krytyczne', verdictFor(4740), 'critical')
+check(
+  'mail nazywa najwieksza baze, bo to ona decyduje, gdzie szukac miejsca',
+  quotaEmail({
+    usedMb: 4200, quotaMb: FLEX_QUOTA_MB, percent: 82, verdict: 'warning', measuredAt: '',
+    databases: [{ name: 'equity-analyst', mb: 4000 }, { name: 'stackpick', mb: 200 }],
+  }).text.includes('Largest is equity-analyst'),
   true,
 )
 
