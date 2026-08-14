@@ -37,12 +37,21 @@ i 0 rozjazdow** na 19 pilnowanych liczbach, a wszystkie 13 publicznych powierzch
 `corpus.json`, `corpus.csv`, `sitemap.xml`, `agent-signup.md`, `llms.txt`) odpowiadaja 200.
 **Jedyne, co jest nie tak, to zablokowane zapisy i zamrozony korpus.**
 
-**Reseed WOLNO uruchamiac, i to jest korekta mojej wczesniejszej notatki.** Napisalem „nie
-uruchamiaj, kazda proba dokłada rozbicia" i to bylo za ostrozne. Korpus publikuje wersje
-**wiekszosciowa**, wiec dopoki 9.12 ma mniej wierszy niz najwieksza kohorta, opublikowany zbior
-**nie zmienia sie wcale**. Sprawdzone 14.08: po 33 zapisach na 9.12 strona nadal pokazywala te
-same 87 wierszy na 9.8. Czesciowy reseed jest dzis neutralny, a nie szkodliwy. Szkoda z 13.08
-wziela sie z innego stanu wyjsciowego, gdy wiekszosc przeskoczyla w polowie przebiegu.
+**Reseed WOLNO uruchamiac, ale NIE jest neutralny, i myle sie na tym drugi raz.** Najpierw
+napisalem „nie uruchamiaj, kazda proba dokłada rozbicia" (za ostroznie), potem „czesciowy reseed
+nie zmienia nic opublikowanego" (nieprawda). **Prawda jest posrodku i wynika z arytmetyki, ktorej
+nie zrobilem:** kazdy zapis nie tylko dodaje wiersz do 9.12, ale **zabiera go najwiekszej
+kohorcie**, wiec wiekszosc topnieje w trakcie i opublikowany zbior maleje, dopoki nie nastapi
+przeciecie. Zmierzone: po 33 zapisach strona pokazywala nadal 87 wierszy (stad moj bledny
+wniosek), po kolejnych 40 **spadla do 75**.
+
+**To jest dolek przejsciowy, nie szkoda trwala.** Stan 14.08 04:10Z: 9.8 - 75, 9.12 - 72, 9.9 - 23.
+**Do przeciecia brakuje 2-3 zapisow**, po czym korpus przeskakuje na 9.12 i rosnie dalej z kazdym
+kolejnym. Nastepne okno to zalatwi z duzym zapasem.
+
+**Czego sie z tego nauczyc:** „to nic nie zmieni" o operacji na danych trzeba **policzyc**, a nie
+uzasadnic slownie. Zdanie brzmialo przekonujaco i bylo falszywe, bo patrzylem tylko na jedna
+strone bilansu.
 
 **Stan kohort (14.08): 9.8 - 87, 9.9 - 38, 9.12 - 33, 9.11 - 12. Do przelaczenia korpusu na 9.12
 brakuje 55 zapisow.** Kazde okno zapisu dawalo dotad 33-45 zapisow, a lista wznawialna je kumuluje,
