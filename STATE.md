@@ -1065,13 +1065,16 @@ paski etapów przestały odwracać dane, karta OG nazywa domenę.
 
 ## Co zostało z audytów, w kolejności wagi
 
-Stan 2026-08-09 po **czterech** przebiegach adwersaryjnych (16,7 → 2,2 → 3,9 → **2,0 procent
-błędu**, 11 błędów na 547 werdyktów) i po zamknięciu wszystkiego, co one znalazły poza pozycjami
-niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
+**Stan 2026-08-15: wszystkie 15 checkow ma udokumentowany przebieg adwersaryjny.** Przebiegi 14-19
+(14.08) objely `mcp_present`, 736 publikowanych adresow, `machine_readable_api`, `signup_no_captcha`,
+`llms_txt`, `typed_package` i `self_serve`: **okolo 900 werdyktow, 1 blad w danych** (`statsig.com`,
+naprawiony w 9.13). Wczesniejsze przebiegi 1-13 sa opisane w dzienniku rund.
 
-1. **Blokery po stronie Krystiana** (pełny opis w sekcji „Zablokowane na Krystianie"): domena,
-   zweryfikowany nadawca w Resend, ścieżka zakupu inna niż `mailto:` na prywatnego Gmaila,
-   nazwanie licencji korpusu, decyzja o modelu sprzedaży. **Agent tego nie rozstrzyga.**
+**Co z tej listy zostalo naprawde:**
+
+1. **Blokery po stronie Krystiana** - **zostaly TRZY, nie piec** (domena i nadawca w Resend zrobione,
+   patrz przejrzana sekcja „Zablokowane na Krystianie"): sciezka zakupu inna niz `mailto:`, nazwanie
+   licencji korpusu, decyzja o modelu sprzedazy. **Agent tego nie rozstrzyga.**
 2. ~~**Ściana bota czytana jako wyzwanie OAuth.**~~ **zrobione 2026-08-09 (7.1).** Zmierzone
    przed zmianą, nie założone: ściany to HTML (`mcp.sentry.io` 6 698 B, `mcp.cloudinary.com`
    372 B), a serwery odpowiadają w protokole, którym mówią (`contentful.com` 79 B JSON,
@@ -1107,6 +1110,22 @@ niżej. Wszystko powyżej tej listy jest zrobione i opisane w dzienniku rund.
    przepisywaliśmy. Wszystkie jedenaście naprawione, patrz runda 50.
 
 ## Następne kroki merytoryczne
+
+**Stan 2026-08-15: lista ponizej jest historia zamknietych pozycji.** Otwarte sa tylko te,
+i wszystkie sa decyzjami Krystiana albo wymagaja konta, ktorego agent nie zaklada:
+
+- **Publikacja w rejestrze MCP**: `server.json` gotowy w korzeniu repo, wymaga rekordu DNS.
+- **Bing Webmaster Tools i trzy katalogi MCP**: wymagaja zalozenia kont. **Agent kont nie zaklada.**
+- **Token do rejestru npm**: przy odmowie rejestru pojedyncze domeny zwracaja uczciwe „nie wiemy".
+- **Pomiar progu szumu przebiegow agenta**: 150-400 USD wydatku na model na kategorie.
+- **Filozofia punktacji bibliotek**: czy `mcp_present`, `llms_txt`, `agent_entry_point`
+  i `machine_readable_api` maja dotyczyc bibliotek npm. Liczby i moja rekomendacja („zostawic jak
+  jest") sa w sekcji o granicy „nie da sie" kontra „nie zrobili".
+
+**Co agent moze wziac bez pytania, gdy lista wyzej stoi:** kolejny przebieg adwersaryjny na rodzinie
+z najwieksza liczba oskarzen (kontrolka DWUSTRONNA obowiazkowa), albo pomiar podlogi szumu po
+najblizszym reseedzie (`npm run noise-floor <formula>`).
+
 
 - ~~**Piąty przebieg adwersaryjny**~~ **zrobione 2026-08-09: 0,94 procent** (6 na 640). Dowiedzione:
   ściana wyzwania (156/156), dowody MCP (63 endpointy odtworzone, 465 sond, zero wymyślonych zdań),
