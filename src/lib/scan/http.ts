@@ -255,19 +255,24 @@ async function takeSiteSlot(state: ScanState, hostname: string): Promise<() => v
  * roughly nineteen documents per domain, and a corpus reseed asks for the same popular packages
  * over and over. That load is what made npm start refusing us, and since 6.9 a refusal is
  * honestly "we do not know" rather than a wrong answer, so it cost 28 domains their package in
- * one reseed. Answers are cached across scans for six hours; refusals never are, because caching
- * one would turn a moment of load into a fact about a vendor.
+ * one reseed. Answers are cached across scans and refusals never are, because caching a refusal
+ * would turn a moment of load into a fact about a vendor. The window is on the constant below,
+ * with the reasoning that picked it.
  *
- * Six hours was the first guess and it turned out to be short of what the product needs. Measured
- * on 2026-08-15: the reseed's cold first pass loses sixteen domains their package and the warm
- * second pass finds it again, which is 21 of the 22 verdicts that moved between the two passes.
- * The corpus is published from the warm pass, so a vendor who scans themselves after a quiet night
- * gets a cold answer and a worse score than the row we publish about them, for no reason on their
- * side. Seven days, because what this reads changes on a package release and *whether a package
- * bundles types* changes about once in its life. Refusals are still never cached.
+ * Six hours was the first guess and too short: measured on 2026-08-15, a reseed's cold first pass
+ * loses sixteen domains their package and the warm second pass finds it again, which is 21 of the
+ * 22 verdicts that moved between the two. The corpus is published from the warm pass, so a vendor
+ * scanning themselves after a quiet night got a worse score than the row we publish about them.
+ *
+ * Seven days was then too long, in the other direction and for a worse reason. Every failing row
+ * carries advice, and the advice on this one is "name your package once in your docs". A vendor
+ * who takes it, publishes and rescans would have read the same verdict back for a week, from a
+ * cache shared by every dyno, and the weekly watch rescan reads it too, so their fix would not
+ * even have produced the email. Forty-eight hours spans the quiet night that started this and
+ * bounds what a vendor who fixed something has to wait. Refusals are still never cached.
  */
 const REGISTRY_HOSTS = new Set(['registry.npmjs.org', 'api.npmjs.org'])
-export const REGISTRY_TTL_MS = 7 * 24 * 60 * 60 * 1000
+export const REGISTRY_TTL_MS = 48 * 60 * 60 * 1000
 const registryCache = new Map<string, { at: number; answer: Fetched }>()
 
 /**

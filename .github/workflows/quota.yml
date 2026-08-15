@@ -46,10 +46,22 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          last=$(gh run list --workflow=watch.yml --limit 1 --json conclusion,createdAt \
-            -q '.[0] | "\(.conclusion) \(.createdAt)"')
-          echo "ostatni przebieg monitoringu: $last"
+          # --status completed, because a run still in progress reports an empty conclusion and
+          # would fail this guard: watch.yml and this workflow are scheduled 84 minutes apart and
+          # GitHub's cron drifts, so the windows touch.
+          last=$(gh run list --workflow=watch.yml --status completed --limit 1 \
+            --json conclusion,createdAt -q '.[0] | "\(.conclusion) \(.createdAt)"')
+          echo "ostatni zakonczony przebieg monitoringu: $last"
           case "$last" in
             success*) ;;
             *) echo "::error::monitoring nie konczy sie sukcesem: $last"; exit 1 ;;
           esac
+          # A cron that stops firing is invisible to a check that only reads the last conclusion:
+          # it stays green on a success from three weeks ago. GitHub also disables scheduled
+          # workflows in a repository nobody touches for 60 days, which is exactly that shape.
+          age=$(( $(date -u +%s) - $(date -u -d "$(echo "$last" | cut -d' ' -f2)" +%s) ))
+          echo "ostatni przebieg sprzed $(( age / 3600 )) h"
+          if [ "$age" -gt 172800 ]; then
+            echo "::error::monitoring nie uruchomil sie od $(( age / 3600 )) h, choc ma chodzic codziennie"
+            exit 1
+          fi

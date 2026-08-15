@@ -31,7 +31,14 @@ jobs:
         run: |
           set -euo pipefail
           corpus=$(curl -sS --max-time 30 https://letagentsin.com/corpus.json)
-          rows=$(echo "$corpus" | jq '.rows | length')
+          rows=$(echo "$corpus" | jq '.rows // [] | length')
+          # Before the freshness maths: an empty corpus is the worst state there is, and jq's
+          # `max` over an empty list returns null, which turns the next line into a type error and
+          # kills the step before it can name what happened.
+          if [ "$rows" -eq 0 ]; then
+            echo "::error::corpus is empty, which is worse than small"
+            exit 1
+          fi
           # Seconds since the newest row was scanned. A reseed writes one every few seconds, so a
           # small corpus with a fresh newest row is a crossover in progress and a small corpus with
           # a stale one is a reseed that stopped.

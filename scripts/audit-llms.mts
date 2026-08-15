@@ -18,7 +18,21 @@ const PATHS = ['/llms.txt', '/llms-full.txt', '/.well-known/llms.txt']
 // correct row a miss. The control caught that before the accusation run could inherit it.
 function hostsFor(site: string, domain: string, docs: string): string[] {
   const bare = domain.replace(/^www\./, '')
-  const docsRoot = docs ? docs.replace(/\/$/, '').replace(/\/[^/]*\.[a-z]+$/i, '') : ''
+  // Only strip a trailing file, and only below the host: the first version's `/[^/]*\.[a-z]+$/`
+  // matched the hostname itself, so https://docs.example.com became "https:/" and the probe asked
+  // https://llms.txt. That is a false confirmation in a tool whose only job is to refute, and the
+  // control could not catch it because the docs./developers. fallbacks rescued those hosts anyway.
+  const docsRoot = docs
+    ? (() => {
+        try {
+          const url = new URL(docs)
+          const path = url.pathname.replace(/\/$/, '').replace(/\/[^/]*\.[a-z0-9]+$/i, '')
+          return `${url.origin}${path}`
+        } catch {
+          return ''
+        }
+      })()
+    : ''
   return [...new Set(
     [site.replace(/\/$/, ''), docsRoot, `https://${bare}`, `https://www.${bare}`, `https://docs.${bare}`, `https://developers.${bare}`].filter(Boolean),
   )]
