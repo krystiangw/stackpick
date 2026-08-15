@@ -7,6 +7,34 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
+## MAIL, ZA KTORY KLIENT PLACI, POWIEDZIALBY MU O NASZYM CACHE
+
+Monitoring nie wyslal jeszcze **nigdy** maila o zmianie: kazdy przebieg byl cichy, bo podbicia
+formuly unieważniaja punkt odniesienia. Czyli **rzecz, za ktora klient ma placic, nie zostala
+nigdy zobaczona**. Zrenderowalem ja z prawdziwych danych: para przebiegow reseedu na 9.16 daje
+autentyczne zmiany.
+
+Mail czyta sie dobrze i niesie zastrzezenie o sile dowodu, ktore doszlo dzis („matched from the
+registry by who publishes it rather than by a link on your site"). **Ale jego tresc byla o nas:**
+
+> datadoghq.com: typed sdk on the registry now pass
+> Typed SDK on the registry: **unmeasured to pass**
+
+Wszystkie trzy wyrenderowane maile mialy ten sam ksztalt, bo **21 z 22 ruchow miedzy przebiegami
+to `unmeasured → pass`**, w tym szesnascie z zimnego cache npm. Obserwator aktywny w godzinie
+reseedu dostalby wiec „wasze SDK teraz przechodzi" o zmianie, ktora zaszla **w calosci wewnatrz
+naszego skanera**.
+
+**Kod juz to wiedzial i nie dociagnal wniosku.** Komentarz przy `changesBetween` mowi wprost:
+„a check going unmeasured usually says something about our reach, not their site", i dlatego takie
+zmiany nie sa nazywane pogorszeniem. Brakowalo jednego kroku: **nie powinny same byc powodem
+maila**. `worthTelling` wymaga teraz co najmniej jednej zmiany miedzy stanami, ktore **oba
+zmierzylismy**; przejscia z „niemierzalne" nadal sa **wypisywane w mailu**, gdy zasluzyla na niego
+inna zmiana, czyli dokladnie tak, jak prosi tamten komentarz.
+
+Przypiete szescioma testami z **dwustronna kontrolka** (`pass → fail` i `fail → pass` nadal
+pisza), a po cofnieciu poprawki zestaw oblewa.
+
 ## PRZEGLAD WSZYSTKICH HARMONOGRAMOW: drugi straznik tez klamal, tylko w druga strone
 
 Po awarii monitoringu sprawdzilem **wszystkie trzy workflowy**, bo pytanie „co jeszcze pada po
