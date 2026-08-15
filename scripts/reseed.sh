@@ -47,15 +47,19 @@ fi
 # 2026-08-15, the two differed by more than two hours during a formula divergence, and the corpus
 # figure was the correct one.
 newest=$(curl -s --max-time 30 "$BASE/corpus.json" | python3 -c "
-import sys, json, datetime
+import sys, json, datetime, statistics
 rows = json.load(sys.stdin).get('rows', [])
 stamps = [r['scannedAt'] for r in rows if r.get('scannedAt')]
 if not stamps:
     print(999)
 else:
-    newest = max(stamps).replace('Z', '+00:00')
-    age = datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.fromisoformat(newest)
-    print(round(age.total_seconds() / 3600, 1))
+    now = datetime.datetime.now(datetime.timezone.utc)
+    ages = [(now - datetime.datetime.fromisoformat(s.replace('Z', '+00:00'))).total_seconds() for s in stamps]
+    # The median, not the newest. The comment above says this number is time since the last SWEEP,
+    # and max() does not measure that: one console scan run to verify a fix becomes the newest row
+    # in the corpus and holds the next reseed hostage for six hours. The median moves only when
+    # most of the corpus moves, which is what a sweep is.
+    print(round(statistics.median(ages) / 3600, 1))
 " 2>/dev/null || echo 999)
 if [ "$(printf '%s\n' "$newest" | cut -d. -f1)" -lt 6 ] 2>/dev/null && [ -z "${FORCE:-}" ]; then
   echo "ostatni skan korpusu ma $newest godzin. Reseed teraz uczy vendorow, ze nas maja blokowac." >&2
