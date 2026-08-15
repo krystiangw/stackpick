@@ -3,7 +3,7 @@ import { scanDomain } from '@/lib/scan'
 import { scoreFindings } from '@/lib/score'
 import { getStore, reportId, type Report } from '@/lib/store'
 import { sendEmail } from '@/lib/email'
-import { changesBetween, comparableScorecards, measurableOf, worthTelling } from '@/lib/watch'
+import { changesBetween, comparableScorecards, measurableOf, turnedAwayAtTheEdge, worthTelling } from '@/lib/watch'
 import { changeEmail } from '@/lib/watch-email'
 
 export const maxDuration = 60
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     const changes = previous && comparable ? changesBetween(previous.scorecard.checks, report.scorecard.checks) : []
     // Nothing is mailed on the first check: there is no before, and "here is your score again"
     // is the email that teaches somebody to stop reading us.
-    if (previous && comparable && worthTelling(changes)) {
+    if (previous && comparable && worthTelling(changes, turnedAwayAtTheEdge(report.findings))) {
       const { subject, text } = changeEmail(watch, report, changes)
       const sent = await sendEmail(watch.email, subject, text)
       if (sent.delivered) mailed += 1

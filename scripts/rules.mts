@@ -5,7 +5,7 @@ import { HELD_OUT_4 } from './routing-questions'
 import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
-import { changesBetween, comparableScorecards, worthTelling } from '../src/lib/watch'
+import { changesBetween, comparableScorecards, turnedAwayAtTheEdge, worthTelling } from '../src/lib/watch'
 import { CHECKS } from '../src/lib/score'
 import { forStorage } from '../src/lib/store'
 import { REMEDIES } from '../src/lib/fixfirst'
@@ -774,7 +774,14 @@ for (const domain of ['posthog.com', 'medusajs.com']) {
 // keep working: a real regression still writes.
 const move = (from: string, to: string) => ({ checkId: 'typed_package', label: 'x', from, to, detail: '', worse: false }) as never
 check('samo unmeasured -> pass nie jest powodem maila', worthTelling([move('unmeasured', 'pass')]), false)
-check('ani pass -> unmeasured', worthTelling([move('pass', 'unmeasured')]), false)
+check('ani pass -> unmeasured, gdy to nasz pomiar', worthTelling([move('pass', 'unmeasured')]), false)
+// The exception that is the whole product: a customer switching on bot protection moves checks to
+// unmeasured and nothing else, and that is the email they signed up for.
+check('ale pass -> unmeasured PRZY blokadzie ich brzegu juz tak', worthTelling([move('pass', 'unmeasured')], true), true)
+check('blokada brzegu bez zadnej zmiany to nadal brak maila', worthTelling([], true), false)
+check('sygnal brzegu: blocksPlainRequests', turnedAwayAtTheEdge({ blocksPlainRequests: true }), true)
+check('sygnal brzegu: nieczytelny robots.txt', turnedAwayAtTheEdge({ robots: { unreadable: true } }), true)
+check('zwykly skan nie jest blokada', turnedAwayAtTheEdge({ blocksPlainRequests: false, robots: { unreadable: false } }), false)
 check('ale pass -> fail juz tak', worthTelling([move('pass', 'fail')]), true)
 check('i fail -> pass tez', worthTelling([move('fail', 'pass')]), true)
 check('mieszanka liczy sie przez zmierzona czesc', worthTelling([move('unmeasured', 'pass'), move('pass', 'fail')]), true)

@@ -54,9 +54,10 @@ export async function clusterUsage(): Promise<{ name: string; mb: number }[]> {
 /** Moves the TTL when the constant moves, because createIndex will not and collMod is denied. */
 async function retuneRegistryExpiry(answers: Collection<CachedAnswer>): Promise<void> {
   const wanted = REGISTRY_TTL_MS / 1000
-  const existing = (await answers.indexes()).find((index) => index.name === 'at_1') as
-    | { expireAfterSeconds?: number }
-    | undefined
+  // On a fresh database the collection does not exist and indexes() raises NamespaceNotFound.
+  // There is nothing to retune then: the createIndex that follows creates it with the right value.
+  const held = await answers.indexes().catch(() => [])
+  const existing = held.find((index) => index.name === 'at_1') as { expireAfterSeconds?: number } | undefined
   if (!existing || existing.expireAfterSeconds === wanted) return
   await answers.dropIndex('at_1')
   await answers.createIndex({ at: 1 }, { expireAfterSeconds: wanted })
@@ -76,7 +77,14 @@ async function collections(): Promise<{
   const visits = database.collection<{ day: string; path: string; count: number }>('visits')
   const watches = database.collection<Watch>('watches')
 
-  indexesReady ??= Promise.all([
+  // Before the batch, not after it. createIndex does not change the expiry of an index that already
+  // exists: it raises IndexOptionsConflict, which rejects the Promise.all below and skips every
+  // .then hanging off it, straight into the catch that swallows index errors on purpose. Put after
+  // the batch, this ran only when it had nothing to do, and the first version of it passed review
+  // solely because the index had been rebuilt by hand before the deploy.
+  indexesReady ??= retuneRegistryExpiry(answers)
+    .then(() =>
+      Promise.all([
     reports.createIndex({ domain: 1, scannedAt: -1 }),
     reports.createIndex({ scannedAt: -1 }),
     leads.createIndex({ createdAt: -1 }),
@@ -86,15 +94,9 @@ async function collections(): Promise<{
     watches.createIndex({ email: 1, domain: 1 }, { unique: true }),
     watches.createIndex({ checkedAt: 1 }),
     // Mongo expires them, so nothing here has to remember to.
-    answers.createIndex({ at: 1 }, { expireAfterSeconds: REGISTRY_TTL_MS / 1000 }),
-  ])
-    // createIndex does not change the expiry of an index that already exists, and the error it
-    // raises for the attempt is swallowed three lines down, so raising REGISTRY_TTL_MS alone left
-    // the database expiring answers on the old schedule with nothing anywhere saying so. collMod
-    // is the documented way to move a TTL and our Atlas user is not allowed to run it ("user is
-    // not allowed to do action [collMod]"), so the index is rebuilt instead, which readWrite can
-    // do. Verified on 2026-08-15: 2117 cached answers survived the rebuild untouched.
-    .then(() => retuneRegistryExpiry(answers))
+        answers.createIndex({ at: 1 }, { expireAfterSeconds: REGISTRY_TTL_MS / 1000 }),
+      ]),
+    )
     .then(() => undefined)
     // Creating an index is a write, and awaiting it made every read depend on the cluster
     // accepting writes. On 2026-08-13 the cluster hit its quota and refused them, so reading one

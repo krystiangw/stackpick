@@ -75,8 +75,20 @@ export function changesBetween(before: ScoredCheck[], after: ScoredCheck[]): Wat
  * comment on changesBetween asks for: "we could not measure your signup this week" is news to
  * somebody who passed it last week. It is not, on its own, a reason to write.
  */
-export function worthTelling(changes: WatchChange[]): boolean {
-  return changes.some((change) => RANK[change.from] >= 0 && RANK[change.to] >= 0)
+export function worthTelling(changes: WatchChange[], theirEdgeTurnedUsAway = false): boolean {
+  if (changes.some((change) => RANK[change.from] >= 0 && RANK[change.to] >= 0)) return true
+  // The exception, and it is the whole product. A check falls to "unmeasured" for two unrelated
+  // reasons: our own cache or clock, and their edge deciding to turn a non-browser away. The
+  // second is exactly the failure the landing page promises to catch, because it changes nothing
+  // a person sees in a browser. Requiring a measured change on both sides silenced it: a customer
+  // switching on bot protection would have moved three checks from pass to unmeasured and heard
+  // nothing from us.
+  return theirEdgeTurnedUsAway && changes.some((change) => change.to === 'unmeasured')
+}
+
+/** Their edge, not our reach: the two signals that mean a scan was turned away rather than slow. */
+export function turnedAwayAtTheEdge(findings: { blocksPlainRequests?: boolean; robots?: { unreadable?: boolean } }): boolean {
+  return Boolean(findings.blocksPlainRequests || findings.robots?.unreadable)
 }
 
 /**
