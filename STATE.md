@@ -44,7 +44,29 @@ obiecywala "five links from each file" przy dwunastu ze wspolnej puli.
 
 Pulapka trafila do KB: `clad-kb show skaner-link-wzgledny-rozwiazuj-wzgledem-adresu-ktory-odpowie`.
 
-## 429 NIE JEST WLASNOSCIA VENDORA, TYLKO NASZEGO SPOSOBU PYTANIA (znalezione, NIENAPRAWIONE)
+## 429 NIE JEST WLASNOSCIA VENDORA, TYLKO NASZEGO CIENIA (naprawione, wdrozone v401)
+
+**Werdykt z 429 obiecuje vendorowi wprost: „Nothing for you to do if this was a 429. We will
+rescan later and this becomes measurable."** Nic tego nie robilo. Reseed ma teraz zamiatanie:
+zbiera domeny, ktore dostaly od nas 429, czeka 180 sekund, az ruch opadnie, i pyta jeszcze raz.
+Sprawdzone koncem do konca.
+
+**Ile to kosztowalo w danych, na jednym przykladzie:** wiersz `split.io` z reseedu 9.17 mowil
+**6/12** z dwoma „Unmeasurable". Ten sam skan w izolacji, po opadnieciu ruchu: **10/15**, wszystkie
+trzy checki zaliczone. Nasz nawal zabral im trzy punkty i zawezil mianownik, a my opublikowalismy
+to jako zdanie o nich.
+
+**Rozroznienie dziala w obie strony i to jest tu najwazniejsze.** `contentful.com` i `savvycal.com`
+odpowiadaja 429 takze **pojedynczemu, izolowanemu skanowi**, przy zerowym ruchu z naszej strony,
+wiec ich wiersze zostaja bez zmian. Zamiatanie nie jest wybielaniem, tylko oddzieleniem naszego
+halasu od ich brzegu.
+
+Pulapka pomiarowa do zapamietania: probowalem zamiatac pieciu domenami co 12 sekund i uznalem, ze
+sam sobie dokladam presji, bo savvycal.com nabral dwoch nowych 429. Sprawdzenie w izolacji tego
+**nie potwierdzilo** - savvycal odpowiada 429 tak samo w pelnej ciszy. Odstep miedzy zapytaniami
+zamiatania jest wiec grzecznoscia, a nie zmierzonym progiem, i tak jest opisany w skrypcie.
+
+## 429: STARE ZNALEZISKO, ZANIM POWSTALO ZAMIATANIE
 
 Z czterech werdyktow pogorszonych po reseedzie **dwa to nasze wlasne 429** (split.io i
 locationiq.com, `machine_readable_api`). W skali korpusu: **10 z 294 werdyktow "Unmeasurable"
@@ -1481,11 +1503,13 @@ naprawiony w 9.13). Wczesniejsze przebiegi 1-13 sa opisane w dzienniku rund.
 **Stan 2026-08-15: lista ponizej jest historia zamknietych pozycji.** Otwarte i wykonalne przez
 agenta:
 
-- **429 z naszej winy psuje 10 werdyktow w korpusie** (piec to sam contentful.com). Zmierzone:
-  te hosty odpowiadaja 200 z laptopa i 429 z dyna, a 429 reprodukuje sie przy **pojedynczym**
-  skanie, wiec nawal jest wewnatrz jednego skanu (do 6 rownoleglych zadan na host), nie miedzy
-  domenami reseedu. Kierunek: uszanowac `Retry-After` i ponowic raz, w granicach budzetu skanu.
-  **To jest nastepna pozycja i nie wymaga niczyjej decyzji.**
+- ~~**429 z naszej winy psuje werdykty w korpusie**~~ **zrobione 2026-08-15 (v401)**: reseed zamiata
+  je po odczekaniu, `split.io` wrocil z 6/12 na 10/15. Rozroznienie dziala w obie strony, patrz
+  sekcja u gory.
+- **Kandydat z tego samego watku, jeszcze nietkniety:** `contentful.com` ma **piec** checkow
+  „Unmeasurable" przez 429, ktory nie znika w ciszy, wiec caly jego wiersz jest prawie pusty.
+  Do zbadania, czy to ich brzeg odrzuca nasze IP na stale (wtedy wiersz jest uczciwy, ale warto
+  to nazwac na stronie), czy cos w naszym sposobie pytania akurat u nich.
 
 Reszta wymaga decyzji Krystiana albo konta, ktorego agent nie zaklada:
 
