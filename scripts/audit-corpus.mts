@@ -1,4 +1,5 @@
 import { CHECKS } from '../src/lib/score'
+import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR } from '../src/lib/scan-gate'
 import { SITE_URL } from '../src/lib/site'
 /**
  * A scorecard has to hold together when read line by line, and it did not: rows claimed every
@@ -351,6 +352,25 @@ const stated: { page: string; pattern: RegExp; expected: number; what: string }[
  */
 const held = new Map(corpus.rows.map((row) => [row.domain, row]))
 const named: { page: string; pattern: RegExp; holds: (found: RegExpMatchArray) => string | null; what: string }[] = [
+  // The two files an agent reads before anything else spell their limits as words, and the words
+  // came from constants nobody ties them to. Changing PER_DOMAIN_PER_HOUR would leave both files
+  // telling agents a number that is no longer true, in a product whose whole argument is that you
+  // should not lie to agents.
+  ...['/agent-signup.md', '/agents.md'].map((page) => ({
+    page,
+    pattern: /(\w+) scans per hour per registrable domain(?:,| and) (\w+) per hour/i,
+    what: 'the rate limits stated to agents',
+    holds: (found: RegExpMatchArray) => {
+      const asNumber: Record<string, number> = {
+        one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+        twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60,
+      }
+      const [, perDomain, perCaller] = found.map((word) => word.toLowerCase())
+      if (asNumber[perDomain] !== PER_DOMAIN_PER_HOUR) return `says ${perDomain} per domain, code says ${PER_DOMAIN_PER_HOUR}`
+      if (asNumber[perCaller] !== PER_CALLER_PER_HOUR) return `says ${perCaller} per address, code says ${PER_CALLER_PER_HOUR}`
+      return null
+    },
+  })),
   {
     page: '/findings',
     pattern: /(\S+) and (\S+) publish the same shaped door, and only (\S+) offers client_credentials/,
