@@ -7,6 +7,32 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
+## VENDOR SKANUJACY SIEBIE DOSTAWAL GORSZY WYNIK NIZ TEN, KTORY O NIM PUBLIKUJEMY
+
+Wyszlo z pomiaru wyzej: **zimny cache rejestru npm kosztuje szesnascie domen ich pakiet**. Reseed
+radzi sobie dwoma przebiegami i **korpus publikujemy z ciepłego**, ale odwiedzajacy dostaje jeden
+przebieg. Po szesciu godzinach ciszy pierwszy vendor, ktory sie u nas przeskanuje, widzi wiec
+**gorszy wynik niz wiersz, ktory o nim publikujemy**, bez zadnego powodu po jego stronie.
+
+**Cache rejestru przedluzony z 6 godzin do 7 dni.** Uzasadnienie jest w semantyce checku: to, czy
+pakiet **dowozi wlasne typy**, zmienia sie mniej wiecej raz w jego zyciu, a nie co wydanie. Odmowy
+rejestru nadal nie sa cache'owane nigdy.
+
+**I tu byla pulapka, ktora sama zmiana stalej by ukryla.** Mongo **nie zmienia TTL istniejacego
+indeksu** przez `createIndex`, a blad tej proby jest w tym kodzie od dawna **polykany i logowany**
+(swiadomie, po awarii z 13.08). Kod mowilby wiec siedem dni, a baza kasowalaby dalej po szesciu
+godzinach i **nic by o tym nie powiedzialo**.
+
+Udokumentowanym wyjsciem jest `collMod` i **nasz uzytkownik Atlasa nie ma do niego prawa**
+(„user is not allowed to do action [collMod]"). Zostaje przebudowa indeksu, na ktora rola
+`readWrite` pozwala. Sprawdzone przed wdrozeniem recznie: **2117 zapisanych odpowiedzi przetrwalo
+bez zmiany**, potem wpiete w kod jako `retuneRegistryExpiry`, ktore rusza indeks tylko wtedy, gdy
+stala sie rozjechala. **Zweryfikowane na produkcji: 7,0 dnia.**
+
+**Przewidywanie do sprawdzenia przy nastepnym reseedzie:** asymetria miedzy przebiegami powinna
+zniknac albo mocno zmalec (dzis 21 w gore, 1 w dol, z czego 16 to `typed_package`). Jesli nie
+zniknie, przyczyna jest inna niz cache i trzeba jej szukac gdzie indziej.
+
 ## KORPUS NA 9.16, I NARZEDZIE, KTORE ZMIERZYLO SIE Z WLASNEJ ROLI
 
 **Reseed zakonczony: 170 wierszy na formule 9.16, 0 sprzecznosci, 21 pilnowanych liczb bez
