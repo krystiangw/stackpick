@@ -77,6 +77,7 @@ for pass in $(seq 1 "$PASSES"); do
 ok=0
 fail=0
 failed=""
+throttled=""
 
 while read -r domain; do
   [ -z "$domain" ] && continue
@@ -112,6 +113,14 @@ except Exception:
     ERR*|"") fail=$((fail + 1)); failed="$failed $domain"; printf '%-24s FAILED\n' "$domain" ;;
     *) ok=$((ok + 1)); printf '%-24s %s\n' "$domain" "$line" ;;
   esac
+  # A row saved with a 429 verdict is a saved row, so it is not a failure and must not be retried
+  # here: the pressure that caused it is this loop, and asking again now asks under the same load.
+  # It is collected for the sweep at the end, which is also the only thing that makes the sentence
+  # we publish to the vendor true - it promises "we will rescan later and this becomes measurable".
+  if printf '%s' "$out" | grep -qE '"Unmeasurable[^"]*429'; then
+    throttled="$throttled $domain"
+    printf '%-24s %s\n' "" "^ 429 od nas, do zamiecenia po przebiegu"
+  fi
   sleep "$PAUSE"
 done <<< "$domains"
 
@@ -148,6 +157,42 @@ if [ -n "$failed" ]; then
     if printf '%s' "$out" | grep -q '"saved":false'; then printf '%-24s STILL NOT SAVED\n' "$domain"; continue; fi
     printf '%s' "$out" | grep -q '"scorecard"' && printf '%-24s recovered\n' "$domain" || printf '%-24s STILL FAILING\n' "$domain"
   done
+fi
+
+# Measured on 2026-08-15, and it is the reason this block exists: split.io and locationiq.com came
+# out of the 9.17 reseed as "answered 429 when we asked it for markdown", both hosts answered 200
+# from a laptop and from a one-off dyno at the same minute, and split.io scored the point again on
+# a single scan once the reseed had stopped. The 429 was our own shadow, and we published it as a
+# row about the vendor. Ten such verdicts sat in the corpus, five of them on contentful.com alone,
+# which made most of that vendor's row a description of our load.
+#
+# Waiting is the whole mechanism, so it is deliberately longer than a polite pause and the sweep
+# is sequential. A domain that answers 429 twice, minutes apart and under no load of ours, is
+# telling us something about itself, and that is the verdict we keep: savvycal.com and
+# contentful.com answered 429 to an isolated single scan with nothing else running, so their rows
+# stay as they are. The gap between sweep requests is politeness, not a measured threshold - the
+# only thing measured here is that the wait after the reseed recovers rows.
+if [ -n "$throttled" ]; then
+  count=$(echo "$throttled" | wc -w | tr -d ' ')
+  echo
+  echo "== zamiatam $count domen, ktore dostaly od nas 429 (czekam ${THROTTLE_WAIT:-180}s, az ruch opadnie)"
+  sleep "${THROTTLE_WAIT:-180}"
+  swept=0
+  for domain in $throttled; do
+    out=$(curl -s --max-time 120 -X POST "$BASE/api/scan" \
+      -H 'content-type: application/json' \
+      -H "cookie: stackpick_console=$TOKEN" \
+      -d "{\"domain\":\"$domain\"}")
+    if printf '%s' "$out" | grep -qE '"Unmeasurable[^"]*429'; then
+      printf '%-24s wciaz 429, zostaje jako werdykt o nich\n' "$domain"
+    elif printf '%s' "$out" | grep -q '"scorecard"'; then
+      swept=$((swept + 1)); printf '%-24s odzyskane\n' "$domain"
+    else
+      printf '%-24s zamiatanie nie doszlo do skutku\n' "$domain"
+    fi
+    sleep 15
+  done
+  echo "odzyskane po zamiataniu: $swept z $count"
 fi
 done
 
