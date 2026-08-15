@@ -7,6 +7,39 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
+## POZOSTALE ZNALEZISKA DRUGIEGO PRZEGLADU, I JEDNO SWIADOMIE ODRZUCONE
+
+**Cache rejestru: 7 dni bylo za dlugo i to w gorsza strone niz 6 godzin.** Kazdy nieudany wiersz
+niesie rade, a rada przy tym checku brzmi „name your package once in your docs". Vendor, ktory ja
+wykona, opublikuje i przeskanuje sie ponownie, **czytalby ten sam werdykt przez tydzien**, bo cache
+jest wspolny dla wszystkich dyn. Co gorsza cotygodniowy rescan monitoringu czyta ten sam cache,
+wiec **jego naprawa nie wygenerowalaby nawet maila**. Ustawione na **48 godzin**: obejmuje cicha
+noc, ktora byla powodem calej zmiany, i ogranicza do dwoch dni to, na co czeka ktos, kto cos u
+siebie poprawil.
+
+**Straznik crona pytal o zly przebieg i nie pytal o wiek.** `--limit 1` lapie tez przebieg w toku,
+ktory raportuje pusta konkluzje i **oblewalby straznika** (oba workflowy dziela 84 minuty, a cron
+GitHuba dryfuje). Doszlo `--status completed`. Osobno: sprawdzanie samej konkluzji **nie widzi
+crona, ktory przestal sie uruchamiac** i swieci na zielono na sukcesie sprzed trzech tygodni,
+a GitHub wylacza harmonogramy w repo nietykanym od 60 dni. Doszedl prog wieku 48 h, przetestowany
+osobno (47 h przechodzi, 49 h alarmuje). Zweryfikowane na produkcji: **„ostatni zakonczony przebieg
+monitoringu: success", „sprzed 2 h"**.
+
+**Pusty korpus mowi teraz, ze jest pusty**, zamiast umierac w `jq` na `max` z pustej listy, czyli
+w najgorszym mozliwym stanie tracic komunikat.
+
+**Prawdziwy blad w moim wlasnym narzedziu audytowym.** `audit-llms` budowal korzen dokumentacji,
+obcinajac wszystko konczace sie kropka i rozszerzeniem, a to **pasuje do nazwy hosta**:
+`https://docs.example.com` stawalo sie `https:/`, wiec sonda pytala `https://llms.txt`. To
+**falszywe potwierdzenie oskarzenia w narzedziu, ktorego jedynym zadaniem jest obalanie**, i
+kontrolka nie mogla tego zlapac, bo dla hostow `docs.` ratowala je lista zapasowa. Poprawione przez
+`URL`, sprawdzone na szesciu ksztaltach adresu, kontrolka nadal 8 na 8.
+
+**Jedno znalezisko odrzucam swiadomie:** propozycje, zeby zamrozony korpus zapalal alarm po X dniach.
+Reseedy sa reczne, wiec dwutygodniowa przerwa jest **normalna**, a alarm o niej bylby dokladnie ta
+klasa falszywki, ktora dzis usuwalem z `health.yml`. Zapisane, zeby nikt nie dodal tego „bo review
+kazal".
+
 ## DRUGI PRZEGLAD: obie moje wczorajsze poprawki byly zepsute, kazda inaczej
 
 Druga porcja zmian (400 linii) tez poszla bez przegladu, wiec subagent przejrzal ja tak samo.
