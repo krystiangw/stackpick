@@ -22,7 +22,24 @@ export function GET() {
             required: true,
             content: {
               'application/json': {
-                schema: { type: 'object', required: ['domain'], properties: { domain: { type: 'string', example: 'example.com' } } },
+                // `format` was missing, and it is the field that turns this endpoint into the two
+                // machine surfaces worth having: SARIF for a code scanner and markdown written for
+                // an agent to act on. An agent reading this document could not discover either,
+                // which is the omission we score other people for one check below.
+                schema: {
+                  type: 'object',
+                  required: ['domain'],
+                  properties: {
+                    domain: { type: 'string', example: 'example.com' },
+                    format: {
+                      type: 'string',
+                      enum: ['json', 'sarif', 'agent'],
+                      default: 'json',
+                      description:
+                        'json is the scorecard. sarif is SARIF 2.1.0 with one rule per check. agent is markdown written to be acted on, with one task per failing check. Also accepted as ?format= on the query string.',
+                    },
+                  },
+                },
               },
             },
           },
@@ -75,6 +92,10 @@ export function GET() {
             },
             '400': { description: 'Not a domain' },
             '422': { description: 'Domain refused or unreachable' },
+            '503': {
+              description:
+                'The scan did not finish inside the gateway timeout, or the store is not accepting writes. /api/scan/stream reports progress and does not go silent.',
+            },
             '429': { description: 'Rate limit reached, five per hour per registrable domain, thirty per hour per address' },
           },
         },
@@ -88,6 +109,51 @@ export function GET() {
       },
       // The three surfaces this document used to omit, which is the defect we score other people
       // for: an agent reading our own API description could not learn that the corpus exists.
+      // Documented because it is public, needs no account and an agent can complete it: an email
+      // and a domain, confirmed by a link. Leaving the recurring half of the product out of the
+      // machine-readable description of the product is the same omission as leaving out `format`.
+      '/api/watch': {
+        post: {
+          summary: 'Ask to be told when a domain\'s verdicts change',
+          operationId: 'watchDomain',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['email', 'domain'],
+                  properties: {
+                    email: { type: 'string', format: 'email' },
+                    domain: { type: 'string', example: 'example.com' },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            '200': {
+              description:
+                'Recorded. Nothing is watched until the link in the confirmation email is followed, and every email carries the link that stops it.',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      ok: { type: 'boolean' },
+                      delivered: { type: 'boolean', description: 'False when the confirmation email could not be sent, in which case nothing is watched.' },
+                      alreadyWatching: { type: 'boolean' },
+                    },
+                  },
+                },
+              },
+            },
+            '400': { description: 'The address or the domain does not look right' },
+            '429': { description: 'Too many requests from this caller, or for this address' },
+            '503': { description: 'Could not be recorded, so nothing was signed up and no email was sent' },
+          },
+        },
+      },
       '/corpus.json': {
         get: {
           summary: 'Every curated domain we have scanned, one formula version throughout',
