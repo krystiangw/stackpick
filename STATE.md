@@ -7,6 +7,25 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
+## DWA OSTATNIE ZNALEZISKA: straznik zgadzajacy sie przez przypadek i strona placaca za dwa pola
+
+**Audyt liczyl pilnowana liczbe inaczej niz strona, ktora ja wypisuje.** Strona liczy dopasowania
+przez rejestr **wsrod wierszy zmierzonych**, audyt liczyl je wsrod wszystkich. Dzis oba daja 132,
+ale gdy faza npm wpadnie w limit czasu, `npmSource` jest juz ustawione przez discovery, a scoring
+degraduje `typed_package` do „niemierzalne" i **audyt zglosilby nieistniejacy rozjazd**. Zrownane.
+**Straznik, ktory zgadza sie przez przypadek, to straznik, ktory zapali sie w spokojny wtorek.**
+
+**Strona metodologii budowala caly korpus przy kazdym renderze po dwa pola.** `buildCorpus`
+przepuszcza `erratumFor`, `otherDomainsNamed` i `refusesAgentsAtSignup` przez 170 wierszy po
+15 checkow, a strona chce liczby i udzialu. Czyta teraz opublikowane raporty wprost. Baza nie byla
+czytana dwa razy (5-minutowy memo w `publishedCorpus`), wiec chodzi o CPU, ale to **ta sama klasa
+kosztu, ktora przewrocila nas 12.08**, gdy crawler otworzyl siedemdziesiat stron naraz.
+Zweryfikowane: strona 200, audyt nadal 0 rozjazdow, czyli wartosc przetrwala refaktor.
+
+**Stan bazy po dniu pracy:** klaster **56,1 procent** (2870 z 5120 MB), StackPick **59,4 MB**
+(cache rejestru 15,2 MB przy 2117 wpisach, raporty 44,2 MB przy 2068). Cache urosnie po zmianie
+TTL na 48 h, ale zostaje o rzad wielkosci ponizej progu, a alarm kwotowy to pilnuje.
+
 ## POZOSTALE ZNALEZISKA DRUGIEGO PRZEGLADU, I JEDNO SWIADOMIE ODRZUCONE
 
 **Cache rejestru: 7 dni bylo za dlugo i to w gorsza strone niz 6 godzin.** Kazdy nieudany wiersz
