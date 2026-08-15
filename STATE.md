@@ -1,4 +1,37 @@
-# Let Agents In: stan na 2026-08-15 (formula 9.17 na produkcji, korpus 170 wierszy na 9.17, baza zdrowa)
+# Let Agents In: stan na 2026-08-15 (formula 9.18 na produkcji, korpus czeka na przesiew z 9.17, baza zdrowa)
+
+**UWAGA dla nastepnej rundy: korpus jest przejsciowo na 9.17, a produkcja na 9.18**, wiec wiersze
+zmierzone po wdrozeniu wypadaja z wiekszosciowej wersji i strona pokazuje 169 zamiast 170.
+Reseed jest zaplanowany na wygasniecie karencji. Jesli go nie widac w dzienniku ponizej, uruchom
+`STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) npm run reseed`.
+
+## 429 Z MARKEREM WYZWANIA TO SCIANA, NIE NASZ NAWAL (9.18, wdrozone)
+
+Regula „a 429 is our own burst" powstala, zeby rozstrzygnac **prawdziwa sprzecznosc**:
+contentful.com czytalo „no agent reaches the site at all" w `answers_plain_request` i „a limit we
+triggered" w `signup_reachable`, na tym samym skanie, o tym samym brzegu. Wygrala wymowka.
+
+**Wymowka byla falszywa polowa.** contentful.com i pandadoc.com odpowiadaja 429 z naglowkiem
+`x-vercel-mitigated: challenge` **takze przegladarce i takze z laptopa**, przy zerowym ruchu z
+naszej strony. Tryb ataku Vercela uzywa 429 jako statusu sciany. Kod **juz wykrywal** to wyzwanie
+(`isBotChallenge`) i sam sobie te wiedze odrzucal, wypuszczajac dwoch vendorow z jedynego
+znaleziska, po ktore ten check istnieje.
+
+**Kontrolka zostaje nietknieta i to jest warunek, ze to nie jest zaostrzanie na sile:**
+postmarkapp.com odpowiedzial (200, 429, 200) bez naglowka wyzwania i 200 temu samemu laptopowi,
+wiec jego 429 naprawde jest nasz i nadal go nie liczymy. Reguly testuja obie strony, przy
+rejestracji tez, zeby te dwa checki nie rozjechaly sie ponownie.
+
+Zasieg zmierzony **przed** wdrozeniem: piec domen ma wyzwanie na brzegu, werdykt zmieniaja dwie
+(contentful.com, pandadoc.com). name.com ma (200, 429, 429), wiec i tak nie wchodzil w te galaz,
+a bitmovin.com i namecheap.com dostaja wyzwanie na 403 i byly liczone jako sciana od poczatku.
+
+Przy okazji: karencja reseedu twierdzila w komentarzu, ze mierzy czas od ostatniego **przesiewu**,
+a liczyla `max(scannedAt)`, wiec jeden skan weryfikacyjny blokowal reseed na szesc godzin. Teraz
+liczy mediane. **Pomylka warta zapamietania:** najpierw uznalem, ze to wlasnie mnie blokuje, a
+sprawdzenie znacznikow pokazalo, ze wszystkie 169 wierszy pochodzi z osmiu minut - to byl ogon
+mojego wlasnego reseedu, bo drugi przebieg na cieplym cache jest osiem razy szybszy niz pierwszy.
+Straznik dzialal poprawnie, usterka byla prawdziwa, ale nie byla przyczyna.
 
 Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
 **Dwie sekcje na dole tego bloku, "Co zostało z audytów" i "Następne kroki merytoryczne", są
@@ -1506,10 +1539,9 @@ agenta:
 - ~~**429 z naszej winy psuje werdykty w korpusie**~~ **zrobione 2026-08-15 (v401)**: reseed zamiata
   je po odczekaniu, `split.io` wrocil z 6/12 na 10/15. Rozroznienie dziala w obie strony, patrz
   sekcja u gory.
-- **Kandydat z tego samego watku, jeszcze nietkniety:** `contentful.com` ma **piec** checkow
-  „Unmeasurable" przez 429, ktory nie znika w ciszy, wiec caly jego wiersz jest prawie pusty.
-  Do zbadania, czy to ich brzeg odrzuca nasze IP na stale (wtedy wiersz jest uczciwy, ale warto
-  to nazwac na stronie), czy cos w naszym sposobie pytania akurat u nich.
+- ~~**contentful.com z pieciopunktowa dziura przez 429**~~ **zrobione 2026-08-15 (9.18)**: to nie
+  byl limit tempa, tylko tryb ataku Vercela podany jako 429. Patrz sekcja u gory.
+- **Jedyna otwarta rzecz z tego watku:** przesiac korpus na 9.18 (zaplanowane, patrz naglowek).
 
 Reszta wymaga decyzji Krystiana albo konta, ktorego agent nie zaklada:
 
