@@ -7,6 +7,27 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
+## NASZ WLASNY OPENAPI POMIJAL DWIE RZECZY, I OBIE SA TYM, CO PUNKTUJEMY U INNYCH
+
+Ten sam obiektyw, przylozony do `/openapi.json`. **Klamiacy albo niepelny spec to doslownie defekt,
+za ktory odejmujemy punkty**, wiec dokument opisujacy nasze API zasluguje na to samo traktowanie.
+
+**Brakowalo parametru `format`.** To pole zamienia `/api/scan` w dwie powierzchnie maszynowe warte
+posiadania: **SARIF 2.1.0** dla skanera kodu i **markdown napisany po to, zeby agent go wykonal**.
+Agent czytajacy nasz wlasny spec **nie mogl odkryc zadnej z nich**, choc obie dzialaja od dawna.
+
+**Brakowalo `/api/watch`**, czyli publicznego zapisu na monitoring: bez konta, e-mail plus domena,
+potwierdzenie linkiem. Pominiecie go zostawialo **powracajaca polowe produktu poza maszynowym
+opisem produktu**.
+
+Doszla tez odpowiedz **503**, ktora `agent-signup.md` opisuje od dawna („a slow domain can hit
+a gateway timeout"), a spec o niej milczal.
+
+**Sprawdzone, a nie tylko dopisane:** wszystkie trzy wartosci `format` odpowiadaja poprawnie
+**obiema drogami**, ktore spec deklaruje - w ciele zadania i w query stringu: `json` daje
+`application/json`, `sarif` daje `application/sarif+json` (12 217 B), `agent` daje `text/markdown`
+(2 561 B). Spec opisuje teraz szesc sciezek zamiast pieciu.
+
 ## INSTRUKCJE, KTORE DAJEMY AGENTOM, SPRAWDZONE JAK AGENT I WPIETE W AUDYT
 
 Przeczytalem `agent-signup.md` jak agent, ktory ma tylko to, i sprawdzilem **kazde twierdzenie
