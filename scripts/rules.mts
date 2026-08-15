@@ -5,7 +5,7 @@ import { HELD_OUT_4 } from './routing-questions'
 import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
-import { changesBetween, comparableScorecards } from '../src/lib/watch'
+import { changesBetween, comparableScorecards, worthTelling } from '../src/lib/watch'
 import { CHECKS } from '../src/lib/score'
 import { forStorage } from '../src/lib/store'
 import { REMEDIES } from '../src/lib/fixfirst'
@@ -768,6 +768,17 @@ for (const domain of ['posthog.com', 'medusajs.com']) {
   check(`${domain}: poprawne zdanie NIE dostaje sprostowania`, erratumFor(domain, 'mcp_present', '9.9', good) !== null, false)
   check(`${domain}: zle zdanie dostaje`, erratumFor(domain, 'mcp_present', '9.9', bad) !== null, true)
 }
+
+// A reseed's cold first pass moves two dozen checks from unmeasured to pass, and a watcher active
+// that hour would have been mailed about our npm cache. The second pair pins the half that must
+// keep working: a real regression still writes.
+const move = (from: string, to: string) => ({ checkId: 'typed_package', label: 'x', from, to, detail: '', worse: false }) as never
+check('samo unmeasured -> pass nie jest powodem maila', worthTelling([move('unmeasured', 'pass')]), false)
+check('ani pass -> unmeasured', worthTelling([move('pass', 'unmeasured')]), false)
+check('ale pass -> fail juz tak', worthTelling([move('pass', 'fail')]), true)
+check('i fail -> pass tez', worthTelling([move('fail', 'pass')]), true)
+check('mieszanka liczy sie przez zmierzona czesc', worthTelling([move('unmeasured', 'pass'), move('pass', 'fail')]), true)
+check('brak zmian to brak maila', worthTelling([]), false)
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

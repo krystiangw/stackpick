@@ -62,9 +62,21 @@ export function changesBetween(before: ScoredCheck[], after: ScoredCheck[]): Wat
   return changes
 }
 
-/** A scan is worth an email when a verdict moved. A score moving without one is arithmetic. */
+/**
+ * A scan is worth an email when a verdict moved between two states we could both measure. A score
+ * moving without a verdict is arithmetic, and a verdict moving in or out of "unmeasured" is
+ * usually us: the note on changesBetween says so, and 2026-08-15 put a number on it. Between the
+ * two passes of one reseed, 21 of the 22 verdicts that moved went unmeasured to pass, sixteen of
+ * them because the first pass asked npm with a cold cache and the second found the answer. A
+ * watcher active that hour would have been told their typed SDK now passes, about a change that
+ * happened entirely inside our scanner.
+ *
+ * Such a change is still listed in the mail when something else earned it, which is what the
+ * comment on changesBetween asks for: "we could not measure your signup this week" is news to
+ * somebody who passed it last week. It is not, on its own, a reason to write.
+ */
 export function worthTelling(changes: WatchChange[]): boolean {
-  return changes.length > 0
+  return changes.some((change) => RANK[change.from] >= 0 && RANK[change.to] >= 0)
 }
 
 /**
