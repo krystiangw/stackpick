@@ -329,8 +329,9 @@ export default async function MethodologyPage() {
             {ours.failing.length > 0 && (
               <>
                 {' '}
-                {/* One expression, because a line break after </code> renders as a space and put
-                    one in front of the comma. */}
+                {/* One expression rather than a wrapped sentence, which is a readability choice
+                    and nothing more: the two commits that split it were chasing a space that my
+                    own tag-stripping extraction had added, not the page. */}
                 We fail <code>{ours.failing.join(', ')}</code>{', and we are not going to fix it: our tools take no credential, so there is no client for an agent to register, and rewriting the rule until we passed would be marking our own work.'}
               </>
             )}
