@@ -30,13 +30,28 @@ jobs:
       - name: The corpus must not have quietly shrunk
         run: |
           set -euo pipefail
-          rows=$(curl -sS --max-time 30 https://letagentsin.com/corpus.json | jq '.rows | length')
-          echo "corpus rows: $rows"
+          corpus=$(curl -sS --max-time 30 https://letagentsin.com/corpus.json)
+          rows=$(echo "$corpus" | jq '.rows | length')
+          # Seconds since the newest row was scanned. A reseed writes one every few seconds, so a
+          # small corpus with a fresh newest row is a crossover in progress and a small corpus with
+          # a stale one is a reseed that stopped.
+          # sub() strips the milliseconds: jq's fromdate rejects them, and finding that out on the
+          # live file beat trusting the expression.
+          freshness=$(echo "$corpus" | jq -r 'now - ([.rows[].scannedAt | sub("\\.[0-9]+Z$"; "Z") | fromdate] | max) | floor')
+          echo "corpus rows: $rows, najnowszy skan sprzed ${freshness}s"
           # An interrupted reseed splits the corpus across two formula versions and we publish only
           # the majority, which took the site from 170 vendors to 95 without a single error anywhere.
           if [ "$rows" -lt 150 ]; then
-            echo "::error::corpus is down to $rows rows, which usually means a reseed stopped half way"
-            exit 1
+            # This fired on 2026-08-14 at 112 rows in the middle of a deliberate reseed, which is a
+            # false alarm on an hourly check and teaches people to ignore the colour. A reseed in
+            # flight is the one case where a shrunken corpus is expected, and it is the only case
+            # where the newest row is minutes old.
+            if [ "$freshness" -lt 1800 ]; then
+              echo "corpus jest maly, ale najnowszy wiersz ma ${freshness}s: to reseed w toku, nie awaria"
+            else
+              echo "::error::corpus is down to $rows rows and the newest is ${freshness}s old, so a reseed stopped half way"
+              exit 1
+            fi
           fi
 
       - name: A scan must still run end to end
