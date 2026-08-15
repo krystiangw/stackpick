@@ -7,6 +7,36 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
+## DRUGI PRZEGLAD: obie moje wczorajsze poprawki byly zepsute, kazda inaczej
+
+Druga porcja zmian (400 linii) tez poszla bez przegladu, wiec subagent przejrzal ja tak samo.
+**Dwa znaleziska wysokiej wagi i oba dotyczyly kodu, ktory napisalem tego samego dnia.**
+
+**1. Straznik TTL byl martwym kodem dokladnie tam, gdzie mial dzialac.** `retuneRegistryExpiry`
+wisialo w `.then()` **za** `Promise.all`, w ktorym siedzi kolidujacy `createIndex`. Gdy stala
+rozjedzie sie z baza, ten `createIndex` rzuca `IndexOptionsConflict`, `Promise.all` odrzuca,
+**wszystkie `.then` sa pomijane**, a `catch` to polyka, bo tak zaprojektowano po awarii z 13.08.
+Poprawka dzialala wczoraj **wylacznie dlatego, ze przebudowalem indeks recznie przed wdrozeniem**,
+czyli w stanie, w ktorym nie miala nic do roboty.
+
+Przeniesione **przed** wsad. **Udowodnione, a nie zadeklarowane:** ustawilem baze z powrotem na
+6 godzin, jeden odczyt przez sklep przywrocil 604800 s, **2117 wpisow przetrwalo**.
+
+**2. Moja wlasna poprawka `worthTelling` wyciszyla to, co produkt obiecuje wykrywac.** Wymog
+„zmiana miedzy stanami oba zmierzonymi" jest sluszny dla naszego cache npm i **falszywy dla
+blokady po stronie vendora**: klient wlaczajacy bot protection przestawia `docs_without_js`,
+`user_agents_allowed` i `no_crawl_delay` z `pass` na `unmeasured` i **nic wiecej sie nie rusza**.
+Mail by nie poszedl, choc to doslownie zdanie ze strony glownej: „an edge rule that starts refusing
+agents changes nothing a person sees in a browser".
+
+Dolozony waski wyjatek: przejscie w `unmeasured` **liczy sie, gdy skan widzi, ze to ich brzeg nas
+odrzucil** (`blocksPlainRequests` albo nieczytelny `robots.txt`), a nie gdy to nasz cache. Przypiete
+siedmioma testami, w tym kontrolka „blokada brzegu bez zadnej zmiany to nadal brak maila".
+
+**Wniosek procesowy, drugi raz tego samego dnia: kod, ktory przechodzi typecheck, testy i wlasne
+oczy, potrafi byc zepsuty w sposob, ktory widac dopiero z zewnatrz.** Oba znaleziska byly
+w poprawkach napisanych po to, zeby cos naprawic.
+
 ## PIERWSZY W HISTORII TEGO PRODUKTU MAIL O PRAWDZIWEJ ZMIANIE, DOSTARCZONY
 
 Po poprawce `worthTelling` przeszedlem korpus w poszukiwaniu pary z ruchem miedzy stanami **oba
