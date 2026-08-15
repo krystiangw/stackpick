@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { buildIndustryReport } from '@/lib/industry'
 import { NOISE_FLOOR_PERCENT, publishedCorpus } from '@/lib/published'
 import { AGENT_ENTRY_PATHS, PROVISIONING_PATTERN_COUNT, PROVISIONING_PATTERN_LABELS } from '@/lib/scan/funnel'
 import { AI_CRAWLERS } from '@/lib/scan/robots'
 import { verdictOf } from '@/lib/corpus'
-import type { Report } from '@/lib/store'
+import { SITE_URL } from '@/lib/site'
+import { getStore, type Report } from '@/lib/store'
 import { CHECKS, FORMULA_VERSION, MAX_SCORE, STAGES } from '@/lib/score'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
@@ -39,12 +41,32 @@ function evidenceForPackages(reports: Report[]) {
   }
 }
 
+/**
+ * Our own scorecard, from the most recent scan of this site. Computed rather than typed, and
+ * published for the reason a reader should ask about first: a scanner that grades 170 companies
+ * and never shows its own row is asking for trust it has not offered.
+ */
+function ourOwnRow(report: Report | null) {
+  if (!report) return null
+  const failing = report.scorecard.checks.filter(
+    (check) => !check.inconclusive && !check.notApplicable && check.points < check.max,
+  )
+  return {
+    total: report.scorecard.total,
+    measurable: report.scorecard.measurable,
+    scannedAt: report.scannedAt.slice(0, 10),
+    failing: failing.map((check) => check.id),
+    reportId: report.id,
+  }
+}
+
 export default async function MethodologyPage() {
   // Computed, because both numbers were written by hand in a sentence comparing us to another
   // tool, and one of them had drifted from 95 to 91 without anybody noticing. The guard only
   // watches /findings, so a hardcoded number here is a number nothing recomputes.
   const report = await buildIndustryReport()
   const packageEvidence = evidenceForPackages((await publishedCorpus()).reports)
+  const ours = ourOwnRow(await getStore().latestForDomain(new URL(SITE_URL).hostname.replace(/^www\./, '')))
   const shareOf = (stage: string) =>
     Math.round((report?.stages.find((row) => row.stage === stage)?.share ?? 0) * 100)
   const discoveryShare = shareOf('discovery')
@@ -290,6 +312,31 @@ export default async function MethodologyPage() {
           it, which is a question about your codebase rather than about your funnel.
         </p>
       </section>
+
+      {ours && (
+        <section className="border-b border-rule py-12">
+          <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">What we score</h2>
+          <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+            This scanner is pointed at this site too. On {ours.scannedAt} it measured{' '}
+            <span className="font-mono tabular-nums">
+              {ours.total} of {ours.measurable}
+            </span>{' '}
+            points here, and{' '}
+            <Link href={`/r/${ours.reportId}`} className="text-brass underline underline-offset-4">
+              the scorecard is public
+            </Link>{' '}
+            like everyone else&apos;s.
+            {ours.failing.length > 0 && (
+              <>
+                {' '}
+                We fail <code>{ours.failing.join(', ')}</code>, and we are not going to fix it: our
+                tools take no credential, so there is no client for an agent to register, and
+                rewriting the rule until we passed would be marking our own work.
+              </>
+            )}
+          </p>
+        </section>
+      )}
 
       <section className="py-12">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Known limits</h2>
