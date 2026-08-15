@@ -7,6 +7,34 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
+## MONITORING NIE DZIALAL PRZEZ DWA DNI I NIC O TYM NIE POWIEDZIALO
+
+Poszedlem sprawdzic, czy obserwujacy cokolwiek dostali po trzech podbiciach formuly w dwa dni.
+Odpowiedz byla gorsza od pytania: **trzy potwierdzone obserwacje nie byly sprawdzone NIGDY**,
+a cron monitoringu **padal 13 i 14 sierpnia**, ostatni sukces 12 sierpnia.
+
+**Przyczyna: HTTP 503, czyli nasz wlasny guard dzialajacy poprawnie.** Endpoint odmawia startu,
+gdy baza nie przyjmuje zapisow, a o 5:45 UTC obu tych dni klaster byl jeszcze zapchany (prune
+zrobilem 14.08 rano). Guard zachowal sie dokladnie tak, jak zaprojektowany: **nie przeskanowal
+czterdziesci razy cudzej strony po to, zeby nie miec gdzie zapisac wyniku.**
+
+**Powracajaca polowa produktu byla martwa przez dwa dni i dowiedzielismy sie przypadkiem.**
+Workflow byl czerwony, tyle ze **na czerwone workflowy nikt nie patrzy**.
+
+**Naprawione i potwierdzone:**
+- Cron uruchomiony recznie: `{"checked":1,"mailed":0,"remaining":0}`, zaleglosc zeszla do zera.
+  Maila nie wyslal **poprawnie**: po zmianie formuly nie ma porownywalnego punktu odniesienia,
+  wiec pierwszy przebieg po niej jest z zalozenia cichy.
+- Prawdziwy przebieg workflow **konczy sie sukcesem**, wiec to nie byla sztuczka z curlem.
+- **Cotygodniowy alarm sprawdza teraz, czy monitoring konczy sie sukcesem** i oblewa, gdy nie.
+  Najtansze mozliwe miejsce, bo cos juz tam chodzi co tydzien.
+- Sam straznik **zapalil sie przy pierwszym uruchomieniu z 403** (domyslny token nie czyta
+  przebiegow) i to byla dobra wiadomosc: alarm, ktory nie dziala, ma padac glosno. Po dodaniu
+  `actions: read` raportuje „ostatni przebieg monitoringu: success".
+
+**Sprawdzone przed uruchomieniem czegokolwiek:** wszystkie szesc obserwacji nalezy do skrzynek
+Krystiana i mojej testowej. Zaden mail nie moglby trafic do obcej osoby.
+
 ## VENDOR SKANUJACY SIEBIE DOSTAWAL GORSZY WYNIK NIZ TEN, KTORY O NIM PUBLIKUJEMY
 
 Wyszlo z pomiaru wyzej: **zimny cache rejestru npm kosztuje szesnascie domen ich pakiet**. Reseed
@@ -85,7 +113,10 @@ i przez dwa dni straszyly skonczona robota. **Lista jest przejrzana.**
   rozjechanych).
 - **Zapora przed adresami wewnetrznymi**, lacznie z domena publiczna wskazujaca petle zwrotna.
 
-**Trzy rzeczy, ktore znalazlem i naprawilem, a ktore uderzalyby w klienta:**
+**Cztery rzeczy, ktore znalazlem i naprawilem, a ktore uderzalyby w klienta:**
+- **Monitoring nie dzialal przez dwa dni.** Cron padal na 503 (baza nie przyjmowala zapisow),
+  workflow byl czerwony i nikt na to nie patrzyl. Dziala, zaleglosc wyczyszczona, a cotygodniowy
+  alarm pilnuje teraz, zeby to sie nie powtorzylo po cichu.
 - **Odpowiedz na naszego maila wracala odbiciem.** Nadawca `scorecards@` nie odbiera; `Reply-To`
   wskazuje teraz `hello@`, ktory dowozi do Twojej skrzynki.
 - **Komunikat o limicie skanow nazywal zla domene** („docs.acme.com skanowano 5 razy", gdy godzine
