@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-15 rano (formula 9.16 na produkcji, korpus w trakcie reseedu na 9.16, baza zdrowa)
+# Let Agents In: stan na 2026-08-15 (formula 9.17 na produkcji, korpus 170 wierszy na 9.17, baza zdrowa)
 
 Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
 **Dwie sekcje na dole tego bloku, "Co zostało z audytów" i "Następne kroki merytoryczne", są
@@ -6,6 +6,56 @@ kontraktem dla watchdoga. Aktualizuj je przy każdej zamkniętej pozycji, inacze
 listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, nie listą zadań.
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
+
+## LLMS.TXT: SPRAWDZALISMY CO NAJWYZEJ POLOWE LINKOW, A NA WLASNYM PLIKU ZADNEGO (9.17, korpus przesiany)
+
+Check `llms_txt` odbiera punkt za mape, ktorej linki jeszcze odpowiadaja. Wyciagal **tylko adresy
+bezwzgledne**, wiec wzgledne pomijal w ciszy. Skala: **54 ze 136** zaliczajacych vendorow je
+publikuje, knock.app pisze **1347 wzglednych na 4 bezwzgledne**, wiec jego "probka dwunastu"
+losowala sie z czterech linkow. **Nasz wlasny plik jest w calosci wzgledny**, czyli bralismy punkt
+bez sprawdzenia ani jednego linku, w checku, ktorym oceniamy innych. Teraz nasz wiersz probkuje 11.
+
+**Przeglad subagenta zatrzymal ten commit przed wdrozeniem** i to jest tu najwazniejsze. Nie czytal
+kodu, tylko **odtworzyl nowy sampler 1:1 i puscil go na prawdziwych plikach z opublikowanego
+korpusu**. Moja "scisle lepsza" poprawka opublikowalaby z nazwy falszywe oskarzenia o martwe linki
+i zabrala punkt szesciu vendorom, ktorych pliki sa w porzadku. Trzy bledy, kazdy potwierdzony
+osobno przed przyjeciem:
+
+1. **Baza to adres, ktory ODPOWIEDZIAL, nie ten, o ktory pytalismy.** `docs.twilio.com/llms.txt`
+   serwuje sie z `www.twilio.com/docs/`, wiec szesc zywych stron Twilio wychodzilo jako 404.
+   Osiem ze 136 plikow przekierowuje gdzie indziej.
+2. **W `llms-full.txt` nie wolno rozwiazywac linkow wzglednych w ogole.** To konkatenacja stron
+   dokumentacji, wiec `../queries/select` bylo wzgledne wobec STRONY, nie wobec pliku. Blad z
+   definicji, ktorego wybor bazy nie naprawia. Zmierzone: `payloadcms.com/authentication/overview`
+   → 404, prawdziwe `payloadcms.com/docs/authentication/overview` → 200.
+3. **Obrazek i plik zrodlowy to nie strona.** maptiler.com tracil punkt przez dwie miniatury
+   `.webp`. Odfiltrowane razem z `.mdx`, `.svg` i self-linkiem z golej kotwicy.
+
+Przy okazji: probkowanie bralo pierwsze 12 linkow zawsze, gdy bylo ich 13-23 (czyli dokladnie to,
+czemu mialo zapobiegac), i nigdy nie siegalo ostatnich 8% duzego pliku. Teraz rownomiernie z
+obiema koncowkami. Naprawione tez trzy nieprawdziwe zdania publiczne: liczebnik plikow bral sie z
+obecnosci `llms-full.txt` zamiast z liczby plikow, ktore faktycznie wniosly linki; vendor
+publikujacy wylacznie `llms-full.txt` byl informowany, ze ma tez `llms.txt`; strona findings
+obiecywala "five links from each file" przy dwunastu ze wspolnej puli.
+
+**Efekt na korpusie: 170 wierszy na 9.17, zero sprzecznosci, zaden vendor nie stracil punktu za
+`llms_txt`.** knock.app ujawnia jeden **prawdziwy** martwy link (`/api-reference/schedules/.md`,
+404, faktycznie obecny w ich pliku), niewidoczny przez caly czas, bo wzgledny.
+
+Pulapka trafila do KB: `clad-kb show skaner-link-wzgledny-rozwiazuj-wzgledem-adresu-ktory-odpowie`.
+
+## 429 NIE JEST WLASNOSCIA VENDORA, TYLKO NASZEGO SPOSOBU PYTANIA (znalezione, NIENAPRAWIONE)
+
+Z czterech werdyktow pogorszonych po reseedzie **dwa to nasze wlasne 429** (split.io i
+locationiq.com, `machine_readable_api`). W skali korpusu: **10 z 294 werdyktow "Unmeasurable"
+bierze sie z 429**, z czego piec to sam contentful.com, czyli caly wiersz vendora opisuje glownie
+nasze limity, a nie jego produkt.
+
+Rozstrzygajacy pomiar: `docs.split.io`, `docs.locationiq.com` i `postmarkapp.com/developer`
+odpowiadaja **200 z laptopa i 429 z dyna**, wszystkie za Cloudflare. Cache tego nie zatruwa
+(rejestr trzyma tylko `ok` i 404), wiec 429 reprodukuje sie takze przy **pojedynczym** skanie, co
+znaczy, ze nawal jest **wewnatrz jednego skanu** (do 6 rownoleglych zadan na host), a nie miedzy
+domenami reseedu. To jest do naprawienia po naszej stronie i jest nastepna pozycja.
 
 ## NASZ WLASNY OPENAPI POMIJAL DWIE RZECZY, I OBIE SA TYM, CO PUNKTUJEMY U INNYCH
 
@@ -1376,6 +1426,12 @@ paski etapów przestały odwracać dane, karta OG nazywa domenę.
 
 ## Co zostało z audytów, w kolejności wagi
 
+**Stan 2026-08-15 (po 9.17): dwudziesty przebieg byl przegladem wlasnej zmiany punktacji i jako
+jedyny do tej pory zatrzymal commit przed wdrozeniem.** Wniosek do powtarzania: przy zmianie regul
+punktacji recenzent ma **odtworzyc nowy algorytm na prawdziwych danych z korpusu i policzyc, ile
+wierszy zmienia werdykt oraz ktore z tych zmian sa falszywe**, a nie czytac kod. Czytanie kodu nie
+wykrylo zadnego z trzech bledow, ktore razem zabralyby punkt szesciu niewinnym vendorom.
+
 **Stan 2026-08-15: wszystkie 15 checkow ma udokumentowany przebieg adwersaryjny.** Przebiegi 14-19
 (14.08) objely `mcp_present`, 736 publikowanych adresow, `machine_readable_api`, `signup_no_captcha`,
 `llms_txt`, `typed_package` i `self_serve`: **okolo 900 werdyktow, 1 blad w danych** (`statsig.com`,
@@ -1422,8 +1478,16 @@ naprawiony w 9.13). Wczesniejsze przebiegi 1-13 sa opisane w dzienniku rund.
 
 ## Następne kroki merytoryczne
 
-**Stan 2026-08-15: lista ponizej jest historia zamknietych pozycji.** Otwarte sa tylko te,
-i wszystkie sa decyzjami Krystiana albo wymagaja konta, ktorego agent nie zaklada:
+**Stan 2026-08-15: lista ponizej jest historia zamknietych pozycji.** Otwarte i wykonalne przez
+agenta:
+
+- **429 z naszej winy psuje 10 werdyktow w korpusie** (piec to sam contentful.com). Zmierzone:
+  te hosty odpowiadaja 200 z laptopa i 429 z dyna, a 429 reprodukuje sie przy **pojedynczym**
+  skanie, wiec nawal jest wewnatrz jednego skanu (do 6 rownoleglych zadan na host), nie miedzy
+  domenami reseedu. Kierunek: uszanowac `Retry-After` i ponowic raz, w granicach budzetu skanu.
+  **To jest nastepna pozycja i nie wymaga niczyjej decyzji.**
+
+Reszta wymaga decyzji Krystiana albo konta, ktorego agent nie zaklada:
 
 - **Publikacja w rejestrze MCP**: `server.json` gotowy w korzeniu repo, wymaga rekordu DNS.
 - **Bing Webmaster Tools i trzy katalogi MCP**: wymagaja zalozenia kont. **Agent kont nie zaklada.**
