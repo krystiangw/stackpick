@@ -2,11 +2,18 @@ import { MongoClient } from 'mongodb'
 import { CURATED_DOMAINS } from '../src/lib/categories'
 
 /**
- * How much a verdict moves when nothing about the vendor or the rules has changed.
+ * What moves between the two passes of one reseed, and in which direction.
  *
- * A reseed runs two passes over the same 170 domains minutes apart on one formula, so the pair it
- * leaves in the database is a free measurement of our own repeatability: any check that differs
- * between the two is noise, because neither the site nor the scoring moved in between.
+ * Written to be a free noise-floor measurement and measured out of that job on the first run. A
+ * reseed's two passes differ in more than time: the first asks npm cold and the second finds the
+ * answers cached, so both pairs available on 2026-08-15 moved **one way only** (9.16: 21 up, 1
+ * down, sixteen of them typed_package; 9.14: 2 up, 0 down). One-directional movement is a
+ * systematic effect, not noise, and quoting either percentage as a noise floor would overstate how
+ * unstable the scanner is.
+ *
+ * So this is a detector of systematic effects between passes, and the published NOISE_FLOOR_PERCENT
+ * stays where a dedicated measurement put it. A real noise floor needs two passes with the same
+ * cache state on both sides, which a two-pass reseed cannot give.
  *
  * The published figure on /methodology is dated 12 August and was measured on formula 9.8. The
  * scanner has since moved through nine rule changes, so quoting it as current would be quoting a

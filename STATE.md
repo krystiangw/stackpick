@@ -7,6 +7,37 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
+## KORPUS NA 9.16, I NARZEDZIE, KTORE ZMIERZYLO SIE Z WLASNEJ ROLI
+
+**Reseed zakonczony: 170 wierszy na formule 9.16, 0 sprzecznosci, 21 pilnowanych liczb bez
+rozjazdu.** Okno rozjazdu formul zamkniete. Bariera szesciu godzin zadzialala: petla ponawiala
+reseed dziesiec razy i przepuscila go dopiero jej wlasny guard, bez `FORCE`.
+
+**Guard regresji: 6 obnizen, 2 byly nasza flaka.** `locationiq.com` (429 przy pytaniu o markdown)
+i `postmarkapp.com` (jedna strona dokumentacji zamiast trzech) wrocily po jednym przeskanowaniu.
+Trwale sa cztery: froala nadal odpowiada 403, `mongodb.com` renderuje **66 znakow bez JavaScriptu**,
+a `shopify.com` ma rejestracje, ktorej nie da sie zmierzyc.
+
+**Narzedzie do podlogi szumu zmierzylo sie z wlasnej roli i to jest wynik, nie porazka.**
+Napisalem je, zeby czytac za darmo pare, ktora reseed i tak zostawia. Pierwszy przebieg na 9.16 dal
+**0,86 procent** i o malo tego nie opublikowalem jako nowej podlogi szumu. Rozklad kierunkow
+zatrzymal to w pol kroku:
+
+| para | ruchow | w gore | w dol |
+|---|---|---|---|
+| 9.16 | 22 | **21** | 1 |
+| 9.14 | 2 | **2** | 0 |
+
+**Losowy szum bylby symetryczny.** Asymetria 21:1 to efekt systematyczny: pierwszy przebieg reseedu
+pyta npm z zimnym cache, npm odmawia, i **szesnascie domen odzyskuje pakiet dopiero w drugim
+przebiegu** (`typed_package` 0 → 1). Para z 9.14 jest jednokierunkowa tak samo, tylko slabiej.
+
+**Wniosek: dwa przebiegi jednego reseedu NIE moga zmierzyc podlogi szumu**, bo roznia sie stanem
+cache po obu stronach. Narzedzie zostaje jako **detektor efektow systematycznych** i samo o tym
+mowi, a publikowany `NOISE_FLOOR_PERCENT` zostaje tam, gdzie postawil go dedykowany pomiar.
+Zmiana publikowanej liczby o wlasnej wiarygodnosci na podstawie dwoch ruchow bylaby przesada
+w druga strone.
+
 ## WEEKEND W SKROCIE (dla Krystiana, poniedzialek rano)
 
 Ponizej jest 70 sekcji. Ta jedna wystarczy, zeby wiedziec, co sie zmienilo i co czeka na Ciebie.
