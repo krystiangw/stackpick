@@ -329,10 +329,9 @@ export default async function MethodologyPage() {
             {ours.failing.length > 0 && (
               <>
                 {' '}
-                We fail <code>{ours.failing.join(', ')}</code>
-                {', and we are not going to fix it: our'}
-                {' tools take no credential, so there is no client for an agent to register, and '}
-                {'rewriting the rule until we passed would be marking our own work.'}
+                {/* One expression, because a line break after </code> renders as a space and put
+                    one in front of the comma. */}
+                We fail <code>{ours.failing.join(', ')}</code>{', and we are not going to fix it: our tools take no credential, so there is no client for an agent to register, and rewriting the rule until we passed would be marking our own work.'}
               </>
             )}
           </p>
