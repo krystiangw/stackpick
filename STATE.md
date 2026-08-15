@@ -7,6 +7,26 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
+## PUBLIKUJEMY WLASNY WYNIK, LACZNIE Z CHECKIEM, KTOREGO OBLEWAMY
+
+Skaner ocenia 170 firm i **nigdzie nie pokazywal wlasnego wiersza**, a nasza domena nie jest nawet
+w korpusie, bo nie jest kuratorowanym vendorem. To luka wiarygodnosciowa, nie techniczna.
+
+`/methodology` mowi teraz, **liczba wyliczana z ostatniego skanu, nie wpisana**: „On 2026-08-15 it
+measured **11 of 12** points here", z linkiem do naszej wlasnej karty, publicznej jak kazda inna.
+
+**Oblewamy `oauth_dcr` i nie zamierzamy tego naprawiac**, co strona mowi wprost: nasze narzedzia
+nie biora zadnych poswiadczen, wiec **nie ma klienta do zarejestrowania**, a przepisanie reguly az
+do naszego zaliczenia byloby ocenianiem wlasnej pracy. To bylo kuszace i dlatego warto zapisac, ze
+tego nie zrobilem: audytor, ktory dostraja punktacje pod siebie, przestaje byc audytorem.
+
+**Wpadka warta zapisania, bo trzeci raz w tym weekendzie ta sama:** zobaczylem na stronie
+`oauth_dcr ,` ze spacja przed przecinkiem i **dwoma commitami scigalem blad, ktorego nie bylo**.
+Surowy HTML mial `<code>oauth_dcr</code>,` bez spacji od samego poczatku; spacje dokladal **moj
+skrypt ekstrakcji**, ktory zamienia kazdy tag na spacje. Komentarz, ktory po drodze napisalem
+(„line break renders as a space"), **klamal o przyczynie** i zostal poprawiony. Sprawdzaj narzedzie,
+zanim uwierzysz w to, co pokazuje - takze wtedy, gdy pokazuje literowke.
+
 ## DWA OSTATNIE ZNALEZISKA: straznik zgadzajacy sie przez przypadek i strona placaca za dwa pola
 
 **Audyt liczyl pilnowana liczbe inaczej niz strona, ktora ja wypisuje.** Strona liczy dopasowania
