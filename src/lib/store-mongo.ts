@@ -77,6 +77,17 @@ async function collections(): Promise<{
     // Mongo expires them, so nothing here has to remember to.
     answers.createIndex({ at: 1 }, { expireAfterSeconds: REGISTRY_TTL_MS / 1000 }),
   ])
+    // createIndex does not change the expiry of an index that already exists, and the error it
+    // raises for the attempt is swallowed three lines down. So raising REGISTRY_TTL_MS in the code
+    // would have left the database expiring answers on the old schedule for ever, with nothing
+    // anywhere saying so. collMod is the only way to move it, and it is a no-op when the value
+    // already matches.
+    .then(() =>
+      database.command({
+        collMod: 'registryAnswers',
+        index: { keyPattern: { at: 1 }, expireAfterSeconds: REGISTRY_TTL_MS / 1000 },
+      }),
+    )
     .then(() => undefined)
     // Creating an index is a write, and awaiting it made every read depend on the cluster
     // accepting writes. On 2026-08-13 the cluster hit its quota and refused them, so reading one
