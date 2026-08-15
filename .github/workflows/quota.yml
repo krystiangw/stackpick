@@ -16,6 +16,11 @@ jobs:
   quota:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # The default token cannot read workflow runs, and the step below asks for one: without this
+    # the guard fails 403 every week, which is an alarm about itself rather than about the product.
+    permissions:
+      actions: read
+      contents: read
     steps:
       - name: Ask how much room is left
         env:
