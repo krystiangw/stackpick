@@ -495,11 +495,31 @@ check('zdanie liczy strony i pliki osobno', readPagesAndFiles(['https://v.test/d
 console.log('sprzecznosci wewnatrz jednego wiersza')
 const doorCheck = CHECKS.find((c) => c.id === 'answers_plain_request')!
 // contentful.com read "no agent reaches the site at all" here and "a limit we triggered rather
-// than a rule about agents" from the signup check, on the same scan, about the same 429.
+// than a rule about agents" from the signup check, on the same scan, about the same 429. Until
+// 9.18 the excuse won. It was the false half: both vendors serve `x-vercel-mitigated: challenge`
+// to a browser from a laptop with no traffic of ours near them, so the 429 is the status of a
+// wall and not a limit we caused.
 const challenged429 = doorCheck.evaluate({
   botChallenge: true, agentStatus: 429, agentStatusesSeen: [429, 429, 429], site: 'https://v.test', challengeAdmits: [],
 } as never)
-check('challenge zlozony z samych 429 to nasz ruch', challenged429.inconclusive, true)
+check('challenge zlozony z samych 429 to sciana, nie nasz ruch', challenged429.inconclusive, undefined)
+check('i kosztuje punkt', challenged429.points, 0)
+// The other half, and the reason this is not just "429 always counts": a burst with no challenge
+// header stays ours. postmarkapp.com answered (200, 429, 200) and 200 to the same laptop.
+check('429 bez wyzwania nadal jest nasz', doorCheck.evaluate({
+  botChallenge: false, rateLimitedUs: true, agentStatus: 429, agentStatusesSeen: [429, 429, 429], site: 'https://v.test', challengeAdmits: [],
+} as never).inconclusive, true)
+
+// The same distinction on the door the contradiction was measured against, so the two checks
+// cannot drift apart again: same edge, same 429, same answer.
+const reach = CHECKS.find((c) => c.id === 'signup_reachable')!
+const walledSignup = (challenge: boolean) => reach.evaluate({
+  discovered: { signup: 'https://v.test/signup', pricing: 'https://v.test/pricing' },
+  funnel: { signup: { url: 'https://v.test/signup', reachable: false, consistent: true, status: 429, statusesSeen: [429, 429, 429], browserStatus: 429, challenge } },
+} as never)
+check('rejestracja za wyzwaniem to sciana', walledSignup(true).inconclusive, undefined)
+check('ta sciana kosztuje punkt', walledSignup(true).points, 0)
+check('rejestracja z gologo 429 zostaje niemierzalna', walledSignup(false).inconclusive, true)
 // A 403 challenge is still the vendor's wall and still costs the point.
 check('challenge na 403 nadal kosztuje punkt', doorCheck.evaluate({
   botChallenge: true, agentStatus: 403, agentStatusesSeen: [403, 403, 403], site: 'https://v.test', challengeAdmits: [],

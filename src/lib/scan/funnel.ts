@@ -1,4 +1,4 @@
-import { AGENT_UA, BROWSER_UA, fetchUrl, isEdgeRefusal, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, timeLeftMs, visibleTextLength, type Fetched } from './http'
+import { AGENT_UA, BROWSER_UA, fetchUrl, isBotChallenge, isEdgeRefusal, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, timeLeftMs, visibleTextLength, type Fetched } from './http'
 
 export const AGENT_ENTRY_PATHS = [
   '/agent-signup.md',
@@ -318,6 +318,12 @@ export type SignupFindings = {
    * answers 200 to one.
    */
   browserStatus: number | null
+  /**
+   * Whether the edge answered with a challenge rather than a limit. Vercel's attack mode sends
+   * 429 with `x-vercel-mitigated: challenge`, so the status alone cannot tell "you are asking too
+   * often" from "prove you are a browser", and we excused the second as the first.
+   */
+  challenge?: boolean
 }
 
 /**
@@ -707,6 +713,7 @@ async function inspectSignup(url: string | null): Promise<SignupFindings> {
   return {
     url,
     browserStatus: asBrowser === null ? null : asBrowser.status,
+    challenge: isBotChallenge(got),
     status: got.status,
     statusesSeen: got.statusesSeen,
     consistent: got.consistent,

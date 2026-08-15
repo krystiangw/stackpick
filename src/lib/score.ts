@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.17'
+export const FORMULA_VERSION = '9.18'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -117,18 +117,16 @@ export const CHECKS: Check[] = [
       // browser does invisibly and no HTTP client does at all, so it is the sharpest possible
       // answer to this check rather than an excuse for skipping it.
       //
-      // Unless every try was a 429, in which case this branch and the one below it disagreed about
-      // the same response: contentful.com read "no agent reaches the site at all" here and
-      // "answered 429, which is a limit we triggered rather than a rule about agents" from the
-      // signup check, on the same scan, about the same edge. One of those cost them a point.
-      if (f.botChallenge && f.agentStatusesSeen?.length && f.agentStatusesSeen.every((status) => status === 429)) {
-        return {
-          points: 0,
-          detail: `Unmeasurable: answered 429 to ${AGENT_UA}${tries} behind a challenge, and a 429 is our own burst rather than an answer about agents`,
-          inconclusive: true,
-          unblock: 'Nothing for you to do. We will rescan later and this becomes measurable.',
-        }
-      }
+      // That was true of an all-429 challenge too until 9.18, and it was the wrong way to settle a
+      // real contradiction: this check read "no agent reaches the site at all" while the signup
+      // check read "a limit we triggered", about the same edge on the same scan, so the excuse
+      // won. Measured on 2026-08-15, the excuse was the false half. contentful.com and
+      // pandadoc.com answer 429 with `x-vercel-mitigated: challenge` to a Chrome user-agent, from
+      // a laptop, with no traffic of ours anywhere near them. Vercel's attack mode simply uses 429
+      // as the status of its wall, so reading the number and ignoring the header let two vendors
+      // out of the one finding this check exists to make. The control is the other half:
+      // postmarkapp.com answered (200, 429, 200) with no challenge header and 200 from the same
+      // laptop, and that 429 really is ours - it is still excused, one branch below.
       if (f.botChallenge) {
         // "The site" was a claim about every host we read, and namecheap.com carried it next to a
         // robots.txt we had just read from the same origin. The measurement is one request.
@@ -794,6 +792,15 @@ export const CHECKS: Check[] = [
           }
         }
         // Our own rule everywhere else: a 429 is us asking too often, never a finding about them.
+        // Unless the edge said otherwise in the headers. A challenge served as 429 is a wall an
+        // agent cannot climb and a browser climbs without noticing, which is this check's subject
+        // rather than an excuse for skipping it.
+        if (signup.challenge && tried.every((status) => status === 429)) {
+          return yes(
+            0,
+            `${signup.url} answers ${seen} to an agent, from an edge in challenge mode, so an agent never reaches the form`,
+          )
+        }
         if (tried.every((status) => status === 429)) {
           return {
             points: 0,
