@@ -7,6 +7,34 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
+## PRZEGLAD WSZYSTKICH HARMONOGRAMOW: drugi straznik tez klamal, tylko w druga strone
+
+Po awarii monitoringu sprawdzilem **wszystkie trzy workflowy**, bo pytanie „co jeszcze pada po
+cichu" jest tanie i rzadko bezowocne.
+
+**`health.yml` padl o 23:41, poltorej godziny wczesniej.** Powod: korpus mial wtedy **112 wierszy**,
+bo trwal **moj wlasny reseed** w polowie przejscia na 9.16. Straznik nie mial jak odroznic
+przemiatania w toku od przemiatania przerwanego.
+
+**To jest fałszywy alarm z prawdziwego powodu i gorszy niz brak alarmu**, bo chodzi co godzine
+i uczy ignorowac kolor. Dokladnie ten sam mechanizm, przez ktory nikt nie zauwazyl, ze monitoring
+padal dwa dni.
+
+**Rozroznienie, ktore nie wymaga zadnego dodatkowego stanu:** reseed zapisuje wiersz co kilka
+sekund, wiec **maly korpus ze swiezym najnowszym wierszem to przejscie, a maly ze starym to
+awaria**. Prog: 30 minut.
+
+| wierszy | najnowszy sprzed | werdykt |
+|---|---|---|
+| 112 | 300 s | przepuszcza, reseed w toku |
+| 112 | 7200 s | **alarm** |
+| 149 | 1799 s / 1801 s | przepuszcza / **alarm** |
+| 170 | dowolnie | przepuszcza |
+
+**Pulapka po drodze:** `fromdate` w jq **odrzuca ulamki sekundy**, a nasze znaczniki maja
+milisekundy. Wyszlo to na zywym pliku, bo sprawdzilem wyrazenie na prawdziwych danych zamiast mu
+uwierzyc. Workflow zielony, raportuje teraz obie liczby, a obie galezie sa przetestowane osobno.
+
 ## MONITORING NIE DZIALAL PRZEZ DWA DNI I NIC O TYM NIE POWIEDZIALO
 
 Poszedlem sprawdzic, czy obserwujacy cokolwiek dostali po trzech podbiciach formuly w dwa dni.
