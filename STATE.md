@@ -7,6 +7,32 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
+## PIERWSZY W HISTORII TEGO PRODUKTU MAIL O PRAWDZIWEJ ZMIANIE, DOSTARCZONY
+
+Po poprawce `worthTelling` przeszedlem korpus w poszukiwaniu pary z ruchem miedzy stanami **oba
+zmierzonymi** i wyslalem z niej maila na wlasna skrzynke testowa. **Cala sciezka powracajacej
+polowy produktu jest wiec zademonstrowana od konca do konca**, czego wczesniej nie bylo nigdy.
+
+**`telnyx.com`, dwa werdykty w gore, oba prawdziwe po ich stronie:**
+
+> telnyx.com: llms.txt published now pass
+> llms.txt published: **fail to pass** - 12 probkowanych linkow, wszystkie odpowiadaja
+> MCP surface: **fail to pass** - `https://api.telnyx.com/v2/mcp`, odpowiada JSON-em
+
+Status w Resend: **delivered**.
+
+**Poprawka sprawdzila sie przy okazji na prawdziwych danych.** Pierwsza para, po ktora siegnalem
+(`postmarkapp.com`), miala zmiany `unmeasured→pass` i `pass→unmeasured`, czyli **wylacznie nasz
+pomiar**, i `worthTelling` zwrocilo `false`. Maila nie ma i nie powinno go byc. Dokladnie o to
+chodzilo.
+
+**Uwaga o `mcp_present` u telnyx:** `fail → pass` pod adresem `api.telnyx.com/v2/mcp`. To ten sam
+adres, ktory 14.08 raportowal 404 na GET i `serverInfo` na POST. Wiersz przeszedl w gore po
+**naszej** poprawce z 9.13 (dolozony wersjonowany adres na hoscie `api`), a nie po zmianie u nich.
+Formalnie jest to zmiana miedzy stanami zmierzonymi, wiec regula ja przepuszcza, i to jest
+**poprawne w tym przebiegu** (para pochodzi z dwoch reseedow rozdzielonych zmiana formuly, czego
+`comparableScorecards` w produkcji nie dopusci). W produkcji taka para nigdy nie trafi do maila.
+
 ## MAIL, ZA KTORY KLIENT PLACI, POWIEDZIALBY MU O NASZYM CACHE
 
 Monitoring nie wyslal jeszcze **nigdy** maila o zmianie: kazdy przebieg byl cichy, bo podbicia
