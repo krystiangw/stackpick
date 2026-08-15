@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import { buildIndustryReport } from '@/lib/industry'
-import { NOISE_FLOOR_PERCENT } from '@/lib/published'
+import { NOISE_FLOOR_PERCENT, publishedCorpus } from '@/lib/published'
 import { AGENT_ENTRY_PATHS, PROVISIONING_PATTERN_COUNT, PROVISIONING_PATTERN_LABELS } from '@/lib/scan/funnel'
 import { AI_CRAWLERS } from '@/lib/scan/robots'
-import { buildCorpus } from '@/lib/corpus'
-import { SITE_URL } from '@/lib/site'
+import { verdictOf } from '@/lib/corpus'
+import type { Report } from '@/lib/store'
 import { CHECKS, FORMULA_VERSION, MAX_SCORE, STAGES } from '@/lib/score'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
@@ -25,13 +25,17 @@ const CLASS_COST: Record<string, string> = {
  * Computed on every render rather than written down, because the ratio moves with every reseed and
  * a hand-typed share is a claim that quietly stops being true.
  */
-function evidenceForPackages(rows: { npmSource: string | null; checks: { id: string; verdict: string }[] }[]) {
-  const measured = rows.filter((row) =>
-    row.checks.some((check) => check.id === 'typed_package' && ['pass', 'partial', 'fail'].includes(check.verdict)),
-  )
+function evidenceForPackages(reports: Report[]) {
+  // Reads the published reports rather than building the corpus. buildCorpus runs erratumFor,
+  // otherDomainsNamed and refusesAgentsAtSignup over 170 rows and 15 checks each, and this page
+  // wants two fields; the outage on 2026-08-12 was a crawler opening seventy pages at once.
+  const measured = reports.filter((report) => {
+    const check = report.scorecard.checks.find((c) => c.id === 'typed_package')
+    return check !== undefined && ['pass', 'partial', 'fail'].includes(verdictOf(check))
+  })
   return {
     measured: measured.length,
-    registrySearch: measured.filter((row) => row.npmSource === 'registry-search').length,
+    registrySearch: measured.filter((report) => report.findings?.discovered?.npmSource === 'registry-search').length,
   }
 }
 
@@ -40,8 +44,7 @@ export default async function MethodologyPage() {
   // tool, and one of them had drifted from 95 to 91 without anybody noticing. The guard only
   // watches /findings, so a hardcoded number here is a number nothing recomputes.
   const report = await buildIndustryReport()
-  const corpus = await buildCorpus(SITE_URL, new Date().toISOString())
-  const packageEvidence = evidenceForPackages(corpus?.rows ?? [])
+  const packageEvidence = evidenceForPackages((await publishedCorpus()).reports)
   const shareOf = (stage: string) =>
     Math.round((report?.stages.find((row) => row.stage === stage)?.share ?? 0) * 100)
   const discoveryShare = shareOf('discovery')

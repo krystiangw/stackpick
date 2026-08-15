@@ -210,7 +210,16 @@ const stated: { page: string; pattern: RegExp; expected: number; what: string }[
     // is computed on the page and checked here rather than typed once and forgotten.
     page: '/methodology',
     pattern: /Weakest evidence first: (\d+) of the \d+ measured rows/,
-    expected: corpus.rows.filter((row) => row.npmSource === 'registry-search').length,
+    // The same filter the page applies, not a near-enough one. The page counts registry matches
+    // among rows where typed_package was actually measured; counting every row with an npmSource
+    // drifts the moment the npm phase runs out of budget, because discovery has already set the
+    // source while scoring degrades the check to unmeasured. Equal today at 132, and a guard that
+    // agrees by coincidence is a guard that will raise a false alarm on a quiet Tuesday.
+    expected: corpus.rows.filter(
+      (row) =>
+        row.npmSource === 'registry-search' &&
+        row.checks.some((check) => check.id === 'typed_package' && ['pass', 'partial', 'fail'].includes(check.verdict)),
+    ).length,
     what: 'rows whose package was matched by publisher',
   },
   {
