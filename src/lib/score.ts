@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.16'
+export const FORMULA_VERSION = '9.17'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -196,8 +196,31 @@ export const CHECKS: Check[] = [
         // link the sentence cited appears nowhere in its llms.txt, only on line 4700 of its
         // llms-full.txt. Five rows read that way, all of them in this branch, because the passing
         // branch named both files and this one never did.
-        const files = f.machine.hasLlmsFullTxt ? 'llms.txt and llms-full.txt present' : 'llms.txt present'
-        const across = f.machine.hasLlmsFullTxt ? 'across both files' : 'across the file'
+        // Named from what answered. A vendor who publishes only llms-full.txt was told "llms.txt
+        // and llms-full.txt present", which is half an invention about a file they never wrote.
+        const plain = Object.entries(f.machine.llms).some(([label, file]) => file.present && !label.includes('full'))
+        const files = f.machine.hasLlmsFullTxt
+          ? plain
+            ? 'llms.txt and llms-full.txt present'
+            : 'llms-full.txt present'
+          : 'llms.txt present'
+        // Counted from the files the sample actually drew from, not from hasLlmsFullTxt and not
+        // from the addresses printed: typesense.org serves llms.txt on the apex and on /docs, so
+        // the row named two files and then said the sample ran "across the file", while agora.io
+        // serves three of which one holds no link at all. Either way the reader who checks us
+        // opens a file the sentence sent them to and finds nothing of what we described.
+        const fileCount = links?.files ?? f.machine.llmsUrls?.length ?? 0
+        const named = f.machine.llmsUrls?.length ?? 0
+        const across =
+          // Naming three addresses and then saying "across both files" leaves the reader guessing
+          // which two, so when the sample could not use every file we say so instead.
+          fileCount < named
+            ? `across the ${fileCount === 1 ? 'one of them that carries' : `${fileCount} of them that carry`} links`
+            : fileCount > 2
+              ? `across the ${fileCount} files`
+              : fileCount === 2
+                ? 'across both files'
+                : 'across the file'
         // A curated map whose entries are gone is worse than no map: an agent follows them, gets
         // nothing, and has spent its budget. The point is the file being useful, not present.
         //

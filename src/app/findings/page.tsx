@@ -185,7 +185,7 @@ export default async function FindingsPage() {
           </h2>
           <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
             llms.txt is the one thing this market did adopt, so the sharper question is whether it is
-            maintained. We sample five links from each file and follow them. A file that lists pages which
+            maintained. We follow up to twelve links, spread across the files a domain publishes. A file that lists pages which
             have moved is worse than no file at all: an agent reads it first, follows the links, gets
             nothing, and has spent that much of its budget before it learns anything about the product.
           </p>

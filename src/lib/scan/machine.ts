@@ -23,7 +23,7 @@ export type MachineFindings = {
    * a curated map whose entries 404 is worse than none: an agent follows them, gets nothing, and
    * has spent its budget. agent-ready.dev checks this and we did not.
    */
-  llmsLinks?: { sampled: number; dead: number; firstDead: string | null }
+  llmsLinks?: { sampled: number; dead: number; firstDead: string | null; files: number }
   wellKnown: Record<string, boolean>
   openapi: string[]
   /**
@@ -75,15 +75,62 @@ const MOST_LLMS_LINKS_SAMPLED = 12
  * Whether the map leads anywhere. Only markdown links, only http, and only a handful: the point
  * is to catch a file listing pages that have moved, not to crawl the vendor's documentation.
  * A refusal is not a dead link, because a WAF that turns us away says nothing about the page.
+ *
+ * Relative links count from an index file, and until 9.17 none of them did. An agent reading
+ * llms.txt holds the address it fetched, so `](/docs/start)` is an ordinary link and can rot like
+ * any other, but the pattern only matched `https?://` and skipped them in silence. That is not a
+ * rounding error: 54 of the 136 rows we credit publish some, knock.app writes 1347 relative
+ * against 4 absolute, and their sample of twelve was drawn from those four. Our own file is
+ * entirely relative, so we were the clearest beneficiary of a check we score other people on.
+ *
+ * Only from an index file, though. llms-full.txt is documentation pages concatenated, so the
+ * `../queries/select` inside it was written relative to the page it came from and not to the file:
+ * resolving it against the file invents an address nobody published. Measured on the corpus before
+ * shipping, that alone would have taken the point from payloadcms.com, windmill.dev and agora.io
+ * and printed a dead link by name for each, while every page it accused answers 200 at its real
+ * address. An accusation we cannot stand behind is worse than a check that scores too easily.
  */
-async function sampleLlmsLinks(corpus: string): Promise<MachineFindings['llmsLinks']> {
-  const links = [...new Set([...corpus.matchAll(/\]\((https?:\/\/[^\s)]+)\)/g)].map((match) => match[1]))]
+const RESOURCE_TARGET = /\.(png|jpe?g|gif|svg|webp|ico|mdx|css|js|zip|tar\.gz)$/i
+
+async function sampleLlmsLinks(
+  files: { body: string; base: string; index: boolean }[],
+): Promise<MachineFindings['llmsLinks']> {
+  const seen = new Set<string>()
+  let contributing = 0
+  for (const { body, base, index } of files) {
+    let addedHere = false
+    for (const match of body.matchAll(/\]\(([^\s)]+)\)/g)) {
+      const href = match[1]
+      if (!index && !/^https?:\/\//i.test(href)) continue
+      let resolved: URL
+      try {
+        resolved = new URL(href, base)
+      } catch {
+        continue
+      }
+      // mailto:, tel: and data: are not pages.
+      if (resolved.protocol !== 'https:' && resolved.protocol !== 'http:') continue
+      const url = resolved.href.split('#')[0]
+      // A bare #anchor resolves to the file itself, and an image or a source file is not a page an
+      // agent was sent to: maptiler.com lost the point to two .webp thumbnails that 404 on their
+      // CDN, which says nothing about whether its map leads anywhere.
+      if (url === base.split('#')[0] || RESOURCE_TARGET.test(resolved.pathname)) continue
+      if (seen.has(url)) continue
+      seen.add(url)
+      addedHere = true
+    }
+    if (addedHere) contributing += 1
+  }
+  const links = [...seen]
   if (links.length === 0) return undefined
   // Spread across the file rather than the first N, which is what "sampled" has to mean if we are
   // going to print the word. Taking the head found dead links in 7 files and missed them in 8 more,
   // because a maintained top and a rotten tail is what an unmaintained map actually looks like.
-  const step = Math.max(1, Math.floor(links.length / MOST_LLMS_LINKS_SAMPLED))
-  const sample = links.filter((_, index) => index % step === 0).slice(0, MOST_LLMS_LINKS_SAMPLED)
+  // Evenly, ends included: a step of floor(n/12) took the first twelve whenever n was 13 to 23,
+  // and never reached the last 8% of a file with a thousand entries, which is where rot collects.
+  const wanted = Math.min(MOST_LLMS_LINKS_SAMPLED, links.length)
+  const sample =
+    wanted === 1 ? [links[0]] : Array.from({ length: wanted }, (_, i) => links[Math.round((i * (links.length - 1)) / (wanted - 1))])
   const gone = (answer: { status: number }) => answer.status === 404 || answer.status === 410
   const heads = await inParallel(sample, (url) => fetchUrl(url, { method: 'HEAD' }))
   // A HEAD that 404s is not a dead page. play.honeycomb.io answers 404 to HEAD and 200 to GET,
@@ -94,7 +141,10 @@ async function sampleLlmsLinks(corpus: string): Promise<MachineFindings['llmsLin
     (url) => fetchUrl(url),
   )
   const dead = confirmed.filter(gone)
-  return { sampled: sample.length, dead: dead.length, firstDead: dead[0]?.url ?? null }
+  // Files that put a link in the pool, not files that exist: agora.io serves three, one of which
+  // holds no markdown link at all, and "sampled across the 3 files" sends a reader to check an
+  // address the sample never touched.
+  return { sampled: sample.length, dead: dead.length, firstDead: dead[0]?.url ?? null, files: contributing }
 }
 
 /** Enough to tell a shell from a site, and few enough that a negotiating site pays nothing. */
@@ -239,7 +289,12 @@ export async function scanMachineContext(
         links: present ? (got.body.match(/\]\(http/g) ?? []).length : 0,
         truncated: present && got.truncated,
       }
-      return [label, file, present ? got.body : '', url] as const
+      // Both addresses: `url` is where the vendor publishes and belongs in the verdict, `got.url`
+      // is where the bytes came from and is the only correct base for a relative link. They differ
+      // on 8 of the 136 files we credit - docs.twilio.com/llms.txt is served from
+      // www.twilio.com/docs/ - and resolving against the asked-for one turned six live Twilio
+      // pages into a published accusation.
+      return [label, file, present ? got.body : '', url, got.url || url] as const
     }),
     inParallel(Object.entries(WELL_KNOWN_PATHS), async ([label, path]) => {
       const got = await fetchUrl(`${site}${path}`, { accept: 'application/json, text/plain' })
@@ -260,20 +315,23 @@ export async function scanMachineContext(
   let countable = ''
   let anyTruncated = false
   const llmsUrls: string[] = []
+  /** Kept apart from the concatenated corpus because a relative link resolves against its own file. */
+  const llmsFiles: { body: string; base: string; index: boolean }[] = []
   // The same file answers at more than one of these locations - chargebee.com serves its llms.txt
   // on the apex and on www - and counting one document twice would be counting evidence twice.
   const seenBodies = new Set<string>()
-  for (const [label, file, body, url] of llmsEntries) {
+  for (const [label, file, body, url, servedFrom] of llmsEntries) {
     llms[label] = file
     if (!file.present || seenBodies.has(body)) continue
     seenBodies.add(body)
     llmsUrls.push(url)
+    llmsFiles.push({ body, base: servedFrom, index: !label.includes('full') })
     corpus += body
     if (file.truncated) anyTruncated = true
     else countable += body
   }
 
-  const llmsLinks = await sampleLlmsLinks(corpus)
+  const llmsLinks = await sampleLlmsLinks(llmsFiles)
 
   const mcpUrls = [...corpus.matchAll(/https?:\/\/[^\s)"']*mcp[^\s)"']*/gi)].map((m) => m[0])
   const uniqueMcpUrls = [...new Set(mcpUrls)].slice(0, 5)
