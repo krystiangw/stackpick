@@ -7,6 +7,24 @@ listę sprzed trzydziestu rund.** Dziennik rund jest niżej i jest historią, ni
 **Ten nagłówek też się starzeje: 2026-08-11 rano mówił "StackPick, formuła 7.4, 155 domen",
 czyli był o dwa dni i pięć wersji formuły do tyłu. Przepisuj go, nie tylko dziennik.**
 
+## INSTRUKCJE, KTORE DAJEMY AGENTOM, SPRAWDZONE JAK AGENT I WPIETE W AUDYT
+
+Przeczytalem `agent-signup.md` jak agent, ktory ma tylko to, i sprawdzilem **kazde twierdzenie
+osobno**. Wszystkie sie bronia: `POST /api/scan` dziala, `/r/{id}` jest trwalym linkiem,
+`/api/scan/stream` **naprawde emituje zdarzenia postepu** (`text/event-stream`, etykiety
+„Resolving…", „Reading /docs", „Checking robots.txt against 13 AI crawlers"), adresy IP i zakresy
+prywatne sa odrzucane, a `/corpus.json` niesie caly zbior.
+
+**Jedna rzecz byla krucha i to najbardziej agento-zwrocona ze wszystkich.** Limity sa w tych
+plikach **wpisane slownie** („Five scans per hour per registrable domain, thirty per hour per
+source address") i **nic nie wiazalo ich ze stalymi** `PER_DOMAIN_PER_HOUR` i `PER_CALLER_PER_HOUR`.
+Zmiana stalej zostawilaby oba pliki mowiace agentom nieprawde, **w produkcie, ktorego cala teza
+brzmi: nie oklamuj agentow.**
+
+Wpiete w audyt (5 pilnowanych twierdzen zamiast 3), z mapowaniem slowa na liczbe. **Udowodnione:**
+po ustawieniu stalej na 7 audyt zglasza „says five per domain, code says 7" dla **obu** plikow, po
+przywroceniu wraca do zera.
+
 ## PUBLIKUJEMY WLASNY WYNIK, LACZNIE Z CHECKIEM, KTOREGO OBLEWAMY
 
 Skaner ocenia 170 firm i **nigdzie nie pokazywal wlasnego wiersza**, a nasza domena nie jest nawet
