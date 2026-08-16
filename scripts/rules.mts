@@ -13,7 +13,7 @@ import { ERRATA, erratumFor } from '../src/lib/errata'
 import { FLEX_QUOTA_MB, quotaEmail, verdictFor } from '../src/lib/quota'
 import { sawRateLimit, otherDomainsNamed } from '../src/lib/corpus'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
-import { rendersUsableForm, mcpCandidates, looksLikeADocsPageTwin } from '../src/lib/scan/funnel'
+import { rendersUsableForm, mcpCandidates, looksLikeADocsPageTwin, answersWithTheSameTemplate } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
 import {
   methodRefusalIsRouted,
@@ -491,6 +491,26 @@ const readPagesAndFiles = (pages: string[], files: number) =>
 check('same pliki llms nie przekraczaja bramki dwoch stron', readPagesAndFiles([], 3).inconclusive, true)
 check('dwie prawdziwe strony przekraczaja', readPagesAndFiles(['https://v.test/docs/api-keys', 'https://v.test/docs/x'], 3).inconclusive, undefined)
 check('zdanie liczy strony i pliki osobno', readPagesAndFiles(['https://v.test/docs/api-keys', 'https://v.test/docs/x'], 3).detail.includes('3 machine-readable files'), true)
+
+console.log('punkt wejscia, czyli szablon kontra plik')
+// docs.slatejs.org answers every unknown path with this, and the suggested pages differ per path,
+// so neither the length nor the path-stripped body matches the control. Five of these shipped as
+// five separate entry files on the 9.19 reseed.
+const soft404 = (slug: string, suggestion: string) =>
+  `# Page Not Found\n\nThe URL \`${slug}\` does not exist.\n\n## Suggested Pages\n\n- [${suggestion}](https://docs.v.test/${suggestion}.md)`
+check('miekki 404 rozpoznany po naglowku', answersWithTheSameTemplate(soft404('agent-signup', 'PointEntry'), soft404('qx7-nonsens', 'Nodes')), true)
+// The half that must keep working: a real file does not share the control's first line.
+check('prawdziwy plik nie jest szablonem', answersWithTheSameTemplate(
+  '---\nname: Mixpanel\ndescription: Use when implementing product analytics\n---\n\nInstall the SDK.',
+  soft404('qx7-nonsens', 'Nodes'),
+), false)
+// Frontmatter is excluded from the heading test, because a skill file and a docs platform's own
+// 404 both open with `---`. Without that exclusion this pair would read as the same template.
+check('sam frontmatter nie przesadza', answersWithTheSameTemplate(
+  '---\nname: Chroma\n---\n\nVector search.',
+  '---\ntitle: Not found\n---\n\nNo such page.',
+), false)
+check('brak kontrolki to nie szablon', answersWithTheSameTemplate('# Skill\n\nDo this.', undefined), false)
 
 console.log('punkt wejscia, czyli plik dla agenta kontra blizniak strony dokumentacji')
 // Once the probe asks the documentation origin, every vendor with a page called "agent" answers

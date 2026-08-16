@@ -279,6 +279,28 @@ const PROCEDURE_SIGNALS =
  * skill files at docs.mixpanel.com and docs.trychroma.com declare `name:` and a description
  * beginning "Use when", which is the skill format and not a page.
  */
+/**
+ * Whether a response is the same template the control probe got, rather than a file.
+ *
+ * Two tests, because each one has been defeated on its own. Stripping path segments catches a stub
+ * that echoes the path it is refusing (restate.dev). Comparing the first line catches a soft 404
+ * that echoes the path AND varies the rest: docs.slatejs.org answers every unknown path with
+ * "# Page Not Found" and a list of suggested pages drawn from its search index, so no two bodies
+ * are the same length or the same string after stripping. Five of those shipped as five entry
+ * files on 9.19.
+ *
+ * `---` is excluded from the heading test on purpose: a skill file opens with frontmatter, and so
+ * does a documentation platform's own 404, so that one line proves nothing either way.
+ */
+export function answersWithTheSameTemplate(body: string, controlBody: string | undefined): boolean {
+  if (controlBody === undefined || controlBody.length === 0) return false
+  const withoutPaths = (text: string) => text.replace(/\/[\w.@~-]+/g, ' ').replace(/\s+/g, ' ').trim()
+  if (withoutPaths(body) === withoutPaths(controlBody)) return true
+  const firstLine = (text: string) => text.split('\n').map((line) => line.trim()).find(Boolean)?.toLowerCase() ?? ''
+  const heading = firstLine(controlBody)
+  return heading.length > 3 && heading !== '---' && firstLine(body) === heading
+}
+
 export function looksLikeADocsPageTwin(body: string): boolean {
   const frontmatter = body.match(/^\s*---\r?\n([\s\S]{0,600}?)\r?\n---/)
   if (!frontmatter) return false
@@ -1260,18 +1282,16 @@ export async function scanFunnel({
       return null
     }
   })()
-  const bases = [site, ...(docsOrigin ? [docsOrigin] : [])]
   // One control per origin, never one shared. A documentation platform answers every unknown .md
   // path with a rendered "page not found", so the site's control says nothing about the docs host
   // and using it would republish that 404 as a file the vendor publishes.
-  const catchAllPending = Promise.all(bases.map((base) => servesCatchAllText(base)))
+  const catchAllPending = servesCatchAllText(site)
 
   // The entry probes are the one thing that has to wait: on a site that answers every unknown
   // path they prove nothing, and firing them anyway would be nine requests spent to learn that.
-  const catchAllPerBase = await catchAllPending
-  const catchAll = catchAllPerBase[0]
-  const probes = bases.flatMap((base, index) => AGENT_ENTRY_PATHS.map((path) => ({ base, path, control: catchAllPerBase[index] })))
-  const probeEntry = inParallel(probes, async ({ base, path, control: catchAll }) => {
+  const catchAll = await catchAllPending
+  const probeOne = (base: string, control: CatchAll) => inParallel(AGENT_ENTRY_PATHS, async (path) => {
+    const catchAll = control
     // The namespace verdict no longer short-circuits the probe. sentry.io publishes a real 106
     // byte /.well-known/mcp.json and answers unknown paths in that namespace with a 20,402 byte
     // page shell, so "this namespace serves everything" threw away a file that is nothing like
@@ -1287,15 +1307,7 @@ export async function scanFunnel({
       : path.endsWith('.txt')
         ? catchAll.bodies?.text
         : catchAll.bodies?.markdown
-    // Path segments removed from both bodies before comparing, because a stub that names the path
-    // it is refusing differs from the control by exactly that name. restate.dev answers every .md
-    // path with "# Restate - /<path> A markdown rendering of this page is not available", so the
-    // lengths never matched and three copies of one refusal were published as three entry files.
-    // Stripping URLs cannot make two genuinely different files look alike: what is left of a real
-    // agent-signup.md is a procedure, and what is left of a refusal is the refusal.
-    const withoutPaths = (body: string) => body.replace(/\/[\w.@~-]+/g, ' ').replace(/\s+/g, ' ').trim()
-    const sameTemplate =
-      controlBody !== undefined && controlBody.length > 0 && withoutPaths(got.body) === withoutPaths(controlBody)
+    const sameTemplate = answersWithTheSameTemplate(got.body, controlBody)
     const sameAsNonsense =
       sameTemplate || (controlLength !== undefined && controlLength > 0 && got.body.length === controlLength)
     const present = !sameAsNonsense && isRealTextFile(got, 30) && !looksLikeADocsPageTwin(got.body)
@@ -1306,6 +1318,23 @@ export async function scanFunnel({
     return [`${base}${path}`, present, present && describesAProcedure(got.body), got.body, refused, base] as const
   })
 
+  // The site first, and the documentation host only when the site had nothing. Asking both every
+  // time doubled the requests we make to an edge that is already deciding whether to refuse us,
+  // and it cost bitmovin.com two points on the 9.19 reseed: they publish a real skill.md, they
+  // answer our data centre 403 under load, and eighteen probes tripped that where nine had not.
+  // The 17 vendors this whole change is for have nothing on the apex, so they still reach here.
+  // Nor when the site refused us. A refusal means we do not know what is on the apex, and nine
+  // more requests to an edge that is currently turning us away is how bitmovin.com went from
+  // "found your skill.md" to "8 of 18 refused" between two runs minutes apart. If the site would
+  // not answer, that is the finding, and it is reported out of the nine paths we actually asked.
+  const probeEntry = (async () => {
+    const onSite = await probeOne(site, catchAll)
+    const worthLookingFurther =
+      docsOrigin && !onSite.some(([, present]) => present) && !onSite.some(([, , , , refused]) => refused)
+    if (!worthLookingFurther) return onSite
+    return [...onSite, ...(await probeOne(docsOrigin, await servesCatchAllText(docsOrigin)))]
+  })()
+
   /**
    * A body served at more than one of these paths is the site's shell, whatever the control
    * probe happened to land on. sentry.io answers /ai.txt and every other path with the same 976
@@ -1315,14 +1344,22 @@ export async function scanFunnel({
    * Counted per origin, because "the same body twice" only means a shell when one server served
    * both. A vendor whose apex and docs host serve the same real skill.md would otherwise have it
    * discarded for being served consistently.
+   *
+   * Compared with the path segments stripped, the same normalisation the control comparison uses,
+   * because a template that writes the requested path into its own body produces a different
+   * string every time and defeats an exact match. docs.slatejs.org does exactly that, and on the
+   * 9.19 reseed it was credited with four separate entry files that are one page: our own audit
+   * caught the row contradicting itself, which is the only reason this was found.
    */
   const entriesPending = probeEntry.then((probed) => {
+    const shapeOf = (base: string, body: string) =>
+      `${base}\n${body.replace(/\/[\w.@~-]+/g, ' ').replace(/\s+/g, ' ').trim()}`
     const seenBodies = new Map<string, number>()
     for (const [, present, , body, , base] of probed) {
-      if (present) seenBodies.set(`${base}\n${body}`, (seenBodies.get(`${base}\n${body}`) ?? 0) + 1)
+      if (present) seenBodies.set(shapeOf(base, body), (seenBodies.get(shapeOf(base, body)) ?? 0) + 1)
     }
     return probed.map(([path, present, procedure, body, refused, base]) => {
-      const shared = present && (seenBodies.get(`${base}\n${body}`) ?? 0) > 1
+      const shared = present && (seenBodies.get(shapeOf(base, body)) ?? 0) > 1
       return [path, present && !shared, procedure && !shared, refused] as const
     })
   })
@@ -1360,7 +1397,7 @@ export async function scanFunnel({
     entryPointsFound: entries.filter(([, hit]) => hit).map(([path]) => path),
     entryPointsWithProcedure: entries.filter(([, , procedure]) => procedure).map(([path]) => path),
     entryPathsRefused,
-    entryProbesAsked: probes.length,
+    entryProbesAsked: entries.length,
     oauth,
     mcpEndpoints,
     mcpProbed: mcp.answered,
