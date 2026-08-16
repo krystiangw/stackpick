@@ -95,10 +95,12 @@ const RESOURCE_TARGET = /\.(png|jpe?g|gif|svg|webp|ico|mdx|css|js|zip|tar\.gz)$/
 async function sampleLlmsLinks(
   files: { body: string; base: string; index: boolean }[],
 ): Promise<MachineFindings['llmsLinks']> {
-  const seen = new Set<string>()
-  let contributing = 0
-  for (const { body, base, index } of files) {
-    let addedHere = false
+  // Which file each link came from, so the sentence can say how many files the sample was drawn
+  // from rather than how many put something in the pool. Those differ twice over: a file whose
+  // links are all duplicates of another's contributes nothing, and a file that contributed a
+  // thousand links can still be missed by twelve evenly spaced picks.
+  const seen = new Map<string, number>()
+  for (const [fileIndex, { body, base, index }] of files.entries()) {
     for (const match of body.matchAll(/\]\(([^\s)]+)\)/g)) {
       const href = match[1]
       if (!index && !/^https?:\/\//i.test(href)) continue
@@ -116,12 +118,10 @@ async function sampleLlmsLinks(
       // CDN, which says nothing about whether its map leads anywhere.
       if (url === base.split('#')[0] || RESOURCE_TARGET.test(resolved.pathname)) continue
       if (seen.has(url)) continue
-      seen.add(url)
-      addedHere = true
+      seen.set(url, fileIndex)
     }
-    if (addedHere) contributing += 1
   }
-  const links = [...seen]
+  const links = [...seen.keys()]
   if (links.length === 0) return undefined
   // Spread across the file rather than the first N, which is what "sampled" has to mean if we are
   // going to print the word. Taking the head found dead links in 7 files and missed them in 8 more,
@@ -155,7 +155,12 @@ async function sampleLlmsLinks(
   // Files that put a link in the pool, not files that exist: agora.io serves three, one of which
   // holds no markdown link at all, and "sampled across the 3 files" sends a reader to check an
   // address the sample never touched.
-  return { sampled: asked.length, dead: dead.length, firstDead: dead[0] ?? null, files: contributing }
+  return {
+    sampled: asked.length,
+    dead: dead.length,
+    firstDead: dead[0] ?? null,
+    files: new Set(asked.map((url) => seen.get(url))).size,
+  }
 }
 
 /** Enough to tell a shell from a site, and few enough that a negotiating site pays nothing. */

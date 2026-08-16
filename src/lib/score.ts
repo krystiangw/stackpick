@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.25'
+export const FORMULA_VERSION = '9.26'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -211,9 +211,12 @@ export const CHECKS: Check[] = [
         const named = f.machine.llmsUrls?.length ?? 0
         const across =
           // Naming three addresses and then saying "across both files" leaves the reader guessing
-          // which two, so when the sample could not use every file we say so instead.
+          // which two, so when the sample did not draw from every file we say so instead. Phrased
+          // as a fraction rather than "the ones that carry links", because that was a second claim
+          // and a false one: a file can carry a thousand links and still be missed by twelve
+          // evenly spaced picks, and llms-full.txt carries links we deliberately do not resolve.
           fileCount < named
-            ? `across the ${fileCount === 1 ? 'one of them that carries' : `${fileCount} of them that carry`} links`
+            ? `across ${fileCount} of the ${named} files`
             : fileCount > 2
               ? `across the ${fileCount} files`
               : fileCount === 2
