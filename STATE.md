@@ -1,9 +1,45 @@
-# Let Agents In: stan na 2026-08-15 (formula 9.22 na produkcji, korpus na 9.19 czeka na przesiew, baza zdrowa)
+# Let Agents In: stan na 2026-08-15 (formula 9.23 na produkcji, korpus na 9.19 czeka na przesiew, baza zdrowa)
 
 **UWAGA dla nastepnej rundy: korpus jest przejsciowo na 9.17, a produkcja na 9.18**, wiec wiersze
 zmierzone po wdrozeniu wypadaja z wiekszosciowej wersji i strona pokazuje 169 zamiast 170.
 Reseed jest zaplanowany na wygasniecie karencji. Jesli go nie widac w dzienniku ponizej, uruchom
 `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) npm run reseed`.
+
+## NIEZALEZNY PRZEGLAD SZESCIU WYDAN Z JEDNEGO DNIA (9.23, wdrozone) + LISTA NIENAPRAWIONYCH
+
+Kazda zmiana z 9.17-9.22 byla weryfikowana osobno i **nikt nie patrzyl, jak dzialaja razem**.
+Przeglad z czystym kontekstem znalazl to, co temu umknelo. **Piec naprawione i wdrozone:**
+
+1. **Host dokumentacji mogl nalezec do innej firmy.** `docsOrigin` sprawdzal tylko, czy to nie ten
+   sam origin co witryna. Skaner wie gdzie indziej, ze marka mieszka czasem na cudzej stronie
+   (`twilio.com/docs/sendgrid` nalezy do SendGrida), wiec moglismy wydrukowac na karcie SendGrida
+   „Found: https://www.twilio.com/skill.md". Masowo dotyczylo to wspoldzielonych platform
+   dokumentacji. Teraz wymagamy tej samej domeny rejestrowalnej.
+2. **Regula blizniaka odrzucala prawdziwe pliki**, bo kluczowala na `title:`, a `name:` to format
+   skilla i nic nie zmusza vendora, zeby go uzywal. Rozstrzyga teraz sciezka okruszkowa.
+3. **Rejestr MCP blokowal cala faze** (obcy host bez budzetu). Teraz 4 s.
+4. **Adresy z rejestru byly traktowane jak zgadywanka** i wylatywaly na domenie z wildcardem.
+5. **Przeliczanie starej podstawy bez zabezpieczenia** moglo zatrzymac kolejke monitoringu.
+
+**NIENAPRAWIONE, do wziecia w kolejnosci wagi. To jest najwazniejsza czesc tej sekcji:**
+
+- **Najwazniejsze, wspolny mianownik trzech znalezisk:** `fetchUrl` zwraca `status: 0` takze wtedy,
+  gdy **zadanie nigdy nie wyszlo** (host odmowil polaczenia wczesniej w tym skanie albo przekroczyl
+  limit timeoutow). Tylko prefiks `Out of time` zasila licznik `lost`, wiec faza nie trafia do
+  `incomplete` i siec bezpieczenstwa `missed` nie dziala. Efekt: mozemy opublikowac „the 12 links
+  we sampled all answer", choc **zaden z 12 HEAD-ow nie wyszedl**. Ta sama luka podbija
+  `probedHosts` w zdaniu o OAuth. Naprawa: osobny znacznik na `Fetched` („nie wyslano zadania") i
+  liczenie go tak jak deadline'u. **Zmiana 9.17 to zaostrzyla**, bo probka linkow ladują teraz
+  glownie na wlasnej domenie vendora, czyli tej samej, ktorej licznik timeoutow sie przepelnia.
+- `firstDead` drukuje adres **po przekierowaniach**, a nie link z pliku, wiec czytelnik moze go w
+  swoim llms.txt nie znalezc.
+- Zdanie „across the N files" liczy pliki, ktore **dorzucily nowy URL do puli**, a nie te, ktorych
+  dotknela probka; llms-full.txt z samymi linkami wzglednymi jest opisany jako nienoszacy zadnych.
+- `MCP_ADDRESSES` w `score.ts` nie wymienia adresow z rejestru ani `api.<domain>/v1/mcp`, choc
+  komentarz nad nia obiecuje, ze wymienia wszystkie odpytywane.
+- Obejscie `everyNamespaceFakes` nie jest ograniczone do trafienia na hoscie dokumentacji.
+- `entryPathsRefused` obejmuje dwa origins, wiec odmowa na hoscie dokumentacji potrafi zamienic
+  zmierzone zero w „niemierzalne" i podniesc wynik vendora.
 
 ## MONITORING MILCZAL PO KAZDYM NASZYM WYDANIU (naprawione, wdrozone)
 
