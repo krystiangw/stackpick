@@ -4,10 +4,12 @@ import { buildIndustryReport, type CheckTally } from '@/lib/industry'
 import { NOISE_FLOOR_PERCENT } from '@/lib/published'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
+import { SITE_URL } from '@/lib/site'
 
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
+  alternates: { canonical: `${SITE_URL}/report` },
   title: 'The agent readiness of developer tooling: Let Agents In',
   description:
     'Every domain we have scanned, aggregated. The market has solved being read by agents and has not solved being joined by them.',

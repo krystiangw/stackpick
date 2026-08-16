@@ -23,6 +23,19 @@ export const metadata: Metadata = {
   title: 'Let Agents In: can an AI agent get through your product?',
   description:
     'Measures whether an AI coding agent can find, register with and integrate your product. Deterministic checks, published formula, reproducible score.',
+  // Only the vendor pages carried these, so the two pages somebody would actually forward - the
+  // front page and /findings - arrived in Slack and on LinkedIn as a bare link with no card.
+  // Nothing links to this site yet, and a shared link that renders as nothing is the mechanism
+  // that would earn the first ones failing quietly.
+  openGraph: {
+    type: 'website',
+    siteName: 'Let Agents In',
+    url: SITE_URL,
+    title: 'Let Agents In: can an AI agent get through your product?',
+    description:
+      'Measures whether an AI coding agent can find, register with and integrate your product. Deterministic checks, published formula, reproducible score.',
+  },
+  twitter: { card: 'summary_large_image' },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -3,8 +3,10 @@ import Link from 'next/link'
 import { CHECKS, MAX_SCORE } from '@/lib/score'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
+import { SITE_URL } from '@/lib/site'
 
 export const metadata: Metadata = {
+  alternates: { canonical: `${SITE_URL}/pricing` },
   title: 'Pricing: Let Agents In',
   description: 'What the free scan covers, what a real agent audit costs, and what happens after the findings.',
 }

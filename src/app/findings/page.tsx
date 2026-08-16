@@ -3,10 +3,12 @@ import Link from 'next/link'
 import { buildIndustryReport } from '@/lib/industry'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
+import { SITE_URL } from '@/lib/site'
 
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
+  alternates: { canonical: `${SITE_URL}/findings` },
   title: 'Findings: Let Agents In',
   description: 'Thirty-eight runs, five studies, two models. What agents pick when nobody is watching, and where every one of them stops.',
 }

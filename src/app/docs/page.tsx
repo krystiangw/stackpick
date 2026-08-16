@@ -7,6 +7,7 @@ import { headers } from 'next/headers'
 import { SITE_URL } from '@/lib/site'
 
 export const metadata: Metadata = {
+  alternates: { canonical: `${SITE_URL}/docs` },
   title: 'Docs: Let Agents In',
   description: 'How to scan a domain from code: endpoints, response shape, limits, and how to read a scorecard.',
 }

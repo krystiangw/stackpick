@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { FunnelMark } from '@/components/funnel-mark'
 import { Rankings } from '@/components/rankings'
@@ -7,8 +8,14 @@ import { loadRankings } from '@/lib/rankings'
 import { CHECKS, MAX_SCORE, STAGES } from '@/lib/score'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
+import { SITE_URL } from '@/lib/site'
 
 export const dynamic = 'force-dynamic'
+
+// Set here rather than in the root layout on purpose: a canonical in the layout is inherited by
+// every page that does not override it, so one line would tell a crawler that /docs and /pricing
+// are both this page.
+export const metadata: Metadata = { alternates: { canonical: SITE_URL } }
 
 const EVIDENCE = [
   {
