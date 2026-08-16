@@ -40,11 +40,12 @@ const TIERS: readonly Tier[] = [
     name: 'Monitoring',
     price: '$99',
     cadence: 'per domain, per month',
-    pitch: 'The failures here are the kind nobody notices until an integration stops working.',
+    pitch: 'Whether an agent can still use you, and whether it ever considers you at all.',
     includes: [
       'The same checks, rerun every week, so a verdict that moves is caught within days',
-      'One email when something changes, naming the check, what it says now and what it said before',
-      'Nothing when nothing changed, which is most weeks',
+      'Real agents every month: one question about your category, put to an agent five times in isolation, and how many of the five named you',
+      'Which provider got picked instead, and the sentence that passed over you, quoted from the transcript',
+      'One email when something moves, nothing when nothing does, which is most weeks',
       'No account and no card. One link in every email stops it',
     ],
     note: 'Free while we are building it, and we will ask before it ever costs anything.',
@@ -52,15 +53,16 @@ const TIERS: readonly Tier[] = [
     cta: { label: 'Watch a domain', href: '/#watch' },
   },
   {
-    name: 'Agent audit',
+    name: 'Audit and fixes',
     price: 'By conversation',
     cadence: 'one to three weeks',
-    pitch: 'What real agents do on your product when nobody is watching, which no scanner can see.',
+    pitch: 'Agents given a real app and told to ship against you, a person reading what happened, and the work that follows.',
     includes: [
-      'Real agent runs on a brief designed for your category, recorded and handed over',
-      'Whether you are in the candidate set at all, and which provider gets picked instead',
-      'The words used to reject you, quoted where a run left a quotable sentence',
-      'Where a run stalls: registration, credentials, or the first integration',
+      'Build runs: an agent gets a working application and a brief for your category, and is told to ship with nobody available to answer questions',
+      'Where the run stalls: registration, credentials, or the first integration',
+      'Every transcript and every artefact handed over, with what shipped read from the files rather than from what the run says it did',
+      'The argument about what it means, with the person who wrote the brief rather than an account manager',
+      'The fixes, quoted from what the runs found: documentation an agent can read, an entry point built for a machine, a credential path with no human in it, or an MCP server for your API',
     ],
     note: 'Four figures, scoped once we agree what to measure. It is a conversation, not a checkout, because the brief is most of the work.',
     cta: { label: 'Ask what it would cost', href: 'mailto:hello@letagentsin.com?subject=Agent%20audit' },
@@ -74,12 +76,13 @@ export default async function PricingPage() {
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Pricing</p>
         <h1 className="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-tight tracking-tight">
-          Everything a machine can check is free. You pay to be told when it breaks.
+          Everything a machine can check is free. You pay for the part where real agents run.
         </h1>
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
           The scan costs us bandwidth and nothing else, so it costs you nothing and the formula is published
-          with it. The only thing worth charging for is the part that keeps working after you close the tab:
-          rerunning it every week and telling you the day a verdict moves.
+          with it. What is worth charging for is what a checklist cannot see: the same checks rerun every week
+          so you hear the day a verdict moves, and real agents asked the question your buyers ask, to find out
+          whether you are named at all.
         </p>
       </section>
 
@@ -173,14 +176,32 @@ export default async function PricingPage() {
         </p>
       </section>
 
+      {/* The distinction the two paid tiers turn on, and the one a buyer cannot be expected to
+          guess from the word "agent" appearing in both columns. */}
       <section className="border-b border-rule py-12">
-        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">After the findings</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Two kinds of agent run, and why only one of them is in monitoring</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          An audit that ends in a document changes nothing, so the implementation is available too: docs that
-          answer the question agents actually ask, an entry point built for a machine, a credential path that
-          does not need a human, or an MCP server for your API. Each is quoted from what the audit found rather
-          than from a price list, because a fix sprint scoped before the measurement is guesswork with an
-          invoice attached.
+          A discovery run is one question and no more: a developer&apos;s problem with a deadline attached, put to
+          an agent in an empty directory that has never heard of you. It reads the answer and records who was
+          named, in what order, and in what words. Nothing is signed up for and nothing is created, which is
+          why it can run every month on any domain, including yours before you have spoken to us.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          A build run is the opposite. The agent gets a working application, a brief, and instructions to ship,
+          and it walks straight into your registration form, your API key and your first integration. That
+          needs your agreement and a person watching it, so it stays in the audit and it is most of what the
+          audit costs.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          They catch different failures, which is the reason both exist. The first tells you whether you are in
+          the room at all. The second tells you whether an agent that already wants you can actually get in.
+          A vendor can fail either one while passing the other, and we have measured both.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          Reading the answers is done by rule rather than by a second model: a published list of names and a
+          published matcher decide who was named, and where a brand is also an ordinary English word the hit is
+          quoted for a human instead of counted. A model grading another model is the measurement this whole
+          site exists to be an alternative to.
         </p>
       </section>
 
@@ -212,6 +233,14 @@ export default async function PricingPage() {
             [
               'Monitoring says $99 and also says free. Which is it?',
               'Free today, for everyone, and the price is printed so you know what it will become rather than finding out later. Nobody is charged without being asked first, and there is no card on file to charge.',
+            ],
+            [
+              'Do your monitoring agents sign up for our product?',
+              'No. A discovery run answers a question in an empty directory and touches nothing of yours: no form, no account, no key. Anything that creates something on your side happens only inside a paid audit, with your agreement and with somebody watching it, which is also why that half costs what it costs.',
+            ],
+            [
+              'Five runs a month is not much of a sample.',
+              'It is not, and it decides what the number is allowed to say. Five runs catch a wall every run hits, and they cannot separate you from a competitor that finishes close. So monitoring does not sell you a position: it reports how many of the five named you, and the thing worth reacting to is the month that number moves.',
             ],
             [
               'Do you bill hourly?',
