@@ -66,6 +66,13 @@ sprawdzenie znacznikow pokazalo, ze wszystkie 169 wierszy pochodzi z osmiu minut
 mojego wlasnego reseedu, bo drugi przebieg na cieplym cache jest osiem razy szybszy niz pierwszy.
 Straznik dzialal poprawnie, usterka byla prawdziwa, ale nie byla przyczyna.
 
+**NAZWA PRODUKTU: „Let Agents In" / `letagentsin`.** Zmieniona 2026-08-16, wczesniej „StackPick".
+Uzywaj nowej nazwy w rozmowie, w dokumentach i w tekstach na stronie. **Stara nazwa zostaje w
+infrastrukturze i to nie jest usterka do naprawienia przy okazji:** katalog repo to nadal
+`~/projects/stackpick`, aplikacja Heroku `stackpick`, baza Mongo `stackpick`, ciasteczko konsoli
+`stackpick_console`. Przemianowanie tego to osobna, ryzykowna operacja, **nie rob jej bez wyraznej
+prosby Krystiana.**
+
 Punkt wejścia po compact. Czytaj przed pracą, razem z `ARCHITECTURE.md`.
 **Dwie sekcje na dole tego bloku, "Co zostało z audytów" i "Następne kroki merytoryczne", są
 kontraktem dla watchdoga. Aktualizuj je przy każdej zamkniętej pozycji, inaczej watchdog czyta
@@ -1587,6 +1594,22 @@ agenta:
 
 Reszta wymaga decyzji Krystiana albo konta, ktorego agent nie zaklada:
 
+- **Sciezka zakupu inna niz `mailto:`** i decyzja Stripe kontra Paddle. **Zaudytowane 2026-08-16:
+  `krystiangw/agenticpay` tego NIE odblokowuje.** To mikroplatnosci per wywolanie narzedzia MCP
+  (x402, USDC, Solana), nie bramka platnicza: kupujacy platny audyt to firma potrzebujaca faktury
+  z VAT, hostowany facilitator chodzi na devnecie, a mainnet znaczy keypair platnika oplat na
+  dynie, czyli nowa klase ryzyka. Projekt jest pre-alpha, choc porzadnie zaudytowany.
+  **Nie wracaj do tego pytania przy okazji checkoutu.**
+- **Kandydat obok, tani i wykonalny przez agenta, gdy Krystian powie „tak":** jedno platne
+  narzedzie na naszym `/mcp` **wylacznie na devnecie**, jako demo z dowodem on-chain. Produkt,
+  ktorego teza brzmi „wpuszczajcie agentow", zarabiajacy na agencie placacym bez czlowieka w
+  petli, jest najmocniejsza demonstracja tej tezy. **Przychod planowac na zero**: agentow z
+  zasilonym portfelem Solany i obsluga x402 jest dzis w naturze tyle co nic. Integracja nie jest
+  darmowa, bo `@agenticpay/mcp-server` to Express z `paymentMiddleware`, a my jestesmy na Next.js
+  App Router, wiec albo `@x402/core` w handlerze trasy, albo osobny proces.
+- **Pomysl produktowy z tego samego audytu, do rozwazenia pozniej:** przyszly check w scorecardzie
+  „czy agent moze ci zaplacic bez czlowieka". Dzisiejsza odpowiedz brzmialaby „prawie nikt nie
+  moze", czyli to dokladnie ten rodzaj pustego pola, na ktorym zbudowalismy reszte produktu.
 - **Publikacja w rejestrze MCP**: `server.json` gotowy w korzeniu repo, wymaga rekordu DNS.
 - **Bing Webmaster Tools i trzy katalogi MCP**: wymagaja zalozenia kont. **Agent kont nie zaklada.**
 - **Token do rejestru npm**: przy odmowie rejestru pojedyncze domeny zwracaja uczciwe „nie wiemy".
