@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-15 (formula 9.25 na produkcji, korpus na 9.19 czeka na przesiew, baza zdrowa)
+# Let Agents In: stan na 2026-08-15 (formula 9.26 na produkcji, korpus na 9.19 czeka na przesiew, baza zdrowa)
 
 **UWAGA dla nastepnej rundy: korpus jest przejsciowo na 9.17, a produkcja na 9.18**, wiec wiersze
 zmierzone po wdrozeniu wypadaja z wiekszosciowej wersji i strona pokazuje 169 zamiast 170.
@@ -39,10 +39,14 @@ Przeglad z czystym kontekstem znalazl to, co temu umknelo. **Piec naprawione i w
   glownie na wlasnej domenie vendora, czyli tej samej, ktorej licznik timeoutow sie przepelnia.
 - ~~`firstDead` drukuje adres po przekierowaniach~~ **zrobione (9.25)**: nazywamy link tak, jak
   stoi w pliku.
-- Zdanie „across the N files" liczy pliki, ktore **dorzucily nowy URL do puli**, a nie te, ktorych
-  dotknela probka; llms-full.txt z samymi linkami wzglednymi jest opisany jako nienoszacy zadnych.
+- ~~Zdanie „across the N files" liczy pliki, ktore dorzucily nowy URL do puli~~ **zrobione (9.26)**:
+  liczba opisuje teraz, z ilu plikow pochodzi probka, i mowi to ulamkiem.
 - ~~`MCP_ADDRESSES` nie wymienia wszystkich odpytywanych adresow~~ **zrobione (9.25)**.
-- Obejscie `everyNamespaceFakes` nie jest ograniczone do trafienia na hoscie dokumentacji.
+- **JEDYNE, CO ZOSTALO Z TEJ LISTY:** obejscie `everyNamespaceFakes` nie jest ograniczone do
+  trafienia na hoscie dokumentacji, wiec strona, ktorej shell zmienia sie przy kazdym zadaniu
+  (nonce, znacznik czasu), moze dostac 2 punkty za cztery kopie tego samego shella. Kontrolki tego
+  nie lapia, bo porownuja cialo z cialem. Kandydat na naprawe: wymagac, zeby trafienie bylo na
+  hoscie dokumentacji, albo porownywac shell po usunieciu wartosci zmiennych.
 - ~~`entryPathsRefused` obejmuje dwa origins~~ **zrobione (9.25)**: niemierzalny czyni check tylko
   odmowa na samej witrynie, a odmowe hosta dokumentacji zdanie nazywa.
 
