@@ -1,9 +1,39 @@
-# Let Agents In: stan na 2026-08-15 (formula 9.19 na produkcji, korpus w trakcie przesiewu na 9.19, baza zdrowa)
+# Let Agents In: stan na 2026-08-15 (formula 9.20 na produkcji, korpus na 9.19 czeka na przesiew, baza zdrowa)
 
 **UWAGA dla nastepnej rundy: korpus jest przejsciowo na 9.17, a produkcja na 9.18**, wiec wiersze
 zmierzone po wdrozeniu wypadaja z wiekszosciowej wersji i strona pokazuje 169 zamiast 170.
 Reseed jest zaplanowany na wygasniecie karencji. Jesli go nie widac w dzienniku ponizej, uruchom
 `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) npm run reseed`.
+
+## RESEED 9.19 ZNALAZL TRZY USTERKI W MOJEJ WLASNEJ ZMIANIE (9.20, wdrozone)
+
+**Korpus na 9.19: 170 wierszy. Zamiatanie 429 zadzialalo pierwszy raz na produkcji dokladnie jak
+zaprojektowane:** cztery domeny zlapane, `split.io` i `locationiq.com` odzyskane, `contentful.com`
+i `savvycal.com` zostaja jako werdykt o nich. Ale audyt zglosil **sprzecznosc wewnatrz wiersza
+slatejs.org** i to jedyny powod, dla ktorego znalazlem trzy usterki wprowadzone dzien wczesniej.
+
+1. **Miekki 404 udajacy piec plikow.** `docs.slatejs.org` odpowiada na kazda nieznana sciezke
+   naglowkiem „# Page Not Found" i lista sugerowanych stron, a **sugestie roznia sie przy kazdej
+   sciezce**, wiec ani dlugosc, ani cialo po usunieciu sciezek nie zgadza sie z kontrolka. Piec
+   takich poszlo jako piec plikow wejsciowych. Szablon oglasza sie w pierwszej linii i po niej go
+   teraz rozpoznajemy; trzy myslniki sa z tego wylaczone, bo plik skilla i wlasny 404 platformy
+   docsowej otwieraja sie tak samo.
+2. **Host dokumentacji pytany dopiero, gdy witryna nic nie ma.** Pytanie obu za kazdym razem
+   podwajalo ruch do brzegu, ktory wlasnie decyduje, czy nas odrzucic, i kosztowalo `bitmovin.com`
+   dwa punkty: publikuja prawdziwy `skill.md`, odmawiaja naszemu centrum danych pod obciazeniem, a
+   osiemnascie sond wywrocilo to, czego dziewiec nie wywracalo.
+3. **Nie pytamy dalej, gdy witryna nas odmowila.** Odmowa znaczy, ze nie wiemy, co jest na apexie.
+   Wtedy odmowa jest znaleziskiem i raportujemy ja z dziewieciu faktycznie zapytanych sciezek.
+
+**Lekcja, ktora warto powtarzac:** wszystkie trzy przeszly przez przeglad subagenta, testy regul i
+recznie sprawdzone przypadki. Znalazl je dopiero **reseed calego korpusu plus audyt sprzecznosci
+wewnatrz wiersza**. Zmiane w punktacji sprawdza sie na 170 wierszach, nie na czterech.
+
+Dyskryminator szablonu jest teraz osobna funkcja `answersWithTheSameTemplate` z testem
+dwustronnym, bo to byla trzecia usterka w tym samym miejscu.
+
+**Korpus jest na 9.19, produkcja na 9.20, wiec czeka kolejny przesiew** (karencja liczona z
+mediany, patrz `scripts/reseed.sh`).
 
 ## PUNKT WEJSCIA: SZUKALISMY GO TYLKO W KORZENIU WITRYNY (9.19, wdrozone)
 
