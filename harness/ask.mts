@@ -71,6 +71,10 @@ for (let run = 1; run <= runs; run++) {
     encoding: 'utf8',
     timeout: TIMEOUT_MS,
     maxBuffer: 64 * 1024 * 1024,
+    // Closed stdin, not an inherited one. `codex exec` prints "Reading additional input from
+    // stdin" and waits when it is left open, so the run burns its whole timeout without ever
+    // answering the question.
+    input: '',
   })
   const answer = result.stdout ?? ''
   writeFileSync(join(dir, 'ANSWER.txt'), answer)

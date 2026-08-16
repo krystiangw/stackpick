@@ -38,6 +38,52 @@
      werdykty za zero, a wartoscia bywa samo zdanie, bo to je czyta vendor.
 
 
+## 28. PRZEBIEG: `machine_readable_api`, ZERO ZNALEZIEN I TYM RAZEM ZERO COS ZNACZY
+
+25. przebieg na tym checku byl pusty, bo apis.guru mial pokrycie 2 na 47. Ten pyta dwa zrodla,
+ktore **udowodnily, ze umieja cos znalezc**, zanim cokolwiek powiedzialy o oskarzonych
+(`scripts/audit-openapi-docs.mts`):
+
+1. **Adres specyfikacji w atrybutach ich strony dokumentacji** (`data-url` Scalara, `spec-url`
+   Redoca, `rel="service-desc"`). Kontrolka: **1 trafienie na 113** wierszy zaliczanych. Slabe, bo
+   te widgety najczesciej montuje JavaScript, a my czytamy HTML z serwera.
+2. **Zwykle sciezki specyfikacji na HOSCIE DOKUMENTACJI**, ktorych skaner nie pyta wcale: probujemy
+   `/openapi.json` i cztery inne **tylko na witrynie**. Kontrolka: **3 trafienia na 113**
+   (`docs.trychroma.com/openapi.json`, `docs.together.ai/openapi.yaml`,
+   `docs.browserless.io/openapi.yaml`), wszystkie prawdziwe, z sparsowana wersja.
+
+**Strona oskarzen: 48 domen, 0 znalezien.** Tym razem zero jest informacyjne, bo to samo narzedzie
+na kontrolce znalazlo cztery specyfikacje. **Zadnego falszywego oskarzenia na tym checku.**
+
+**Do wdrozenia PO pomiarze podlogi szumu** (dotyka punktacji, wiec nie teraz): sciezki specyfikacji
+probowac takze na hoscie dokumentacji. Dzis nie zmienia zadnego werdyktu, bo te trzy domeny sa juz
+zaliczone inna droga, ale to ta sama dziura, ktora `agent_entry_point` mial do 9.19 i `llms_txt`
+przed nim, i przy nastepnym vendorze zamieni sie w falszywe oskarzenie.
+
+## CELA ROZPOZNAWCZA POWTORZONA DRUGIM NARZEDZIEM: WYNIK SIE TRZYMA
+
+`file-storage`, to samo pytanie, 5 biegow claude/sonnet i 5 biegow codex (gpt-5.6-sol). Codex nie
+czyta `CLAUDE.md` w ogole, wiec czyta zupelnie inny zestaw plikow operatora niz claude, i to jest
+sens powtorki: **znalezisko, ktore przezywa dwa narzedzia z dwoma roznymi skazeniami, jest o
+vendorach, a nie o tej maszynie.**
+
+| domena | claude/sonnet | codex |
+|---|---|---|
+| cloudflare.com | 5/5, pierwszy 5x | 5/5, pierwszy 5x |
+| cloudinary.com | 4/5 | 5/5 |
+| uploadthing.com | 3/5 | 1/5 |
+| uploadcare.com | 0/5 | 1/5 |
+| bunny, filestack, imagekit, tigris, transloadit | **0/5** | **0/5** |
+
+**Pieciu dostawcow nie padlo ani razu w zadnym z dziesieciu biegow.** Zgadza sie takze to, kto jest
+wybierany: cloudflare pierwszy we wszystkich dziesieciu. Rozbieznosci sa na ogonie (uploadthing 3/5
+kontra 1/5), czyli dokladnie tam, gdzie FAQ na `/pricing` mowi, ze piec biegow nie rozdziela
+bliskich sobie dostawcow.
+
+**Pulapka narzedziowa przy okazji:** `codex exec` wypisuje "Reading additional input from stdin" i
+czeka, jesli stdin zostanie otwarty. Pierwszy bieg spalil na tym cala minute i skonczylby sie na
+limicie czasu; `spawnSync` dostal `input: ''`.
+
 ## OKNO NA POMIAR PODLOGI SZUMU: OD TERAZ NIE RUSZAMY FORMULY (2026-08-16, 23:00)
 
 Podloga szumu jest niezmierzona od poczatku istnienia tego produktu i **powod jest zawsze ten sam:
