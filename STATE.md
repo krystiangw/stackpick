@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-15 (formula 9.24 na produkcji, korpus na 9.19 czeka na przesiew, baza zdrowa)
+# Let Agents In: stan na 2026-08-15 (formula 9.25 na produkcji, korpus na 9.19 czeka na przesiew, baza zdrowa)
 
 **UWAGA dla nastepnej rundy: korpus jest przejsciowo na 9.17, a produkcja na 9.18**, wiec wiersze
 zmierzone po wdrozeniu wypadaja z wiekszosciowej wersji i strona pokazuje 169 zamiast 170.
@@ -37,15 +37,14 @@ Przeglad z czystym kontekstem znalazl to, co temu umknelo. **Piec naprawione i w
   `probedHosts` w zdaniu o OAuth. Naprawa: osobny znacznik na `Fetched` („nie wyslano zadania") i
   liczenie go tak jak deadline'u. **Zmiana 9.17 to zaostrzyla**, bo probka linkow ladują teraz
   glownie na wlasnej domenie vendora, czyli tej samej, ktorej licznik timeoutow sie przepelnia.
-- `firstDead` drukuje adres **po przekierowaniach**, a nie link z pliku, wiec czytelnik moze go w
-  swoim llms.txt nie znalezc.
+- ~~`firstDead` drukuje adres po przekierowaniach~~ **zrobione (9.25)**: nazywamy link tak, jak
+  stoi w pliku.
 - Zdanie „across the N files" liczy pliki, ktore **dorzucily nowy URL do puli**, a nie te, ktorych
   dotknela probka; llms-full.txt z samymi linkami wzglednymi jest opisany jako nienoszacy zadnych.
-- `MCP_ADDRESSES` w `score.ts` nie wymienia adresow z rejestru ani `api.<domain>/v1/mcp`, choc
-  komentarz nad nia obiecuje, ze wymienia wszystkie odpytywane.
+- ~~`MCP_ADDRESSES` nie wymienia wszystkich odpytywanych adresow~~ **zrobione (9.25)**.
 - Obejscie `everyNamespaceFakes` nie jest ograniczone do trafienia na hoscie dokumentacji.
-- `entryPathsRefused` obejmuje dwa origins, wiec odmowa na hoscie dokumentacji potrafi zamienic
-  zmierzone zero w „niemierzalne" i podniesc wynik vendora.
+- ~~`entryPathsRefused` obejmuje dwa origins~~ **zrobione (9.25)**: niemierzalny czyni check tylko
+  odmowa na samej witrynie, a odmowe hosta dokumentacji zdanie nazywa.
 
 ## MONITORING MILCZAL PO KAZDYM NASZYM WYDANIU (naprawione, wdrozone)
 
