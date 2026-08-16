@@ -40,6 +40,14 @@ export function changeEmail(
   watch: Watch,
   report: Report,
   changes: WatchChange[],
+  /**
+   * True when the rules moved since the last measurement, so the before was recomputed from the
+   * findings we already held rather than read off what we published then. The comparison is still
+   * like for like, but a line of it can be ours rather than theirs: when we start probing an
+   * address we never asked before, a vendor who changed nothing reads "gained". Saying so costs
+   * one sentence and is the difference between a report and a boast.
+   */
+  rescoredBaseline = false,
 ): { subject: string; text: string } {
   const worse = changes.filter((change) => change.worse)
   const better = changes.filter((change) => !change.worse)
@@ -65,6 +73,12 @@ export function changeEmail(
       '',
       ...section(`Lost ground (${worse.length}):`, worse),
       ...section(`Gained or moved (${better.length}):`, better),
+      ...(rescoredBaseline
+        ? [
+            'Our checks changed since your last measurement, so the before above was recomputed from the same evidence under the current rules rather than taken from the older score. Where we started looking somewhere we had not looked before, a line can move without anything changing on your side.',
+            '',
+          ]
+        : []),
       `The scan behind this: ${reportUrl(report)}`,
       `Every check and its rule: ${BASE_URL}/methodology`,
       '',

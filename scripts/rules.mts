@@ -6,6 +6,7 @@ import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
 import { changesBetween, comparableScorecards, turnedAwayAtTheEdge, worthTelling } from '../src/lib/watch'
+import { changeEmail } from '../src/lib/watch-email'
 import { CHECKS } from '../src/lib/score'
 import { forStorage } from '../src/lib/store'
 import { REMEDIES } from '../src/lib/fixfirst'
@@ -255,6 +256,18 @@ const moved = (before: never[], after: never[]) => changesBetween(before, after)
 check('pass na fail to strata', moved([verdict(1, 1)], [verdict(0, 1)])[0]?.worse, true)
 check('fail na pass to nie strata', moved([verdict(0, 1)], [verdict(1, 1)])[0]?.worse, false)
 check('bez zmiany nie ma o czym pisac', moved([verdict(1, 1)], [verdict(1, 1)]).length, 0)
+
+// When the rules moved, the before is recomputed from the evidence we already held, and the mail
+// has to say so: a line that moved because we started probing a new address is ours, not theirs.
+const mailFor = (rescored: boolean) =>
+  changeEmail(
+    { domain: 'v.test', id: 'w1', email: 'a@v.test', lastTotal: 5, lastMeasurable: 10 } as never,
+    { id: 'r1', scorecard: { total: 6, max: 12, checks: [] } } as never,
+    moved([verdict(0, 1)], [verdict(1, 1)]),
+    rescored,
+  )
+check('mail mowi, ze podstawa byla przeliczona', mailFor(true).text.includes('recomputed from the same evidence'), true)
+check('i nie mowi tego, gdy nie byla', mailFor(false).text.includes('recomputed from the same evidence'), false)
 // A check going unmeasured is news, but it is usually about our reach and never called a loss.
 check('przejscie w niemierzalne to nie oskarzenie', moved([verdict(1, 1)], [verdict(0, 1, { inconclusive: true })])[0]?.worse, false)
 // A check the earlier scan never had must not be reported as a change from nothing.

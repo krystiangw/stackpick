@@ -73,12 +73,24 @@ export async function POST(request: Request) {
     // every formula change mails every watcher a list of verdicts that moved because we changed
     // our mind, under a subject line saying their site lost ground. The baseline is replaced
     // silently and the next comparison is like for like.
-    const comparable = comparableScorecards(previous?.scorecard, report.scorecard)
-    const changes = previous && comparable ? changesBetween(previous.scorecard.checks, report.scorecard.checks) : []
+    // Rescored rather than skipped, which is the other half of that rule and the half that was
+    // missing. Replacing the baseline silently loses any real change that lands in the same window
+    // as one of our releases, and on 2026-08-16 there were five releases in a day: a vendor could
+    // have broken their signup that morning and the recurring half of the product would never have
+    // said so. The previous findings are still on disk, so they can be scored under today's rules
+    // and compared like for like. Only `catchAll.bodies` is stripped before storage and scoring
+    // does not read it, so the rescored card is the card we would have published then.
+    const previousCard = previous
+      ? comparableScorecards(previous.scorecard, report.scorecard)
+        ? previous.scorecard
+        : scoreFindings(previous.findings)
+      : null
+    const comparable = previousCard !== null
+    const changes = previousCard ? changesBetween(previousCard.checks, report.scorecard.checks) : []
     // Nothing is mailed on the first check: there is no before, and "here is your score again"
     // is the email that teaches somebody to stop reading us.
     if (previous && comparable && worthTelling(changes, turnedAwayAtTheEdge(report.findings))) {
-      const { subject, text } = changeEmail(watch, report, changes)
+      const { subject, text } = changeEmail(watch, report, changes, previousCard !== previous.scorecard)
       const sent = await sendEmail(watch.email, subject, text)
       if (sent.delivered) mailed += 1
     }
