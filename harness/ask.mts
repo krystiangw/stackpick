@@ -17,7 +17,7 @@
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { join } from 'node:path'
 import { AGENTS } from './agents.mjs'
 
 /** A question that has not answered in five minutes is a broken run, not a vendor's problem. */
@@ -43,22 +43,6 @@ if (!existsSync(askFile)) {
   process.exit(1)
 }
 const question = readFileSync(askFile, 'utf8').trim()
-
-/**
- * The instruction files this machine will hand the run before it reads the question. Empty is the
- * only state a published number may come from, and on a subscription it is never empty, so the
- * list travels with every run rather than being discovered later.
- */
-function operatorContext(dir: string): string[] {
-  const found: string[] = []
-  const userLevel = join(homedir(), '.claude', 'CLAUDE.md')
-  if (existsSync(userLevel)) found.push(userLevel)
-  for (let at = dir; at !== dirname(at); at = dirname(at)) {
-    const candidate = join(at, 'CLAUDE.md')
-    if (existsSync(candidate)) found.push(candidate)
-  }
-  return found
-}
 
 const clean = agent.clean && process.env[agent.clean.needs] ? agent.clean : null
 if (!clean && agent.clean) {
@@ -102,7 +86,7 @@ for (let run = 1; run <= runs; run++) {
         model: model ?? 'default',
         auth: clean ? 'api-key' : 'subscription',
         cleanRoom: Boolean(clean),
-        operatorContext: clean ? [] : operatorContext(dir),
+        operatorContext: clean ? [] : agent.contextFiles(dir),
         startedAt,
         finishedAt: new Date().toISOString(),
         exitCode: result.status,

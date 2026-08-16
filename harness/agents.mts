@@ -27,7 +27,25 @@ export type Agent = {
    * cannot use it. Isolating CLAUDE_CONFIG_DIR instead was tried first and logs the run out.
    */
   clean?: { needs: string; argv: (prompt: string, model?: string) => string[] }
+  /**
+   * The instruction files THIS tool reads before it reads the question. Per agent, because they
+   * do not share them: codex reads AGENTS.md and never sees a CLAUDE.md, so reporting one against
+   * a codex run would be a lie in the opposite direction from the one this field exists to catch.
+   */
+  contextFiles: (runDir: string) => string[]
 }
+
+/** Every ancestor of the run directory, so a file two levels up is not missed. */
+function upwards(from: string, name: string): string[] {
+  const found: string[] = []
+  for (let at = from; at !== dirname(at); at = dirname(at)) {
+    const candidate = join(at, name)
+    if (existsSync(candidate)) found.push(candidate)
+  }
+  return found
+}
+
+const ifThere = (...paths: string[]) => paths.filter((path) => existsSync(path))
 
 function firstLine(bin: string, args: string[]): string {
   try {
@@ -46,21 +64,31 @@ export const AGENTS: Record<string, Agent> = {
       needs: 'ANTHROPIC_API_KEY',
       argv: (prompt, model) => ['--bare', '-p', prompt, ...(model ? ['--model', model] : [])],
     },
+    contextFiles: (dir) => [...ifThere(join(homedir(), '.claude', 'CLAUDE.md')), ...upwards(dir, 'CLAUDE.md')],
   },
   codex: {
     bin: 'codex',
     // exec is codex's non-interactive mode; the sandbox flag is what stops it stopping.
     argv: (prompt, model) => ['exec', '--sandbox', 'workspace-write', ...(model ? ['-m', model] : []), prompt],
     version: () => firstLine('codex', ['--version']),
+    // No CLAUDE.md here, which is the point of running a cell twice: a finding that survives two
+    // tools reading two different sets of the operator's files is a finding about the vendors.
+    // The memory database is listed because it is context we did not write for this question.
+    contextFiles: (dir) => [
+      ...ifThere(join(homedir(), '.codex', 'AGENTS.md'), join(homedir(), '.codex', 'memories_1.sqlite')),
+      ...upwards(dir, 'AGENTS.md'),
+    ],
   },
   gemini: {
     bin: 'gemini',
     argv: (prompt, model) => ['-p', prompt, '--approval-mode', 'yolo', ...(model ? ['-m', model] : [])],
     version: () => firstLine('gemini', ['--version']),
+    contextFiles: (dir) => [...ifThere(join(homedir(), '.gemini', 'GEMINI.md')), ...upwards(dir, 'GEMINI.md')],
   },
   cursor: {
     bin: 'cursor-agent',
     argv: (prompt, model) => ['-p', prompt, '--force', ...(model ? ['--model', model] : [])],
     version: () => firstLine('cursor-agent', ['--version']),
+    contextFiles: (dir) => [...upwards(dir, 'AGENTS.md'), ...upwards(dir, '.cursorrules')],
   },
 }
