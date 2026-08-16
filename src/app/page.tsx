@@ -187,6 +187,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
               only when a verdict moves, naming what it says now and what it said before.
             </p>
             <p className="text-sm leading-relaxed text-ink-soft">
+              Once a month a real agent is asked the question your buyers ask, five times over, and you are told
+              how many of the five named you and which provider was picked instead. It answers a question and
+              signs up for nothing, so nothing of yours is touched.
+            </p>
+            <p className="text-sm leading-relaxed text-ink-soft">
               Free while we are building it, and we will ask before it ever costs anything. No account, no card,
               and one link in every email stops it.
             </p>
