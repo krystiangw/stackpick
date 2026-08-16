@@ -38,6 +38,57 @@
      werdykty za zero, a wartoscia bywa samo zdanie, bo to je czyta vendor.
 
 
+## PIERWSZY POMIAR: CZY NASZE CHECKI MAJA COKOLWIEK WSPOLNEGO Z TYM, KOGO AGENCI WYMIENIAJA
+
+25 cel rozpoznawczych (wszystkie kategorie, 5 biegow claude/sonnet kazda), **170 dostawcow, 87
+wymienionych choc raz**. `npm run named-vs-score`, wynik w `scratchpad/named-vs-score.txt`.
+Test permutacyjny 10 000 przetasowan ze stalym ziarnem, plus podzial po medianie tygodniowych
+pobran npm, bo **slawa dostawcy jest oczywistym czynnikiem konfundujacym**.
+
+**Na calym korpusie:**
+
+| check | zdaja | oblewaja | roznica | przypadek |
+|---|---|---|---|---|
+| `oauth_dcr` | 56% | 28% | **+28pp** | 0.000 |
+| `mcp_present` | 51% | 31% | **+20pp** | 0.003 |
+| `programmatic_provisioning` | 50% | 31% | **+18pp** | 0.006 |
+| `typed_package` | 42% | 23% | +20pp | 0.050 |
+| **`llms_txt`** | 40% | 37% | **+3pp** | **0.738** |
+| `machine_readable_api` | 39% | 40% | -1pp | 0.908 |
+| `agent_entry_point` | 41% | 40% | +1pp | 0.905 |
+
+Wynik powyzej mediany: **50% wymienialnosci kontra 31%** ponizej, +19pp, przypadek 0.003.
+
+**Ale wiekszosc tego to slawa, nie nasze checki.** Sami popularni (powyzej mediany 243 891 pobran
+tygodniowo): 58% wymienialnosci. Sami mniej znani: 27%. Dopiero wewnatrz polowek widac, co zostaje:
+
+| check | u popularnych | u mniej znanych |
+|---|---|---|
+| **`oauth_dcr`** | **+32pp** | **+16pp** |
+| `mcp_present` | +28pp | +4pp |
+| `programmatic_provisioning` | +35pp | -1pp |
+| `llms_txt` | +1pp | -7pp |
+
+**`oauth_dcr` jest jedynym checkiem, ktory przezywa kontrole na slawe po obu stronach.** MCP i
+provisioning trzymaja sie tylko wsrod popularnych, czyli u nich to w duzej mierze slawa.
+**`llms_txt` nie pokazuje niczego nigdzie**, co zgadza sie co do joty z trzema zewnetrznymi
+zbiorami logow opisanymi w sekcji o wtyczkach.
+
+**Czego to NIE dowodzi, i to musi isc razem z kazda liczba:** nic o przyczynie (znany dostawca i
+publikuje, i jest wymieniany), nic o pojedynczym dostawcy (piec biegow oddziela sciane od ciszy),
+i nic czystego, bo biegi czytaly `~/.claude/CLAUDE.md` tej maszyny. Wiersze z garstka danych sa
+w wydruku oznaczone: `answers_plain_request` pokazuje -54pp na **pieciu** oblewajacych, a wszyscy
+piatka to firmy dosc duze, by stac je na obrone przed botami, wiec to znowu slawa tylnymi drzwiami.
+
+**Co z tym zrobic (decyzje na po pomiarze podlogi szumu, bo dotykaja punktacji):**
+1. `llms_txt` zostaje w formule czy nie? Moja rekomendacja: **zostaje, ale zdanie przy nim mowi, co
+   zmierzylismy** - jest tani i nieszkodliwy, a my wlasnie udowodnilismy, ze nie ma zwiazku z
+   wymienialnoscia. Konkurencja sprzedaje go jako lek.
+2. To jest **material na strone i najmocniejsza roznica wobec Cloudflare i Vercela**, ktorzy mierza
+   czytelnosc tresci. Zdanie do publikacji: check poswiadczen (`oauth_dcr`) jest jedynym, ktory
+   przezywa kontrole na popularnosc.
+3. Powtorzyc na drugim narzedziu (codex) i po odmrozeniu formuly, zanim cokolwiek pojdzie na strone.
+
 ## RESEARCH: WTYCZKI "AGENT READY" DLA WORDPRESSA I SKLEPOW (pytanie Krystiana, 2026-08-16)
 
 Pytanie: czy budowac wtyczki gotowosci na agentow dla popularnych platform (WordPress, WooCommerce,

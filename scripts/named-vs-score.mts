@@ -149,8 +149,12 @@ for (const check of CHECKS) {
   if (passing.length < 5 || failing.length < 5) continue
   const gap = rate(passing) - rate(failing)
   const chance = byChance(rows, (row) => row.passes.has(check), gap)
+  // A side with under ten rows can produce a large gap and a small chance at the same time and
+  // still be about five vendors. `answers_plain_request` reads -54pp on five failing rows, all of
+  // them big enough to run bot defence, which is fame arriving through the back door.
+  const thin = Math.min(passing.length, failing.length) < 10 ? '  <- garstka wierszy' : ''
   console.log(
-    `${check.padEnd(28)} ${String(passing.length).padStart(5)} ${(rate(passing) * 100).toFixed(0).padStart(10)}% ${String(failing.length).padStart(10)} ${(rate(failing) * 100).toFixed(0).padStart(10)}% ${(gap * 100).toFixed(0).padStart(9)}pp ${chance.toFixed(3).padStart(11)}`,
+    `${check.padEnd(28)} ${String(passing.length).padStart(5)} ${(rate(passing) * 100).toFixed(0).padStart(10)}% ${String(failing.length).padStart(10)} ${(rate(failing) * 100).toFixed(0).padStart(10)}% ${(gap * 100).toFixed(0).padStart(9)}pp ${chance.toFixed(3).padStart(11)}${thin}`,
   )
 }
 
