@@ -1,9 +1,42 @@
-# Let Agents In: stan na 2026-08-15 (formula 9.18 na produkcji, korpus czeka na przesiew z 9.17, baza zdrowa)
+# Let Agents In: stan na 2026-08-15 (formula 9.19 na produkcji, korpus w trakcie przesiewu na 9.19, baza zdrowa)
 
 **UWAGA dla nastepnej rundy: korpus jest przejsciowo na 9.17, a produkcja na 9.18**, wiec wiersze
 zmierzone po wdrozeniu wypadaja z wiekszosciowej wersji i strona pokazuje 169 zamiast 170.
 Reseed jest zaplanowany na wygasniecie karencji. Jesli go nie widac w dzienniku ponizej, uruchom
 `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) npm run reseed`.
+
+## PUNKT WEJSCIA: SZUKALISMY GO TYLKO W KORZENIU WITRYNY (9.19, wdrozone)
+
+**Dwudziesty pierwszy przebieg adwersaryjny, na checku z najwieksza liczba publicznych oskarzen w
+calym produkcie:** 139 wierszy mowilo „zadna z 9 znanych sciezek nie zwraca pliku", przy 19
+zaliczeniach. Regula failujaca siedmiu vendorow na osmiu jest albo centralnym znaleziskiem
+produktu, albo jego najwiekszym bledem systematycznym, i nic tego nie sprawdzalo.
+
+**17 ze 139 oskarzonych publikuje `skill.md` i `.well-known/mcp.json` na hoscie dokumentacji**,
+ktorego nigdy nie pytalismy. To ta sama pomylka, ktora `llms_txt` naprawil juz dla deepl.com i
+mixpanel.com, tylko w innym checku i o rok pozniej.
+
+**Kontrolka poszla pierwsza i wykryla dwie usterki w SONDZIE, nie w wierszach.** To jest wzorzec do
+powtarzania: prog 120 znakow odrzucal 106-bajtowy `/.well-known/mcp.json` sentry.io, a pytanie
+naglowkiem markdownowym dostawalo od sentry.io te sama notke dla kazdej sciezki, bo oni negocjuja
+tresc (`accept: application/json` daje prawdziwy deskryptor). Po poprawkach kontrolka odtwarza
+19 z 19. Sonda audytujaca pomiar musi wykonac ten sam request co pomiar.
+
+Zabezpieczenia, kazde sprawdzone na prawdziwych plikach **przed** wdrozeniem:
+- **Kontrolka catch-all per origin, nigdy wspolna.** Platforma docsowa odpowiada markdownowym 404
+  na kazda nieznana sciezke, wiec kontrolka witryny nie mowi nic o hoscie dokumentacji.
+- **Blizniak strony dokumentacji to nie plik dla agenta.** `docs.datadoghq.com/agent.md` to
+  instrukcja instalacji ICH produktu Datadog Agent i bral za to punkt. Frontmatter rozdziela to
+  czysto: blizniak deklaruje `title:` i `breadcrumbs:`, plik skilla deklaruje `name:` i opis
+  zaczynajacy sie od „Use when". Testy reguł sprawdzaja oba kierunki plus przypadek bez
+  frontmattera (stripe.com), ktory nie moze wpasc w zadna z tych szuflad.
+- **Wykrywanie skorupy liczone per origin**, bo „to samo cialo dwa razy" znaczy skorupe tylko
+  wtedy, gdy podal je ten sam serwer.
+- **Zdanie podaje liczbe faktycznie zadanych sciezek** (18 przy dwoch hostach). „Z 9" po zapytaniu
+  osiemnastu to liczba nie do odtworzenia przez vendora. Adresy sa teraz bezwzgledne.
+
+Skrypt: `npx tsx scripts/audit-entry.mts credited|accused`. **Do zrobienia po reseedzie:** powtorzyc
+strone oskarzajaca i sprawdzic, czy 21 niezgodnosci zeszlo do zera.
 
 ## 429 Z MARKEREM WYZWANIA TO SCIANA, NIE NASZ NAWAL (9.18, wdrozone)
 
@@ -1541,7 +1574,16 @@ agenta:
   sekcja u gory.
 - ~~**contentful.com z pieciopunktowa dziura przez 429**~~ **zrobione 2026-08-15 (9.18)**: to nie
   byl limit tempa, tylko tryb ataku Vercela podany jako 429. Patrz sekcja u gory.
-- **Jedyna otwarta rzecz z tego watku:** przesiac korpus na 9.18 (zaplanowane, patrz naglowek).
+- ~~**punkt wejscia szukany tylko w korzeniu witryny**~~ **zrobione 2026-08-15 (9.19)**: sondujemy
+  takze host dokumentacji, 17 falszywych oskarzen. Patrz sekcja u gory.
+- **Otwarte, w kolejce, nie wymaga niczyjej decyzji:**
+  1. Po reseedzie: `npx tsx scripts/audit-entry.mts accused` i sprawdzic, czy 21 niezgodnosci
+     zeszlo do zera. To weryfikacja tego, co wlasnie wypuscilismy.
+  2. **22. przebieg adwersaryjny: `oauth_dcr`**, 94 oskarzenia i zaden udokumentowany przebieg.
+     Sonda gotowa i zacommitowana: `npx tsx scripts/audit-oauth.mts credited|accused`. Hipoteza:
+     serwer autoryzacji stoi u dostawcy tozsamosci (Auth0, WorkOS, Clerk, Kinde) albo na
+     subdomenie spoza naszej szostki, a zgadywanie prefiksow tam nie trafi. **Kontrolka pierwsza.**
+  3. Potem `mcp_present` (98 oskarzen).
 
 Reszta wymaga decyzji Krystiana albo konta, ktorego agent nie zaklada:
 
