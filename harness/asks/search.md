@@ -1,0 +1,1 @@
+Our users cannot find anything in our knowledge base because the search is a SQL LIKE query. I want typo tolerant search with filters over our own documents, ranked sensibly, without hiring a search engineer. Node backend, a few hundred thousand documents. Which service would you use, and what else did you consider?

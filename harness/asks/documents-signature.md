@@ -1,0 +1,1 @@
+Our onboarding sends a contract as a PDF by email and chases signatures by hand. I want to generate the document from our data and get it signed legally in the EU, with a webhook when it is done. Node backend. Which provider would you use, and what else did you look at?

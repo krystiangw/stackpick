@@ -1,0 +1,1 @@
+We find out about exceptions when a customer emails us, which is embarrassing. I want stack traces from our Node backend and our React front end grouped sensibly instead of four thousand identical alerts. Which tool would you use, and what else did you look at before picking it?

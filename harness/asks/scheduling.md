@@ -1,0 +1,1 @@
+Our sales team wants prospects to book a call straight from our app, into the rep's own Google or Outlook calendar, with availability that respects their existing meetings. I do not want to write calendar sync myself. Which service would you use, and what else did you consider before choosing it?

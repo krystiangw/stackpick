@@ -1,0 +1,1 @@
+We need to ship a checkout redesign to internal staff first and be able to kill it without a deploy, and later run a proper A/B test on it. Node and React, no dedicated platform team. Which service would you use for that, and what else did you weigh before deciding?

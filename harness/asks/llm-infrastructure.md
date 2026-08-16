@@ -1,0 +1,1 @@
+We want to add a summarisation feature and I do not want to run GPUs or get locked to one model vendor. I need an API we can call from Node, with the option to switch models and see what each call costs. Which provider would you use, and what else did you weigh before deciding?

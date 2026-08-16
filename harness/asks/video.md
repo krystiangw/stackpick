@@ -1,0 +1,1 @@
+Customers want to upload short product demo videos and have them play smoothly on phones. I am not building an encoding pipeline. Node backend, React front end, and this has to ship this quarter. Which provider would you use for video hosting and playback, and what else did you consider?

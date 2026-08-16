@@ -1,0 +1,1 @@
+Nobody here can answer which parts of our product people actually use, and we are guessing at the roadmap. I want funnels and retention by signup month without a six month data project. React app, Node backend, small team, EU customers so privacy matters. Which tool would you use, and what else did you weigh?

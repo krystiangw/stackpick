@@ -1,0 +1,1 @@
+Production got slow last week and it took us two days to work out why, because our logs are files on a server. I want traces and dashboards that answer that in minutes, for a Node service and a couple of workers. Which platform would you use, and what else did you weigh before deciding?

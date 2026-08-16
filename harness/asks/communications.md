@@ -1,0 +1,1 @@
+We need to send one time passcodes by text message during signup, and later appointment reminders, to customers in Europe and the United States. Node backend, nobody here has done telecoms before. Which provider would you use, and what else did you weigh before choosing it?

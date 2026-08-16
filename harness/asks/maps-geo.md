@@ -1,0 +1,1 @@
+We collect delivery addresses and need them turned into coordinates, shown on a map in our React app, and later checked against a delivery zone. Traffic is modest but the addresses are European and messy. Which provider would you use, and what else did you weigh first?

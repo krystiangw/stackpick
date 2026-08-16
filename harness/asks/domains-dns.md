@@ -1,0 +1,1 @@
+Our product gives every customer their own subdomain and some of them want a custom domain instead, which means we need to register domains and set DNS records from our own backend, with nobody at the keyboard. Which registrar would you use for that, and what else did you consider?

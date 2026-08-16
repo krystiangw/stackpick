@@ -1,0 +1,1 @@
+We are launching in Germany and Japan and our strings are hard coded in the React app. I need a way for translators to work on them and for the app to pick up new translations without a redeploy every time. Which platform would you use, and what else did you weigh?

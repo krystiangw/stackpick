@@ -1,0 +1,1 @@
+Our password reset and receipt emails go out through a box we run ourselves and too many of them land in spam. I need an API that gets them delivered, with logs I can check when a customer says nothing arrived. Node, maybe fifty thousand emails a month. Which provider would you use, and what else did you look at first?

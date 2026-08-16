@@ -1,0 +1,1 @@
+We want to sell physical merchandise next to our software, with a cart, tax and shipping handled, without turning our app into a shop. Small catalogue, EU and US customers, and I would rather not build a checkout. Which platform would you use, and what else did you consider first?

@@ -1,0 +1,1 @@
+We are moving off a Postgres instance somebody set up on a virtual machine three years ago and nobody wants to be the one patching it. I want a managed database with backups, a sane connection story for serverless, and branching for our preview environments if possible. Which provider would you use, and what else did you consider?

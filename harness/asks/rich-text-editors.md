@@ -1,0 +1,1 @@
+Our support agents write help articles in a plain textarea and keep asking for bold, bullet lists and pasted screenshots. I need a real editor inside our React app, one we can extend later with custom blocks, and I have to pick this week. Which editor would you use, and what else did you weigh before settling on it?

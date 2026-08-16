@@ -1,0 +1,1 @@
+Every new alert in our product means writing the email, the push and the Slack version separately, plus per user preferences we keep getting wrong. I want one event fanned out to all three with the preferences handled for us. Node backend. Which service would you use, and what else did you weigh?

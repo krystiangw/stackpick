@@ -1,0 +1,1 @@
+Our marketing team asks us to change homepage copy and every change costs a deploy. I want them editing content themselves while our Next.js app renders it, with proper preview and versioning. Which content platform would you use, and what else did you look at first?
