@@ -47,17 +47,26 @@ type Run = {
   }
 }
 
-const all: Run[] = readdirSync(target)
+const dirs = readdirSync(target)
   .filter((name) => name.startsWith('run-'))
   .sort()
-  .map((name) => {
-    const dir = join(target, name)
-    return {
-      dir,
-      answer: readFileSync(join(dir, 'ANSWER.txt'), 'utf8'),
-      meta: JSON.parse(readFileSync(join(dir, 'RUN.json'), 'utf8')),
-    }
-  })
+  .map((name) => join(target, name))
+
+// A directory exists from the moment its run starts and its files land when the run ends, so a
+// cell read while it is still going has to say which runs are missing rather than fail on the
+// first one or, worse, publish the finished half as if it were the whole cell.
+const unfinished = dirs.filter((dir) => !existsSync(join(dir, 'RUN.json')))
+const all: Run[] = dirs
+  .filter((dir) => !unfinished.includes(dir))
+  .map((dir) => ({
+    dir,
+    answer: readFileSync(join(dir, 'ANSWER.txt'), 'utf8'),
+    meta: JSON.parse(readFileSync(join(dir, 'RUN.json'), 'utf8')),
+  }))
+
+if (unfinished.length > 0) {
+  console.log(`${unfinished.length} biegow jeszcze trwa, czytam ${all.length}. Poczekaj, jesli to ma byc pelna cela.\n`)
+}
 
 const broken = all.filter((run) => run.meta.timedOut || run.meta.exitCode !== 0 || run.answer.trim().length === 0)
 const answered = all.filter((run) => !broken.includes(run))

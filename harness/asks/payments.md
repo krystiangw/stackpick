@@ -1,0 +1,1 @@
+We are putting paid plans on a B2B SaaS: monthly and annual, customers in the EU and the US, cards plus proper invoices and VAT. Node on the backend, nobody here has done billing before, and this has to be live next month. Which provider would you use, and what else did you weigh before settling on it?

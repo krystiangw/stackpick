@@ -169,7 +169,26 @@ export function mentionsIn(text: string, domains: readonly string[]): Mention[] 
     }
     if (best) found.push(best)
   }
-  return found.sort((a, b) => a.at - b.at)
+  return promoted(found).sort((a, b) => a.at - b.at)
+}
+
+/**
+ * An ordinary word standing next to a vendor nobody can mistake is being used as a brand.
+ *
+ * Measured 2026-08-16 on the payments cell: Paddle was recommended in five runs out of five, every
+ * time in a sentence that also named Lemon Squeezy or Stripe, and every time the ambiguity rule
+ * threw it out. "Merchant of Record (Paddle, Lemon Squeezy)" is not a sentence about a boat. The
+ * capitalisation requirement still has to be met first, so "split the traffic in LaunchDarkly"
+ * stays out, and a capitalised word alone in its sentence stays weak.
+ */
+function promoted(found: Mention[]): Mention[] {
+  const sure = found.filter((mention) => mention.form !== 'weak')
+  if (sure.length === 0) return found
+  return found.map((mention) => {
+    if (mention.form !== 'weak') return mention
+    const company = sure.some((other) => other.domain !== mention.domain && mention.sentence.includes(other.matched))
+    return company ? { ...mention, form: 'name' } : mention
+  })
 }
 
 /** What a run counts as: named for certain, or named only through a word that is also English. */

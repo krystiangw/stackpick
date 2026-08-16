@@ -910,5 +910,12 @@ check('i niepewne nie liczy sie do wyniku', namedIn('Modal is a good fit for GPU
 check('ale domena obok juz tak', namedIn('Modal (modal.com) is a good fit', ['modal.com']), 'modal.com')
 check('cytat leci razem z niepewnym trafieniem', mentionsIn('Modal is a good fit.', ['modal.com'])[0].sentence, 'Modal is a good fit.')
 
+// Zwykle slowo stojace obok dostawcy, ktorego nie da sie pomylic, jest marka. Zdanie nizej to
+// cytat z celi payments, gdzie Paddle padl w pieciu biegach na piec i nie zostal policzony.
+const MOR = 'Alternatywa to Merchant of Record (Paddle, Lemon Squeezy), ktory bierze VAT na siebie.'
+check('Paddle obok Lemon Squeezy juz sie liczy', namedIn(MOR, ['paddle.com', 'lemonsqueezy.com']), 'paddle.com,lemonsqueezy.com')
+check('ale sam w zdaniu nadal nie', formOf('Paddle is worth a look for EU VAT', 'paddle.com'), 'weak')
+check('mala litera nie awansuje przez sasiada', namedIn('we split the traffic in LaunchDarkly', ['split.io', 'launchdarkly.com']), 'launchdarkly.com')
+
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

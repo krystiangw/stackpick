@@ -11,7 +11,10 @@
 - **Do zrobienia, w tej kolejnosci:**
   1. ~~`npm run noise-floor 9.27`~~ **zrobione**: 0,24 procent, ale jednokierunkowo, wiec to NIE
      jest podloga szumu. Prawdziwy pomiar wymaga dnia bez zmiany regul, patrz sekcja u gory.
-  2. Kolejny przebieg adwersaryjny. **Zanim wybierzesz check, zmierz pokrycie zrodla prawdy na
+  2. **Monitoring ma teraz w opisie prawdziwe agenty** (`npm run ask` / `npm run asked`), wiec dla
+     kazdej obserwowanej domeny nalezy raz w miesiacu puscic cele jej kategorii. Dzis to trzy
+     obserwacje na naszym wlasnym mailu, wiec nie kosztuje nic. Sekcja nizej.
+  3. Kolejny przebieg adwersaryjny. **Zanim wybierzesz check, zmierz pokrycie zrodla prawdy na
      naszym korpusie** (rejestr MCP mial pokrycie i dal piec znalezisk, apis.guru mial 2 na 47 i
      nie dal nic). Skrypty: `scripts/audit-{entry,oauth,signup,mcp-registry,openapi-directory}.mts`,
      kazdy z trybem `credited|accused`, **kontrolka zawsze pierwsza**.
@@ -28,10 +31,79 @@
      werdykty za zero, a wartoscia bywa samo zdanie, bo to je czyta vendor.
 
 
-**UWAGA dla nastepnej rundy: korpus jest przejsciowo na 9.17, a produkcja na 9.18**, wiec wiersze
-zmierzone po wdrozeniu wypadaja z wiekszosciowej wersji i strona pokazuje 169 zamiast 170.
-Reseed jest zaplanowany na wygasniecie karencji. Jesli go nie widac w dzienniku ponizej, uruchom
-`STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) npm run reseed`.
+## MONITORING DOSTAJE PRAWDZIWE AGENTY (decyzja Krystiana, 2026-08-16, wdrozone)
+
+Krystian: *"w monitoringu powinnismy miec tez real agents. samo sprawdzanie checklist to malo za
+99 miesiecznie. a trzecia kolumna to audyt, rozmowa ze specjalista, praca nad twoim kodem"*. Zgoda,
+ale kluczowy jest podzial, KTORE biegi agentow tam wchodza, bo mamy dwa rozne zwierzeta:
+
+- **build run** (`npm run cell`): agent dostaje scaffold i brief i ma wdrozyc integracje. Minuty do
+  godzin, izolowana kopia na bieg, wchodzi w cudza rejestracje i klucze. **Wymaga zgody vendora i
+  czlowieka przy klawiaturze**, wiec zostaje w platnym audycie i jest wiekszoscia jego kosztu.
+- **discovery run** (`npm run ask`, NOWE): jedno pytanie, pusty katalog, bez scaffoldu. Minuta na
+  bieg. **Nic po drugiej stronie nie powstaje**, wiec wolno go puszczac co miesiac na dowolna
+  domene, takze taka, ktorej wlasciciel nas o nic nie prosil. To jest ta polowa, ktora miesci sie
+  w 99 dolarach.
+
+Argument sprzedazowy, ktory z tego wychodzi: **darmowy skan mowi, czy drzwi sa otwarte, monitoring
+mowi, czy ktokolwiek przez nie wszedl.** Checklisty odpowiadaja "czy agent MOZE nas uzyc",
+discovery runs odpowiadaja "czy agent w ogole nas ROZWAZA". To dwie rozne porazki.
+
+**Ograniczenie, ktore trzeba trzymac:** `/pricing` ma wlasna sekcje "Why one run of an agent proves
+nothing", wiec monitoring **nie sprzedaje pozycji z jednego biegu**. Sprzedaje cele (5 biegow) i
+ruch tej liczby miedzy miesiacami. Jest to napisane wprost w FAQ razem z tym, czego 5 biegow nie
+umie: rozdzielic nas od bliskiego konkurenta.
+
+### Kto zostal wymieniony, decyduje regula, nie drugi model
+
+`src/lib/vendors.ts`: opublikowana lista nazw plus matcher, kontrolka w `scripts/rules.mts`
+(sprawdzone, ze umie oblac: skasowanie jednego wpisu wywraca trzy testy). Marki bedace zwyklym
+angielskim slowem - Modal, Temporal, Split, Resend, Plaid i ~30 innych - sa **cytowane czlowiekowi
+jako `weak`, a nie liczone**: niedoliczenie mowi klientowi, ze jest niewidoczny, gdy nie jest, a
+przeliczenie mowi, ze jest widoczny, gdy nie jest, i to sa bledy w rozne strony.
+
+**Pierwsza cela, file-storage, 5 biegow (claude sonnet):** cloudflare 5/5, cloudinary 4/5,
+uploadthing 3/5, **szesciu z dziewieciu dostawcow nie padlo ani razu**. Przeliczone recznie przez
+grep, zgadza sie co do biegu.
+
+**Druga cela, payments** (bo stripe.com jest jedna z obserwowanych domen): stripe 5/5 i za kazdym
+razem jako pierwszy, lemonsqueezy 4/5, paddle 4/5, chargebee 2/5, plaid i polar 0/5. Ta cela od
+razu pokazala granice mojej wlasnej reguly: **Paddle padl w 5 biegach na 5 i nie byl liczony**, bo
+"paddle" to zwykle slowo. We wszystkich pieciu zdaniach stal obok pewnego dostawcy ("Merchant of
+Record (Paddle, Lemon Squeezy)"). Stad awans: **niepewne trafienie staje sie pewnym, gdy w tym
+samym zdaniu stoi pewne trafienie na INNEGO dostawce**, przy nadal wymaganej duzej literze. Po
+zmianie paddle ma 4/5 policzone i jedno nadal cytowane czlowiekowi, bo w tym zdaniu stoi sam.
+file-storage nie drgnelo, wiec awans nie jest po prostu poluzowaniem.
+
+### Bieg czyta konfiguracje maszyny, na ktorej stoi (znalezisko, nienaprawialne bez klucza)
+
+Pierwsza cela wrocila **PO POLSKU** na angielskie pytanie, 5 biegow na 5. Powod: `claude` czyta
+`~/.claude/CLAUDE.md` tej maszyny, zanim przeczyta pytanie, a tam stoi, zeby odpowiadac po polsku.
+Jezyk to tylko widoczna polowa, bo razem z nim wchodzi caly plik. Izolowany katalog roboczy nic tu
+nie daje, wyciek idzie z katalogu domowego. Co sprawdzone:
+
+| droga | wynik |
+|---|---|
+| izolacja `CLAUDE_CONFIG_DIR` | **wylogowuje bieg**, poswiadczenia sa zwiazane z prawdziwym katalogiem |
+| `--system-prompt` zamiast domyslnego | pamiec uzytkownika to przezywa, odpowiedz nadal po polsku |
+| `--bare` | zdejmuje CLAUDE.md, hooki, skille. **Czyta wylacznie ANTHROPIC_API_KEY**, nigdy keychaina |
+
+Wiec `ask` bierze czysta droge, gdy w srodowisku jest klucz, a bez niego zapisuje do `RUN.json`
+kazdy plik instrukcji, ktory byl w zasiegu, i `asked` drukuje to **NAD tabela, nie pod nia**.
+**Dla Krystiana: `ANTHROPIC_API_KEY` jest teraz blokerem produktowym**, nie wygoda. Bez niego zaden
+opublikowany pomiar rozpoznawczy nie jest czysty, a z nim staje sie odtwarzalny przez obcego.
+
+### Stan operacyjny
+
+Trzy aktywne obserwacje w produkcji, **wszystkie na naszym wlasnym mailu** (stripe.com x2,
+vercel.com), wiec obietnica miesiecznej celi nie kosztuje dzis nic. Cela `payments` puszczona dla
+stripe.com, bo obietnicy nie publikuje sie przed jej wykonaniem. Wpiecie w cron ma sens dopiero
+przy pierwszym prawdziwym obserwujacym.
+
+**Przy okazji, do przemyslenia:** agenty wymieniaja w file-storage S3, Vercel Blob i Supabase
+Storage, a zadnego z nich nie ma w naszym korpusie (vercel.com zostal z niego usuniety 2026-08-11).
+Korpus mierzy dostawcow "agent-native", a agenci odpowiadaja domyslnie AWS. To nie jest blad
+korpusu, ale jest to roznica, ktora bedzie wracac przy kazdej celi.
 
 ## PODLOGA SZUMU: NADAL JEJ NIE ZMIERZYLISMY, I TRZEBA TO MOWIC WPROST
 
