@@ -294,7 +294,16 @@ const PROCEDURE_SIGNALS =
  */
 export function answersWithTheSameTemplate(body: string, controlBody: string | undefined): boolean {
   if (controlBody === undefined || controlBody.length === 0) return false
-  const withoutPaths = (text: string) => text.replace(/\/[\w.@~-]+/g, ' ').replace(/\s+/g, ' ').trim()
+  // Long runs of hex or digits go with the paths: a shell that stamps a nonce, a build id or a
+  // timestamp into every response differs from its own control on every request, which defeats an
+  // exact comparison and would hand a vendor points for four copies of one page. Eight characters
+  // is long enough that ordinary prose and version numbers survive.
+  const withoutPaths = (text: string) =>
+    text
+      .replace(/\/[\w.@~-]+/g, ' ')
+      .replace(/\b[0-9a-f]{8,}\b/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
   if (withoutPaths(body) === withoutPaths(controlBody)) return true
   const firstLine = (text: string) => text.split('\n').map((line) => line.trim()).find(Boolean)?.toLowerCase() ?? ''
   const heading = firstLine(controlBody)

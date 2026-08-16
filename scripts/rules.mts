@@ -534,6 +534,17 @@ check('sam frontmatter nie przesadza', answersWithTheSameTemplate(
   '---\ntitle: Not found\n---\n\nNo such page.',
 ), false)
 check('brak kontrolki to nie szablon', answersWithTheSameTemplate('# Skill\n\nDo this.', undefined), false)
+// Shell ze zmienna wartoscia rozni sie od samego siebie przy kazdym zadaniu, wiec doslowne
+// porownanie go nie widzi i cztery kopie jednej strony szly jako cztery pliki wejsciowe.
+check('shell z nonce rozpoznany mimo roznicy', answersWithTheSameTemplate(
+  'Welcome. build 9f2ab41c7d0e55 served at 1786781017',
+  'Welcome. build 3c81de99aa0f21 served at 1786781099',
+), true)
+// I druga strona: dwa naprawde rozne pliki nie zlewaja sie przez to w jeden.
+check('rozne pliki nadal rozne', answersWithTheSameTemplate(
+  'Create an API key with POST to our keys endpoint 9f2ab41c7d0e55',
+  'Welcome. build 3c81de99aa0f21 served at 1786781099',
+), false)
 
 console.log('punkt wejscia, czyli plik dla agenta kontra blizniak strony dokumentacji')
 // Once the probe asks the documentation origin, every vendor with a page called "agent" answers

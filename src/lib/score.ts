@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.26'
+export const FORMULA_VERSION = '9.27'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -474,10 +474,17 @@ export const CHECKS: Check[] = [
       const everyNamespaceFakes = catchAll
         ? catchAll.markdown && catchAll.json && (catchAll.entryText ?? catchAll.text)
         : f.funnel.servesCatchAll
-      // This describes the site's own namespaces, and since 9.19 the probe also asks the
+      // This describes the site's OWN namespaces, and since 9.19 the probe also asks the
       // documentation origin, which has its own control. A site that answers everything while its
-      // docs host serves a real file is measurable through the docs host, so a hit outranks it.
-      if (everyNamespaceFakes && f.funnel.entryPointsFound.length === 0) {
+      // docs host serves a real file is measurable through the docs host, so a hit there outranks
+      // it - but only a hit there. Letting any hit through reopened the hole this branch exists to
+      // close: a site whose shell carries a nonce or a timestamp differs from its own control and
+      // from itself on every request, so the body comparisons cannot see it, and four copies of
+      // one shell would have been published as four entry files worth two points.
+      const found = f.funnel.entryPointsFound
+      const elsewhere = found.filter((entry) => entry.startsWith('http') && !entry.startsWith(f.site))
+      const usable = everyNamespaceFakes ? elsewhere : found
+      if (everyNamespaceFakes && elsewhere.length === 0) {
         return {
           points: 0,
           detail: 'Unmeasurable: the site answers unknown paths in every format with real text, so any hit here proves nothing',
@@ -497,11 +504,11 @@ export const CHECKS: Check[] = [
       }
       // A .well-known descriptor already scores under MCP; counting it twice sold one file
       // as three points across two stages.
-      const written = f.funnel.entryPointsFound.filter((entry) => !pathOf(entry).startsWith('/.well-known/'))
+      const written = usable.filter((entry) => !pathOf(entry).startsWith('/.well-known/'))
       // Older reports predate the content test, and rescoring them as policy files would be a
       // claim about a body we no longer hold.
       const withProcedure = (f.funnel.entryPointsWithProcedure ?? written).filter(
-        (entry) => !pathOf(entry).startsWith('/.well-known/'),
+        (entry) => !pathOf(entry).startsWith('/.well-known/') && usable.includes(entry),
       )
       const at = (entries: string[]) => entries.map((entry) => (entry.startsWith('http') ? entry : `${f.site}${entry}`)).join(', ')
       if (withProcedure.length > 0) return yes(2, `Found: ${at(withProcedure)}`)
@@ -511,8 +518,8 @@ export const CHECKS: Check[] = [
           `Found ${at(written)}, but it states a policy rather than a procedure: nothing in it names a credential, an endpoint or a way to get an account.`,
         )
       }
-      if (f.funnel.entryPointsFound.length > 0) {
-        return yes(1, `Only service descriptors: ${at(f.funnel.entryPointsFound)}. No procedure written for a machine.`)
+      if (usable.length > 0) {
+        return yes(1, `Only service descriptors: ${at(usable)}. No procedure written for a machine.`)
       }
       // A refusal is not an absence, the same rule robots.txt already follows. bitmovin.com
       // publishes a real 9.6 kB skill.md and answers 403 to our data centre on most requests,
