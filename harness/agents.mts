@@ -7,6 +7,9 @@
  * the run.
  */
 import { execFileSync } from 'node:child_process'
+import { existsSync } from 'node:fs'
+import { homedir } from 'node:os'
+import { dirname, join } from 'node:path'
 
 export type Agent = {
   bin: string

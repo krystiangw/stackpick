@@ -533,6 +533,8 @@ export type FunnelFindings = {
   mcpCardNamed: string[]
   /** True when every POST we sent came back an empty 2xx, control included, so we measured nothing. */
   mcpPostsSwallowed: boolean
+  /** Their own MCP pages, opened only when nothing answered anywhere else. Named so it is checkable. */
+  mcpPagesFollowed: string[]
   signup: SignupFindings
   provisioning: {
     programmatic: string[]
@@ -1077,15 +1079,102 @@ async function registryEndpoints(domain: string): Promise<string[]> {
   }
 }
 
-async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe> {
+/** At most this many of their own MCP pages are opened, and only when nothing answered. */
+const MOST_MCP_PAGES_READ = 2
+const MOST_MCP_ADDRESSES_FROM_PAGES = 3
+
+/**
+ * An address is theirs when it sits on the domain we scanned or on a domain carrying the same
+ * name. neon.com documents `mcp.neon.tech` and launchdarkly.com documents a path on their own
+ * host that no guess reaches; both were published as running no MCP server. A brand that moved
+ * domains is still the same vendor, and their own documentation saying "our server is here" is
+ * better evidence of that than a hostname match.
+ *
+ * The rule stops at the brand on purpose: `github.com/modelcontextprotocol` appears in half the
+ * MCP pages ever written, and crediting a vendor for it would invent a surface.
+ */
+export function readsAsTheirOwnAddress(url: string, domain: string): boolean {
+  try {
+    const host = new URL(url).hostname
+    const bare = domain.replace(/^www\./, '')
+    if (host === bare || host.endsWith(`.${bare}`)) return true
+    const theirName = bare.split('.')[0]
+    // The registrable name, so mcp.neon.tech reads as "neon" rather than as "mcp".
+    const parts = host.split('.')
+    const registrable = parts.length > 2 ? parts[parts.length - 2] : parts[0]
+    return registrable === theirName && theirName.length >= 4
+  } catch {
+    return false
+  }
+}
+
+/** The shapes an MCP endpoint takes, as opposed to a page that talks about one. */
+export function readsAsAnEndpoint(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    if (/\.(md|html?|png|jpe?g|svg|json)$/i.test(parsed.pathname)) return false
+    // launchdarkly.com/docs/home/getting-started/mcp ends in the right segment and is a page about
+    // the server, not the server. Nobody routes JSON-RPC under a documentation prefix.
+    if (/\/(docs|guides|blog|tutorials|help)\//i.test(parsed.pathname)) return false
+    return parsed.hostname.startsWith('mcp.') || /(^|\/)mcp(\/|$)/i.test(parsed.pathname)
+  } catch {
+    return false
+  }
+}
+
+/**
+ * The addresses a vendor's own MCP documentation names.
+ *
+ * Their files point at pages about MCP, never at the endpoint itself: neon.com's llms.txt names
+ * `/docs/ai/neon-mcp-server.md` and the endpoint is inside that page. So this opens the page they
+ * named. It is the only source in this check that is neither a guess of ours nor somebody else's
+ * directory, and the twenty-sixth pass exists because the directories turned out to be worthless
+ * for it: smithery lists 31 of the 73 vendors we credit with a live server and points at the
+ * vendor's own host for none of them.
+ */
+async function addressesInTheirMcpPages(domain: string, corpus: string): Promise<{ candidates: string[]; followed: string[] }> {
+  const pages = [...new Set([...corpus.matchAll(/https?:\/\/[^\s)"'<>]*mcp[^\s)"'<>]*/gi)].map((found) => found[0]))]
+    .filter((url) => readsAsTheirOwnAddress(url, domain) && !readsAsAnEndpoint(url))
+    // A markdown twin of a page costs less to read and carries the same addresses.
+    .sort((a, b) => Number(b.endsWith('.md')) - Number(a.endsWith('.md')))
+    .slice(0, MOST_MCP_PAGES_READ)
+  if (pages.length === 0) return { candidates: [], followed: [] }
+  const bodies = await inParallel(pages, (url) => fetchUrl(url, { accept: 'text/markdown, text/html' }))
+  const candidates = [
+    ...new Set(
+      bodies
+        .flatMap((got) => [...got.body.matchAll(/https?:\/\/[^\s)"'<>]*mcp[^\s)"'<>]*/gi)].map((found) => found[0]))
+        .map((url) => url.replace(/[.,;]+$/, ''))
+        .filter((url) => readsAsAnEndpoint(url) && readsAsTheirOwnAddress(url, domain)),
+    ),
+  ].slice(0, MOST_MCP_ADDRESSES_FROM_PAGES)
+  return { candidates, followed: pages }
+}
+
+/**
+ * `documented` are addresses read out of the vendor's own MCP pages, and `onlyDocumented` runs the
+ * second wave alone: the guesses, the card and the registry were already probed and re-asking them
+ * would cost seven requests to learn what we know.
+ */
+async function probeMcpEndpoints(
+  domain: string,
+  site: string,
+  { documented = [], onlyDocumented = false }: { documented?: string[]; onlyDocumented?: boolean } = {},
+): Promise<McpProbe> {
   // The registry is somebody else's host, and nothing else in this phase starts until it answers.
   // Left unbounded it is one external point of failure that can push every MCP handshake past the
   // scan budget for every vendor, which is the mistake the npm phase already learned once.
-  const [fromCard, fromRegistry] = await Promise.all([
-    cardEndpoints(site),
-    Promise.race([registryEndpoints(domain), new Promise<string[]>((resolve) => setTimeout(() => resolve([]), REGISTRY_BUDGET_MS))]),
-  ])
-  const candidates = [...new Set([...mcpCandidates(domain, site, fromCard), ...fromRegistry])]
+  const [fromCard, fromRegistry] = onlyDocumented
+    ? [[] as string[], [] as string[]]
+    : await Promise.all([
+        cardEndpoints(site),
+        Promise.race([registryEndpoints(domain), new Promise<string[]>((resolve) => setTimeout(() => resolve([]), REGISTRY_BUDGET_MS))]),
+      ])
+  const candidates = onlyDocumented
+    ? [...new Set(documented)]
+    : [...new Set([...mcpCandidates(domain, site, fromCard), ...fromRegistry, ...documented])]
+  /** Addresses the vendor named themselves, in their card or in their documentation. Not guesses. */
+  const named = [...fromCard, ...documented]
   const handshake = {
     accept: 'application/json, text/event-stream',
     method: 'POST' as const,
@@ -1161,7 +1250,7 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
           // wildcard that answers everything does not discredit it. Without the registry half,
           // mcp.eu.phrase.com would be thrown out on a domain whose wildcard also answers 401 -
           // which is exactly the row 9.22 exists to fix.
-          return !discreditedByWildcard(got) || fromCard.includes(url) || fromRegistry.includes(url)
+          return !discreditedByWildcard(got) || named.includes(url) || fromRegistry.includes(url)
         })
         .map(controlFor),
     ),
@@ -1194,7 +1283,7 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
       }
       // The wildcard probe only discredits addresses we guessed. An address the vendor named in
       // its own card is not a guess, and sentry.io's card points at another domain entirely.
-      if (discreditedByWildcard(got) && !fromCard.includes(candidates[index])) return null
+      if (discreditedByWildcard(got) && !named.includes(candidates[index])) return null
       const control = nonsense.get(controlFor(candidates[index]))
       // Read after the control, never before it: the same refusal at a name nobody registered is
       // the namespace talking, not a server.
@@ -1465,7 +1554,22 @@ export async function scanFunnel({
     })
   })
 
-  const mcp = await mcpPending
+  const firstWave = await mcpPending
+  // Only when the guesses, the card and the registry all came back empty, which is what the 93
+  // rows accused on this check have in common. Their own MCP pages are the last source left and
+  // the only one they wrote themselves: neon.com documents mcp.neon.tech, launchdarkly.com
+  // documents a path on their own host that no guess reaches, and both answer a real JSON-RPC
+  // challenge while we published that they run no server at all.
+  const deeper =
+    firstWave.endpoints.length === 0 ? await addressesInTheirMcpPages(domain, await corpus) : { candidates: [], followed: [] }
+  // Only the endpoints are taken from the second wave. Everything else the probe reports is about
+  // the first one: whether any host answered, what their card named, whether the edge swallowed
+  // our posts. A second wave that finds nothing must not overwrite those with its own emptiness.
+  const secondWave =
+    deeper.candidates.length > 0
+      ? await probeMcpEndpoints(domain, site, { documented: deeper.candidates, onlyDocumented: true })
+      : null
+  const mcp = secondWave && secondWave.endpoints.length > 0 ? { ...firstWave, endpoints: secondWave.endpoints } : firstWave
   const mcpEndpoints = mcp.endpoints
   const mcpOrigins = [...new Set(mcpEndpoints.map((endpoint) => new URL(endpoint.url).origin))]
   const alreadyProbed = new Set((await oauthKnownPending).origins)
@@ -1536,6 +1640,7 @@ export async function scanFunnel({
     mcpProbed: mcp.answered,
     mcpCardNamed: mcp.cardNamed,
     mcpPostsSwallowed: mcp.swallowsPosts,
+    mcpPagesFollowed: deeper.followed,
     signup,
     provisioning: {
       programmatic: provisioningMatches(await corpus),

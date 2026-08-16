@@ -16,7 +16,7 @@ import { sawRateLimit, otherDomainsNamed } from '../src/lib/corpus'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
 import { wasNeverAsked } from '../src/lib/scan/http'
 import { certain, mentionsIn } from '../src/lib/vendors'
-import { rendersUsableForm, mcpCandidates, looksLikeADocsPageTwin, answersWithTheSameTemplate } from '../src/lib/scan/funnel'
+import { rendersUsableForm, mcpCandidates, looksLikeADocsPageTwin, answersWithTheSameTemplate, readsAsAnEndpoint, readsAsTheirOwnAddress } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
 import {
   methodRefusalIsRouted,
@@ -884,6 +884,22 @@ check('brak zmian to brak maila', worthTelling([]), false)
 // branded with ordinary words. The negatives below are sentences a competent answer about the
 // category actually contains, and every one of them would be a vendor mention under a matcher
 // that only looked for the brand token.
+// Druga fala MCP: adresy czytane ze stron, ktore vendor sam wskazuje w swoich plikach. Regula
+// musi rozrozniac ICH adres od cudzego i endpoint od strony o endpoincie, bo inaczej zaliczylaby
+// vendorowi serwer, ktorego nie zbudowal.
+console.log('\nadresy MCP z ich wlasnej dokumentacji')
+check('inna domena tej samej marki to ich adres', readsAsTheirOwnAddress('https://mcp.neon.tech/mcp', 'neon.com'), true)
+check('ich wlasny host oczywiscie tez', readsAsTheirOwnAddress('https://mcp.launchdarkly.com/mcp/launchdarkly', 'launchdarkly.com'), true)
+check('modelcontextprotocol na githubie to nie ich serwer', readsAsTheirOwnAddress('https://github.com/modelcontextprotocol/servers', 'neon.com'), false)
+check('katalog trzeciej strony tez nie', readsAsTheirOwnAddress('https://smithery.ai/server/neon', 'neon.com'), false)
+// Krotka marka jest slowem, ktore trafia wszedzie, wiec regula marki jej nie obejmuje.
+check('krotka marka nie awansuje cudzej domeny', readsAsTheirOwnAddress('https://mcp.cal.tech/mcp', 'cal.com'), false)
+check('endpoint na dedykowanym hoscie', readsAsAnEndpoint('https://mcp.neon.tech/mcp'), true)
+check('sciezka /mcp na ich hoscie', readsAsAnEndpoint('https://api.statsig.com/v1/mcp'), true)
+check('plik markdown to nie endpoint', readsAsAnEndpoint('https://neon.com/docs/ai/neon-mcp-server.md'), false)
+check('strona z mcp w nazwie to nie endpoint', readsAsAnEndpoint('https://neon.com/docs/ai/neon-mcp-server'), false)
+check('strona dokumentacji konczaca sie na /mcp tez nie', readsAsAnEndpoint('https://launchdarkly.com/docs/home/getting-started/mcp'), false)
+
 console.log('\nkto jest wymieniony w odpowiedzi, czyli czy matcher umie nie znalezc')
 const namedIn = (text: string, domains: string[]) => certain(mentionsIn(text, domains)).map((mention) => mention.domain).join()
 const formOf = (text: string, domain: string) => mentionsIn(text, [domain])[0]?.form ?? 'none'

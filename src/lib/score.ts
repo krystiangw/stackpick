@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.28'
+export const FORMULA_VERSION = '9.29'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -694,10 +694,19 @@ export const CHECKS: Check[] = [
           unblock: 'Publish an MCP endpoint and we will find it whatever the file size, or split the file.',
         }
       }
+      // The pages named here are theirs, opened because nothing else answered. Saying so is what
+      // separates "we guessed six addresses" from "we also read where you said your server is",
+      // and neon.com is the row that made the difference matter: their endpoint lives on
+      // neon.tech and no guess about neon.com could ever have reached it.
+      const followed = f.funnel.mcpPagesFollowed ?? []
+      const alsoRead = followed.length > 0 ? `, nor at any address in ${followed.join(' or ')}` : ''
       if (f.machine.mcp.mentions > 0) {
-        return yes(0, `MCP mentioned ${f.machine.mcp.mentions}x in your own files, but nothing answered at ${MCP_ADDRESSES(f.domain)}`)
+        return yes(
+          0,
+          `MCP mentioned ${f.machine.mcp.mentions}x in your own files, but nothing answered at ${MCP_ADDRESSES(f.domain)}${alsoRead}`,
+        )
       }
-      return yes(0, `No MCP surface: nothing answered at ${MCP_ADDRESSES(f.domain)}, and no file mentions MCP`)
+      return yes(0, `No MCP surface: nothing answered at ${MCP_ADDRESSES(f.domain)}${alsoRead}, and no file mentions MCP`)
     },
   },
   {
