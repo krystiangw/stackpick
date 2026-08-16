@@ -5,6 +5,22 @@ zmierzone po wdrozeniu wypadaja z wiekszosciowej wersji i strona pokazuje 169 za
 Reseed jest zaplanowany na wygasniecie karencji. Jesli go nie widac w dzienniku ponizej, uruchom
 `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) npm run reseed`.
 
+## RESEED NA 9.27: PIERWSZY DZIS PRZEBIEG BEZ ANI JEDNEGO POGORSZENIA
+
+**170 wierszy na 9.27, zero sprzecznosci, 21 publikowanych liczb i 5 twierdzen o nazwanych
+vendorach bez rozjazdu, i zero werdyktow gorszych niz poprzedni pomiar.** Poprzednie reseedy dzis
+konczyly sie czterema, szescioma albo dwoma pogorszeniami, z ktorych czesc byla nasza. Ten nie ma
+zadnego, mimo ze przeskoczyl osiem wersji formuly naraz (9.19 -> 9.27).
+
+Zamiatanie 429 odzyskalo **3 z 5**: `postmarkapp.com`, `split.io` i `locationiq.com` wrocily do
+pomiaru, a `contentful.com` i `savvycal.com` odpowiadaja 429 takze w ciszy, wiec ich wiersze
+zostaja jako werdykt o nich. Mechanizm rozdziela te dwie klasy juz trzeci raz z rzedu.
+
+**Pulapka operacyjna do zapamietania:** karencja liczona z mediany odbila trzy proby pod rzad, a
+zaplanowane wczesniej zadanie odpalilo dokladnie w chwili, gdy reseed juz trwal, i **slusznie
+zostalo odrzucone**. Jesli planujesz reseed na przyszlosc, planuj **petle ponawiajaca**, a nie
+jednorazowe uruchomienie: pojedyncze trafia w karencje i traci okazje bez sladu.
+
 ## NIEZALEZNY PRZEGLAD SZESCIU WYDAN Z JEDNEGO DNIA (9.23, wdrozone) + LISTA NIENAPRAWIONYCH
 
 Kazda zmiana z 9.17-9.22 byla weryfikowana osobno i **nikt nie patrzyl, jak dzialaja razem**.
