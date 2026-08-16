@@ -9,8 +9,9 @@
   mediane wieku korpusu i odbija proby, a pojedyncze uruchomienie traci okazje bez sladu:
   `for i in 1 2 3 4 5 6; do STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) npm run reseed; [ $? -eq 3 ] && sleep 600 || break; done`
 - **Do zrobienia, w tej kolejnosci:**
-  1. ~~`npm run noise-floor 9.27`~~ **zrobione**: 0,24 procent, ale jednokierunkowo, wiec to NIE
-     jest podloga szumu. Prawdziwy pomiar wymaga dnia bez zmiany regul, patrz sekcja u gory.
+  1. **PODLOGA SZUMU: okno otwarte, trzymaj dyscypline.** Reseed po karencji stawia korpus na
+     9.30, potem **zadnej zmiany `FORMULA_VERSION`** do drugiego reseedu i `noise-floor 9.30`.
+     Szczegoly w sekcji "OKNO NA POMIAR PODLOGI SZUMU" u gory.
   2. **Monitoring ma teraz w opisie prawdziwe agenty** (`npm run ask` / `npm run asked`), wiec dla
      kazdej obserwowanej domeny nalezy raz w miesiacu puscic cele jej kategorii. Dzis to trzy
      obserwacje na naszym wlasnym mailu, wiec nie kosztuje nic. Sekcja nizej.
@@ -36,6 +37,27 @@
   3. **Czytaj zdanie, ktore publikujemy, nie liczbe punktow.** Check potrafi miec dwa rozne
      werdykty za zero, a wartoscia bywa samo zdanie, bo to je czyta vendor.
 
+
+## OKNO NA POMIAR PODLOGI SZUMU: OD TERAZ NIE RUSZAMY FORMULY (2026-08-16, 23:00)
+
+Podloga szumu jest niezmierzona od poczatku istnienia tego produktu i **powod jest zawsze ten sam:
+kazdy reseed konczy sie zmiana formuly, wiec nigdy nie mamy dwoch cieplych przebiegow na TEJ SAMEJ
+wersji**. `noise-floor 9.27` dal 0,24 procent, ale jednokierunkowo, czyli mierzyl nasza wlasna
+poprawke, a nie szum.
+
+Dzis to okno wreszcie jest otwarte i **kosztuje tylko dyscypline**:
+
+1. Reseed czekajacy w petli (`scratchpad/reseed-929.log`) wjedzie po karencji, ok. **02:12**, i
+   postawi korpus na **9.30**.
+2. **Do drugiego reseedu NIE WOLNO zmieniac `FORMULA_VERSION`.** Zadnej poprawki punktacji, nawet
+   oczywistej. Znaleziska z przebiegow adwersaryjnych mozna w tym czasie zbierac i opisywac, ale
+   wdrazac dopiero po pomiarze.
+3. Po ok. sze­sciu godzinach (karencja) drugi reseed, dalej na 9.30.
+4. `npm run noise-floor 9.30` na tej parze. **Dopiero to jest podloga szumu**: ruch w obie strony
+   miedzy dwoma pomiarami tej samej reguly na tym samym korpusie.
+
+Co wolno robic w tym oknie, bo nie dotyka punktacji: przebiegi adwersaryjne (same pomiary),
+harness biegow rozpoznawczych, audyty, dokumentacja, strony.
 
 ## 27. PRZEBIEG: TOKEN CAPTCHY NA CALEJ WITRYNIE TO NIE BRAMKA NA FORMULARZU (9.30)
 
