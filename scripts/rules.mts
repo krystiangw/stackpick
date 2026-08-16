@@ -15,6 +15,7 @@ import { FLEX_QUOTA_MB, quotaEmail, verdictFor } from '../src/lib/quota'
 import { sawRateLimit, otherDomainsNamed } from '../src/lib/corpus'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
 import { wasNeverAsked } from '../src/lib/scan/http'
+import { certain, mentionsIn } from '../src/lib/vendors'
 import { rendersUsableForm, mcpCandidates, looksLikeADocsPageTwin, answersWithTheSameTemplate } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
 import {
@@ -878,6 +879,36 @@ check('ale pass -> fail juz tak', worthTelling([move('pass', 'fail')]), true)
 check('i fail -> pass tez', worthTelling([move('fail', 'pass')]), true)
 check('mieszanka liczy sie przez zmierzona czesc', worthTelling([move('unmeasured', 'pass'), move('pass', 'fail')]), true)
 check('brak zmian to brak maila', worthTelling([]), false)
+
+// Reading a discovery run means deciding who an English paragraph names, and half this corpus is
+// branded with ordinary words. The negatives below are sentences a competent answer about the
+// category actually contains, and every one of them would be a vendor mention under a matcher
+// that only looked for the brand token.
+console.log('\nkto jest wymieniony w odpowiedzi, czyli czy matcher umie nie znalezc')
+const namedIn = (text: string, domains: string[]) => certain(mentionsIn(text, domains)).map((mention) => mention.domain).join()
+const formOf = (text: string, domain: string) => mentionsIn(text, [domain])[0]?.form ?? 'none'
+
+check('pelna domena to pewne trafienie', formOf('see https://uploadcare.com/docs/upload', 'uploadcare.com'), 'domain')
+check('sama marka tez, gdy nie jest slowem', formOf('I would reach for Uploadcare here', 'uploadcare.com'), 'name')
+check('marka dwuwyrazowa', formOf('New Relic covers the traces', 'newrelic.com'), 'name')
+check('marka inna niz domena', formOf('Postmark wins on deliverability', 'postmarkapp.com'), 'name')
+check('nikt nie wymieniony to pusta lista', namedIn('roll your own with S3 and be done', ['uploadcare.com']), [].join())
+
+check('modal okna dialogowego to nie Modal', formOf('open a modal dialog when the upload finishes', 'modal.com'), 'none')
+check('resend maila to nie Resend', formOf('let the user resend the confirmation email', 'resend.com'), 'none')
+check('split ruchu to nie Split', formOf('split the traffic between two variants', 'split.io'), 'none')
+check('here w zdaniu to nie HERE', formOf('here is the plan I would follow', 'here.com'), 'none')
+check('temporal ordering to nie Temporal', formOf('the temporal ordering of the events matters', 'temporal.io'), 'none')
+check('sanity check to nie Sanity', formOf('give the payload a sanity check first', 'sanity.io'), 'none')
+check('nazwa bucketu to nie name.com', formOf('give the bucket a name and a region', 'name.com'), 'none')
+check('cal w kodzie to nie Cal.com', formOf('const cal = new Calendar()', 'cal.com'), 'none')
+
+// Capitalised, the same words are genuinely ambiguous, so they are neither counted nor thrown
+// away: `weak` means a human reads the sentence that travels with the hit.
+check('Modal z duzej litery to niepewne', formOf('Modal is a good fit for GPU jobs', 'modal.com'), 'weak')
+check('i niepewne nie liczy sie do wyniku', namedIn('Modal is a good fit for GPU jobs', ['modal.com']), [].join())
+check('ale domena obok juz tak', namedIn('Modal (modal.com) is a good fit', ['modal.com']), 'modal.com')
+check('cytat leci razem z niepewnym trafieniem', mentionsIn('Modal is a good fit.', ['modal.com'])[0].sentence, 'Modal is a good fit.')
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

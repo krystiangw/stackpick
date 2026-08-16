@@ -14,49 +14,11 @@
  * a stated limit of any audit produced this way: the run is not reproducible by a stranger who
  * does not hold the same accounts.
  */
-import { execFileSync, spawnSync } from 'node:child_process'
+import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-
-type Agent = {
-  bin: string
-  /** Non-interactive invocation. Each CLI spells "do not ask me anything" differently. */
-  argv: (prompt: string, model?: string) => string[]
-  version: () => string
-}
-
-const AGENTS: Record<string, Agent> = {
-  claude: {
-    bin: 'claude',
-    argv: (prompt, model) => ['-p', prompt, ...(model ? ['--model', model] : [])],
-    version: () => run('claude', ['--version']),
-  },
-  codex: {
-    bin: 'codex',
-    // exec is codex's non-interactive mode; the sandbox flag is what stops it stopping.
-    argv: (prompt, model) => ['exec', '--sandbox', 'workspace-write', ...(model ? ['-m', model] : []), prompt],
-    version: () => run('codex', ['--version']),
-  },
-  gemini: {
-    bin: 'gemini',
-    argv: (prompt, model) => ['-p', prompt, '--approval-mode', 'yolo', ...(model ? ['-m', model] : [])],
-    version: () => run('gemini', ['--version']),
-  },
-  cursor: {
-    bin: 'cursor-agent',
-    argv: (prompt, model) => ['-p', prompt, '--force', ...(model ? ['--model', model] : [])],
-    version: () => run('cursor-agent', ['--version']),
-  },
-}
-
-function run(bin: string, args: string[]): string {
-  try {
-    return execFileSync(bin, args, { encoding: 'utf8' }).trim().split('\n')[0]
-  } catch {
-    return 'unknown'
-  }
-}
+import { AGENTS } from './agents.mjs'
 
 const [category, agentName, ...rest] = process.argv.slice(2)
 const model = rest.length > 1 ? rest[0] : undefined

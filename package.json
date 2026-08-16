@@ -15,6 +15,8 @@
     "seed": "tsx harness/seed.mts",
     "collect": "tsx harness/collect.mts",
     "cell": "tsx harness/run.mts",
+    "ask": "tsx harness/ask.mts",
+    "asked": "tsx harness/asked.mts",
     "typecheck": "tsc --noEmit",
     "rules": "tsx scripts/rules.mts",
     "diff-corpus": "tsx scripts/diff-corpus.mts",

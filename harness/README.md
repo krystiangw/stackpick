@@ -9,13 +9,30 @@ is an anecdote with a table in it.
 This directory is the reproducible half. It does not automate the reading, which is deliberate:
 `docs/method.md` records which parts must stay human and why.
 
-## What it does
+## Two kinds of run
+
+A **build run** hands an agent a working application and a brief and tells it to ship. It walks
+into somebody's registration form and their API key, it takes minutes to hours, and it is the
+audit deliverable. A **discovery run** asks one question and keeps the answer: who gets named, who
+gets chosen, in what words. It creates nothing on anybody's side, which is why it can be repeated
+every month on a domain whose owner never asked us to look at them, and why it is the half that
+fits inside monitoring.
 
 ```
-npm run seed    -- <category> <n>              # n isolated copies, one per run
+npm run seed    -- <category> <n>                   # n isolated copies, one per build run
 npm run cell    -- <category> <agent> [model] <n>   # one brief, one agent, one model
-npm run collect -- <category>                  # what shipped, read from the files
+npm run collect -- <category>                       # what shipped, read from the files
+
+npm run ask     -- <category> <agent> [model] <n>   # one question, n isolated discovery runs
+npm run asked   -- <category>                       # who was named, read by rule
 ```
+
+`asked` never sends an answer to a model to be graded. Who was named is decided by
+`src/lib/vendors.ts`: a published list of names and a published matcher, with a control in
+`scripts/rules.mts` that can fail. Where a brand is also an ordinary English word (Modal,
+Temporal, Split, Resend, Plaid and thirty more) the hit is quoted for a human instead of counted,
+because an undercount and an overcount are wrong in different directions and both are worth
+keeping apart.
 
 Agents: `claude`, `codex`, `gemini`, `cursor`. A cell is (agent x model x brief) and comparing
 cells is the whole experiment, so only one of the three may vary between them.
@@ -70,6 +87,32 @@ refusal rather than as a run that answered a question it found lying around.
 So `seed` writes to `$LETAGENTSIN_RUNS` or `~/.letagentsin-runs`, and gives every copy its own
 `git init` so an agent looking for the project boundary finds the scaffold and stops there.
 **Never seed a run inside a repository that is about measuring agents.**
+
+## The operator leaks into the run, measured 2026-08-16
+
+The first discovery cell came back **in Polish**, on an English question, five runs out of five.
+Nothing in the answers looked wrong and the vendor names in them were plausible. The cause is that
+`claude` reads the machine's user-level `~/.claude/CLAUDE.md` before it reads the question, and on
+this machine that file says to answer in Polish. Every run had been handed a page of instructions
+belonging to whoever started it.
+
+The language is only the visible half. The same file carries working preferences, tool rules and a
+project history, all of it in the context that produced the answer. **A run that inherits whoever
+ran it is not a measurement of what an agent does**, and the isolated working directory does
+nothing about it: the leak arrives from the home directory, not from the cwd.
+
+What was tried, and what it costs:
+
+| approach | result |
+|---|---|
+| isolated `CLAUDE_CONFIG_DIR` | logs the run out. Credentials are keyed to the real config dir, so the run cannot authenticate |
+| `--system-prompt` replacing the default | user memory survives it. Verified: the answer came back in Polish anyway |
+| `--bare` | shuts out CLAUDE.md, hooks, skills and plugins. **Reads `ANTHROPIC_API_KEY` only, never the keychain**, so a subscription cannot use it |
+
+So `ask` takes the clean path the moment an API key exists in the environment, and without one it
+records every instruction file that was in scope into `RUN.json` and prints them above the table
+rather than below it. A number produced this way describes an agent on this machine, not an agent
+at a customer's desk, and it says so out loud in both places.
 
 ## The rules that are not negotiable
 
