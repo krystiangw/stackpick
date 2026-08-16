@@ -74,6 +74,27 @@ provisioning trzymaja sie tylko wsrod popularnych, czyli u nich to w duzej mierz
 **`llms_txt` nie pokazuje niczego nigdzie**, co zgadza sie co do joty z trzema zewnetrznymi
 zbiorami logow opisanymi w sekcji o wtyczkach.
 
+### REPLIKACJA NA DRUGIM NARZEDZIU: to samo, mocniej
+
+Te same 25 kategorii przepuszczone przez **codex (gpt-5.6-sol)**, ktory nie czyta `CLAUDE.md`
+w ogole, wiec wchodzi z zupelnie innym skazeniem (`~/.codex/memories_1.sqlite`). 90 dostawcow
+wymienionych choc raz. **Wynik w `scratchpad/named-vs-score-codex.txt`.**
+
+| check | claude/sonnet | codex |
+|---|---|---|
+| `oauth_dcr` | +28pp (0.000) | **+30pp (0.000)** |
+| `mcp_present` | +20pp (0.003) | **+24pp (0.001)** |
+| `programmatic_provisioning` | +18pp (0.006) | **+23pp (0.000)** |
+| `llms_txt` | +3pp (0.738) | +13pp (0.145) |
+| wynik powyzej mediany | +19pp (0.003) | **+23pp (0.001)** |
+
+Po kontroli na slawe, codex: `oauth_dcr` **+35pp u popularnych i +19pp u mniej znanych**,
+`mcp_present` +34 i +10, `programmatic_provisioning` +41 i +4, `llms_txt` +20 i -2.
+
+**Wniosek, ktory przezyl wszystko, co na niego rzucilem:** `oauth_dcr` jest dodatni w **dwoch
+narzedziach, dwoch rodzinach modeli i obu polowkach popularnosci**. `mcp_present` idzie zaraz za
+nim. `llms_txt` nie ma sygnalu w zadnym pomiarze, ktory przechodzi test przypadku.
+
 **Czego to NIE dowodzi, i to musi isc razem z kazda liczba:** nic o przyczynie (znany dostawca i
 publikuje, i jest wymieniany), nic o pojedynczym dostawcy (piec biegow oddziela sciane od ciszy),
 i nic czystego, bo biegi czytaly `~/.claude/CLAUDE.md` tej maszyny. Wiersze z garstka danych sa
