@@ -82,6 +82,9 @@ async function catchAllFor(base: string): Promise<Map<string, Body | null>> {
   return seen
 }
 
+/** The first line, which is what a template repeats and a real file does not. */
+const heading = (text: string) => text.split(/\s{2,}|\n/).map((line) => line.trim()).find(Boolean)?.toLowerCase() ?? ''
+
 async function realFilesOn(base: string): Promise<string[]> {
   const control = await catchAllFor(base)
   const found: string[] = []
@@ -92,6 +95,11 @@ async function realFilesOn(base: string): Promise<string[]> {
     // Same size as the invented path means the host answers everything in that namespace, so the
     // hit says nothing about what the vendor publishes.
     if (nonsense && Math.abs(nonsense.bytes - got.bytes) < 200) continue
+    // And the same opening line means the same template even when the sizes differ, which is the
+    // usual shape: a documentation platform's soft 404 lists suggested pages, so every response is
+    // a different length. Six of the seven disagreements on 2026-08-16 were this, all of them the
+    // probe being weaker than the scanner it audits rather than a finding about anybody.
+    if (nonsense && heading(nonsense.head).length > 3 && heading(got.head) === heading(nonsense.head)) continue
     found.push(`${base}${path} (${got.bytes}B ${got.head})`)
   }
   return found

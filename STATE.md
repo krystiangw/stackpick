@@ -1,9 +1,32 @@
-# Let Agents In: stan na 2026-08-15 (formula 9.27 na produkcji, korpus na 9.19 czeka na przesiew, baza zdrowa)
+# Let Agents In: stan na 2026-08-15 (formula 9.28 na produkcji, korpus na 9.19 czeka na przesiew, baza zdrowa)
 
 **UWAGA dla nastepnej rundy: korpus jest przejsciowo na 9.17, a produkcja na 9.18**, wiec wiersze
 zmierzone po wdrozeniu wypadaja z wiekszosciowej wersji i strona pokazuje 169 zamiast 170.
 Reseed jest zaplanowany na wygasniecie karencji. Jesli go nie widac w dzienniku ponizej, uruchom
 `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) npm run reseed`.
+
+## WERYFIKACJA POPRAWKI PUNKTU WEJSCIA, I JEDNO PRAWDZIWE ZNALEZISKO (9.28)
+
+Powtorzony audyt na przesianym korpusie. **Zbior oskarzonych spadl ze 139 na 121: osiemnastu
+vendorow odzyskalo punkt**, czyli poprawka z 9.19 dziala tak, jak miala.
+
+Zostalo **7 niezgodnosci, z czego prawdziwa JEDNA**: `clerk.com` serwuje `/SKILL.md` **wielkimi
+literami** z prawdziwym plikiem skilla (`name: clerk-quickstart`), a `/skill.md` malymi zwraca 404,
+przy czym sciezka bezsensowna tez zwraca 404, wiec to nie catch-all. Naprawione w 9.28 jako **fala
+zapasowa** trzech sciezek (`/AGENTS.md`, `/SKILL.md`, `/AGENT.md`), pytana dopiero, gdy dziewiec
+podstawowych nic nie znalazlo, wiec vendor z plikiem nie placi ani jednego dodatkowego zadania.
+To spelnienie hipotezy, ktora pilotaz na dwudziestu domenach odrzucil jako nieoplacalna.
+
+**Pozostale szesc to slepe plamy SONDY AUDYTOWEJ, nie skanera**, i to jest dobra wiadomosc:
+rzecz testowana okazala sie surowsza niz rzecz testujaca. Piec to markdownowe 404
+(`qdrant.tech`, `getunleash.io`, `calendly.com`, `bigcommerce.com`, `weglot.com`), jedno to
+blizniak strony dokumentacji (`docs.datadoghq.com/agent.md`). Sonda dostala wlasny test naglowka,
+zeby nastepny przebieg byl czytelny.
+
+**Regres, ktory ta zmiana sama wprowadzila i ktory zlapalem od razu:** zdanie wnioskowalo
+„pytalismy tez na hoscie dokumentacji" z LICZBY sciezek, wiec dwanascie sond na samej witrynie
+kazalo nam nazwac host, do ktorego nie otworzylismy gniazda. Teraz bierze to z tego, gdzie
+faktycznie pytalismy.
 
 ## RESEED NA 9.27: PIERWSZY DZIS PRZEBIEG BEZ ANI JEDNEGO POGORSZENIA
 
