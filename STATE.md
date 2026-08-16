@@ -38,6 +38,61 @@
      werdykty za zero, a wartoscia bywa samo zdanie, bo to je czyta vendor.
 
 
+## RESEARCH: WTYCZKI "AGENT READY" DLA WORDPRESSA I SKLEPOW (pytanie Krystiana, 2026-08-16)
+
+Pytanie: czy budowac wtyczki gotowosci na agentow dla popularnych platform (WordPress, WooCommerce,
+PrestaShop, Magento, frameworki) jako czesc naszego ekosystemu. **Odpowiedz: nie w wersji ogolnej.**
+Trzy powody, kazdy ze zrodlem.
+
+**1. Wlasciciele platform wchlaniaja te warstwe.** Yoast i Rank Math generuja `llms.txt` natywnie
+(miliony instalacji kazda). Wtyczka Automattica `wordpress-mcp` jest **wygaszana na rzecz
+`WordPress/mcp-adapter`**, czyli MCP wchodzi do rdzenia WP przez Abilities API. Mintlify sam
+generuje `llms.txt`, `llms-full.txt`, `skill.md` **i serwer MCP dla kazdej instancji docsow**, czyli
+cztery nasze checki za darmo. Shopify Spring '26 **automatycznie wlacza kwalifikujacym sie
+sprzedawcom** UCP i Global Catalog MCP z syndykacja do ChatGPT, Copilota, Google AI Mode i Gemini.
+
+**2. To, co te wtyczki dodaja, nie ma zmierzonego efektu.** Trzy niezalezne zbiory logow:
+MaxAEO (19 witryn, luty-kwiecien 2026) **41 zadan o `llms.txt` na ~1,1 mln pobran stron przez
+crawlery AI**; OtterlyAI **84 na 62 100 wizyt botow, 0,1 procent**; Evil Martians **zero zadan o
+pliki markdown** od GPTBot, ClaudeBot i PerplexityBot. Cytowalnosc 11,8 kontra 11,6 procent, czyli
+**0,2 punktu, wewnatrz szumu**.
+
+**3. Pojemnosc.** Jedna osoba, dwa audyty miesiecznie. Wtyczka na cudzej platformie to biezaca
+konserwacja bez konca.
+
+### Wazniejsze od pytania o wtyczki: rynek pomiaru sie zamknal
+
+- **Cloudflare, 17 kwietnia 2026, darmowy `isitagentready.com`**: cztery wymiary, w tym Agent Skills,
+  API Catalog (RFC 9727), OAuth discovery, MCP Server Card, WebMCP.
+- **Vercel** ma wlasna Agent Readability Spec i paczke `@vercel/agent-readability`;
+  **`agent-ready.dev`** robi 70 checkow z opublikowana metodologia (my jestesmy w ich komentarzach
+  w kodzie od dawna).
+- **`agentchecker.ai` sprzedaje juz nasz platny produkt**: prawdziwy agent w prawdziwej
+  przegladarce, ponad 20 zadan lacznie z rejestracja i checkoutem, **od 19 funtow**, plus model
+  odsprzedazy dla agencji po ~13 funtow. Nasz audyt to cztery cyfry.
+
+**Nasza obrona jest metodologiczna i lejkowa, nie technologiczna.** Oni sprzedaja jeden
+pietnastominutowy przebieg; my mamy juz napisane na `/pricing`, dlaczego jeden przebieg niczego nie
+dowodzi, i raportujemy rozrzut z powtarzalnej celi. **Nikt z nich nie mierzy, czy agent zdobedzie
+konto i klucz** (rejestracja, OAuth DCR, provisioning) - Cloudflare i Vercel mierza czytelnosc.
+
+### Waska wersja pomyslu, ktora ma sens
+
+Nie wtyczka dla mas, tylko **mala paczka dla NASZYCH kupujacych** (dostawcy API): karta
+`.well-known/mcp.json`, `agents.md`, link `rel="service-desc"` do OpenAPI, samo-check lejka
+rejestracji, plus akcja CI liczaca nasza opublikowana formule na PR. **Cel to dystrybucja, nie
+przychod** - jestesmy niewidoczni i to byl nasz wlasny wniosek. Jedyny segment z prawdziwa luka to
+**WooCommerce, jako jedyna duza platforma nie dajaca sprzedawcom niczego automatycznie**, ale to
+inny klient i inny zestaw checkow, wiec tylko przy swiadomej zmianie segmentu.
+
+### Co to wymusza na nas
+
+**Punktujemy `llms_txt` jako jeden z 15 checkow, a dowody na jego dzialanie sa zerowe.** Nie wolno
+tego bronic, trzeba sprawdzic na wlasnych danych: cele rozpoznawcze ze wszystkich 25 kategorii
+(leca w nocy 2026-08-16) pozwalaja zapytac wprost, **czy dostawcy z `llms.txt` sa wymieniani przez
+agentow czesciej niz ci bez**. Jesli nie, mowimy to na stronie przed konkurencja. To jest mocniejszy
+produkt niz jakakolwiek wtyczka.
+
 ## 28. PRZEBIEG: `machine_readable_api`, ZERO ZNALEZIEN I TYM RAZEM ZERO COS ZNACZY
 
 25. przebieg na tym checku byl pusty, bo apis.guru mial pokrycie 2 na 47. Ten pyta dwa zrodla,
