@@ -213,6 +213,13 @@ export type FetchOptions = {
   body?: string
   /** Bypasses the per-scan response cache, for the reads that are repeated on purpose. */
   fresh?: boolean
+  /**
+   * A larger read cap for one request. The default exists so a 7 MB llms-full.txt cannot exhaust
+   * the dyno, and it costs a control its answer when the page is a marketing front page: sentry.io
+   * serves 628 kB and the recaptcha token we were controlling for sits past 400 kB, so the control
+   * reported "not there" about bytes it never read.
+   */
+  readBytes?: number
 }
 
 const empty = (url: string, error: string): Fetched => ({
@@ -242,7 +249,10 @@ const MAX_REDIRECTS = 5
 const cacheKey = (url: string, options: FetchOptions): string =>
   // The accept header is part of the key because content negotiation is one of the things
   // this scan measures: the same path answers differently to text/markdown and to */*.
-  [options.method ?? 'GET', options.ua ?? BROWSER_UA, options.accept ?? '*/*', options.body ?? '', url].join('\n')
+  // readBytes belongs here: the front page is fetched during discovery under the default cap, and
+  // without it a control asking for more bytes would be handed the truncated body from cache and
+  // conclude about text nobody read.
+  [options.method ?? 'GET', options.ua ?? BROWSER_UA, options.accept ?? '*/*', options.body ?? '', String(options.readBytes ?? ''), url].join('\n')
 
 function countIfLost(state: ScanState, fetched: Fetched): Fetched {
   if (ranOutOfTime(fetched)) state.lost.count++
@@ -423,7 +433,7 @@ async function runFetch(url: string, options: FetchOptions, state: ScanState | n
         continue
       }
 
-      const buffer = method === 'HEAD' ? { text: '', truncated: false } : await readCapped(response)
+      const buffer = method === 'HEAD' ? { text: '', truncated: false } : await readCapped(response, options.readBytes ?? MAX_BYTES)
       return {
         url: current,
         status: response.status,
@@ -484,18 +494,18 @@ function decoded(bytes: Uint8Array, encoding: string | undefined): Uint8Array {
   return bytes
 }
 
-async function readCapped(response: Response): Promise<{ text: string; truncated: boolean }> {
+async function readCapped(response: Response, cap: number = MAX_BYTES): Promise<{ text: string; truncated: boolean }> {
   if (!response.body) return { text: '', truncated: false }
   const reader = response.body.getReader()
   const chunks: Uint8Array[] = []
   let size = 0
   let truncated = false
-  while (size < MAX_BYTES) {
+  while (size < cap) {
     const { done, value } = await reader.read()
     if (done) break
     chunks.push(value)
     size += value.byteLength
-    if (size >= MAX_BYTES) truncated = true
+    if (size >= cap) truncated = true
   }
   void reader.cancel()
   const joined = new Uint8Array(size)

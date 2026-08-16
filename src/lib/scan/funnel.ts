@@ -366,6 +366,13 @@ export type SignupFindings = {
   reachable: boolean
   rendersFormWithoutJs: boolean
   captcha: string[]
+  /**
+   * The same CAPTCHA vendors found on the site's front page, asked only when the signup page
+   * carried one. A token loaded from a bundle every route shares says nothing about this form,
+   * and six of the twenty eight rows we accuse are that shape: mailgun, chargebee, sentry,
+   * betterstack, raygun and bigcommerce all serve recaptcha on their home page too.
+   */
+  captchaSiteWide?: string[]
   /** Background bot defence, reported next to the CAPTCHA verdict and never scored as one. */
   botDefence?: string[]
   behindCloudflare: boolean
@@ -766,7 +773,7 @@ function mergeOauthProbes(first: OauthProbe, second: OauthProbe): FunnelFindings
   }
 }
 
-async function inspectSignup(url: string | null): Promise<SignupFindings> {
+async function inspectSignup(url: string | null, site: string): Promise<SignupFindings> {
   if (!url) {
     return {
       url: null,
@@ -788,6 +795,18 @@ async function inspectSignup(url: string | null): Promise<SignupFindings> {
   // One request, and only when there is a difference worth measuring.
   const asBrowser = got.ok ? null : await fetchUrl(url, { ua: BROWSER_UA })
   const body = got.body.toLowerCase()
+  const captcha = Object.entries(CAPTCHA_SIGNATURES)
+    .filter(([, pattern]) => pattern.test(body))
+    .map(([name]) => name)
+  // The control, and only when there is something to control for. A token on the front page as
+  // well is a script the whole site loads, which is a different fact from a gate on this form,
+  // and the sentence has to be able to tell the vendor which one we saw.
+  // A bigger read cap than the default, because this control reads a marketing front page rather
+  // than a machine-readable file: sentry.io serves 628 kB and its recaptcha token sits past the
+  // 400 kB default, so the first version of this control answered "not there" about bytes it had
+  // never read.
+  const front = captcha.length > 0 ? await fetchUrl(`${site.replace(/\/$/, '')}/`, { readBytes: 1_500_000 }) : null
+  const frontBody = (front?.body ?? '').toLowerCase()
   return {
     url,
     browserStatus: asBrowser === null ? null : asBrowser.status,
@@ -797,9 +816,8 @@ async function inspectSignup(url: string | null): Promise<SignupFindings> {
     consistent: got.consistent,
     reachable: got.ok,
     rendersFormWithoutJs: rendersUsableForm(body),
-    captcha: Object.entries(CAPTCHA_SIGNATURES)
-      .filter(([, pattern]) => pattern.test(body))
-      .map(([name]) => name),
+    captcha,
+    captchaSiteWide: captcha.filter((name) => CAPTCHA_SIGNATURES[name].test(frontBody)),
     botDefence: Object.entries(BOT_DEFENCE_SIGNATURES)
       .filter(([, pattern]) => pattern.test(body))
       .map(([name]) => name),
@@ -1444,7 +1462,7 @@ export async function scanFunnel({
 }: FunnelInput): Promise<FunnelFindings> {
   const mcpPending = probeMcpEndpoints(domain, site)
   const oauthKnownPending = probeOauthOrigins(oauthTargetsKnownUpFront(domain, site, signupUrl))
-  const signupPending = inspectSignup(signupUrl)
+  const signupPending = inspectSignup(signupUrl, site)
   const pricingPending = alreadyFetchedPricing ?? (pricingUrl ? fetchUrl(pricingUrl) : Promise.resolve(null))
   // The documentation origin, when it is not the site. An adversarial pass over the 139 rows that
   // said "none of the 9 known agent entry paths returns a file" found 17 of them publishing a

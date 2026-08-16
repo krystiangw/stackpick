@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.29'
+export const FORMULA_VERSION = '9.30'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -758,11 +758,20 @@ export const CHECKS: Check[] = [
         }
       }
       if (f.funnel.signup.captcha.length > 0) {
+        // Six of the twenty eight rows carrying this sentence serve the same token on their front
+        // page, where there is no account to create. That does not clear them, because a script
+        // the whole site loads still runs on this form, and it does not convict them either: the
+        // HTML cannot say which. The reader gets told which of the two we actually saw.
+        const everywhere = f.funnel.signup.captchaSiteWide ?? []
+        const alsoAtHome =
+          everywhere.length > 0
+            ? `. ${everywhere.join(', ')} is on your front page too, where there is no account to create, so this may be a script the whole site loads rather than a gate on this form. We did not submit it, so which one it is stayed unmeasured`
+            : ''
         return yes(
           0,
           `${f.funnel.signup.captcha.join(', ')} appears in the signup page's server HTML${
             f.funnel.signup.rendersFormWithoutJs ? '' : ', even though the form itself is assembled by JavaScript'
-          }`,
+          }${alsoAtHome}`,
         )
       }
       if (!f.funnel.signup.rendersFormWithoutJs) {
