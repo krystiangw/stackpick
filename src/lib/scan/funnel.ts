@@ -1010,9 +1010,50 @@ export function mcpCandidates(domain: string, site: string, fromCard: string[] =
   ].filter((url, index, all) => all.indexOf(url) === index)
 }
 
+/**
+ * Addresses the vendor published in the official MCP registry, which is where an agent looking for
+ * a tool actually looks, and the one source of candidates that is not us guessing.
+ *
+ * The twenty-fourth adversarial pass measured what guessing costs: five of the 98 rows reading
+ * "No MCP surface: nothing answered at ..." run a live server listed there, at addresses no list
+ * of shapes would reach - asset-management.mcp.cloudinary.com, api.raygun.com/v3/mcp,
+ * docs.medusajs.com/mcp, mcp.eu.phrase.com, app.tolgee.io/mcp/developer.
+ *
+ * The listing is a lead and never evidence: every address it returns goes through the same
+ * handshake and the same control as an address we guessed, so a stale entry cannot credit a
+ * vendor with a server that is not running. The hostname has to be theirs, because searching a
+ * vendor's name also returns servers other people built on top of them.
+ */
+async function registryEndpoints(domain: string): Promise<string[]> {
+  const bare = domain.replace(/^www\./, '')
+  const got = await fetchUrl(
+    `https://registry.modelcontextprotocol.io/v0/servers?search=${encodeURIComponent(bare.split('.')[0])}&limit=50`,
+    { accept: 'application/json' },
+  )
+  if (!got.ok) return []
+  try {
+    const listing = JSON.parse(got.body) as { servers?: { server?: { remotes?: { url?: string }[] } }[] }
+    const urls = (listing.servers ?? []).flatMap((entry) => entry.server?.remotes ?? []).flatMap((remote) => (remote.url ? [remote.url] : []))
+    return [
+      ...new Set(
+        urls.filter((url) => {
+          try {
+            const host = new URL(url).hostname
+            return host === bare || host.endsWith(`.${bare}`)
+          } catch {
+            return false
+          }
+        }),
+      ),
+    ].slice(0, 4)
+  } catch {
+    return []
+  }
+}
+
 async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe> {
-  const fromCard = await cardEndpoints(site)
-  const candidates = mcpCandidates(domain, site, fromCard)
+  const [fromCard, fromRegistry] = await Promise.all([cardEndpoints(site), registryEndpoints(domain)])
+  const candidates = [...new Set([...mcpCandidates(domain, site, fromCard), ...fromRegistry])]
   const handshake = {
     accept: 'application/json, text/event-stream',
     method: 'POST' as const,
