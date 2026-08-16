@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-15 (formula 9.23 na produkcji, korpus na 9.19 czeka na przesiew, baza zdrowa)
+# Let Agents In: stan na 2026-08-15 (formula 9.24 na produkcji, korpus na 9.19 czeka na przesiew, baza zdrowa)
 
 **UWAGA dla nastepnej rundy: korpus jest przejsciowo na 9.17, a produkcja na 9.18**, wiec wiersze
 zmierzone po wdrozeniu wypadaja z wiekszosciowej wersji i strona pokazuje 169 zamiast 170.
@@ -23,7 +23,13 @@ Przeglad z czystym kontekstem znalazl to, co temu umknelo. **Piec naprawione i w
 
 **NIENAPRAWIONE, do wziecia w kolejnosci wagi. To jest najwazniejsza czesc tej sekcji:**
 
-- **Najwazniejsze, wspolny mianownik trzech znalezisk:** `fetchUrl` zwraca `status: 0` takze wtedy,
+- ~~**Najwazniejsze, wspolny mianownik trzech znalezisk**~~ **zrobione 2026-08-16 (9.24), ale tylko
+  w polowie i to celowo.** Znacznik `unasked` na `Fetched` jest czytany tam, gdzie probnik linkow w
+  llms.txt bral brak 404 za dowod zycia; linki, o ktore nie zapytalismy, wypadaja z probki. **Nie**
+  policzylem kazdego niewyslanego zadania jako straty fazy, bo to zepsuloby uczciwe negatywy:
+  wiekszosc pominietych zadan to zgadywane subdomeny, ktore nie istnieja, a „zapytalismy dziewieciu
+  hostow i zaden nie odpowiedzial" jest prawdziwym zdaniem. **Zostaje `probedHosts` w zdaniu o
+  OAuth, ktory nadal liczy hosty niezapytane.** Kontekst pierwotny: `fetchUrl` zwraca `status: 0` takze wtedy,
   gdy **zadanie nigdy nie wyszlo** (host odmowil polaczenia wczesniej w tym skanie albo przekroczyl
   limit timeoutow). Tylko prefiks `Out of time` zasila licznik `lost`, wiec faza nie trafia do
   `incomplete` i siec bezpieczenstwa `missed` nie dziala. Efekt: mozemy opublikowac „the 12 links
