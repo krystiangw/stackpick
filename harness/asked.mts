@@ -19,11 +19,15 @@ import { join } from 'node:path'
 import { CATEGORIES } from '../src/lib/categories'
 import { certain, mentionsIn } from '../src/lib/vendors'
 
-const [categoryId] = process.argv.slice(2)
+const [categoryId, subject] = process.argv.slice(2)
 const category = CATEGORIES.find((candidate) => candidate.id === categoryId)
 if (!category) {
-  console.error('usage: npm run asked -- <category>')
+  console.error('usage: npm run asked -- <category> [domena]')
   console.error(`categories: ${CATEGORIES.map((candidate) => candidate.id).join(', ')}`)
+  process.exit(2)
+}
+if (subject && !category.domains.includes(subject)) {
+  console.error(`${subject} nie jest w kategorii ${category.id}: ${category.domains.join(', ')}`)
   process.exit(2)
 }
 
@@ -92,6 +96,8 @@ console.log('')
 const named = new Map<string, number>()
 const first = new Map<string, number>()
 const weak: { domain: string; run: number; sentence: string }[] = []
+/** For the one domain somebody is paying us to watch: what happened in each run, run by run. */
+const perRun: { run: number; sentence: string | null; instead: string | null }[] = []
 
 for (const run of answered) {
   const mentions = mentionsIn(run.answer, category.domains)
@@ -100,6 +106,14 @@ for (const run of answered) {
   if (sure[0]) first.set(sure[0].domain, (first.get(sure[0].domain) ?? 0) + 1)
   for (const mention of mentions) {
     if (mention.form === 'weak') weak.push({ domain: mention.domain, run: run.meta.run, sentence: mention.sentence })
+  }
+  if (subject) {
+    const mine = mentions.find((mention) => mention.domain === subject)
+    perRun.push({
+      run: run.meta.run,
+      sentence: mine?.sentence ?? null,
+      instead: sure[0] && sure[0].domain !== subject ? sure[0].domain : null,
+    })
   }
 }
 
@@ -119,3 +133,14 @@ if (weak.length > 0) {
 
 const invisible = rows.filter((row) => row.named === 0).length
 console.log(`\n${invisible} z ${rows.length} dostawcow w tej kategorii nie padlo ani razu`)
+
+// The customer's own view: not the table, but the sentence about them, run by run. A vendor paying
+// to be watched is owed the words rather than the tally, and where there are no words that is the
+// finding and it gets a line of its own.
+if (subject) {
+  console.log(`\n${subject}, bieg po biegu:`)
+  for (const one of perRun) {
+    const instead = one.instead ? ` (wybrano ${one.instead})` : ''
+    console.log(`  run-${one.run}${instead}: ${one.sentence ?? 'nie padli ani razu'}`)
+  }
+}
