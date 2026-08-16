@@ -29,6 +29,16 @@ slatejs.org** i to jedyny powod, dla ktorego znalazlem trzy usterki wprowadzone 
 recznie sprawdzone przypadki. Znalazl je dopiero **reseed calego korpusu plus audyt sprzecznosci
 wewnatrz wiersza**. Zmiane w punktacji sprawdza sie na 170 wierszach, nie na czterech.
 
+**Cztery werdykty pogorszone po reseedzie 9.19, wszystkie wyjasnione, zaden nie wymaga poprawki:**
+- `bitmovin.com` `agent_entry_point` 2→0: **nasza usterka**, naprawiona w 9.20 (punkt 2 wyzej).
+- `oramasearch.com` `llms_txt` 1→0: **prawdziwe**. `github.com/oramasearch/orama-cloud-cli` zwraca
+  404 na HEAD i GET, a link stoi w ich `llms.txt` raz i w `llms-full.txt` dwa razy. To nie regres
+  vendora ani nasz blad, tylko skutek rownomiernego probkowania z 9.17, ktore siega teraz ogona
+  pliku i znalazlo zgnilizne lezaca tam od dawna.
+- `froala.com` `answers_plain_request` 1→0 i `weglot.com` `signup_reachable` 1→0: oba wyszly jako
+  „Unmeasurable" i oba slusznie. froala odmawia tak samo przegladarce, a weglot odpowiedzial
+  (403, 403, 200), czyli jedna z trzech prob weszla, co reguła drzwi wprost obsluguje.
+
 Dyskryminator szablonu jest teraz osobna funkcja `answersWithTheSameTemplate` z testem
 dwustronnym, bo to byla trzecia usterka w tym samym miejscu.
 

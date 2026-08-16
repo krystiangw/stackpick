@@ -32,7 +32,15 @@ const PATHS = [
   '/.well-known/oauth-protected-resource',
   '/.well-known/openid-configuration',
 ]
-/** Beyond the six the scanner guesses. Each of these is in use by somebody in the corpus. */
+/**
+ * The scanner's own six and one, then twelve more.
+ *
+ * The first version listed only the twelve, on the reasoning that the scanner already covers the
+ * rest. The control refused it immediately: 43 of the 68 rows we credit could not be reproduced,
+ * because their metadata lives on exactly the hosts I had left out. A probe that audits a
+ * measurement has to be able to make that measurement first, and only then reach further.
+ */
+const SCANNER_GUESSES = ['auth', 'login', 'accounts', 'id', 'oauth', 'api', 'mcp']
 const WIDER = ['identity', 'sso', 'signin', 'account', 'token', 'idp', 'authn', 'secure', 'my', 'console', 'app', 'dashboard']
 /** Hosts that are somebody else's authorization server, so a redirect landing here is the answer. */
 const IDENTITY_PROVIDERS =
@@ -135,11 +143,11 @@ let disagree = 0
 let withRegistration = 0
 for (const { domain, site, signup, probedHosts } of targets) {
   const bare = domain.replace(/^www\./, '')
-  const guessed = WIDER.map((prefix) => `https://${prefix}.${bare}`)
+  const guessed = [...SCANNER_GUESSES, ...WIDER].map((prefix) => `https://${prefix}.${bare}`)
   const followed = await loginLandsOn(
     [signup, `${site}/login`, `${site}/signin`, `${site}/sign-in`].filter((url): url is string => Boolean(url)),
   )
-  const origins = [...new Set([...followed, ...guessed])]
+  const origins = [...new Set([site, ...followed, ...guessed])]
   const hits = (await Promise.all(origins.map(metadataOn))).flat()
   const hit = hits.length > 0
   const expected = mode === 'credited' ? hit : !hit
