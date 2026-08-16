@@ -9,8 +9,8 @@
   mediane wieku korpusu i odbija proby, a pojedyncze uruchomienie traci okazje bez sladu:
   `for i in 1 2 3 4 5 6; do STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) npm run reseed; [ $? -eq 3 ] && sleep 600 || break; done`
 - **Do zrobienia, w tej kolejnosci:**
-  1. `npm run noise-floor 9.27` (podloga szumu na swiezym korpusie) - jedyna otwarta pozycja
-     merytoryczna po mojej stronie.
+  1. ~~`npm run noise-floor 9.27`~~ **zrobione**: 0,24 procent, ale jednokierunkowo, wiec to NIE
+     jest podloga szumu. Prawdziwy pomiar wymaga dnia bez zmiany regul, patrz sekcja u gory.
   2. Kolejny przebieg adwersaryjny. **Zanim wybierzesz check, zmierz pokrycie zrodla prawdy na
      naszym korpusie** (rejestr MCP mial pokrycie i dal piec znalezisk, apis.guru mial 2 na 47 i
      nie dal nic). Skrypty: `scripts/audit-{entry,oauth,signup,mcp-registry,openapi-directory}.mts`,
@@ -32,6 +32,29 @@
 zmierzone po wdrozeniu wypadaja z wiekszosciowej wersji i strona pokazuje 169 zamiast 170.
 Reseed jest zaplanowany na wygasniecie karencji. Jesli go nie widac w dzienniku ponizej, uruchom
 `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) npm run reseed`.
+
+## PODLOGA SZUMU: NADAL JEJ NIE ZMIERZYLISMY, I TRZEBA TO MOWIC WPROST
+
+`npm run noise-floor 9.27` na parze przebiegow ze swiezego reseedu: **6 werdyktow na 2550
+ruszylo, czyli 0,24 procent, ale WSZYSTKIE w jedna strone** (6 w gore, 0 w dol). Narzedzie samo
+to nazywa i ma racje: jednokierunkowy ruch to efekt systematyczny, nie szum. Trzy z szesciu to
+`postmarkapp.com`, `split.io` i `locationiq.com`, czyli dokladnie domeny odzyskane przez
+zamiatanie 429, wiec zachowanie zaprojektowane.
+
+**Wniosek, ktory trzeba powiedziec wprost: nigdy nie zmierzylismy wlasnej podlogi szumu.** Kazda
+liczba, ktora publikujemy, opiera sie na zalozeniu, ze werdykt jest stabilny miedzy pomiarami, a
+tego zalozenia nie sprawdzilismy ani razu.
+
+**Czego wymaga prawdziwy pomiar:** pary CIEPLY-CIEPLY, czyli dwoch kolejnych reseedow na TEJ SAMEJ
+wersji formuly. Dzis jest to niewykonalne przy okazji, bo kazdy reseed konczy sie zmiana formuly, a
+karencja to 6 godzin, wiec para kosztuje dobe bez zmian w punktacji. **Tansza alternatywa, ktora
+ROZWAZYLEM I ODRZUCILEM:** przeskanowac probke 25 domen dwa razy. Kosztuje to spojnosc korpusu,
+bo te 25 wierszy trafia na nowa wersje formuly i wypada z wiekszosci, wiec strona pokazuje 145
+zamiast 170 az do nastepnego przesiewu.
+
+**Jak to zrobic, gdy przyjdzie dzien bez zmiany regul:** zrob reseed, odczekaj karencje, zrob drugi
+reseed BEZ dotykania `FORMULA_VERSION`, potem `npm run noise-floor <wersja>`. Dopiero ta liczba
+jest podloga szumu i dopiero wtedy wolno ja cytowac.
 
 ## WERYFIKACJA POPRAWKI PUNKTU WEJSCIA, I JEDNO PRAWDZIWE ZNALEZISKO (9.28)
 
