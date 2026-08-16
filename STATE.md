@@ -1,9 +1,34 @@
-# Let Agents In: stan na 2026-08-15 (formula 9.21 na produkcji, korpus na 9.19 czeka na przesiew, baza zdrowa)
+# Let Agents In: stan na 2026-08-15 (formula 9.22 na produkcji, korpus na 9.19 czeka na przesiew, baza zdrowa)
 
 **UWAGA dla nastepnej rundy: korpus jest przejsciowo na 9.17, a produkcja na 9.18**, wiec wiersze
 zmierzone po wdrozeniu wypadaja z wiekszosciowej wersji i strona pokazuje 169 zamiast 170.
 Reseed jest zaplanowany na wygasniecie karencji. Jesli go nie widac w dzienniku ponizej, uruchom
 `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) npm run reseed`.
+
+## 24. PRZEBIEG: `mcp_present`, I ZRODLO, KTOREGO NIE PYTALISMY WCALE (9.22, wdrozone)
+
+Zdanie „No MCP surface: nothing answered at mcp.<domain>, ..." wymienia **wylacznie adresy, ktore
+sami zgadlismy**. Ten przebieg zapytal jedyne zrodlo, ktore nie jest zgadywaniem i ktorego nie
+pytalismy w ogole: **oficjalny rejestr MCP**, czyli miejsce, gdzie agent szukajacy narzedzia
+faktycznie patrzy.
+
+**Piec z 98 oskarzonych prowadzi zywy serwer wpisany do rejestru, na wlasnej domenie**, pod
+adresem, ktorego zadna lista ksztaltow nie osiagnie: `asset-management.mcp.cloudinary.com`,
+`api.raygun.com/v3/mcp`, `docs.medusajs.com/mcp`, `mcp.eu.phrase.com` i
+`app.tolgee.io/mcp/developer`. Sprawdzone recznie: tolgee odpowiada pelnym handshakiem
+(`serverInfo: tolgee v3.216.4`), cloudinary zwraca 401 z `WWW-Authenticate` wskazujacym dokument
+protected-resource, raygun ustrukturyzowane 401.
+
+**Rejestr jest tropem, nie dowodem.** Kazdy adres z niego przechodzi przez ten sam handshake i te
+sama kontrolke co adres zgadniety, wiec nieaktualny wpis nie zaliczy nikomu serwera, ktory nie
+dziala. Hostname musi nalezec do vendora, bo wyszukanie jego nazwy zwraca tez serwery osob
+trzecich. Jedno zadanie na skan, awaria rejestru nie zmienia werdyktu.
+
+**Do przekazania Krystianowi, bo jest w tym niezrecznosc:** od 9.22 punktujemy vendorow miedzy
+innymi za obecnosc w rejestrze MCP, a **nas samych w nim nie ma**, bo publikacja `server.json` stoi
+na rekordzie DNS. To nie jest niespojnosc reguly (check mierzy, czy agent znajdzie serwer, a nie
+czy jestes w rejestrze), ale jest to argument, ktory ktos moze podniesc, i jest to dodatkowy powod,
+zeby ten rekord DNS w koncu powstal.
 
 ## 23. PRZEBIEG ADWERSARYJNY: `signup_reachable`, 88 OSKARZEN, NIC NIE OBALONE
 
@@ -1694,8 +1719,12 @@ agenta:
      zero zmian w punktacji. Patrz sekcja u gory.
   3. ~~**23. przebieg**~~ **zrobione**: poszedl na `signup_reachable` (88 oskarzen, nigdy nie
      audytowany), a nie na `mcp_present`, ktory mial juz przebieg 14. **Nic nie obalone.**
-  4. **24. przebieg: `mcp_present`** (98 oskarzen) albo `machine_readable_api`. Kontrolka pierwsza,
-     i przeczytaj granice metody z przebiegu 23, zanim uznasz niezgodnosc za znalezisko.
+  4. ~~**24. przebieg: `mcp_present`**~~ **zrobione (9.22)**: piec falszywych oskarzen, naprawione
+     przez zapytanie rejestru MCP. Patrz sekcja u gory.
+  5. **Do zrobienia po najblizszym reseedzie:** `npx tsx scripts/audit-entry.mts accused` (czy 21
+     niezgodnosci zeszlo do zera) oraz `npm run noise-floor 9.22`.
+  6. **25. przebieg:** `machine_readable_api` (48 oskarzen). Kontrolka pierwsza, i przeczytaj
+     granice metody z przebiegu 23, zanim uznasz niezgodnosc za znalezisko.
 
 Reszta wymaga decyzji Krystiana albo konta, ktorego agent nie zaklada:
 
