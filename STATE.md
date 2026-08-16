@@ -5,6 +5,26 @@ zmierzone po wdrozeniu wypadaja z wiekszosciowej wersji i strona pokazuje 169 za
 Reseed jest zaplanowany na wygasniecie karencji. Jesli go nie widac w dzienniku ponizej, uruchom
 `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) npm run reseed`.
 
+## MONITORING MILCZAL PO KAZDYM NASZYM WYDANIU (naprawione, wdrozone)
+
+Cron monitoringu, czyli **platna, powracajaca czesc produktu**, robil dobra rzecz w polowie. Dwie
+karty z dwoch wersji formuly nie sa „przed i po", wiec nie wysylal maila, tylko po cichu podmienial
+podstawe. **Drugiej polowy tej reguly nie bylo: kazda prawdziwa zmiana u vendora, ktora wypadnie w
+tym samym oknie co nasze wydanie, przepadala bezpowrotnie.** 16.08 wydan bylo piec. Vendor mogl
+tego dnia zepsuc rejestracje i nikt by sie nie dowiedzial.
+
+Teraz przeliczamy poprzednie ustalenia dzisiejsza regula i porownujemy jak z jak. **Zmierzone przed
+wdrozeniem: przeliczenie wierszy z 9.19 pod 9.22 rusza ZERO werdyktow** na pieciu domenach, wiec
+mechanizm nie produkuje szumu. Skladowanie usuwa tylko `catchAll.bodies`, ktorych punktacja nie
+czyta, wiec przeliczona karta jest karta, ktora opublikowalibysmy wtedy.
+
+**Rysa, ktora zostaje, i ktora mail teraz nazywa wprost:** kiedy zaczynamy sondowac adres, o ktory
+wczesniej nie pytalismy (dzis rejestr MCP), vendor, ktory nie zmienil nic, przeczyta „gained".
+Mail mowi wiec, ze podstawa zostala przeliczona pod obecnymi regulami i ze linia mogla ruszyc bez
+zmiany po ich stronie. To roznica miedzy raportem a przechwalka.
+
+Stan obserwacji: **szesc, wszystkie testowe** (Krystian plus skrzynka agentowa), zero platnych.
+
 ## 25. PRZEBIEG: `machine_readable_api`, WYNIK PUSTY I TAK TRZEBA GO CZYTAC
 
 Ten sam ruch, ktory zadzialal na `mcp_present`: zapytac zrodlo, ktore nie jest naszym zgadywaniem.
