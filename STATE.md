@@ -1,4 +1,32 @@
-# Let Agents In: stan na 2026-08-15 (formula 9.28 na produkcji, korpus na 9.19 czeka na przesiew, baza zdrowa)
+# Let Agents In: stan na 2026-08-16 (formula 9.28 na produkcji, korpus 170 wierszy na 9.27, baza zdrowa)
+
+## OD CZEGO ZACZAC PO COMPACT (przeczytaj te dwadziescia linijek, potem reszte)
+
+- **Produkcja: 9.28. Korpus: 9.27, 170 wierszy, zero sprzecznosci.** Roznica jednej wersji jest
+  normalna: wiersze zmierzone po wdrozeniu wypadaja z wersji wiekszosciowej, wiec **strona pokazuje
+  chwilowo mniej niz 170**, dopoki nie przyjdzie nastepny przesiew. Nie jest to awaria.
+- **Nastepny reseed planuj PETLA ponawiajaca, nie jednorazowym uruchomieniem.** Karencja liczy
+  mediane wieku korpusu i odbija proby, a pojedyncze uruchomienie traci okazje bez sladu:
+  `for i in 1 2 3 4 5 6; do STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) npm run reseed; [ $? -eq 3 ] && sleep 600 || break; done`
+- **Do zrobienia, w tej kolejnosci:**
+  1. `npm run noise-floor 9.27` (podloga szumu na swiezym korpusie) - jedyna otwarta pozycja
+     merytoryczna po mojej stronie.
+  2. Kolejny przebieg adwersaryjny. **Zanim wybierzesz check, zmierz pokrycie zrodla prawdy na
+     naszym korpusie** (rejestr MCP mial pokrycie i dal piec znalezisk, apis.guru mial 2 na 47 i
+     nie dal nic). Skrypty: `scripts/audit-{entry,oauth,signup,mcp-registry,openapi-directory}.mts`,
+     kazdy z trybem `credited|accused`, **kontrolka zawsze pierwsza**.
+- **Wszystko inne jest zablokowane na Krystianie:** rekord DNS do rejestru MCP (`server.json`
+  gotowy), konta w Bing Webmaster i katalogach MCP (agent kont nie zaklada), token npm, nazwanie
+  licencji korpusu, sciezka zakupu inna niz `mailto:` i decyzja Stripe kontra Paddle. **agenticpay
+  tego NIE odblokowuje** - patrz sekcja o nim nizej.
+- **Trzy zasady, ktore wyszly z 12 wydan jednego dnia i oszczedza nastepnej sesji dnia pracy:**
+  1. Zmiane w punktacji sprawdza sie na **170 wierszach**, nie na czterech. Przeglad subagenta,
+     testy regul i reczne przypadki przepuscily trzy usterki, ktore zlapal dopiero reseed.
+  2. Sonda audytujaca pomiar musi najpierw **umiec ten pomiar wykonac** (ten sam request, te same
+     hosty), a dopiero potem siegac dalej. Kontrolka na wierszach ZALICZANYCH idzie pierwsza.
+  3. **Czytaj zdanie, ktore publikujemy, nie liczbe punktow.** Check potrafi miec dwa rozne
+     werdykty za zero, a wartoscia bywa samo zdanie, bo to je czyta vendor.
+
 
 **UWAGA dla nastepnej rundy: korpus jest przejsciowo na 9.17, a produkcja na 9.18**, wiec wiersze
 zmierzone po wdrozeniu wypadaja z wiekszosciowej wersji i strona pokazuje 169 zamiast 170.
