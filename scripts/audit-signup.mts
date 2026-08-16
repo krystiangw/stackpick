@@ -16,6 +16,19 @@
  *
  *   npx tsx scripts/audit-signup.mts credited   # must find a form where we credit one
  *   npx tsx scripts/audit-signup.mts accused    # a form here is a false accusation of ours
+ *
+ * RESULT, 2026-08-16, and the accuracy bound that goes with it. The pass refuted nothing: five
+ * candidate disagreements, all five mine on inspection. api.video serves one email input with no
+ * name and no action, which is a shell JavaScript wires up later; browserless.io's only form holds
+ * three consent checkboxes; lemonsqueezy.com answers 800 bytes and no form at all; rollbar.com
+ * serves an unnamed text input, a search box; payloadcms.com an email field on a "get started"
+ * page. The check's sentence stands on every row it was possible to examine.
+ *
+ * The bound matters as much as the result. This detector is not accurate enough to settle the
+ * question on its own, and tuning it further would turn it into a copy of the code under test,
+ * which is the one thing it must not be. Loose, it reads search boxes as signups (control 41/42).
+ * Strict, it misses real ones (control 39/42: docuseal.com and deepl.com, both genuinely
+ * credited). Treat a disagreement as a lead to inspect by hand, never as a verdict.
  */
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
@@ -24,19 +37,30 @@ const UA = 'LetAgentsIn/1.0 (+https://letagentsin.com/methodology)'
 
 type Verdict = 'form' | 'oauth-only' | 'nothing' | 'unreachable'
 
-/** A field a person could actually type into, found without borrowing the scanner's parser. */
+/**
+ * A form an agent could use to create an account, found without borrowing the scanner's parser.
+ *
+ * The first version of this counted any non-hidden input inside any form, and it reported five
+ * false accusations that were all mine: rollbar.com serves one unnamed text input with no action,
+ * which is a search box, and payloadcms.com serves an email field on a "get started" page. Both
+ * are forms; neither is a way in. A credential form says so - it carries a password field, or it
+ * carries an identifier field and posts somewhere that names the act.
+ */
 function readableForm(html: string): { fields: number; forms: number } {
   const forms = [...html.matchAll(/<form\b[\s\S]*?<\/form>/gi)]
   let fields = 0
   for (const form of forms) {
+    const action = (form[0].match(/action\s*=\s*["']([^"']*)/i)?.[1] ?? '').toLowerCase()
+    const postsToAnAccount = /regist|signup|sign-up|sign_up|join|create|account|login|signin|sign-in|auth/.test(action)
+    let identifiers = 0
+    let passwords = 0
     for (const input of form[0].matchAll(/<input\b([^>]*)>/gi)) {
       const attrs = input[1].toLowerCase()
-      // Hidden CSRF tokens are not a way in, and every server-rendered form has them.
-      if (/type\s*=\s*["']?(hidden|submit|button|image)/.test(attrs)) continue
-      fields += 1
+      if (/type\s*=\s*["']?(hidden|submit|button|image|search)/.test(attrs)) continue
+      if (/type\s*=\s*["']?password/.test(attrs)) passwords += 1
+      else if (/type\s*=\s*["']?email|name\s*=\s*["']?(email|username|user|login)\b/.test(attrs)) identifiers += 1
     }
-    // A password manager fills these too, and some signups use them instead of <input>.
-    fields += [...form[0].matchAll(/<(textarea|select)\b/gi)].length
+    if (passwords > 0 || (identifiers > 0 && postsToAnAccount)) fields += passwords + identifiers
   }
   return { fields, forms: forms.length }
 }

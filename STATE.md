@@ -5,6 +5,39 @@ zmierzone po wdrozeniu wypadaja z wiekszosciowej wersji i strona pokazuje 169 za
 Reseed jest zaplanowany na wygasniecie karencji. Jesli go nie widac w dzienniku ponizej, uruchom
 `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) npm run reseed`.
 
+## 23. PRZEBIEG ADWERSARYJNY: `signup_reachable`, 88 OSKARZEN, NIC NIE OBALONE
+
+**Pierwszy przebieg od dawna, ktory nie znalazl u nas bledu, i to jest wynik wart tyle samo co
+poprawka.** 85 z 88 oskarzen niesie jedno zdanie: „<url> is reachable, but its form needs
+JavaScript". Jest to zarazem jedna z dwoch liczb na stronie glownej, wiec falszywa byla by falszywa
+publicznie.
+
+Wykrywacz formularza napisalem **od nowa, celowo bez importu `rendersUsableForm`**, bo audyt
+uzywajacy testowanego kodu zgadza sie z nim z definicji i nie dowodzi niczego.
+
+**Piec kandydatow na falszywe oskarzenie, wszystkie pieciu okazaly sie MOJE:**
+- `api.video`: jedno pole `email` **bez nazwy i bez akcji**, czyli skorupa, ktora dopiero
+  JavaScript podlacza. Agent nie ma czego wyslac.
+- `browserless.io`: jedyny formularz to trzy checkboxy zgod.
+- `lemonsqueezy.com`: 800 bajtow i zero formularzy przy powtorzeniu.
+- `rollbar.com`: jedno nienazwane pole tekstowe bez akcji, czyli wyszukiwarka.
+- `payloadcms.com`: pole e-mail na stronie „get started".
+
+**Granica metody, wazniejsza niz sam wynik.** Ten wykrywacz **nie jest dosc dokladny**, zeby
+rozstrzygac ten check samodzielnie, a dalsze strojenie zamienilo by go w kopie testowanego kodu,
+czyli w dokladnie to, czym byc nie moze. Luzny czyta wyszukiwarki jako rejestracje (kontrolka
+41/42). Ostry gubi prawdziwe formularze (kontrolka 39/42: `docuseal.com` i `deepl.com`, oba
+slusznie zaliczone). **Niezgodnosc traktuj jako trop do recznego sprawdzenia, nigdy jako werdykt.**
+
+Obserwacja bez werdyktu, do ewentualnego podjecia: u szesciu oskarzonych jedynym wejsciem, jakie
+widac w HTML od serwera, jest przycisk dostawcy tozsamosci (`cloudinary.com`, `transloadit.com`,
+`trychroma.com`, `modal.com`, `cal.com`, `redis.io`). Zdanie o formularzu wymagajacym JavaScriptu
+opisuje im formularz, ktorego mogli nigdy nie napisac. **Nie da sie tego jednak rozstrzygnac z
+samego HTML**, bo strona moze miec i przyciski OAuth, i formularz doklejany JavaScriptem, wiec
+zostawiam to jako obserwacje, a nie jako blad do naprawienia.
+
+Skrypt: `npx tsx scripts/audit-signup.mts credited|accused`.
+
 ## 22. PRZEBIEG ADWERSARYJNY: `oauth_dcr`, 94 OSKARZENIA (9.21, wdrozone)
 
 **Wynik: punktacja nie zmienia sie u nikogo, a trzy zdania byly falszywe.** To jest ten rodzaj
@@ -1659,7 +1692,10 @@ agenta:
      zeszlo do zera. To weryfikacja tego, co wlasnie wypuscilismy.
   2. ~~**22. przebieg adwersaryjny: `oauth_dcr`**~~ **zrobione (9.21)**: trzy falszywe zdania,
      zero zmian w punktacji. Patrz sekcja u gory.
-  3. **23. przebieg: `mcp_present`** (98 oskarzen), nastepny w kolejce. Kontrolka pierwsza.
+  3. ~~**23. przebieg**~~ **zrobione**: poszedl na `signup_reachable` (88 oskarzen, nigdy nie
+     audytowany), a nie na `mcp_present`, ktory mial juz przebieg 14. **Nic nie obalone.**
+  4. **24. przebieg: `mcp_present`** (98 oskarzen) albo `machine_readable_api`. Kontrolka pierwsza,
+     i przeczytaj granice metody z przebiegu 23, zanim uznasz niezgodnosc za znalezisko.
 
 Reszta wymaga decyzji Krystiana albo konta, ktorego agent nie zaklada:
 
