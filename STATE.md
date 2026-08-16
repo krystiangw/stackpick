@@ -17,7 +17,10 @@
   3. ~~26. przebieg adwersaryjny~~ **zrobione (9.29)**: katalogi MCP odpadly na pomiarze pokrycia
      (smithery 0 z 73 w kontrolce), a zrodlem okazala sie ich wlasna dokumentacja. Dwa falszywe
      oskarzenia: neon.com i launchdarkly.com. **Zostaje reseed na 9.29 i sprawdzenie diffu.**
-  4. Kolejny przebieg adwersaryjny. **Zanim wybierzesz check, zmierz pokrycie zrodla prawdy na
+  4. ~~27. przebieg: `signup_no_captcha`~~ **zrobione (9.30)**: zadne z 28 oskarzen nie obalone,
+     ale 6 z nich ma token CAPTCHY takze na stronie glownej, wiec zdanie mowi teraz, ktore z dwoch
+     widzielismy. Idzie w tym samym reseedzie co 9.29.
+  5. Kolejny przebieg adwersaryjny. **Zanim wybierzesz check, zmierz pokrycie zrodla prawdy na
      naszym korpusie** (rejestr MCP mial pokrycie i dal piec znalezisk, apis.guru mial 2 na 47 i
      nie dal nic). Skrypty: `scripts/audit-{entry,oauth,signup,mcp-registry,openapi-directory}.mts`,
      kazdy z trybem `credited|accused`, **kontrolka zawsze pierwsza**.
@@ -33,6 +36,31 @@
   3. **Czytaj zdanie, ktore publikujemy, nie liczbe punktow.** Check potrafi miec dwa rozne
      werdykty za zero, a wartoscia bywa samo zdanie, bo to je czyta vendor.
 
+
+## 27. PRZEBIEG: TOKEN CAPTCHY NA CALEJ WITRYNIE TO NIE BRAMKA NA FORMULARZU (9.30)
+
+`signup_no_captcha`, 28 oskarzen, `npm run audit-captcha credited|accused` (skrypt przepisany na
+ksztalt dwustronny ze sklepu, stary czytal domeny ze stdin).
+
+**Kontrolka pierwsza: 22 wiersze, ktorym dajemy punkt, sonda widzi czyste. Zero niezgod**, wiec
+sonda potrafi odtworzyc nasz pomiar, zanim cokolwiek powie o oskarzonych. **Strona oskarzen: zaden
+z 28 nie obalony** - token naprawde jest w HTML rejestracji, dokladnie tak, jak publikujemy.
+
+Znalezisko jest gdzie indziej i dotyczy roznicy miedzy zdaniem a punktem. Check istnieje po to, by
+znalezc **bramke na formularzu**, a zdanie dowodzi tylko **stringu na stronie**. **Szesc z 28**
+(`mailgun.com`, `chargebee.com`, `sentry.io`, `betterstack.com`, `raygun.com`, `bigcommerce.com`)
+serwuje ten sam token **na stronie glownej, gdzie nie ma zadnego konta do zalozenia**. To ich nie
+oczyszcza (skrypt ladowany na calej witrynie i tak dziala na tym formularzu) i nie skazuje (HTML
+nie umie powiedziec, ktore z dwoch). Wiec **punkt zostaje odjety, a zdanie mowi teraz, ktore z
+dwoch faktycznie widzielismy**, dokladnie tak, jak gałąź zaliczajaca mowi juz o bot defence.
+
+**Usterka zlapana w mojej wlasnej kontrolce, warta zapamietania:** pierwsza wersja twierdzila o
+`sentry.io`, ze tokenu na stronie glownej nie ma. Strona glowna wazy **628 kB, a domyslny limit
+odczytu to 400 kB** i token siedzi za nim, wiec kontrolka wypowiadala sie o bajtach, ktorych nie
+przeczytala. Zlapal to dopiero skrypt audytu (curl bez limitu) postawiony obok skanera. `fetchUrl`
+przyjmuje teraz `readBytes` na pojedyncze zadanie, a **`readBytes` wchodzi do klucza cache**, bo
+inaczej kontrolka dostalaby uciety korpus zapisany wczesniej podczas odkrywania. Regula ogolna:
+**limit odczytu to takze zrodlo falszywych "nie ma"**, nie tylko oszczednosc pamieci.
 
 ## 26. PRZEBIEG: POKRYCIE ZMIERZONE PRZED WYBOREM ZRODLA, I DWA FALSZYWE OSKARZENIA (9.29)
 
