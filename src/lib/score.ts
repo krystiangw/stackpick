@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.27'
+export const FORMULA_VERSION = '9.28'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -529,7 +529,10 @@ export const CHECKS: Check[] = [
       // the same nine on the documentation origin when there is one. Saying "of the 9" while
       // having asked eighteen is a number a vendor cannot reproduce.
       const asked = f.funnel.entryProbesAsked ?? AGENT_ENTRY_PATH_COUNT
-      const where = asked > AGENT_ENTRY_PATHS.length ? 'on your site and your documentation host' : 'on your site'
+      // From where we actually asked, not from how many. Older rows have no flag and fall back to
+      // the count, which was the only signal they were scored on.
+      const docsProbed = f.funnel.entryDocsProbed ?? asked > AGENT_ENTRY_PATHS.length
+      const where = docsProbed ? 'on your site and your documentation host' : 'on your site'
       // Only the site can make this unmeasurable. Older rows have no split and fall back to the
       // total, which is what they were scored on.
       const refusedOnSite = f.funnel.entrySiteRefused ?? refused

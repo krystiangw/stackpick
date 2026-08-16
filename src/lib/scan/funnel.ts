@@ -2,6 +2,9 @@ import { AGENT_UA, BROWSER_UA, fetchUrl, registrableDomain, isBotChallenge, isEd
 
 export const AGENT_ENTRY_PATH_COUNT = 9
 
+/** Asked only when the lower-case set came back empty, so it costs nothing where a file exists. */
+export const UPPERCASE_ENTRY_PATHS = ['/AGENTS.md', '/SKILL.md', '/AGENT.md'] as const
+
 export const AGENT_ENTRY_PATHS = [
   '/agent-signup.md',
   '/skill.md',
@@ -500,6 +503,12 @@ export type FunnelFindings = {
   entryProbesAsked?: number
   /** Refusals on the site alone, which is the half that decides whether we measured anything. */
   entrySiteRefused?: number
+  /**
+   * Whether the documentation host was one of the places we asked. The count alone cannot say:
+   * since the upper-case fallback there are twelve site probes, and a sentence deriving "we asked
+   * your documentation host too" from twelve named a host we never opened a socket to.
+   */
+  entryDocsProbed?: boolean
   oauth: {
     metadataPublished: boolean
     dynamicClientRegistration: boolean
@@ -1373,7 +1382,8 @@ export async function scanFunnel({
   // The entry probes are the one thing that has to wait: on a site that answers every unknown
   // path they prove nothing, and firing them anyway would be nine requests spent to learn that.
   const catchAll = await catchAllPending
-  const probeOne = (base: string, control: CatchAll) => inParallel(AGENT_ENTRY_PATHS, async (path) => {
+  const probeOne = (base: string, control: CatchAll, paths: string[] = [...AGENT_ENTRY_PATHS]) =>
+    inParallel(paths, async (path) => {
     const catchAll = control
     // The namespace verdict no longer short-circuits the probe. sentry.io publishes a real 106
     // byte /.well-known/mcp.json and answers unknown paths in that namespace with a 20,402 byte
@@ -1412,10 +1422,18 @@ export async function scanFunnel({
   // not answer, that is the finding, and it is reported out of the nine paths we actually asked.
   const probeEntry = (async () => {
     const onSite = await probeOne(site, catchAll)
-    const worthLookingFurther =
-      docsOrigin && !onSite.some(([, present]) => present) && !onSite.some(([, , , , refused]) => refused)
-    if (!worthLookingFurther) return onSite
-    return [...onSite, ...(await probeOne(docsOrigin, await servesCatchAllText(docsOrigin)))]
+    const nothing = (probed: typeof onSite) => !probed.some((entry) => entry[1])
+    const refusedUs = (probed: typeof onSite) => probed.some((entry) => entry[4])
+    if (!nothing(onSite) || refusedUs(onSite)) return onSite
+    // The spelling people actually use in a repository, asked only when the lower-case nine found
+    // nothing. clerk.com serves a real skill file at /SKILL.md and answers /skill.md with a 404,
+    // on an origin whose nonsense paths also 404, so it is a file at a casing we never tried
+    // rather than a catch-all. Three paths rather than nine: these are the spellings the AGENTS.md
+    // convention produced, and every extra probe is traffic a vendor did not ask for.
+    const upper = await probeOne(site, catchAll, [...UPPERCASE_ENTRY_PATHS])
+    if (!nothing(upper)) return [...onSite, ...upper]
+    if (!docsOrigin || refusedUs(upper)) return [...onSite, ...upper]
+    return [...onSite, ...upper, ...(await probeOne(docsOrigin, await servesCatchAllText(docsOrigin)))]
   })()
 
   /**
@@ -1512,6 +1530,7 @@ export async function scanFunnel({
     entryPathsRefused,
     entryProbesAsked: entries.length,
     entrySiteRefused,
+    entryDocsProbed: docsOrigin !== null && entries.some(([url]) => url.startsWith(docsOrigin)),
     oauth,
     mcpEndpoints,
     mcpProbed: mcp.answered,
