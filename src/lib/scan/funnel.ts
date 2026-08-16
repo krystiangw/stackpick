@@ -1133,22 +1133,26 @@ export function readsAsAnEndpoint(url: string): boolean {
  * vendor's own host for none of them.
  */
 async function addressesInTheirMcpPages(domain: string, corpus: string): Promise<{ candidates: string[]; followed: string[] }> {
-  const pages = [...new Set([...corpus.matchAll(/https?:\/\/[^\s)"'<>]*mcp[^\s)"'<>]*/gi)].map((found) => found[0]))]
-    .filter((url) => readsAsTheirOwnAddress(url, domain) && !readsAsAnEndpoint(url))
+  const mcpUrls = (text: string) =>
+    [...new Set([...text.matchAll(/https?:\/\/[^\s)"'<>]*mcp[^\s)"'<>]*/gi)].map((found) => found[0].replace(/[.,;]+$/, '')))]
+  const theirs = mcpUrls(corpus).filter((url) => readsAsTheirOwnAddress(url, domain))
+  // A vendor who writes the address straight into llms.txt is the easy case and it was still
+  // being missed: the first wave probes guesses, the card and the registry, and their own files
+  // are none of those.
+  const inTheirFiles = theirs.filter(readsAsAnEndpoint)
+  const pages = theirs
+    .filter((url) => !readsAsAnEndpoint(url))
     // A markdown twin of a page costs less to read and carries the same addresses.
     .sort((a, b) => Number(b.endsWith('.md')) - Number(a.endsWith('.md')))
     .slice(0, MOST_MCP_PAGES_READ)
-  if (pages.length === 0) return { candidates: [], followed: [] }
-  const bodies = await inParallel(pages, (url) => fetchUrl(url, { accept: 'text/markdown, text/html' }))
-  const candidates = [
-    ...new Set(
-      bodies
-        .flatMap((got) => [...got.body.matchAll(/https?:\/\/[^\s)"'<>]*mcp[^\s)"'<>]*/gi)].map((found) => found[0]))
-        .map((url) => url.replace(/[.,;]+$/, ''))
-        .filter((url) => readsAsAnEndpoint(url) && readsAsTheirOwnAddress(url, domain)),
-    ),
-  ].slice(0, MOST_MCP_ADDRESSES_FROM_PAGES)
-  return { candidates, followed: pages }
+  const bodies = pages.length > 0 ? await inParallel(pages, (url) => fetchUrl(url, { accept: 'text/markdown, text/html' })) : []
+  const inTheirPages = bodies
+    .flatMap((got) => mcpUrls(got.body))
+    .filter((url) => readsAsAnEndpoint(url) && readsAsTheirOwnAddress(url, domain))
+  return {
+    candidates: [...new Set([...inTheirFiles, ...inTheirPages])].slice(0, MOST_MCP_ADDRESSES_FROM_PAGES),
+    followed: pages,
+  }
 }
 
 /**
