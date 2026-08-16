@@ -152,30 +152,6 @@ export default async function PricingPage() {
         </p>
       </section>
 
-      {/* The second question a buyer asks after "is the method sound", and the one this page used to
-          leave them to work out from an email address. The answer is one person, and saying so is
-          worth more than the impression of a company that the plural would create. */}
-      <section className="border-b border-rule py-12">
-        <h2 className="text-lg font-semibold tracking-tight">Who does the work</h2>
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          One person, and you should know that before you put an audit through procurement.{' '}
-          <a
-            href="https://krystiangw.github.io/krystiangw/"
-            className="text-brass underline underline-offset-4"
-          >
-            Krystian Gwizdała
-          </a>
-          , a full-stack engineer in Kraków, wrote the scanner, ran all eighteen agent runs behind the
-          published audits, and will be the one reading your transcripts. There is no team behind this and
-          no account manager between you and the work.
-        </p>
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          What that costs you is capacity: two full audits a month, not ten, and no cover if one week goes
-          badly. What it buys you is that the person who designed the brief is the person who argues with
-          you about what the runs mean, which is the part of this that does not survive being handed over.
-        </p>
-      </section>
-
       {/* The distinction the two paid tiers turn on, and the one a buyer cannot be expected to
           guess from the word "agent" appearing in both columns. */}
       <section className="border-b border-rule py-12">
@@ -205,11 +181,21 @@ export default async function PricingPage() {
         </p>
       </section>
 
+      {/* The second question a buyer asks after "is the method sound", and the one this page used to
+          leave them to work out from an email address. The answer is one person, and saying so is
+          worth more than the impression of a company that the plural would create. */}
       <section className="border-b border-rule py-12">
-        <h2 className="text-lg font-semibold tracking-tight">Who runs this</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Who does the work</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Krystian Gwizdała. The research on this site is mine: the scanner, the formula, the agent runs and
-          every number on{' '}
+          One person, and you should know that before you put an audit through procurement.{' '}
+          <a
+            href="https://krystiangw.github.io/krystiangw/"
+            className="text-brass underline underline-offset-4"
+          >
+            Krystian Gwizdała
+          </a>
+          , a full-stack engineer in Kraków, wrote the scanner and the formula, ran all eighteen agent runs
+          behind the published audits, and produced every number on{' '}
           <Link href="/findings" className="text-brass underline underline-offset-4">
             Findings
           </Link>{' '}
@@ -217,7 +203,13 @@ export default async function PricingPage() {
           <Link href="/report" className="text-brass underline underline-offset-4">
             the industry report
           </Link>
-          . An audit is run by me, not by a team you never meet, and the raw runs go to you with the report.
+          . He will also be the one reading your transcripts. There is no team behind this and no account
+          manager between you and the work.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          What that costs you is capacity: two full audits a month, not ten, and no cover if one week goes
+          badly. What it buys you is that the person who designed the brief is the person who argues with
+          you about what the runs mean, which is the part of this that does not survive being handed over.
         </p>
         <p className="mt-4 font-mono text-sm">
           <a href="mailto:hello@letagentsin.com" className="text-brass underline underline-offset-4">
