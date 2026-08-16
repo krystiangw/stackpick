@@ -14,7 +14,10 @@
   2. **Monitoring ma teraz w opisie prawdziwe agenty** (`npm run ask` / `npm run asked`), wiec dla
      kazdej obserwowanej domeny nalezy raz w miesiacu puscic cele jej kategorii. Dzis to trzy
      obserwacje na naszym wlasnym mailu, wiec nie kosztuje nic. Sekcja nizej.
-  3. Kolejny przebieg adwersaryjny. **Zanim wybierzesz check, zmierz pokrycie zrodla prawdy na
+  3. ~~26. przebieg adwersaryjny~~ **zrobione (9.29)**: katalogi MCP odpadly na pomiarze pokrycia
+     (smithery 0 z 73 w kontrolce), a zrodlem okazala sie ich wlasna dokumentacja. Dwa falszywe
+     oskarzenia: neon.com i launchdarkly.com. **Zostaje reseed na 9.29 i sprawdzenie diffu.**
+  4. Kolejny przebieg adwersaryjny. **Zanim wybierzesz check, zmierz pokrycie zrodla prawdy na
      naszym korpusie** (rejestr MCP mial pokrycie i dal piec znalezisk, apis.guru mial 2 na 47 i
      nie dal nic). Skrypty: `scripts/audit-{entry,oauth,signup,mcp-registry,openapi-directory}.mts`,
      kazdy z trybem `credited|accused`, **kontrolka zawsze pierwsza**.
@@ -30,6 +33,52 @@
   3. **Czytaj zdanie, ktore publikujemy, nie liczbe punktow.** Check potrafi miec dwa rozne
      werdykty za zero, a wartoscia bywa samo zdanie, bo to je czyta vendor.
 
+
+## 26. PRZEBIEG: POKRYCIE ZMIERZONE PRZED WYBOREM ZRODLA, I DWA FALSZYWE OSKARZENIA (9.29)
+
+Kolejka mowila: **zanim wybierzesz check, zmierz pokrycie zrodla prawdy**. Zmierzylem i zrodlo
+odpadlo, co samo w sobie jest wynikiem tego przebiegu.
+
+**Katalogi MCP inne niz oficjalny rejestr nie sa zrodlem prawdy o tym, co publikuje vendor.**
+`scripts/coverage-mcp-directories.mts`, kontrolka pierwsza: z **73 domen, ktorym zaliczamy zywy
+serwer MCP, smithery ma wpis dla 31 i wskazuje na ICH wlasny host dla ZERA**. Strona oskarzen to
+samo: 93 sprawdzone, 22 z jakimkolwiek wpisem, **0 pod ich hostem**. Katalog hostuje serwery u
+siebie (`stripe` -> `stripe.run.tools`), wiec jego adres nie mowi nic o vendorze. Dwa pozostale
+kandydaty odpadly bez pomiaru: **glama ignoruje wlasny parametr wyszukiwania** (`?query=stripe`
+zwraca serwery do zakladek Firefoksa) i trzyma same repozytoria spolecznosci, a **pulsemcp v0beta
+odbija polowe zadan** w ramach wygaszania API.
+
+**Liczby "22 ma wpis" NIE publikujemy**, bo jest zawyzona przez ten sam problem zwyklych slow, co
+matcher nazw: `cloudflare/radar` trafilo na `radar.com`, `GoPlausible/tinyman-mcp` na
+`plausible.io`. Liczba, ktora ma znaczenie (0 pod ich hostem), jest odporna, bo decyduje o niej
+host adresu, a nie podobienstwo nazwy.
+
+### Zrodlo, ktorego nie pytalismy: ich wlasna dokumentacja
+
+Odpadniecie katalogow zepchnelo na jedyne zrodlo, ktore nie jest ani nasza zgadywanka, ani cudzym
+katalogiem: **strony o MCP, ktore vendor sam wymienia w swoich plikach maszynowych**. Ich pliki nie
+zawieraja adresu serwera, tylko adres strony o nim, wiec teraz otwieramy te strone i probujemy
+adresy z jej wnetrza. Dwa potwierdzone falszywe oskarzenia, oba na fladze produktu:
+
+- **neon.com**: serwer stoi na `mcp.neon.tech/mcp` (inna domena tej samej marki), odpowiada 401 z
+  wyzwaniem. **Zaden adres zgadywany na neon.com nie mogl tam trafic**, a `mcp.neon.com` w ogole
+  sie nie rozwiazuje.
+- **launchdarkly.com**: `mcp.launchdarkly.com/mcp/launchdarkly` odpowiada bledem JSON-RPC
+  (`-32001 unauthorized access`), a `mcp.launchdarkly.com/mcp`, ktory zgadujemy, odpowiada 404.
+  Wlasciwy host, sciezka nie do zgadniecia.
+
+Straznicy reguly, kazdy z testem, ktory umie oblac (`scripts/rules.mts`): adres liczy sie jako ich,
+gdy stoi na skanowanej domenie albo na domenie z **ta sama marka o dlugosci min. 4 znakow** (zeby
+"cal" nie lapalo swiata); musi **wygladac jak endpoint, a nie jak strona o endpoincie** (sciezki
+`/docs/`, `/guides/`, `/blog/` odpadaja, bo nikt nie routuje JSON-RPC pod prefiksem dokumentacji);
+**druga fala rusza wylacznie**, gdy zgadywanie, karta i rejestr nic nie znalazly; i **bierzemy z
+niej tylko endpointy**, bo pusta druga fala nie moze nadpisac tego, co wie pierwsza. Zdanie odmowne
+wymienia teraz strony, ktore przeczytalismy, wiec vendor widzi, ze zajrzelismy tam, gdzie sam
+wskazal.
+
+**Ryzyko do sprawdzenia w reseedzie:** druga fala dodaje do 2 pobran stron i do 3 sond na domenach,
+ktore i tak sa najtrudniejsze do przeczytania, a budzet skanu to 27 s. Jesli w diffie pojawia sie
+pogorszenia na INNYCH checkach tych domen, to jest wlasnie to, i wtedy limit stron schodzi do 1.
 
 ## MONITORING DOSTAJE PRAWDZIWE AGENTY (decyzja Krystiana, 2026-08-16, wdrozone)
 
