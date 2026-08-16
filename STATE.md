@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-15 (formula 9.26 na produkcji, korpus na 9.19 czeka na przesiew, baza zdrowa)
+# Let Agents In: stan na 2026-08-15 (formula 9.27 na produkcji, korpus na 9.19 czeka na przesiew, baza zdrowa)
 
 **UWAGA dla nastepnej rundy: korpus jest przejsciowo na 9.17, a produkcja na 9.18**, wiec wiersze
 zmierzone po wdrozeniu wypadaja z wiekszosciowej wersji i strona pokazuje 169 zamiast 170.
@@ -42,11 +42,14 @@ Przeglad z czystym kontekstem znalazl to, co temu umknelo. **Piec naprawione i w
 - ~~Zdanie „across the N files" liczy pliki, ktore dorzucily nowy URL do puli~~ **zrobione (9.26)**:
   liczba opisuje teraz, z ilu plikow pochodzi probka, i mowi to ulamkiem.
 - ~~`MCP_ADDRESSES` nie wymienia wszystkich odpytywanych adresow~~ **zrobione (9.25)**.
-- **JEDYNE, CO ZOSTALO Z TEJ LISTY:** obejscie `everyNamespaceFakes` nie jest ograniczone do
-  trafienia na hoscie dokumentacji, wiec strona, ktorej shell zmienia sie przy kazdym zadaniu
-  (nonce, znacznik czasu), moze dostac 2 punkty za cztery kopie tego samego shella. Kontrolki tego
-  nie lapia, bo porownuja cialo z cialem. Kandydat na naprawe: wymagac, zeby trafienie bylo na
-  hoscie dokumentacji, albo porownywac shell po usunieciu wartosci zmiennych.
+- ~~obejscie `everyNamespaceFakes`~~ **zrobione (9.27), z obu stron**: przy stronie podrabiajacej
+  wszystkie formaty liczy sie wylacznie trafienie spoza jej wlasnego originu, a normalizacja przed
+  porownaniem zdejmuje teraz dlugie ciagi szesnastkowe i cyfr, wiec shell z nonce nie udaje juz
+  czterech roznych plikow.
+
+**CALA LISTA PO PRZEGLADZIE JEST ZAMKNIETA.** Nastepny krok to reseed (9.19 -> 9.27) i dopiero po
+nim: `npx tsx scripts/audit-entry.mts accused` (czy 21 niezgodnosci zeszlo do zera) oraz
+`npm run noise-floor 9.27`.
 - ~~`entryPathsRefused` obejmuje dwa origins~~ **zrobione (9.25)**: niemierzalny czyni check tylko
   odmowa na samej witrynie, a odmowe hosta dokumentacji zdanie nazywa.
 
