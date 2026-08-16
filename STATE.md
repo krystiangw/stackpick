@@ -100,6 +100,15 @@ vercel.com), wiec obietnica miesiecznej celi nie kosztuje dzis nic. Cela `paymen
 stripe.com, bo obietnicy nie publikuje sie przed jej wykonaniem. Wpiecie w cron ma sens dopiero
 przy pierwszym prawdziwym obserwujacym.
 
+Widok dla jednej domeny, czyli to, co idzie do klienta: `npm run asked -- payments stripe.com`
+drukuje zdanie z **kazdego** biegu, a gdy domena nie padla, pokazuje, kogo wybrano zamiast niej
+(sprawdzone na polar.sh: piec biegow, piec razy "nie padli ani razu, wybrano stripe.com").
+
+Wdrozone i sprawdzone na produkcji: `/pricing` z trzema kolumnami i sekcja o dwoch rodzajach biegu,
+`/` z akapitem o miesiecznych biegach przy formularzu obserwacji. Pulapka z CLAUDE.md poszla do KB
+(`clad-kb show agent-cli-czyta-claudemd-operatora-i-skazi-kazdy-pomiar-zach`), bo dotyczy kazdego
+agenta mierzacego agenta, nie tylko tego projektu.
+
 **Przy okazji, do przemyslenia:** agenty wymieniaja w file-storage S3, Vercel Blob i Supabase
 Storage, a zadnego z nich nie ma w naszym korpusie (vercel.com zostal z niego usuniety 2026-08-11).
 Korpus mierzy dostawcow "agent-native", a agenci odpowiadaja domyslnie AWS. To nie jest blad
