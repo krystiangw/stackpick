@@ -1,9 +1,40 @@
-# Let Agents In: stan na 2026-08-15 (formula 9.20 na produkcji, korpus na 9.19 czeka na przesiew, baza zdrowa)
+# Let Agents In: stan na 2026-08-15 (formula 9.21 na produkcji, korpus na 9.19 czeka na przesiew, baza zdrowa)
 
 **UWAGA dla nastepnej rundy: korpus jest przejsciowo na 9.17, a produkcja na 9.18**, wiec wiersze
 zmierzone po wdrozeniu wypadaja z wiekszosciowej wersji i strona pokazuje 169 zamiast 170.
 Reseed jest zaplanowany na wygasniecie karencji. Jesli go nie widac w dzienniku ponizej, uruchom
 `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) npm run reseed`.
+
+## 22. PRZEBIEG ADWERSARYJNY: `oauth_dcr`, 94 OSKARZENIA (9.21, wdrozone)
+
+**Wynik: punktacja nie zmienia sie u nikogo, a trzy zdania byly falszywe.** To jest ten rodzaj
+znaleziska, ktory ma znaczenie dopiero wtedy, gdy vendor otworzy swoj wiersz.
+
+**Kontrolka znowu zrobila robote i znowu odrzucila MOJA sonde, nie wiersze.** Pierwsza wersja
+listowala tylko subdomeny „poza szostka, ktora zgaduje skaner", bo skaner szostke juz pokrywa.
+43 z 68 zaliczen nie dalo sie odtworzyc, dokladnie dlatego, ze ich metadane leza na hostach,
+ktore pominalem. **Sonda audytujaca pomiar musi najpierw umiec ten pomiar wykonac, a dopiero
+potem siegac dalej.** Po poprawce 68 z 68.
+
+Strona oskarzajaca, 94 domeny: **16 publikuje metadane na hoscie, ktorego nie pytamy, i zaden z
+tych 16 nie ma `registration_endpoint`**, wiec punkt nie rusza sie u nikogo. **13 z 16 ma juz
+poprawne zdanie**, bo metadane niosl inny host, ktory znalezlismy. Falszywe „No OAuth metadata on
+any of the N hosts probed" szlo do trzech: `auth2.liveblocks.io`, `sso.meilisearch.com` i
+`account.here.com`. Trzy prefiksy, w tym `account` w liczbie pojedynczej obok `accounts`, ktore
+juz mielismy.
+
+**Pulapka we wlasnym audycie, warta zapamietania:** moja lista „oskarzonych" to byly wiersze z
+zerem punktow, a ten check ma **dwa rozne werdykty za zero** („brak metadanych" i „metadane sa,
+brak registration_endpoint"). Przez chwile mialem 16 falszywych oskarzen zamiast trzech. Zanim
+zglosisz falszywe zdanie, przeczytaj zdanie, ktore faktycznie publikujemy.
+
+Poprawka to **trzecia fala** pieciu prefiksow (`auth2`, `sso`, `account`, `app`, `signin`), pytana
+tylko wtedy, gdy dwie pierwsze nic nie znalazly. Czterem wierszom na piec nie kosztuje to ani
+jednego zadania, a dzisiejszy reseed pokazal dobitnie, ze nadmiarowy ruch zamienia pomiary w
+odmowy. Sprawdzone dwustronnie: `uploadcare.com` nadal slyszy „brak metadanych" (uczciwie z 13
+hostow), `datadoghq.com` zachowuje punkt i trzecia fala u niego nie startuje.
+
+Skrypt: `npx tsx scripts/audit-oauth.mts credited|accused`.
 
 ## RESEED 9.19 ZNALAZL TRZY USTERKI W MOJEJ WLASNEJ ZMIANIE (9.20, wdrozone)
 
@@ -1626,11 +1657,9 @@ agenta:
 - **Otwarte, w kolejce, nie wymaga niczyjej decyzji:**
   1. Po reseedzie: `npx tsx scripts/audit-entry.mts accused` i sprawdzic, czy 21 niezgodnosci
      zeszlo do zera. To weryfikacja tego, co wlasnie wypuscilismy.
-  2. **22. przebieg adwersaryjny: `oauth_dcr`**, 94 oskarzenia i zaden udokumentowany przebieg.
-     Sonda gotowa i zacommitowana: `npx tsx scripts/audit-oauth.mts credited|accused`. Hipoteza:
-     serwer autoryzacji stoi u dostawcy tozsamosci (Auth0, WorkOS, Clerk, Kinde) albo na
-     subdomenie spoza naszej szostki, a zgadywanie prefiksow tam nie trafi. **Kontrolka pierwsza.**
-  3. Potem `mcp_present` (98 oskarzen).
+  2. ~~**22. przebieg adwersaryjny: `oauth_dcr`**~~ **zrobione (9.21)**: trzy falszywe zdania,
+     zero zmian w punktacji. Patrz sekcja u gory.
+  3. **23. przebieg: `mcp_present`** (98 oskarzen), nastepny w kolejce. Kontrolka pierwsza.
 
 Reszta wymaga decyzji Krystiana albo konta, ktorego agent nie zaklada:
 
