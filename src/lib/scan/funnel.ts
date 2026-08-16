@@ -554,6 +554,13 @@ const OAUTH_METADATA_PATHS = [
  * one of them a domain with no MCP endpoint to follow. Probing one origin is not a search.
  */
 const AUTH_SUBDOMAINS = ['auth', 'login', 'accounts', 'id', 'oauth']
+/**
+ * Asked only when everything else came back empty, because the sentence we would otherwise
+ * publish is "no OAuth metadata on any of the N hosts probed" and that sentence has to be true.
+ * `app` and `signin` are here on the same evidence, from vendors whose row is already right for
+ * another reason: app.kinde.com, signin.kinde.com, app.loops.so, app.chargebee.com, app.cronofy.com.
+ */
+const LAST_RESORT_AUTH_SUBDOMAINS = ['auth2', 'sso', 'account', 'app', 'signin']
 // mcp is here rather than only behind a found endpoint: datadoghq.com and contentful.com both
 // publish a registration_endpoint on mcp.<domain> while our MCP probe concluded nothing answers
 // there, so the host that had the answer was the one host we never asked.
@@ -1377,7 +1384,32 @@ export async function scanFunnel({
     signupPending,
     pricingPending,
   ])
-  const oauth = mergeOauthProbes(oauthKnown, oauthFromMcp)
+  const firstTwoWaves = mergeOauthProbes(oauthKnown, oauthFromMcp)
+  // A third wave, and only when the first two found nothing, so it costs nothing on the four rows
+  // in five that already have their answer. The twenty-second adversarial pass measured what it
+  // buys: of 94 rows scoring zero here, 16 publish metadata on a host we never asked, 13 of them
+  // already read "OAuth metadata published, but no registration_endpoint in it" because another
+  // host carried it, and three published the false sentence. Those three are auth2.liveblocks.io,
+  // sso.meilisearch.com and account.here.com, which is exactly three prefixes we did not guess -
+  // note `account` singular against the `accounts` we already had.
+  // Both earlier waves came back empty here, so their only contribution is the host count the
+  // sentence quotes, and stating it explicitly keeps that count honest.
+  const nothingFoundYet: OauthProbe = {
+    metadataPublished: false,
+    dynamicClientRegistration: false,
+    origins: [...new Set([...oauthKnown.origins, ...oauthFromMcp.origins])],
+  }
+  const oauth = firstTwoWaves.metadataPublished
+    ? firstTwoWaves
+    : mergeOauthProbes(
+        nothingFoundYet,
+        await probeOauthOrigins(
+          LAST_RESORT_AUTH_SUBDOMAINS.map((prefix) => ({
+            origin: `https://${prefix}.${domain.replace(/^www\./, '')}`,
+            paths: ['/.well-known/oauth-authorization-server', '/.well-known/openid-configuration'],
+          })),
+        ),
+      )
 
   // supertokens.com answered the same URL with and without its free-tier wording forty minutes
   // apart, which moved a scored point. Pricing pages are assembled and cached like any other
