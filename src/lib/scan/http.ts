@@ -197,6 +197,13 @@ export type Fetched = {
   headers: Record<string, string>
   truncated: boolean
   error?: string
+  /**
+   * The request never left the process, because the host had already refused a connection or
+   * swallowed its allowance of timeouts earlier in this scan. Status 0 alone cannot say that: it
+   * is also what a genuine network failure looks like, and a check that reads "not a 404" as
+   * "alive" turns a request we never sent into a link that answers.
+   */
+  unasked?: boolean
 }
 
 export type FetchOptions = {
@@ -217,6 +224,18 @@ const empty = (url: string, error: string): Fetched => ({
   truncated: false,
   error,
 })
+
+const unasked = (url: string, error: string): Fetched => ({ ...empty(url, error), unasked: true })
+
+/**
+ * Whether this answer is the absence of a request rather than the absence of a page.
+ *
+ * Deliberately not wired into `countIfLost`, which would demote whole phases: most skipped
+ * requests are guessed subdomains that do not exist, and "we asked nine hosts and none answered"
+ * is a true sentence about a vendor with no authorization server. It matters where a check reads
+ * a non-404 as proof of life, which is why the llms.txt sampler consults it by name.
+ */
+export const wasNeverAsked = (fetched: Fetched): boolean => fetched.unasked === true
 
 const MAX_REDIRECTS = 5
 
@@ -370,14 +389,14 @@ async function runFetch(url: string, options: FetchOptions, state: ScanState | n
 
       attempted = target.hostname.toLowerCase()
       if (state?.hostHealth.get(attempted) === 'dead') {
-        return empty(url, `${attempted} would not accept a connection earlier in this scan`)
+        return unasked(url, `${attempted} would not accept a connection earlier in this scan`)
       }
       const site = registrableDomain(attempted)
       if (
         state?.hostHealth.get(attempted) !== 'ok' &&
         (state?.timeouts.get(site) ?? 0) >= MOST_TIMEOUTS_PER_SITE
       ) {
-        return empty(url, `${site} left ${MOST_TIMEOUTS_PER_SITE} requests unanswered earlier in this scan`)
+        return unasked(url, `${site} left ${MOST_TIMEOUTS_PER_SITE} requests unanswered earlier in this scan`)
       }
 
       // Held for the whole request, including the body read, and keyed on the host of the

@@ -1,4 +1,4 @@
-import { fetchUrl, inParallel, isRealTextFile, type Fetched } from './http'
+import { fetchUrl, inParallel, wasNeverAsked, isRealTextFile, type Fetched } from './http'
 
 export const WELL_KNOWN_PATHS = {
   api_catalog_rfc9727: '/.well-known/api-catalog',
@@ -133,18 +133,27 @@ async function sampleLlmsLinks(
     wanted === 1 ? [links[0]] : Array.from({ length: wanted }, (_, i) => links[Math.round((i * (links.length - 1)) / (wanted - 1))])
   const gone = (answer: { status: number }) => answer.status === 404 || answer.status === 410
   const heads = await inParallel(sample, (url) => fetchUrl(url, { method: 'HEAD' }))
+  // A link we never asked about is not a link that answers. The host may have refused a connection
+  // or used up its allowance of timeouts earlier in this scan, and then every remaining probe
+  // returns status 0 without leaving the process: read as "not a 404", that would publish "the 12
+  // links we sampled all answer" about twelve requests nobody made. Since 9.17 the sample is
+  // mostly the vendor's own domain, which is the same host whose timeout counter fills up, so this
+  // stopped being theoretical. What we could not ask about is dropped from the sample rather than
+  // counted either way, and a sample with nothing left in it makes no claim at all.
+  const asked = sample.filter((_, index) => !wasNeverAsked(heads[index]))
+  if (asked.length === 0) return undefined
   // A HEAD that 404s is not a dead page. play.honeycomb.io answers 404 to HEAD and 200 to GET,
   // and a framework that only routes GET is common enough that calling those links gone would
   // have published a false sentence about six vendors on the first reseed.
   const confirmed = await inParallel(
-    sample.filter((url, index) => gone(heads[index])),
+    sample.filter((url, index) => !wasNeverAsked(heads[index]) && gone(heads[index])),
     (url) => fetchUrl(url),
   )
   const dead = confirmed.filter(gone)
   // Files that put a link in the pool, not files that exist: agora.io serves three, one of which
   // holds no markdown link at all, and "sampled across the 3 files" sends a reader to check an
   // address the sample never touched.
-  return { sampled: sample.length, dead: dead.length, firstDead: dead[0]?.url ?? null, files: contributing }
+  return { sampled: asked.length, dead: dead.length, firstDead: dead[0]?.url ?? null, files: contributing }
 }
 
 /** Enough to tell a shell from a site, and few enough that a negotiating site pays nothing. */

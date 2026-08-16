@@ -14,6 +14,7 @@ import { ERRATA, erratumFor } from '../src/lib/errata'
 import { FLEX_QUOTA_MB, quotaEmail, verdictFor } from '../src/lib/quota'
 import { sawRateLimit, otherDomainsNamed } from '../src/lib/corpus'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
+import { wasNeverAsked } from '../src/lib/scan/http'
 import { rendersUsableForm, mcpCandidates, looksLikeADocsPageTwin, answersWithTheSameTemplate } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
 import {
@@ -504,6 +505,15 @@ const readPagesAndFiles = (pages: string[], files: number) =>
 check('same pliki llms nie przekraczaja bramki dwoch stron', readPagesAndFiles([], 3).inconclusive, true)
 check('dwie prawdziwe strony przekraczaja', readPagesAndFiles(['https://v.test/docs/api-keys', 'https://v.test/docs/x'], 3).inconclusive, undefined)
 check('zdanie liczy strony i pliki osobno', readPagesAndFiles(['https://v.test/docs/api-keys', 'https://v.test/docs/x'], 3).detail.includes('3 machine-readable files'), true)
+
+console.log('zadanie, ktore nie wyszlo, kontra strona, ktorej nie ma')
+// Status 0 znaczy jedno i drugie, a check od linkow w llms.txt czyta "nie 404" jako "zyje".
+// Bez tego rozroznienia dwanascie niewyslanych zadan publikuje sie jako dwanascie dzialajacych
+// linkow. Warunku brzegowego nie udalo sie wywolac na zywej domenie, wiec przynajmniej predykat
+// jest tu zablokowany w obie strony.
+check('pominiete zadanie rozpoznane', wasNeverAsked({ status: 0, error: 'x.test would not accept a connection earlier in this scan', unasked: true } as never), true)
+check('zwykla awaria sieci to nie pominiecie', wasNeverAsked({ status: 0, error: 'blad sieci' } as never), false)
+check('prawdziwe 404 to nie pominiecie', wasNeverAsked({ status: 404 } as never), false)
 
 console.log('punkt wejscia, czyli szablon kontra plik')
 // docs.slatejs.org answers every unknown path with this, and the suggested pages differ per path,
