@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.24'
+export const FORMULA_VERSION = '9.25'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -26,7 +26,7 @@ const TOLERATED_DEAD_LINKS = 1
  * ask makes a vendor unable to reproduce our own denial.
  */
 const MCP_ADDRESSES = (domain: string) =>
-  `mcp.${domain}, mcp.${domain}/mcp, mcp.${domain}/v1/mcp, api.${domain}/mcp, /mcp or /api/mcp`
+  `mcp.${domain}, mcp.${domain}/mcp, mcp.${domain}/v1/mcp, api.${domain}/mcp, api.${domain}/v1/mcp, /mcp or /api/mcp, and any address you publish in the MCP registry`
 
 export type Stage = 'discovery' | 'entry' | 'signup' | 'provisioning' | 'integration'
 
@@ -520,17 +520,26 @@ export const CHECKS: Check[] = [
       // having asked eighteen is a number a vendor cannot reproduce.
       const asked = f.funnel.entryProbesAsked ?? AGENT_ENTRY_PATH_COUNT
       const where = asked > AGENT_ENTRY_PATHS.length ? 'on your site and your documentation host' : 'on your site'
-      if (refused > 0) {
+      // Only the site can make this unmeasurable. Older rows have no split and fall back to the
+      // total, which is what they were scored on.
+      const refusedOnSite = f.funnel.entrySiteRefused ?? refused
+      if (refusedOnSite > 0) {
         return {
           points: 0,
-          detail: `Unmeasurable: ${refused} of the ${asked} agent entry paths we asked ${where} answered with a refusal rather than a file or a 404, so what you publish there is not something we measured`,
+          detail: `Unmeasurable: ${refusedOnSite} of the ${AGENT_ENTRY_PATHS.length} agent entry paths we asked on your site answered with a refusal rather than a file or a 404, so what you publish there is not something we measured`,
           inconclusive: true,
           unblock: 'Let ordinary HTTP reach these paths and this becomes measurable.',
         }
       }
       // "None of them answer" was false on every site that serves its app shell for unknown
       // paths, which is most of them: all nine answer 200, and none of them answers with a file.
-      return yes(0, `None of the ${asked} agent entry paths we asked ${where} returns a file rather than your page shell`)
+      //
+      // A documentation host that refused us is named rather than allowed to erase the site's
+      // answer. We looked there because the site held nothing, and being turned away there is a
+      // fact about the second place we looked, not about the first.
+      const docsRefused = refused - refusedOnSite
+      const caveat = docsRefused > 0 ? `, and your documentation host refused ${docsRefused} of them` : ''
+      return yes(0, `None of the ${asked} agent entry paths we asked ${where} returns a file rather than your page shell${caveat}`)
     },
   },
   {

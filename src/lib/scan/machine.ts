@@ -145,15 +145,17 @@ async function sampleLlmsLinks(
   // A HEAD that 404s is not a dead page. play.honeycomb.io answers 404 to HEAD and 200 to GET,
   // and a framework that only routes GET is common enough that calling those links gone would
   // have published a false sentence about six vendors on the first reseed.
-  const confirmed = await inParallel(
-    sample.filter((url, index) => !wasNeverAsked(heads[index]) && gone(heads[index])),
-    (url) => fetchUrl(url),
-  )
-  const dead = confirmed.filter(gone)
+  const suspect = sample.filter((url, index) => !wasNeverAsked(heads[index]) && gone(heads[index]))
+  const confirmed = await inParallel(suspect, (url) => fetchUrl(url))
+  // Paired with the address as written in the file, not the one the redirect chain ended on. The
+  // verdict names this link so the vendor can find it in their own llms.txt, and `Fetched.url` is
+  // where we ended up: a `/docs/old-guide` that 301s to `/404` was published as "starting with
+  // https://x.com/404", an address that appears nowhere in the file we were talking about.
+  const dead = suspect.filter((_, index) => gone(confirmed[index]))
   // Files that put a link in the pool, not files that exist: agora.io serves three, one of which
   // holds no markdown link at all, and "sampled across the 3 files" sends a reader to check an
   // address the sample never touched.
-  return { sampled: asked.length, dead: dead.length, firstDead: dead[0]?.url ?? null, files: contributing }
+  return { sampled: asked.length, dead: dead.length, firstDead: dead[0] ?? null, files: contributing }
 }
 
 /** Enough to tell a shell from a site, and few enough that a negotiating site pays nothing. */

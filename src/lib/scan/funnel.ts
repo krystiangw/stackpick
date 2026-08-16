@@ -489,6 +489,8 @@ export type FunnelFindings = {
   entryPathsRefused?: number
   /** How many probes the refusal count and the absence sentence are out of. Nine per origin. */
   entryProbesAsked?: number
+  /** Refusals on the site alone, which is the half that decides whether we measured anything. */
+  entrySiteRefused?: number
   oauth: {
     metadataPublished: boolean
     dynamicClientRegistration: boolean
@@ -1484,6 +1486,11 @@ export async function scanFunnel({
 
   const entryPaths = Object.fromEntries(entries.map(([path, hit]) => [path, hit]))
   const entryPathsRefused = entries.filter(([, , , refused]) => refused).length
+  // Split by origin, because they answer different questions. A refusal on the site means we do
+  // not know what the site publishes. A refusal on the documentation host, after the site answered
+  // cleanly and held nothing, does not undo that measurement: reporting the pair as one
+  // "unmeasurable" handed a free pass to every vendor whose docs platform turns us away.
+  const entrySiteRefused = entries.filter(([url, , , refused]) => refused && url.startsWith(site)).length
   const firstPricingText = pricingPage?.ok && visibleTextLength(pricingPage.body) > 0 ? pricingPage.body : ''
   const retryText = pricingRetry?.ok && visibleTextLength(pricingRetry.body) > 0 ? pricingRetry.body : ''
   const pricingText = retryText ? `${firstPricingText}\n${retryText}` : firstPricingText
@@ -1495,6 +1502,7 @@ export async function scanFunnel({
     entryPointsWithProcedure: entries.filter(([, , procedure]) => procedure).map(([path]) => path),
     entryPathsRefused,
     entryProbesAsked: entries.length,
+    entrySiteRefused,
     oauth,
     mcpEndpoints,
     mcpProbed: mcp.answered,
