@@ -80,11 +80,19 @@ export async function POST(request: Request) {
     // said so. The previous findings are still on disk, so they can be scored under today's rules
     // and compared like for like. Only `catchAll.bodies` is stripped before storage and scoring
     // does not read it, so the rescored card is the card we would have published then.
-    const previousCard = previous
-      ? comparableScorecards(previous.scorecard, report.scorecard)
-        ? previous.scorecard
-        : scoreFindings(previous.findings)
-      : null
+    // Guarded, because this is the first time stored findings are put through today's rules: a
+    // report old enough to be missing a shape the current checks read would throw here, and the
+    // throw would land before saveWatch, so the same watch would be picked again on every call and
+    // the queue would stop moving. A baseline we cannot recompute is the old behaviour, not a
+    // reason to take the cron down.
+    const rescored = (): typeof report.scorecard | null => {
+      try {
+        return scoreFindings(previous!.findings)
+      } catch {
+        return null
+      }
+    }
+    const previousCard = previous ? (comparableScorecards(previous.scorecard, report.scorecard) ? previous.scorecard : rescored()) : null
     const comparable = previousCard !== null
     const changes = previousCard ? changesBetween(previousCard.checks, report.scorecard.checks) : []
     // Nothing is mailed on the first check: there is no before, and "here is your score again"

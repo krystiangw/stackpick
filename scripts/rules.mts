@@ -535,6 +535,11 @@ check('blizniak strony dokumentacji odrzucony', looksLikeADocsPageTwin(
 check('plik skilla zaliczony', looksLikeADocsPageTwin(
   '---\nname: Mixpanel\ndescription: Use when implementing product analytics\n---\n\nMixpanel is an analytics platform.',
 ), false)
+// Recznie pisany plik nie musi uzywac formatu skilla. Keying on `title:` odrzucalo go razem z
+// blizniakami, wiec teraz rozstrzyga wylacznie sciezka okruszkowa.
+check('recznie pisany plik z title: nie jest blizniakiem', looksLikeADocsPageTwin(
+  '---\ntitle: Agent access\ndescription: How an agent gets an API key\n---\n\nPOST https://api.v.test/v1/api_keys',
+), false)
 // A hand-written file with no frontmatter at all is the common case and must not be caught.
 check('brak frontmattera to nie blizniak', looksLikeADocsPageTwin('# Agents and AI on Stripe\n\nBuild with agent-first developer tools.'), false)
 

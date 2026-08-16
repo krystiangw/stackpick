@@ -1,4 +1,4 @@
-import { AGENT_ENTRY_PATH_COUNT, PROVISIONING_PATTERN_COUNT } from './scan/funnel'
+import { AGENT_ENTRY_PATH_COUNT, AGENT_ENTRY_PATHS, PROVISIONING_PATTERN_COUNT } from './scan/funnel'
 import { AGENT_UA, DOCS_SHELL_FLOOR } from './scan/http'
 import { OPENAPI_PATHS } from './scan/machine'
 import { CREDENTIAL_PATH } from './scan'
@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.22'
+export const FORMULA_VERSION = '9.23'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -519,7 +519,7 @@ export const CHECKS: Check[] = [
       // the same nine on the documentation origin when there is one. Saying "of the 9" while
       // having asked eighteen is a number a vendor cannot reproduce.
       const asked = f.funnel.entryProbesAsked ?? AGENT_ENTRY_PATH_COUNT
-      const where = asked > AGENT_ENTRY_PATH_COUNT ? 'on your site and your documentation host' : 'on your site'
+      const where = asked > AGENT_ENTRY_PATHS.length ? 'on your site and your documentation host' : 'on your site'
       if (refused > 0) {
         return {
           points: 0,

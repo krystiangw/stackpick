@@ -1,4 +1,4 @@
-import { AGENT_UA, BROWSER_UA, fetchUrl, isBotChallenge, isEdgeRefusal, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, timeLeftMs, visibleTextLength, type Fetched } from './http'
+import { AGENT_UA, BROWSER_UA, fetchUrl, registrableDomain, isBotChallenge, isEdgeRefusal, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, timeLeftMs, visibleTextLength, type Fetched } from './http'
 
 export const AGENT_ENTRY_PATH_COUNT = 9
 
@@ -306,7 +306,11 @@ export function looksLikeADocsPageTwin(body: string): boolean {
   if (!frontmatter) return false
   const fields = frontmatter[1]
   if (/^\s*name\s*:/m.test(fields)) return false
-  return /^\s*breadcrumbs\s*:/m.test(fields) || /^\s*title\s*:/m.test(fields)
+  // `breadcrumbs:` only. Keying on `title:` as well rejected a hand-written agents.md whose YAML
+  // says `title: Agent access` and whose body is a procedure, because `name:` is the skill format
+  // and nothing obliges a vendor to use it. A breadcrumb trail is the thing no standalone file
+  // has: it exists to place a page inside a documentation tree.
+  return /^\s*breadcrumbs\s*:/m.test(fields)
 }
 
 export function describesAProcedure(body: string): boolean {
@@ -1024,6 +1028,8 @@ export function mcpCandidates(domain: string, site: string, fromCard: string[] =
  * vendor with a server that is not running. The hostname has to be theirs, because searching a
  * vendor's name also returns servers other people built on top of them.
  */
+const REGISTRY_BUDGET_MS = 4_000
+
 async function registryEndpoints(domain: string): Promise<string[]> {
   const bare = domain.replace(/^www\./, '')
   const got = await fetchUrl(
@@ -1052,7 +1058,13 @@ async function registryEndpoints(domain: string): Promise<string[]> {
 }
 
 async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe> {
-  const [fromCard, fromRegistry] = await Promise.all([cardEndpoints(site), registryEndpoints(domain)])
+  // The registry is somebody else's host, and nothing else in this phase starts until it answers.
+  // Left unbounded it is one external point of failure that can push every MCP handshake past the
+  // scan budget for every vendor, which is the mistake the npm phase already learned once.
+  const [fromCard, fromRegistry] = await Promise.all([
+    cardEndpoints(site),
+    Promise.race([registryEndpoints(domain), new Promise<string[]>((resolve) => setTimeout(() => resolve([]), REGISTRY_BUDGET_MS))]),
+  ])
   const candidates = [...new Set([...mcpCandidates(domain, site, fromCard), ...fromRegistry])]
   const handshake = {
     accept: 'application/json, text/event-stream',
@@ -1125,7 +1137,11 @@ async function probeMcpEndpoints(domain: string, site: string): Promise<McpProbe
         .filter((url, index) => {
           const got = results[index]
           if (got.status === 0 || completesHandshake(got.body)) return false
-          return !discreditedByWildcard(got) || fromCard.includes(url)
+          // An address the vendor named, in its own card or in the registry, is not a guess, so a
+          // wildcard that answers everything does not discredit it. Without the registry half,
+          // mcp.eu.phrase.com would be thrown out on a domain whose wildcard also answers 401 -
+          // which is exactly the row 9.22 exists to fix.
+          return !discreditedByWildcard(got) || fromCard.includes(url) || fromRegistry.includes(url)
         })
         .map(controlFor),
     ),
@@ -1324,8 +1340,16 @@ export async function scanFunnel({
   const docsOrigin = (() => {
     if (!docsUrl) return null
     try {
-      const origin = new URL(docsUrl).origin
-      return origin === site ? null : origin
+      const found = new URL(docsUrl)
+      if (found.origin === site) return null
+      // It has to be their documentation. A brand can live on another company's site, which the
+      // scanner already knows about elsewhere - twilio.com/docs/sendgrid is SendGrid's - so
+      // without this we would probe twilio.com for SendGrid's entry files and publish
+      // "Found: https://www.twilio.com/skill.md" on SendGrid's card. The same trap swallows every
+      // vendor on a shared documentation platform, where one tenant-level file would be credited
+      // to all of them.
+      const theirs = registrableDomain(new URL(site).hostname)
+      return registrableDomain(found.hostname) === theirs ? found.origin : null
     } catch {
       return null
     }
