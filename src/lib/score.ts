@@ -1,4 +1,4 @@
-import { PROVISIONING_PATTERN_COUNT } from './scan/funnel'
+import { AGENT_ENTRY_PATH_COUNT, PROVISIONING_PATTERN_COUNT } from './scan/funnel'
 import { AGENT_UA, DOCS_SHELL_FLOOR } from './scan/http'
 import { OPENAPI_PATHS } from './scan/machine'
 import { CREDENTIAL_PATH } from './scan'
@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.18'
+export const FORMULA_VERSION = '9.19'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -471,22 +471,36 @@ export const CHECKS: Check[] = [
       const everyNamespaceFakes = catchAll
         ? catchAll.markdown && catchAll.json && (catchAll.entryText ?? catchAll.text)
         : f.funnel.servesCatchAll
-      if (everyNamespaceFakes) {
+      // This describes the site's own namespaces, and since 9.19 the probe also asks the
+      // documentation origin, which has its own control. A site that answers everything while its
+      // docs host serves a real file is measurable through the docs host, so a hit outranks it.
+      if (everyNamespaceFakes && f.funnel.entryPointsFound.length === 0) {
         return {
           points: 0,
           detail: 'Unmeasurable: the site answers unknown paths in every format with real text, so any hit here proves nothing',
           inconclusive: true,
         }
       }
+      // Absolute since 9.19, because the file is no longer always on the site: the probe asks the
+      // documentation origin too. Rows written before that hold bare paths, and printing those
+      // against the wrong host would send a vendor to check an address we never fetched.
+      const pathOf = (entry: string) => {
+        if (!entry.startsWith('http')) return entry
+        try {
+          return new URL(entry).pathname
+        } catch {
+          return entry
+        }
+      }
       // A .well-known descriptor already scores under MCP; counting it twice sold one file
       // as three points across two stages.
-      const written = f.funnel.entryPointsFound.filter((path) => !path.startsWith('/.well-known/'))
+      const written = f.funnel.entryPointsFound.filter((entry) => !pathOf(entry).startsWith('/.well-known/'))
       // Older reports predate the content test, and rescoring them as policy files would be a
       // claim about a body we no longer hold.
       const withProcedure = (f.funnel.entryPointsWithProcedure ?? written).filter(
-        (path) => !path.startsWith('/.well-known/'),
+        (entry) => !pathOf(entry).startsWith('/.well-known/'),
       )
-      const at = (paths: string[]) => paths.map((path) => `${f.site}${path}`).join(', ')
+      const at = (entries: string[]) => entries.map((entry) => (entry.startsWith('http') ? entry : `${f.site}${entry}`)).join(', ')
       if (withProcedure.length > 0) return yes(2, `Found: ${at(withProcedure)}`)
       if (written.length > 0) {
         return yes(
@@ -501,17 +515,22 @@ export const CHECKS: Check[] = [
       // publishes a real 9.6 kB skill.md and answers 403 to our data centre on most requests,
       // so on the runs where it refuses this path we were publishing "you have none of these".
       const refused = f.funnel.entryPathsRefused ?? 0
+      // The count is over everything asked, and since 9.19 that is the nine paths on the site and
+      // the same nine on the documentation origin when there is one. Saying "of the 9" while
+      // having asked eighteen is a number a vendor cannot reproduce.
+      const asked = f.funnel.entryProbesAsked ?? AGENT_ENTRY_PATH_COUNT
+      const where = asked > AGENT_ENTRY_PATH_COUNT ? 'on your site and your documentation host' : 'on your site'
       if (refused > 0) {
         return {
           points: 0,
-          detail: `Unmeasurable: ${refused} of the 9 known agent entry paths answered with a refusal rather than a file or a 404, so what you publish there is not something we measured`,
+          detail: `Unmeasurable: ${refused} of the ${asked} agent entry paths we asked ${where} answered with a refusal rather than a file or a 404, so what you publish there is not something we measured`,
           inconclusive: true,
           unblock: 'Let ordinary HTTP reach these paths and this becomes measurable.',
         }
       }
       // "None of them answer" was false on every site that serves its app shell for unknown
       // paths, which is most of them: all nine answer 200, and none of them answers with a file.
-      return yes(0, 'None of the 9 known agent entry paths returns a file rather than your page shell')
+      return yes(0, `None of the ${asked} agent entry paths we asked ${where} returns a file rather than your page shell`)
     },
   },
   {

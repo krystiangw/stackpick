@@ -13,7 +13,7 @@ import { ERRATA, erratumFor } from '../src/lib/errata'
 import { FLEX_QUOTA_MB, quotaEmail, verdictFor } from '../src/lib/quota'
 import { sawRateLimit, otherDomainsNamed } from '../src/lib/corpus'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
-import { rendersUsableForm, mcpCandidates } from '../src/lib/scan/funnel'
+import { rendersUsableForm, mcpCandidates, looksLikeADocsPageTwin } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
 import {
   methodRefusalIsRouted,
@@ -491,6 +491,19 @@ const readPagesAndFiles = (pages: string[], files: number) =>
 check('same pliki llms nie przekraczaja bramki dwoch stron', readPagesAndFiles([], 3).inconclusive, true)
 check('dwie prawdziwe strony przekraczaja', readPagesAndFiles(['https://v.test/docs/api-keys', 'https://v.test/docs/x'], 3).inconclusive, undefined)
 check('zdanie liczy strony i pliki osobno', readPagesAndFiles(['https://v.test/docs/api-keys', 'https://v.test/docs/x'], 3).detail.includes('3 machine-readable files'), true)
+
+console.log('punkt wejscia, czyli plik dla agenta kontra blizniak strony dokumentacji')
+// Once the probe asks the documentation origin, every vendor with a page called "agent" answers
+// /agent.md, because docs platforms publish a .md twin of every page. Both bodies are real, read
+// on 2026-08-15 before this shipped.
+check('blizniak strony dokumentacji odrzucony', looksLikeADocsPageTwin(
+  '---\ntitle: Agent\ndescription: Install and configure the Agent to collect data\nbreadcrumbs: Docs > Agent\n---\n\n> For the complete documentation index, see llms.txt',
+), true)
+check('plik skilla zaliczony', looksLikeADocsPageTwin(
+  '---\nname: Mixpanel\ndescription: Use when implementing product analytics\n---\n\nMixpanel is an analytics platform.',
+), false)
+// A hand-written file with no frontmatter at all is the common case and must not be caught.
+check('brak frontmattera to nie blizniak', looksLikeADocsPageTwin('# Agents and AI on Stripe\n\nBuild with agent-first developer tools.'), false)
 
 console.log('sprzecznosci wewnatrz jednego wiersza')
 const doorCheck = CHECKS.find((c) => c.id === 'answers_plain_request')!

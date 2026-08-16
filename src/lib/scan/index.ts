@@ -677,6 +677,7 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
       ),
       pricingUrl: found.pricing,
       signupUrl: found.signup,
+      docsUrl: found.docs,
       alreadyFetchedPricing: found.pricingPage,
       pricesVisibleWithoutJs: found.pricesVisibleWithoutJs,
     }),
