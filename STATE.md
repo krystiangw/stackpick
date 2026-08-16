@@ -5,6 +5,23 @@ zmierzone po wdrozeniu wypadaja z wiekszosciowej wersji i strona pokazuje 169 za
 Reseed jest zaplanowany na wygasniecie karencji. Jesli go nie widac w dzienniku ponizej, uruchom
 `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) npm run reseed`.
 
+## 25. PRZEBIEG: `machine_readable_api`, WYNIK PUSTY I TAK TRZEBA GO CZYTAC
+
+Ten sam ruch, ktory zadzialal na `mcp_present`: zapytac zrodlo, ktore nie jest naszym zgadywaniem.
+Dla OpenAPI jest nim **apis.guru**, katalog okolo 2500 publicznych opisow.
+
+**Wynik: 0 falszywych oskarzen na 47, ale sila tego dowodu jest znikoma.** Tylko **2 z 47**
+oskarzonych w ogole wystepuja w katalogu, a u obu adres zrodlowy nie odpowiada, co jest faktem o
+nieaktualnosci katalogu, nie o nas. apis.guru pokrywa glownie duzych i starszych dostawcow, wiec
+dla naszego korpusu jest praktycznie pusty.
+
+**Wniosek metodyczny, wazniejszy niz sam przebieg:** „nowe zrodlo prawdy" dziala tylko wtedy, gdy
+ma pokrycie na naszym korpusie. Rejestr MCP mial i dal piec prawdziwych znalezisk. apis.guru nie
+ma i nie dal nic, a zapisanie tego jako „check zweryfikowany" byloby falszywym poczuciem
+bezpieczenstwa. **Przed nastepnym przebiegiem tego typu zmierz najpierw pokrycie zrodla.**
+
+Skrypt: `npx tsx scripts/audit-openapi-directory.mts credited|accused`.
+
 ## 24. PRZEBIEG: `mcp_present`, I ZRODLO, KTOREGO NIE PYTALISMY WCALE (9.22, wdrozone)
 
 Zdanie „No MCP surface: nothing answered at mcp.<domain>, ..." wymienia **wylacznie adresy, ktore
@@ -1723,8 +1740,11 @@ agenta:
      przez zapytanie rejestru MCP. Patrz sekcja u gory.
   5. **Do zrobienia po najblizszym reseedzie:** `npx tsx scripts/audit-entry.mts accused` (czy 21
      niezgodnosci zeszlo do zera) oraz `npm run noise-floor 9.22`.
-  6. **25. przebieg:** `machine_readable_api` (48 oskarzen). Kontrolka pierwsza, i przeczytaj
-     granice metody z przebiegu 23, zanim uznasz niezgodnosc za znalezisko.
+  6. ~~**25. przebieg:** `machine_readable_api`~~ **zrobione**: 0 znalezisk, ale zrodlo mialo
+     pokrycie 2 na 47, wiec wynik jest pusty, a nie uspokajajacy. Patrz sekcja u gory.
+  7. **26. przebieg:** zanim wybierzesz check, **zmierz najpierw pokrycie zrodla prawdy** na
+     naszym korpusie. Kandydaci bez zbadanego pokrycia: katalogi MCP inne niz oficjalny,
+     `signup_no_captcha` (28 oskarzen) przez ponowne pobranie stron rejestracji.
 
 Reszta wymaga decyzji Krystiana albo konta, ktorego agent nie zaklada:
 
