@@ -145,6 +145,16 @@ if (!cell) {
     lines.push('What the runs said about you, quoted:')
     lines.push('')
     for (const quote of quotes) lines.push(`- **${quote.tool} run ${quote.run}**: “${quote.said}”`)
+    // Fewer quotes than runs that named you is a difference a buyer counts, and the reason is
+    // worth one line: a run can put a vendor in a table of links and write no sentence about it.
+    // Without this the document looks as if we lost some of the answers.
+    const wordless = namedAll - quotes.length
+    if (wordless > 0) {
+      lines.push('')
+      lines.push(
+        `${wordless} of the runs that named you did so only in a table or a list of links, with no sentence about you to quote. The count above reads the run's own list of providers, not the quotes.`,
+      )
+    }
   } else {
     lines.push('No run wrote a sentence about you. That is the finding: not a bad review, an absence.')
   }

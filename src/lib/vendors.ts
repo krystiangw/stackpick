@@ -299,8 +299,23 @@ export const quotedAbout = (text: string, domain: string, inCategory: readonly s
   // one that says something: the vercel.com report quoted three of six codex runs as a bare link,
   // because their first mention sat in a table of links while the prose two paragraphs down
   // weighed the vendor. Certainty is already settled above; this only chooses what to print.
-  const sentences = [...new Set([domain, ...namesFor(domain)].flatMap((token) => occurrencesOf(text, token)).sort((a, b) => a - b).map((at) => sentenceAround(text, at)))]
-  const carrying = sentences.find((sentence) => wordsCarried(sentence) >= CARRIES_ENOUGH)
+  const forms = [domain, ...namesFor(domain)]
+  const sentences = [...new Set(forms.flatMap((token) => occurrencesOf(text, token)).sort((a, b) => a - b).map((at) => sentenceAround(text, at)))]
+  // Among true sentences, the one where the run writes the name as a product rather than dropping
+  // it into a clause. resend.com was quoted "drozszy per email niz SES i nieco drozszy niz Resend"
+  // out of an answer that elsewhere spent a paragraph on their logs and their SDK, and this picks
+  // the paragraph.
+  //
+  // Codex objected that typography marks a brand, not a sentence about that brand, and it is
+  // right: "**Resend** is pricier than SES" would still win over a plain "Resend provides useful
+  // logs". The obvious alternative - prefer a sentence naming no rival - was tried and measured
+  // worse on the same answer, because the rival there was SES, which our corpus does not carry, so
+  // the comparison read as a sentence about Resend alone. Kept because it is the version that wins
+  // on the answers we have, and the failure it leaves behind is a true sentence, not an empty one.
+  const weighed = sentences.find(
+    (sentence) => wordsCarried(sentence) >= CARRIES_ENOUGH && forms.some((token) => styledAsABrand(sentence, token)),
+  )
+  const carrying = weighed ?? sentences.find((sentence) => wordsCarried(sentence) >= CARRIES_ENOUGH)
   const richest = sentences.reduce((best, sentence) => (wordsCarried(sentence) > wordsCarried(best) ? sentence : best), mention.sentence)
   const best = carrying ?? richest
   // A run can name a vendor only inside a table of links, and then there is no sentence to quote.
