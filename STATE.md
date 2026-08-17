@@ -157,6 +157,31 @@ co zostawia, to zdanie prawdziwe, nie puste.
 `audit-delivery`). Strona `/c/<kat>/runs` uzywa z tego modulu wylacznie `matched` do podswietlania,
 wiec **nie wymaga deployu**, zeby poprawka dotarla do klienta.
 
+## /findings PUBLIKOWALO NIEPRAWDE, BO LICZBY BYLY WPISANE RECZNIE (2026-08-18, wdrozone v484)
+
+Lista po reseedzie kazala sprawdzic, czy `audit-study.mts` zglosi ruch przy provisioningu. **Nie
+zglosil** - i to bylo wlasciwe znalezisko. Straznik pilnuje **kierunku** ("niesiony przez polowe
+popularnych"), a strona publikowala **liczby**, ktorych nikt nie przeliczal. Po tym, jak 9.32 zabrala
+punkt 17 wierszom, cztery figury na `/findings` przestaly odpowiadac danym, a **dwie zmienily znak**:
+strona mowila "+37 wsrod znanych i **minus trzy** wsrod reszty", podczas gdy dane mowia +34 i **+10**.
+Analogicznie przy drugim narzedziu: "+42 i minus osiem" wobec dzisiejszych +32 i +5.
+
+**Poprawka jest strukturalna, nie tekstowa.** Badanie mieszka teraz w `src/lib/study.ts`:
+`buildStudy()` liczy luki, `studyClaims()` trzyma **liste twierdzen z warunkiem prawdziwosci**.
+Czytaja to dwa miejsca: `audit-study.mts` (oblewa, gdy twierdzenie przestaje sie trzymac) i sama
+strona (interpoluje liczby, a gdy ktores twierdzenie nie trzyma albo korpus jest niepelny,
+**zdejmuje eksponat** zamiast drukowac wniosek nad danymi, ktore mu przecza). Naglowek i wstep licza
+badania z tego, co faktycznie wyrenderowano, a opis strony nie obiecuje juz szesciu.
+
+**Szesc rund `codex review`, kazda z realnym znaleziskiem**, w tym: eksponat renderowal sie przy
+pustym korpusie z "0 of 0" i "too few to read"; wniosek o trzecim checku mieszal dwa narzedzia w
+jednym zdaniu; metadane strony obiecywaly szesc badan takze wtedy, gdy szoste sie nie renderuje.
+
+**Zasada, ktora z tego zostaje:** straznik potrafi pilnowac kierunku, nie potrafi czytac zdania.
+Kazda liczba, ktora publikujemy w prozie, ma byc **interpolowana z pomiaru** albo pilnowana osobnym
+strażnikiem porownujacym dokladna wartosc. Trzecia droga, czyli "poprawimy przy nastepnym reseedzie",
+konczy sie publikowaniem znaku minus tam, gdzie dane maja plus.
+
 ## 9.34: SZESNASTY CHECK, CZYLI CENA W SNIPPECIE (2026-08-17, w repo, czeka na deploy)
 
 Z przegladu `~/projects/seo-agent/Jak-agenty-wyszukuja-produkty.md` i skilla `agent-discoverability`
