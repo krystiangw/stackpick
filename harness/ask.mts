@@ -15,7 +15,7 @@
  * reading done separately by `npm run asked` rather than by the run itself.
  */
 import { execFileSync, spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { AGENTS } from './agents.mjs'
@@ -23,7 +23,15 @@ import { AGENTS } from './agents.mjs'
 /** A question that has not answered in five minutes is a broken run, not a vendor's problem. */
 const TIMEOUT_MS = Number(process.env.ASK_TIMEOUT_MS ?? 300_000)
 
-const [category, agentName, ...rest] = process.argv.slice(2)
+const args = process.argv.slice(2)
+/**
+ * Adds runs to a cell instead of replacing it. The default is to replace, because a cell mixing
+ * answers from two days is not one measurement, but a cell of three runs that has to reach the ten
+ * a paying report promises is exactly the case where replacing costs five fresh runs to keep three
+ * already paid for. Same question, same tool, same day: adding is the honest arithmetic there.
+ */
+const adding = args.includes('--add')
+const [category, agentName, ...rest] = args.filter((arg) => arg !== '--add')
 const model = rest.length > 1 ? rest[0] : undefined
 const runs = Number(rest[rest.length - 1] ?? '5')
 const agent = AGENTS[agentName]
@@ -50,13 +58,23 @@ if (!clean && agent.clean) {
 }
 
 const target = join(process.env.LETAGENTSIN_RUNS ?? join(homedir(), '.letagentsin-runs'), 'ask', category)
-if (existsSync(target)) rmSync(target, { recursive: true })
+if (existsSync(target) && !adding) rmSync(target, { recursive: true })
 mkdirSync(target, { recursive: true })
+/** Where the numbering continues from, so an added run never overwrites one already read. */
+const held = adding
+  ? readdirSync(target)
+      .filter((name) => name.startsWith('run-'))
+      .map((name) => Number(name.slice(4)))
+      .filter((number) => Number.isInteger(number))
+  : []
+const from = held.length > 0 ? Math.max(...held) + 1 : 1
 
 const version = agent.version()
-console.log(`ask: ${category} x ${agentName}${model ? ` (${model})` : ''} x ${runs}, ${agent.bin} ${version}`)
+console.log(
+  `ask: ${category} x ${agentName}${model ? ` (${model})` : ''} x ${runs}${adding ? ` dodane do ${held.length} juz trzymanych` : ''}, ${agent.bin} ${version}`,
+)
 
-for (let run = 1; run <= runs; run++) {
+for (let run = from; run < from + runs; run++) {
   const dir = join(target, `run-${run}`)
   mkdirSync(dir)
   // An empty directory with a git root of its own, so an agent looking for context finds nothing
