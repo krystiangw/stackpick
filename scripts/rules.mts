@@ -17,7 +17,7 @@ import { sawRateLimit, otherDomainsNamed } from '../src/lib/corpus'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
 import { wasNeverAsked } from '../src/lib/scan/http'
 import { certain, mentionsIn } from '../src/lib/vendors'
-import { rendersUsableForm, mcpCandidates, looksLikeADocsPageTwin, answersWithTheSameTemplate, readsAsAnEndpoint, readsAsTheirOwnAddress } from '../src/lib/scan/funnel'
+import { rendersUsableForm, entersThroughIdentityProvider, mcpCandidates, looksLikeADocsPageTwin, answersWithTheSameTemplate, readsAsAnEndpoint, readsAsTheirOwnAddress } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
 import {
   methodRefusalIsRouted,
@@ -342,6 +342,21 @@ const withForm = '<form method="post" action="/sign_up"><input type="email" name
 check('formularz z polem tozsamosci i submitem', rendersUsableForm(withForm), true)
 check('pusta skorupa SPA nie ma formularza', rendersUsableForm('<div id="root"></div>'), false)
 check('sam baner cookie to nie signup', rendersUsableForm('<form action="/cookies"><input type="checkbox" name="analytics"><button>OK</button></form>'), false)
+// modal.com/signup: 51 983 bytes of server HTML, no input in any of it, three "Continue with"
+// buttons. We published "its form needs JavaScript" about a form they never wrote.
+check(
+  'same przyciski dostawcy tozsamosci to nie formularz budowany skryptem',
+  entersThroughIdentityProvider('<div id="root"></div><a href="/auth/github">Continue with GitHub</a>'),
+  true,
+)
+// browserless.io serves an email input outside every form element. A page with a field on it has
+// something to fill in, whatever wires it up, so the older sentence stays.
+check(
+  'pole tozsamosci poza formularzem odbiera prawo do tego zdania',
+  entersThroughIdentityProvider('<input type="email" name="email"><a href="/auth/google">Continue with Google</a>'),
+  false,
+)
+check('strona bez wejscia przez dostawce tez nie', entersThroughIdentityProvider('<div id="root"></div>'), false)
 const hits = (path: string) => SIGNUP_HINTS.some((hint) => hint.test(path))
 check('rails register_free', hits('/users/register_free'), true)
 check('rails user/new', hits('/user/new'), true)

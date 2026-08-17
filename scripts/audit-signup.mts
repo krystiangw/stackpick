@@ -100,28 +100,31 @@ async function inspect(url: string): Promise<{ verdict: Verdict; detail: string 
 const mode = process.argv[2] === 'credited' ? 'credited' : 'accused'
 const store = getStore()
 
-const targets: { domain: string; url: string }[] = []
+const targets: { domain: string; url: string; saysJs: boolean }[] = []
 for (const domain of CURATED_DOMAINS) {
   const report = await store.latestForDomain(domain)
   const check = report?.scorecard.checks.find((candidate) => candidate.id === 'signup_reachable')
   if (!check || check.inconclusive || check.notApplicable) continue
-  // Only the one sentence, on the accused side. The three rows saying something else are about
-  // rate limits and edges, which is a different claim and not what this pass is testing.
-  const wanted = mode === 'credited' ? check.points > 0 : check.detail.includes('form needs JavaScript')
+  // Both no-form sentences on the accused side, since 9.31 splits them. The rows saying something
+  // else are about rate limits and edges, which is a different claim and not what this pass tests.
+  const accuses = check.detail.includes('form needs JavaScript') || check.detail.includes('no signup form of its own')
+  const wanted = mode === 'credited' ? check.points > 0 : accuses
   if (!wanted) continue
   const url = (report!.findings as unknown as { funnel: { signup: { url: string | null } } }).funnel.signup.url
-  if (url) targets.push({ domain, url })
+  if (url) targets.push({ domain, url, saysJs: check.detail.includes('form needs JavaScript') })
 }
 
 console.log(`${mode}: ${targets.length} domen\n`)
 
 const tally = new Map<Verdict, number>()
-for (const { domain, url } of targets) {
+for (const { domain, url, saysJs } of targets) {
   const { verdict, detail } = await inspect(url)
   tally.set(verdict, (tally.get(verdict) ?? 0) + 1)
   const expected = mode === 'credited' ? verdict === 'form' : verdict !== 'form'
   if (!expected) console.log(`NIEZGODA ${domain.padEnd(20)} ${detail}  ${url}`)
-  else if (mode === 'accused' && verdict === 'oauth-only') console.log(`ZDANIE MYLI  ${domain.padEnd(18)} ${detail}  ${url}`)
+  // Misleading only while the published sentence still claims a form. Since 9.31 an
+  // oauth-only page is told so, and agreement is not a finding.
+  else if (mode === 'accused' && verdict === 'oauth-only' && saysJs) console.log(`ZDANIE MYLI  ${domain.padEnd(18)} ${detail}  ${url}`)
 }
 
 console.log(`\n${targets.length} sprawdzonych`)

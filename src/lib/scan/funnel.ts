@@ -390,6 +390,14 @@ export type SignupFindings = {
    * often" from "prove you are a browser", and we excused the second as the first.
    */
   challenge?: boolean
+  /**
+   * The other way to have no form. modal.com/signup is 51 983 bytes of server HTML with no input
+   * in it at all and three "Continue with" buttons, and we published "its form needs JavaScript"
+   * about a form they never wrote. Eight rows of the 9.30 corpus are this shape. The verdict is
+   * unchanged, because an unattended agent gets through neither, but the sentence has to say
+   * which of the two we saw.
+   */
+  identityProviderOnly?: boolean
 }
 
 /**
@@ -415,6 +423,22 @@ export function rendersUsableForm(body: string): boolean {
     if (asksWhoYouAre && canBeSubmitted) return true
   }
   return false
+}
+
+/** Buttons and hrefs that hand the caller to somebody else's identity provider. */
+const IDENTITY_PROVIDER_ENTRY =
+  /(?:continue|sign\s*up|sign\s*in|log\s*in)\s*with\s*(?:google|github|microsoft|apple|gitlab|okta|sso)|href\s*=\s*["'][^"']*(?:oauth|auth\/(?:google|github|microsoft|okta|sso)|saml)/i
+
+/**
+ * A page whose only door is an identity provider, as opposed to one whose form a bundle builds.
+ * Deliberately stricter than the provider signature alone: a page that offers Google *and* an
+ * email field is a normal signup with a shortcut on it, and only a page with no field anywhere
+ * in the HTML, not just none inside a form, has nothing of its own to fill in.
+ */
+export function entersThroughIdentityProvider(body: string): boolean {
+  if (!IDENTITY_PROVIDER_ENTRY.test(body)) return false
+  const fields = [...body.matchAll(/<(?:input|select|textarea)\b[^>]*>/gi)].map((field) => field[0])
+  return !fields.filter(isFillable).some(identifiesTheCaller)
 }
 
 /**
@@ -807,6 +831,7 @@ async function inspectSignup(url: string | null, site: string): Promise<SignupFi
   // never read.
   const front = captcha.length > 0 ? await fetchUrl(`${site.replace(/\/$/, '')}/`, { readBytes: 1_500_000 }) : null
   const frontBody = (front?.body ?? '').toLowerCase()
+  const hasForm = rendersUsableForm(body)
   return {
     url,
     browserStatus: asBrowser === null ? null : asBrowser.status,
@@ -815,7 +840,8 @@ async function inspectSignup(url: string | null, site: string): Promise<SignupFi
     statusesSeen: got.statusesSeen,
     consistent: got.consistent,
     reachable: got.ok,
-    rendersFormWithoutJs: rendersUsableForm(body),
+    rendersFormWithoutJs: hasForm,
+    identityProviderOnly: !hasForm && entersThroughIdentityProvider(body),
     captcha,
     captchaSiteWide: captcha.filter((name) => CAPTCHA_SIGNATURES[name].test(frontBody)),
     botDefence: Object.entries(BOT_DEFENCE_SIGNATURES)

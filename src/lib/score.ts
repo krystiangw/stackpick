@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.30'
+export const FORMULA_VERSION = '9.31'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -770,7 +770,11 @@ export const CHECKS: Check[] = [
         return yes(
           0,
           `${f.funnel.signup.captcha.join(', ')} appears in the signup page's server HTML${
-            f.funnel.signup.rendersFormWithoutJs ? '' : ', even though the form itself is assembled by JavaScript'
+            f.funnel.signup.rendersFormWithoutJs
+              ? ''
+              : f.funnel.signup.identityProviderOnly
+                ? ', even though the page carries no form of its own and offers only an identity provider'
+                : ', even though the form itself is assembled by JavaScript'
           }${alsoAtHome}`,
         )
       }
@@ -894,8 +898,15 @@ export const CHECKS: Check[] = [
       // reading "your form needs JavaScript" cannot tell which page we read, and this is a page we
       // found by following links and guessing paths, so being wrong about it is a thing that
       // happens: anvil.co's signup was on another host entirely.
-      return signup.rendersFormWithoutJs
-        ? yes(1, `Form renders in server HTML at ${signup.url}`)
+      if (signup.rendersFormWithoutJs) return yes(1, `Form renders in server HTML at ${signup.url}`)
+      // "Its form needs JavaScript" is a claim about a form, and eight rows of the 9.30 corpus
+      // have none: no field anywhere in the HTML and only "Continue with" buttons. The verdict is
+      // the same either way, so this changes nothing but what we tell the vendor we saw.
+      return signup.identityProviderOnly
+        ? yes(
+            0,
+            `${signup.url} is reachable and carries no signup form of its own: the only way in we can see is an identity provider, which an unattended agent has no way through`,
+          )
         : yes(0, `${signup.url} is reachable, but its form needs JavaScript`)
     },
   },
@@ -1199,6 +1210,9 @@ export const CHECKS: Check[] = [
       // The path alone is ambiguous on a vendor whose docs and site are different hosts, and
       // it is the sentence a sceptic reruns first.
       if (f.machine.openapi.length > 0) return yes(1, `OpenAPI at ${f.site}${f.machine.openapi[0]}`)
+      // Named in full, because the host is the finding: we asked the site for years and never the
+      // place the docs live, which is where three of the corpus's specs actually answer.
+      if (f.machine.openapiOnDocsHost) return yes(1, `OpenAPI at ${f.machine.openapiOnDocsHost}, on your documentation host`)
       const declared = f.machine.openapiDeclared
       // Naming the relation matters: it is the difference between us guessing a path and the
       // vendor telling us, and it is what another vendor copies to get the same point.
@@ -1241,12 +1255,22 @@ export const CHECKS: Check[] = [
       // published a spec at a path nobody would guess and we called it absent.
       return {
         points: 0,
-        detail: `No OpenAPI spec at the ${OPENAPI_PATHS.length} usual paths, none declared by ${f.discovered.docs ?? f.site}, and no markdown negotiation`,
+        detail: `No OpenAPI spec at the ${OPENAPI_PATHS.length} usual paths${onAnotherHost(f.discovered.docs, f.site) ? ' on your site or on your documentation host' : ''}, none declared by ${f.discovered.docs ?? f.site}, and no markdown negotiation`,
         unblock: 'Point at your spec from your docs page with rel="service-desc" and an agent finds it without guessing.',
       }
     },
   },
 ]
+
+/** Whether the docs live somewhere the site's own paths were not already asked. */
+function onAnotherHost(docs: string | null | undefined, site: string): boolean {
+  if (!docs) return false
+  try {
+    return new URL(docs).origin !== site
+  } catch {
+    return false
+  }
+}
 
 /**
  * A signup that turns an agent away and lets a browser through. The two numbers on the landing
@@ -1259,7 +1283,10 @@ export function signupNeedsJavaScript(report: { findings: ScanFindings; scorecar
   // and the landing page counted a domain the corpus itself refuses to score.
   const check = report.scorecard.checks.find((candidate) => candidate.id === 'signup_reachable')
   if (!check || check.inconclusive || check.notApplicable || check.points > 0) return false
-  return report.findings.funnel.signup.reachable && !report.findings.funnel.signup.rendersFormWithoutJs
+  const signup = report.findings.funnel.signup
+  // A page with no form at all is not a form that needs JavaScript, and the landing page counts
+  // this number in exactly those words.
+  return signup.reachable && !signup.rendersFormWithoutJs && signup.identityProviderOnly !== true
 }
 
 export function refusesAgentsAtSignup(findings: ScanFindings): boolean {

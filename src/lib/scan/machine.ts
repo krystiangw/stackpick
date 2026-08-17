@@ -32,6 +32,13 @@ export type MachineFindings = {
    * page; we scored them "no OpenAPI spec" for six weeks because neither is a path we probe.
    */
   openapiDeclared?: { url: string; rel: string }
+  /**
+   * The same paths, asked on the documentation host. We probed them on the site only, and a spec
+   * lives where the docs live often enough for an audit to find three in 113 credited rows
+   * (docs.trychroma.com/openapi.json, docs.together.ai/openapi.yaml, docs.browserless.io/openapi.yaml).
+   * The full address, not a path: it is a different origin from the one the verdict names.
+   */
+  openapiOnDocsHost?: string
   /** Which pages were asked, so a vendor can rerun the exact request behind the verdict. */
   /** Where the files actually answered, so a verdict names a URL instead of a filename. */
   llmsUrls?: string[]
@@ -217,6 +224,17 @@ export function declaredSpecs(page: { url: string; body: string; headers: Record
   return found.slice(0, MOST_SPEC_CANDIDATES)
 }
 
+/** The docs origin, when there is one and it is not the site we already probed. */
+function docsHostApartFromSite(docs: string | null | undefined, site: string): string | null {
+  if (!docs) return null
+  try {
+    const origin = new URL(docs).origin
+    return origin === site ? null : origin
+  } catch {
+    return null
+  }
+}
+
 /** The same test the guessed paths face: a URL is a spec when its body says it is. */
 function readsAsSpec(got: Fetched): boolean {
   const head = got.body.slice(0, 2000).toLowerCase()
@@ -368,10 +386,20 @@ export async function scanMachineContext(
   }
 
   const openapi = openapiHits.filter((path): path is string => path !== null)
+  // Only when guessing on the site found nothing, and only when the docs are somewhere else.
+  let openapiOnDocsHost: string | undefined
+  const docsOrigin = docsHostApartFromSite(docs, site)
+  if (openapi.length === 0 && docsOrigin) {
+    const onDocs = await inParallel(OPENAPI_PATHS, async (path) => {
+      const got = await fetchUrl(`${docsOrigin}${path}`, { accept: 'application/json' })
+      return readsAsSpec(got) ? `${docsOrigin}${path}` : null
+    })
+    openapiOnDocsHost = onDocs.find((url): url is string => url !== null)
+  }
   // Only when guessing found nothing: a vendor who serves /openapi.json has already been counted,
   // and this costs a request per candidate on the domains that are hardest to read anyway.
   let openapiDeclared: MachineFindings['openapiDeclared']
-  if (openapi.length === 0) {
+  if (openapi.length === 0 && !openapiOnDocsHost) {
     const confirmations = await inParallel(declared, (candidate) =>
       fetchUrl(candidate.url, { accept: 'application/json' }),
     )
@@ -389,6 +417,7 @@ export async function scanMachineContext(
       wellKnown: Object.fromEntries(wellKnownEntries),
       openapi,
       openapiDeclared,
+      openapiOnDocsHost,
       markdownNegotiation: negotiation,
       mcp: {
         // ckeditor.com's llms-full.txt is 7.08 MB and we read the first 400 kB of it, counted 108
