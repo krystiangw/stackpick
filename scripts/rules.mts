@@ -287,8 +287,11 @@ const mailFor = (rescored: boolean) =>
     moved([verdict(0, 1)], [verdict(1, 1)]),
     rescored,
   )
-check('mail mowi, ze podstawa byla przeliczona', mailFor(true).text.includes('recomputed from the same evidence'), true)
-check('i nie mowi tego, gdy nie byla', mailFor(false).text.includes('recomputed from the same evidence'), false)
+check('mail mowi, ze podstawa byla przeliczona', mailFor(true).text.includes('recomputed from the evidence we still hold'), true)
+check('i nie mowi tego, gdy nie byla', mailFor(false).text.includes('recomputed from the evidence we still hold'), false)
+// The half that makes the sentence honest: a rule we tightened can move a line on its own, and the
+// mail has to say so rather than let the vendor read it as their own regression.
+check('i przyznaje, ze to mogla byc nasza regula', mailFor(true).text.includes('because we tightened a rule'), true)
 // A check going unmeasured is news, but it is usually about our reach and never called a loss.
 check('przejscie w niemierzalne to nie oskarzenie', moved([verdict(1, 1)], [verdict(0, 1, { inconclusive: true })])[0]?.worse, false)
 // A check the earlier scan never had must not be reported as a change from nothing.
