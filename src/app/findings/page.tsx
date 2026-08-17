@@ -5,13 +5,17 @@ import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
 import { SITE_URL } from '@/lib/site'
 import { FORMULA_VERSION } from '@/lib/score'
+import { buildStudy, inPoints, studyClaims, type Study } from '@/lib/study'
+import { publishedCorpus } from '@/lib/published'
 
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/findings` },
   title: 'Findings: Let Agents In',
-  description: 'Six studies: what agents pick when nobody is watching, where every one of them stops, and which of our own checks has anything to do with being named.',
+  // No count here: the sixth exhibit is measured from the corpus and takes itself down when the
+  // data cannot carry it, so a number in the description would be a promise the page can break.
+  description: 'What agents pick when nobody is watching, where every one of them stops, and which of our own checks has anything to do with being named.',
 }
 
 type Result = {
@@ -111,24 +115,6 @@ const RESULTS: Result[] = [
         'The entire evaluation one vendor received, in an earlier round run before we isolated the copies. That round shared one working directory between agents, so it is not part of the six above and its counts are not reported. The product was never opened.',
     },
   },
-  {
-    id: 'named',
-    heading: 'Two of the fifteen checks in this study relate to being named by an agent. The file everybody publishes relates to almost nothing once you control for fame',
-    numbers: [
-      ['Categories, each with one buying question put to an agent', '26'],
-      ['Vendors named at least once, of those we measure', '107 of 177'],
-      ['Nameability gap between vendors that pass and fail oauth_dcr', '+26pp'],
-      ['The same for llms.txt among lesser known vendors, one tool and the other', '+5pp and -1pp'],
-    ],
-    body: [
-      'We published fifteen checks when this ran, and told vendors to fix them. Nobody, ourselves included, had asked which of them has anything to do with the thing a vendor actually wants: being named when somebody asks an agent for a recommendation. So we asked. One question per category, the question a buyer would type, put to an agent five times in isolation, and for each vendor in the corpus a count of the runs that named them. Then, for every check, how often an agent names the vendors that pass it against the vendors that fail it, averaged across runs. Checks we could not measure on a vendor are left out of both groups rather than counted as failures.',
-      'Two checks separate the two groups and survive the obvious objection. Vendors whose product an agent can register itself with, which is what oauth_dcr measures, are named 26 points more often, and the gap holds among well known vendors and lesser known ones alike, at +32 and +16. A live MCP endpoint is worth +17 points overall and holds in both halves, at +21 and +10. A third, documented programmatic key creation, reads +18 overall and does not survive the same split: +37 among well known vendors and minus three among the rest, so what it measures is mostly fame rather than the rule.',
-      'And llms.txt, the file the whole market publishes, is the one of the four that does not survive the control. Overall it looks like something, +9 points on one tool and +17 on the other, but the gap sits in the better known half: among lesser known vendors it is minus one on one tool and +5 on the other, two tools disagreeing about the direction. That is what nothing looks like at this sample size, and it is a weaker claim than the one this paragraph carried before the last rescan, which had it negative in both halves. We score the file, we say on the methodology page that it is not the thing to fix first, and this is the measurement behind that sentence rather than an opinion about it.',
-      'One place where the answer depends on the question, printed because it is the kind of thing a study normally leaves out. Ask instead how many vendors were named at all, rather than how often, and registration by an agent still separates both halves on both tools, while a live MCP endpoint separates both halves on the clean tool and loses the lesser known half on the other. The stricter measure throws away everything except the first mention, on cells of five runs, so it has less to work with; we report both rather than the flattering one.',
-      'It was repeated on a second tool the same day, five runs a category again, and the second tool reads none of the instructions on the machine it ran on: different vendor, different model, different contamination. The two survivors survive there too, and by more: registration by an agent +29 points (+29 among well known vendors, +24 among lesser known ones) and a live MCP endpoint +21 (+21 and +20). Documented key creation repeats its own pattern as well, +42 among well known vendors and minus eight among the rest, which is what fame looks like when you split for it. A finding that holds across two tools with two different contaminations is about the vendors rather than about our machine.',
-      'The limits, because they are large. Five runs tell a wall from silence and nothing finer. This is correlation on 177 vendors, not an experiment: a well run company publishes more and gets named more, and no split of a corpus this size fully separates the two. Both tools ran on one laptop, so neither describes an agent sitting at your customer, and the answers from the first are in Polish because that machine asks for Polish. Every answer is published under the category pages, so the counting can be argued with rather than believed.',
-    ],
-  },
 ]
 
 /**
@@ -139,11 +125,84 @@ const RESULTS: Result[] = [
  */
 const LATE_CAPTCHA = ['supabase.com', 'contentful.com']
 
+/** Small numbers as words, because the heading is prose and "5 studies" reads like a dashboard. */
+function counted(value: number, capital = false): string {
+  const words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight']
+  const word = words[value] ?? String(value)
+  return capital ? word.charAt(0).toUpperCase() + word.slice(1) : word
+}
+
+/**
+ * The sixth study, written from the measurement rather than from memory.
+ *
+ * Every figure below used to be typed into the prose. The reseed of 2026-08-17 moved four of them
+ * and reversed two: the page was publishing "minus three among the rest" about a gap the data had
+ * turned into plus ten, and the guard beside it passed the whole time, because a guard asserts a
+ * direction and cannot read a sentence. Interpolated, they cannot drift again.
+ */
+function namedResult(study: Study): Result | null {
+  const first = study.tools.find((tool) => tool !== study.cleanTool) ?? study.tools[0]
+  const clean = study.cleanTool ?? study.tools[1] ?? first
+  if (!first || !clean) return null
+  const oauth = study.gap('oauth_dcr', first, 'share')
+  const mcp = study.gap('mcp_present', first, 'share')
+  const provisioning = study.gap('programmatic_provisioning', first, 'share')
+  const llmsFirst = study.gap('llms_txt', first, 'share')
+  const llmsClean = study.gap('llms_txt', clean, 'share')
+  const oauthClean = study.gap('oauth_dcr', clean, 'share')
+  const mcpClean = study.gap('mcp_present', clean, 'share')
+  const provisioningClean = study.gap('programmatic_provisioning', clean, 'share')
+  // An empty or half-loaded corpus must take the exhibit down rather than print conclusions over
+  // "0 of 0" and "too few to read". The store has refused reads twice this month, and a research
+  // page that keeps asserting a result while it cannot see the data is the failure this whole
+  // section is about.
+  const readable = (gap: { overall: number; popular: number; quieter: number }) =>
+    Number.isFinite(gap.overall) && Number.isFinite(gap.popular) && Number.isFinite(gap.quieter)
+  const everyGap = [oauth, mcp, provisioning, llmsFirst, llmsClean, oauthClean, mcpClean, provisioningClean]
+  if (study.vendors === 0 || !everyGap.every(readable)) return null
+  // The prose asserts things, not only numbers: that two checks separate in both halves and that
+  // llms.txt is the one that does not. When the data stops supporting one of those, the exhibit
+  // comes down and the guard fails the same hour, which is the pair that gets it rewritten rather
+  // than quietly kept. Interpolating fresh numbers under an old conclusion is the exact failure
+  // this section was rebuilt to end.
+  if (!studyClaims(study).every((claim) => claim.holds)) return null
+  // The claim about the third check rests on the sign in the quiet half, and that sign has already
+  // moved once. Written as a branch rather than as a sentence, so the page cannot go on asserting
+  // "fame rather than the rule" on the day both tools turn that half positive.
+  const carriedByFame = provisioning.quieter <= 0
+  return {
+    id: 'named',
+    heading:
+      'Two of the checks we publish relate to being named by an agent. The file everybody publishes relates to almost nothing once you control for fame',
+    numbers: [
+      ['Categories, each with one buying question put to an agent', '26'],
+      ['Vendors named at least once, of those we measure', `${study.namedAtLeastOnce} of ${study.vendors}`],
+      ['Nameability gap between vendors that pass and fail oauth_dcr', `${inPoints(oauth.overall)}pp`],
+      [
+        'The same for llms.txt among lesser known vendors, one tool and the other',
+        `${inPoints(llmsFirst.quieter)}pp and ${inPoints(llmsClean.quieter)}pp`,
+      ],
+    ],
+    body: [
+      'We publish a scorecard and tell vendors to fix it. Nobody, ourselves included, had asked which of the checks has anything to do with the thing a vendor actually wants: being named when somebody asks an agent for a recommendation. So we asked. One question per category, the question a buyer would type, put to an agent five times in isolation, and for each vendor in the corpus a count of the runs that named them. Then, for every check, how often an agent names the vendors that pass it against the vendors that fail it, averaged across runs. Checks we could not measure on a vendor are left out of both groups rather than counted as failures.',
+      `Two checks separate the two groups and survive the obvious objection. Vendors whose product an agent can register itself with, which is what oauth_dcr measures, are named ${inPoints(oauth.overall)} points more often, and the gap holds among well known vendors and lesser known ones alike, at ${inPoints(oauth.popular)} and ${inPoints(oauth.quieter)}. A live MCP endpoint is worth ${inPoints(mcp.overall)} points overall and holds in both halves, at ${inPoints(mcp.popular)} and ${inPoints(mcp.quieter)}. A third, documented programmatic key creation, reads ${inPoints(provisioning.overall)} overall and ${carriedByFame ? 'does not survive the same split' : 'leans on the better known half'}: ${inPoints(provisioning.popular)} among well known vendors against ${inPoints(provisioning.quieter)} among the rest.`,
+      `And llms.txt, the file the whole market publishes, is the one of the four that does not survive the control. Overall it looks like something, ${inPoints(llmsFirst.overall)} points on one tool and ${inPoints(llmsClean.overall)} on the other, but the gap sits in the better known half: among lesser known vendors it is ${inPoints(llmsFirst.quieter)} on one tool and ${inPoints(llmsClean.quieter)} on the other. That is what nothing looks like at this sample size. We score the file, we say on the methodology page that it is not the thing to fix first, and this is the measurement behind that sentence rather than an opinion about it.`,
+      'One place where the answer depends on the question, printed because it is the kind of thing a study normally leaves out. Ask instead how many vendors were named at all, rather than how often, and registration by an agent still separates both halves on both tools, while a live MCP endpoint separates both halves on the clean tool and loses the lesser known half on the other. The stricter measure throws away everything except the first mention, on cells of five runs, so it has less to work with; we report both rather than the flattering one.',
+      `It was repeated on a second tool the same day, five runs a category again, and the second tool reads none of the instructions on the machine it ran on: different vendor, different model, different contamination. The two survivors survive there too: registration by an agent ${inPoints(oauthClean.overall)} points (${inPoints(oauthClean.popular)} among well known vendors, ${inPoints(oauthClean.quieter)} among lesser known ones) and a live MCP endpoint ${inPoints(mcpClean.overall)} (${inPoints(mcpClean.popular)} and ${inPoints(mcpClean.quieter)}). Documented key creation splits there too, ${inPoints(provisioningClean.popular)} among well known vendors against ${inPoints(provisioningClean.quieter)} among the rest${provisioningClean.quieter <= 0 ? ', which is what fame looks like when you split for it' : ', so the gap leans on the better known half on this tool as well'}. A finding that holds across two tools with two different contaminations is about the vendors rather than about our machine.`,
+      'The limits, because they are large. Five runs tell a wall from silence and nothing finer. This is correlation on the corpus, not an experiment: a well run company publishes more and gets named more, and no split of a corpus this size fully separates the two. Both tools ran on one laptop, so neither describes an agent sitting at your customer, and the answers from the first are in Polish because that machine asks for Polish. Every answer is published under the category pages, so the counting can be argued with rather than believed.',
+    ],
+  }
+}
+
 export default async function FindingsPage() {
   recordVisit('/findings', (await headers()).get('user-agent'))
   // The behavioural studies say a wall exists. The corpus says how much of the market is standing
   // behind it, and this page argued the first half without ever showing the second.
   const corpus = await buildIndustryReport()
+  // Measured here rather than remembered in a paragraph: this page prints the study's numbers in
+  // sentences, and a number in a sentence is the one thing no guard on this repo can watch.
+  const sixth = namedResult(buildStudy((await publishedCorpus()).reports))
+  const results = sixth ? [...RESULTS, sixth] : RESULTS
   // Only while they are still on the list the sentence points at.
   const lateCaptchaOnList = LATE_CAPTCHA.filter((domain) => corpus?.usable.domains.includes(domain) ?? false)
   return (
@@ -151,16 +210,21 @@ export default async function FindingsPage() {
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Research</p>
         <h1 className="mt-4 max-w-2xl text-balance text-4xl font-semibold leading-tight tracking-tight">
-          Six studies, nobody watching
+          {counted(results.length, true)} studies, nobody watching
         </h1>
+        {/* Counted from what is actually rendered. The sixth exhibit takes itself down when the
+            corpus cannot carry it or one of its claims stops holding, and a page that kept saying
+            "six studies" over five would be making the same kind of stale claim the sixth is
+            about. */}
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
-          Six studies so far. Five are build runs across four categories: image upload and storage twice, a rich text editor,
+          {counted(results.length, true)} studies so far. Five are build runs across four categories: image upload and storage twice, a rich text editor,
           authentication for a support tool, and payments. Every run received a brief and nothing else. No provider names,
           no mention of an audit, no hint that anyone was watching, and no way to ask a question. Two models,
           isolated copies of a real application, and a record of every source each run consulted, separating
-          the pages it read from the summaries it only skimmed. The sixth is different in kind: it asks whether the
-          checks we publish have anything to do with being named at all, and it is the one that criticises our own
-          scorecard.
+          the pages it read from the summaries it only skimmed.
+          {sixth
+            ? ' The sixth is different in kind: it asks whether the checks we publish have anything to do with being named at all, and it is the one that criticises our own scorecard.'
+            : ' A sixth asks whether the checks we publish have anything to do with being named at all; it is measured from the corpus and is not shown today, because the data behind it is incomplete or one of its claims no longer holds.'}
         </p>
         {/* Every other page carrying these numbers says which formula measured them. This one
             stated dozens of counts and never did, so a reader could run their own scan on a newer
@@ -175,7 +239,7 @@ export default async function FindingsPage() {
         )}
       </section>
 
-      {RESULTS.map((result) => (
+      {results.map((result) => (
         <section key={result.id} className="border-b border-rule py-12">
           <h2 className="max-w-2xl text-balance text-2xl font-semibold leading-snug tracking-tight">
             {result.heading}

@@ -277,6 +277,12 @@ check('złych odpowiedzi razem', wrongCategory + shouldHaveRefused, quoted(/and 
 const limitReached = readFileSync('src/components/limit-reached.tsx', 'utf8')
 check('liczba checkow w ekranie limitu', Number(limitReached.match(/Same (\d+) checks/)?.[1] ?? -1), CHECKS.length)
 
+// Liczby szostego badania byly wpisane w akapity i reseed 2026-08-17 ruszyl cztery z nich, dwie
+// odwracajac znak: strona twierdzila "minus trzy wsrod reszty" o luce, ktora dane mialy juz na
+// plus dziesiec, a straznik obok przechodzil, bo pilnuje kierunku i nie umie czytac zdania.
+const findingsSource = readFileSync('src/app/findings/page.tsx', 'utf8')
+check('szoste badanie jest liczone, nie wpisane', findingsSource.includes('namedResult(buildStudy('), true)
+
 console.log('naglowek, czyli najglosniejsze zdanie na stronie')
 // The headline reads raw findings and the checks read the same findings with four guards on top,
 // so the two disagreed exactly where the guards were: a 429 we caused, a status that varies, a
