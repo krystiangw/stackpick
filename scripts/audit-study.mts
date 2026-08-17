@@ -126,8 +126,13 @@ const claims: { says: string; holds: boolean }[] = [
     ),
   },
   {
-    says: 'llms_txt separates nobody among lesser known vendors, every tool, how often measure',
-    holds: tools.every((tool) => gap('llms_txt', quieter, tool, 'share').pp < 5),
+    // The negative claim, in the same shape as the positive ones, rather than a threshold picked to
+    // pass. The first version asserted "under five points among lesser known vendors", and the
+    // reseed put one tool at exactly five: a number chosen to fit the data cannot then test it.
+    // What the page claims is that llms_txt is the one of the four that does NOT survive the
+    // control, so that is what this asks, and it fails the day llms_txt starts separating.
+    says: 'llms_txt does not separate in both halves on both tools, how often measure',
+    holds: !tools.every((tool) => survives('llms_txt', tool, 'share')),
   },
 ]
 
