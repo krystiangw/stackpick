@@ -172,7 +172,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                           : 'text-fail'
                   }`}
                 >
-                  {stage.measurable === 0 ? 'n/m' : `${stage.points}/${stage.measurable}`}
+                  {stage.measurable === 0 ? 'n/m' : `${stage.points}/${stage.measurable ?? stage.max}`}
                 </dd>
               </div>
             ))}
@@ -181,7 +181,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
         <p className="mt-3 font-mono text-xs text-ink-faint">
           {unmeasured > 0
-            ? `of the ${measurable} points that apply to you and we could measure · ${unmeasured} of ${scorecard.max} were not scored`
+            ? `of the ${measurable} points that apply to you and we could measure · ${unmeasured} of ${scorecard.max} ${unmeasured === 1 ? 'was' : 'were'} not scored`
             : `all ${scorecard.max} points were measurable on this domain`}
         </p>
 
@@ -225,7 +225,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             <p className="mt-3 max-w-2xl leading-relaxed">
               Your site took longer to read than the {Math.round(findings.truncation.budgetMs / 1000)} seconds a
               scan is allowed, so {findings.truncation.unmeasuredChecks.length} of the{' '}
-              {scorecard.checks.length} checks never got their evidence and are marked unmeasurable rather than
+              {scorecard.checks.length} checks never got {findings.truncation.unmeasuredChecks.length === 1 ? 'its' : 'their'} evidence and{' '}
+              {findings.truncation.unmeasuredChecks.length === 1 ? 'is' : 'are'} marked unmeasurable rather than
               scored. The number above is out of what we did measure, so it is not a worse result, it is a
               smaller one. Scanning again usually finishes.
             </p>
@@ -368,7 +369,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                   )}
                 </div>
                 <span className="w-auto shrink-0 text-right font-mono text-sm tabular-nums sm:w-14">
-                  {stage.measurable === 0 ? 'not measured' : `${stage.points}/${stage.measurable}`}
+                  {stage.measurable === 0 ? 'not measured' : `${stage.points}/${stage.measurable ?? stage.max}`}
                 </span>
               </div>
             </div>

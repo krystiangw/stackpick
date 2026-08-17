@@ -270,6 +270,12 @@ check('odpowiedzi tam, gdzie należało odmówić', shouldHaveRefused, quoted(/a
 check('udzielonych odpowiedzi', answered, quoted(/it gave an answer to (\d+) of the/))
 check('złych odpowiedzi razem', wrongCategory + shouldHaveRefused, quoted(/and (\d+) of those answers were wrong/))
 
+// A number typed into a client component, because importing CHECKS there drags the scan chain and
+// node:dns into the browser bundle. It said fourteen while there were fifteen, so the guard is the
+// build rather than the import.
+const limitReached = readFileSync('src/components/limit-reached.tsx', 'utf8')
+check('liczba checkow w ekranie limitu', Number(limitReached.match(/Same (\d+) checks/)?.[1] ?? -1), CHECKS.length)
+
 console.log('naglowek, czyli najglosniejsze zdanie na stronie')
 // The headline reads raw findings and the checks read the same findings with four guards on top,
 // so the two disagreed exactly where the guards were: a 429 we caused, a status that varies, a

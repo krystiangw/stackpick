@@ -45,7 +45,11 @@ async function publishedRowFor(domain: string) {
 export async function generateMetadata({ params }: { params: Promise<{ domain: string }> }): Promise<Metadata> {
   const { domain } = await params
   const name = normalizeDomain(decodeURIComponent(domain))
-  const report = await getStore().latestForDomain(name)
+  // The same row the body renders. Metadata used to take the newest scan of any kind, so a visitor
+  // scanning stripe.com from the form put 11/17 in the title and the share card while the page
+  // under it showed the corpus row at 9/16, and a sentence further down called itself the newest
+  // scan we hold. One page, two numbers, and the one search engines cache was the wrong one.
+  const report = await publishedRowFor(name)
   // On every page, indexable or not. /v/www.stripe.com and /v/Stripe.com both answer 200 and are
   // the same page as /v/stripe.com, and without this they were three addresses with no canonical
   // between them: "Duplicate without user-selected canonical" in Search Console on 2026-08-17.
@@ -132,7 +136,8 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
           <p className="mt-3 max-w-2xl leading-relaxed">
             This scan ran under formula {scorecard.formulaVersion} and we are on {FORMULA_VERSION} now, so the
             number below is not comparable with the corpus and the sentences may quote addresses we have since
-            moved. We keep the page rather than delete it, and keep it out of search rather than publish it.{' '}
+            moved. The page stays up and says so rather than disappearing: hiding a measurement because it aged
+            is how a number outlives the reason to believe it.{' '}
             <Link href={`/?domain=${encodeURIComponent(name)}`} className="text-brass underline underline-offset-4">
               Rescan it
             </Link>{' '}
@@ -154,8 +159,15 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
         {unmeasured > 0 && (
           <>
             {' '}
-            {unmeasured} of them could not be measured from where we ask, and those are left out of the
-            denominator rather than counted as failures.
+            {unmeasured} of them could not be measured from where we ask, and those are{' '}
+            {scorecard.measurable === undefined ? (
+              <>
+                counted in the {scorecard.max} above rather than left out of it: this row predates the denominator
+                that excludes them, so it reads worse than the same evidence would today. A rescan fixes it.
+              </>
+            ) : (
+              <>left out of the denominator rather than counted as failures.</>
+            )}
           </>
         )}
       </p>
