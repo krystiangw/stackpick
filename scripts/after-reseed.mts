@@ -25,6 +25,14 @@ let provisioningCredited = 0
 let provisioningQuoted = 0
 let oauthNamesHosts = 0
 let oauthFails = 0
+// The two youngest things in the scan, and the reason this script exists: a number nobody prints
+// after a sweep is a number nobody looks at until a customer asks.
+let snippetPasses = 0
+let snippetFails = 0
+let snippetUnmeasurable = 0
+let snippetNotApplicable = 0
+let licenceGateRows = 0
+const licenceGateSample: string[] = []
 const stillWrong: string[] = []
 
 for (const domain of CURATED_DOMAINS) {
@@ -47,6 +55,24 @@ for (const domain of CURATED_DOMAINS) {
   if (provisioning && provisioning.points > 0) {
     provisioningCredited += 1
     if (provisioning.detail.includes('matched in:')) provisioningQuoted += 1
+  }
+
+  const snippet = check('price_in_snippet')
+  if (snippet) {
+    if (snippet.notApplicable) snippetNotApplicable += 1
+    else if (snippet.inconclusive) snippetUnmeasurable += 1
+    else if (snippet.points > 0) snippetPasses += 1
+    else snippetFails += 1
+  }
+
+  // Collected, not scored: the sentences that say a licence key is needed before anything runs.
+  // Printed here so the decision about scoring it is taken from the corpus rather than from three
+  // vendors somebody remembered.
+  const quotes = (report.findings as unknown as { funnel?: { provisioning?: { licenceGateQuotes?: string[] } } })?.funnel
+    ?.provisioning?.licenceGateQuotes
+  if (quotes && quotes.length > 0) {
+    licenceGateRows += 1
+    if (licenceGateSample.length < 8) licenceGateSample.push(`${domain}: ${quotes[0].slice(0, 110)}`)
   }
 
   const oauth = check('oauth_dcr')
@@ -90,6 +116,11 @@ console.log(
 )
 console.log(`programmatic_provisioning: ${provisioningQuoted} z ${provisioningCredited} zaliczonych wierszy cytuje slowa, na ktorych stoi punkt`)
 console.log(`oauth_dcr: ${oauthNamesHosts} z ${oauthFails} oblanych wierszy wymienia sprawdzone adresy`)
+console.log(
+  `price_in_snippet: ${snippetPasses} przechodzi, ${snippetFails} oblewa, ${snippetUnmeasurable} niemierzalnych, ${snippetNotApplicable} nie dotyczy`,
+)
+console.log(`klucz licencyjny (tylko dowody, bez punktow): ${licenceGateRows} wierszy ma zdanie o wymogu klucza`)
+for (const one of licenceGateSample) console.log(`  ${one}`)
 console.log('')
 if (stillWrong.length === 0) {
   console.log('errata: wszystkie wpisy wygasly, czyli reseed poprawil kazdy wiersz, o ktorym wiedzielismy, ze mysli')
