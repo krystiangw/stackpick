@@ -4608,3 +4608,19 @@ laptopa: **za kazdym razem 2 punkty i `agent-signup.md`**. Zadnego obciecia budz
 przebiegach (`truncation: null`), wiec teoria „skan nie zdazyl" jest **nieudowodniona**, choc telnyx
 jest jedna z najwolniejszych domen (17-22 s przy budzecie 27 s). Zgodnie z zasada 5 niezgoda,
 ktora sie nie powtarza, nie jest znaleziskiem: zapisane jako instancja szumu, nie jako blad.
+
+## LUSTRO REJESTRU MCP DZIALA OD KONCA DO KONCA (2026-08-17, wdrozone)
+
+Pelne przejscie listy: **743 strony, 27 889 zdalnych adresow, 9 322 hosty**, zapisane do kolekcji
+`mcpRegistry`. Skan na produkcji odzyskal wszystkie trzy wiersze, ktore rejestr wczesniej zgubil:
+
+```
+tolgee.io      9.31  1  Live MCP endpoint at https://app.tolgee.io/mcp/developer
+phrase.com     9.31  1  Live MCP endpoint at https://mcp.eu.phrase.com
+medusajs.com   9.31  1  Live MCP endpoint at https://docs.medusajs.com/mcp
+```
+
+**Baza po zapisie: `stackpick` 87 MB, caly klaster 2 905 z 5 120 MB (56,7 procent, verdict ok)**,
+wiec dziewiec tysiecy malych dokumentow nic tu nie zmienia. Kadencja: **przyrostowo co dobe**
+(`updated_since`, dodaje adresy), **cala lista w niedziele** (zastepuje i usuwa to, co zniknelo).
+Pierwsze napelnienie zrobione z laptopa, bo runner GitHuba dopiero zacznie w nocy.
