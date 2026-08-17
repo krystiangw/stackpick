@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/c` },
   title: 'Who an AI agent names, by category · Let Agents In',
   description:
-    'One buying question per category, put to an agent five times in isolation. Who it names, who it names first, and how many vendors it never mentions.',
+    'One buying question per category, put to an agent in isolation, on two different tools. Who it names, who it names first, and how many vendors it never mentions.',
 }
 
 export default async function CategoriesPage() {
@@ -41,6 +41,10 @@ export default async function CategoriesPage() {
   })
 
   const measured = rows.filter((row) => row.cell)
+  // Counted rather than written down: cells hold three, five or six runs depending on when a tool
+  // was topped up, and "five times" stopped being true the day a second tool arrived.
+  const runsTotal = cells.reduce((sum, cell) => sum + cell.runs, 0)
+  const toolNames = [...new Set(cells.map((cell) => cell.tool.split(' ')[0]))]
   const silent = measured.reduce((sum, row) => sum + ((row.cell?.rows.length ?? 0) - row.named), 0)
   const vendors = measured.reduce((sum, row) => sum + (row.cell?.rows.length ?? 0), 0)
 
@@ -52,8 +56,8 @@ export default async function CategoriesPage() {
           Who an agent names when somebody asks it to choose
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-soft">
-          One buying question per category, the question a developer would type, put to an agent five times in
-          isolation with nothing carried between the runs.{' '}
+          One buying question per category, the question a developer would type, put to an agent in isolation with
+          nothing carried between the runs: {runsTotal} runs so far across {toolNames.join(' and ')}.{' '}
           <span className="font-medium text-ink">
             Across {measured.length} categories, {silent} of {vendors} vendors were never named once.
           </span>{' '}
@@ -91,8 +95,8 @@ export default async function CategoriesPage() {
           </table>
         </div>
         <p className="mt-5 max-w-2xl text-sm leading-relaxed text-ink-soft">
-          Five runs separate a wall from silence and nothing finer, so nothing here ranks two vendors that finish
-          close. The whole answer text is published under each category, marked where a vendor is named, because a
+          A handful of runs separates a wall from silence and nothing finer, so nothing here ranks two vendors that
+          finish close. The whole answer text is published under each category, marked where a vendor is named, because a
           tally is our reading and the words are the evidence.
         </p>
       </section>
