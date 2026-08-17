@@ -37,7 +37,16 @@ if (!category) {
   process.exit(1)
 }
 
-const cell = cells.find((candidate) => candidate.category === category.id)
+// Every tool we hold for the category, cleanest first. /pricing promises ten runs on two tools,
+// and one tool is five: a report that quietly delivered half of that would be the first thing a
+// buyer could catch us on.
+const held = cells
+  .filter((candidate) => candidate.category === category.id)
+  .sort((a, b) => a.operatorContext.length - b.operatorContext.length)
+const cell = held[0]
+const runsAll = held.reduce((sum, one) => sum + one.runs, 0)
+const namedAll = held.reduce((sum, one) => sum + (one.rows.find((row) => row.domain === domain)?.named ?? 0), 0)
+const firstAll = held.reduce((sum, one) => sum + (one.rows.find((row) => row.domain === domain)?.first ?? 0), 0)
 const report = await getStore().latestForDomain(domain, true) ?? (await getStore().latestForDomain(domain))
 if (!report) {
   console.error(`brak skanu dla ${domain}. Uruchom: npm run scan ${domain}`)
@@ -70,33 +79,47 @@ lines.push('')
 if (!cell) {
   lines.push('We hold no agent runs for this category yet, so this half is not answered and you have not been charged for it.')
 } else {
-  lines.push(`We put one buying question to an agent ${cell.runs} times, each in a separate session with nothing carried between them.`)
+  lines.push(
+    held.length > 1
+      ? `We put one buying question to an agent ${runsAll} times across ${held.length} different tools (${held.map((one) => `${one.tool.split(' ')[0]}: ${one.runs}`).join(', ')}), each run a separate session with nothing carried between them. A result that survives two tools is about you rather than about the machine we ran it on.`
+      : `We put one buying question to an agent ${cell.runs} times, each in a separate session with nothing carried between them.`,
+  )
   lines.push('')
   lines.push(`> ${cell.question}`)
   lines.push('')
-  lines.push(`**You were named in ${mine?.named ?? 0} of ${cell.runs} runs, and named first in ${mine?.first ?? 0}.**`)
+  lines.push(`**You were named in ${namedAll} of ${runsAll} runs, and named first in ${firstAll}.**`)
+  if (held.length > 1) {
+    lines.push('')
+    for (const one of held) {
+      const there = one.rows.find((row) => row.domain === domain)
+      lines.push(`- ${one.tool.split(' ')[0]}: ${there?.named ?? 0} of ${one.runs}${one.operatorContext.length === 0 ? ', a tool that read none of our instructions' : ''}`)
+    }
+  }
   lines.push('')
   if (ahead.length > 0) {
     lines.push('Named more often than you, in the same runs:')
     lines.push('')
-    for (const row of ahead) lines.push(`- ${row.domain}: ${row.named}/${cell.runs}, first in ${row.first}`)
+    for (const row of ahead) lines.push(`- ${row.domain}: ${row.named}/${cell.runs} on ${cell.tool.split(' ')[0]}, first in ${row.first}`)
     lines.push('')
   }
-  const quotes = cell.answers
-    .map((answer) => ({ run: answer.run, said: saidAbout(answer.text, domain), winner: answer.first }))
+  // Named by tool as well as by number: two tools both have a run 1, and "Run 1" twice in one
+  // report is the kind of small confusion that makes a buyer doubt the rest of it.
+  const quotes = held
+    .flatMap((one) => one.answers.map((answer) => ({ tool: one.tool.split(' ')[0], ...answer })))
+    .map((answer) => ({ run: answer.run, tool: answer.tool, said: saidAbout(answer.text, domain) }))
     .filter((entry) => entry.said !== null)
   if (quotes.length > 0) {
     lines.push('What the runs said about you, quoted:')
     lines.push('')
-    for (const quote of quotes) lines.push(`- **Run ${quote.run}**: “${quote.said}”`)
+    for (const quote of quotes) lines.push(`- **${quote.tool} run ${quote.run}**: “${quote.said}”`)
   } else {
     lines.push('No run wrote a sentence about you. That is the finding: not a bad review, an absence.')
-    const winners = [...new Set(cell.answers.map((answer) => answer.first).filter(Boolean))]
+    const winners = [...new Set(held.flatMap((one) => one.answers).map((answer) => answer.first).filter(Boolean))]
     if (winners.length > 0) lines.push('')
     if (winners.length > 0) lines.push(`The runs chose ${winners.join(', ')} instead.`)
   }
   lines.push('')
-  lines.push(`${cell.runs} runs separate a wall from silence and nothing finer: two vendors a run apart are not ranked by this.`)
+  lines.push(`${runsAll} runs separate a wall from silence and nothing finer: two vendors a run apart are not ranked by this.`)
   if (cell.operatorContext.length > 0) {
     lines.push('')
     lines.push(`These runs could read the operator instructions on the machine they ran on (${cell.operatorContext.join(', ')}), so they describe an agent there rather than an agent at your customer. We say so rather than print the number alone.`)
