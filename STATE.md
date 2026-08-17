@@ -40,6 +40,19 @@
      werdykty za zero, a wartoscia bywa samo zdanie, bo to je czyta vendor.
 
 
+## PRZEGLAD TEGO, CO WIDZI ODWIEDZAJACY, PO RESEEDZIE (2026-08-17)
+
+Sam korpus moze byc zdrowy, a strona i tak pokazywac cos innego, wiec po reseedzie przeszedlem
+sciezka klienta zamiast ufac audytowi korpusu.
+
+- **Wszystkie strony 200**, a `170` renderuje sie na `/`, `/findings`, `/report` i `/methodology`.
+  Najwolniejsza jest strona glowna, 1,95 s (dynamiczna, liczy rankingi); reszta ponizej 0,4 s.
+- **Skan odwiedzajacego przeszedl end to end**: `vercel.com` w 6,1 s, 11/17 na formule 9.30,
+  **zero checkow bez zdania**, jeden niemierzalny. Strona vendora i **link trwaly** oba 200.
+
+To jest tania kontrola, ktora warto powtarzac po kazdym reseedzie: audyt korpusu sprawdza dane,
+a to sprawdza produkt.
+
 ## 29. PRZEBIEG: `signup_reachable` NA 9.30, ZERO OBALONYCH I OSIEM ZDAN, KTORE MYLA
 
 `npm run audit-signup credited|accused` na korpusie 9.30. **Kontrolka: 40 z 42**, czyli dokladnie
