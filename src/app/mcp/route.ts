@@ -195,6 +195,16 @@ export async function POST(request: Request) {
     if (typeof args.domain !== 'string' || args.domain.length === 0) {
       return toolFailure(id, 'Pass a domain, for example example.com.')
     }
+    // An unrecognised format used to fall through to prose with a 200 and no error, so a caller
+    // that read `format` off /openapi.json and asked for "json" here got a paragraph and no way to
+    // know it had asked for something this surface does not have. REST already 400s on the same
+    // mistake; the two surfaces also spell the default differently, which is what makes it easy.
+    if (args.format !== undefined && !['summary', 'agent', 'sarif'].includes(String(args.format))) {
+      return toolFailure(
+        id,
+        `format "${String(args.format)}" is not one of summary, agent, sarif. The REST endpoint at /api/scan calls the default "json"; here it is "summary" and the two are the same thing.`,
+      )
+    }
 
     const scan = await runScan(request, args.domain)
     if (scan.kind === 'error') return toolFailure(id, scan.error)

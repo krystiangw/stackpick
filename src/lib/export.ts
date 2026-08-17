@@ -1,6 +1,6 @@
 import { buildFixPlan } from './fixfirst'
 import { AGENT_UA } from './scan/http'
-import { CHECKS, checkHelpUri, FORMULA_VERSION, type ScoredCheck } from './score'
+import { CHECKS, checkHelpUri, type ScoredCheck } from './score'
 import type { Report } from './store'
 
 /**
@@ -56,16 +56,27 @@ export function toSarif(report: Report, baseUrl: string): unknown {
   const { scorecard, findings } = report
   const measurable = scorecard.measurable ?? scorecard.max
 
-  const rules = CHECKS.map((check) => ({
+  // Rules from the scorecard we are reporting, not from the checks this dyno happens to run now.
+  // A report served from the reuse window after a formula deploy produced `results[].ruleId` for a
+  // check the new CHECKS no longer defines, which is the one structural rule SARIF consumers rely
+  // on. `why` still comes from the live definition, and is allowed to be missing for a retired one.
+  const rules = scorecard.checks.map((check) => ({
     id: check.id,
     name: check.label,
     shortDescription: { text: check.label },
-    fullDescription: { text: check.why },
+    fullDescription: { text: CHECKS.find((live) => live.id === check.id)?.why ?? check.detail },
     helpUri: checkHelpUri(check.id, baseUrl),
     properties: { stage: check.stage, maxPoints: check.max },
   }))
 
-  const results = scorecard.checks.map((check) => {
+  // Only what an agent actually hits. Every check used to be emitted, so a domain with a clean
+  // sheet handed a code-scanning pipeline fifteen results, one of them saying there was nothing to
+  // check. `kind` is what separated them, and a consumer that reads `level` alone - which is the
+  // documented subset - saw fifteen alerts about a passing domain. The rest is published as counts
+  // below, so nothing is hidden, it is just not filed as a problem.
+  const failing = scorecard.checks.filter((check) => !check.notApplicable && !check.inconclusive && check.points < check.max)
+
+  const results = failing.map((check) => {
     const { kind, level } = verdictOf(check)
     const text = check.unblock ? `${check.detail} Next step: ${check.unblock}` : check.detail
     // We only claim an HTTP exchange where we actually recorded one: the door test is the
@@ -79,7 +90,13 @@ export function toSarif(report: Report, baseUrl: string): unknown {
               target: findings.site,
               headers: { 'user-agent': AGENT_UA },
             },
-            webResponse: { protocol: 'https', statusCode: findings.agentStatus },
+            // Zero is our own word for "nothing answered", not an HTTP status, and SARIF has a
+            // field for exactly that. Emitting `statusCode: 0` handed a parser a code that does
+            // not exist, under a comment promising we only claim exchanges we recorded.
+            webResponse:
+              findings.agentStatus > 0
+                ? { protocol: 'https', statusCode: findings.agentStatus }
+                : { noResponseReceived: true },
           }
         : {}
 
@@ -93,8 +110,13 @@ export function toSarif(report: Report, baseUrl: string): unknown {
       properties: {
         points: check.points,
         maxPoints: check.max,
+        // The corpus vocabulary, beside the SARIF one. SARIF has no word for a partial credit, so
+        // both halves of a two-point check land on `fail`, while /corpus.json publishes `partial`
+        // and keeps it out of `tally.fail`. Two artefacts about one scan disagreed on the count
+        // until this said which word each was using.
+        verdict: check.points > 0 ? 'partial' : 'fail',
         // Named the way Lighthouse names it, so a caller that knows one knows the other.
-        scoreDisplayMode: check.notApplicable ? 'notApplicable' : check.inconclusive ? 'informative' : 'binary',
+        scoreDisplayMode: 'binary',
       },
     }
   })
@@ -108,22 +130,46 @@ export function toSarif(report: Report, baseUrl: string): unknown {
           driver: {
             name: 'Let Agents In',
             fullName: 'Let Agents In agent readiness scanner',
-            version: FORMULA_VERSION,
+            // The version that produced these results, not the one this dyno runs. They differ for
+            // fifteen minutes after every formula deploy, and the file claimed both at once.
+            version: scorecard.formulaVersion,
             informationUri: `${baseUrl}/methodology`,
             rules,
           },
         },
-        automationDetails: { id: `letagentsin/${report.domain}/${report.id}` },
-        invocations: [{ startTimeUtc: report.scannedAt, executionSuccessful: true }],
+        // The domain, not the scan. Keyed by report id, every nightly run was a new analysis
+        // category: yesterday's alerts could never close as fixed, they only accumulated.
+        automationDetails: { id: `letagentsin/${report.domain}` },
+        invocations: [
+          {
+            startTimeUtc: report.scannedAt,
+            // A scan cut short by the time budget measured less than it meant to, and saying it
+            // succeeded let a pipeline read "nothing is failing" off a scan that measured nothing.
+            executionSuccessful: findings.truncation === null,
+            ...(findings.truncation
+              ? { toolExecutionNotifications: [{ level: 'warning', message: { text: findings.truncation.detail } }] }
+              : {}),
+          },
+        ],
         results,
         properties: {
           domain: report.domain,
+          // The domain we were asked about is not always the one we read. HTML carries a banner for
+          // this and the machine formats carried nothing, so every location pointed at a host the
+          // caller never named.
+          ...(findings.resolvedElsewhere ? { measuredOn: findings.resolvedElsewhere.finalDomain } : {}),
           formulaVersion: scorecard.formulaVersion,
           total: scorecard.total,
           // The denominator, and the paper maximum kept beside it so neither can be mistaken
           // for the other by something reading this without our documentation.
           measurable,
           max: scorecard.max,
+          // Everything that is not in `results`, so a caller can tell a clean sheet from a scan
+          // that could not look. Counts rather than silence: silence reads as a pass.
+          passed: scorecard.checks.filter((check) => !check.notApplicable && !check.inconclusive && check.points === check.max).length,
+          unmeasured: scorecard.checks.filter((check) => check.inconclusive).map((check) => check.id),
+          notApplicable: scorecard.checks.filter((check) => check.notApplicable).map((check) => check.id),
+          ...(findings.truncation ? { truncated: findings.truncation.unmeasuredChecks } : {}),
           scorecardUrl: `${baseUrl}/r/${report.id}`,
         },
       },
@@ -156,11 +202,14 @@ export function toAgentInstructions(report: Report, baseUrl: string): string {
     const step = plan?.steps.find((candidate) => candidate.checkId === check.id)
     return [
       `### ${check.label} (+${step?.gain ?? check.max - check.points}, ${step?.effort ?? 'unscoped'})`,
-      step?.how ?? check.detail,
+      // A check with no published remedy is not a task. Without this the measurement was pasted
+      // into the instruction slot and then again under "What we measured", so the same sentence
+      // appeared twice with nothing to do between them.
+      step?.how ?? 'We publish no step for this one. It is a measurement, not an instruction: read the rule and decide what your setup should be.',
       `Why it costs money: ${CHECKS.find((c) => c.id === check.id)?.why ?? ''}`,
       `Rule: ${checkHelpUri(check.id, baseUrl)}`,
       `What we measured: ${check.detail}`,
-    ].join('\n')
+    ].join('\n\n')
   })
 
   return [
@@ -169,11 +218,30 @@ export function toAgentInstructions(report: Report, baseUrl: string): string {
     `Measured by Let Agents In on ${report.scannedAt.slice(0, 10)}, formula v${scorecard.formulaVersion}: ` +
       `${scorecard.total} of ${measurable} points we could measure. Full scorecard: ${baseUrl}/r/${report.id}`,
     '',
+    // The requested domain heads the page while every URL below points at another host, and the
+    // HTML scorecard is the only surface that used to say why.
+    ...(findings.resolvedElsewhere
+      ? [
+          `${report.domain} redirects to ${findings.resolvedElsewhere.finalDomain}, so everything below was measured there and every address in it belongs to that host.`,
+          '',
+        ]
+      : []),
+    // Saying nothing is failing after a scan that ran out of time is the worst sentence this file
+    // can produce: it is indistinguishable from a clean sheet and it is not one.
+    ...(findings.truncation
+      ? [`The scan did not finish: ${findings.truncation.detail} Treat the checks it names as unasked rather than as passed.`, '']
+      : []),
     'Each task below is one thing to change, with the measurement that produced it and a link to the rule. ' +
       'Do not take any of it on trust: every check is a single HTTP request with a published rule, so verify ' +
-      'before you change anything, and tell the owner where we are wrong if we are.',
+      'before you change anything, and tell the owner where we are wrong if we are. Anything that widens who ' +
+      'can reach the product - relaxing a bot rule, opening client registration, changing when a CAPTCHA ' +
+      'fires - is the owner\'s decision, not a defect to fix unattended.',
     '',
-    steps.length > 0 ? '## Tasks' : '## Tasks\n\nNothing measurable is failing.',
+    steps.length > 0
+      ? '## Tasks'
+      : findings.truncation
+        ? '## Tasks\n\nNothing to list: the scan ran out of time before it could measure enough to say.'
+        : '## Tasks\n\nNothing measurable is failing.',
     ...steps,
     '',
     ...(unmeasured.length > 0

@@ -72,11 +72,14 @@ export const REMEDIES: Record<string, Remedy> = {
   },
   docs_without_js: {
     effort: 'a project',
+    // Two failure modes, and writing the remedy for one of them made the other read as nonsense:
+    // stripe.com was told "a plain fetch gets 229,024 characters, which reads as an empty product"
+    // beside a measurement about serving agents less than Chrome. An agent that checks the number
+    // is right to throw the whole task out, cloaking charge included.
     how: (f) =>
-      // The "just under the line" branch went with the 2,000-character threshold. Below 500 there
-      // is no near miss to describe, and the only other way into this list is cloaking, where the
-      // number is large and a sentence about falling short of it reads as nonsense.
-      `Server-render the docs or mirror them as markdown. A plain fetch gets ${f.docsTextChars.toLocaleString('en-US')} characters, which reads as an empty product.`,
+      typeof f.docsThinnerForAgents === 'number' && Number.isFinite(f.docsThinnerForAgents)
+        ? `Serve the docs the same to every user-agent. The same URL at the same moment returns ${Math.round(f.docsThinnerForAgents * 100)} percent less text to an agent than to Chrome, which is a rule at your edge rather than anything in the page.`
+        : `Server-render the docs or mirror them as markdown. A plain fetch gets ${f.docsTextChars.toLocaleString('en-US')} characters, which reads as an empty product.`,
   },
   user_agents_allowed: {
     effort: 'minutes',

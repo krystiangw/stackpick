@@ -300,8 +300,11 @@ export const CHECKS: Check[] = [
       // to Chrome. Every other read on the scan is a browser, so without asking twice this was
       // invisible anywhere except the front door, and it is the sharpest form of the thing this
       // check exists to measure. A vendor can reproduce it with two curls.
+      // Number, not null-check. Reports stored before this field existed carry `undefined`, which
+      // is not null, and the cron rescores stored findings: every one of them published "serves
+      // NaN percent less text".
       const thinner = f.docsThinnerForAgents
-      if (thinner !== null) {
+      if (typeof thinner === 'number' && Number.isFinite(thinner)) {
         return yes(
           0,
           `${entry} serves ${Math.round(thinner * 100)} percent less text to ${AGENT_UA} than to a Chrome user-agent, at the same URL and the same moment`,

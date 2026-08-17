@@ -31,6 +31,10 @@ export async function POST(request: Request) {
         id: report.id,
         domain: report.domain,
         total: report.scorecard.total,
+        // The denominator our own /agents.md tells callers to read. `max` is the paper 17 and
+        // charges a vendor for checks we could not run: linear.app read 7/17 here and 7/12 in
+        // every other surface. `measurable` was already computed below and never sent.
+        measurable: report.scorecard.measurable ?? report.scorecard.max,
         max: report.scorecard.max,
         reused: true,
       }),
@@ -81,13 +85,14 @@ export async function POST(request: Request) {
             id: report.id,
             domain: report.domain,
             total: scorecard.total,
+            measurable,
             max: scorecard.max,
             temporary: true,
           })
           controller.close()
           return
         }
-        send('done', { id: report.id, domain: report.domain, total: scorecard.total, max: scorecard.max })
+        send('done', { id: report.id, domain: report.domain, total: scorecard.total, measurable, max: scorecard.max })
       } catch (error) {
         const message =
           error instanceof UnreachableDomainError
