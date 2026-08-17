@@ -1,4 +1,4 @@
-import { AGENT_UA, BROWSER_UA, fetchUrl, registrableDomain, isBotChallenge, isEdgeRefusal, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, timeLeftMs, visibleTextLength, type Fetched } from './http'
+import { AGENT_UA, BROWSER_UA, fetchUrl, registrableDomain, isBotChallenge, isEdgeRefusal, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, timeLeftMs, visibleTextLength, wasNeverAsked, type Fetched } from './http'
 
 export const AGENT_ENTRY_PATH_COUNT = 9
 
@@ -720,10 +720,13 @@ function metadataUrlsFor(issuer: string): string[] {
 }
 
 async function probeOauthOrigins(targets: OauthTarget[]): Promise<OauthProbe> {
-  const origins = targets.map((target) => target.origin)
-  const probes = targets.flatMap((target) => target.paths.map((path) => `${target.origin}${path}`))
-  const firstPass = await inParallel(probes, (url) => fetchUrl(url, { accept: 'application/json' }))
+  // The origin travels with the address rather than being read back off the answer: a successful
+  // fetch reports the URL it ended on, so a well-known that redirects cross-origin would credit
+  // the destination and lose the host we actually asked.
+  const probes = targets.flatMap((target) => target.paths.map((path) => ({ origin: target.origin, url: `${target.origin}${path}` })))
+  const firstPass = await inParallel(probes, (probe) => fetchUrl(probe.url, { accept: 'application/json' }))
 
+  const askedFor = new Set(probes.map((probe) => probe.url))
   const followed = [
     ...new Set(
       firstPass
@@ -731,11 +734,19 @@ async function probeOauthOrigins(targets: OauthTarget[]): Promise<OauthProbe> {
         .flatMap((got) => serversNamedIn(got.body))
         .flatMap(metadataUrlsFor),
     ),
-  ].filter((url) => !probes.includes(url))
+  ].filter((url) => !askedFor.has(url))
   const results = [
     ...firstPass,
     ...(followed.length > 0 ? await inParallel(followed, (url) => fetchUrl(url, { accept: 'application/json' })) : []),
   ]
+
+  // "No OAuth metadata on any of the 13 hosts probed" has to count hosts we actually asked. A
+  // request is dropped before it leaves when the host already refused a connection or swallowed
+  // its allowance of timeouts in this scan, and counting those made the sentence a claim about
+  // requests we never sent. Only an origin whose every request was suppressed drops out: a
+  // guessed subdomain that does not resolve still answered us, with a failure.
+  const asked = new Set(probes.filter((_, index) => !wasNeverAsked(firstPass[index])).map((probe) => probe.origin))
+  const origins = targets.map((target) => target.origin).filter((origin) => asked.has(origin))
 
   // The MCP host first. A claim about the token that opens an MCP server has to come off the
   // server guarding it, and a conventionally guessed apex is a different authorization server

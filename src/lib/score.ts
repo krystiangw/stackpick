@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.32'
+export const FORMULA_VERSION = '9.33'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -601,6 +601,17 @@ export const CHECKS: Check[] = [
           points: 0,
           detail: 'Unmeasurable: your edge refused our requests, so nothing we probed proves anything',
           unblock: 'Let ordinary HTTP through to your public pages and this becomes measurable.',
+          inconclusive: true,
+        }
+      }
+      // Nothing left the process: every host had already refused a connection or swallowed its
+      // allowance of timeouts. Saying "no OAuth metadata on the apex" here would name a document
+      // we never asked for.
+      if (oauth.probedHosts === 0) {
+        return {
+          points: 0,
+          detail: 'Unmeasurable: every OAuth probe was dropped before it was sent, because your hosts had already refused connections or left our requests unanswered in this scan',
+          unblock: 'Answer ordinary HTTPS requests on the hosts that issue your tokens and this becomes measurable.',
           inconclusive: true,
         }
       }

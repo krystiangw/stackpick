@@ -342,6 +342,7 @@ check('kolejnosc wersji nie ma znaczenia', [...rulesChangedBetween('9.32', '9.31
 // The version a measurement was taken under already contains its own change, so it must not count.
 check('wersja pomiaru nie liczy sie sama sobie', [...rulesChangedBetween('9.32', '9.32')].join(','), '')
 check('ten sam pomiar dwa razy to zero zmian regul', [...rulesChangedBetween('9.31', '9.31')].join(','), '')
+check('9.33 przenosi zmiane w oauth_dcr', [...rulesChangedBetween('9.32', '9.33')].join(','), 'oauth_dcr')
 
 check('mail mowi, ze podstawa byla przeliczona', mailFor(true).text.includes('recomputed from the evidence we still hold'), true)
 check('i nie mowi tego, gdy nie byla', mailFor(false).text.includes('recomputed from the evidence we still hold'), false)
@@ -956,6 +957,16 @@ check('biblioteka bez cennika i konta: nie dotyczy', dcrFor({}).notApplicable, t
 check('vendor z cennikiem dostaje werdykt', dcrFor({ pricing: 'https://v.test/pricing' }).notApplicable, undefined)
 check('vendor z rejestracja tez', dcrFor({ signup: 'https://v.test/signup' }).notApplicable, undefined)
 check('i nadal jest to odmowa, nie milczenie', dcrFor({ pricing: 'https://v.test/pricing' }).inconclusive, undefined)
+
+// Zero hosts asked is not zero metadata found. Every probe dropped before it left means we have
+// nothing to publish about them, and the sentence must not name a document we never requested.
+const dcrNothingSent = dcr.evaluate({
+  funnel: { oauth: { probedHosts: 0, metadataPublished: false, dynamicClientRegistration: false } },
+  discovered: { pricing: 'https://v.test/pricing' },
+  blocksPlainRequests: false,
+} as never)
+check('zero zapytanych hostow: niemierzalne', dcrNothingSent.inconclusive, true)
+check('i zdanie nie mowi o apeksie', dcrNothingSent.detail.includes('on the apex'), false)
 
 // The scan budget is per registrable name and the message named the host the caller typed, so a
 // first-ever scan of docs.acme.com was told that docs.acme.com had been scanned five times.

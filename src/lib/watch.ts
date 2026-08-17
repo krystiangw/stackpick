@@ -123,6 +123,7 @@ export function comparableScorecards(
 const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   '9.31': ['signup_reachable', 'mcp_present', 'oauth_dcr'],
   '9.32': ['programmatic_provisioning', 'oauth_dcr'],
+  '9.33': ['oauth_dcr'],
 }
 
 const asNumber = (version: string) => Number(version) || 0
