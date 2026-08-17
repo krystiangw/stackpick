@@ -214,16 +214,20 @@ export function buildFixPlan(
   const steps: FixStep[] = fixable
     .map((check) => {
       const remedy = REMEDIES[check.id]
-      if (!remedy) return null
       return {
         checkId: check.id,
         label: check.label,
         gain: check.max - check.points,
-        effort: typeof remedy.effort === 'function' ? remedy.effort(findings) : remedy.effort,
-        how: remedy.how(findings, check),
+        // A check with no published step is still a check they do not pass, and the component says
+        // in so many words "this is the whole list". Dropping it silently made that sentence false
+        // for anybody failing robots_paths_resolve, the one check with no entry in REMEDIES: they
+        // could fix every line we printed and still not reach the number we printed beside it.
+        effort: remedy ? (typeof remedy.effort === 'function' ? remedy.effort(findings) : remedy.effort) : 'a project',
+        how: remedy
+          ? remedy.how(findings, check)
+          : `We publish no step for this one, so read the measurement and decide what your setup should be: ${check.detail}`,
       }
     })
-    .filter((step): step is FixStep => step !== null)
     .sort((a, b) => EFFORT_RANK[a.effort] - EFFORT_RANK[b.effort] || b.gain - a.gain)
 
   if (steps.length === 0) return null
@@ -234,8 +238,14 @@ export function buildFixPlan(
   const to = scorecard.total + gain
   const measurable = scorecard.measurable ?? scorecard.max
 
+  // Shares, because every row has its own denominator and the table on the same page is ordered by
+  // share. Comparing raw totals promised a reader on 9/17 that two fixes would take them "past
+  // acme.com" on 10/12, and the comparison three sections down left acme.com above them.
+  const shareOf = (peer: { total: number; max: number }) => (peer.max === 0 ? 0 : peer.total / peer.max)
+  const now = measurable === 0 ? 0 : scorecard.total / measurable
+  const after = measurable === 0 ? 0 : to / measurable
   const overtakes = (comparison?.peers ?? [])
-    .filter((peer) => !peer.isSubject && peer.total > scorecard.total && peer.total < to)
+    .filter((peer) => !peer.isSubject && !peer.undermeasured && shareOf(peer) > now && shareOf(peer) < after)
     .map((peer) => peer.domain)
     .slice(0, 3)
 
@@ -247,8 +257,13 @@ export function buildFixPlan(
     from: scorecard.total,
     to,
     max: measurable,
-    /** Points locked behind checks we could not evaluate, so the list has a visible ceiling. */
-    unmeasured: scorecard.max - measurable,
+    /**
+     * Points locked behind checks we could not evaluate, so the list has a visible ceiling. Only
+     * the inconclusive ones: `max - measurable` also swept in every check that does not apply, and
+     * the component says those points "sit behind checks we could not evaluate" while the row
+     * itself, two sections up, says a product with no accounts cannot fail that check.
+     */
+    unmeasured: scorecard.checks.filter((check) => check.inconclusive).reduce((sum, check) => sum + check.max, 0),
     overtakes,
   }
 }
