@@ -1,32 +1,38 @@
-# Let Agents In: stan na 2026-08-17 (formula 9.31 na produkcji, korpus czeka na reseed)
+# Let Agents In: stan na 2026-08-17 (formula 9.31 na produkcji, korpus zasiany na 9.31)
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te trzydziesci linijek, potem reszte)
 
-**W LOCIE JEST JEDNO (stan 15:35, 2026-08-17): petla ponawiajaca reseed na 9.31.**
-Log `/tmp/reseed-931.log`, proba 14 z 18, co 20 minut. Karencja (6 h mediany wieku korpusu) mija
-**okolo 16:00**, wiec powinna zlapac probe 16 albo 17. **`tail -3 /tmp/reseed-931.log` zanim
-cokolwiek zrobisz.** Gdyby przepadla, wznowienie: `STACKPICK_CONSOLE_TOKEN=$(heroku config:get
-STACKPICK_CONSOLE_TOKEN -a stackpick) bash -c 'for i in $(seq 1 18); do npm run reseed; [ $? -eq 3 ]
-&& sleep 1200 || break; done'`.
+**NIC NIE JEST W LOCIE. Reseed na 9.31 skonczony o 16:56, cala lista pokontrolna przeszla.**
 
-**Dobijanie cel codeksa SKONCZONE.** `src/data/cells.json` ma **52 cele, po piec biegow na
-kategorie i narzedzie**, wiec raport klienta dowozi obiecane dziesiec biegow na dwoch narzedziach
-doslownie. Replikacja na `/findings` przeliczona i wdrozona.
+- korpus: **177 wierszy, wszystkie na 9.31**, skaner tez na 9.31
+- `signup_reachable`: 80 razy „formularz potrzebuje JavaScriptu", **9 razy „brak formularza,
+  wejscie przez dostawce tozsamosci"** (bylo zero)
+- `mcp_present`: **0 wierszy niemierzalnych** przez milczacy rejestr, czyli lustro dziala
+- `programmatic_provisioning`: **80 z 80** zaliczonych wierszy cytuje slowa, na ktorych stoi punkt
+- `oauth_dcr`: **75 z 92** oblanych wierszy wymienia sprawdzone adresy
+- **errata pusta**, wszystkie 11 wpisow wygaslo samo, czyli reseed poprawil kazdy wiersz, o ktorym
+  wiedzielismy, ze mysli
+- `npm run audit`: **0 sprzecznosci**, 21 liczb i 5 twierdzen o vendorach zgodnych z danymi
+- `npm run audit-delivery`: czysto (107 dostawcow z cytatem, 70 ze zdaniem o absencji)
+- `/c/app-hosting` przestal pokazywac „not measured"
 
-**PO RESEEDZIE, w tej kolejnosci:**
-1. `MONGODB_URI=... npx tsx scripts/after-reseed.mts` - jedna komenda zamiast czterech pytan z
-   pamieci. Ma pokazac: korpus na 9.31, siedem zdan „brak formularza, wejscie przez dostawce
-   tozsamosci" zamiast zera, cytaty przy `programmatic_provisioning`, adresy przy `oauth_dcr`
-   i **errata puste** (11 wpisow ma wygasnac samo).
-2. `npm run audit`, `npx tsx scripts/audit-signup.mts accused` oraz **`npx tsx
-   scripts/audit-study.mts`** (straznik zdan szostego badania, konczy sie bledem, gdy ktores
-   przestanie byc prawdziwe wobec danych).
-3. **Policz, ile wierszy ma `mcp_present` niemierzalny.** Duzo znaczy, ze lustro rejestru sie nie
-   zapelnilo albo TTL jest za krotki.
-4. Korpus urosnie ze 170 do **177 wierszy** (kategoria `app-hosting`), a `/c/app-hosting` przestanie
-   pokazywac „not measured" w kolumnie skanu.
-5. **Dopiero potem** zaciesnienie trzech golych fraz w `programmatic_provisioning`: reseed zapisze
-   cytaty dla wszystkich zaliczonych wierszy i bedzie to czym policzyc.
+**Dwa werdykty gorsze niz poprzedni pomiar, oba sprawdzone i oba prawdziwe** (to nie regres
+skanera): `oramasearch.com` `llms_txt` 1 -> 0, bo `github.com/oramasearch/orama-cloud-cli` z ich
+`llms.txt` naprawde odpowiada 404 (potwierdzone osobnym curlem); `name.com` `agent_entry_point`
+2 -> 1, bo ich `skill.md` opisuje polityke, a nie procedure.
+
+**Straznik zdan badania zadzialal na ostro.** Po reseedzie jedno opublikowane zdanie o `llms_txt`
+przestalo byc prawdziwe i **strona zostala poprawiona w dol**: bylo „nie rozdziela nikogo, ujemne w
+obu polowach", jest „+9 i +17 ogolem, a wsrod mniej znanych -1 i +5, dwa narzedzia nie zgadzaja sie
+co do kierunku". Przy okazji naprawiony blad konstrukcyjny samego straznika: prog „ponizej pieciu
+punktow" byl liczba dobrana pod dane. Teraz sprawdza to, co strona twierdzi (llms_txt jako jedyny z
+czterech NIE przezywa kontroli), wiec zawiedzie w dniu, w ktorym zacznie rozdzielac.
+
+**NASTEPNA POZYCJA MERYTORYCZNA:** zaciesnienie trzech golych fraz w `programmatic_provisioning`
+(`management api`, `account api`, `provisioning api`) plus nigdy niepasujaca pisownia
+`service-account` z lacznikiem. Reseed zapisal cytaty dla **wszystkich 80 zaliczonych wierszy**,
+wiec pierwszy raz jest czym to policzyc: przeczytaj cytaty, zobacz, ile punktow stoi na samej
+frazie bez kontekstu, i dopiero potem zmieniaj regule.
 
 **PODLOGA SZUMU: 0,59 procent** (15 werdyktow na 2550; 10 to werdykt kontra werdykt, 5 to wiersz
 niemierzalny po jednej stronie). **Zamrozenie formuly zdjete.**
