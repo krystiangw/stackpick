@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { certain, mentionsIn } from '@/lib/vendors'
 import { CATEGORIES } from '@/lib/categories'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
@@ -31,16 +32,31 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
   }
 }
 
-/** Marks the vendor names in the answer without touching a character of what was said. */
+/**
+ * Marks the vendor names in the answer without touching a character of what was said.
+ *
+ * By the published matcher, not by a substring search, because the page sits directly under a table
+ * of counts produced by that matcher and a mark it disagrees with discredits both. A bare search for
+ * the first label of each domain highlighted "name" inside nameservers, "cal" inside calculates and
+ * "here" inside where: on domains-dns that put a mark on a vendor the table above says was never
+ * named once. The same weaker reading was quoting competitors at vendors in the paid report until
+ * this afternoon, which is how this one was found.
+ *
+ * Only the exact strings the matcher accepted, matched case-sensitively. That under-marks a lower
+ * case "stripe" where the run wrote "Stripe", and under-marking is the safe direction: every mark
+ * on this page is a mention the count behind it also counted.
+ */
 function marked(text: string, domains: string[]) {
-  const names = [...new Set(domains.flatMap((domain) => [domain, domain.split('.')[0]]))]
-    .filter((name) => name.length > 2)
+  const forms = [...new Set(certain(mentionsIn(text, domains)).map((mention) => mention.matched))]
+    .filter((form) => form.length > 2)
     .sort((a, b) => b.length - a.length)
-    .map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-  if (names.length === 0) return [text]
-  const pattern = new RegExp(`(${names.join('|')})`, 'gi')
-  return text.split(pattern).map((piece, index) =>
-    pattern.test(piece) && index % 2 === 1 ? (
+    .map((form) => form.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  if (forms.length === 0) return [text]
+  // One capture group, so split puts the matches at the odd indices. The previous version also
+  // called pattern.test on each piece, which with a global regular expression carries lastIndex
+  // between calls and skips every other match on its own.
+  return text.split(new RegExp(`(${forms.join('|')})`, 'g')).map((piece, index) =>
+    index % 2 === 1 ? (
       <mark key={index} className="bg-brass-soft text-ink">
         {piece}
       </mark>
@@ -49,6 +65,7 @@ function marked(text: string, domains: string[]) {
     ),
   )
 }
+
 
 export default async function RunsPage({ params }: { params: Promise<{ category: string }> }) {
   const { category: id } = await params
