@@ -1,219 +1,46 @@
-# Let Agents In: stan na 2026-08-17 (formula 9.31 na produkcji, korpus zasiany na 9.31)
+# Let Agents In: stan na 2026-08-17 (formula 9.32 na produkcji, korpus czeka na reseed)
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te trzydziesci linijek, potem reszte)
 
-**NIC NIE JEST W LOCIE. Reseed na 9.31 skonczony o 16:56, cala lista pokontrolna przeszla.**
+**W LOCIE JEST JEDNO (stan 21:55): petla ponawiajaca reseed na 9.32.**
+Log `/tmp/reseed-932.log`, proba 13 z 18, co 20 minut, proces zyje. Karencja liczy sie od
+**mediany wieku korpusu** i o 21:34 zostalo 1,1 h, wiec petla powinna zlapac probe 16 albo 17,
+czyli okolo **22:35-23:00**. **`tail -3 /tmp/reseed-932.log` zanim cokolwiek zrobisz.**
+Gdyby przepadla: `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick)
+bash -c 'for i in $(seq 1 18); do npm run reseed >> /tmp/reseed-932.log 2>&1; [ $? -eq 3 ] &&
+sleep 1200 || break; done'`.
 
-- korpus: **177 wierszy, wszystkie na 9.31**, skaner tez na 9.31
-- `signup_reachable`: 80 razy „formularz potrzebuje JavaScriptu", **9 razy „brak formularza,
-  wejscie przez dostawce tozsamosci"** (bylo zero)
-- `mcp_present`: **0 wierszy niemierzalnych** przez milczacy rejestr, czyli lustro dziala
-- `programmatic_provisioning`: **80 z 80** zaliczonych wierszy cytuje slowa, na ktorych stoi punkt
-- `oauth_dcr`: **75 z 92** oblanych wierszy wymienia sprawdzone adresy
-- **errata pusta**, wszystkie 11 wpisow wygaslo samo, czyli reseed poprawil kazdy wiersz, o ktorym
-  wiedzielismy, ze mysli
-- `npm run audit`: **0 sprzecznosci**, 21 liczb i 5 twierdzen o vendorach zgodnych z danymi
-- `npm run audit-delivery`: czysto (107 dostawcow z cytatem, 70 ze zdaniem o absencji)
-- `/c/app-hosting` przestal pokazywac „not measured"
+**PULAPKA, ktora dzis odsunela reseed o godzine:** kazdy skan domeny Z KORPUSU, takze ten zrobiony
+do weryfikacji poprawki, **odmladza mediane i przesuwa karencje**. Sprawdzalem dzis w ten sposob
+storyblok.com, plivo.com, mailgun.com, clerk.com, chargebee.com i bunny.net. Do weryfikacji zmiany
+w regule uzywaj domen SPOZA korpusu albo licz sie z odsunieciem reseedu.
 
-**Dwa werdykty gorsze niz poprzedni pomiar, oba sprawdzone i oba prawdziwe** (to nie regres
-skanera): `oramasearch.com` `llms_txt` 1 -> 0, bo `github.com/oramasearch/orama-cloud-cli` z ich
-`llms.txt` naprawde odpowiada 404 (potwierdzone osobnym curlem); `name.com` `agent_entry_point`
-2 -> 1, bo ich `skill.md` opisuje polityke, a nie procedure.
+**PO RESEEDZIE, w tej kolejnosci:**
+1. `MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/after-reseed.mts`
+2. `npm run audit`, `npx tsx scripts/audit-study.mts`, `npm run audit-delivery`,
+   `npx tsx scripts/read-provisioning-quotes.mts`
+3. **Policz, ile wierszy stracilo punkt za `programmatic_provisioning`.** Odtworzenie na cytatach z
+   9.31 mowilo 19 z 28, ale liczylo je PRZED domknieciem okna z drugiej strony, wiec prawdziwa
+   liczba bedzie inna. Przeczytaj cytaty tych, ktore zostaly.
+4. `audit-study.mts` prawie na pewno zglosi ruch przy `programmatic_provisioning`: strona
+   `/findings` mowi o nim „+37 wsrod znanych, minus trzy wsrod reszty" i te liczby sa z 9.31.
+   **Popraw strone albo wycofaj twierdzenie, nie prog w strazniku.**
+5. Dopiero potem: `npx tsx scripts/audit-provisioning.mts credited` (kontrolka!) i `accused`.
 
-**Straznik zdan badania zadzialal na ostro.** Po reseedzie jedno opublikowane zdanie o `llms_txt`
-przestalo byc prawdziwe i **strona zostala poprawiona w dol**: bylo „nie rozdziela nikogo, ujemne w
-obu polowach", jest „+9 i +17 ogolem, a wsrod mniej znanych -1 i +5, dwa narzedzia nie zgadzaja sie
-co do kierunku". Przy okazji naprawiony blad konstrukcyjny samego straznika: prog „ponizej pieciu
-punktow" byl liczba dobrana pod dane. Teraz sprawdza to, co strona twierdzi (llms_txt jako jedyny z
-czterech NIE przezywa kontroli), wiec zawiedzie w dniu, w ktorym zacznie rozdzielac.
+**CO DZIS ZROBIONE, w skrocie** (kazde ma sekcje nizej): formula **9.32** (gola fraza w
+`programmatic_provisioning` musi niesc dowod w cytowanym oknie); **dziesiec bledow w platnym
+raporcie i mailu**; **audyt formatow maszynowych** (SARIF zglaszal 15 alertow o domenie, ktora
+przeszla wszystko); **audyt stron darmowego uzytkownika, 27 znalezisk, zamkniety**; **routing
+`find_providers`** poprawiony dwukrotnie i zmierzony na dwoch swiezych zestawach held-out
+(zle odpowiedzi 14 -> 3, zero zlych kategorii); **mail o zmianie werdyktu** nie wysyla juz zmiany,
+ktora jest nasza regula, a nie zmiana u vendora.
 
-**FORMULA 9.32 WDROZONA, KORPUS CZEKA NA RESEED.** Zaciesnienie golych fraz w
-`programmatic_provisioning` zrobione: gola fraza liczy sie tylko wtedy, gdy w tym samym oknie,
-ktore cytujemy, stoi nazwa poswiadczenia albo cos jest TWORZONE. Okno jest domkniete z obu stron
-granica bloku, sprawdzane sa wszystkie wystapienia, a cytat pokazuje to, ktore dalo punkt.
-
-**Potwierdzone na produkcji po wygasnieciu okna reuse:** `storyblok.com` schodzi z falszywego
-punktu za pozycje w menu na **`0/2` NIEMIERZALNE**, ze zdaniem „none of the 2 documentation pages
-we reached is about keys or authentication, so their silence about creating one says nothing". To
-jest najlepszy mozliwy wynik: nie zamienilismy falszywego kredytu na falszywe oskarzenie, tylko na
-uczciwe „nie wiemy". `plivo.com` **zachowuje** punkt, ale na innym, lepszym wystapieniu („[Subaccount
-API]: Create and manage subaccounts") - to sprawdzanie wszystkich wystapien dziala tak, jak mialo.
-
-**Petla reseedu na 9.32 juz chodzi**, log `/tmp/reseed-932.log`, start 17:20, karencja mija okolo
-22:30. Petla:
-`STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) bash -c 'for i
-in $(seq 1 18); do npm run reseed; [ $? -eq 3 ] && sleep 1200 || break; done'`. Po nim: `npm run
-audit`, `audit-study.mts`, `audit-delivery.mts` i **przeczytaj, ile wierszy stracilo punkt** -
-odtworzenie na cytatach z 9.31 mowilo 19 z 28, ale bylo liczone przed domknieciem okna z drugiej
-strony, wiec prawdziwa liczba bedzie inna.
-
-**Zrobione w tym samym oknie oczekiwania:** `oauth_dcr` mial jedna oblana galaz, ktora **nie
-nazywala niczego** - „OAuth metadata published, but no registration_endpoint in it", bez adresu i
-bez `unblock`, na **17 wierszach**. Adres dokumentu byl wyrzucany, gdy nie mial
-`registration_endpoint`. Teraz zdanie brzmi „OAuth metadata published at
-https://clerk.clerk.com/.well-known/oauth-authorization-server, but no registration_endpoint in it"
-i ma krok do wykonania. To check, ktory w szostym badaniu najmocniej wiaze sie z byciem
-wymienianym, wiec akurat on nie moze konczyc sie zdaniem bez wyjscia.
-
-**Pokrycie obserwacji: 0 z 3 nieobslugiwanych**, kazda obserwowana kategoria ma cele mlodsza niz
-miesiac. Ta pozycja jest zamknieta.
-
-**CZWARTY ZESTAW HELD-OUT DO ROUTINGU, I GORSZA PRAWDA NIZ PUBLIKOWALISMY.** Opis
-`find_providers` cytowal skutecznosc zmierzona na zestawie, ktory od tamtej pory zostal przeczytany
-i naprawiony przeciwko sobie, wiec nie mierzyl juz niczego. Nowy zestaw: **40 pytan napisanych przez
-agenta bez dostepu do repo i bez widoku listy kategorii**, szesc celowo nie o kupowaniu,
-przetlumaczonych przez drugiego agenta z zakazem wstawiania rzeczownikow kategorii; etykiety
-zacommitowane PRZED pierwszym biegiem (`harness/heldout/2026-08-17.json`).
-
-**Trafia 24 z 40, odpowiada na 26, a 10 tych odpowiedzi jest blednych.** Dominujaca porazka nie
-jest juz cisza, tylko **pewna zla odpowiedz**: na 16 pytan, na ktore powinien byl odmowic,
-odpowiedzial na 8. Zrodlem sa **pojedyncze slowa czytane bez kontekstu**: deploy kontenerow do
-`notifications` na slowie „push", modul billing we **wlasnym** repo pytajacego do `payments`,
-tabela `events` w Postgresie do `product-analytics`, eksport CSV z polskimi znakami do `video`,
-a „similarity of two lists of tags" do `vector-search`, ktory ma w slowniku gole `similar`.
-Odwrotnie: „store and search embeddings" i „product search with typos" **przemilczal**.
-
-**Narzedzie czyta po angielsku.** Te same 40 pytan po polsku: 11 odpowiedzi, 6 trafien. To tez
-jest opublikowane w opisie narzedzia, bo nigdzie nie pisalismy, ze pytanie ma byc po angielsku.
-
-**Szosty zestaw zamowiony, poprawka zrobiona i zmierzona uczciwie** (`harness/heldout/2026-08-17-b.json`).
-Piaty stal sie zestawem ROBOCZYM, szosty napisano **po** wyborze progu i on jest miara.
-
-**Poprawka:** `explainJob` od poczatku mial w komentarzu zdanie „jedno trafienie w zdaniu na dziewiec
-slow to inny rodzaj dowodu niz dwa trafienia w trzech slowach, i regula decyzyjna musi widziec oba",
-a regula decyzyjna **nigdy nie patrzyla na dlugosc pytania**. Teraz pytanie dluzsze niz dwanascie
-slow potrzebuje dwoch trafien ze slownika, nie jednego. Prog wybrany przez przemiatanie pieciu
-wartosci po wszystkich zestawach, ktore wtedy istnialy.
-
-**Wynik na szostym zestawie: zle odpowiedzi z 14 na 4, poprawne odmowy z 3 na 11, kosztem trzech
-trafien.** Narzedzie jest teraz wyraznie ciche i tak jest opisane.
-
-**Wykrywacz pytan o wlasny kod dorobiony i zmierzony** (`ABOUT_THEIR_OWN_CODE` w `lookup.ts`).
-Lapie **ksztalty**, ktore nigdy nie pojawiaja sie w pytaniu o zakup - notacja zlozonosci, slownik
-strojenia bazy, ktora sie juz ma (`EXPLAIN ANALYZE`, `seq scan`, `SKIP LOCKED`, `BRIN`), zwroty
-proszace o kod („what data structure", „how do I refactor", „in our repo") - a **nie slowa z naszych
-kategorii**. Bezpiecznik w buildzie jest mocniejszy niz liczba: regula musi zwrocic false dla
-**kazdego pytania ze wszystkich siedmiu zestawow, ktore ma kategorie**.
-
-**Siodmy zestaw** (`harness/heldout/2026-08-17-c.json`) napisano po obu zmianach, celowo trudny:
-14 z 40 pytan to wlasny kod w handlowych slowach (modul billing, tabela payments, worker
-notifications), 6 to rzeczy prawdziwe, ale spoza katalogu. Wynik: **trafia 29 z 40, odpowiada na 14
-z czego 3 blednie, ZERO zlych kategorii, odmawia poprawnie 18 z 21.** Zaden z szesciu wczesniejszych
-zestawow nie stracil ani jednej poprawnej odpowiedzi.
-
-**Stan protokolu:** zestawy 1-6 sa spalone jako miara (byly zestawami roboczymi kolejnych poprawek),
-**siodmy jest jedyna zywa miara** i tez zginie przy pierwszej poprawce pod niego. Przed kolejna
-zmiana w routingu: zamow osmy tym samym sposobem. Co zostalo do poprawy widac na siodmym: **8 pytan,
-na ktore powinien byl odpowiedziec, a milczy** - to teraz slabsza strona, nie precyzja.
-
-**MAIL O ZMIANIE WERDYKTU OPISYWAL METODE, KTOREJ NIE STOSUJEMY** (naprawione, ale zostaje dlug).
-Gdy formula sie zmieni, cron przelicza poprzedni pomiar i mail mowil, ze podstawa „zostala
-przeliczona z tych samych dowodow pod obecnymi regulami". **To nie jest prawda dla checku, ktorego
-odczyt powstaje W TRAKCIE skanu**: dopasowanie fraz w `programmatic_provisioning` dzieje sie przy
-skanowaniu, a w raporcie zostaje **lista trafien, nie strony**, w ktorych je znaleziono (surowe
-ciala sond wyrzucamy, patrz „zapis raportu"). Przeliczenie zapisanych findings odtwarza wiec STARY
-odczyt. 9.32 zaciesnia dokladnie ten check, wiec zdanie stalo sie falszywe akurat teraz. Mail mowi
-teraz, co naprawde robimy, i wprost dopuszcza, ze linia mogla sie ruszyc przez zaostrzenie reguly.
-
-**Dlug SPLACONY tego samego wieczoru.** `CHECK_RULE_CHANGED` w `src/lib/watch.ts` mowi, ktore checki
-zmienily regule w ktorej wersji formuly, a `rulesChangedBetween(przed, po)` zwraca te, ktore ruszyly
-sie miedzy dwoma pomiarami. Cron **wycina je z listy zmian** i loguje ile, zamiast tlumaczyc je
-akapitem pod tematem, ktory juz powiedzial, ze vendor stracil grunt. Wersja, pod ktora zrobiono
-pomiar, nie liczy sie sama sobie. Cztery testy w buildzie.
-
-**Utrzymanie:** przy KAZDEJ zmianie punktacji dopisz check do `CHECK_RULE_CHANGED` pod numerem nowej
-wersji. Wersja nieobecna w tej mapie znaczy „ta wersja nie zmienila zadnej reguly punktacji" i jesli
-to nieprawda, obserwujacy dostanie maila o stracie, ktorej nie bylo.
-
-**Pulapka z tej samej godziny:** opublikowalem najpierw opis, w ktorym przykladem naprawionego bledu
-byl wlasnie modul billing - i to bylo nieprawda, bo tego akurat prog nie naprawia. Sprawdzilem
-kazdy z trzech przykladow zamiast zalozyc i poprawilem. **Przyklad w opisie jest twierdzeniem i
-sprawdza sie go tak samo jak liczbe.**
-
-**TA SAMA SLABSZA DEFINICJA ZNALEZIONA JESZCZE RAZ, NA STRONIE PUBLICZNEJ.** `/c/<kat>/runs`
-podswietlalo nazwy vendorow szukajac pierwszej etykiety domeny jako **podciagu bez granicy slowa**,
-wiec na `/c/domains-dns/runs` zaznaczalo „name" w *nameservers*, „cal" w *calculates" i „here" w
-*where*. Strona jest DOWODEM dla tabeli nad nia, wiec znacznik klocacy sie z ta tabela podwaza obie.
-Teraz zaznaczane sa wylacznie ciagi zaakceptowane przez opublikowany matcher, z wielkoscia liter.
-Zweryfikowane na produkcji: 28 znacznikow na `/c/domains-dns/runs`, wszystkie to prawdziwe nazwy,
-`name.com` nie dostaje zadnego - zgodnie z tabela, ktora mowi, ze nie padl ani razu.
-
-**Wniosek do zapamietania:** ta sama slabsza definicja „czy go wymieniono" byla w TRZECH miejscach
-niezaleznie (platny raport, mail, strona z biegami). Szukajac takiego bledu raz, poszukaj od razu
-wszystkich miejsc, ktore robia to samo pojecie po swojemu.
-
-**Domkniete przy okazji:** `/r/<id>` liczyl check nieadekwatny jako oblany (zweryfikowane na
-produkcji: uploadthing.com pisze teraz „5 of the checks", przy 5 oblanych i 1 nieadekwatnym);
-`audit-unblock` zglaszal groq.com przy kazdym biegu, bo zawezenie obiecane w naglowku tego skryptu
-14.08 nigdy nie trafilo do reguly (sprawdzone recznie 17.08: `groq.com/pricing` nadal przekierowuje
-na strone glowna, wiec werdykt i rada byly poprawne, blad byl w audycie).
-
-## AUDYT STRON DARMOWEGO UZYTKOWNIKA: 27 ZNALEZISK, EPICENTRUM W JEDNYM PLIKU (2026-08-17)
-
-**Piec z nich to `headline.ts`, wszystkie z jednej przyczyny: naglowek czytal SUROWE findings, a
-checki czytaja te same findings z czterema straznikami na wierzchu.** Rozjezdzaly sie dokladnie
-tam, gdzie te straznicy stali.
-
-- `[429,429,429]` na signupie, wywolane naszym wlasnym burstem: check pisal „Unmeasurable: a limit
-  we triggered", a naglowek najwieksza czcionka „Your signup page answers 429 to anything that is
-  not a browser".
-- `[403,403,200]`: naglowek wymienial to `200`, ktoremu sam zaprzeczal. Blad weglot.com, naprawiony
-  w checku 15.08 i **zywy w naglowku do 17.08**.
-- check NIEADEKWATNY liczony jako oblany: biblioteka z dwoma N/A dostawala do tytulu i do karty
-  share „2 checks are costing you agent-driven integrations", a bramka nizej mowila, ze zdaje
-  wszystko. **Trzy rozne odpowiedzi na jednej stronie, najglosniejsza falszywa.**
-- galaz o provisioningu omijala poprawke z 9.32: storyblok.com, ktoremu check mowi „nie wiemy",
-  dostawal naglowek „Nowhere in your documentation does an agent learn how to get a key".
-- galaz „clean" liczyla z papierowego maksimum: `2/2` obok „2 of 6".
-
-**Regula: galaz naglowka odpala sie tylko wtedy, gdy JEJ check oblal, mierzalnie.** Zdania
-niezmienione. Nowa pierwsza galaz na wypadek, gdy nie zmierzylismy niczego. Cztery testy w buildzie.
-
-**Cztery dalsze zdania nieprawdziwe, naprawione:** `/v` bralo tytul z najnowszego skanu dowolnego
-rodzaju, a tresc z wiersza korpusu (11/17 w tytule, 9/16 w tresci, i to tytul idzie do
-wyszukiwarki); pudelko o starej formule obiecywalo noindex, ktorego od 17.08 nie stosujemy; zdanie
-o mianowniku bylo arytmetycznie falszywe dla wierszy sprzed pola `measurable`; `stage.measurable`
-szlo do tekstu jako `undefined`. Plus „Same fourteen checks" przy pietnastu.
-
-**ZNALEZIONE PRZY WERYFIKACJI CZEGO INNEGO, I WIEKSZE NIZ TO, CZEGO SZUKALEM:** od wdrozenia 9.32
-po poludniu **kazdy nowy skan tracil caly blok porownania** - zero konkurentow, zero percentyla,
-zero „beaten on". Powod jest poprawny: `buildComparison` filtruje korpus do wersji formuly
-skanowanego, a korpus stoi na 9.31, wiec porownywalnych wierszy bylo ZERO. Odmowa porownywania
-przez wersje jest sluszna; **ciche usuniecie sekcji nie**. Strona mowi teraz, ktore dwie wersje sa
-w grze i ze korpus dogoni sam. **Dotyczy to okna po KAZDYM wdrozeniu formuly.**
-
-**Zrobione z listy audytu:** trzy zastrzezenia na `/v` (przekierowanie, uciety skan, 429) - `/v` jest
-strona indeksowana o cudzej firmie i nie mialo zadnego, a `/corpus.json` niosl `measuredOn` i
-`rateLimited`, wiec plik dla maszyn mowil wiecej niz strona dla ludzi; errata renderuja sie teraz
-takze na `/r`, czyli pod adresem z maila; prog `RANKABLE_MEASURABLE` dziala juz na karcie wyniku,
-wiec bitmovin.com nie stoi jednoczesnie na dole strony glownej i na gorze kazdej karty obok;
-`scaleAnchor` liczy w ulamkach zamiast mieszac surowe totale przy roznych mianownikach; `beatenOn`
-nie oskarza o check nieadekwatny.
-
-**Domkniete takze:** „This is the whole list" w FixFirst gubilo check bez recepty (jedyny taki to
-`robots_paths_resolve`, wiec kazdy, kto go oblewa, mogl naprawic cala liste i nie dojsc do liczby
-obok); „overtakes" porownywalo surowe totale przy roznych mianownikach; `unmeasured` w planie
-zgarnialo punkty za checki nieadekwatne; bramka mailowa obiecywala „permanent link" na stronie, na
-ktorej baner mowi, ze link umrze przy nastepnym deployu; trzy wiersze drukowaly `none` z robots.txt,
-ktorego nie dalo sie przeczytac.
-
-**Audyt stron darmowego uzytkownika ZAMKNIETY.** Ostatnia czworka: zdanie o metodzie mowilo, ze
-pobieramy wiecej niz raz cennik (pobieramy drzwi i signup); „Probably the wrong yardstick" stawialo
-teze o cudzym produkcie na podstawie naszej slepoty za WAF-em i nie pokazuje sie juz przy skanie
-zablokowanym, ograniczonym ani uciętym; naglowek „Scanned so far" stal nad liczba, ktora wycina
-kategorie ponizej czterech wierszy.
-
-**Nasz wlasny formularz skanu nie dziala bez JavaScriptu**, a karzemy za to vendorow. Formularz nie
-zalatwi tego uczciwie: skan trwa dluzej, niz zwykly submit ma prawo czekac, i dlatego sciezka
-przegladarkowa strumieniuje. Klient bez runtime dostaje wiec `<noscript>` z instrukcja - `curl` do
-`/api/scan`, `format: agent`, adres MCP - co dla agenta jest lepsze niz formularz. **Zasada:
-jesli nie umiemy czegos zrobic tak, jak wymagamy od innych, mowimy to wprost i dajemy droge obok.**
-
-**PULAPKA, ktora prawie opublikowala falszywy wniosek:** skan tuz po wdrozeniu wraca z **okna
-ponownego uzycia** (15 minut) i mierzy POPRZEDNI build. `storyblok.com` po deployu pokazywal stary
-werdykt i wygladalo to jak nieudana poprawka. **Sprawdzaj `reused` w odpowiedzi `/api/scan`, zanim
-uznasz, ze zmiana nie zadziala.**
+**JEDNA ZASADA Z CALEGO DNIA, warta wiecej niz reszta:** *to samo pojecie liczone w kilku miejscach
+po swojemu rozjedzie sie dokladnie tam, gdzie boli.* „Czy go wymieniono" bylo w trzech miejscach
+(platny raport, mail, strona z biegami). Naglowek liczyl werdykty inaczej niz checki, ktore
+opisuje. Mianownik byl raz `max`, raz `measurable`. Prog rankingu byl na stronie glownej i nie bylo
+go na karcie wyniku. **Szukajac takiego bledu raz, poszukaj od razu wszystkich miejsc, ktore robia
+to samo pojecie po swojemu.**
 
 **PODLOGA SZUMU: 0,59 procent** (15 werdyktow na 2550; 10 to werdykt kontra werdykt, 5 to wiersz
 niemierzalny po jednej stronie). **Zamrozenie formuly zdjete.**
