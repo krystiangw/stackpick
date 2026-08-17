@@ -4903,3 +4903,21 @@ i dowozi obietnice „dziesiec biegow na dwoch narzedziach"** (dzis osiem: 5 cla
 78 na 91 dostawcow, choc **zaden vendor nic nie zmienil**: pierwsza cela stala sie ta z trzema
 biegami. Teraz liczy sie brak wymienienia **we wszystkich celach**, czyli 71 na 177, a kolumna
 „named first" mowi, z ktorego narzedzia pochodzi.
+
+## MIESIECZNY MAIL Z BIEGOW AGENTA (2026-08-17)
+
+Monitoring obiecuje **dwie** rzeczy, a sciezke dostawy mial **jedna**: cotygodniowe checki mailuja
+sie same, a miesieczny bieg agenta nie mial nic. Wynik siedzial w `cells.json` i nikt nie byl o nim
+informowany, czyli polowa produktu za 79 USD nie miala jak dojsc do klienta.
+
+`npx tsx scripts/cell-email.mts [domena]` pisze po jednym szkicu na obserwowana domene: ile biegow
+ja wymienilo, kto byl przed nia, jedno zdanie cytatu, link do wszystkich odpowiedzi i do opisu
+liczenia. **Drukuje, nie wysyla** - mail do obcego czlowieka jest decyzja czlowieka. Domena bez
+kategorii dostaje szkic mowiacy wprost, ze biegu nie bedzie i dlaczego.
+
+**Cytat wybiera punktacja okien, nie pierwsze trafienie**: pierwsza wersja zacytowala `stripe.com`
+fragmentem zaczynajacym sie w srodku markdownowego linku i mowiacym glownie o konkurencie. Okno
+traci punkty za markdown, za link i za kazdego innego dostawce w srodku.
+
+Do tego `harness/ask.mts --add` dokleja biegi zamiast zastepowac cele, bo dobicie celi z trzech
+biegow do dziesieciu obiecanych w raporcie kosztowaloby piec swiezych, zeby zachowac trzy zrobione.
