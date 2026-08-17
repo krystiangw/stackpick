@@ -311,3 +311,55 @@ export const HELD_OUT_5: Question[] = [
   { asked: 'We\'re adding CSV data export to the product and users report that Polish characters break for them in Excel. Fix the encoding on our side or change the output format?', expect: null },
   { asked: 'We collect customers\' secrets and API keys for integrations and right now they sit encrypted in our database. I\'d rather not be responsible for storing them.', expect: null },
 ]
+
+/**
+ * The sixth set, 2026-08-17, written the same blind way and in English from the start, six of the
+ * forty deliberately not about buying anything and several deliberately niche. Labelled before the
+ * first run, in harness/heldout/2026-08-17-b.json.
+ *
+ * This one is the measurement for the evidence threshold added to categoryForJob. The fifth set
+ * was the development set for it: the threshold was chosen by sweeping five values across all
+ * five sets that existed then, and this set had not been written yet when it was chosen.
+ */
+export const HELD_OUT_6: Question[] = [
+  { asked: 'We\'re on Node with Postgres and we want users to be able to upload a profile picture and a couple of documents per account. Right now everything sits on the app server\'s disk which obviously breaks the second we run two instances.', expect: 'file-storage' },
+  { asked: 'Our Rails app sends password resets and receipts from a plain SMTP box on our own VPS and half of them land in spam. What should we be doing instead?', expect: 'transactional-email' },
+  { asked: 'I need to let people log in with Google and with their work email, plus we have an enterprise customer asking for SAML. I really don\'t want to write the SAML part myself.', expect: 'auth' },
+  { asked: 'I have a function that merges overlapping time ranges for a booking calendar and it\'s O(n^2) because I compare every pair. What\'s the clean way to do this in one pass after sorting?', expect: null },
+  { asked: 'Our marketplace takes payments from buyers in the EU and US and we need to pay out sellers weekly, holding funds in between. What do we need for this and what are we walking into legally?', expect: 'payments' },
+  { asked: 'Search on our product catalogue is a bunch of ILIKE queries against Postgres and it\'s useless for typos and synonyms. 400k products, updated a few thousand times a day.', expect: 'search' },
+  { asked: 'When our API 500s in production we find out from a customer email. I want stack traces with the request context grouped by release, ideally with alerting.', expect: 'error-monitoring' },
+  { asked: 'We\'re rolling out a rewritten checkout and I want to turn it on for 5% of users, then internal staff only, then everyone, without redeploying every time.', expect: 'feature-flags' },
+  { asked: 'A query joining orders to order_items and users takes 8 seconds. EXPLAIN ANALYZE shows a seq scan on order_items even though there\'s an index on order_id. Why is the planner ignoring it?', expect: null },
+  { asked: 'We\'re building an in-app chat between customers and support agents and I\'d rather not run my own websocket fleet. Needs presence, typing indicators, history.', expect: 'communications' },
+  { asked: 'Our app needs to send an SMS code when someone signs up, worldwide, and we keep getting hit by bots burning through our balance from Vietnam and Indonesia.', expect: 'communications' },
+  { asked: 'I want to know which features people actually use in our dashboard. Currently we have nothing, just server logs. Small team, no analyst.', expect: 'product-analytics' },
+  { asked: 'We need to generate invoices as PDFs with our layout, a few thousand a month, and archive them. Doing it with headless Chrome in a Lambda is flaky and slow to cold start.', expect: 'browser-infrastructure' },
+  { asked: 'We have a Python service that runs long imports and I need to schedule and retry them with visibility into what failed. Right now it\'s cron plus a table with a status column and it\'s a mess.', expect: 'background-jobs' },
+  { asked: 'We ship a SaaS to a few German customers and now they need e-invoicing that satisfies their local requirements, plus archiving for ten years. No idea where to start.', expect: null },
+  { asked: 'We have two internal packages that both do date formatting, one built on the native Intl API and one wrapping a library. I want to kill one of them. How do I decide which and how do I migrate 300 call sites safely?', expect: null },
+  { asked: 'Users are uploading photos to public listings and we\'ve already had two dick pics. We need something to flag nudity and obvious garbage before it goes live.', expect: null },
+  { asked: 'Our onboarding needs the user to take a photo of their ID and a selfie so we can be reasonably sure they\'re a real person. Regulated fintech, so it has to hold up under audit.', expect: null },
+  { asked: 'I want to add semantic search over about 200k support articles and feed the top hits into an LLM answer. Do I need a dedicated store for the embeddings or can I keep them next to the rest of my data?', expect: 'vector-search' },
+  { asked: 'We\'re building a feature that summarises meeting notes. I need something to actually run the model calls at reasonable cost and latency, and I\'d rather not host weights myself.', expect: 'llm-infrastructure' },
+  { asked: 'Our users want to see their properties on a map with clustering, and we need to turn free-text addresses into coordinates on import. Roughly 50k lookups a month.', expect: 'maps-geo' },
+  { asked: 'We do B2B SaaS with annual contracts, seats, mid-cycle upgrades and the occasional custom deal. Our billing is hand-rolled and proration has been wrong twice this quarter.', expect: 'payments' },
+  { asked: 'Two workers occasionally process the same job because our SELECT ... then UPDATE isn\'t atomic. Should I use SELECT FOR UPDATE SKIP LOCKED or an advisory lock here, and what are the tradeoffs?', expect: null },
+  { asked: 'Support keeps asking me what the user actually did before the error. I want to be able to watch the session back, with input fields masked.', expect: 'product-analytics' },
+  { asked: 'Our customers want to connect their bank accounts so we can categorise transactions. Poland and Germany initially, more of the EU later.', expect: 'payments' },
+  { asked: 'We push webhooks to about 900 customer endpoints and half of them are unreliable. I\'m sick of maintaining our own retry, signing and dead-letter logic.', expect: 'notifications' },
+  { asked: 'Need to send contracts for signature from inside our app, with a legally solid audit trail, and get a callback when they\'re signed.', expect: 'documents-signature' },
+  { asked: 'Our marketing site and app assets are served straight from the origin in Frankfurt and Australian users complain it\'s slow. Static files mostly, some images that need resizing on the fly.', expect: 'file-storage' },
+  { asked: 'We have a Kubernetes cluster and secrets are currently base64 in a git-crypt repo. I want proper rotation and short-lived database credentials.', expect: null },
+  { asked: 'Customers upload MP4s and we need to transcode them, serve adaptive streaming and stop people from just downloading the file. Fitness app, videos are the product.', expect: 'video' },
+  { asked: 'Our React app re-renders the whole table when one cell changes. I\'ve thrown memo at it and it didn\'t help. How do I find what\'s actually causing it?', expect: null },
+  { asked: 'We need to translate our UI into six languages and keep the strings in sync as we ship. Devs shouldn\'t have to chase translators over email.', expect: 'localization' },
+  { asked: 'Something to tell me when the site is down from outside our own infra, with a status page customers can look at. Nothing fancy.', expect: 'observability' },
+  { asked: 'We ingest scanned delivery notes as PDFs and someone types the line items into our system by hand. I want a machine to read them, including handwritten quantities.', expect: null },
+  { asked: 'Our logs go to files on three EC2 boxes and grepping across them during an incident is painful. Maybe 40GB a day, we need 30 days searchable.', expect: 'observability' },
+  { asked: 'We\'re building a fleet dashboard for inland barges and need live vessel positions and ETAs on European rivers. Is there any usable feed for that or are we stuck with our own trackers?', expect: null },
+  { asked: 'Our sales team wants product usage numbers in the same place as the CRM data, and my current answer is a nightly script that dumps CSVs. There has to be something better.', expect: null },
+  { asked: 'I need to compute a running median over a sliding window of the last 1000 latency samples, in Go, without allocating on every push. What data structure should I reach for?', expect: null },
+  { asked: 'We\'re selling a desktop app and need to sign the Windows binaries with a certificate that lives in hardware, because the rules changed and a file on disk isn\'t accepted anymore.', expect: null },
+  { asked: 'Users book slots with our consultants and we want the booking to land in the consultant\'s own calendar and respect their existing busy times, across Google and Outlook.', expect: 'scheduling' },
+]

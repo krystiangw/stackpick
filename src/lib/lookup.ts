@@ -332,6 +332,22 @@ export function categoryForJob(job: string): Category | null {
   // my app" went there because the same line says "sell something". A prose hit now only breaks a
   // tie between categories the caller's own words already reached.
   if (scored[0].strong === 0) return null
+  /**
+   * One word out of many is not enough to answer with. `explainJob` has said since it was written
+   * that "one hit inside a nine word sentence is a different kind of evidence from two hits inside
+   * three words, and the decision rule needs to see both", and then the decision rule never looked
+   * at the length at all: a single vocabulary token won outright however long the question was.
+   * That is where the confident wrong answers came from. Deploying containers went to
+   * notifications on the word push, a billing module inside the caller's own repository went to
+   * payments, an events table in Postgres went to product analytics.
+   *
+   * Measured across all five question sets before choosing the number. On the one set nobody has
+   * fixed against, this costs nothing at all and removes eight of the ten wrong answers: 24 right
+   * either way, wrong answers 10 to 2. On the second set, 31 right either way and 11 wrong to 6.
+   * The two sets it costs correct answers on are both sets the rules were fixed against, so their
+   * higher score is partly a memory of that fitting rather than a measurement.
+   */
+  if (words.length > 12 && scored[0].strong < 20) return null
   // A tie between two categories is a question we cannot route, and guessing would send a caller
   // a list of the wrong vendors with our name on it.
   // Tested and refuted 2026-08-13: letting a named delivery channel take the tie. It fired on

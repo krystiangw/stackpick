@@ -1,0 +1,33 @@
+{
+  "note": "Szosty zestaw held-out. 40 pytan napisanych 2026-08-17 przez agenta bez dostepu do repozytorium i bez widoku listy kategorii, od razu po angielsku, szesc celowo nie o kupowaniu i kilka celowo niszowych. Etykiety nadane PRZED pierwszym uruchomieniem poprawionej reguly decyzyjnej. Piaty zestaw stal sie zestawem roboczym dla tej poprawki, ten jest miara.",
+  "expected": {
+    "1": "file-storage", "2": "transactional-email", "3": "auth", "5": "payments",
+    "6": "search", "7": "error-monitoring", "8": "feature-flags", "11": "communications",
+    "12": "product-analytics", "14": "background-jobs", "19": "vector-search",
+    "20": "llm-infrastructure", "21": "maps-geo", "22": "payments", "24": "product-analytics",
+    "25": "payments", "27": "documents-signature", "28": "file-storage", "30": "video",
+    "32": "localization", "33": "observability", "35": "observability", "40": "scheduling"
+  },
+  "refuse": [4, 9, 15, 16, 17, 18, 23, 29, 31, 34, 36, 37, 38, 39],
+  "refuseWhy": {
+    "4": "wlasny algorytm",
+    "9": "planista Postgresa, wlasne zapytanie",
+    "15": "e-fakturowanie i archiwizacja, poza kategoriami",
+    "16": "dwa wlasne pakiety, decyzja w repo",
+    "17": "moderacja tresci, poza kategoriami",
+    "18": "KYC, poza kategoriami",
+    "23": "blokady w Postgresie, wlasny kod",
+    "29": "zarzadzanie sekretami, poza kategoriami",
+    "31": "renderowanie w Reakcie, wlasny kod",
+    "34": "OCR dokumentow, poza kategoriami",
+    "36": "pozycje barek na rzekach, poza kategoriami",
+    "37": "reverse ETL do CRM, poza kategoriami",
+    "38": "struktura danych w Go",
+    "39": "podpisywanie binariow certyfikatem sprzetowym, poza kategoriami"
+  },
+  "ambiguous": {
+    "10": ["communications", null],
+    "13": ["browser-infrastructure", null],
+    "26": ["notifications", null]
+  }
+}
