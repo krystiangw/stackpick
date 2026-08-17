@@ -4873,3 +4873,33 @@ Trzecie znalezisko jest kosmetyczne i samo zniknie: `app-hosting` ma w kolumnie 
 Agenci czytaja nas systematycznie i **`/c` zostalo znalezione w godzine od wdrozenia**. Dni
 wczesniejsze: 460, 23, 228, 615, 172. To nie jest ruch sprzedazowy, ale jest to dokladnie ta
 publicznosc, o ktorej piszemy vendorom, ze istnieje.
+
+## REPLIKACJA DRUGIM NARZEDZIEM ZROBIONA I OPUBLIKOWANA (2026-08-17)
+
+26 cel powtorzonych **codeksem**, ktory nie czyta instrukcji tej maszyny i odpowiada po angielsku:
+inny dostawca, inny model, inne skazenie, trzy biegi na kategorie zamiast pieciu. **Wniosek trzyma
+sie i jest mocniejszy:**
+
+| check | claude (5 biegow) | codex (3 biegi) |
+|---|---|---|
+| `oauth_dcr` | +25pp (+26 / +17) | **+28pp (+25 / +22)** |
+| `mcp_present` | +17pp (+21 / +9) | **+22pp (+20 / +20)** |
+| `programmatic_provisioning` | +24pp (+37 / **+3**) | +22pp (+41 / **-1**) |
+| `llms_txt` | +5pp (-2 / -4) | +13pp (+11 / **+1**) |
+| wynik powyzej mediany karty | 54% kontra 35% | **57% kontra 33%, p = 0,001** |
+
+**Dwa checki przezywaja w obu narzedziach: `oauth_dcr` i `mcp_present`.**
+`programmatic_provisioning` powtarza swoj wlasny wzor, czyli caly efekt u popularnych i zero albo
+minus u reszty, wiec to slawa. `llms_txt` nadal nie oddziela nikogo po kontroli na popularnosc.
+
+**Opublikowane na `/findings`**, razem ze zdaniem, czego to nadal nie dowodzi. Strona obiecywala
+publikacje niezaleznie od wyniku, wiec tym bardziej trzeba bylo dopisac ograniczenia.
+
+**Dane:** `src/data/cells.json` ma teraz **52 cele, po 26 na narzedzie** (600 kB). Strony kategorii
+maja kolumne per narzedzie, strona biegow pokazuje odpowiedzi z obu, a **raport klienta sumuje oba
+i dowozi obietnice „dziesiec biegow na dwoch narzedziach"** (dzis osiem: 5 claude + 3 codex).
+
+**Pulapka zlapana od razu:** po dolozeniu drugiego narzedzia zdanie „nie padl ani razu" skoczylo z
+78 na 91 dostawcow, choc **zaden vendor nic nie zmienil**: pierwsza cela stala sie ta z trzema
+biegami. Teraz liczy sie brak wymienienia **we wszystkich celach**, czyli 71 na 177, a kolumna
+„named first" mowi, z ktorego narzedzia pochodzi.
