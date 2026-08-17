@@ -2,8 +2,8 @@
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te trzydziesci linijek, potem reszte)
 
-**W LOCIE JEST JEDNO (stan 15:20, 2026-08-17): petla ponawiajaca reseed na 9.31.**
-Log `/tmp/reseed-931.log`, proba 13 z 18, co 20 minut. Karencja (6 h mediany wieku korpusu) mija
+**W LOCIE JEST JEDNO (stan 15:35, 2026-08-17): petla ponawiajaca reseed na 9.31.**
+Log `/tmp/reseed-931.log`, proba 14 z 18, co 20 minut. Karencja (6 h mediany wieku korpusu) mija
 **okolo 16:00**, wiec powinna zlapac probe 16 albo 17. **`tail -3 /tmp/reseed-931.log` zanim
 cokolwiek zrobisz.** Gdyby przepadla, wznowienie: `STACKPICK_CONSOLE_TOKEN=$(heroku config:get
 STACKPICK_CONSOLE_TOKEN -a stackpick) bash -c 'for i in $(seq 1 18); do npm run reseed; [ $? -eq 3 ]
@@ -69,6 +69,33 @@ kadencji monitoringu, raport pokrycia obserwacji i research wtyczek agent-ready.
 czysty i to on niesie replikacje), rekord DNS do rejestru MCP, konta w Bing Webmaster i katalogach
 MCP, token npm, licencja korpusu, sciezka zakupu inna niz `mailto:` i Stripe kontra Paddle.
 **agenticpay tego NIE odblokowuje.**
+
+## SELF-AUDYT WLASNEJ WITRYNY WEDLUG SKILLA `agent-discoverability` (2026-08-17, 15:30)
+
+Sprzedajemy gotowosc na agentow, wiec raz na jakis czas trzeba przepuscic wlasna witryne przez
+wlasna liste. **Blokery binarne przechodzimy wszystkie**: HTML renderowany po stronie serwera na
+`/`, `/c`, `/findings`, `/methodology` i `/pricing`, `robots.txt` wpuszcza boty pobierajace,
+skan bez konta i bez karty, `/agent-signup.md`, `/agents.md`, `/openapi.json`,
+`/.well-known/mcp.json`, `/.well-known/agent-access.json` i `/.well-known/api-catalog` odpowiadaja
+200, a linki w naszym `llms.txt` zyja.
+
+**Trzy dziury, ktore celowo zostawiamy** (zapisane, zeby nikt nie audytowal tego drugi raz):
+`/.well-known/security.txt` (nasz skaner go sonduje, ale **za nic nie przyznaje punktu**, wiec
+wystawienie go byloby kultem cargo), `llms-full.txt` (nasz `llms.txt` ma 2,6 kB i nie ma czego
+rozwijac) oraz ARD `/.well-known/ai-catalog.json` (adopcja bliska zeru, skill wprost mowi, zeby
+nie mierzyc nim sukcesu).
+
+**Dwie rzeczy naprawione i wdrozone.**
+
+1. **Cena i warunek wejscia trafily do snippeta.** Wlasny pomiar mowi, ze agent odrzuca dostawce na
+   podstawie wyniku wyszukiwania, ktorego **nie otworzyl** (Auth0 przegral bieg przez cudze zdanie
+   o wymaganej karcie; jedyny bieg, ktory otworzyl ich cennik, zadnej karty nie znalazl). Opis
+   `/pricing` nie mial ani jednej liczby, wiec czytal sie jak „contact sales", a opis strony
+   glownej nie mowil, ze skan jest darmowy i nie chce konta. Oba zmienione, lead na `/pricing` tez.
+2. **Adnotacje przy narzedziach MCP**, ktorych nie bylo wcale. `scan_domain` dostal
+   `readOnlyHint: false` - jedno wywolanie to seria zadan do **cudzego** serwera i zapisany raport
+   pod stalym linkiem, wiec klient auto-zatwierdzajacy read-only puszczalby to bez nadzoru na
+   osobie trzeciej. `find_providers` czyta tylko nasz korpus i ma hinty odwrotne.
 
 ## 9.31 I ODKRYCIE, ZE REJESTR MCP JEST DLA NASZEGO DYNA NIEOSIAGALNY (2026-08-17)
 
