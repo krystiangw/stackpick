@@ -82,6 +82,29 @@ const SAME_SENTENCE = String.raw`(?:(?!\.\s)[\s\S])`
 
 const CREATES_A_CREDENTIAL = String.raw`creat(?:e|es|ing)(?:\s+(?:and|or)\s+\w+)?\s+(?:an?|your|a new|new|the)?\s*${CREDENTIAL}`
 
+/**
+ * Three of the rules below are bare noun phrases, and a noun phrase is a name rather than a path.
+ * The reseed of 9.31 stored the words each match stood on, and reading all 28 rows credited on
+ * nothing else showed what a bare phrase actually catches: "Media management API integration"
+ * (imagekit.io), "Content Delivery API Management API Image Service" (storyblok.com), "Permissions
+ * Manager - permissions management API" (plaid.com), "Important Change to the Twilio Phone Number
+ * Provisioning API" (sendgrid.com), "[Account API]: Retrieve account details" (usefathom.com) and
+ * a customer testimonial on auth0.com. Navigation lists and a different sense of "management".
+ *
+ * So a bare phrase now has to be corroborated inside the same window we quote: either a credential
+ * is named beside it, or something is created rather than merely managed. The window is the rule
+ * rather than the whole page on purpose - it makes the sentence we publish carry its own evidence,
+ * so a vendor reading the quote can see what earned the point instead of taking our word for it.
+ */
+const BARE_PROVISIONING_INDEXES = new Set([0, 1, 2])
+
+const NAMES_A_CREDENTIAL =
+  /\b(?:api[-_ ]?keys?|api[-_ ]?tokens?|access[-_ ]?(?:tokens?|keys?)|personal access tokens?|secret[-_ ]?keys?|credentials?|service accounts?|auth tokens?|bearer tokens?)\b/i
+
+/** Something is brought into existence, in either word order, rather than administered. */
+const MAKES_SOMETHING =
+  /\b(?:creat\w+|generat\w+|provision(?:s|ed|ing)?|issu\w+|add(?:s|ed|ing)?|register\w*)\b[^.]{0,40}\b(?:accounts?|users?|keys?|tokens?|tenants?|organi[sz]ations?|workspaces?|projects?)\b|\b(?:accounts?|users?|keys?|tokens?|tenants?|organi[sz]ations?|workspaces?|projects?)\b[^.]{0,40}\b(?:creation|creat\w+|generat\w+|provision(?:s|ed|ing)?|issu\w+)\b/i
+
 const PROVISIONING_PATTERNS = [
   /management api/i,
   /provisioning api/i,
@@ -350,9 +373,11 @@ export const BOT_DEFENCE_RULES = BOT_DEFENCE_SIGNATURES
  * not a published rule, and it is the heaviest check on the card.
  */
 export const PROVISIONING_PATTERN_LABELS = [
-  'management api',
-  'provisioning api',
-  'account api',
+  // The three bare ones say "beside" because since 9.32 they no longer count on their own: the
+  // words we quote have to carry the evidence, or the phrase is just a name in a menu.
+  'management api, beside a credential or something being created',
+  'provisioning api, beside a credential or something being created',
+  'account api, beside a credential or something being created',
   // Parenthesised because the sentence quotes each label as one phrase, and a comma-separated
   // list read as six: a vendor saw "1 of 7 provisioning phrases" followed by six things.
   'create an api key (or api token, access token, personal access token, service account, auth token, secret key, access key, service token, signing key, publishable key, client key, licence key, project token), next to something programmatic',
@@ -909,10 +934,38 @@ function visibleProse(html: string): string {
     .replace(/(?:\.\s+){2,}/g, '. ')
 }
 
+/**
+ * Whether the words around a bare phrase earn it the point. Exported so the corpus can be replayed
+ * against the stored quotes without a rescan: the quote is the window, so the answer is exact.
+ */
+export function corroboratesBareProvisioning(window: string, phrase: string): boolean {
+  // The phrase cannot corroborate itself: "Phone Number Provisioning API" contains "provision".
+  const around = window.replace(phrase, ' ')
+  return NAMES_A_CREDENTIAL.test(around) || MAKES_SOMETHING.test(around)
+}
+
+/** The ±70 characters we quote, which for a bare phrase is also the evidence it has to carry. */
+function windowAround(text: string, at: number, length: number): string {
+  return text.slice(Math.max(text.lastIndexOf('. ', at) + 1, at - 70), at + length + 70)
+}
+
+/**
+ * Every occurrence, not the first. A nav list naming "Management API" usually comes before the
+ * page that documents it, so stopping at the first hit judged the menu and ignored the docs.
+ */
+function provisioningHit(text: string, pattern: RegExp, index: number): number {
+  const all = new RegExp(pattern.source, `${pattern.flags.replace('g', '')}g`)
+  for (let hit = all.exec(text); hit; hit = all.exec(text)) {
+    if (!BARE_PROVISIONING_INDEXES.has(index)) return hit.index
+    if (corroboratesBareProvisioning(windowAround(text, hit.index, hit[0].length), hit[0])) return hit.index
+  }
+  return -1
+}
+
 export function provisioningMatches(html: string): string[] {
   const text = visibleProse(html)
   return PROVISIONING_PATTERNS.map((pattern, index) =>
-    pattern.test(text) ? PROVISIONING_PATTERN_LABELS[index] : null,
+    provisioningHit(text, pattern, index) === -1 ? null : PROVISIONING_PATTERN_LABELS[index],
   ).filter((label): label is string => label !== null)
 }
 
@@ -927,10 +980,13 @@ export function provisioningMatches(html: string): string[] {
 export function provisioningQuotes(html: string, most = 2): string[] {
   const text = visibleProse(html)
   const found: string[] = []
-  for (const pattern of PROVISIONING_PATTERNS) {
-    const hit = pattern.exec(text)
+  for (const [index, pattern] of PROVISIONING_PATTERNS.entries()) {
+    // The occurrence that earned the point, not the first one on the page. Quoting a different
+    // occurrence than the rule accepted would publish a sentence that does not carry its evidence.
+    const at = provisioningHit(text, pattern, index)
+    if (at === -1) continue
+    const hit = new RegExp(pattern.source, pattern.flags).exec(text.slice(at))
     if (!hit) continue
-    const at = hit.index ?? text.indexOf(hit[0])
     const from = Math.max(text.lastIndexOf('. ', at) + 1, at - 70)
     // From a word boundary, because a window cut by character count starts mid-word and the
     // published sentence then opens with a stray letter.

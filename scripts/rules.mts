@@ -112,8 +112,10 @@ const widerProvisioning: Case[] = [
   ['self service account holders can reset their own password', false],
   // The real one still counts, in both spellings.
   ['Create a service account and grant it the roles it needs', true],
-  // Hyphenated spelling has never matched, before this change or after it. Noted rather than
-  // widened here: a widening moves scores and belongs in a pass that can measure how many.
+  // Hyphenated spelling has never matched. Left alone again in 9.32, which was the pass that could
+  // finally measure a change here: the stored quotes only cover phrases that already fired, so a
+  // WIDENING is the one kind of change they cannot price. This sentence is also the reason not to
+  // widen it naively - a key you use to authenticate is one you were given, not one you can make.
   ['Use a service-account key to authenticate the job', false],
 ]
 for (const [text, expected] of widerProvisioning) {
@@ -444,9 +446,16 @@ check('menu nie jest zdaniem', provisioningMatches(mapboxSidebar).length, 0)
 // The same words as prose, which is a real documented path and has to keep counting.
 const realSentence = '<p>You can create an API key with the CLI, or POST to /v1/api_keys.</p>'
 check('zdanie nadal jest zdaniem', provisioningMatches(realSentence).length > 0, true)
-// Two list items whose words would form a false sentence if run together.
+// Two list items whose words would form a false sentence if run together. Since 9.32 this earns
+// nothing at all: the conjunction must not reach across the boundary, and the bare phrase left on
+// its own is a menu entry. Twenty-eight rows in the corpus stood on exactly this shape, among them
+// "Content Delivery API Management API Image Service" and "Account API . Number Masking".
 const dashboardList = `<ul><li>Click Generate key in the dashboard.</li><li>Management API</li></ul>`
-check('dwie pozycje listy to nie jedno zdanie', provisioningMatches(dashboardList).includes('management api'), true)
+check('dwie pozycje listy to nie jedno zdanie', provisioningMatches(dashboardList).length, 0)
+// The same phrase with its evidence in the same breath still counts, which is the half of this
+// that a tightening is most likely to break.
+const namedBeside = '<p>Use the Management API to create an API key for each tenant.</p>'
+check('gola fraza z dowodem obok nadal liczy', provisioningMatches(namedBeside).includes('management api, beside a credential or something being created'), true)
 // A heading is not a boundary, it is the subject of the sentence under it. mux.com, telnyx.com
 // and stytch.com all document key creation this way, and a reseed with headings as boundaries
 // lost every one of them.

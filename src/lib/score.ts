@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.31'
+export const FORMULA_VERSION = '9.32'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
