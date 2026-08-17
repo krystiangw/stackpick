@@ -2473,5 +2473,109 @@
         "first": 0
       }
     ]
+  },
+  {
+    "category": "app-hosting",
+    "question": "We have a Node API and a React front end that a single developer deploys by hand to a virtual machine, and every release is a small ceremony. I want pushes to deploy themselves, preview environments per pull request, and no server for anybody to patch. Which platform would you use, and what else did you weigh before settling on it?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-17",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Dla tego zestawu (Node API + React, jeden developer, zero serwera do łatania) postawiłbym na **Render** - ma natywne PR preview environments dla usług backendowych i statycznych stron w jednym miejscu, deploy z push'a od razu, i nie wymusza przepisania Express/Node API na funkcje serverless.\n\nCo odrzuciłem po drodze: **Vercel** ma najlepszy DX dla samego Reacta i świetne preview per PR, ale API trzeba by przerobić pod jego model funkcji serverless (edge/node functions) - jeśli to zwykły długo działający Express, to dodatkowa robota migracyjna; **Railway** jest bardzo zbliżony do Render i też warty rozważenia, głównie kwestia cen i limitów regionów; **Fly.io** dawałby więcej kontroli (pełne kontenery, blisko VM) ale to już z powrotem trochę \"serwer do patchowania\" w wydaniu light; **AWS (App Runner/Amplify)** odpadło jako przerost formy dla jednoosobowego zespołu - więcej configu niż realnej potrzeby.\n\nJeśli chcesz, mogę zajrzeć w kod repo i sprawdzić, czy Node API da się bez bólu przenieść na Vercel Functions (to by dało jeden provider dla całości) - powiedz tylko czy backend jest stateless czy trzyma coś w pamięci/na dysku VM.",
+        "named": [
+          "render.com",
+          "vercel.com",
+          "railway.com",
+          "fly.io"
+        ],
+        "first": "render.com"
+      },
+      {
+        "run": 2,
+        "text": "Dla pojedynczego dewelopera z Node API + React, bez własnego serwera do łatania: postawiłbym na **Vercel** (frontend + serverless/edge API routes) albo, jeśli backend to pełnoprawny long-running proces (websockety, kolejki, cron), **Render** albo **Railway** dla API i osobno Vercel/Netlify dla Reacta - oba dają deploy na push i automatyczne preview environments per PR out of the box, zero serwera do patchowania.\n\nCo odrzuciłem po drodze: czysty **AWS (ECS/Fargate + Amplify)** daje najwięcej kontroli, ale to z powrotem ceremonia (IaC, VPC, ECR) tylko przeniesiona z rąk na Terraform; **Fly.io** jest dobry dla long-running procesów blisko usera, ale preview per PR trzeba sobie samemu poskładać z fly.toml + GitHub Actions; **Heroku** ma dokładnie ten sam model co Render/Railway, ale drożej i mniej żywy.\n\nJeśli backend to zwykłe REST endpointy bez stanu, wolałbym Vercel dla obu części (jeden dashboard, jeden deploy pipeline). Powiedz więcej o charakterze API (czy trzyma połączenia/stan, WebSockety, długie joby) to zawężę rekomendację.",
+        "named": [
+          "vercel.com",
+          "render.com",
+          "railway.com",
+          "netlify.com",
+          "fly.io",
+          "heroku.com"
+        ],
+        "first": "vercel.com"
+      },
+      {
+        "run": 3,
+        "text": "Dla pojedynczego developera z Node API + React, gdzie zależy Ci na deployu z pusha, preview per PR i zerowym patchowaniu serwera, postawiłbym na **Render** (frontend jako static site, API jako Web Service) - deploy z każdego pusha out of the box, natywne PR preview environments, infrastruktura w całości zarządzana przez nich.\n\nGłówny kompromis, który ważyłem: **Vercel** ma najlepszy DX i previews, ale Node API tam żyje jako serverless functions - jeśli Twoje API robi coś dłużej działającego, trzyma połączenia (np. websockety, długie query) albo ma stan między requestami, wchodzisz w limity czasu wykonania i cold starty. Render/**Railway** (praktycznie równoważna alternatywa) dają Ci zwykły długożyjący proces Node bez tego ograniczenia, kosztem odrobinę mniej dopracowanego UX previews niż Vercel.\n\nCzy Twoje API ma coś, co wymaga długo działającego procesu (websockety, cron, streaming), czy spokojnie zmieściłoby się w modelu serverless?",
+        "named": [
+          "render.com",
+          "vercel.com",
+          "railway.com"
+        ],
+        "first": "render.com"
+      },
+      {
+        "run": 4,
+        "text": "Postawiłbym na Render: jeden zaczep na repo, oddzielne serwisy dla API i frontu, push na main wdraża się sam, a każdy PR dostaje własne środowisko preview bez ruszania serwera - zero OS-a do łatania.\n\nCo odrzuciłem po drodze: Vercel (świetny dla samego Reacta i najlepsze previews na rynku, ale trzeba by dokładać osobną platformę pod Node API, jeśli to nie są proste funkcje serverless - dwa dashboardy zamiast jednego to więcej ceremonii, nie mniej) oraz Fly.io (więcej kontroli nad regionami i ruchem, ale to wciąż myślenie w kategoriach maszyn i trzeba samemu spinać push-to-deploy oraz PR previews przez GitHub Actions, czyli dokładnie ta robota, której chcesz się pozbyć).",
+        "named": [
+          "render.com",
+          "vercel.com",
+          "fly.io"
+        ],
+        "first": "render.com"
+      },
+      {
+        "run": 5,
+        "text": "Wziąłbym **Render** (ewentualnie Railway jako blisko bliźniaczą alternatywę) - deploy z gita, PR preview environments out-of-the-box dla frontendu i API, zero patchowania OS bo to zarządzane kontenery, a Node API działa bez przepisywania.\n\nGłówny kompromis, który rozstrzygnął sprawę: **Vercel** jest \"bardziej serverless\" (zero infrastruktury nawet koncepcyjnie) i ma najlepsze PR previews na rynku, ale wymusza przerobienie Node API na serverless functions - opłacalne tylko jeśli to bezstanowe, krótkie żądania (CRUD). Jeśli w API są WebSockety, długie połączenia, joby w tle czy cron, Vercel zaczyna się wyginać (limity czasu wykonania, brak trwałych połączeń), a Render/Railway trzyma to jako zwykły long-running proces bez żadnej przebudowy.\n\nJedno pytanie zanim to osiądzie: czy ten Node API jest czysto bezstanowy (REST/CRUD), czy trzyma coś długożyjącego (WS, kolejki, cron)? To rozstrzyga między Vercel a Render/Railway.",
+        "named": [
+          "render.com",
+          "railway.com",
+          "vercel.com"
+        ],
+        "first": "render.com"
+      }
+    ],
+    "rows": [
+      {
+        "domain": "render.com",
+        "named": 5,
+        "first": 4
+      },
+      {
+        "domain": "vercel.com",
+        "named": 5,
+        "first": 1
+      },
+      {
+        "domain": "railway.com",
+        "named": 4,
+        "first": 0
+      },
+      {
+        "domain": "fly.io",
+        "named": 3,
+        "first": 0
+      },
+      {
+        "domain": "heroku.com",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "netlify.com",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "koyeb.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
   }
 ]
