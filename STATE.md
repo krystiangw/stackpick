@@ -2,35 +2,29 @@
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te trzydziesci linijek, potem reszte)
 
-**W LOCIE, SPRAWDZ TO NAJPIERW:** drugi reseed na 9.30 skonczyl przemiatanie (`170 ok, 0 failed`,
-2026-08-17 ok. 10:15) i wchodzil w zamiatanie 429. Log: `scratchpad/reseed-drugi.log`.
+**NIC NIE JEST W LOCIE.** Oba reseedy na 9.30 skonczone, korpus 170 wierszy, 0 sprzecznosci,
+0 rozjazdu w opublikowanych liczbach. Zadnych procesow w tle poza cronami.
 
-**PODLOGA SZUMU ZMIERZONA I OPUBLIKOWANA: 0,59 procent, symetrycznie (9 w gore, 6 w dol).**
-Zamrozenie formuly **zdjete**. Do wdrozenia dwie opisane poprawki: zdanie o formularzu
-(`signup_reachable`, sekcja 29.) i sciezki specyfikacji na hoscie dokumentacji (sekcja 28.).
+**PODLOGA SZUMU ZMIERZONA, OPUBLIKOWANA I ZWERYFIKOWANA NA PRODUKCJI: 0,59 procent**
+(15 werdyktow na 2550, 170 domen, 9 w gore i 6 w dol, czyli symetrycznie). Zastapila 0,20 z
+formuly 9.8. **Zamrozenie formuly ZDJETE.**
 
-**Jak powtorzyc pomiar (stara instrukcja, nadal wazna):**
-
-```
-MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npm run noise-floor 9.30
-```
-
-To jest **pierwszy w historii tego produktu pomiar podlogi szumu** na parze **CIEPLY-CIEPLY**
-(ostatni skan pierwszego reseedu kontra ostatni skan drugiego, oba na 9.30). Skrypt grupuje skany
-po przerwie 90 minut i sam wybiera wlasciwa pare; tryb `adjacent` pokazuje stara, myląca pare z
-jednego przebiegu (na 9.30: 30 ruchow, 27 w gore, 3 w dol, czyli zimny cache npm).
-
-**Jak czytac wynik:** ruch **symetryczny** = prawdziwy szum, i ta liczba idzie na `/methodology`
-zamiast pomiaru z 12 sierpnia na formule 9.8. Ruch **jednokierunkowy** = znowu efekt systematyczny,
-i wtedy piszemy to wprost, zamiast publikowac procent.
-
-**FORMULA JEST ZAMROZONA NA 9.30 do czasu tego pomiaru.** Po nim odmrazamy i wdrazamy dwie gotowe,
-opisane poprawki (obie dotykaja zdania, wiec i wersji):
-1. **`signup_reachable`**: osmiu vendorom mowimy "its form needs JavaScript", a ich strona nie ma
-   zadnego pola i wpuszcza tylko przez dostawce tozsamosci (`modal.com/signup`: 51 983 B, zero
-   `<input>`, trzy przyciski "Continue with"). Sekcja "29. PRZEBIEG".
+**NASTEPNE DWA KROKI, oba opisane i gotowe do napisania:**
+1. **`signup_reachable`**: osmiu vendorom publikujemy *„its form needs JavaScript"*, a ich strona
+   nie ma zadnego pola i wpuszcza tylko przez dostawce tozsamosci (`modal.com/signup`: 51 983 B,
+   zero `<input>`, trzy przyciski „Continue with"). Sonda audytu juz to rozroznia jako `oauth-only`.
+   Sekcja **„29. PRZEBIEG"**.
 2. **`machine_readable_api`**: sciezek specyfikacji szukamy tylko na witrynie, nigdy na **hoscie
-   dokumentacji**, choc tam leza (`docs.trychroma.com/openapi.json` i dwie inne). Sekcja "28. PRZEBIEG".
+   dokumentacji**, choc tam leza (`docs.trychroma.com/openapi.json`, `docs.together.ai/openapi.yaml`,
+   `docs.browserless.io/openapi.yaml`). Sekcja **„28. PRZEBIEG"**.
+
+Obie zmieniaja publikowane zdanie, wiec **obie wymagaja bumpa `FORMULA_VERSION`** i sprawdzenia na
+**170 wierszach** (reseed), a nie na czterech domenach.
+
+**Jak powtorzyc pomiar podlogi szumu** (koszt: doba bez zmiany regul i dwa przemiatania oddalone
+o karencje): `MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npm run noise-floor <wersja>`.
+Skrypt grupuje skany po przerwie 90 minut i sam wybiera pare cieply-cieply; `... <wersja> adjacent`
+pokazuje stara, mylaca pare z jednego przebiegu (na 9.30: 27 w gore, 3 w dol).
 
 **Co jeszcze zrobione tej nocy, w skrocie:** 26. przebieg (katalogi MCP odpadly na pokryciu, zrodlem
 zostala ich wlasna dokumentacja, dwa falszywe oskarzenia naprawione w 9.29), 27. (CAPTCHA na calej
