@@ -2,33 +2,33 @@
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te trzydziesci linijek, potem reszte)
 
-**W LOCIE SA DWIE RZECZY, obie w tle na tym laptopie:**
-1. **Petla ponawiajaca reseed na 9.31**, od okolo 11:00, log `/tmp/reseed-931.log`. Czeka na
-   karencje (6 h mediany wieku korpusu, mija okolo 16:00) i ponawia co 20 minut, 18 razy.
-   **`tail -3 /tmp/reseed-931.log` zanim cokolwiek zrobisz.** Korpus jest wiec dalej na **9.30**,
-   produkcja na **9.31**, i strona sama o tym pisze.
-2. **Replikacja 26 cel rozpoznawczych codeksem**, log `/tmp/codex-cells.log`, katalog
-   `~/.letagentsin-runs-codex`, 3 biegi na kategorie. Codex **nie czyta instrukcji tej maszyny i
-   odpowiada po angielsku**, wiec to jest czystszy dowod niz to, co dzis publikujemy. Koniec: linia
-   `KONIEC` w logu.
+**W LOCIE SA DWIE RZECZY, obie w tle na tym laptopie (stan 15:06, 2026-08-17):**
+1. **Petla ponawiajaca reseed na 9.31**, log `/tmp/reseed-931.log`, proba 13 z 18, co 20 minut.
+   Karencja (6 h mediany wieku korpusu) mija **okolo 16:00**, wiec powinna zlapac probe 16 albo 17.
+   **`tail -3 /tmp/reseed-931.log` zanim cokolwiek zrobisz.** Gdyby przepadla: `for i in $(seq 1
+   18); do npm run reseed; [ $? -eq 3 ] && sleep 1200 || break; done` z `STACKPICK_CONSOLE_TOKEN`.
+2. **Dobijanie cel codeksa do pieciu biegow**, log `/tmp/codex-top-up.log`, 41 z 52 biegow,
+   `npm run ask -- <kategoria> codex --add 2` po kolei. Koniec: linia `KONIEC`.
+
+**PO ZAKONCZENIU DOBIJANIA:**
+`LETAGENTSIN_RUNS_ALL=$HOME/.letagentsin-runs-codex npx tsx scripts/export-cells.mts`, potem
+`npx tsx scripts/audit-never-named.mts`, `npm run build`, commit i deploy. Cele codeksa maja wtedy
+piec biegow, wiec raport klienta dowozi **dziesiec biegow na dwoch narzedziach** doslownie, a nie
+osiem. Warto tez powtorzyc `LETAGENTSIN_RUNS=$HOME/.letagentsin-runs-codex npm run named-vs-score`
+i **poprawic na `/findings` zdanie o „trzech biegach na kategorie"**, bo przestanie byc prawdziwe.
 
 **PO RESEEDZIE, w tej kolejnosci:**
 1. `MONGODB_URI=... npx tsx scripts/after-reseed.mts` - jedna komenda zamiast czterech pytan z
    pamieci. Ma pokazac: korpus na 9.31, siedem zdan „brak formularza, wejscie przez dostawce
-   tozsamosci" zamiast zera, cytaty przy `programmatic_provisioning`, adresy przy `oauth_dcr`,
+   tozsamosci" zamiast zera, cytaty przy `programmatic_provisioning`, adresy przy `oauth_dcr`
    i **errata puste** (11 wpisow ma wygasnac samo).
 2. `npm run audit` oraz `npx tsx scripts/audit-signup.mts accused`.
 3. **Policz, ile wierszy ma `mcp_present` niemierzalny.** Duzo znaczy, ze lustro rejestru sie nie
    zapelnilo albo TTL jest za krotki.
-4. Korpus urosnie ze 170 do okolo **177 wierszy** (nowa kategoria hostingu).
-
-**PO REPLIKACJI CODEKSEM:**
-1. `LETAGENTSIN_RUNS_ALL=$HOME/.letagentsin-runs-codex npx tsx scripts/export-cells.mts`, potem
-   `npx tsx scripts/audit-never-named.mts` i deploy. Strony kategorii pokazuja wtedy **kolumne per
-   narzedzie**, a raport klienta sumuje biegi z obu, czyli dowozi obietnice „dziesiec biegow na
-   dwoch narzedziach".
-2. `LETAGENTSIN_RUNS=$HOME/.letagentsin-runs-codex npm run named-vs-score` i porownanie z wersja
-   claude. **`/findings` obiecuje publicznie, ze opublikujemy to niezaleznie od wyniku.**
+4. Korpus urosnie ze 170 do **177 wierszy** (kategoria `app-hosting`), a `/c/app-hosting` przestanie
+   pokazywac „not measured" w kolumnie skanu.
+5. **Dopiero potem** zaciesnienie trzech golych fraz w `programmatic_provisioning`: reseed zapisze
+   cytaty dla wszystkich zaliczonych wierszy i bedzie to czym policzyc.
 
 **PODLOGA SZUMU: 0,59 procent** (15 werdyktow na 2550; 10 to werdykt kontra werdykt, 5 to wiersz
 niemierzalny po jednej stronie). **Zamrozenie formuly zdjete.**
@@ -42,7 +42,16 @@ o karencje): `MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npm run 
 Skrypt grupuje skany po przerwie 90 minut i sam wybiera pare cieply-cieply; `... <wersja> adjacent`
 pokazuje stara, mylaca pare z jednego przebiegu (na 9.30: 27 w gore, 3 w dol).
 
-**Co jeszcze zrobione tej nocy, w skrocie:** 26. przebieg (katalogi MCP odpadly na pokryciu, zrodlem
+**Co zrobione dzis, w skrocie** (kazde ma wlasna sekcje nizej): formula **9.31** z trzema
+poprawkami, **lustro rejestru MCP** (rejestr jest z dyna nieosiagalny), **dwie poprawki SEO** po
+mailu z Search Console, **26. kategoria** hosting aplikacji, **strony `/c`, `/c/<kat>` i
+`/c/<kat>/runs`**, **szoste badanie na `/findings`** z replikacja drugim narzedziem, **przebudowany
+cennik** po researchu dwoch rynkow (49 / 79 / pakiety / rok za dziesiec miesiecy), **generator
+platnego raportu**, **szkic miesiecznego maila z biegow**, **runbook dostawy**, poprawka matchera
+(trzy firmy, o ktorych publikowalismy „nie padl ani razu") i **30. przebieg adwersaryjny** na
+`programmatic_provisioning`.
+
+**Co jeszcze zrobione poprzedniej nocy, w skrocie:** 26. przebieg (katalogi MCP odpadly na pokryciu, zrodlem
 zostala ich wlasna dokumentacja, dwa falszywe oskarzenia naprawione w 9.29), 27. (CAPTCHA na calej
 witrynie, 9.30), 28. (`machine_readable_api`, 0 znalezien i tym razem to cos znaczy), 29.
 (`signup_reachable`, 0 obalonych, osiem mylacych zdan), weryfikacja punktu wejscia (120 oskarzen,
