@@ -1,11 +1,12 @@
-# Let Agents In: stan na 2026-08-18 (formula 9.35 na produkcji, reseed zamowiony)
+# Let Agents In: stan na 2026-08-18 (formula 9.36 na produkcji, reseed zamowiony)
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te trzydziesci linijek, potem reszte)
 
-**WERSJE (stan 01:15): produkcja i repo na 9.35, korpus na 9.33.**
-Od wieczora doszly dwie wersje: **9.34** (szesnasty check, cena albo warunek wejscia w snippecie z
-cennika) i **9.35** (probka dokumentacji rozproszona po rodzinach wskazowek). Korpus dostanie obie
-przy najblizszym reseedzie.
+**WERSJE (stan 02:10): produkcja i repo na 9.36, korpus na 9.33.**
+Od wieczora doszly trzy wersje: **9.34** (szesnasty check, cena albo warunek wejscia w snippecie z
+cennika), **9.35** (probka dokumentacji rozproszona po rodzinach wskazowek) i **9.36** (cztery
+poprawki `price_in_snippet` z 31. przebiegu adwersaryjnego). Korpus dostanie je wszystkie przy
+najblizszym reseedzie.
 
 **W LOCIE JEST JEDNO: petla czekajaca na karencje, log `/tmp/reseed-935.log`.** Karencja liczy sie od
 **mediany wieku korpusu**, ostatni przemiat skonczyl sie 2026-08-17 o 23:50, wiec reseed ruszy
@@ -15,7 +16,7 @@ zanim cokolwiek zrobisz.** Gdyby przepadla, komenda jest w sekcji o 9.35 nizej.
 **PULAPKA:** kazdy skan domeny Z KORPUSU, takze zrobiony do weryfikacji poprawki, odmladza mediane i
 **przesuwa karencje**. Do weryfikacji uzywaj domen spoza korpusu.
 
-**PO RESEEDZIE (9.35), w tej kolejnosci:**
+**PO RESEEDZIE (9.36), w tej kolejnosci:**
 1. `MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/after-reseed.mts`
 2. `npm run audit`, `npx tsx scripts/audit-study.mts`, `npm run audit-delivery`
 3. **Nowy check `price_in_snippet`: policz, ilu vendorow go oblewa.** Przedreseedowa probka 30 domen
@@ -5494,3 +5495,56 @@ werdykt o vendorze, wiec ryzykowalibysmy jakosc checkow, ktore juz publikujemy, 
 Czesc tego i tak mierzymy: `llms_txt` sprawdza probke linkow z llms.txt i wypisuje, ile odpowiada.
 Do zrobienia dopiero wtedy, gdy zmierzymy zapas w budzecie 27 s i pokazemy probke bez falszywych
 oskarzen.
+
+## 31. PRZEBIEG ADWERSARYJNY: `price_in_snippet` PRZED RESEEDEM (2026-08-18, formula 9.36)
+
+Szesnasty check trafia przy najblizszym reseedzie na 177 wierszy, wiec dostal przebieg **zanim**
+zaczal cokolwiek publikowac. Narzedzie: `npx tsx scripts/audit-snippet.mts <domeny>` - pobiera sam
+cennik i czyta go **produkcyjnym `readSnippet`**, bez zapisu raportu, wiec **nie odmladza mediany i
+nie przesuwa karencji** (karencja liczy `scannedAt` z opublikowanych wierszy, sprawdzone w
+`reseed.sh`). Adres cennika brany z ostatniego raportu, a nie zgadywany.
+
+**Probka: 12 domen spoza korpusu + 34 z korpusu** (co piata z listy). Kontrolka spelniona: sonda
+umie powiedziec „tak" (13 przejsc na 32 mierzalnych wierszach korpusu).
+
+**Falszywych oskarzen: ZERO.** Przeczytalem wszystkie 19 oblanych opisow po kolei. Kazdy naprawde
+nie niesie ani kwoty, ani warunku wejscia (amplitude, deepl, livekit, sanity, tiptap, trigger.dev,
+name.com, radar, telnyx, meilisearch, plausible, fastmail, mailerlite, n8n, simpleanalytics,
+scaleway, mailjet, dropboxsign bez taga).
+
+**Cztery defekty znalezione i naprawione w 9.36:**
+1. **Kwota z symbolem po liczbie.** `9,90 €` (standardowy zapis europejski) nie byla kwota. Klasa
+   falszywego oskarzenia dla kazdego, kto wycenia w euro po europejsku.
+2. **Cena procentowa.** stripe.com i telnyx wyceniaja w procentach. Ale sam procent kredytowal
+   „99.9% uptime", a wersja z `of` kredytowala sendlayer.com za obietnice **zwrotu 100%** pieniedzy -
+   zlapane na zywym opisie w drugim przebiegu. Teraz procent liczy sie tylko, gdy pracuje jak
+   oplata (`+`, `per`, `/`, slowo `fee` w poblizu), a `100` jest wykluczone.
+3. **„no card needed" nie bylo rozpoznawane**, choc `no credit card required` bylo. Bare
+   `no credit card` zostawione jako osobna alternatywa, zeby nie przestac czytac zdania bez czasownika.
+4. **Cytat byl pierwszym trafieniem, nie najlepszym.** buttondown.com dostawal „carries free entry"
+   z dowodem „free migration", podczas gdy w tym samym opisie stoi „Start free today, no card
+   needed". Werdykt sie nie zmienia, zmienia sie zdanie, ktore vendor ma poprawic.
+   **Dodatkowo:** to samo zdanie bylo cytowane dwa razy (browserbase, courier, pdfmonkey), bo dwa
+   wzorce daja okna rozniace sie o kilka znakow. **Codex znalazl tu wiecej niz ja**: moje pierwsze
+   scalanie porownywalo teksty, a przy trafieniach oddalonych bardziej niz szerokosc okna zaden
+   fragment nie zawiera drugiego. Teraz scalamy **zakresy znakow**, nie napisy.
+
+**Swiadoma decyzja, do zakwestionowania:** cztery opisy mowia tylko „only pay for what you use"
+(baseten, koyeb, newrelic, replicate). Zostaja **oblane**. Zdanie jest prawdziwe („nie nazywa ani
+kwoty, ani warunku wejscia"), a rada jest wykonalna: replicate moze napisac „od $0.000225/s".
+Kredytowanie tego zdania kredytowaloby dokladnie ten snippet, po ktorym agent nadal nie umie
+porownac kosztu. **Jesli Krystian uzna inaczej, to jeden wzorzec w `SNIPPET_PATTERNS`.**
+
+**Na probce korpusowej zaden werdykt nie ruszyl sie po zmianach** (13/19 przed i po). Poprawki
+zamykaja klasy pokazane na napisach i naprawiaja dowody, a nie przesuwaja punktacji.
+
+**Codex znalazl cos w kazdej z trzech pierwszych rund, za kazdym razem realnie** (czwarta czysta):
+1. scalanie dowodow porownywalo teksty, wiec trafienia dalsze niz szerokosc okna dawaly dwa
+   fragmenty tego samego zdania;
+2. po przejsciu na zakresy: kandydat spinajacy **dwa** istniejace zakresy scalal tylko pierwszy
+   (teraz klasyczne scalanie przedzialow po sortowaniu);
+3. moja galaz „procent obok slowa fee" przepuszczala **rabat**: „Save 20% on transaction fees".
+   Teraz przyimek miedzy procentem a oplata konczy dopasowanie.
+
+**Wniosek do powtorzenia:** przy wzorcach jezykowych sprawdzaj nie tylko „czy lapie to, co ma", ale
+**czym jeszcze jest to zdanie** - rabat, gwarancja zwrotu i SLA wygladaja jak cena dla regexpa.

@@ -478,6 +478,52 @@ check('takze gdy encja ma nazwe', snippetFor(said('Plans from &dollar;20 a month
 check('i gdy to euro', snippetFor(said('Plany od &euro;9 miesiecznie')).points, 1)
 // Cudzy HTML moze nazwac punkt kodowy, ktorego nie ma. Skan nie moze sie na tym wywalic.
 check('bezsensowna encja nie wysadza skanu', said('Plans from &#999999999999; a month').description, 'Plans from &#999999999999; a month')
+// 9.36, po przebiegu adwersaryjnym na dwunastu domenach spoza korpusu.
+check('symbol waluty po liczbie tez jest kwota', snippetFor(said('ab 9,90 € pro Monat')).points, 1)
+check('"no card needed" znaczy to samo co "no credit card required"', said('Start free today, no card needed').says.includes('no card asked'), true)
+check('samo "no credit card" nadal wystarcza', said('Start free, no credit card.').says.includes('no card asked'), true)
+// Werdykt sie nie zmienia, zmienia sie zdanie, ktore vendor dostaje do poprawienia.
+check(
+  'cytujemy trafienie mowiace o wejsciu, a nie pierwsze z brzegu',
+  said('Get free migration and support. Start free today, no card needed!').quotes[0].includes('Start free today'),
+  true,
+)
+check(
+  'to samo zdanie trafione dwoma wzorcami cytujemy raz',
+  said('Start free today, no card needed!').quotes.length,
+  1,
+)
+// Trafienia dalsze od siebie niz szerokosc okna daja fragmenty, z ktorych zaden nie zawiera
+// drugiego. Porownanie tekstem tego nie lapie, porownanie zakresami tak.
+check(
+  'takze gdy trafienia dzieli pol zdania',
+  said('Start free with no credit card, and when your team outgrows the sandbox you can move to a plan that costs $49 per month with unlimited seats.').quotes.length,
+  1,
+)
+// Trzy trafienia w jednym zdaniu: srodkowe okno spina dwa skrajne, wiec scalanie musi isc dalej niz
+// pierwsze trafione dopasowanie.
+check(
+  'trzy trafienia w jednym zdaniu to jeden dowod',
+  said('Plans start at $9 per month for the first seat and every extra seat after that is billed at $4 per month with no card required.').quotes.length,
+  1,
+)
+check(
+  'ale dwa rozne zdania to nadal dwa dowody',
+  said('Compare plans: Free (20 docs/mo), Starter €5, Pro €15. No credit card required to start.').quotes.length,
+  2,
+)
+// Procent liczy sie jako cena tylko wtedy, gdy pracuje jak oplata.
+check('procent jako oplata to kwota', snippetFor(said('Fees are 2.9% + 30 cents per successful charge')).points, 1)
+check('procent dostepnosci to nie cena', snippetFor(said('We guarantee 99.9% uptime on every plan')).points, 0)
+check('oplata nazwana slowem tez sie liczy', snippetFor(said('A 2% transaction fee applies')).points, 1)
+// Zlapane na zywym opisie sendlayer.com: obietnica zwrotu pieniedzy to nie cennik.
+check('zwrot 100 procent to nie cena', snippetFor(said('We will happily refund 100% of your money')).points, 0)
+check('rabat na roczny plan to nie cena', snippetFor(said('Save 20% on annual plans')).points, 0)
+// Rabat obok slowa "fee" nadal jest rabatem. Znalezione przez codeksa w trzeciej rundzie.
+check('rabat na oplaty to nie cena', snippetFor(said('Save 20% on transaction fees')).points, 0)
+check('ani obnizka wyrazona przez "off"', snippetFor(said('Get 20% off our processing fees')).points, 0)
+// Swiadomie: "only pay for what you use" nie mowi agentowi, ile zaplaci ani czy moze zaczac.
+check('samo "pay for what you use" to za malo', snippetFor(said('Only pay for what you use, by the second.')).points, 0)
 check('brak cennika, ale jest rejestracja: niemierzalne', snippetFor(null).inconclusive, true)
 check(
   'brak cennika i rejestracji: nie dotyczy',

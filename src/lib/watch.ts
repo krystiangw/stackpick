@@ -129,6 +129,9 @@ const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   // one family of words take all three slots. A rescore reproduces the old reading either way, so
   // a vendor must not be told they lost ground because we looked somewhere else.
   '9.35': ['programmatic_provisioning'],
+  // 9.36 reads the same description with a wider eye: an amount with the currency symbol after the
+  // number, and "no card needed" beside "no credit card".
+  '9.36': ['price_in_snippet'],
 }
 
 /**

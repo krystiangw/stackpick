@@ -997,15 +997,27 @@ function snippetOf(html: string): { description: string | null; opening: string 
  * the page being opened, which is the elimination step measured on WorkOS and Auth0.
  */
 export const SNIPPET_PATTERNS: Record<string, RegExp> = {
-  'an amount': /(?:[$€£]\s?\d|\b\d+(?:[.,]\d+)?\s?(?:usd|eur|gbp|pln)\b)/i,
+  // Both sides of the number: most of Europe writes "9,90 €" and reading only "€9.90" would have
+  // told a vendor pricing in euros that their description names no amount while it names one.
+  'an amount': /(?:[$€£]\s?\d|\b\d+(?:[.,]\d+)?\s?[$€£]|\b\d+(?:[.,]\d+)?\s?(?:usd|eur|gbp|pln)\b)/i,
   'a rate': /\b\d+(?:[.,]\d+)?\s?(?:\/|per\s)\s?(?:mo\b|month|user|seat|year|yr\b|1k|1,000|thousand|million|gb\b|tb\b|request|call|message|email|minute|hour)/i,
+  // Payment and telecom vendors price in percent, and stripe.com's own snippet is the example. The
+  // percentage has to be doing the work of a fee: a bare number with a percent sign reads "99.9%
+  // uptime" as a price, and accepting "of" after it credited sendlayer.com for promising to
+  // "refund 100% of" the money. 100 is excluded outright, because no fee is the whole amount.
+  // The percentage has to BE the fee, not stand near the word: "Save 20% on transaction fees" is a
+  // discount and tells an agent nothing about what it will pay, so a preposition between the two
+  // ends the match.
+  'a percentage': /\b(?!100\b)\d+(?:[.,]\d+)?\s?%(?:\s?\+|\s?per\b|\s?\/|\s?(?:(?!on\b|off\b|of\b)\w+\s){0,2}fees?\b)/i,
   // Deliberately the bare word. "free tier", "free plan", "free to individuals", "free for open
   // source", "starts free" and "free of charge" are all the same fact to an agent deciding whether
   // it can start, and a list of accepted phrasings would have told pulumi.com that its snippet
   // names no entry condition while it says "free to individuals" in it. The only exclusion is the
   // idiom that means nothing about price.
   'free entry': /\bfree\b/i,
-  'no card asked': /\b(no credit card|without a credit card|no card required|card free)\b/i,
+  // The bare "no credit card" stays as its own alternative: narrowing it to the phrasings that name
+  // a verb would have stopped reading "Start free, no credit card." at all.
+  'no card asked': /\b(no credit card|no card( is)? (required|needed|necessary)|without a credit card|card free)\b/i,
   'no account asked': /\b(no (account|signup|sign-up) (required|needed)|without an account)\b/i,
 }
 
@@ -1021,6 +1033,58 @@ function snippetAcrossReads(first: Fetched | null, second: Fetched | null): Funn
   return reads.find((read) => read.says.length > 0) ?? reads[0]
 }
 
+/** Words that turn a match into an answer to "can I start", which is the question being measured. */
+const ENTRY_WORDS = /\b(plan|tier|forever|trial|start|starts|started|sign ?up|account|per|month|first|get going|no card|credit card)\b/i
+
+/**
+ * Which of several matches to show the vendor. buttondown.com says "free migration" before it says
+ * "Start free today - no card needed", and quoting the first one told them their description
+ * carries an entry condition while showing them a sentence about migrations. The verdict is the
+ * same either way; the sentence they are asked to act on is not.
+ *
+ * It does not narrow the verdict, and deliberately so: a description whose only match is "free
+ * migration" is still credited, because the alternative is the list of accepted phrasings that
+ * accused pulumi.com of naming no entry condition while it said "free to individuals".
+ */
+function bestEvidence(spans: Span[], read: string): Span {
+  return spans.find((span) => ENTRY_WORDS.test(read.slice(span.from, span.to))) ?? spans[0]
+}
+
+/** Where a quote sits in the text, kept as positions so two quotes can be asked whether they touch. */
+type Span = { from: number; to: number }
+
+/** The same window `windowAround` cuts, as positions rather than as a string. */
+function spanAround(text: string, at: number, length: number): Span {
+  const from = Math.max(text.lastIndexOf('. ', at) + 1, at - 70)
+  const after = at + length
+  const stop = text.indexOf('. ', after)
+  return { from, to: stop === -1 ? after + 70 : Math.min(stop, after + 70) }
+}
+
+/**
+ * One sentence quoted once.
+ *
+ * Two patterns hitting the same sentence produce windows centred on different words, so
+ * browserbase.com's verdict quoted "Start free, then scale to Developer ($20/mo) ... custom Scale
+ * plans." and then the same sentence again without its last two words. Comparing the strings only
+ * catches that when one is contained in the other, which stops being true once the two matches are
+ * further apart than the window is wide: then the slices overlap in the middle and neither contains
+ * the other, and the vendor reads their own sentence twice while a genuinely different quote is
+ * pushed out of the two slots the verdict shows.
+ */
+function mergeEvidence(spans: Span[]): Span[] {
+  const merged: Span[] = []
+  for (const span of [...spans].sort((one, other) => one.from - other.from)) {
+    const last = merged[merged.length - 1]
+    // Merged against the growing span rather than the one it first touched: three matches in one
+    // sentence produce a middle window that bridges the outer two, and merging only the first
+    // overlap leaves the sentence quoted twice with the halves swapped.
+    if (last && span.from < last.to) last.to = Math.max(last.to, span.to)
+    else merged.push({ ...span })
+  }
+  return merged
+}
+
 /** The snippet and what it says, in one value, so the check quotes what it read. */
 export function readSnippet(html: string): NonNullable<FunnelFindings['pricingSnippet']> {
   const { description, opening } = snippetOf(html)
@@ -1029,15 +1093,18 @@ export function readSnippet(html: string): NonNullable<FunnelFindings['pricingSn
   // a price the agent doing the eliminating never sees.
   const read = (description ?? opening).replace(/\bfeel free\b/gi, ' ').trim()
   const says: string[] = []
-  const quotes: string[] = []
+  const evidence: Span[] = []
   for (const [label, pattern] of Object.entries(SNIPPET_PATTERNS)) {
-    const hit = pattern.exec(read)
-    if (!hit) continue
+    const hits = [...read.matchAll(new RegExp(pattern.source, `${pattern.flags.replace('g', '')}g`))]
+    if (hits.length === 0) continue
     says.push(label)
     // The words around the hit, not the hit: "free" on its own is not evidence a vendor can check,
     // and the same window rule is what the provisioning check quotes with.
-    quotes.push(windowAround(read, hit.index, hit[0].length).trim())
+    const windows = hits.map((hit) => spanAround(read, hit.index, hit[0].length))
+    evidence.push(bestEvidence(windows, read))
   }
+  // In the order the vendor reads them, which is also what makes the merge above straightforward.
+  const quotes = mergeEvidence(evidence).map((span) => read.slice(span.from, span.to).trim())
   return { description, opening, says, quotes }
 }
 
