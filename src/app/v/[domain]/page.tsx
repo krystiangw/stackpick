@@ -28,15 +28,23 @@ export async function generateMetadata({ params }: { params: Promise<{ domain: s
   const { domain } = await params
   const name = normalizeDomain(decodeURIComponent(domain))
   const report = await getStore().latestForDomain(name)
-  if (!report) return { title: `${name}: not measured yet · Let Agents In`, robots: { index: false } }
+  // On every page, indexable or not. /v/www.stripe.com and /v/Stripe.com both answer 200 and are
+  // the same page as /v/stripe.com, and without this they were three addresses with no canonical
+  // between them: "Duplicate without user-selected canonical" in Search Console on 2026-08-17.
+  const canonical = { alternates: { canonical: `${SITE_URL}/v/${name}` } }
+  if (!report) return { title: `${name}: not measured yet · Let Agents In`, robots: { index: false }, ...canonical }
 
   const { scorecard } = report
   const measurable = measurableOf(scorecard)
-  // A number from a superseded formula is not comparable with the ones we publish, so it is
-  // shown to whoever asked for it and kept out of the index rather than competing with them.
-  if (scorecard.formulaVersion !== FORMULA_VERSION) {
-    return { title: `${name}: measured under an older formula · Let Agents In`, robots: { index: false } }
-  }
+  // Only the corpus is published, so only the corpus is offered to an index. A page built from a
+  // visitor's own scan of a company that never asked is a page about somebody else, and it stays
+  // readable at its address without being put in front of searchers.
+  //
+  // The formula version deliberately does NOT decide this any more. It did until 2026-08-17, and
+  // the cost was the whole vendor index: the corpus is reseeded hours after a formula ships, and
+  // in that window all 170 sitemap URLs said noindex, which is what Search Console wrote about.
+  // The page states the formula it was measured under and the date, twice, in its own body.
+  if (!categoryFor(name)) return { title: `${name} · Let Agents In`, robots: { index: false }, ...canonical }
   return {
     title: `Is ${name} ready for AI agents? ${scorecard.total}/${measurable} · Let Agents In`,
     description:
