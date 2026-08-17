@@ -7,9 +7,16 @@ export function EmailGate({
   domain,
   reportId,
   failingCount,
+  temporary = false,
 }: {
   domain: string
   reportId: string
+  /**
+   * The store refused this scan and it is being held in memory, so the address dies at the next
+   * deploy. The banner at the top of the page says so and this component went on promising a
+   * permanent link in the same column, which is the one contradiction a reader cannot miss.
+   */
+  temporary?: boolean
   failingCount: number
 }) {
   const [email, setEmail] = useState('')
@@ -46,7 +53,10 @@ export function EmailGate({
       <div className="border border-brass bg-brass-soft p-8">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-brass">On its way</h2>
         <p className="mt-3 max-w-xl leading-relaxed">
-          The scorecard for {domain} is in your inbox, with a permanent link you can forward.
+          The scorecard for {domain} is in your inbox
+          {temporary
+            ? '. The link in it stops working at our next deploy, because our database refused this scan and we are holding it in memory. The mail itself keeps the findings.'
+            : ', with a permanent link you can forward.'}
         </p>
         {/* The one thing this page could never give them: today's answer goes stale, and an edge
             rule that starts refusing agents next month looks identical in a browser. Offered
@@ -68,8 +78,10 @@ export function EmailGate({
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">We could not send it</h2>
         <p className="mt-3 max-w-xl leading-relaxed">
           Our mail provider refused the message, which is our problem and not yours. We have your address
-          and the scorecard for {domain} lives at this URL permanently, so copy the link from your browser
-          and it will keep working.
+          and the scorecard for {domain} lives at this URL
+          {temporary
+            ? ' only until our next deploy, because our database refused this scan. Save the page rather than the link.'
+            : ' permanently, so copy the link from your browser and it will keep working.'}
         </p>
         <p className="mt-3 max-w-xl leading-relaxed text-ink-soft">
           Telling you it was on its way would have been the easy thing to print here. This tool exists to

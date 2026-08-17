@@ -119,6 +119,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   // apply to the market, and this is the page the vendor actually reads.
   const measurable = scorecard.measurable ?? scorecard.max
   const unmeasured = scorecard.max - measurable
+  const robotsUnreadable = Boolean(findings.robots.unreadable)
   // Built from the request when no base URL is configured, so a copied link is never relative.
   const host = (await headers()).get('host') ?? 'localhost:3000'
   const origin = process.env.STACKPICK_BASE_URL ?? `${host.startsWith('localhost') ? 'http' : 'https'}://${host}`
@@ -320,7 +321,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           the corpus is public and the formula is published, so gating the number would cost us
           the thing that makes it worth reading and buy nothing. */}
       <section className="border-b border-rule py-12">
-        <EmailGate domain={report.domain} reportId={report.id} failingCount={failing.length} />
+        <EmailGate domain={report.domain} reportId={report.id} failingCount={failing.length} temporary={isHeldOnly(id)} />
       </section>
 
       {/* The one sentence that separates a scan from an audit, at the only moment the reader
@@ -459,11 +460,18 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             ],
             ['GitHub', findings.discovered.githubRepo],
             ['Package licence', findings.npm.license ?? null],
-            ['Crawl-delay', findings.robots.crawlDelaySeconds ? `${findings.robots.crawlDelaySeconds}s` : 'none'],
-            ['Content-Signal', findings.robots.contentSignal ?? 'none'],
+            // "none" is an answer, and we only have it when we read the file. With an unreadable
+            // robots.txt these three rows printed "Blocked on-demand agents: none", which is a
+            // clean bill of health produced from a file we never got.
+            ['Crawl-delay', robotsUnreadable ? 'robots.txt unreadable' : findings.robots.crawlDelaySeconds ? `${findings.robots.crawlDelaySeconds}s` : 'none'],
+            ['Content-Signal', robotsUnreadable ? 'robots.txt unreadable' : (findings.robots.contentSignal ?? 'none')],
             [
               'Blocked on-demand agents',
-              findings.robots.blockedByClass.user.length > 0 ? findings.robots.blockedByClass.user.join(', ') : 'none',
+              robotsUnreadable
+                ? 'robots.txt unreadable'
+                : findings.robots.blockedByClass.user.length > 0
+                  ? findings.robots.blockedByClass.user.join(', ')
+                  : 'none',
             ],
           ].map(([label, value]) => (
             // Label over value, and the value wraps. A nowrap URL in a right-aligned cell
