@@ -121,6 +121,11 @@ async function realFilesOn(base: string): Promise<string[]> {
     // a different length. Six of the seven disagreements on 2026-08-16 were this, all of them the
     // probe being weaker than the scanner it audits rather than a finding about anybody.
     if (nonsense && nonsense.firstLine.length > 3 && got.firstLine === nonsense.firstLine) continue
+    // Asked a second time before it counts. developer.calendly.com answered two uppercase paths
+    // with a 317 byte markdown "Page Not Found" during one run and with its usual 298 kB HTML
+    // shell a minute later, and a disagreement that does not reproduce is not a finding.
+    const again = await fileAt(`${base}${path}`)
+    if (!again || Math.abs(again.bytes - got.bytes) > 200) continue
     found.push(`${base}${path} (${got.bytes}B ${got.head})`)
   }
   return found
