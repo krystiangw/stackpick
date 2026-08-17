@@ -1,6 +1,7 @@
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { MongoClient } from 'mongodb'
 import type { Report } from '../src/lib/store'
+import { rulesChangedBetween } from '../src/lib/watch'
 
 /**
  * Which verdicts got worse in the last reseed, and are therefore probably our fault.
@@ -28,7 +29,17 @@ const client = new MongoClient(process.env.MONGODB_URI)
 await client.connect()
 const reports = client.db(process.env.MONGODB_DB ?? 'stackpick').collection<Report & { seeded?: boolean }>('reports')
 
-const worse: { domain: string; check: string; from: number; to: number; detail: string }[] = []
+type Worse = { domain: string; check: string; from: number; to: number; detail: string }
+/** Lost points under a rule that did not move, so the vendor or our load explains it. */
+const worse: Worse[] = []
+/**
+ * Lost points on a check whose rule WE changed between the two measurements. Mixing these into the
+ * list above is how a sweep that tightened one phrase reads as forty vendors going backwards, and
+ * the rescan advice at the bottom would send somebody to re-measure our own decision. The same
+ * definition drives the watcher email, which must not tell a vendor they lost ground either.
+ */
+const ours: Worse[] = []
+const versions = new Set<string>()
 let compared = 0
 
 for (const domain of CURATED_DOMAINS) {
@@ -37,14 +48,20 @@ for (const domain of CURATED_DOMAINS) {
     .toArray()
   if (!latest || !previous) continue
   compared += 1
+  const movedRule = rulesChangedBetween(previous.scorecard.formulaVersion, latest.scorecard.formulaVersion)
+  if (previous.scorecard.formulaVersion !== latest.scorecard.formulaVersion) {
+    versions.add(`${previous.scorecard.formulaVersion} -> ${latest.scorecard.formulaVersion}`)
+  }
   for (const check of latest.scorecard.checks) {
     const before = previous.scorecard.checks.find((c) => c.id === check.id)
     if (!before || check.points >= before.points) continue
-    worse.push({ domain, check: check.id, from: before.points, to: check.points, detail: check.detail.slice(0, 100) })
+    const row = { domain, check: check.id, from: before.points, to: check.points, detail: check.detail.slice(0, 100) }
+    if (movedRule.has(check.id)) ours.push(row)
+    else worse.push(row)
   }
 }
 
-console.log(`${compared} domen z dwoma pomiarami do porownania\n`)
+console.log(`${compared} domen z dwoma pomiarami do porownania${versions.size > 0 ? `, formula ${[...versions].join(', ')}` : ''}\n`)
 const byCheck = new Map<string, number>()
 for (const row of worse) byCheck.set(row.check, (byCheck.get(row.check) ?? 0) + 1)
 for (const row of worse.sort((a, b) => a.check.localeCompare(b.check))) {
@@ -53,5 +70,13 @@ for (const row of worse.sort((a, b) => a.check.localeCompare(b.check))) {
 console.log(`\n${worse.length} werdyktow gorszych niz poprzedni pomiar`)
 for (const [check, count] of [...byCheck].sort((a, b) => b[1] - a[1])) console.log(`  ${check}: ${count}`)
 if (worse.length > 0) console.log('\nKazdy z nich przeskanuj ponownie ZANIM uznasz go za regres vendora.')
+
+if (ours.length > 0) {
+  console.log(`\n${ours.length} dalszych spadkow na checkach, ktorych regule zmienilismy miedzy tymi pomiarami.`)
+  const byOurs = new Map<string, number>()
+  for (const row of ours) byOurs.set(row.check, (byOurs.get(row.check) ?? 0) + 1)
+  for (const [check, count] of [...byOurs].sort((a, b) => b[1] - a[1])) console.log(`  ${check}: ${count}`)
+  console.log('To jest nasza zmiana, nie regres vendora: nie skanuj ich ponownie, tylko sprawdz, czy nowe zdanie mowi prawde.')
+}
 await client.close()
 process.exit(0)

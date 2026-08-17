@@ -18,6 +18,15 @@ import { CATEGORIES } from '../src/lib/categories'
 import { quotedAbout, wordsCarried } from '../src/lib/vendors'
 import cells from '../src/data/cells.json'
 
+/**
+ * What /pricing sells for $49, word for word: "at least ten times in isolation" and "Two different
+ * tools, five runs each at least". The per-tool floor is the half a total cannot enforce - nine
+ * codex runs and one claude run clears ten on two tools and is not what anybody paid for.
+ */
+const PROMISED_RUNS = 10
+const PROMISED_TOOLS = 2
+const PROMISED_RUNS_PER_TOOL = 5
+
 type Complaint = { where: string; says: string }
 const complaints: Complaint[] = []
 
@@ -28,8 +37,28 @@ for (const category of CATEGORIES) {
   const held = cells
     .filter((cell) => cell.category === category.id)
     .sort((a, b) => a.operatorContext.length - b.operatorContext.length)
-  if (held.length === 0) continue
   const runs = held.reduce((sum, one) => sum + one.runs, 0)
+
+  // Before the empty-category skip, not after it. A category is added to CATEGORIES the moment its
+  // domains are, and /pricing then offers it while the runs, which are the slow part, do not exist
+  // yet. That is the case this guard was written for, and skipping empty cells hid exactly it.
+  const byTool = new Map<string, number>()
+  for (const one of held) {
+    const tool = one.tool.split(' ')[0]
+    byTool.set(tool, (byTool.get(tool) ?? 0) + one.runs)
+  }
+  // Two tools that clear the floor, not every tool recorded: a third tool sampled three times is
+  // extra evidence, not a broken promise.
+  const qualifying = [...byTool.values()].filter((count) => count >= PROMISED_RUNS_PER_TOOL).length
+  if (runs < PROMISED_RUNS || qualifying < PROMISED_TOOLS) {
+    const has = byTool.size === 0 ? 'zadnych biegow' : [...byTool.entries()].map(([tool, count]) => `${tool}: ${count}`).join(', ')
+    complaints.push({
+      where: category.id,
+      says: `cennik obiecuje ${PROMISED_RUNS} biegow i po ${PROMISED_RUNS_PER_TOOL} na kazdym z ${PROMISED_TOOLS} narzedzi, a cela ma ${has}`,
+    })
+  }
+
+  if (held.length === 0) continue
   const namedAcross = (of: string) => held.reduce((sum, one) => sum + (one.rows.find((row) => row.domain === of)?.named ?? 0), 0)
 
   for (const domain of category.domains) {

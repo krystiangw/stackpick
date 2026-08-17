@@ -36,8 +36,19 @@ LETAGENTSIN_RUNS_ALL=$HOME/.letagentsin-runs-codex npx tsx scripts/export-cells.
 MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/client-report.mts their.com --out their.md
 ```
 
-Read it before sending. The generator is deliberately blunt: if no run mentioned them it says so in
-one sentence, and that sentence is the product. What it must never do is soften a zero.
+Read it before sending, the whole file, as the buyer. Every defect found in this document so far was
+found by reading it and none by an audit: quotes cut mid-address, a vendor whose site we could not
+read being handed advice about OAuth, "oAuth" in the fix plan. The generator is deliberately blunt:
+if no run mentioned them it says so in one sentence, and that sentence is the product. What it must
+never do is soften a zero.
+
+Run the delivery guard first, because it replays every sentence both customer documents can print
+against the data underneath them, including whether the category has the ten runs on two tools the
+price promises:
+
+```bash
+MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npm run audit-delivery
+```
 
 ## What to send
 
