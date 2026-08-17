@@ -157,6 +157,38 @@ co zostawia, to zdanie prawdziwe, nie puste.
 `audit-delivery`). Strona `/c/<kat>/runs` uzywa z tego modulu wylacznie `matched` do podswietlania,
 wiec **nie wymaga deployu**, zeby poprawka dotarla do klienta.
 
+## 9.35: TRZY STRONY DOKUMENTACJI TO TRZY PYTANIA, NIE TRZY RAZY TO SAMO SLOWO (2026-08-18, v488)
+
+Ciag dalszy 30. przebiegu. Moja pierwsza diagnoza byla bledna i warto to zapisac: myslalem, ze
+skaner nie czyta map witryn. **Czyta.** Prawdziwa przyczyna byla o krok dalej.
+
+**Co bylo zle.** Probka to trzy strony dokumentacji, wybierane rankingiem "jak bezposrednio sciezka
+obiecuje poswiadczenia". Na vendorze, ktory ma kilka stron z najlepsza wskazowka, ranking wydawal
+**caly budzet na jedna rodzine slow**. Zmierzone na korpusie: `supabase.com` przeczytal
+`getting-started/api-keys`, `cli/supabase-projects-api-keys` i `migrating-to-new-api-keys`, czyli trzy
+strony o tym samym rzeczowniku. `cloudinary.com` przeczytal poradnik o **rotacji** klucza w konsoli i
+drugi o **znalezieniu** poswiadczen, a `documentation/provisioning_api`, czyli strona o tworzeniu
+poswiadczen maszynowo, lezala w **tej samej mapie witryny, ktora juz mielismy otwarta** (805 wpisow).
+
+**Poprawka.** Najlepsza strona z kazdej rodziny wskazowek najpierw, w kolejnosci rangi, a dopiero
+potem reszta miejsc. Najwyzej oceniona strona sie nie rusza, wiec `api-app-keys` Datadoga zostaje w
+probce. **Klucz byl w miejscu obciecia**: pierwsza wersja rozpraszala liste juz obcieta do trzech, bo
+`sitemapCandidates` tnie w petli. Rozproszenie musi isc **przed** obcieciem.
+
+**Zmierzone przed wdrozeniem, dziewiec domen.** Trzy podejrzane: probka sie zmienila (cloudinary
+czyta teraz `provisioning_api`), werdykt zaden. Szesc z punktem (`honeycomb.io`, `axiom.co`,
+`planetscale.com`, `nylas.com`, `cronofy.com`, `xata.io`): **zadna nie stracila punktu**. Czyli
+poprawa w tym, gdzie patrzymy, bez zmiany w tym, co orzekamy, na probce, ktora umialem sprawdzic.
+
+**Cloudinary i tak zostaje na zero, i to jest teraz uczciwe zero:** ich `provisioning_api` renderuje
+sie JavaScriptem, wiec gole pobranie dostaje 26 kB nawigacji bez tresci. Patrzymy juz tam, gdzie
+trzeba, i mowimy, czego nie widac.
+
+**Wersja podbita do 9.35 mimo ze regula sie nie zmienila**, bo zmienilo sie **co regula czyta**, a
+`CHECK_RULE_CHANGED` ma wpis, zeby monitoring nie powiedzial vendorowi, ze stracil grunt, gdy to my
+zajrzelismy gdzie indziej. **Korpus dostanie to przy nastepnym reseedzie** (karencja od 23:50, wiec
+najwczesniej okolo 05:50).
+
 ## KAZDA KWOTA NA CENNIKU POCHODZI Z KATALOGU (2026-08-18, v487)
 
 Ceny byly wklepane w JSX, w opisie strony i w dwoch odpowiedziach FAQ ("twenty-nine dollars"), a
