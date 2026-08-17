@@ -157,6 +157,52 @@ co zostawia, to zdanie prawdziwe, nie puste.
 `audit-delivery`). Strona `/c/<kat>/runs` uzywa z tego modulu wylacznie `matched` do podswietlania,
 wiec **nie wymaga deployu**, zeby poprawka dotarla do klienta.
 
+## WARSTWA PLATNOSCI NAPISANA I WYLACZONA (2026-08-18, v486)
+
+Druga polowa planu z audytu decyzji, cala bez zakladania konta. **Wszystko jest martwe, dopoki
+`BILLING_PROVIDER` nie zostanie ustawione**: webhook odpowiada 404, sprawdzone na produkcji.
+
+- `src/lib/billing/catalog.ts` - **jedno miejsce z cenami** (SKU, kwota w groszach, interwal, liczba
+  domen, identyfikator ceny u dostawcy z env). Straznik porownuje kwote z cennikiem na stronie, bo
+  to jest para, ktora sie rozjedzie najszybciej i najbardziej boli.
+- `src/lib/billing/provider.ts` - interfejs plus dwie implementacje: `manual` (dzisiejszy mailto,
+  domyslny) i `paddle`. Zmiana dostawcy na Polara to jeden plik, nie przepisywanie stron.
+- `src/app/api/billing/webhook/route.ts` - podpis, okno czasowe, czytanie zdarzen, przyznawanie i
+  odbieranie uprawnien.
+
+**Siedemnascie rund `codex review` na tym jednym kawalku, kazda z realnym znaleziskiem.** Lista, bo
+to jest mapa pulapek platnosci asynchronicznych i szkoda, zeby zginela:
+1. **Paddle wysyla `customer_id`, nie adres** - kazde prawdziwe zdarzenie odpadaloby jako niekompletne.
+2. **Uprawnienie szlo z `custom_data`**, czyli z pola, ktore kupujacy moze podmienic w checkoucie:
+   mozna bylo zaplacic taniej, a poprosic o plan agencyjny. Teraz **uprawnienie idzie za cena**,
+   ktora dostawca mowi, ze obciazyl.
+3. **Id transakcji to nie id subskrypcji** - anulowanie nie trafialoby w nic, a monitoring zostawalby
+   platny na zawsze. Teraz obie referencje sa osobne.
+4. **Odnowienie subskrypcji** dzielilo referencje z pierwszym miesiacem, wiec drugi miesiac wygladal
+   jak powtorka i wypadal na unikalnym indeksie.
+5. **Anulowanie pytalo o katalog** - po zmianie cennika stara cena nie pasowala do niczego i
+   anulowanie bylo kwitowane bez odebrania uprawnienia.
+6. **`extra-question` za 29 USD** wpadalo w galaz monitoringu i dawalo plan, ktorego nikt nie kupil.
+7. **Transakcja z dwiema pozycjami** dawala jedno uprawnienie: placisz za dwie rzeczy, dostajesz jedna.
+8. **Platnosc bez domeny** byla kwitowana i gubiona; teraz kazda zostawia trwaly slad do przypisania.
+9. **Pakiet na dziesiec domen** zapisywal reszte tylko do logu, a log nie jest kolejka pracy.
+10. **Rotacja sekretu**: Paddle wysyla wtedy kilka `h1`, a brany byl ostatni.
+11. **Nieuporzadkowana kolejnosc zdarzen** - platnosc w locie mogla cofnac anulowanie; marker
+    anulowania jest teraz zapisywany **przed** dotknieciem czegokolwiek i czytany po zapisie.
+12. **Powtorka starej platnosci** wznawiala obserwacje, ktora klient w miedzyczasie zatrzymal.
+13. **Watch niepotwierdzony albo zatrzymany** dostawal `plan: paid` i zadnej uslugi, bo kolejka go
+    pomija.
+
+**Jedna rzecz, ktora wygladala na blad, a jest regula produktu:** `plan` niczego nie odbiera, bo cron
+obsluguje kazda potwierdzona i niezatrzymana obserwacje. To jest **poprawne, dopoki monitoring jest
+darmowy w trakcie budowy**, co obiecuje `/pricing`. Regula siedzi teraz w `MONITORING_IS_FREE` obok
+cen, a straznik wiaze ja ze zdaniem na stronie: gdy flaga sie zmieni, zdanie musi zniknac w tym samym
+commicie.
+
+**Czego swiadomie NIE ma:** ksiegi platnosci z wersjonowaniem zdarzen dostawcy. Idempotencja stoi
+dzis na unikalnym indeksie i na sprawdzeniu przed zmiana uprawnienia, co zamyka okna, ale nie
+zastapi ksiegi. To jest robota na tydzien, w ktorym pieniadze naprawde zaczna sie ruszac.
+
 ## SCIEZKA PLATNOSCI: DECYZJA Z AUDYTU SUBAGENTA (2026-08-18, do potwierdzenia rano)
 
 **To nie jest decyzja Krystiana, tylko rekomendacja audytu decyzji**, zrobionego subagentem na
