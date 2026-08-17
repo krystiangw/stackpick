@@ -157,6 +157,16 @@ co zostawia, to zdanie prawdziwe, nie puste.
 `audit-delivery`). Strona `/c/<kat>/runs` uzywa z tego modulu wylacznie `matched` do podswietlania,
 wiec **nie wymaga deployu**, zeby poprawka dotarla do klienta.
 
+## KAZDA KWOTA NA CENNIKU POCHODZI Z KATALOGU (2026-08-18, v487)
+
+Ceny byly wklepane w JSX, w opisie strony i w dwoch odpowiedziach FAQ ("twenty-nine dollars"), a
+katalog dla dostawcy platnosci to trzecia kopia tych samych liczb. Pierwsza rzecz, ktora dostawca
+robi przy weryfikacji, to porownanie kwoty na stronie z kwota, ktora ma obciazyc.
+
+Teraz strona liczy z `src/lib/billing/catalog.ts`, wiec **nie ma czego porownywac**, a straznik
+pilnuje juz nie zgodnosci dwoch kopii, tylko tego, ze strona **nadal czyta katalog**. Sprawdzone na
+produkcji: opis, karty i FAQ pokazuja 49, 79, 179, 499 i 29 z jednego zrodla.
+
 ## 30. PRZEBIEG ADWERSARYJNY PO RESEEDZIE: ZERO FALSZYWYCH OSKARZEN, JEDNA LUKA W SKANERZE (2026-08-18)
 
 Sonda `audit-provisioning.mts` szuka tego samego co check, ale **drzwiami, ktorych skaner nie
