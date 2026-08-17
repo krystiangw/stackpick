@@ -82,7 +82,8 @@ export default async function RunsPage({ params }: { params: Promise<{ category:
         {cell.operatorContext.length > 0 && (
           <p className="mt-3 max-w-2xl font-mono text-xs leading-relaxed text-ink-faint">
             Not a clean measurement: these runs could read the operator instructions on the machine they ran on
-            ({cell.operatorContext.join(', ')}).
+            ({cell.operatorContext.join(', ')}), which is also why some answers below are in Polish rather than
+            English: those instructions ask for it.
           </p>
         )}
       </section>
@@ -111,8 +112,12 @@ export default async function RunsPage({ params }: { params: Promise<{ category:
           Counting who was named is done by a published list of names and a published regular expression, never by
           a second model reading the first one&apos;s answer. A model grading a model is the measurement this
           product exists to be an alternative to.{' '}
+          <Link href="/methodology#named" className="text-brass underline underline-offset-4">
+            How the counting works
+          </Link>{' '}
+          or{' '}
           <Link href={`/c/${id}`} className="text-brass underline underline-offset-4">
-            Back to the tally
+            back to the tally
           </Link>
         </p>
       </section>

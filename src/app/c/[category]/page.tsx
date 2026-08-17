@@ -99,8 +99,9 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
             // a reader who has seen the numbers has already believed them.
             <p className="mt-3 max-w-2xl font-mono text-xs leading-relaxed text-ink-faint">
               Not a clean measurement: these runs could read the operator instructions on the machine they ran on
-              ({cell.operatorContext.join(', ')}), so they describe an agent there rather than an agent at your
-              customer. We say so rather than publish the number alone.
+              ({cell.operatorContext.join(', ')}), which is also why some answers are in Polish rather than English:
+              those instructions ask for it. They describe an agent there rather than an agent at your customer, and
+              we say so rather than publish the number alone.
             </p>
           )}
         </section>
@@ -162,7 +163,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
             Read what the agent actually answered
           </Link>{' '}
           or{' '}
-          <Link href="/methodology" className="text-brass underline underline-offset-4">
+          <Link href="/methodology#named" className="text-brass underline underline-offset-4">
             how every number here is measured
           </Link>
         </p>

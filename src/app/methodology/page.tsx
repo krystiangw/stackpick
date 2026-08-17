@@ -291,6 +291,35 @@ export default async function MethodologyPage() {
         </p>
       </section>
 
+      {/* The category pages link here under "how every number here is measured" and, until an
+          audit on 2026-08-17 followed that link, this page described only the scanner. A link that
+          does not answer the question it promises is worse than no link. */}
+      <section id="named" className="scroll-mt-8 border-b border-rule py-12">
+        <h2 className="text-lg font-semibold tracking-tight">How the agent runs are counted</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          One question per category, written to be the question a developer would type, naming no vendor and
+          asking for a recommendation. It is put to an agent five times, each run in its own empty directory with
+          nothing carried between them, and the answers are kept whole and published under each category.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          Who was named is decided by a published list of names and a published regular expression, never by a
+          second model reading the first one&apos;s answer: a model grading a model is the measurement this
+          product exists to be an alternative to. A brand that is also an ordinary English word counts only when
+          the writing says it is a brand, which means emphasis or code or a link around it, capitals throughout,
+          or the capitalised form used more than once in the same answer. “the bunny hops” is not bunny.net and
+          “**Sanity**” is sanity.io. <span className="font-medium">Named</span> is how many runs mentioned a
+          vendor at all; <span className="font-medium">named first</span> is how many mentioned it before any
+          other vendor we measure.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          Five runs separate a wall from silence and nothing finer, so nothing here ranks two vendors that finish
+          close. And these runs are not a clean measurement: they ran on a machine whose operator instructions
+          they could read, and those instructions ask for answers in Polish, which is why some of the published
+          answers are in Polish rather than English. It describes an agent on that machine rather than an agent
+          at your customer. A replication on a second tool that reads none of those instructions is running.
+        </p>
+      </section>
+
       <section className="border-b border-rule py-12">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">We are scored by this too</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
