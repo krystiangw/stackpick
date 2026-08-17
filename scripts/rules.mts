@@ -12,6 +12,7 @@ import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
 import { changesBetween, comparableScorecards, rulesChangedBetween, turnedAwayAtTheEdge, worthTelling } from '../src/lib/watch'
+import { isOlderThan } from '../src/lib/formula'
 import { buildFixPlan } from '../src/lib/fixfirst'
 import { changeEmail } from '../src/lib/watch-email'
 import { CHECKS } from '../src/lib/score'
@@ -525,6 +526,13 @@ check('wersja pomiaru nie liczy sie sama sobie', [...rulesChangedBetween('9.32',
 check('ten sam pomiar dwa razy to zero zmian regul', [...rulesChangedBetween('9.31', '9.31')].join(','), '')
 check('9.33 przenosi zmiane w oauth_dcr', [...rulesChangedBetween('9.32', '9.33')].join(','), 'oauth_dcr')
 check('9.35 przenosi zmiane w probce provisioningu', [...rulesChangedBetween('9.34', '9.35')].join(','), 'programmatic_provisioning')
+// The part after the dot is a counter, not a fraction. Read as a float, 9.9 sorts after 9.35 and
+// the window came out empty, so every rule we changed since would have been mailed to a watcher on
+// an old baseline as ground they lost. Measured 2026-08-18: no live watch sat in 9.4-9.9, and
+// val.town's stored report does.
+check('stara baza 9.9 nadal pomija kazda zmieniona regule', [...rulesChangedBetween('9.9', '9.35')].sort().join(','), 'mcp_present,oauth_dcr,programmatic_provisioning,signup_reachable')
+check('9.9 jest starsze niz 9.10', isOlderThan('9.9', '9.10'), true)
+check('9.35 nie jest starsze niz 9.9', isOlderThan('9.35', '9.9'), false)
 
 check('mail mowi, ze podstawa byla przeliczona', mailFor(true).text.includes('recomputed from the evidence we still hold'), true)
 check('i nie mowi tego, gdy nie byla', mailFor(false).text.includes('recomputed from the evidence we still hold'), false)

@@ -14,6 +14,8 @@
  * Entries retire themselves: the note disappears as soon as the row is measured under `fixedIn` or
  * later, so a finished reseed empties this list without anybody remembering to.
  */
+import { isOlderThan } from './formula'
+
 export type Erratum = {
   domain: string
   checkId: string
@@ -156,17 +158,6 @@ export const ERRATA: Erratum[] = [
     example: 'Live MCP endpoint at https://medusajs.com/mcp, answers JSON',
   },
 ]
-
-/** 9.8 is older than 9.12, which string comparison gets backwards. */
-function isOlderThan(version: string, than: string): boolean {
-  const parts = (value: string) => value.split('.').map((piece) => Number(piece) || 0)
-  const [a, b] = [parts(version), parts(than)]
-  for (let at = 0; at < Math.max(a.length, b.length); at += 1) {
-    const [left, right] = [a[at] ?? 0, b[at] ?? 0]
-    if (left !== right) return left < right
-  }
-  return false
-}
 
 export function erratumFor(
   domain: string,

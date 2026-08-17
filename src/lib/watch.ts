@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto'
 import type { Report } from './store'
 import type { ScoredCheck } from './score'
 import { verdictOf, type CorpusVerdict } from './corpus'
+import { inReleaseOrder, isOlderThan } from './formula'
 
 /**
  * Somebody asking to be told when their agent readiness changes. The scan already answers "how
@@ -130,21 +131,23 @@ const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   '9.35': ['programmatic_provisioning'],
 }
 
-const asNumber = (version: string) => Number(version) || 0
-
 /**
  * Checks whose rule moved between two formula versions, so a change in them is ours to explain
  * rather than the vendor's to answer for. Order does not matter: a rescan under an older formula
  * is as incomparable as one under a newer.
+ *
+ * Ordered by `isOlderThan` rather than by reading the version as a number, which was wrong in the
+ * one direction nobody would notice. A baseline of 9.9 is older than every entry here, but as a
+ * float it is larger than 9.35, so the window came out empty and the whole guard fell silent for
+ * exactly the oldest measurements: the ones that crossed the most rule changes.
  */
 export function rulesChangedBetween(before: string, after: string): Set<string> {
-  const [low, high] = [asNumber(before), asNumber(after)].sort((a, b) => a - b)
+  const [low, high] = inReleaseOrder(before, after)
   const moved = new Set<string>()
   for (const [version, checks] of Object.entries(CHECK_RULE_CHANGED)) {
-    const at = asNumber(version)
     // The version a measurement was taken under is the version it already contains, so only the
     // releases AFTER the older measurement can have moved anything under it.
-    if (at > low && at <= high) for (const check of checks) moved.add(check)
+    if (isOlderThan(low, version) && !isOlderThan(high, version)) for (const check of checks) moved.add(check)
   }
   return moved
 }
