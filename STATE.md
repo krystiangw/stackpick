@@ -4635,3 +4635,36 @@ dokladnie z jednej domeny: naszej.
 
 Do tego regula musialaby opierac sie na „nie znalezlismy rejestracji", a to najczesciej jest nasze
 odkrywanie, ktore zawiodlo, a nie produkt bez kont. **Pozycja zamknieta, check zostaje bez zmian.**
+
+## 30. PRZEBIEG: `programmatic_provisioning`, I ODWROCENIE KIERUNKU (2026-08-17)
+
+Pierwszy przebieg adwersaryjny na najciezszym checku karty (2 punkty, 89 oblanych wierszy). Sonda
+(`scripts/audit-provisioning.mts`) szuka tego samego przez **ich wlasna mape witryny**, ktorej
+skaner nie czyta wcale: `sitemap.xml` na witrynie i na hoscie dokumentacji, jeden poziom indeksu,
+sciezki obiecujace poswiadczenia, do szesciu stron. Reguly frazowe **napisane od nowa**, nie
+zaimportowane.
+
+**Kontrolka: 21 trafien na 80 zaliczanych wierszy (26 procent).** Slabe, wiec cisza po stronie
+oskarzen nic nie znaczy, i to jest zapisane, zanim padly wnioski.
+
+**Strona oskarzen: 40 wierszy, 2 trafienia, i ZERO falszywych oskarzen.** Oba trafienia to nasza
+wlasna fraza lapiaca co innego: `bird.com` „Destination **Management API**" o trasowaniu SMS,
+`bunny.net` „**Account API** Key" o kluczu z panelu.
+
+**To odwrocilo kierunek przebiegu.** Ryzykiem nie jest tu falszywe oskarzenie, tylko **falszywy
+kredyt**: **43 z 79 zaliczonych wierszy stoi wylacznie na golej frazie** („management api" 16,
+„service account" 11, „account api" 5, kombinacje 11). Zliczenie fraz: „management api" trafia 34
+razy, „service account" 24, „account api" 9.
+
+**Wdrozone (9.31):**
+1. **Wiersz cytuje slowa, w ktorych fraze znalezlismy.** Bez tego nie da sie odroznic powierzchni
+   provisioningu od zbiegu okolicznosci, a to jedyny check, gdzie za sama fraze dajemy dwa punkty.
+2. **„self-service accounts" przestalo sie liczyc** jako „service account". Pierwszy sprawdzony
+   vendor pokazal blad wprost: `auth0.com` mial **dwa punkty za wiersz tabelki porownawczej**
+   „Self-service accounts, testing scenarios". Po poprawce ma jeden, a to, co zostalo, to
+   **cytat z opinii klienta** o Management API, czyli sample, nie regula.
+
+**Zostawione swiadomie do pomiaru PO reseedzie** (dopiero on zapisze cytaty dla wszystkich
+zaliczonych wierszy): zaciesnienie trzech golych fraz tak, zeby wymagaly w tym samym zdaniu slowa
+o poswiadczeniu albo o tworzeniu, oraz pisownia „service-account" z myslnikiem, ktora nie trafia ani
+przed zmiana, ani po. Obie zmiany rusza punkty, wiec nie robi sie ich na oko.
