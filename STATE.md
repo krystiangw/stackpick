@@ -2,29 +2,40 @@
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te trzydziesci linijek, potem reszte)
 
-**W LOCIE JEST JEDNO: petla ponawiajaca reseed na 9.31**, uruchomiona 2026-08-17 okolo 11:00 przez
-`nohup` (log: `/tmp/reseed-931.log`). Czeka na karencje szesciu godzin mediany wieku korpusu i
-ponawia co 20 minut, 18 razy. **Sprawdz `tail -3 /tmp/reseed-931.log` zanim cokolwiek zrobisz.**
-Korpus jest wiec ciagle na **9.30**, a produkcja na **9.31**, i strona sama o tym pisze.
+**W LOCIE SA DWIE RZECZY, obie w tle na tym laptopie:**
+1. **Petla ponawiajaca reseed na 9.31**, od okolo 11:00, log `/tmp/reseed-931.log`. Czeka na
+   karencje (6 h mediany wieku korpusu, mija okolo 16:00) i ponawia co 20 minut, 18 razy.
+   **`tail -3 /tmp/reseed-931.log` zanim cokolwiek zrobisz.** Korpus jest wiec dalej na **9.30**,
+   produkcja na **9.31**, i strona sama o tym pisze.
+2. **Replikacja 26 cel rozpoznawczych codeksem**, log `/tmp/codex-cells.log`, katalog
+   `~/.letagentsin-runs-codex`, 3 biegi na kategorie. Codex **nie czyta instrukcji tej maszyny i
+   odpowiada po angielsku**, wiec to jest czystszy dowod niz to, co dzis publikujemy. Koniec: linia
+   `KONIEC` w logu.
 
-**PODLOGA SZUMU ZMIERZONA, OPUBLIKOWANA I ZWERYFIKOWANA NA PRODUKCJI: 0,59 procent**
-(15 werdyktow na 2550, 170 domen, 9 w gore i 6 w dol, czyli symetrycznie). Zastapila 0,20 z
-formuly 9.8. **Zamrozenie formuly ZDJETE.**
+**PO RESEEDZIE, w tej kolejnosci:**
+1. `MONGODB_URI=... npx tsx scripts/after-reseed.mts` - jedna komenda zamiast czterech pytan z
+   pamieci. Ma pokazac: korpus na 9.31, siedem zdan „brak formularza, wejscie przez dostawce
+   tozsamosci" zamiast zera, cytaty przy `programmatic_provisioning`, adresy przy `oauth_dcr`,
+   i **errata puste** (11 wpisow ma wygasnac samo).
+2. `npm run audit` oraz `npx tsx scripts/audit-signup.mts accused`.
+3. **Policz, ile wierszy ma `mcp_present` niemierzalny.** Duzo znaczy, ze lustro rejestru sie nie
+   zapelnilo albo TTL jest za krotki.
+4. Korpus urosnie ze 170 do okolo **177 wierszy** (nowa kategoria hostingu).
 
-**9.31 WDROZONA I ZWERYFIKOWANA NA PRODUKCJI** (trzy zmiany, opis w sekcji „9.31 I ODKRYCIE..."):
-rozdzielone zdanie o rejestracji bez formularza, specyfikacje szukane takze na hoscie dokumentacji
-oraz **milczenie rejestru MCP przestalo byc oskarzeniem** (rejestr jest z naszego dyna nieosiagalny,
-zmierzone). Do tego **lustro rejestru** w kolekcji `mcpRegistry`, napelniane dziennym jobem GitHuba.
+**PO REPLIKACJI CODEKSEM:**
+1. `LETAGENTSIN_RUNS_ALL=$HOME/.letagentsin-runs-codex npx tsx scripts/export-cells.mts`, potem
+   `npx tsx scripts/audit-never-named.mts` i deploy. Strony kategorii pokazuja wtedy **kolumne per
+   narzedzie**, a raport klienta sumuje biegi z obu, czyli dowozi obietnice „dziesiec biegow na
+   dwoch narzedziach".
+2. `LETAGENTSIN_RUNS=$HOME/.letagentsin-runs-codex npm run named-vs-score` i porownanie z wersja
+   claude. **`/findings` obiecuje publicznie, ze opublikujemy to niezaleznie od wyniku.**
 
-**NASTEPNE KROKI:**
-1. **Napelnij lustro rejestru MCP zanim ruszy reseed**: `STACKPICK_CRON_TOKEN=$(heroku config:get
-   STACKPICK_CRON_TOKEN -a stackpick) npx tsx scripts/mirror-mcp-registry.mts`. Bez tego kazdy
-   wiersz bez endpointu z innego zrodla wyjdzie **niemierzalny** zamiast oblany.
-2. **Po reseedzie**: `npm run audit`, `npx tsx scripts/audit-signup.mts accused` (osiem zdan
-   mylacych ma zejsc do zera) i policzenie, ile wierszy ma `mcp_present` niemierzalny.
-3. **Cennik**: Krystian pyta o jednorazowy raport z biegow agenta za 29 dolarow. Moja odpowiedz:
-   tak, ale **dziesiec biegow na dwoch narzedziach**, tylko w naszych 25 kategoriach i **z cena
-   zaliczana w pierwszy miesiac monitoringu**. Blokuje to samoobslugowa platnosc (Stripe/Paddle).
+**PODLOGA SZUMU: 0,59 procent** (15 werdyktow na 2550; 10 to werdykt kontra werdykt, 5 to wiersz
+niemierzalny po jednej stronie). **Zamrozenie formuly zdjete.**
+
+**Zablokowane na Krystianie:** sciezka platnosci inna niz `mailto:` (Stripe kontra Paddle) - przy
+raporcie za 49 USD to decyduje, czy ten poziom w ogole istnieje; `ANTHROPIC_API_KEY` do czystego
+pokoju dla biegow claude; oferta agencyjna (zadanie #45); dolna granica ceny audytu („from X").
 
 **Jak powtorzyc pomiar podlogi szumu** (koszt: doba bez zmiany regul i dwa przemiatania oddalone
 o karencje): `MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npm run noise-floor <wersja>`.
