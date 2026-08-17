@@ -140,6 +140,24 @@ export function ScanForm({ autoFocus = false, initialDomain = '' }: { autoFocus?
         </div>
       )}
 
+      {/* We score vendors on whether their signup works without JavaScript and this form does not,
+          which is a fair thing to be caught on. A form cannot do it honestly here: a scan takes
+          longer than the gateway allows, which is why the browser path streams. So the client
+          without a runtime gets the thing it can actually use, an instruction, rather than a
+          button that does nothing. */}
+      <noscript>
+        <p className="font-mono text-xs leading-relaxed text-ink-faint">
+          This form needs JavaScript, because a scan takes longer than a plain form submit is allowed to wait.
+          Without a runtime, ask the API directly and it answers the same scorecard:
+          <br />
+          <code>curl -X POST https://letagentsin.com/api/scan -H &apos;content-type: application/json&apos; -d
+          &apos;&#123;&quot;domain&quot;:&quot;example.com&quot;&#125;&apos;</code>
+          <br />
+          Add <code>&quot;format&quot;:&quot;agent&quot;</code> for markdown tasks, or connect an MCP client to{' '}
+          <code>https://letagentsin.com/mcp</code>.
+        </p>
+      </noscript>
+
       <p className="font-mono text-xs leading-relaxed text-ink-faint">
         Your scan gets a permanent link you can forward. It is never added to the published corpus, and we do
         not post it anywhere.

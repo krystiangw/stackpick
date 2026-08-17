@@ -21,9 +21,13 @@ export function Rankings({ rankings }: { rankings: RankedCategory[] }) {
   return (
     <section className="border-b border-rule py-14">
       <div className="flex flex-wrap items-baseline justify-between gap-4">
-        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Scanned so far</h2>
+        {/* Not "scanned so far": this list drops any category holding fewer than four rows, so the
+            number under it was smaller than the corpus count printed higher up the same page, and
+            the label made the smaller one read as the total. */}
+        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Ranked by category</h2>
         <p className="font-mono text-xs text-ink-faint">
-          {rankings.reduce((sum, ranked) => sum + ranked.entries.length, 0)} domains · every result is a live link
+          {rankings.reduce((sum, ranked) => sum + ranked.entries.length, 0)} domains in {rankings.length} categories
+          large enough to rank · every result is a live link
         </p>
       </div>
 

@@ -214,7 +214,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </div>
       </section>
 
-      {!looksLikeDeveloperProduct && (
+      {!looksLikeDeveloperProduct && !findings.blocksPlainRequests && !findings.rateLimitedUs && !findings.truncation && (
         <section className="border-b border-rule py-8">
           <div className="border-l-2 border-warn bg-surface p-6">
             <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">Probably the wrong yardstick</h2>
@@ -392,9 +392,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <h2 className="text-lg font-semibold tracking-tight">Every check</h2>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
           Each line is one HTTP observation with a published rule, so you can rerun any of them yourself.
-          Most are the same tomorrow if you are: the two that are not are the bot gate and the pricing page,
-          which answer inconsistently on their own, which is why those run more than once and say so when the
-          tries disagreed. PASS and PART are counted. UNMEASURED means we could not
+          Most are the same tomorrow if you are: the two that are not are the front door and the signup page,
+          which answer inconsistently on their own, which is why those two are fetched three times and say so
+          when the tries disagreed. Everything else is asked once. PASS and PART are counted. UNMEASURED means we could not
           evaluate it, N/A means it does not apply to a product like yours, and neither is in the score or
           its denominator.{' '}
           <Link href="/methodology" className="text-brass underline underline-offset-4">
