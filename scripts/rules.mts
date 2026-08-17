@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { overDomainBudget } from '../src/lib/scan-gate'
 import { categoryForJob } from '../src/lib/lookup'
-import { HELD_OUT_4 } from './routing-questions'
+import { HELD_OUT_5 } from './routing-questions'
 import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
@@ -244,7 +244,7 @@ let silent = 0
 let wrongCategory = 0
 let shouldHaveRefused = 0
 let answered = 0
-for (const question of HELD_OUT_4) {
+for (const question of HELD_OUT_5) {
   const got = categoryForJob(question.asked)?.id ?? null
   if (got !== null) answered += 1
   if (got === question.expect) right += 1
@@ -254,8 +254,8 @@ for (const question of HELD_OUT_4) {
 }
 const described = readFileSync('src/app/mcp/route.ts', 'utf8')
 const quoted = (pattern: RegExp) => Number(described.match(pattern)?.[1] ?? -1)
-check('pytań w zestawie odłożonym', HELD_OUT_4.length, quoted(/Measured on (\d+) questions written before/))
-check('odpowiedzi poprawnych', right, quoted(/it answered (\d+) correctly/))
+check('pytań w zestawie odłożonym', HELD_OUT_5.length, quoted(/Measured on (\d+) questions written by an agent/))
+check('odpowiedzi poprawnych', right, quoted(/it got (\d+) of the 40 right/))
 check('milczeń tam, gdzie należało odpowiedzieć', silent, quoted(/said nothing on (\d+) it should have answered/))
 check('złych kategorii', wrongCategory, quoted(/sent (\d+) to the wrong category/))
 check('odpowiedzi tam, gdzie należało odmówić', shouldHaveRefused, quoted(/answered (\d+) that it should have refused/))

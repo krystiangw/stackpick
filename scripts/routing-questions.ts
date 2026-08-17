@@ -258,3 +258,56 @@ export const HELD_OUT_4: Question[] = [
   { asked: 'honestly the whole stack feels dated and slow, we have some budget this quarter, what should we be looking at', expect: null },
   { asked: 'the accountant keeps asking for receipts nobody can find and vat is due next friday', expect: null },
 ]
+
+/**
+ * The fifth set, 2026-08-17. Written by an agent with no access to this repository and no sight of
+ * the category list, six of the forty deliberately not about buying anything, translated to English
+ * by a second agent told not to introduce any category noun. Labelled before the first run and the
+ * labels committed first, in harness/heldout/2026-08-17.json.
+ *
+ * The three questions that could honestly go either way (in-app chat, GDPR document storage, agent
+ * tracing) carry their primary reading here, because the build check compares one number and an
+ * "either" would let it pass on the reading that happens to be convenient.
+ */
+export const HELD_OUT_5: Question[] = [
+  { asked: 'We have Node and Postgres, and we want users to be able to upload profile photos and have them served fast in Europe and the US. What do you recommend instead of keeping the files on the machine\'s disk?', expect: 'file-storage' },
+  { asked: 'We\'re building a B2B SaaS in Rails and enterprise customers are starting to ask about logging in with their company account and about enforcing MFA. I don\'t want to maintain SAML myself.', expect: 'auth' },
+  { asked: 'I need to send transactional emails (password reset, order confirmation) from a Django app, around 50k a month, and have them not land in spam. How do I hook that up?', expect: 'transactional-email' },
+  { asked: 'I have an endpoint that generates a PDF report and takes 40 seconds, and the browser disconnects. I\'m wondering whether to turn it into a queue in my own code with a jobs table in Postgres, or use a separate worker.', expect: null },
+  { asked: 'A mobile app is supposed to sell monthly and yearly subscriptions, with a 14-day trial and VAT invoices for EU companies. We don\'t want to touch card data.', expect: 'payments' },
+  { asked: 'Our Go backend crashes once every few days and we find out about it from customers. I\'d like to get a stack trace with the request context right after the exception, instead of digging through journalctl.', expect: 'error-monitoring' },
+  { asked: 'We have 200k support documents and we want a chat to answer based on them with source citations. What should we use to store and search embeddings if we already have Postgres?', expect: 'vector-search' },
+  { asked: 'We need to verify a user\'s identity at signup: an ID scan plus a selfie, KYC requirements for a fintech in Poland. How is that usually wired into the signup flow?', expect: null },
+  { asked: 'We want users to get push notifications on iOS and Android as well as in-app, from one place and respecting per-channel preferences. Which parts of that are worth writing ourselves?', expect: 'notifications' },
+  { asked: 'I have a function that computes the similarity of two lists of tags and at 10k records it takes 3 seconds. How do I rewrite it so it\'s linear instead of O(n^2)?', expect: null },
+  { asked: 'Startup, a Next.js app, marketing wants to edit the copy and the blog themselves without a deploy. The backend is in a separate repo and we don\'t want to let them into the code.', expect: 'headless-cms' },
+  { asked: 'We need to accept payments from customers in Brazil and India, local methods like PIX and UPI, and our current processor doesn\'t support that. What should I be looking for?', expect: 'payments' },
+  { asked: 'We collect product events from the frontend and the backend and we want to see the signup funnel and cohort retention, without building our own warehouse stack up front.', expect: 'product-analytics' },
+  { asked: 'In our repo we have a billing module and a subscriptions module, both touch the same table and they keep getting in each other\'s way. Split it into two services or make one domain layer?', expect: null },
+  { asked: 'A video editing app, the user uploads a 2 GB file from the browser and we need transcoding to several resolutions plus thumbnails. What do we do about that pipeline?', expect: 'video' },
+  { asked: 'We want to add chat between users in the app, with message history, read receipts and a typing indicator. Writing that on raw WebSockets feels like a trap to me.', expect: 'communications' },
+  { asked: 'We need to ship feature flags so we can enable a feature for 5% of users and do killswitches without a deploy, split by environment and with an audit of changes.', expect: 'feature-flags' },
+  { asked: 'We have a PHP monolith and we want decent logs with the ability to search by trace_id for 30 days. Right now it\'s files on three machines and grep over ssh.', expect: 'observability' },
+  { asked: 'We\'re building a tool that should answer questions about customer data and call our API. I\'m thinking about the model: is fine-tuning even needed, or is tool calling enough?', expect: 'llm-infrastructure' },
+  { asked: 'We need to send SMS with a one-time code to users in a dozen or so countries and have decent deliverability plus a voice call fallback.', expect: 'communications' },
+  { asked: 'Our e2e tests in CI take 45 minutes because everything runs sequentially on one machine. Is it worth splitting it into shards at an external provider, or is a bigger runner enough?', expect: null },
+  { asked: 'I have a form component in React with seven useEffects that trigger each other and the state gets lost. How do I redesign it into a reducer or a state machine?', expect: null },
+  { asked: 'Online store, we want to show prices and charge tax correctly for customers in the EU, US and UK, including VAT number validation. We don\'t want to maintain our own rate tables.', expect: null },
+  { asked: 'Our app already has an English interface, we\'re entering four markets and the translators work in Excel. I\'m looking for a sensible workflow so the strings don\'t drift out of sync with the code.', expect: 'localization' },
+  { asked: 'Enterprise customers require SOC 2 from us, and we\'re 8 people with zero processes. Where do we start so we don\'t do all that paperwork by hand?', expect: null },
+  { asked: 'We need to sync our users\' data with their CRMs and support tools, every customer wants a different one. We don\'t have a team to write 20 integrations.', expect: null },
+  { asked: 'Our frontend makes 300 requests per second to the API and we want to rate limit per API key and fend off bots. Should that be done in the application code or a layer above?', expect: null },
+  { asked: 'We have to store customer documents in a GDPR-compliant way, with retention and the ability to permanently delete on request, with the backend on AWS in an EU region.', expect: 'file-storage' },
+  { asked: 'We\'re building a logistics app, we need to show a courier\'s route on a map, compute ETAs and geocode addresses with typos. What\'s a sensible option for a few hundred thousand requests a month?', expect: 'maps-geo' },
+  { asked: 'I\'m wondering whether our API should return a cursor or an offset for paginating an orders list that users sort by date and status. The data changes often.', expect: null },
+  { asked: 'We have a warehouse on BigQuery and we want to give customers dashboards embedded in our app, with per-tenant data isolation. Build our own charts or embed something ready-made?', expect: null },
+  { asked: 'Our onboarding requires signing a contract, right now we email a PDF and wait for a scan. I\'d like to have it in the product, with a legally valid signature and a webhook after signing.', expect: 'documents-signature' },
+  { asked: 'The app is supposed to generate images for posts based on the user\'s description, a few hundred a day, with content moderation. How do I hook that up to a Python backend?', expect: 'llm-infrastructure' },
+  { asked: 'We deploy containers on a single machine with docker compose and that\'s no longer enough, but we don\'t have anyone who knows Kubernetes. I\'m looking for something where a push to main just puts the app up.', expect: 'app-hosting' },
+  { asked: 'Users report that the app is sluggish for them, and we don\'t know on which screen. I\'d like to have session recordings, or at least real user metrics from the browser.', expect: null },
+  { asked: 'We have an events table with 400M rows in Postgres and date range queries are slow. Partition by month or is adding a BRIN index enough?', expect: null },
+  { asked: 'We want to add product search with suggestions, typos, and filters by category and price. Right now we have LIKE in Postgres and it doesn\'t work.', expect: 'search' },
+  { asked: 'Our AI agent is supposed to run in a loop and call tools, and we can\'t see what it\'s doing when it returns nonsense. I need tracing of prompts, costs and which step failed.', expect: 'llm-infrastructure' },
+  { asked: 'We\'re adding CSV data export to the product and users report that Polish characters break for them in Excel. Fix the encoding on our side or change the output format?', expect: null },
+  { asked: 'We collect customers\' secrets and API keys for integrations and right now they sit encrypted in our database. I\'d rather not be responsible for storing them.', expect: null },
+]
