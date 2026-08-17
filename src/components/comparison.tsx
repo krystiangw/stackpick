@@ -1,8 +1,24 @@
 import type { Comparison } from '@/lib/compare'
 
 export function ComparisonSection({ comparison, domain }: { comparison: Comparison; domain: string }) {
-  const { category, peers, rankInCategory, percentile, beatenOn } = comparison
-  if (!rankInCategory && !percentile) return null
+  const { category, peers, rankInCategory, percentile, beatenOn, incomparable } = comparison
+  // A section that vanishes teaches the reader nothing. Say which two versions are involved and
+  // that the corpus catches up on its own, rather than leaving a hole where the comparison was.
+  if (!rankInCategory && !percentile) {
+    if (!incomparable) return null
+    return (
+      <section className="border-b border-rule py-10">
+        <h2 className="text-lg font-semibold tracking-tight">No comparison for this scan yet</h2>
+        <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
+          This scan ran under formula {incomparable.subjectVersion} and the published corpus is still on{' '}
+          {incomparable.corpusVersion}, so there is nothing measured the same way to compare {domain} against.
+          Scores from two versions are not comparable and we would rather show none than a ranking that moves
+          because we changed our mind. The corpus is rescanned within a day of a formula shipping, and the
+          comparison comes back on its own.
+        </p>
+      </section>
+    )
+  }
 
   return (
     <section className="border-b border-rule py-10">

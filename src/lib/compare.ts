@@ -29,6 +29,14 @@ export type Comparison = {
   percentile: { betterThan: number; outOf: number } | null
   /** Checks a peer passes and the subject does not. The most quotable part of the report. */
   beatenOn: { checkLabel: string; peers: string[] }[]
+  /**
+   * Set when the corpus exists but was measured under a different formula, so there is nothing
+   * comparable to show. Refusing to compare across versions is right; doing it by silently
+   * dropping the whole section is not. Every scan run between a formula shipping and the reseed
+   * finishing lost its comparison with no sentence saying why, which this afternoon was every
+   * scan for six hours.
+   */
+  incomparable: { corpusVersion: string; subjectVersion: string } | null
 }
 
 const SAMPLE_FLOOR = 5
@@ -36,9 +44,14 @@ const SAMPLE_FLOOR = 5
 export async function buildComparison(subject: Report): Promise<Comparison> {
   // Ranking a frozen 2.1 score against peers rescored under 3.0 moved a vendor's position
   // while nothing about the vendor changed. Only like-for-like formulas are comparable.
+  const corpus = await publishedCorpus()
+  const incomparable =
+    corpus.formulaVersion !== '' && corpus.formulaVersion !== subject.scorecard.formulaVersion
+      ? { corpusVersion: corpus.formulaVersion, subjectVersion: subject.scorecard.formulaVersion }
+      : null
   const all = new Map(
     // A visitor's own scan is compared against the published corpus, never added to it.
-    (await publishedCorpus()).reports
+    corpus.reports
       .filter((report) => report.scorecard.formulaVersion === subject.scorecard.formulaVersion)
       .map((report) => [report.domain, report]),
   )
@@ -59,7 +72,7 @@ export async function buildComparison(subject: Report): Promise<Comparison> {
         }
       : null
 
-  if (!category) return { category: null, peers: [], rankInCategory: null, percentile, beatenOn: [] }
+  if (!category) return { category: null, peers: [], rankInCategory: null, percentile, beatenOn: [], incomparable }
 
   const peerReports = category.domains
     .map((domain) => all.get(domain))
@@ -91,7 +104,7 @@ export async function buildComparison(subject: Report): Promise<Comparison> {
   const rankInCategory = position > 0 && peers.length >= 3 ? { position, outOf: peers.length } : null
   // A league table whose only row is the reader is not a comparison. It happened whenever a
   // visitor scanned the first domain we held in their category, and it read as a made-up ranking.
-  if (peers.length < 3) return { category, peers: [], rankInCategory: null, percentile, beatenOn: [] }
+  if (peers.length < 3) return { category, peers: [], rankInCategory: null, percentile, beatenOn: [], incomparable }
 
   const beatenOn = subject.scorecard.checks
     // Not applicable is not a shortfall. A library with no accounts was shown "where competitors
@@ -111,5 +124,5 @@ export async function buildComparison(subject: Report): Promise<Comparison> {
     .sort((a, b) => b.peers.length - a.peers.length)
     .slice(0, 4)
 
-  return { category, peers, rankInCategory, percentile, beatenOn }
+  return { category, peers, rankInCategory, percentile, beatenOn, incomparable }
 }
