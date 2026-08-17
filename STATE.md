@@ -116,10 +116,15 @@ ciala sond wyrzucamy, patrz „zapis raportu"). Przeliczenie zapisanych findings
 odczyt. 9.32 zaciesnia dokladnie ten check, wiec zdanie stalo sie falszywe akurat teraz. Mail mowi
 teraz, co naprawde robimy, i wprost dopuszcza, ze linia mogla sie ruszyc przez zaostrzenie reguly.
 
-**Dlug do splacenia:** oznaczyc **per check**, czy da sie go uczciwie przeliczyc z zapisanych
-findings, i przy zmianie formuly **wylaczyc nieprzeliczalne z listy zmian** zamiast tlumaczyc je
-zdaniem. Dzis zaden obserwowany domen (stripe.com, vercel.com) nie jest w 28 wierszach dotknietych
-przez 9.32, wiec ryzyko jest odroczone, nie zamkniete.
+**Dlug SPLACONY tego samego wieczoru.** `CHECK_RULE_CHANGED` w `src/lib/watch.ts` mowi, ktore checki
+zmienily regule w ktorej wersji formuly, a `rulesChangedBetween(przed, po)` zwraca te, ktore ruszyly
+sie miedzy dwoma pomiarami. Cron **wycina je z listy zmian** i loguje ile, zamiast tlumaczyc je
+akapitem pod tematem, ktory juz powiedzial, ze vendor stracil grunt. Wersja, pod ktora zrobiono
+pomiar, nie liczy sie sama sobie. Cztery testy w buildzie.
+
+**Utrzymanie:** przy KAZDEJ zmianie punktacji dopisz check do `CHECK_RULE_CHANGED` pod numerem nowej
+wersji. Wersja nieobecna w tej mapie znaczy „ta wersja nie zmienila zadnej reguly punktacji" i jesli
+to nieprawda, obserwujacy dostanie maila o stracie, ktorej nie bylo.
 
 **Pulapka z tej samej godziny:** opublikowalem najpierw opis, w ktorym przykladem naprawionego bledu
 byl wlasnie modul billing - i to bylo nieprawda, bo tego akurat prog nie naprawia. Sprawdzilem
