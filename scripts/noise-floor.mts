@@ -38,6 +38,34 @@ const reports = client
   .db(process.env.MONGODB_DB ?? 'stackpick')
   .collection('reports')
 
+/**
+ * Two scans of one reseed sit twenty to forty minutes apart; two reseeds sit hours apart, because
+ * the cooldown is six. So a gap this size separates one sweep from the next, and the last scan of
+ * each sweep is its WARM one.
+ *
+ * This is the fix that makes the whole exercise mean anything. Taking the two newest scans, which
+ * is what this script did until 2026-08-17, pairs the cold and warm passes of the same reseed even
+ * when a second reseed exists, and that pair is the confound the script itself warns about at the
+ * bottom. The window we froze the formula for would have measured the npm cache again.
+ */
+const SWEEP_GAP_MS = 90 * 60 * 1000
+
+type Card = { scorecard: { checks: { id: string; points: number }[] }; scannedAt: string }
+
+/** The warm scan of each sweep, newest sweep first. */
+function warmPerSweep(rows: Card[]): Card[] {
+  const warm: Card[] = []
+  let previous: number | null = null
+  for (const row of rows) {
+    const at = Date.parse(row.scannedAt)
+    if (previous === null || previous - at > SWEEP_GAP_MS) warm.push(row)
+    previous = at
+  }
+  return warm
+}
+
+const warmPair = process.argv[3] !== 'adjacent'
+
 let pairs = 0
 let verdicts = 0
 let moved = 0
@@ -45,12 +73,13 @@ let up = 0
 const byCheck = new Map<string, number>()
 
 for (const domain of CURATED_DOMAINS) {
-  const rows = await reports
-    .find({ domain, seeded: true, 'scorecard.formulaVersion': wanted }, { sort: { scannedAt: -1 }, limit: 2 })
-    .toArray()
-  if (rows.length < 2) continue
+  const rows = (await reports
+    .find({ domain, seeded: true, 'scorecard.formulaVersion': wanted }, { sort: { scannedAt: -1 }, limit: 8 })
+    .toArray()) as unknown as Card[]
+  const chosen = warmPair ? warmPerSweep(rows) : rows.slice(0, 2)
+  if (chosen.length < 2) continue
   pairs += 1
-  const [after, before] = rows as unknown as { scorecard: { checks: { id: string; points: number }[] } }[]
+  const [after, before] = chosen
   for (const check of after.scorecard.checks) {
     const was = before.scorecard.checks.find((c) => c.id === check.id)
     if (!was) continue
@@ -65,11 +94,17 @@ for (const domain of CURATED_DOMAINS) {
 }
 
 if (pairs === 0) {
-  console.log(`brak domen z dwoma skanami na formule ${wanted}: nie ma czego porownac`)
+  console.log(
+    warmPair
+      ? `brak domen z dwoma PRZEMIATANIAMI na formule ${wanted}. Para cieply-cieply wymaga dwoch reseedow tej samej wersji;\nzeby zobaczyc pare z jednego przebiegu, dodaj argument: npx tsx scripts/noise-floor.mts ${wanted} adjacent`
+      : `brak domen z dwoma skanami na formule ${wanted}: nie ma czego porownac`,
+  )
   await client.close()
   process.exit(0)
 }
-console.log(`\n${pairs} domen z para skanow na formule ${wanted}, ${verdicts} porownanych werdyktow`)
+console.log(
+  `\n${pairs} domen z para ${warmPair ? 'CIEPLY-CIEPLY (ostatni skan kazdego z dwoch przemiatan)' : 'sasiednich skanow'} na formule ${wanted}, ${verdicts} porownanych werdyktow`,
+)
 console.log(`${moved} ruszylo bez zmiany regul = ${((moved / verdicts) * 100).toFixed(2)} procent`)
 for (const [id, n] of [...byCheck].sort((a, b) => b[1] - a[1])) console.log(`  ${id}: ${n}`)
 
