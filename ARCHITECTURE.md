@@ -66,6 +66,25 @@ commercial meaning. Conflating them is the most common mistake in this category:
 The `user` class is not a crawler. It is a prospect with a different User-Agent header.
 Companies block it wholesale by pasting "AI bot" lists off the internet.
 
+## What lives outside the scan
+
+Three things the site reads that no HTTP request produces, added on 2026-08-17. Each is data
+frozen into the repository on purpose, because the machine that produces it is not the machine
+that serves the site.
+
+- **Discovery cells** (`src/data/cells.json`, written by `scripts/export-cells.mts`). One buying
+  question per category put to an agent in an empty directory, several times, and the answers kept
+  whole. Runs live under `$LETAGENTSIN_RUNS` on a laptop; `LETAGENTSIN_RUNS_ALL` lets the export
+  read more than one root, which is how two tools end up in one file. `/c` and `/c/<category>` read
+  it, and so does `scripts/client-report.mts`, which produces the paid one-off report.
+- **The MCP registry mirror** (Mongo collection `mcpRegistry`, filled by
+  `.github/workflows/mcp-registry.yml`). `registry.modelcontextprotocol.io` does not answer our
+  dyno at all, measured, so a runner fetches the listing and posts it to `/api/cron/mcp-registry`.
+  A scan then reads a host we control, and a mirror older than seven days counts as no answer
+  rather than as a vendor with no server.
+- **Errata** (`src/lib/errata.ts`). Rows we know are wrong and cannot withdraw until the next
+  reseed. Entries retire themselves once the row is measured under the formula that fixed it.
+
 ## Traps already paid for
 
 These cost real debugging time in the research phase. Do not reintroduce them.
