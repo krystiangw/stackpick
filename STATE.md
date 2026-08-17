@@ -157,6 +157,31 @@ co zostawia, to zdanie prawdziwe, nie puste.
 `audit-delivery`). Strona `/c/<kat>/runs` uzywa z tego modulu wylacznie `matched` do podswietlania,
 wiec **nie wymaga deployu**, zeby poprawka dotarla do klienta.
 
+## PLATNY RAPORT DAWAL MNIEJ NIZ DARMOWA STRONA (2026-08-17, czeka na deploy)
+
+Dalszy ciag czytania dokumentow klienta zamiast ich audytowania. Trzy rzeczy, wszystkie znalezione
+przez wygenerowanie raportu dla vendorow o roznym ksztalcie (mocny, sredni, blokujacy nas).
+
+1. **Brak planu naprawy.** `buildFixPlan` mial darmowy skan, mail i eksport maszynowy. Dokument za
+   **49 USD** jako jedyny go nie mial, wiec kupujacy dostawal liste "co jest nie tak" i **ani jednego
+   "co z tym zrobic"**, czyli mniej niz dostaje za darmo. Sekcja 3 raportu to teraz plan: zdanie z
+   arytmetyka, tanie kroki numerowane, reszta ponizej i **sufit** ("N punktow siedzi za checkami,
+   ktorych nie zmierzylismy"), zeby plan nie czytal sie jak obietnica pelnej puli.
+2. **Vendor, ktorego nie moglismy przeczytac, dostawal wynik bez ostrzezenia.** froala.com odmawia
+   nam wszystkiego (403 takze na Chrome), osiem z pietnastu checkow bylo niemierzalnych, a raport
+   otwieral sie "4 of 6 measurable points" i przechodzil do rad o OAuth. Teraz **przed tabela** stoi
+   zdanie, ile checkow nie dalo sie zmierzyc. Codex zwrocil uwage, ze pierwsza wersja przypisywala
+   **wszystkie** niezmierzone jednej przyczynie, wiec liczba jest teraz bezprzyczynowa, a warunki
+   skanu (odmowa na brzegu, wyczerpany budzet czasu) sa wymienione osobno i moga wystapic naraz.
+3. **`lower()` robilo z "OAuth" - "oAuth".** W zdaniu "Fix one thing, oAuth dynamic client
+   registration", w dokumencie, za ktory ktos placi. Etykieta zaczynajaca sie od dwoch wielkich
+   liter zostaje nietknieta. Dotyczy tez darmowej strony, wiec **wymaga deployu**.
+
+**Plus jedna kopia mniej:** zdanie "Picked ahead of you" bylo w raporcie i w miesiecznym mailu, w
+dwoch osobnych kopiach, i **klamalo liderowi**: stripe.com prowadzil w pieciu biegach z dziesieciu i
+czytal, ze zostal wyprzedzony. Jedna funkcja `whoWentFirst` na oba dokumenty, a przy niezerowym
+`first` zdanie brzmi "In the 5 runs that did not put you first...". Straznik na oba warianty.
+
 ## 9.33: „13 hostow sondowanych" liczylo hosty, o ktore nigdy nie zapytalismy (2026-08-17, v482)
 
 To ostatni nienaprawiony punkt z listy niezaleznego przegladu szesciu wydan (sekcja nizej), tam
