@@ -42,8 +42,16 @@ if (watches.length === 0) {
 }
 
 console.log(`${watches.length} aktywnych obserwacji\n`)
-console.log('domena                kategoria              pytanie   ostatnia cela')
+/** A cell is owed once a month, which is what /pricing promises a watched domain. */
+const CELL_DUE_DAYS = 30
+const daysSince = (day: string | null) =>
+  day === null ? Number.POSITIVE_INFINITY : Math.floor((Date.now() - Date.parse(day)) / 86_400_000)
+
+console.log('domena                kategoria              pytanie   ostatnia cela  stan')
 let unservable = 0
+/** Categories whose monthly cell is owed. Printed as commands, because a list nobody can act on
+ * is how a promise made on the pricing page quietly stops being kept. */
+const due: string[] = []
 for (const watch of watches) {
   const category = categoryFor(watch.domain)
   if (!category) {
@@ -54,12 +62,25 @@ for (const watch of watches) {
   const question = existsSync(join(asks, `${category.id}.md`))
   if (!question) unservable += 1
   const ran = lastCell(category.id)
-  console.log(`${watch.domain.padEnd(22)} ${category.id.padEnd(22)} ${(question ? 'jest' : 'BRAK').padEnd(9)} ${ran ?? 'nigdy'}`)
+  const overdue = daysSince(ran) > CELL_DUE_DAYS
+  if (overdue && question) due.push(category.id)
+  console.log(
+    `${watch.domain.padEnd(22)} ${category.id.padEnd(22)} ${(question ? 'jest' : 'BRAK').padEnd(9)} ${(ran ?? 'nigdy').padEnd(14)} ${
+      overdue ? 'DO URUCHOMIENIA' : 'aktualna'
+    }`,
+  )
 }
 
 console.log(
   `\n${unservable} z ${watches.length} obserwacji nie da sie dzis obsluzyc biegiem rozpoznawczym, a strona obiecuje go co miesiac`,
 )
+const owed = [...new Set(due)]
+if (owed.length > 0) {
+  console.log(`\n${owed.length} kategorii ma cele starsza niz ${CELL_DUE_DAYS} dni. Do uruchomienia:`)
+  for (const id of owed) console.log(`  npm run ask -- ${id} claude sonnet 5`)
+} else {
+  console.log('\nkazda obserwowana kategoria ma cele mlodsza niz miesiac')
+}
 console.log(
   `Domena spoza naszych ${CATEGORIES.length} kategorii nie ma pytania, wiec nie ma celi. To jest do zamkniecia zanim ktos zaplaci.`,
 )
