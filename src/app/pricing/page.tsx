@@ -44,6 +44,7 @@ const TIERS: readonly Tier[] = [
     includes: [
       'The same checks, rerun every week, so a verdict that moves is caught within days',
       'Real agents every month: one question about your category, put to an agent five times in isolation, and how many of the five named you',
+      'The agent runs cover the 25 categories we measure. If your product is not in one of them we say so before you switch it on, rather than after',
       'Which provider got picked instead, and the sentence that passed over you, quoted from the transcript',
       'One email when something moves, nothing when nothing does, which is most weeks',
       'No account and no card. One link in every email stops it',

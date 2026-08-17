@@ -18,6 +18,7 @@
     "ask": "tsx harness/ask.mts",
     "asked": "tsx harness/asked.mts",
     "named-vs-score": "tsx scripts/named-vs-score.mts",
+    "watch-coverage": "tsx scripts/watch-coverage.mts",
     "typecheck": "tsc --noEmit",
     "rules": "tsx scripts/rules.mts",
     "diff-corpus": "tsx scripts/diff-corpus.mts",
