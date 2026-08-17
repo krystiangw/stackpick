@@ -944,9 +944,21 @@ export function corroboratesBareProvisioning(window: string, phrase: string): bo
   return NAMES_A_CREDENTIAL.test(around) || MAKES_SOMETHING.test(around)
 }
 
-/** The ±70 characters we quote, which for a bare phrase is also the evidence it has to carry. */
+/**
+ * The sentence the phrase sits in, at most 70 characters either side.
+ *
+ * Bounded at BOTH ends, which the first version of this was not, and storyblok.com caught it on
+ * production within a minute: their menu reads "Management API . Introduction . Access Tokens",
+ * and a window that ran 70 characters past the match took "Access Tokens" from the next menu entry
+ * as corroboration. A navigation list is exactly where a credential noun sits beside an API name
+ * without the two having anything to do with each other, so the boundary that separates menu items
+ * has to bound the evidence too.
+ */
 function windowAround(text: string, at: number, length: number): string {
-  return text.slice(Math.max(text.lastIndexOf('. ', at) + 1, at - 70), at + length + 70)
+  const from = Math.max(text.lastIndexOf('. ', at) + 1, at - 70)
+  const after = at + length
+  const stop = text.indexOf('. ', after)
+  return text.slice(from, stop === -1 ? after + 70 : Math.min(stop, after + 70))
 }
 
 /**
@@ -988,9 +1000,11 @@ export function provisioningQuotes(html: string, most = 2): string[] {
     const hit = new RegExp(pattern.source, pattern.flags).exec(text.slice(at))
     if (!hit) continue
     const from = Math.max(text.lastIndexOf('. ', at) + 1, at - 70)
+    // The same window the rule read, so the sentence we publish is the evidence rather than a
+    // wider view of the page that might contain something the point was not given for.
     // From a word boundary, because a window cut by character count starts mid-word and the
     // published sentence then opens with a stray letter.
-    const window = text.slice(from, at + hit[0].length + 70).replace(/\s+/g, ' ').trim()
+    const window = windowAround(text, at, hit[0].length).replace(/\s+/g, ' ').trim()
     const quote = window
       .replace(/^[^\s]*\s/, (start) => (from === 0 || /^[A-Z"“]/.test(start) ? start : ''))
       .replace(/^["“'']+/, '')
