@@ -58,6 +58,9 @@ dwoch narzedziach** (`oauth_dcr` jedyny przezywa kontrole na slawe, `llms_txt` z
 kadencji monitoringu, raport pokrycia obserwacji i research wtyczek agent-ready.
 
 **Zasady, ktore oszczedzaja dzien pracy:**
+0. **Dokument, ktory laczy licznik z cytatem, bierze oba z jednej definicji.** Dwie implementacje
+   „czy go wymieniono" w jednym akapicie to dwie rozne prawdy obok siebie, a slabsza zawsze wygra,
+   bo jest hojniejsza. Patrz sekcja o dziesieciu bledach w dokumentach dla klienta.
 1. Zmiane w punktacji sprawdza sie na **170 wierszach**, nie na czterech.
 2. Sonda audytujaca pomiar musi najpierw **umiec ten pomiar wykonac**. **Kontrolka zawsze pierwsza.**
 3. **Czytaj zdanie, ktore publikujemy, nie liczbe punktow.**
@@ -69,6 +72,65 @@ kadencji monitoringu, raport pokrycia obserwacji i research wtyczek agent-ready.
 czysty i to on niesie replikacje), rekord DNS do rejestru MCP, konta w Bing Webmaster i katalogach
 MCP, token npm, licencja korpusu, sciezka zakupu inna niz `mailto:` i Stripe kontra Paddle.
 **agenticpay tego NIE odblokowuje.**
+
+## DZIESIEC BLEDOW W DWOCH DOKUMENTACH, KTORE DOSTAJE PLACACY KLIENT (2026-08-17, naprawione)
+
+**Skan pilnuje `npm run audit`, badanie pilnuje `audit-study.mts`, a platnego raportu i
+miesiecznego maila nie pilnowalo nic.** Adwersaryjny przeglad subagentem znalazl dziesiec rzeczy,
+z ktorych **dwie sa katastrofalne**, i wszystkie potwierdzilem na korpusie przed naprawa.
+
+**Przyczyna wspolna dwoch najciezszych: oba skrypty mialy WLASNA, slabsza definicje wymieniania**
+niz ta, ktora publikujemy na `/methodology` i ktora policzone sa liczby stojace w tym samym
+akapicie. Szukaly marki jako **podciagu**, bez granicy slowa.
+
+1. **`name.com` bylby wymieniony w 0 z 10 biegow i dostalby DZIESIEC akapitow „What the runs said
+   about you"** - kazdy o Route 53, Openprovider albo Cloudflare, trafiony na „nameservers" i
+   „domain name". `tiny.cloud` dostawal zdanie o licencji **CKEditora** (trafienie na „scru**tiny**"),
+   `deepl.com` zdanie o Phrase i Transifeksie („deep**ly**"), `here.com` rekomendacje Google Maps
+   („w**here**"). Galaz „No run wrote a sentence about you" nie odpalala **nigdy**.
+2. **Lista „named more often than you, in the same runs" liczona z jednej celi, a naglowek z obu.**
+   `godaddy.com` czytal „you were named in 5 of 10 runs", a pod tym `gandi.net` (4/10) i
+   `porkbun.com` (3/10) jako wyprzedzajacych. **Osiem takich inwersji w korpusie**, a klauzula
+   „in the same runs" te nieprawde wzmacniala. Blad w druga strone tez: `ckeditor.com` mial 5/5 na
+   celi codeksa, wiec lista byla pusta i nie widzial ani jednego konkurenta, choc pieciu go
+   wyprzedza w skali dziesieciu biegow.
+
+**Osiem pozostalych, wszystkie naprawione w tym samym commicie:**
+
+3. „Ktory dostawca zostal wybrany zamiast was" siedzialo w galezi `else` bloku cytatow, wiec przy
+   dziurawym matcherze dostawal to **prawie nikt**, a sprzedane jest jako osobna pozycja cennika.
+4. **Ujawnienie o instrukcjach operatora bylo martwym kodem** w raporcie **i na `/c/<kategoria>`**:
+   `held[0]` jest z definicji cela **najczystsza** (sortujemy rosnaco po `operatorContext.length`),
+   wiec warunek czytal pusta liste za kazdym razem. Raport twierdzil przy tym *„a result that
+   survives two tools is about you rather than about the machine we ran it on"*, gdy `/methodology`
+   i `/findings` mowia **wprost odwrotnie**. Platny dokument klocil sie z darmowa strona, do ktorej
+   sam linkowal.
+5. **`src/data/cells.json` niosl absolutna sciezke do katalogu domowego operatora** i wkleilby ja do
+   dokumentu, ktory klient przekazuje dalej. Teraz nazwa pliku; `export-cells.mts` obcina ja u
+   zrodla, zeby nie wrocila przy nastepnym eksporcie.
+6. Raport wolal skan **zasiany** od najnowszego, wiec klient, ktory wczoraj naprawil `llms.txt` i
+   przeskanowal sie sam, dostawal starszy wynik pod naglowkiem w czasie terazniejszym.
+7. Brak normalizacji domeny w platnej sciezce: `www.stripe.com` slyszal, ze **nie nalezy do zadnej
+   z 26 mierzonych kategorii**, o domenie siedzacej w korpusie. `--out` bez wartosci wolal
+   `writeFileSync(undefined)`.
+8. Zdanie **„you have not been charged for it"** - raport nie ma pojecia, co zafakturowano, a
+   cennik nie ma pozycji na czesciowy zwrot. Usuniete.
+9. Cennik obiecywal **„every transcript handed over"**, a raport nie linkowal nawet do
+   `/c/<kategoria>/runs`, gdzie transkrypty leza publicznie. Wersja darmowa dawala wiecej niz platna.
+10. **„Ten times" i „five runs each" sa juz nieprawda**: cela `app-hosting/codex` ma szesc biegow.
+    Cennik mowi teraz „at least", bo dolna granica to jedyna wersja tego zdania, ktorej dobity
+    korpus nie obali. Mail dostal tez atrybucje cytatu (narzedzie i numer biegu), bo cela `claude`
+    odpowiada **po polsku** i nieoznaczone polskie zdanie w angielskim mailu czyta sie jak pomylka.
+
+**`npm run audit-delivery`** (`scripts/audit-delivery.mts`) pilnuje tego dalej: przechodzi kazdego
+dostawce w kazdej kategorii i sprawdza, czy dokument moglby powiedziec cos, czego dane nie niosa.
+**Kontrolka pierwsza, zgodnie z zasada 2:** podstawilem stary matcher pod `quotedAbout` i straznik
+zglosil **23 zdania**; po przywroceniu poprawnego zgłasza **zero**, przy 107 dostawcach z cytatem i
+70 ze zdaniem o absencji (te 70 zgadza sie z liczba publikowana na `/c`).
+
+**Zasada, ktora z tego zostaje:** *dokument, ktory laczy licznik z cytatem, musi brac oba z jednej
+definicji.* Dwie implementacje „czy go wymieniono" w jednym akapicie to nie duplikacja kodu, to
+dwie rozne prawdy obok siebie, i ta slabsza zawsze wygra, bo jest bardziej hojna.
 
 ## SELF-AUDYT WLASNEJ WITRYNY WEDLUG SKILLA `agent-discoverability` (2026-08-17, 15:30)
 
