@@ -29,7 +29,10 @@
 ## Pages
 
 - [Methodology](/methodology): every check, its rule, its point value and why it costs a vendor money
-- [Findings](/findings): thirty-eight agent runs across five studies, with the limits stated
+- [Findings](/findings): six studies, including which of our own checks has any relationship with
+  being named by an agent, with the limits stated as plainly as the results
+- [Categories](/c): one buying question per category put to an agent five times, who it named and
+  who it never mentioned. Each category page links the full answers, marked where a vendor is named
 - [Scan a domain](/): enter a domain, get a scorecard under a permanent link
 
 ## Notes for agents
