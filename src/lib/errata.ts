@@ -29,9 +29,105 @@ export type Erratum = {
   wrongWhen: RegExp
   /** What the row says, and what a scan says now, in the vendor's favour where they differ. */
   says: string
+  /**
+   * A real sentence of the shape this entry corrects. The rule test used to build one for itself
+   * and assumed every erratum was about an MCP address, so the first entry about a signup form
+   * failed a test that was really testing the fixture.
+   */
+  example: string
 }
 
 export const ERRATA: Erratum[] = [
+  {
+    domain: 'cloudinary.com',
+    checkId: 'signup_reachable',
+    fixedIn: '9.31',
+    wrongWhen: /form needs JavaScript/,
+    says:
+      'This row says their signup form needs JavaScript. Their page carries no form at all: no field anywhere in the HTML the server sent, and the only way in is an identity provider. The verdict is the same either way, because an unattended agent gets through neither, but the sentence describes a form they never wrote. A corrected scan says what we actually saw.',
+    example: 'https://signup.example/signup is reachable, but its form needs JavaScript',
+  },
+  {
+    domain: 'transloadit.com',
+    checkId: 'signup_reachable',
+    fixedIn: '9.31',
+    wrongWhen: /form needs JavaScript/,
+    says:
+      'This row says their signup form needs JavaScript. Their page carries no form at all: no field anywhere in the HTML the server sent, and the only way in is an identity provider. The verdict is the same either way, because an unattended agent gets through neither, but the sentence describes a form they never wrote. A corrected scan says what we actually saw.',
+    example: 'https://signup.example/signup is reachable, but its form needs JavaScript',
+  },
+  {
+    domain: 'trychroma.com',
+    checkId: 'signup_reachable',
+    fixedIn: '9.31',
+    wrongWhen: /form needs JavaScript/,
+    says:
+      'This row says their signup form needs JavaScript. Their page carries no form at all: no field anywhere in the HTML the server sent, and the only way in is an identity provider. The verdict is the same either way, because an unattended agent gets through neither, but the sentence describes a form they never wrote. A corrected scan says what we actually saw.',
+    example: 'https://signup.example/signup is reachable, but its form needs JavaScript',
+  },
+  {
+    domain: 'rollbar.com',
+    checkId: 'signup_reachable',
+    fixedIn: '9.31',
+    wrongWhen: /form needs JavaScript/,
+    says:
+      'This row says their signup form needs JavaScript. Their page carries no form at all: no field anywhere in the HTML the server sent, and the only way in is an identity provider. The verdict is the same either way, because an unattended agent gets through neither, but the sentence describes a form they never wrote. A corrected scan says what we actually saw.',
+    example: 'https://signup.example/signup is reachable, but its form needs JavaScript',
+  },
+  {
+    domain: 'modal.com',
+    checkId: 'signup_reachable',
+    fixedIn: '9.31',
+    wrongWhen: /form needs JavaScript/,
+    says:
+      'This row says their signup form needs JavaScript. Their page carries no form at all: no field anywhere in the HTML the server sent, and the only way in is an identity provider. The verdict is the same either way, because an unattended agent gets through neither, but the sentence describes a form they never wrote. A corrected scan says what we actually saw.',
+    example: 'https://signup.example/signup is reachable, but its form needs JavaScript',
+  },
+  {
+    domain: 'cal.com',
+    checkId: 'signup_reachable',
+    fixedIn: '9.31',
+    wrongWhen: /form needs JavaScript/,
+    says:
+      'This row says their signup form needs JavaScript. Their page carries no form at all: no field anywhere in the HTML the server sent, and the only way in is an identity provider. The verdict is the same either way, because an unattended agent gets through neither, but the sentence describes a form they never wrote. A corrected scan says what we actually saw.',
+    example: 'https://signup.example/signup is reachable, but its form needs JavaScript',
+  },
+  {
+    domain: 'redis.io',
+    checkId: 'signup_reachable',
+    fixedIn: '9.31',
+    wrongWhen: /form needs JavaScript/,
+    says:
+      'This row says their signup form needs JavaScript. Their page carries no form at all: no field anywhere in the HTML the server sent, and the only way in is an identity provider. The verdict is the same either way, because an unattended agent gets through neither, but the sentence describes a form they never wrote. A corrected scan says what we actually saw.',
+    example: 'https://signup.example/signup is reachable, but its form needs JavaScript',
+  },
+  {
+    domain: 'medusajs.com',
+    checkId: 'mcp_present',
+    fixedIn: '9.31',
+    wrongWhen: /nothing answered at mcp\./,
+    says:
+      'This row says nothing answered at the addresses we probed. They publish a live endpoint in the MCP registry, and the registry is not reachable from the machine this scan ran on: four requests from it timed out while other hosts answered in milliseconds. The silence was ours. We now mirror the registry, and a corrected scan finds their server.',
+    example: 'No MCP surface: nothing answered at mcp.example.com, mcp.example.com/mcp, and no file mentions MCP',
+  },
+  {
+    domain: 'phrase.com',
+    checkId: 'mcp_present',
+    fixedIn: '9.31',
+    wrongWhen: /nothing answered at mcp\./,
+    says:
+      'This row says nothing answered at the addresses we probed. They publish a live endpoint in the MCP registry, and the registry is not reachable from the machine this scan ran on: four requests from it timed out while other hosts answered in milliseconds. The silence was ours. We now mirror the registry, and a corrected scan finds their server.',
+    example: 'No MCP surface: nothing answered at mcp.example.com, mcp.example.com/mcp, and no file mentions MCP',
+  },
+  {
+    domain: 'tolgee.io',
+    checkId: 'mcp_present',
+    fixedIn: '9.31',
+    wrongWhen: /nothing answered at mcp\./,
+    says:
+      'This row says nothing answered at the addresses we probed. They publish a live endpoint in the MCP registry, and the registry is not reachable from the machine this scan ran on: four requests from it timed out while other hosts answered in milliseconds. The silence was ours. We now mirror the registry, and a corrected scan finds their server.',
+    example: 'No MCP surface: nothing answered at mcp.example.com, mcp.example.com/mcp, and no file mentions MCP',
+  },
   {
     domain: 'posthog.com',
     checkId: 'mcp_present',
@@ -39,6 +135,7 @@ export const ERRATA: Erratum[] = [
     wrongWhen: /(?<!mcp\.)posthog\.com\/mcp/,
     says:
       'This row names a documentation page as their MCP server. It is not one: that address answers 405 to any POST, exactly as their /docs and /pricing do, because that is what their framework does with a POST to a static route. They do run a server, at mcp.posthog.com/mcp, and the corrected scan names it.',
+    example: 'Live MCP endpoint at https://posthog.com/mcp, answers JSON',
   },
   {
     domain: 'openrouter.ai',
@@ -47,6 +144,7 @@ export const ERRATA: Erratum[] = [
     wrongWhen: /openrouter\.ai\/docs/,
     says:
       'This row names a documentation page as their MCP server, on the same framework artefact as posthog.com. Their real server is at mcp.openrouter.ai/mcp and the corrected scan names it.',
+    example: 'Live MCP endpoint at https://openrouter.ai/docs/guides/overview/mcp-server',
   },
   {
     domain: 'medusajs.com',
@@ -55,6 +153,7 @@ export const ERRATA: Erratum[] = [
     wrongWhen: /(?<!mcp\.)medusajs\.com\/mcp/,
     says:
       'This row credits a live MCP server on a 405 that their framework returns for every static route. A corrected scan finds none, so this point is one they have not earned and the row overstates them.',
+    example: 'Live MCP endpoint at https://medusajs.com/mcp, answers JSON',
   },
 ]
 
