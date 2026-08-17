@@ -245,6 +245,24 @@ function promoted(found: Mention[]): Mention[] {
 export const certain = (mentions: Mention[]) => mentions.filter((mention) => mention.form !== 'weak')
 
 /**
+ * Who the runs put first, written for the vendor reading it.
+ *
+ * "Picked ahead of you" is the right sentence for somebody no run led with, and the wrong one for
+ * stripe.com, which led five runs of ten and was still told it had been picked ahead of. Both the
+ * paid report and the monthly mail printed it, each from its own copy of the line, which is how
+ * one of them could have been fixed and the other left alone.
+ */
+export function whoWentFirst(winners: readonly string[], yourFirsts: number, runs: number): string | null {
+  if (winners.length === 0) return null
+  const named = winners.join(', ')
+  if (yourFirsts === 0) return `Picked ahead of you, the provider a run named before any other: ${named}.`
+  const others = runs - yourFirsts
+  return `In the ${others} ${others === 1 ? 'run' : 'runs'} that did not put you first, the ${
+    winners.length === 1 ? 'provider named first was' : 'providers named first were'
+  } ${named}.`
+}
+
+/**
  * The sentence a run wrote about one vendor, for the documents a customer receives.
  *
  * It lives here rather than in each script because both of them had written their own, and both

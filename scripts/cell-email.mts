@@ -13,7 +13,7 @@
  */
 import { getStore } from '../src/lib/store'
 import { categoryFor } from '../src/lib/categories'
-import { quotedAbout } from '../src/lib/vendors'
+import { quotedAbout, whoWentFirst } from '../src/lib/vendors'
 import cells from '../src/data/cells.json'
 
 const BASE_URL = process.env.STACKPICK_BASE_URL ?? 'https://letagentsin.com'
@@ -91,8 +91,9 @@ for (const watch of wanted) {
   } else {
     lines.push('No run wrote a sentence about you. That is an absence rather than a bad review, and it is', 'the thing worth acting on.', '')
   }
-  if (winners.length > 0) {
-    lines.push(`Picked ahead of you, the provider a run named before any other: ${winners.join(', ')}.`, '')
+  const wentFirst = whoWentFirst(winners as string[], first, runs)
+  if (wentFirst) {
+    lines.push(wentFirst, '')
   }
   if (ahead.length > 0) {
     lines.push('Named more often than you, on the same scale:', ...ahead.map((other) => `  ${other}: ${namedAcross(other)} of ${runs}`), '')

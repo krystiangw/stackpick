@@ -19,10 +19,11 @@ import cells from '../src/data/cells.json'
 import { CATEGORIES, categoryFor } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { FORMULA_VERSION } from '../src/lib/score'
-import { quotedAbout } from '../src/lib/vendors'
+import { quotedAbout, whoWentFirst } from '../src/lib/vendors'
 import { normalizeDomain } from '../src/lib/scan/discover'
 import { SITE_URL } from '../src/lib/site'
 import { buildFixPlan } from '../src/lib/fixfirst'
+import { turnedAwayAtTheEdge } from '../src/lib/watch'
 
 const plural = (count: number, one: string, many: string) => (count === 1 ? one : many)
 
@@ -165,9 +166,10 @@ if (!cell) {
   // the branch that only fires when nothing was said about the buyer. Being named and still losing
   // to somebody is the common case, and it was the one case this never printed.
   const winners = [...new Set(held.flatMap((one) => one.answers).map((answer) => answer.first).filter((who) => who && who !== domain))]
-  if (winners.length > 0) {
+  const wentFirst = whoWentFirst(winners as string[], firstAll, runsAll)
+  if (wentFirst) {
     lines.push('')
-    lines.push(`Picked ahead of you, the provider a run named before any other: ${winners.join(', ')}.`)
+    lines.push(wentFirst)
   }
   lines.push('')
   lines.push(`${runsAll} runs separate a wall from silence and nothing finer: two vendors a run apart are not ranked by this.`)
@@ -191,6 +193,28 @@ lines.push('')
 lines.push('## 2. Whether an agent could use you once it names you')
 lines.push('')
 lines.push(`Scanned ${report.scannedAt.slice(0, 10)} under formula ${card.formulaVersion}${card.formulaVersion === FORMULA_VERSION ? '' : ` (the scanner now runs ${FORMULA_VERSION})`}: **${card.total} of ${measurable} measurable points**.`)
+// Before the table, not in a footnote. froala.com refuses every request we make, including one
+// from a Chrome user-agent, so eight of their fifteen checks are unmeasured; the report opened
+// with "4 of 6 measurable points" and went straight on to advise them about OAuth. A buyer whose
+// site we could not read has to be told that first, in the same breath as the number.
+if (unmeasured.length > 0) {
+  // Counted, then the conditions named separately. A scan can be refused at the edge AND run out
+  // of time AND hold a check that is inconclusive for its own unrelated reason, so attaching every
+  // unmeasured check to one cause would be exactly the kind of claim this report exists not to
+  // make. Each line below carries its own reason in its own words.
+  lines.push('')
+  lines.push(
+    `${unmeasured.length} of the ${card.checks.length} checks could not be measured, so the number above is out of what we could see rather than out of everything. Every one of them is listed below with the reason, and none counts against you.`,
+  )
+  const conditions = [
+    turnedAwayAtTheEdge(report.findings) ? 'your edge refused ordinary requests' : null,
+    report.findings.truncation ? 'we reached our time budget with work still outstanding, which is ours rather than yours' : null,
+  ].filter((one): one is string => one !== null)
+  if (conditions.length > 0) {
+    lines.push('')
+    lines.push(`During this scan ${conditions.join(', and ')}. Where that is why a check is unmeasured, the line below says so.`)
+  }
+}
 lines.push('')
 lines.push('| Stage | Points |')
 lines.push('|---|---|')

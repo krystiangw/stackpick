@@ -293,7 +293,12 @@ function claimFor(
 
 const measurableOf = (scorecard: Scorecard) => scorecard.measurable ?? scorecard.max
 
-const lower = (label: string) => label.charAt(0).toLowerCase() + label.slice(1)
+/**
+ * Mid-sentence, a label starts in lower case - unless the capital belongs to the name itself.
+ * "Fix one thing, oAuth dynamic client registration" went out in a report somebody pays for.
+ */
+const lower = (label: string) =>
+  /^[A-Z][A-Z]/.test(label) ? label : label.charAt(0).toLowerCase() + label.slice(1)
 
 function listOf(items: string[]): string {
   if (items.length === 1) return items[0]

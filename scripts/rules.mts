@@ -8,6 +8,7 @@ import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
 import { changesBetween, comparableScorecards, rulesChangedBetween, turnedAwayAtTheEdge, worthTelling } from '../src/lib/watch'
+import { buildFixPlan } from '../src/lib/fixfirst'
 import { changeEmail } from '../src/lib/watch-email'
 import { CHECKS } from '../src/lib/score'
 import { forStorage } from '../src/lib/store'
@@ -17,7 +18,7 @@ import { FLEX_QUOTA_MB, quotaEmail, verdictFor } from '../src/lib/quota'
 import { sawRateLimit, otherDomainsNamed } from '../src/lib/corpus'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
 import { wasNeverAsked } from '../src/lib/scan/http'
-import { certain, mentionsIn, quotedAbout, wordsCarried } from '../src/lib/vendors'
+import { certain, mentionsIn, quotedAbout, whoWentFirst, wordsCarried } from '../src/lib/vendors'
 import { rendersUsableForm, entersThroughIdentityProvider, mcpCandidates, looksLikeADocsPageTwin, answersWithTheSameTemplate, readsAsAnEndpoint, readsAsTheirOwnAddress } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
 import {
@@ -316,6 +317,29 @@ check('nic nie zmierzone ma wlasne zdanie', blind.claim.includes('could not meas
 // Not applicable is not failing, in the title and the share card as well as in the table.
 const libraryCard = headlineCard([one('self_serve', { notApplicable: true }), one('llms_txt', { points: 1 })], 12)
 check('nieadekwatny nie jest liczony jako oblany', pickHeadline(headlineFindings({ funnel: { signup: { url: null, reachable: true, captcha: [] }, entryPointsFound: ['a'], servesCatchAll: false, provisioning: { programmatic: ['x'] } } }), libraryCard).severity, 'clean')
+
+// Nazwa wlasna nie traci wielkiej litery w srodku zdania: platny raport wyszedl ze zdaniem
+// „Fix one thing, oAuth dynamic client registration".
+const planFindings = headlineFindings({ machine: { hasLlmsTxt: true, openapi: [], mcp: { mentions: 0 } } })
+const mcpPlan = buildFixPlan(
+  planFindings,
+  headlineCard([{ ...one('mcp_present', { label: 'MCP surface' }), points: 0, max: 1 }], 12),
+)
+check('akronim w planie zostaje akronimem', mcpPlan?.claim.includes('MCP surface'), true)
+const entryPlan = buildFixPlan(
+  planFindings,
+  headlineCard([{ ...one('agent_entry_point', { label: 'Agent entry point' }), points: 0, max: 2 }], 12),
+)
+check('zwykla etykieta nadal idzie z malej', entryPlan?.claim.includes('agent entry point'), true)
+
+// „Picked ahead of you" jest prawdziwe dla kogos, kogo zaden bieg nie postawil pierwszym, i falszywe
+// dla stripe.com, ktory prowadzil w polowie biegow i dostawal to samo zdanie. Jedna definicja na
+// oba dokumenty, bo byly dwie kopie tej linii.
+check('nikt nas nie postawil pierwszym: zdanie o wyprzedzeniu', whoWentFirst(['paddle.com'], 0, 10), 'Picked ahead of you, the provider a run named before any other: paddle.com.')
+check('prowadzimy w czesci biegow: zdanie o reszcie', whoWentFirst(['paddle.com'], 5, 10), 'In the 5 runs that did not put you first, the provider named first was paddle.com.')
+check('jeden taki bieg mowi w liczbie pojedynczej', whoWentFirst(['paddle.com'], 9, 10), 'In the 1 run that did not put you first, the provider named first was paddle.com.')
+check('dwoch zwyciezcow to liczba mnoga', whoWentFirst(['paddle.com', 'stripe.com'], 5, 10), 'In the 5 runs that did not put you first, the providers named first were paddle.com, stripe.com.')
+check('nikt inny nie byl pierwszy: brak zdania', whoWentFirst([], 10, 10), null)
 
 console.log('obserwacja domeny, czyli co jest warte maila')
 const verdict = (points: number, max: number, extra: Record<string, unknown> = {}) =>
