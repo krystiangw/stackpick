@@ -93,7 +93,12 @@ for (const category of CATEGORIES) {
     runs: answered.length,
     tool: answered[0].meta.cli,
     model: answered[0].meta.model,
-    operatorContext: [...new Set(answered.flatMap((run) => (run.meta.cleanRoom ? [] : (run.meta.operatorContext ?? []))))],
+    // File names, not paths. What a reader needs is which instruction files the runs could read;
+    // the absolute path adds the operator's home directory, and this file is published, quoted on
+    // the category pages and pasted into a report a customer forwards.
+    operatorContext: [
+      ...new Set(answered.flatMap((run) => (run.meta.cleanRoom ? [] : (run.meta.operatorContext ?? []))).map((path) => path.split('/').pop() ?? path)),
+    ],
     ranAt: (answered[answered.length - 1].meta.finishedAt ?? '').slice(0, 10),
     answers: answered.map((run) => {
       const sure = certain(mentionsIn(run.answer, category.domains))

@@ -44,13 +44,15 @@ const TIERS: readonly Tier[] = [
     name: 'One agent report',
     price: '$49',
     cadence: 'once, per domain',
-    pitch: 'Whether an agent names you at all, asked ten times over.',
+    pitch: 'Whether an agent names you at all, asked ten times over on two tools.',
     includes: [
-      'One question from your category, the one your buyers ask, put to an agent ten times in isolation',
+      // "Ten" was written when every cell held five runs. One category already holds six on one
+      // tool, and a floor is the only version of this sentence a topped-up cell cannot falsify.
+      'One question from your category, the one your buyers ask, put to an agent at least ten times in isolation',
       // Five runs is what monitoring sends monthly and what the section below admits cannot
       // separate two close providers. Selling five as a one-off product would be selling the
       // weakness: a single reading has no next month to correct it.
-      'Two different tools, five runs each. A result that survives both is about you rather than about the machine we ran it on',
+      'Two different tools, five runs each at least. A result that appears on only one of them is about the tool',
       'How many of the ten named you, which provider was picked instead, and the sentence that passed over you, quoted',
       'Every transcript handed over, so you read what the agent said rather than our summary of it',
       `Only the ${CATEGORIES.length} categories we measure. If your product is not in one of them we say so before you pay, not after`,

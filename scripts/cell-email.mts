@@ -13,6 +13,7 @@
  */
 import { getStore } from '../src/lib/store'
 import { categoryFor } from '../src/lib/categories'
+import { quotedAbout } from '../src/lib/vendors'
 import cells from '../src/data/cells.json'
 
 const BASE_URL = process.env.STACKPICK_BASE_URL ?? 'https://letagentsin.com'
@@ -26,28 +27,7 @@ if (wanted.length === 0) {
   process.exit(1)
 }
 
-/**
- * One sentence a run wrote about them, so the mail quotes rather than summarises.
- *
- * Every occurrence is scored rather than taking the first, because the first is often a cell in a
- * comparison table: the first draft for stripe.com quoted a window that opened inside a markdown
- * link and spent most of its words on Paddle. A window loses points for markdown, for links and for
- * every other vendor in it, so the sentence that survives is the one about this vendor.
- */
-function saidAbout(text: string, domain: string, others: readonly string[]): string | null {
-  const brand = domain.split('.')[0].toLowerCase()
-  const lower = text.toLowerCase()
-  let best: { quote: string; noise: number } | null = null
-  for (let at = lower.indexOf(brand); at !== -1; at = lower.indexOf(brand, at + 1)) {
-    const from = Math.max(text.lastIndexOf('. ', at) + 1, at - 100)
-    const quote = text.slice(from, at + 160).replace(/\s+/g, ' ').trim()
-    const rivals = others.filter((other) => other !== domain && quote.toLowerCase().includes(other.split('.')[0].toLowerCase()))
-    const noise = rivals.length * 2 + (/\]\(|https?:\/\//.test(quote) ? 3 : 0) + (/^[a-z\])]/.test(quote) ? 2 : 0)
-    if (!best || noise < best.noise) best = { quote, noise }
-    if (noise === 0) break
-  }
-  return best?.quote ?? null
-}
+const saidAbout = quotedAbout
 
 const seen = new Set<string>()
 for (const watch of wanted) {
@@ -77,11 +57,22 @@ for (const watch of wanted) {
   const runs = held.reduce((sum, one) => sum + one.runs, 0)
   const named = held.reduce((sum, one) => sum + (one.rows.find((row) => row.domain === watch.domain)?.named ?? 0), 0)
   const first = held.reduce((sum, one) => sum + (one.rows.find((row) => row.domain === watch.domain)?.first ?? 0), 0)
-  const ahead = held[0].rows.filter((row) => row.named > (held[0].rows.find((r) => r.domain === watch.domain)?.named ?? 0))
+  // Across every tool, like the headline. Off one cell the list inverted: netlify.com read
+  // "named in 3 of 11" and then "named more often than you: render.com: 6 of 6", two numbers on
+  // two scales in one mail, and eight pairs in the corpus where the vendor listed as ahead was
+  // behind once both tools were counted.
+  const namedAcross = (of: string) => held.reduce((sum, one) => sum + (one.rows.find((row) => row.domain === of)?.named ?? 0), 0)
+  const ahead = held[0].rows
+    .map((row) => row.domain)
+    .filter((other) => other !== watch.domain && namedAcross(other) - namedAcross(watch.domain) > 1)
+    .sort((a, b) => namedAcross(b) - namedAcross(a))
+  // Attributed, because two tools both have a run 1 and because one of them answers in Polish:
+  // an unattributed foreign-language sentence under "what a run said about you" reads like a
+  // mistake rather than like evidence from a named run.
   const quote = held
-    .flatMap((one) => one.answers)
-    .map((answer) => saidAbout(answer.text, watch.domain, category.domains))
-    .find((said) => said !== null)
+    .flatMap((one) => one.answers.map((answer) => ({ tool: one.tool.split(' ')[0], run: answer.run, said: saidAbout(answer.text, watch.domain, category.domains) })))
+    .find((entry) => entry.said !== null)
+  const winners = [...new Set(held.flatMap((one) => one.answers).map((answer) => answer.first).filter((who) => who && who !== watch.domain))]
 
   const lines = [
     `${watch.domain} was named in ${named} of ${runs} agent runs this month, and named first in ${first}.`,
@@ -91,13 +82,17 @@ for (const watch of wanted) {
     '',
   ]
   if (quote) {
-    lines.push('What a run said about you:', `  "${quote}"`, '')
+    lines.push(`What ${quote.tool} run ${quote.run} said about you:`, `  "${quote.said}"`, '')
   } else {
     lines.push('No run wrote a sentence about you. That is an absence rather than a bad review, and it is', 'the thing worth acting on.', '')
   }
-  if (ahead.length > 0) {
-    lines.push('Named more often than you:', ...ahead.map((row) => `  ${row.domain}: ${row.named} of ${held[0].runs}`), '')
+  if (winners.length > 0) {
+    lines.push(`Picked ahead of you, the provider a run named before any other: ${winners.join(', ')}.`, '')
   }
+  if (ahead.length > 0) {
+    lines.push('Named more often than you, on the same scale:', ...ahead.map((other) => `  ${other}: ${namedAcross(other)} of ${runs}`), '')
+  }
+  const context = [...new Set(held.flatMap((one) => one.operatorContext))]
   lines.push(
     `Every answer, in full and unedited: ${BASE_URL}/c/${category.id}/runs`,
     `How the counting works: ${BASE_URL}/methodology#named`,
@@ -105,6 +100,17 @@ for (const watch of wanted) {
     `${runs} runs separate a wall from silence and nothing finer, so two vendors a run apart are not`,
     'ranked by this. The number worth reacting to is the one that moves next month.',
   )
+  // The same admission the free pages carry. A mail that quotes a run without it reads like a
+  // measurement of an agent at your customer, which is the one thing these runs are not.
+  if (context.length > 0) {
+    lines.push(
+      '',
+      `Not a clean measurement: these ran on one laptop, and ${held
+        .filter((one) => one.operatorContext.length > 0)
+        .map((one) => one.tool.split(' ')[0])
+        .join(', ')} could read the operator instructions on it (${context.join(', ')}).`,
+    )
+  }
 
   console.log(`--- ${watch.domain} -> ${watch.email}`)
   console.log(`TEMAT: ${watch.domain}: named in ${named} of ${runs} agent runs`)

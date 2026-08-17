@@ -229,3 +229,18 @@ function promoted(found: Mention[]): Mention[] {
 
 /** What a run counts as: named for certain, or named only through a word that is also English. */
 export const certain = (mentions: Mention[]) => mentions.filter((mention) => mention.form !== 'weak')
+
+/**
+ * The sentence a run wrote about one vendor, for the documents a customer receives.
+ *
+ * It lives here rather than in each script because both of them had written their own, and both
+ * versions searched for the brand as a substring: name.com was quoted "nameservers", tiny.cloud
+ * "scrutiny", deepl.com "deeply", every one of them a sentence about a competitor sent to a vendor
+ * no run had named. A count and a quote printed in the same paragraph have to come from one
+ * definition of being named, and this is that definition.
+ *
+ * The whole category is passed rather than the one domain, because the matcher resolves a name
+ * against its neighbours: "HERE" is a vendor here and an ordinary word everywhere else.
+ */
+export const quotedAbout = (text: string, domain: string, inCategory: readonly string[]): string | null =>
+  certain(mentionsIn(text, inCategory)).find((mention) => mention.domain === domain)?.sentence ?? null

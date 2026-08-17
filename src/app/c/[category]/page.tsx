@@ -70,6 +70,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
 
   const held = cellsFor(id)
   const cell = held[0]
+  const contaminated = held.filter((one) => one.operatorContext.length > 0)
   const { categories } = await loadRankings()
   const ranked = categories.find((entry) => entry.category.id === id)
   const scoreOf = (domain: string) => ranked?.entries.find((entry) => entry.domain === domain)
@@ -105,14 +106,19 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
             {cell.tool} ({cell.model}), {cell.runs} runs, {cell.ranAt}. The question names no vendor and asks for
             a recommendation, which is the shape a developer types.
           </p>
-          {cell.operatorContext.length > 0 && (
+          {/* Across every cell on the page, not the one whose numbers happen to head it. `cell` is
+              the cleanest by construction, so this asked the empty list every time and the warning
+              never rendered for any category, while the table below it printed the contaminated
+              tool's column beside the clean one with nothing to tell them apart. */}
+          {contaminated.length > 0 && (
             // The warning goes above the table for the same reason it does in the terminal reader:
             // a reader who has seen the numbers has already believed them.
             <p className="mt-3 max-w-2xl font-mono text-xs leading-relaxed text-ink-faint">
-              Not a clean measurement: these runs could read the operator instructions on the machine they ran on
-              ({cell.operatorContext.join(', ')}), which is also why some answers are in Polish rather than English:
-              those instructions ask for it. They describe an agent there rather than an agent at your customer, and
-              we say so rather than publish the number alone.
+              Not a clean measurement: the {contaminated.map(toolName).join(' and ')} runs could read the operator
+              instructions on the machine they ran on ({[...new Set(contaminated.flatMap((one) => one.operatorContext))].join(', ')}),
+              which is also why some answers are in Polish rather than English: those instructions ask for it. They
+              describe an agent there rather than an agent at your customer, and we say so rather than publish the
+              number alone.
             </p>
           )}
         </section>
