@@ -423,6 +423,13 @@ Dzis to okno wreszcie jest otwarte i **kosztuje tylko dyscypline**:
 4. `npm run noise-floor 9.30` na tej parze. **Dopiero to jest podloga szumu**: ruch w obie strony
    miedzy dwoma pomiarami tej samej reguly na tym samym korpusie.
 
+**PULAPKA ZLAPANA W PORE (2026-08-17):** skrypt bral **dwa najswiezsze skany**, czyli po drugim
+reseedzie porownalby przebieg zimny i cieply TEGO SAMEGO reseedu - dokladnie ten konfund, przed
+ktorym sam ostrzega. Cale okno zmierzyloby jeszcze raz cache npm. Teraz grupuje skany po przerwie
+90 minut i bierze **ostatni (cieply) z kazdej grupy**. Stare zachowanie zostaje pod argumentem
+`adjacent` i na 9.30 pokazuje, po co: **30 ruchow, 27 w gore, 3 w dol**, podrecznikowo
+jednokierunkowo.
+
 Co wolno robic w tym oknie, bo nie dotyka punktacji: przebiegi adwersaryjne (same pomiary),
 harness biegow rozpoznawczych, audyty, dokumentacja, strony.
 
