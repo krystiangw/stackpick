@@ -145,6 +145,14 @@ chocz jedno slowo poza linkiem** (`wordsCarried === 0`) - to jest ten blad, a ni
    („[Resend plans](url) |"). Raport pokazuje teraz osiem cytatow przy „wymieniony w 9 z 10 biegow",
    i to jest uczciwe: licznik czyta liste biegu, a nie cytat.
 
+**Jedno zastrzezenie codeksa odrzucone z uzasadnieniem** (szosta runda): typografia mowi, ze slowo
+jest marka, a nie ze zdanie jest o tej marce, wiec „**Resend** is pricier than SES" wygra z prostym
+„Resend provides useful logs". Prawda, ale **oczywista alternatywa zostala zmierzona i wypadla
+gorzej**: regula „zdanie, w ktorym nie pada zaden inny dostawca" cofnela cytat do zdania
+porownawczego, bo rywalem byl tam SES, ktorego **nie mamy w korpusie**, wiec porownanie uchodzilo
+za zdanie wylacznie o Resendzie. Zostaje wersja, ktora wygrywa na odpowiedziach, ktore mamy, a to,
+co zostawia, to zdanie prawdziwe, nie puste.
+
 **Zasieg:** dotyczy tylko dokumentow generowanych skryptami (platny raport, miesieczny mail,
 `audit-delivery`). Strona `/c/<kat>/runs` uzywa z tego modulu wylacznie `matched` do podswietlania,
 wiec **nie wymaga deployu**, zeby poprawka dotarla do klienta.
