@@ -9,9 +9,9 @@
   mediane wieku korpusu i odbija proby, a pojedyncze uruchomienie traci okazje bez sladu:
   `for i in 1 2 3 4 5 6; do STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) npm run reseed; [ $? -eq 3 ] && sleep 600 || break; done`
 - **Do zrobienia, w tej kolejnosci:**
-  1. **PODLOGA SZUMU: okno otwarte, trzymaj dyscypline.** Reseed po karencji stawia korpus na
-     9.30, potem **zadnej zmiany `FORMULA_VERSION`** do drugiego reseedu i `noise-floor 9.30`.
-     Szczegoly w sekcji "OKNO NA POMIAR PODLOGI SZUMU" u gory.
+  1. **PODLOGA SZUMU: korpus JEST na 9.30, drugi reseed uzbrojony** (petla w
+     `scratchpad/reseed-drugi.log`, karencja mija ok. 09:20). **Zadnej zmiany `FORMULA_VERSION`**
+     do czasu `npm run noise-floor 9.30`. Szczegoly w sekcji "OKNO NA POMIAR PODLOGI SZUMU".
   2. **Monitoring ma teraz w opisie prawdziwe agenty** (`npm run ask` / `npm run asked`), wiec dla
      kazdej obserwowanej domeny nalezy raz w miesiacu puscic cele jej kategorii. Dzis to trzy
      obserwacje na naszym wlasnym mailu, wiec nie kosztuje nic. Sekcja nizej.
@@ -37,6 +37,31 @@
   3. **Czytaj zdanie, ktore publikujemy, nie liczbe punktow.** Check potrafi miec dwa rozne
      werdykty za zero, a wartoscia bywa samo zdanie, bo to je czyta vendor.
 
+
+## RESEED NA 9.30: 170 WIERSZY, ZERO SPRZECZNOSCI, PIEC "POGORSZEN" ZBADANYCH PO KOLEI
+
+`170 rows on formula 9.30, 0 contradictions`, `21 stated numbers and 5 named-vendor claims checked
+against the data, 0 adrift`. Piec werdyktow gorszych niz poprzedni pomiar, **kazdy przeskanowany
+pojedynczo, zanim ktokolwiek nazwal go regresem vendora**, tak jak nakazuje skrypt:
+
+- **`vonage.com` i `phrase.com`, `mcp_present` 1 -> 0: przejsciowe.** Pojedynczy skan odzyskuje oba,
+  lokalnie i na produkcji, i oba wpisane z powrotem do korpusu. Przy okazji **vonage potwierdza
+  druga fale z 9.29**: ich serwer stoi na `documentation-mcp.vonage.dev`, czyli na innej domenie tej
+  samej marki, i znajduje go dopiero regula z tego wydania.
+- **`bitmovin.com`, `user_agents_allowed`: niemierzalne**, ich brzeg odmawia nam `robots.txt`.
+  Werdykt jest oznaczony jako niemierzalny, wiec nie liczy sie przeciwko nim.
+- **`calendly.com`, `agent_entry_point` i `machine_readable_api` 1 -> 0: to NIE jest regres vendora,
+  tylko poprawa naszego pomiaru.** Ich host dokumentacji odpowiada **ta sama skorupa HTML o
+  rozmiarze 298 kB na kazda sciezke**, sprawdzone recznie na `/skill.md`, `/SKILL.md`, `/AGENTS.md`
+  i `/agents.md`: cztery identyczne odpowiedzi. Wczesniejszy przebieg tego samego dnia zaliczyl im
+  `skill.md` i to bylo zaliczenie falszywe. **Fala wielkich liter z 9.28 wzmocnila kontrolke
+  wspolnego ksztaltu** przypadkiem: wiecej sond na tym samym hoscie to wiecej identycznych cial,
+  wiec dedup lapie szablon, ktorego wczesniej nie widzial.
+
+**Do zrobienia po odmrozeniu formuly:** discovery adresu dokumentacji jest niestabilne (raz korzen
+`developer.calendly.com/`, raz `/docs/getting-started/overview`), a `machine_readable_api` czyta
+deklaracje specyfikacji **tylko z tej jednej wylosowanej strony**. To druga rzecz w tym tygodniu
+wskazujaca na te sama poprawke, po 28. przebiegu: **pytaj takze o korzen hosta dokumentacji**.
 
 ## PIERWSZY POMIAR: CZY NASZE CHECKI MAJA COKOLWIEK WSPOLNEGO Z TYM, KOGO AGENCI WYMIENIAJA
 
