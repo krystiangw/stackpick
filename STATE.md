@@ -149,6 +149,41 @@ produkcji: uploadthing.com pisze teraz „5 of the checks", przy 5 oblanych i 1 
 14.08 nigdy nie trafilo do reguly (sprawdzone recznie 17.08: `groq.com/pricing` nadal przekierowuje
 na strone glowna, wiec werdykt i rada byly poprawne, blad byl w audycie).
 
+## AUDYT STRON DARMOWEGO UZYTKOWNIKA: 27 ZNALEZISK, EPICENTRUM W JEDNYM PLIKU (2026-08-17)
+
+**Piec z nich to `headline.ts`, wszystkie z jednej przyczyny: naglowek czytal SUROWE findings, a
+checki czytaja te same findings z czterema straznikami na wierzchu.** Rozjezdzaly sie dokladnie
+tam, gdzie te straznicy stali.
+
+- `[429,429,429]` na signupie, wywolane naszym wlasnym burstem: check pisal „Unmeasurable: a limit
+  we triggered", a naglowek najwieksza czcionka „Your signup page answers 429 to anything that is
+  not a browser".
+- `[403,403,200]`: naglowek wymienial to `200`, ktoremu sam zaprzeczal. Blad weglot.com, naprawiony
+  w checku 15.08 i **zywy w naglowku do 17.08**.
+- check NIEADEKWATNY liczony jako oblany: biblioteka z dwoma N/A dostawala do tytulu i do karty
+  share „2 checks are costing you agent-driven integrations", a bramka nizej mowila, ze zdaje
+  wszystko. **Trzy rozne odpowiedzi na jednej stronie, najglosniejsza falszywa.**
+- galaz o provisioningu omijala poprawke z 9.32: storyblok.com, ktoremu check mowi „nie wiemy",
+  dostawal naglowek „Nowhere in your documentation does an agent learn how to get a key".
+- galaz „clean" liczyla z papierowego maksimum: `2/2` obok „2 of 6".
+
+**Regula: galaz naglowka odpala sie tylko wtedy, gdy JEJ check oblal, mierzalnie.** Zdania
+niezmienione. Nowa pierwsza galaz na wypadek, gdy nie zmierzylismy niczego. Cztery testy w buildzie.
+
+**Cztery dalsze zdania nieprawdziwe, naprawione:** `/v` bralo tytul z najnowszego skanu dowolnego
+rodzaju, a tresc z wiersza korpusu (11/17 w tytule, 9/16 w tresci, i to tytul idzie do
+wyszukiwarki); pudelko o starej formule obiecywalo noindex, ktorego od 17.08 nie stosujemy; zdanie
+o mianowniku bylo arytmetycznie falszywe dla wierszy sprzed pola `measurable`; `stage.measurable`
+szlo do tekstu jako `undefined`. Plus „Same fourteen checks" przy pietnastu.
+
+**Zostalo z tego audytu, warte zrobienia** (numery jak w raporcie subagenta): brak ostrzezenia o
+`resolvedElsewhere`, o skanie uciętym budzetem i o 429 na `/v` (`/r` ma wszystkie trzy, a `/v` jest
+strona INDEKSOWANA o cudzej firmie); `scaleAnchor` liczy mediane z surowych totali przy roznych
+mianownikach; ranking na `/r` nie ma progu `RANKABLE_MEASURABLE`, ktory ma strona glowna, wiec ta
+sama firma stoi na dwoch naszych stronach w dwoch miejscach; „This is the whole list" w FixFirst
+przy planie, ktory cicho gubi check bez remedium; errata renderuja sie na `/v` i w `/corpus.json`,
+ale **nie na `/r`**, czyli pod adresem z maila.
+
 **PULAPKA, ktora prawie opublikowala falszywy wniosek:** skan tuz po wdrozeniu wraca z **okna
 ponownego uzycia** (15 minut) i mierzy POPRZEDNI build. `storyblok.com` po deployu pokazywal stary
 werdykt i wygladalo to jak nieudana poprawka. **Sprawdzaj `reused` w odpowiedzi `/api/scan`, zanim
