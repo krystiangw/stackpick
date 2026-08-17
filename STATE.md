@@ -1,6 +1,11 @@
-# Let Agents In: stan na 2026-08-17 (formula 9.32 na produkcji, korpus czeka na reseed)
+# Let Agents In: stan na 2026-08-17 (na produkcji 9.32, w repo 9.33, korpus czeka na reseed)
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te trzydziesci linijek, potem reszte)
+
+**UWAGA NA WERSJE: repo jest na 9.33, produkcja na 9.32, i tak ma zostac do konca reseedu.**
+9.33 (uczciwe liczenie `probedHosts`, sekcja nizej) jest zbudowana, przepuszczona przez straznikow
+i **zacommitowana bez deployu celowo**: reseed jedzie przez zywe dyno, wiec wydanie w trakcie
+mieszaloby dwie formuly w jednym przebiegu. **Deploy dopiero po zamknieciu listy po reseedzie.**
 
 **W LOCIE JEST JEDNO (stan 21:55): petla ponawiajaca reseed na 9.32.**
 Log `/tmp/reseed-932.log`, proba 13 z 18, co 20 minut, proces zyje. Karencja liczy sie od
@@ -86,6 +91,39 @@ kadencji monitoringu, raport pokrycia obserwacji i research wtyczek agent-ready.
 czysty i to on niesie replikacje), rekord DNS do rejestru MCP, konta w Bing Webmaster i katalogach
 MCP, token npm, licencja korpusu, sciezka zakupu inna niz `mailto:` i Stripe kontra Paddle.
 **agenticpay tego NIE odblokowuje.**
+
+## 9.33: „13 hostow sondowanych" liczylo hosty, o ktore nigdy nie zapytalismy (2026-08-17, w repo)
+
+To ostatni nienaprawiony punkt z listy niezaleznego przegladu szesciu wydan (sekcja nizej), tam
+opisany jako *„zostaje `probedHosts` w zdaniu o OAuth, ktory nadal liczy hosty niezapytane"*.
+
+**Na czym polegal.** `fetchUrl` odrzuca zadanie **przed wyslaniem**, gdy host juz raz odmowil
+polaczenia albo domena wyczerpala limit niedopowiedzianych zadan w tym skanie (znacznik `unasked`
+z 9.24). `probeOauthOrigins` liczyl jednak `targets`, czyli **zamiar**, nie zadanie. Vendor mogl
+wiec przeczytac na karcie *„No OAuth metadata on any of the 13 hosts probed"*, gdy czesc z tych
+trzynastu nie dostala od nas ani jednego pakietu.
+
+**Poprawka.** Do `origins` wchodzi origin, do ktorego **wyszlo cokolwiek**. Zakres jest waski z
+zalozenia: wypada tylko taki, ktorego **wszystkie** zadania zostaly stlumione, wiec zgadywana
+subdomena, ktora nie rozwiazuje sie w DNS, nadal sie liczy (odpowiedziala nam bledem, czyli
+pomiarem). Gdy nie zostal nikt, check jest **niemierzalny**, a nie oblany, i ma na to wlasne zdanie
+zamiast starego „no OAuth metadata on the apex", ktore mowiloby o dokumencie, o ktory nie pytalismy.
+
+**Znalezisko codeksa, ktore uratowalo poprawke** (pierwsze uzycie przywroconej reguly „review
+przez `codex review` przed commitem"): pierwsza wersja czytala origin **z odpowiedzi**
+(`got.url`), a `runFetch` zwraca adres, na ktorym **skonczyl po przekierowaniach**. Well-known
+przekierowujacy na inny origin zaliczylby wiec cel, o ktory nie pytalismy, i zgubil ten, o ktory
+pytalismy, czyli poprawka na uczciwosc liczenia sama wprowadzalaby to samo klamstwo. Teraz origin
+**jedzie razem z adresem** (`{ origin, url }`), wiec nie da sie ich rozjechac.
+
+**Straznicy:** `zero zapytanych hostow: niemierzalne` i `i zdanie nie mowi o apeksie` w
+`scripts/rules.mts`, plus `9.33 przenosi zmiane w oauth_dcr` (rescoring monitoringu nie ma prawa
+policzyc tej zmiany jako pogorszenia u vendora, bo zapisane `probedHosts` pochodzi ze starej reguly).
+
+**Czego NIE dalo sie zmierzyc przed reseedem:** ile wierszy w korpusie to dotyka. Zapisane findings
+trzymaja `probedOrigins`, ale **nie trzymaja informacji, ktore z nich byly niezapytane**, wiec
+odtworzenia na starych danych nie ma. Liczbe zobaczymy dopiero na pierwszym reseedzie po deployu
+9.33: `oauth_dcr` niemierzalny powinien podskoczyc, i to jest oczekiwany kierunek, nie regres.
 
 ## DZIESIEC BLEDOW W DWOCH DOKUMENTACH, KTORE DOSTAJE PLACACY KLIENT (2026-08-17, naprawione)
 
