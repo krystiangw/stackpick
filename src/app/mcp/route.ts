@@ -38,6 +38,13 @@ export const TOOL = {
     required: ['domain'],
     additionalProperties: false,
   },
+  /**
+   * Not read-only, which is the answer a scanner does not want to give about itself. A call sends
+   * a burst of requests to somebody else's servers and stores a report under a permanent link, so
+   * a client that auto-approves read-only tools would be running that unattended against a third
+   * party. Repeating it is not free either: another burst, another record.
+   */
+  annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
 } as const
 
 /**
@@ -67,6 +74,9 @@ export const FIND_TOOL = {
     required: ['job'],
     additionalProperties: false,
   },
+  // Reads the corpus we already published and touches nothing outside it, which is the half of
+  // this server a client can safely call without asking.
+  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
 } as const
 
 type RpcId = string | number | null
