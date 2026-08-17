@@ -1,48 +1,36 @@
-# Let Agents In: stan na 2026-08-17 (formula 9.33 na produkcji, korpus czeka na reseed)
+# Let Agents In: stan na 2026-08-18 (formula 9.35 na produkcji, reseed zamowiony)
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te trzydziesci linijek, potem reszte)
 
-**WERSJE (stan 22:20): produkcja i repo na 9.33 (v482), korpus wciaz na 9.31.**
-9.33 (uczciwe liczenie `probedHosts`, sekcja nizej) zostala wydana **przed** startem reseedu
-swiadomie: przemiat i tak dopiero rusza, a drugi kosztowalby szesc godzin karencji i uczyl
-vendorow, ze maja nas blokowac. Jeden przemiat obejmie wiec 9.32 i 9.33 naraz. Sprawdzone po
-wydaniu na domenach **spoza korpusu** (`pulumi.com`, `deno.com`, `railway.app`): skan przechodzi,
-zdanie o sondowanych hostach nadal wymienia trzynascie adresow, czyli filtr nie strzela za szeroko.
+**WERSJE (stan 01:15): produkcja i repo na 9.35, korpus na 9.33.**
+Od wieczora doszly dwie wersje: **9.34** (szesnasty check, cena albo warunek wejscia w snippecie z
+cennika) i **9.35** (probka dokumentacji rozproszona po rodzinach wskazowek). Korpus dostanie obie
+przy najblizszym reseedzie.
 
-**W LOCIE JEST JEDNO: petla ponawiajaca reseed** (log `/tmp/reseed-932.log`, nazwa z czasow 9.32,
-wyniki beda na 9.33). Proba 14 z 18 o 21:53, co 20 minut. Karencja liczy sie od **mediany wieku
-korpusu**: 5,2 h przy probie 14, wiec przejdzie okolo **22:53** (proba 17).
-**`tail -3 /tmp/reseed-932.log` zanim cokolwiek zrobisz.**
-Gdyby przepadla: `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick)
-bash -c 'for i in $(seq 1 18); do npm run reseed >> /tmp/reseed-932.log 2>&1; [ $? -eq 3 ] &&
-sleep 1200 || break; done'`.
+**W LOCIE JEST JEDNO: petla czekajaca na karencje, log `/tmp/reseed-935.log`.** Karencja liczy sie od
+**mediany wieku korpusu**, ostatni przemiat skonczyl sie 2026-08-17 o 23:50, wiec reseed ruszy
+**najwczesniej okolo 05:50**. Petla ponawia co 20 minut, 24 razy. **`tail -3 /tmp/reseed-935.log`
+zanim cokolwiek zrobisz.** Gdyby przepadla, komenda jest w sekcji o 9.35 nizej.
 
-**PULAPKA, ktora dzis odsunela reseed o godzine:** kazdy skan domeny Z KORPUSU, takze ten zrobiony
-do weryfikacji poprawki, **odmladza mediane i przesuwa karencje**. Sprawdzalem dzis w ten sposob
-storyblok.com, plivo.com, mailgun.com, clerk.com, chargebee.com i bunny.net. Do weryfikacji zmiany
-w regule uzywaj domen SPOZA korpusu albo licz sie z odsunieciem reseedu.
+**PULAPKA:** kazdy skan domeny Z KORPUSU, takze zrobiony do weryfikacji poprawki, odmladza mediane i
+**przesuwa karencje**. Do weryfikacji uzywaj domen spoza korpusu.
 
-**PO RESEEDZIE, w tej kolejnosci:**
+**PO RESEEDZIE (9.35), w tej kolejnosci:**
 1. `MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/after-reseed.mts`
-2. `npm run audit`, `npx tsx scripts/audit-study.mts`, `npm run audit-delivery`,
-   `npx tsx scripts/read-provisioning-quotes.mts`
-3. **Policz, ile wierszy stracilo punkt za `programmatic_provisioning`.** Odtworzenie na cytatach z
-   9.31 mowilo 19 z 28, ale liczylo je PRZED domknieciem okna z drugiej strony, wiec prawdziwa
-   liczba bedzie inna. Przeczytaj cytaty tych, ktore zostaly.
-   **PUNKT ODNIESIENIA zdjety 2026-08-17 22:12, korpus 177 wierszy, wszystkie na 9.31:**
-   `programmatic_provisioning` **80 zaliczonych, 80 z cytatem**; `oauth_dcr` **92 oblane, 75 z
-   adresami**; `signup_reachable` 80 „potrzebuje JS" i 9 „wejscie przez dostawce tozsamosci";
-   `mcp_present` **93 zaliczone, 80 oblanych, 0 niemierzalnych przez milczacy rejestr**;
-   errata: wszystkie wpisy wygasly. Roznica wobec tych liczb JEST odpowiedzia na punkty 3 i 4.
-   **Lustro rejestru MCP jest zdrowe: 9322 hosty, sync 2026-08-17 09:51 UTC** (sprawdzasz to
-   `curl -H "authorization: Bearer $(heroku config:get STACKPICK_CRON_TOKEN -a stackpick)"
-   https://letagentsin.com/api/cron/mcp-registry`). **Nie sprawdzaj tego wlasnym klientem Mongo:**
-   `new MongoClient(MONGODB_URI).db()` bez nazwy bazy czyta INNA baze niz aplikacja i pokazal mi
-   dzis 0 dokumentow na kolekcji, ktora ma 9322. Endpoint powyzej obalil to jednym zapytaniem.
-4. `audit-study.mts` prawie na pewno zglosi ruch przy `programmatic_provisioning`: strona
-   `/findings` mowi o nim „+37 wsrod znanych, minus trzy wsrod reszty" i te liczby sa z 9.31.
-   **Popraw strone albo wycofaj twierdzenie, nie prog w strazniku.**
-5. Dopiero potem: `npx tsx scripts/audit-provisioning.mts credited` (kontrolka!) i `accused`.
+2. `npm run audit`, `npx tsx scripts/audit-study.mts`, `npm run audit-delivery`
+3. **Nowy check `price_in_snippet`: policz, ilu vendorow go oblewa.** Przedreseedowa probka 30 domen
+   dala 12 przechodzi / 12 oblewa / 6 bez czytelnego cennika. Jesli na calym korpusie oblewa
+   drastycznie wiecej niz polowa, przeczytaj kilka opisow, zanim uznasz to za wynik.
+4. **9.35 zmienila probke dokumentacji**, wiec `programmatic_provisioning` moze sie ruszyc w obie
+   strony. `regressions.mts` pokaze te ruchy w osobnej sekcji "nasza zmiana reguly", bo wpis w
+   `CHECK_RULE_CHANGED` juz jest. **Nie skanuj ich pojedynczo jako podejrzanych.**
+5. `npx tsx scripts/read-provisioning-quotes.mts` i porownaj z dzisiejszym: 63 zaliczone, 0 stojace
+   wylacznie na golej frazie.
+
+**PUNKT ODNIESIENIA po reseedzie 9.33 (2026-08-18 00:00):** 177 wierszy, `programmatic_provisioning`
+**63 zaliczone** (bylo 80 przed 9.32), `oauth_dcr` **91 oblanych, 74 z adresami**, `mcp_present`
+93 zaliczone / 80 oblanych / 0 niemierzalnych, lustro rejestru MCP 9374 hosty, errata pusta,
+`npm run audit` bez rozjazdow.
 
 **CO DZIS ZROBIONE, w skrocie** (kazde ma sekcje nizej): formula **9.32** (gola fraza w
 `programmatic_provisioning` musi niesc dowod w cytowanym oknie); **dziesiec bledow w platnym
