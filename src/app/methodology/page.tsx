@@ -316,7 +316,9 @@ export default async function MethodologyPage() {
           close. And these runs are not a clean measurement: they ran on a machine whose operator instructions
           they could read, and those instructions ask for answers in Polish, which is why some of the published
           answers are in Polish rather than English. It describes an agent on that machine rather than an agent
-          at your customer. A replication on a second tool that reads none of those instructions is running.
+          at your customer. The whole set was repeated on a second tool that reads none of those instructions and
+          answers in English, and the two checks that separate vendors survive there as well, which is reported on
+          the findings page.
         </p>
       </section>
 
