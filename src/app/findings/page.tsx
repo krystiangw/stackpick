@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/findings` },
   title: 'Findings: Let Agents In',
-  description: 'Thirty-eight runs, five studies, two models. What agents pick when nobody is watching, and where every one of them stops.',
+  description: 'Six studies: what agents pick when nobody is watching, where every one of them stops, and which of our own checks has anything to do with being named.',
 }
 
 type Result = {
@@ -111,6 +111,22 @@ const RESULTS: Result[] = [
         'The entire evaluation one vendor received, in an earlier round run before we isolated the copies. That round shared one working directory between agents, so it is not part of the six above and its counts are not reported. The product was never opened.',
     },
   },
+  {
+    id: 'named',
+    heading: 'Two of our fifteen checks relate to being named by an agent. The file everybody publishes relates to nothing',
+    numbers: [
+      ['Categories, each with one buying question put to an agent', '26'],
+      ['Vendors named at least once, of those we measure', '90 of 170'],
+      ['Nameability gap between vendors that pass and fail oauth_dcr', '+25pp'],
+      ['The same for llms.txt, after controlling for how well known a vendor is', 'nothing'],
+    ],
+    body: [
+      'We publish fifteen checks and tell vendors to fix them. Nobody, ourselves included, had asked which of them has anything to do with the thing a vendor actually wants: being named when somebody asks an agent for a recommendation. So we asked. One question per category, the question a buyer would type, put to an agent five times in isolation, and for each vendor in the corpus a count of the runs that named them. Then, for every check, the share of vendors named at least once among those that pass it against those that fail it.',
+      'Two checks separate the two groups and survive the obvious objection. Vendors whose product an agent can register itself with, which is what oauth_dcr measures, are named 25 points more often, and the gap holds among well known vendors and lesser known ones alike, at +26 and +17. A live MCP endpoint is worth +17 points overall and holds in both halves, at +21 and +9. A third, documented programmatic key creation, looks stronger than either at +24 until the corpus is split by popularity: among lesser known vendors it is worth three points, so most of what it measures is fame rather than the rule.',
+      'And llms.txt, the file the whole market publishes, separates nobody: five points overall, negative in both halves of the popularity split. We score it, we say on the methodology page that it is not the thing to fix first, and this is the measurement behind that sentence rather than an opinion about it.',
+      'The limits, because they are large. Five runs tell a wall from silence and nothing finer. This is correlation on 170 vendors, not an experiment: a well run company publishes more and gets named more, and no split of a corpus this size fully separates the two. The runs also read the operator instructions on the machine they ran on, so they describe an agent there rather than an agent at your customer. A replication on a second tool that reads none of those instructions is running, and it gets published whichever way it comes out.',
+    ],
+  },
 ]
 
 /**
@@ -133,14 +149,16 @@ export default async function FindingsPage() {
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Research</p>
         <h1 className="mt-4 max-w-2xl text-balance text-4xl font-semibold leading-tight tracking-tight">
-          Thirty-eight runs, five studies, nobody watching
+          Six studies, nobody watching
         </h1>
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
-          Five studies so far, across four categories: image upload and storage twice, a rich text editor,
+          Six studies so far. Five are build runs across four categories: image upload and storage twice, a rich text editor,
           authentication for a support tool, and payments. Every run received a brief and nothing else. No provider names,
           no mention of an audit, no hint that anyone was watching, and no way to ask a question. Two models,
           isolated copies of a real application, and a record of every source each run consulted, separating
-          the pages it read from the summaries it only skimmed.
+          the pages it read from the summaries it only skimmed. The sixth is different in kind: it asks whether the
+          checks we publish have anything to do with being named at all, and it is the one that criticises our own
+          scorecard.
         </p>
         {/* Every other page carrying these numbers says which formula measured them. This one
             stated dozens of counts and never did, so a reader could run their own scan on a newer
