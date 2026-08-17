@@ -16,13 +16,21 @@ const plexMono = IBM_Plex_Mono({
   weight: ['400', '500', '600'],
 })
 
+/**
+ * The entry requirement belongs in the snippet, not three scrolls down the page. Our own runs
+ * measured agents rejecting a vendor on a search result they never opened: Auth0 lost one to an
+ * aggregator's claim that it wanted a card, and the single run that opened the pricing page found
+ * no card was wanted. "Free, no account" is the sentence we would have wanted Auth0 to have.
+ */
+const DESCRIPTION =
+  'Measures whether an AI coding agent can find, register with and integrate your product. Free, no account: deterministic checks, published formula, reproducible score.'
+
 export const metadata: Metadata = {
   // Without this Next resolves the file-based OG image against localhost, so every
   // scorecard forwarded to Slack or LinkedIn arrived as a bare link with no card.
   metadataBase: new URL(process.env.STACKPICK_BASE_URL ?? 'http://localhost:3000'),
   title: 'Let Agents In: can an AI agent get through your product?',
-  description:
-    'Measures whether an AI coding agent can find, register with and integrate your product. Deterministic checks, published formula, reproducible score.',
+  description: DESCRIPTION,
   // Only the vendor pages carried these, so the two pages somebody would actually forward - the
   // front page and /findings - arrived in Slack and on LinkedIn as a bare link with no card.
   // Nothing links to this site yet, and a shared link that renders as nothing is the mechanism
@@ -32,8 +40,7 @@ export const metadata: Metadata = {
     siteName: 'Let Agents In',
     url: SITE_URL,
     title: 'Let Agents In: can an AI agent get through your product?',
-    description:
-      'Measures whether an AI coding agent can find, register with and integrate your product. Deterministic checks, published formula, reproducible score.',
+    description: DESCRIPTION,
   },
   twitter: { card: 'summary_large_image' },
 }

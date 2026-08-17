@@ -9,7 +9,10 @@ import { SITE_URL } from '@/lib/site'
 export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/pricing` },
   title: 'Pricing: Let Agents In',
-  description: 'What the free scan covers, what a real agent audit costs, and what happens after the findings.',
+  // The prices go in the snippet. A pricing description with no number in it reads as "contact
+  // sales", and the runs we published measured agents passing over a vendor on exactly that
+  // reading, without opening the page that would have corrected it.
+  description: `Free scan, no account and no card: ${CHECKS.length} deterministic checks. One agent report $49, monitoring $79 a month, the audit priced by conversation.`,
 }
 
 type Tier = {
@@ -99,8 +102,8 @@ export default async function PricingPage() {
           Everything a machine can check is free. You pay for the part where real agents run.
         </h1>
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
-          The scan costs us bandwidth and nothing else, so it costs you nothing and the formula is published
-          with it. What is worth charging for is what a checklist cannot see: the same checks rerun every week
+          The scan costs us bandwidth and nothing else, so it costs you nothing, wants no account and no card,
+          and the formula is published with it. What is worth charging for is what a checklist cannot see: the same checks rerun every week
           so you hear the day a verdict moves, and real agents asked the question your buyers ask, to find out
           whether you are named at all.
         </p>
