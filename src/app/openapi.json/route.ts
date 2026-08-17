@@ -2,6 +2,10 @@ import { CHECKS, MAX_SCORE, STAGES } from '@/lib/score'
 
 const BASE = process.env.STACKPICK_BASE_URL ?? 'http://localhost:3000'
 
+// Without this Next may answer this route from the build, where the fallback above is the only
+// value there is: a spec whose `servers[0].url` is localhost sends every generated client nowhere.
+export const dynamic = 'force-dynamic'
+
 /** Generated from the same check definitions the scanner runs, so the spec cannot drift. */
 export function GET() {
   return Response.json({
@@ -80,21 +84,65 @@ export function GET() {
                                   type: 'boolean',
                                   description: 'Zero because we could not measure it, not because it is absent',
                                 },
+                                label: { type: 'string' },
+                                stage: { type: 'string', enum: STAGES.map((stage) => stage.id) },
+                                unblock: {
+                                  type: 'string',
+                                  description: 'What to change, or for an unmeasured check what would make it measurable',
+                                },
                               },
                             },
                           },
                         },
                       },
+                      reused: {
+                        type: 'boolean',
+                        description: 'The domain was scanned in the last few minutes and the stored result was returned rather than a new one',
+                      },
+                      saved: {
+                        type: 'boolean',
+                        description:
+                          'False when the measurement finished but the store would not accept it. The scorecard is complete and /r/{id} will stop resolving at the next deploy',
+                      },
+                      warning: { type: 'string', description: 'Present with saved: false, in the words the page uses' },
+                      truncation: {
+                        type: 'object',
+                        description:
+                          'Present when the scan ran out of its time budget. The checks it names were never asked, so a partial scan must not be read as a full one',
+                        properties: {
+                          incompletePhases: { type: 'array', items: { type: 'string' } },
+                          unmeasuredChecks: { type: 'array', items: { type: 'string', enum: CHECKS.map((check) => check.id) } },
+                          detail: { type: 'string' },
+                        },
+                      },
                     },
+                  },
+                },
+                'application/sarif+json': {
+                  schema: {
+                    type: 'object',
+                    description:
+                      'SARIF 2.1.0, returned for format: sarif. runs[0].results holds only the checks that failed; what passed, what was not measurable and what did not apply are counted in runs[0].properties',
+                    externalDocs: { url: 'https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html' },
+                  },
+                },
+                'text/markdown': {
+                  schema: {
+                    type: 'string',
+                    description: 'Returned for format: agent. One task per failing check, each carrying the measurement behind it. Not JSON: do not parse it',
                   },
                 },
               },
             },
-            '400': { description: 'Not a domain' },
+            '400': { description: 'Not a domain, or a format outside the enum' },
             '422': { description: 'Domain refused or unreachable' },
+            '500': {
+              description:
+                'The scan itself failed. Retrying does not help on its own; the address in the body is where to tell us.',
+            },
             '503': {
               description:
-                'The scan did not finish inside the gateway timeout, or the store is not accepting writes. /api/scan/stream reports progress and does not go silent.',
+                'The scan did not finish inside the gateway timeout. /api/scan/stream reports progress and does not go silent. A store that will not accept the write is NOT this: that answers 200 with saved: false, because the measurement is finished and it is yours either way.',
             },
             '429': { description: 'Rate limit reached, five per hour per registrable domain, thirty per hour per address' },
           },
@@ -159,6 +207,7 @@ export function GET() {
           summary: 'Every curated domain we have scanned, one formula version throughout',
           operationId: 'getCorpus',
           responses: {
+            '404': { description: 'No corpus yet' },
             '200': {
               description: 'The published corpus, recomputed per request',
               content: {
@@ -169,6 +218,37 @@ export function GET() {
                       formulaVersion: { type: 'string' },
                       domains: { type: 'integer' },
                       max: { type: 'integer' },
+                      notes: {
+                        type: 'array',
+                        items: { type: 'string' },
+                        description:
+                          'Read these before counting anything. One of them says that filtering rows on points < max is the obvious way to count failures and is wrong, because it counts what we could not measure and what does not apply as the vendor failing. Use checks[].tally instead',
+                      },
+                      checks: {
+                        type: 'array',
+                        description: 'One entry per check with the corpus-wide tally, which is what a count of failures should be read from',
+                        items: {
+                          type: 'object',
+                          properties: {
+                            id: { type: 'string', enum: CHECKS.map((check) => check.id) },
+                            stage: { type: 'string', enum: STAGES.map((stage) => stage.id) },
+                            label: { type: 'string' },
+                            max: { type: 'integer' },
+                            helpUri: { type: 'string' },
+                            tally: {
+                              type: 'object',
+                              properties: {
+                                pass: { type: 'integer' },
+                                partial: { type: 'integer' },
+                                fail: { type: 'integer' },
+                                unmeasured: { type: 'integer' },
+                                notApplicable: { type: 'integer' },
+                                measured: { type: 'integer', description: 'pass + partial + fail, the denominator for a rate' },
+                              },
+                            },
+                          },
+                        },
+                      },
                       rows: {
                         type: 'array',
                         items: {
@@ -180,7 +260,23 @@ export function GET() {
                             measurable: { type: 'integer' },
                             unattendedGrant: { type: ['boolean', 'null'] },
                             scorecardUrl: { type: 'string' },
-                            checks: { type: 'array', items: { type: 'object' } },
+                            measuredOn: {
+                              type: ['string', 'null'],
+                              description: 'The domain we actually read, when the one we were asked about redirects elsewhere',
+                            },
+                            rateLimited: { type: ['boolean', 'null'] },
+                            checks: {
+                              type: 'array',
+                              items: {
+                                type: 'object',
+                                properties: {
+                                  id: { type: 'string', enum: CHECKS.map((check) => check.id) },
+                                  verdict: { type: 'string', enum: ['pass', 'partial', 'fail', 'unmeasured', 'notApplicable'] },
+                                  points: { type: 'integer' },
+                                  max: { type: 'integer' },
+                                },
+                              },
+                            },
                           },
                         },
                       },
