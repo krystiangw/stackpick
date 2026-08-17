@@ -5447,3 +5447,50 @@ kontra -5pp. Trzy przyczyny, wszystkie nasze:
 Strona mowi teraz, ktora miare cytuje, i **publikuje te roznice zamiast wybierac wygodniejsza**.
 Straznik pilnuje obu miar i **konczy sie kodem bledu**, gdy ktorekolwiek zdanie przestanie byc
 prawdziwe. Do uruchamiania po kazdym reseedzie i po kazdej zmianie cel.
+
+## PORZADEK WERSJI FORMULY BYL ZLY I ROZBRAJAL OCHRONE WATCHERA (2026-08-18, wdrozone v489)
+
+Po kropce w numerze formuly stoi **licznik, nie ulamek**: po 9.9 przyszlo 9.10, dzis jest 9.35.
+`rulesChangedBetween` czytalo obie wersje przez `Number`, wiec dla bazy z zakresu **9.4-9.9** okno
+wersji wychodzilo puste, a `CHECK_RULE_CHANGED` przestawalo dzialac dokladnie tam, gdzie jest
+najbardziej potrzebne: przy najstarszych pomiarach, ktore przekroczyly najwiecej zmian regul.
+Skutek bylby taki, ze watcher dostaje maila „straciles punkty" za zmiane, ktora zrobilismy my.
+
+**Poprawny komparator istnial juz w `errata.ts`**, z komentarzem nazywajacym pulapke wprost
+(„9.8 jest starsze niz 9.12"). Napisalismy wiec raz dobrze, a raz zle. Teraz jest jeden:
+`src/lib/formula.ts` (`isOlderThan`, `inReleaseOrder`), uzywany w `errata.ts` i `watch.ts`.
+
+**Zmierzony zasieg przed poprawka** (`npm run watch-baselines`, nowy skrypt): 4 watche w kolejce,
+bazy `brak`, `brak`, **9.2** i **9.16** - obie wypadaly poprawnie **przypadkiem**, bo numerycznie sa
+mniejsze od 9.31. Zaden zywy watcher nie dostal zlego maila. Raporty z zakresu 9.4-9.9 istnieja
+(val.town ma 9.9), a `regressions.mts` uzywa tej samej funkcji na historii korpusu, wiec blad byl
+o jeden stary raport od ugryzienia.
+
+Straznik, ktory by to zlapal, jest w `rules.mts`: `rulesChangedBetween('9.9', '9.35')` musi zwrocic
+wszystkie cztery zmienione checki.
+
+## SCIEZKA KLIENTA PRZEJSCIOWO PRZETESTOWANA OD KONCA DO KONCA (2026-08-18)
+
+Na produkcji, na domenie **spoza korpusu** (val.town) i na wlasna skrzynke:
+
+1. `POST /api/watch` -> `delivered: true`, mail w skrzynce w kilkanascie sekund.
+2. Link potwierdzajacy -> „We are watching val.town", **drugie klikniecie nic nie psuje** (mail
+   klienci prefetchuja linki).
+3. `/v/val.town` -> strona zyje i sama mowi, ze pomiar jest pod stara formula (9.9).
+4. Link stopu -> „We will not write to you about val.town again".
+5. Ponowna prosba po stopie -> nowy mail, `confirmedAt` **wyzerowane**, `stoppedAt` wyczyszczone, a
+   watch **nie wchodzi do kolejki** dopoki nie potwierdzi. Czyli nikt nie dostaje maila bez
+   ponownej zgody.
+
+**Nie uruchamiaj teraz crona watchy:** dwa oczekujace watche to stripe.com i vercel.com, a skan
+domeny korpusowej odmladza mediane i przesuwa reseed.
+
+## CHECK O MARTWYCH LINKACH W DOKUMENTACJI: SWIADOMIE NIE ROBIMY (2026-08-18)
+
+Skill `agent-discoverability` wymienia „zero 404 w dokumentacji" jako blokade binarna i to prawda,
+ale check kosztowalby kilkanascie dodatkowych zadan HEAD do **tego samego hosta**, ktory juz
+obsluguje ~19 dokumentow na skan. Nasza wlasna zasada mowi, ze 429 to nasze obciazenie, a nie
+werdykt o vendorze, wiec ryzykowalibysmy jakosc checkow, ktore juz publikujemy, dla jednego punktu.
+Czesc tego i tak mierzymy: `llms_txt` sprawdza probke linkow z llms.txt i wypisuje, ile odpowiada.
+Do zrobienia dopiero wtedy, gdy zmierzymy zapas w budzecie 27 s i pokazemy probke bez falszywych
+oskarzen.
