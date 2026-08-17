@@ -40,6 +40,29 @@
      werdykty za zero, a wartoscia bywa samo zdanie, bo to je czyta vendor.
 
 
+## 29. PRZEBIEG: `signup_reachable` NA 9.30, ZERO OBALONYCH I OSIEM ZDAN, KTORE MYLA
+
+`npm run audit-signup credited|accused` na korpusie 9.30. **Kontrolka: 40 z 42**, czyli dokladnie
+w udokumentowanym progu tej sondy (`docuseal.com` i `deepl.com` to jej znane pudla, opisane w
+naglowku skryptu). **Strona oskarzen: 85 wierszy, zero obalonych** - nigdzie nie ma formularza,
+ktorego byśmy nie widzieli.
+
+**Ale osiem wierszy dostaje zdanie, ktore opisuje formularz, jakiego ten vendor nigdy nie napisal:**
+`cloudinary.com`, `transloadit.com`, `trychroma.com`, `rollbar.com`, `modal.com`, `browserless.io`,
+`cal.com`, `redis.io`. Wszystkim publikujemy *„<url> is reachable, but its form needs JavaScript"*,
+a ich strona rejestracji **nie ma zadnego pola** i wpuszcza wylacznie przez dostawce tozsamosci.
+
+Sprawdzone recznie na `modal.com/signup`: **51 983 bajty HTML z serwera, zero `<input>`**, za to
+trzy przyciski `Continue with GitHub`, `Continue with Google`, `Continue with SSO`.
+
+**Werdykt (zero punktow) jest sluszny** - agent bez czlowieka i tak nie zalozy tam konta - **ale
+zdanie twierdzi istnienie czegos, czego nie zmierzylismy**. To jest dokladnie ten rodzaj bledu,
+ktory ten produkt ma nie popelniac, i vendor czytajacy to zdanie ma prawo uznac, ze nie patrzylismy.
+
+**Poprawka jest gotowa do wdrozenia PO pomiarze podlogi szumu** (dotyka zdania, wiec i wersji
+formuly): gdy strona nie ma zadnego pola formularza, a niesie wejscia przez dostawce tozsamosci,
+publikujemy to zamiast zdania o JavaScripcie. Sonda audytu juz to rozroznia i nazywa `oauth-only`.
+
 ## OBIETNICA BIEGOW AGENTA MA DZIURE: DOMENA SPOZA NASZYCH KATEGORII (2026-08-17)
 
 `/pricing` obiecuje obserwowanej domenie biegi agentow co miesiac, a **cela rozpoznawcza wymaga
