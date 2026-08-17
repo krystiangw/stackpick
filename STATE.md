@@ -59,6 +59,29 @@ wymienianym, wiec akurat on nie moze konczyc sie zdaniem bez wyjscia.
 **Pokrycie obserwacji: 0 z 3 nieobslugiwanych**, kazda obserwowana kategoria ma cele mlodsza niz
 miesiac. Ta pozycja jest zamknieta.
 
+**CZWARTY ZESTAW HELD-OUT DO ROUTINGU, I GORSZA PRAWDA NIZ PUBLIKOWALISMY.** Opis
+`find_providers` cytowal skutecznosc zmierzona na zestawie, ktory od tamtej pory zostal przeczytany
+i naprawiony przeciwko sobie, wiec nie mierzyl juz niczego. Nowy zestaw: **40 pytan napisanych przez
+agenta bez dostepu do repo i bez widoku listy kategorii**, szesc celowo nie o kupowaniu,
+przetlumaczonych przez drugiego agenta z zakazem wstawiania rzeczownikow kategorii; etykiety
+zacommitowane PRZED pierwszym biegiem (`harness/heldout/2026-08-17.json`).
+
+**Trafia 24 z 40, odpowiada na 26, a 10 tych odpowiedzi jest blednych.** Dominujaca porazka nie
+jest juz cisza, tylko **pewna zla odpowiedz**: na 16 pytan, na ktore powinien byl odmowic,
+odpowiedzial na 8. Zrodlem sa **pojedyncze slowa czytane bez kontekstu**: deploy kontenerow do
+`notifications` na slowie „push", modul billing we **wlasnym** repo pytajacego do `payments`,
+tabela `events` w Postgresie do `product-analytics`, eksport CSV z polskimi znakami do `video`,
+a „similarity of two lists of tags" do `vector-search`, ktory ma w slowniku gole `similar`.
+Odwrotnie: „store and search embeddings" i „product search with typos" **przemilczal**.
+
+**Narzedzie czyta po angielsku.** Te same 40 pytan po polsku: 11 odpowiedzi, 6 trafien. To tez
+jest opublikowane w opisie narzedzia, bo nigdzie nie pisalismy, ze pytanie ma byc po angielsku.
+
+**Swiadomie NIE poprawilem regul pod ten zestaw.** Zestaw ma jeszcze raz cos zmierzyc, zanim go
+spalimy, a straznik w buildzie pilnuje teraz, ze kazda liczba w opisie narzedzia zgadza sie z tym,
+co reguly naprawde robia na tych 40 pytaniach. **Zanim ktos ruszy routing: zamow szosty zestaw tym
+samym protokolem, bo poprawka pod ten zabije go jako miare.**
+
 **PULAPKA, ktora prawie opublikowala falszywy wniosek:** skan tuz po wdrozeniu wraca z **okna
 ponownego uzycia** (15 minut) i mierzy POPRZEDNI build. `storyblok.com` po deployu pokazywal stary
 werdykt i wygladalo to jak nieudana poprawka. **Sprawdzaj `reused` w odpowiedzi `/api/scan`, zanim
