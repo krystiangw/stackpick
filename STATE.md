@@ -175,6 +175,36 @@ Po kontroli na slawe, codex: `oauth_dcr` **+35pp u popularnych i +19pp u mniej z
 narzedziach, dwoch rodzinach modeli i obu polowkach popularnosci**. `mcp_present` idzie zaraz za
 nim. `llms_txt` nie ma sygnalu w zadnym pomiarze, ktory przechodzi test przypadku.
 
+### AKTUALIZACJA PO RESEEDZIE 9.30 I POPRAWCE MATCHERA (2026-08-17)
+
+Liczby wyzej powstaly na korpusie 9.27/9.28. Po reseedzie na 9.30 i po dolozeniu reguly „dwie
+marki-slowa w jednym zdaniu licza sie obie" przeliczylem wszystko jeszcze raz:
+
+| check | bylo | jest |
+|---|---|---|
+| `oauth_dcr` | +28pp (0.000) | **+25pp (0.000)** |
+| `programmatic_provisioning` | +18pp (0.006) | **+18pp (0.008)** |
+| `mcp_present` | +20pp (0.003) | **+14pp (0.048)** |
+| `typed_package` | +20pp (0.050) | +23pp (0.019) |
+| `llms_txt` | +3pp (0.738) | **+3pp (0.716)** |
+| wynik powyzej mediany | +19pp (0.003) | +16pp (0.019) |
+
+**Najciekawsza zmiana jest w `mcp_present` i warto rozumiec, skad sie wziela: to MOJA poprawka
+rozmyla te korelacje.** Druga fala z 9.29 znalazla prawdziwe endpointy u 15 dodatkowych vendorow
+(73 zaliczanych przed reseedem, 88 po), a to sa z definicji ci trudniejsi do znalezienia, czyli
+mniej znani. Czyli **czesc starej korelacji byla bledem pomiaru skorelowanym ze slawa**: u duzych
+firm endpoint lezal tam, gdzie zgadywalismy. Lepszy pomiar oslabil zwiazek i to jest zdrowy
+kierunek, a nie strata.
+
+Po kontroli na slawe wnioski sie nie zmieniaja: `oauth_dcr` **+27pp u popularnych i +12pp u mniej
+znanych**, `programmatic_provisioning` +26 i +1, `mcp_present` +18 i +5, `llms_txt` +5 i -6.
+
+**Kontrola matchera recznym odczytem** (cela `llm-infrastructure`, najtrudniejsza, bo pelna marek
+bedacych zwyklymi slowami): matcher zgadza sie z moim odczytem na **33 z 35 komorek**, a obie
+rozbieznosci to te, ktorych **odmowil rozstrzygnac i zacytowal czlowiekowi** (`Replicate` i `Modal`
+w liscie z Ollama i vLLM, ktorych nie ma w naszym korpusie). Po poprawce kategoria zgadza sie co do
+biegu.
+
 **Czego to NIE dowodzi, i to musi isc razem z kazda liczba:** nic o przyczynie (znany dostawca i
 publikuje, i jest wymieniany), nic o pojedynczym dostawcy (piec biegow oddziela sciane od ciszy),
 i nic czystego, bo biegi czytaly `~/.claude/CLAUDE.md` tej maszyny. Wiersze z garstka danych sa
