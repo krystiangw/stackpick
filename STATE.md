@@ -4732,3 +4732,49 @@ zamiast samego „cztery cyfry". Research mowi, ze nawet gracze chowajacy cene p
 startowy, ale liczby nie mam skad wziac i nie wymysle jej sam.
 
 **Wciaz brak sciezki platnosci innej niz `mailto:`.** Cennik jest dzis komunikatem, nie kasa.
+
+## MATCHER MYLIL SIE O TRZY FIRMY, A MY PUBLIKOWALISMY „NIE PADL ANI RAZU" (2026-08-17, naprawione)
+
+Nowe strony kategorii publikuja najmocniejsze zdanie, jakie mamy: **„N z M dostawcow nie padl ani
+razu"**. To jest twierdzenie o nazwanych firmach, wiec dostalo wlasny audyt
+(`scripts/audit-never-named.mts`, celowo grubszy niz matcher, ktory audytuje).
+
+**Cztery leady, trzy prawdziwe pudla:**
+- `sanity.io`: odpowiedz poleca **Sanity** wytluszczeniem, my publikowalismy, ze nigdy nie padlo.
+- `here.com`: odpowiedz nazywa **HERE** realnym konkurentem wersalikami. Alias brzmial „HERE
+  Technologies", wiec samo „HERE" nie trafialo **w zadnym z pieciu biegow**.
+- `neon.com`: odpowiedz otwiera sie zdaniem „Neon bylby moim wyborem" i mowi Neon trzy razy.
+- `name.com`: jedyny sluszny odrzut, bo trafienie bylo fragmentem slowa „Namecheap".
+
+Kazda z trzech byla **jedynym dostawca w swoim zdaniu**, wiec regula promujaca niepewne trafienie
+obok pewnego nie miala jak ich dosiegnac. **Typografia rozstrzyga tam, gdzie sasiad nie moze:**
+wyroznienie, backtick albo etykieta linku wokol slowa; wersaliki; forma z wielkiej litery uzyta
+wiecej niz raz w tej samej odpowiedzi. Alias pisany wersalikami jest teraz dopasowywany z
+uwzglednieniem wielkosci liter, bo „here" to slowo, a „HERE" to firma.
+
+**Efekt na 125 odpowiedziach: 11 licznikow w gore, 6 w dol** (te w dol to same zmiany „kto
+pierwszy"). `sanity.io` 0 -> 5 i pierwszy 5 razy, `neon.com` 0 -> 5, `here.com` 0 -> 5,
+`clerk.com` 1 -> 5, `resend.com` 1 -> 4, `temporal.io` 2 -> 5. **Kontrolka po poprawce: 1 lead
+zamiast 4.**
+
+## POMIAR ZWIAZKU CHECKOW Z WYMIENIALNOSCIA POWTORZONY POPRAWNYM MATCHEREM
+
+Nocny pomiar liczyl sie matcherem, ktory gubil trzy firmy, wiec zostal powtorzony. **Wniosek nie
+tylko sie utrzymal, ale sie wzmocnil:**
+
+| check | roznica | przypadek | u popularnych | u mniej znanych |
+|---|---|---|---|---|
+| `oauth_dcr` | +25pp | 0.000 | +26pp | +17pp |
+| `mcp_present` | +17pp | 0.012 | +21pp | +9pp |
+| `programmatic_provisioning` | +24pp | 0.000 | +37pp | **+3pp** |
+| `llms_txt` | +5pp | 0.577 | **-2pp** | **-4pp** |
+
+**Dwa checki przezywaja kontrole na slawe w obu polowkach: `oauth_dcr` i `mcp_present`** (wczesniej
+tylko pierwszy). `programmatic_provisioning` wyglada mocno, ale caly efekt siedzi u popularnych,
+czyli to najpewniej slawa, nie regula. **`llms_txt` nadal nie pokazuje niczego, w obu polowkach na
+minusie.** Wynik powyzej mediany: 54 procent wymienialnosci kontra 35 procent ponizej, roznica
+19pp, przypadek daje taka lub wieksza w 0,006 przebiegow.
+
+**Do rozwazenia jako nastepna publikacja:** to jest badanie, ktorego nie ma zaden konkurent,
+„ktore z rzeczy, ktore kazemy naprawiac, maja zwiazek z byciem wymienianym". Wymaga zdania o
+skazeniu (biegi czytaly `CLAUDE.md` tej maszyny), bo bez niego to nie jest czysty pomiar.
