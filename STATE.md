@@ -4693,3 +4693,42 @@ biznesowej Krystiana** (model sprzedazy i sciezka platnosci inna niz `mailto:`).
 
 **Czego swiadomie nie kopiujemy:** jednego przebiegu agenta na audyt bez ujawnionej wariancji i
 nieopublikowanej formuly punktacji. To sa dwie rzeczy, ktorymi sie od nich roznimy.
+
+## RESEARCH CENNIKOWY I PRZEBUDOWA CENNIKA (2026-08-17, wdrozone)
+
+Dwa rownolegle researche, bo nasz cennik dotykal dwoch roznych rynkow.
+
+**Rynek, w ktorym naprawde konkuruje monitoring, to widocznosc w odpowiedziach AI** (Profound,
+Peec, Otterly, Scrunch, Athena, Rankscale, Semrush AI Toolkit, Ahrefs Brand Radar, Similarweb):
+- **mediana poziomu wejsciowego 99 USD** (Profound 99, Semrush 99, AmIOnAI 100, Similarweb 129,
+  Otterly 29 jako wyjatek), **mediana poziomu pro okolo 365 USD**, gorny plan Evertune 800.
+- **Jednostka rozliczenia to PROMPT**, nie domena: 25-150 sledzonych pytan w tanim planie,
+  odpytywane **dziennie**. Nasze „za domene" jest w tej kategorii nietypowe.
+- **Rabat roczny 15-20 procent**, prawie zawsze opisany jako „dwa miesiace gratis".
+- **Prawdziwy darmowy poziom ma jeden gracz na czternastu** (Athena), reszta to trial 7 dni.
+
+**Rynek narzedzi audytu i monitoringu stron** (Semrush 139, Ahrefs 129, Little Warden 25 GBP,
+Sitebulb 18, Screaming Frog 199 GBP rocznie): drabinka 3-4 poziomow z mnoznikiem 1,5-2x, poziom
+agencyjny bramkowany **wolumenem** i nazwany wprost „Agency", white label jako osobny dodatek
+(Semrush 20 USD, Ahrefs Report Builder 99 USD), a **powyzej okolo 500 USD miesiecznie cena znika
+za formularzem**. Jednorazowe raporty techniczne: **49 do 2 200 USD**, najtanszy porownywalny
+produkt to 49 USD za audyt, WAVE AIM zaczyna od 500.
+
+**Co zmienilismy:**
+1. **Raport jednorazowy 29 -> 49 USD.** Za 29 bylismy **tansi niz podloga calego porownywalnego
+   rynku**, a techniczny kupujacy czyta cene ponizej rynku jako niska jakosc, nie jako okazje.
+2. **Monitoring zostaje 79**, czyli **ponizej mediany kategorii (99)**, i dostaje **rok w cenie
+   dziesieciu miesiecy**.
+3. **Pakiet dziesieciu domen nazwany „Agency"**, bo nazwany poziom pozwala kupujacemu
+   zakwalifikowac sie samemu.
+4. **Nowa os sprzedazy zgodna z kategoria: kolejne pytanie kupujacych za 29 USD miesiecznie.**
+   Rynek skaluje po promptach, my po pytaniach, i teraz to widac w cenniku.
+5. **FAQ mowi wprost, ze do szerokiego sledzenia udzialu w odpowiedziach lepsze jest narzedzie
+   zbudowane do tego.** Odeslanie kupujacego gdzie indziej jest tansze niz sprzedanie mu czegos,
+   co go rozczaruje.
+
+**Swiadomie NIE zrobione, bo to decyzja Krystiana:** nazwanie dolnej granicy audytu („from X")
+zamiast samego „cztery cyfry". Research mowi, ze nawet gracze chowajacy cene pokazuja punkt
+startowy, ale liczby nie mam skad wziac i nie wymysle jej sam.
+
+**Wciaz brak sciezki platnosci innej niz `mailto:`.** Cennik jest dzis komunikatem, nie kasa.
