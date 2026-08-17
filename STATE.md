@@ -6,6 +6,9 @@
 9.33 (uczciwe liczenie `probedHosts`, sekcja nizej) jest zbudowana, przepuszczona przez straznikow
 i **zacommitowana bez deployu celowo**: reseed jedzie przez zywe dyno, wiec wydanie w trakcie
 mieszaloby dwie formuly w jednym przebiegu. **Deploy dopiero po zamknieciu listy po reseedzie.**
+Skutek uboczny rozjazdu: `scripts/stale-domains.mts` porownuje wiersze z **lokalna**
+`FORMULA_VERSION`, wiec po reseedzie uzna caly korpus za nieaktualny. **Nie uzywaj go do
+dokanczania tego reseedu**, bo kaze przeskanowac 177 domen od nowa.
 
 **W LOCIE JEST JEDNO (stan 21:55): petla ponawiajaca reseed na 9.32.**
 Log `/tmp/reseed-932.log`, proba 13 z 18, co 20 minut, proces zyje. Karencja liczy sie od
