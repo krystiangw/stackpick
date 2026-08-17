@@ -5,7 +5,11 @@
 **W LOCIE, SPRAWDZ TO NAJPIERW:** drugi reseed na 9.30 skonczyl przemiatanie (`170 ok, 0 failed`,
 2026-08-17 ok. 10:15) i wchodzil w zamiatanie 429. Log: `scratchpad/reseed-drugi.log`.
 
-**NASTEPNY KROK, NAJWAZNIEJSZY W CALYM PROJEKCIE:**
+**PODLOGA SZUMU ZMIERZONA I OPUBLIKOWANA: 0,59 procent, symetrycznie (9 w gore, 6 w dol).**
+Zamrozenie formuly **zdjete**. Do wdrozenia dwie opisane poprawki: zdanie o formularzu
+(`signup_reachable`, sekcja 29.) i sciezki specyfikacji na hoscie dokumentacji (sekcja 28.).
+
+**Jak powtorzyc pomiar (stara instrukcja, nadal wazna):**
 
 ```
 MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npm run noise-floor 9.30
