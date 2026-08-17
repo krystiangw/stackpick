@@ -968,9 +968,15 @@ export const CHECKS: Check[] = [
         // Naming the phrases is the difference between a rule and a grep nobody can rerun: this
         // is the heaviest check on the card and a vendor could not tell which ones we looked for.
         const named = f.funnel.provisioning.programmatic.map((phrase) => `"${phrase}"`).join(', ')
+        // Three of the seven rules are bare substrings, and a substring can mean something else:
+        // bird.com writes "Destination Management API" about SMS routing. Quoting the words we
+        // matched is what lets a vendor tell a provisioning surface from a coincidence, and it is
+        // the only check on the card where we award two points for a phrase.
+        const quotes = f.funnel.provisioning.programmaticQuotes ?? []
+        const inTheirWords = quotes.length > 0 ? `, matched in: ${quotes.map((quote) => `“${quote}”`).join(' and ')}` : ''
         return yes(
           found >= 2 ? 2 : 1,
-          `${found} of ${PROVISIONING_PATTERN_COUNT} provisioning phrases across the ${pages} documentation ${pages === 1 ? 'page' : 'pages'}${alsoFiles} we read: ${named}`,
+          `${found} of ${PROVISIONING_PATTERN_COUNT} provisioning phrases across the ${pages} documentation ${pages === 1 ? 'page' : 'pages'}${alsoFiles} we read: ${named}${inTheirWords}`,
         )
       }
       if (found > 0) {

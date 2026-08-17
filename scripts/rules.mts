@@ -106,6 +106,15 @@ const widerProvisioning: Case[] = [
   ['To create a new sites API key, log in to your account and click the New API Key button.', false],
   ['use the Qdrant Cloud Console to create a Database API key for a cluster', false],
   ['This can be generated in the Data Studio within the user page', false],
+  // "Self-service accounts" is a person signing themselves up, which is the opposite of a
+  // credential a machine can be issued. It gave auth0.com two points from a comparison table.
+  ['Recommended use Self-service accounts, testing scenarios Enterprise, production environments', false],
+  ['self service account holders can reset their own password', false],
+  // The real one still counts, in both spellings.
+  ['Create a service account and grant it the roles it needs', true],
+  // Hyphenated spelling has never matched, before this change or after it. Noted rather than
+  // widened here: a widening moves scores and belongs in a pass that can measure how many.
+  ['Use a service-account key to authenticate the job', false],
 ]
 for (const [text, expected] of widerProvisioning) {
   check(`"${text.slice(0, 52)}"`, PROVISIONING_RULES.some((rule) => rule.test(text)), expected)

@@ -106,7 +106,10 @@ const PROVISIONING_PATTERNS = [
     String.raw`creat\w+[^.]{0,30}${CREDENTIAL}[^.]{0,30}programmatically|programmatically[^.]{0,30}creat\w+[^.]{0,30}${CREDENTIAL}`,
     'i',
   ),
-  /service account/i,
+  // Not "self-service account", which is the opposite thing: a person signing themselves up. It
+  // credited auth0.com two points from a comparison table row reading "Self-service accounts,
+  // testing scenarios", which is what quoting the match made visible on the first domain tried.
+  /(?<!self[-\s])service account/i,
   new RegExp(String.raw`/v\d+/(?:api[-_]keys|access[-_]tokens)`, 'i'),
 ]
 
@@ -571,6 +574,8 @@ export type FunnelFindings = {
   signup: SignupFindings
   provisioning: {
     programmatic: string[]
+    /** The words around each match, so a vendor can see what we read as their provisioning path. */
+    programmaticQuotes?: string[]
     selfServeSignals: string[]
     selfServeQuotes?: string[]
     selfServeIsButtonOnly?: boolean
@@ -909,6 +914,29 @@ export function provisioningMatches(html: string): string[] {
   return PROVISIONING_PATTERNS.map((pattern, index) =>
     pattern.test(text) ? PROVISIONING_PATTERN_LABELS[index] : null,
   ).filter((label): label is string => label !== null)
+}
+
+/**
+ * The vendor's own sentence around each provisioning match, because three of the seven rules are
+ * bare substrings and a substring can mean something else entirely. An audit of the sitemap on
+ * 2026-08-17 found bird.com writing "Destination Management API" about SMS routing and bunny.net
+ * writing "Account API Key" about a key you copy out of a dashboard: both would match, neither is
+ * a provisioning surface, and 43 of the 79 credited rows stand on nothing but those substrings.
+ * Storing the words we matched is what makes tightening the rule measurable rather than a guess.
+ */
+export function provisioningQuotes(html: string, most = 2): string[] {
+  const text = visibleProse(html)
+  const found: string[] = []
+  for (const pattern of PROVISIONING_PATTERNS) {
+    const hit = pattern.exec(text)
+    if (!hit) continue
+    const at = hit.index ?? text.indexOf(hit[0])
+    const from = Math.max(text.lastIndexOf('. ', at) + 1, at - 70)
+    const quote = text.slice(from, at + hit[0].length + 70).replace(/\s+/g, ' ').trim()
+    if (quote && !found.includes(quote)) found.push(quote)
+    if (found.length >= most) break
+  }
+  return found
 }
 
 function matching(patterns: RegExp[], html: string, labels?: string[]): string[] {
@@ -1737,6 +1765,7 @@ export async function scanFunnel({
     signup,
     provisioning: {
       programmatic: provisioningMatches(await corpus),
+      programmaticQuotes: provisioningQuotes(await corpus),
       selfServeSignals: matching(SELF_SERVE_PATTERNS, pricingText),
       selfServeQuotes: quoting(SELF_SERVE_PATTERNS, pricingText),
       selfServeIsButtonOnly: everyFreeSignalIsAButton(SELF_SERVE_PATTERNS, visibleText(pricingText)),
