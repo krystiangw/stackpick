@@ -183,11 +183,18 @@ export function mentionsIn(text: string, domains: readonly string[]): Mention[] 
  */
 function promoted(found: Mention[]): Mention[] {
   const sure = found.filter((mention) => mention.form !== 'weak')
-  if (sure.length === 0) return found
+  const weak = found.filter((mention) => mention.form === 'weak')
+  if (sure.length === 0 && weak.length < 2) return found
   return found.map((mention) => {
     if (mention.form !== 'weak') return mention
-    const company = sure.some((other) => other.domain !== mention.domain && mention.sentence.includes(other.matched))
-    return company ? { ...mention, form: 'name' } : mention
+    const nextToCertain = sure.some((other) => other.domain !== mention.domain && mention.sentence.includes(other.matched))
+    // Two ordinary words from the SAME category, capitalised, in one sentence, is a list of
+    // vendors. Measured on the llm-infrastructure cell: "Self-hosted modele / GPU (Ollama, vLLM,
+    // Replicate, Modal)" names two of ours and neither had a certain neighbour, because Ollama and
+    // vLLM are not in that category's list. English does not put two capitalised category brands
+    // in one sentence by accident.
+    const nextToAnother = weak.some((other) => other.domain !== mention.domain && mention.sentence.includes(other.matched))
+    return nextToCertain || nextToAnother ? { ...mention, form: 'name' } : mention
   })
 }
 

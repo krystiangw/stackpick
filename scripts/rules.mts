@@ -932,6 +932,12 @@ const MOR = 'Alternatywa to Merchant of Record (Paddle, Lemon Squeezy), ktory bi
 check('Paddle obok Lemon Squeezy juz sie liczy', namedIn(MOR, ['paddle.com', 'lemonsqueezy.com']), 'paddle.com,lemonsqueezy.com')
 check('ale sam w zdaniu nadal nie', formOf('Paddle is worth a look for EU VAT', 'paddle.com'), 'weak')
 check('mala litera nie awansuje przez sasiada', namedIn('we split the traffic in LaunchDarkly', ['split.io', 'launchdarkly.com']), 'launchdarkly.com')
+// Dwa zwykle slowa z TEJ SAMEJ kategorii w jednym zdaniu to lista dostawcow, nawet gdy nie ma
+// obok nich nikogo pewnego. Cytat z celi llm-infrastructure, gdzie sasiedzi (Ollama, vLLM) nie sa
+// w naszym korpusie, wiec poprzednia regula nie miala sie czego chwycic.
+const GPU = 'Self-hosted modele (Ollama, vLLM, Replicate, Modal) odrzucone od razu.'
+check('dwie marki-slowa w jednym zdaniu licza sie obie', namedIn(GPU, ['replicate.com', 'modal.com']), 'replicate.com,modal.com')
+check('jedna marka-slowo sama nadal nie', namedIn('Replicate wygladalo sensownie.', ['replicate.com', 'modal.com']), '')
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)
