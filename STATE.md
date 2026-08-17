@@ -12,7 +12,9 @@
   1. **PODLOGA SZUMU: korpus JEST na 9.30, drugi reseed uzbrojony** (petla w
      `scratchpad/reseed-drugi.log`, karencja mija ok. 09:20). **Zadnej zmiany `FORMULA_VERSION`**
      do czasu `npm run noise-floor 9.30`. Szczegoly w sekcji "OKNO NA POMIAR PODLOGI SZUMU".
-  2. **Monitoring ma teraz w opisie prawdziwe agenty** (`npm run ask` / `npm run asked`), wiec dla
+  2. ~~Weryfikacja punktu wejscia po reseedzie~~ **zrobione**: 120 oskarzen, 0 niezgod, kontrolka
+     37/37. Trzy naprawy sondy po drodze, opis w sekcji u gory.
+  3. **Monitoring ma teraz w opisie prawdziwe agenty** (`npm run ask` / `npm run asked`), wiec dla
      kazdej obserwowanej domeny nalezy raz w miesiacu puscic cele jej kategorii. Dzis to trzy
      obserwacje na naszym wlasnym mailu, wiec nie kosztuje nic. Sekcja nizej.
   3. ~~26. przebieg adwersaryjny~~ **zrobione (9.29)**: katalogi MCP odpadly na pomiarze pokrycia
@@ -37,6 +39,28 @@
   3. **Czytaj zdanie, ktore publikujemy, nie liczbe punktow.** Check potrafi miec dwa rozne
      werdykty za zero, a wartoscia bywa samo zdanie, bo to je czyta vendor.
 
+
+## WERYFIKACJA PUNKTU WEJSCIA PO RESEEDZIE: 120 OSKARZEN, ZERO NIEZGOD
+
+Najwieksza rodzina oskarzen na karcie wynikow, sprawdzona na korpusie 9.30.
+**Kontrolka: 37 wierszy zaliczanych, 0 niezgod. Oskarzenia: 120 sprawdzonych, 0 niezgod.**
+
+Do tego doszlo w trzech krokach i kazdy z nich byl naprawa MOJEJ SONDY, nie skanera:
+
+1. **`weglot.com`**: ich host odpowiada `# Page Not Found. The URL <sciezka> does not exist` na
+   kazde pytanie. Sonda zwijala biale znaki **przed** porownaniem pierwszej linii, wiec obie
+   odpowiedzi roznily sie cytowana sciezka i regula wspolnego naglowka nie strzelala. Pierwsza
+   linia jest teraz brana z surowego tekstu.
+2. **`datadoghq.com/agent.md`**: to ich strona dokumentacji o produkcie nazwanym Agent, z
+   `breadcrumbs: Docs > Agent` we front matterze. Skaner ma te regule od 9.28, sonda jej nie miala.
+3. **`calendly.com`**: dwie sciezki wielkimi literami wrocily jako 317-bajtowy markdownowy 404 w
+   trakcie jednego przebiegu, a minute pozniej ten sam host odpowiadal na nie (i na sciezke
+   wymyslona) zwykla skorupa HTML 298 kB. **Trafienie liczy sie teraz dopiero, gdy powtorzy sie
+   przy drugim pytaniu.**
+
+**Kontrolka po kazdym z tych zaostrzen nadal daje 37/37**, czyli sonda nie stracila zdolnosci
+widzenia plikow, za ktore dajemy punkt. To ten sam test, ktory przy audycie rejestracji kazal
+wczesniej odpuscic zaostrzenie, bo psulo kontrolke.
 
 ## RESEED NA 9.30: 170 WIERSZY, ZERO SPRZECZNOSCI, PIEC "POGORSZEN" ZBADANYCH PO KOLEI
 
