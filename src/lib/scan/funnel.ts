@@ -931,6 +931,39 @@ async function inspectSignup(url: string | null, site: string): Promise<SignupFi
  * quotes these back to the vendor, and one of the seven is an alternation forty characters long.
  */
 /**
+ * A description tag is an attribute, so its text arrives escaped: sendgrid.com writes
+ * `SendGrid&#39;s`, logto.io writes `you&#x27;ve`. Two reasons this matters and neither is
+ * cosmetic: the verdict quotes this string back to the vendor, and `&#36;19` would hide a price
+ * from the pattern looking for one.
+ */
+function decodeEntities(text: string): string {
+  // Currency names as well as punctuation: the pattern beside this looks for a symbol, so a price
+  // written &dollar;20 or &euro;9 would be a price we published as absent.
+  const named: Record<string, string> = {
+    amp: '&',
+    quot: '"',
+    apos: "'",
+    lt: '<',
+    gt: '>',
+    nbsp: ' ',
+    dollar: '$',
+    euro: '€',
+    pound: '£',
+    cent: '¢',
+    yen: '¥',
+  }
+  // Somebody else's HTML, so a reference can name a code point that does not exist. Left as it
+  // stands rather than replaced: fromCodePoint throws on those, and a malformed meta tag must not
+  // be able to end a scan that has already done its work.
+  const character = (code: number, whole: string) =>
+    Number.isInteger(code) && code >= 0 && code <= 0x10ffff ? String.fromCodePoint(code) : whole
+  return text
+    .replace(/&#x([0-9a-f]+);/gi, (whole, hex: string) => character(parseInt(hex, 16), whole))
+    .replace(/&#(\d+);/g, (whole, code: string) => character(Number(code), whole))
+    .replace(/&([a-z]+);/gi, (whole, name: string) => named[name.toLowerCase()] ?? whole)
+}
+
+/**
  * What a search engine quotes about a page: its description tag, and failing that its opening
  * words. Both are read, because the engines use both and a vendor cannot control which.
  */
@@ -939,7 +972,7 @@ function snippetOf(html: string): { description: string | null; opening: string 
   const contentOf = (tag: string) => {
     const found = tag.match(/content\s*=\s*("([^"]*)"|'([^']*)')/i)
     const value = found?.[2] ?? found?.[3] ?? ''
-    return value.replace(/\s+/g, ' ').trim()
+    return decodeEntities(value).replace(/\s+/g, ' ').trim()
   }
   const named = (tag: string, want: string) =>
     new RegExp(`(name|property)\\s*=\\s*("|')${want}("|')`, 'i').test(tag)

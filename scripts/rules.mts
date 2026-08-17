@@ -376,6 +376,12 @@ check('brak liczby i warunku to zero', snippetFor(said('Flexible usage and volum
 check('i zero niesie recepte', Boolean(snippetFor(said('Flexible usage and volume-based plans')).unblock), true)
 check('bez taga czytamy pierwsze slowa strony', snippetFor(said(null, 'Start free, upgrade when you grow')).points, 1)
 check('"feel free to contact us" to nie jest cena', snippetFor(said('Questions? Feel free to contact us about enterprise plans')).points, 0)
+check('encje w tagu sa rozkodowane, zanim cokolwiek zacytujemy', said('SendGrid&#39;s plans from &#36;20').description, "SendGrid's plans from $20")
+check('a kwota schowana w encji nadal jest kwota', snippetFor(said('Plans from &#36;20 a month')).points, 1)
+check('takze gdy encja ma nazwe', snippetFor(said('Plans from &dollar;20 a month')).points, 1)
+check('i gdy to euro', snippetFor(said('Plany od &euro;9 miesiecznie')).points, 1)
+// Cudzy HTML moze nazwac punkt kodowy, ktorego nie ma. Skan nie moze sie na tym wywalic.
+check('bezsensowna encja nie wysadza skanu', said('Plans from &#999999999999; a month').description, 'Plans from &#999999999999; a month')
 check('brak cennika, ale jest rejestracja: niemierzalne', snippetFor(null).inconclusive, true)
 check(
   'brak cennika i rejestracji: nie dotyczy',
