@@ -191,13 +191,19 @@ wiec bitmovin.com nie stoi jednoczesnie na dole strony glownej i na gorze kazdej
 `scaleAnchor` liczy w ulamkach zamiast mieszac surowe totale przy roznych mianownikach; `beatenOn`
 nie oskarza o check nieadekwatny.
 
-**Zostalo z tego audytu, warte zrobienia** (numery jak w raporcie subagenta): brak ostrzezenia o
-`resolvedElsewhere`, o skanie uciętym budzetem i o 429 na `/v` (`/r` ma wszystkie trzy, a `/v` jest
-strona INDEKSOWANA o cudzej firmie); `scaleAnchor` liczy mediane z surowych totali przy roznych
-mianownikach; ranking na `/r` nie ma progu `RANKABLE_MEASURABLE`, ktory ma strona glowna, wiec ta
-sama firma stoi na dwoch naszych stronach w dwoch miejscach; „This is the whole list" w FixFirst
-przy planie, ktory cicho gubi check bez remedium; errata renderuja sie na `/v` i w `/corpus.json`,
-ale **nie na `/r`**, czyli pod adresem z maila.
+**Domkniete takze:** „This is the whole list" w FixFirst gubilo check bez recepty (jedyny taki to
+`robots_paths_resolve`, wiec kazdy, kto go oblewa, mogl naprawic cala liste i nie dojsc do liczby
+obok); „overtakes" porownywalo surowe totale przy roznych mianownikach; `unmeasured` w planie
+zgarnialo punkty za checki nieadekwatne; bramka mailowa obiecywala „permanent link" na stronie, na
+ktorej baner mowi, ze link umrze przy nastepnym deployu; trzy wiersze drukowaly `none` z robots.txt,
+ktorego nie dalo sie przeczytac.
+
+**Zostalo z tego audytu, mniejsze:** zdanie o metodzie na `/r` mowi, ze cennik pobieramy wiecej niz
+raz (nie pobieramy, tylko drzwi i signup); „Probably the wrong yardstick" stawia teze o produkcie na
+podstawie naszej slepoty za WAF-em; formularz skanu nie dziala bez JavaScriptu, a na tej samej
+stronie piszemy o vendorach, ze ich formularz nie dziala bez JavaScriptu; „177 vendors we can compare
+today" kontra „Scanned so far 154 domains" na jednej stronie (drugie wycina kategorie ponizej czterech
+wierszy).
 
 **PULAPKA, ktora prawie opublikowala falszywy wniosek:** skan tuz po wdrozeniu wraca z **okna
 ponownego uzycia** (15 minut) i mierzy POPRZEDNI build. `storyblok.com` po deployu pokazywal stary
