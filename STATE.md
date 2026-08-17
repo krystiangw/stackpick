@@ -33,7 +33,15 @@ czterech NIE przezywa kontroli), wiec zawiedzie w dniu, w ktorym zacznie rozdzie
 ktore cytujemy, stoi nazwa poswiadczenia albo cos jest TWORZONE. Okno jest domkniete z obu stron
 granica bloku, sprawdzane sa wszystkie wystapienia, a cytat pokazuje to, ktore dalo punkt.
 
-**Karencja mija okolo 23:00** (6 h od reseedu o 16:56). Petla:
+**Potwierdzone na produkcji po wygasnieciu okna reuse:** `storyblok.com` schodzi z falszywego
+punktu za pozycje w menu na **`0/2` NIEMIERZALNE**, ze zdaniem „none of the 2 documentation pages
+we reached is about keys or authentication, so their silence about creating one says nothing". To
+jest najlepszy mozliwy wynik: nie zamienilismy falszywego kredytu na falszywe oskarzenie, tylko na
+uczciwe „nie wiemy". `plivo.com` **zachowuje** punkt, ale na innym, lepszym wystapieniu („[Subaccount
+API]: Create and manage subaccounts") - to sprawdzanie wszystkich wystapien dziala tak, jak mialo.
+
+**Petla reseedu na 9.32 juz chodzi**, log `/tmp/reseed-932.log`, start 17:20, karencja mija okolo
+22:30. Petla:
 `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) bash -c 'for i
 in $(seq 1 18); do npm run reseed; [ $? -eq 3 ] && sleep 1200 || break; done'`. Po nim: `npm run
 audit`, `audit-study.mts`, `audit-delivery.mts` i **przeczytaj, ile wierszy stracilo punkt** -
