@@ -37,6 +37,24 @@ const TIERS: readonly Tier[] = [
     cta: { label: 'Scan your domain', href: '/' },
   },
   {
+    name: 'One agent report',
+    price: '$29',
+    cadence: 'once, per domain',
+    pitch: 'Whether an agent names you at all, asked ten times over.',
+    includes: [
+      'One question from your category, the one your buyers ask, put to an agent ten times in isolation',
+      // Five runs is what monitoring sends monthly and what the section below admits cannot
+      // separate two close providers. Selling five as a one-off product would be selling the
+      // weakness: a single reading has no next month to correct it.
+      'Two different tools, five runs each. A result that survives both is about you rather than about the machine we ran it on',
+      'How many of the ten named you, which provider was picked instead, and the sentence that passed over you, quoted',
+      'Every transcript handed over, so you read what the agent said rather than our summary of it',
+      'Only the 25 categories we measure. If your product is not in one of them we say so before you pay, not after',
+    ],
+    note: 'Credited against your first month of monitoring. It is a sample of that, not a competitor to it.',
+    cta: { label: 'Ask for a report', href: 'mailto:hello@letagentsin.com?subject=One%20agent%20report' },
+  },
+  {
     name: 'Monitoring',
     price: '$99',
     cadence: 'per domain, per month',
@@ -88,7 +106,7 @@ export default async function PricingPage() {
       </section>
 
       <section className="border-b border-rule py-12">
-        <div className="grid gap-px bg-rule md:grid-cols-3">
+        <div className="grid gap-px bg-rule sm:grid-cols-2 xl:grid-cols-4">
           {TIERS.map((tier) => (
             <article
               key={tier.name}
