@@ -9,6 +9,7 @@ import { FixFirst } from '@/components/fix-first'
 import { FunnelMark } from '@/components/funnel-mark'
 import { buildFixPlan } from '@/lib/fixfirst'
 import { getStore , heldReport, isHeldOnly } from '@/lib/store'
+import { erratumFor } from '@/lib/errata'
 import { pickHeadline } from '@/lib/headline'
 import { ShareRow } from '@/components/share-row'
 import { CHECKS, STAGES, type ScoredCheck } from '@/lib/score'
@@ -401,6 +402,11 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                 <ul className="mt-3 flex flex-col gap-3">
                   {checks.map((check) => {
                     const tone = verdictTone(check)
+                    // The correction renders on /v and in /corpus.json and did not render here,
+                    // which is the address the email carries and the one `scorecardUrl` names. A
+                    // row we already know is wrong went on saying it to the person most likely to
+                    // be reading it about themselves.
+                    const erratum = erratumFor(report.domain, check.id, scorecard.formulaVersion, check.detail)
                     return (
                       <li key={check.id} className="grid grid-cols-[3.2rem_minmax(0,1fr)] gap-4">
                         <span className={`font-mono text-xs font-semibold ${tone.className}`}>{tone.label}</span>
@@ -411,6 +417,12 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                             <span className="text-xs italic text-ink-faint">{check.why}</span>
                           )}
                           {check.unblock && <span className="text-xs italic wrap-anywhere text-ink-faint">{check.unblock}</span>}
+                          {erratum && (
+                            <span className="border-l-2 border-warn pl-3 text-xs leading-relaxed text-ink-soft">
+                              <strong className="font-mono uppercase tracking-[0.1em] text-warn">Correction. </strong>
+                              {erratum.says}
+                            </span>
+                          )}
 
                         </div>
                       </li>

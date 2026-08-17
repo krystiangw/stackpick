@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: { params: Promise<{ domain: s
   const canonical = { alternates: { canonical: `${SITE_URL}/v/${name}` } }
   if (!report) return { title: `${name}: not measured yet · Let Agents In`, robots: { index: false }, ...canonical }
 
-  const { scorecard } = report
+  const { scorecard, findings } = report
   const measurable = measurableOf(scorecard)
   // Only the corpus is published, so only the corpus is offered to an index. A page built from a
   // visitor's own scan of a company that never asked is a page about somebody else, and it stays
@@ -117,7 +117,7 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
   // own domain, which is exactly the company we want measuring itself. They get the scan instead.
   if (!report) return <NotMeasured domain={name} />
 
-  const { scorecard } = report
+  const { scorecard, findings } = report
   const measurable = measurableOf(scorecard)
   const category = categoryFor(name)
   const scannedOn = report.scannedAt.slice(0, 10)
@@ -142,6 +142,45 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
               Rescan it
             </Link>{' '}
             and this page catches up.
+          </p>
+        </div>
+      )}
+
+      {/* The three things /r has said for weeks and this page never did, while being the indexed one
+          and the one about somebody else's company. A number published about a vendor without the
+          sentence that qualifies it is the number they will be asked about in a meeting. */}
+      {findings.resolvedElsewhere && (
+        <div className="mt-6 border-l-2 border-warn bg-surface p-6">
+          <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">This domain resolves elsewhere</h2>
+          <p className="mt-3 max-w-2xl leading-relaxed">
+            {findings.resolvedElsewhere.requestedDomain} redirects to{' '}
+            <span className="font-mono text-sm">{findings.resolvedElsewhere.finalUrl}</span>, so every number and
+            every address on this page was measured on {findings.resolvedElsewhere.finalDomain} rather than on the
+            name at the top.
+          </p>
+        </div>
+      )}
+
+      {findings.truncation && (
+        <div className="mt-6 border-l-2 border-warn bg-surface p-6">
+          <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">This scan ran out of time</h2>
+          <p className="mt-3 max-w-2xl leading-relaxed">
+            The site took longer to read than the {Math.round(findings.truncation.budgetMs / 1000)} seconds a scan
+            is allowed, so {findings.truncation.unmeasuredChecks.length} of the {scorecard.checks.length} checks
+            never got evidence and {findings.truncation.unmeasuredChecks.length === 1 ? 'is' : 'are'} marked
+            unmeasurable rather than scored. The number below is out of what we did measure: not a worse result, a
+            smaller one.
+          </p>
+        </div>
+      )}
+
+      {findings.rateLimitedUs && (
+        <div className="mt-6 border-l-2 border-warn bg-surface p-6">
+          <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">We were rate limited</h2>
+          <p className="mt-3 max-w-2xl leading-relaxed">
+            Every request we made was answered with 429. That is either a limit we triggered or a gate on the
+            network we scan from, and we cannot tell those apart from here, so it is not a measurement of how this
+            vendor treats agents. The checks that depended on reading them are marked unmeasurable, not failed.
           </p>
         </div>
       )}
