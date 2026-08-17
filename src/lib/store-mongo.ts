@@ -139,7 +139,7 @@ const registryAnswers: SharedCache = {
  * pass the same handshake as an address we guessed: a week-old listing cannot credit anybody with
  * a server that is not running, and a mirror nobody refilled must not accuse anybody either.
  */
-const MIRROR_TTL_MS = 7 * 24 * 60 * 60 * 1000
+export const MIRROR_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
 const MIRROR_META = '_meta'
 

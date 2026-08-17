@@ -12,6 +12,7 @@ import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { FORMULA_VERSION } from '../src/lib/score'
 import { ERRATA, erratumFor } from '../src/lib/errata'
+import { mcpRegistryMirrorState, MIRROR_TTL_MS } from '../src/lib/store-mongo'
 
 const store = getStore()
 
@@ -73,6 +74,20 @@ console.log(`skaner chodzi na ${FORMULA_VERSION}${versions[0]?.[0] === FORMULA_V
 console.log('')
 console.log(`signup_reachable: ${signupNeedsJs} razy „formularz potrzebuje JavaScriptu", ${signupIdentityProvider} razy „brak formularza, wejscie przez dostawce tozsamosci"`)
 console.log(`mcp_present: ${mcpUnmeasurable} wierszy niemierzalnych przez milczacy rejestr MCP`)
+
+// The row count above is the symptom; this is the cause, and it is worth one line because the
+// mirror going stale looks exactly like a registry that has nothing about anybody. Read through
+// the app's own connection: an ad-hoc Mongo client without a database name reads a different
+// database and reported this collection empty on 2026-08-17 while it held 9322 hosts.
+const mirror = await mcpRegistryMirrorState()
+const ageMs = mirror.syncedAt === null ? null : Date.now() - Date.parse(mirror.syncedAt)
+console.log(
+  `lustro rejestru MCP: ${mirror.hosts} hostow, ${
+    ageMs === null
+      ? 'NIGDY nie zapelnione, wiec skaner czyta rejestr jak milczacy'
+      : `zsynchronizowane ${(ageMs / 3600_000).toFixed(1)} h temu${ageMs > MIRROR_TTL_MS ? ', czyli POZA oknem i skaner czyta je jak milczenie' : ''}`
+  }`,
+)
 console.log(`programmatic_provisioning: ${provisioningQuoted} z ${provisioningCredited} zaliczonych wierszy cytuje slowa, na ktorych stoi punkt`)
 console.log(`oauth_dcr: ${oauthNamesHosts} z ${oauthFails} oblanych wierszy wymienia sprawdzone adresy`)
 console.log('')
