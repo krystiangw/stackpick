@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { replaceMcpRegistryMirror } from '@/lib/store-mongo'
+import { mcpRegistryMirrorState, replaceMcpRegistryMirror, updateMcpRegistryMirror } from '@/lib/store-mongo'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,8 +12,9 @@ export const dynamic = 'force-dynamic'
  * tolgee.io and medusajs.com each publish a live endpoint there and each was told they run no
  * server, which is three of the six downward verdict moves in the 9.30 noise-floor pair.
  *
- * The listing stays a lead and never evidence: every address it hands us goes through the same
- * handshake and the same control as one we guessed.
+ * Two shapes, because a full pass is 600 pages and counting: `full` replaces the mirror and runs
+ * weekly, `since` adds what changed and runs daily. The listing stays a lead and never evidence:
+ * every address it hands us goes through the same handshake and the same control as one we guessed.
  */
 function authorised(request: Request): boolean {
   const secret = process.env.STACKPICK_CRON_TOKEN
@@ -21,19 +22,26 @@ function authorised(request: Request): boolean {
   return (request.headers.get('authorization') ?? '') === `Bearer ${secret}`
 }
 
-type Payload = { fetchedAt?: string; hosts?: { host: string; urls: string[] }[] }
+type Payload = { fetchedAt?: string; mode?: 'full' | 'since'; hosts?: { host: string; urls: string[] }[] }
+
+/** What the daily job asks for first: the moment it has to catch up from. */
+export async function GET(request: Request) {
+  if (!authorised(request)) return NextResponse.json({ error: 'Not for you.' }, { status: 401 })
+  return NextResponse.json(await mcpRegistryMirrorState())
+}
 
 export async function POST(request: Request) {
   if (!authorised(request)) return NextResponse.json({ error: 'Not for you.' }, { status: 401 })
 
   const body = (await request.json().catch(() => ({}))) as Payload
   const hosts = body.hosts ?? []
-  // A run that scraped nothing must not be allowed to empty the mirror, because an empty mirror
-  // is indistinguishable from a stale one and every vendor's MCP check goes unmeasurable.
+  const fetchedAt = body.fetchedAt ?? new Date().toISOString()
+  if (body.mode === 'since') return NextResponse.json({ ...(await updateMcpRegistryMirror(hosts, fetchedAt)), fetchedAt })
+
+  // A full run that scraped nothing must not be allowed to empty the mirror, because an empty
+  // mirror is indistinguishable from a stale one and every vendor's MCP check goes unmeasurable.
   if (hosts.length < 100) {
     return NextResponse.json({ error: `only ${hosts.length} hosts, which is too few to replace the mirror with` }, { status: 400 })
   }
-  const fetchedAt = body.fetchedAt ?? new Date().toISOString()
-  const written = await replaceMcpRegistryMirror(hosts, fetchedAt)
-  return NextResponse.json({ ...written, fetchedAt })
+  return NextResponse.json({ ...(await replaceMcpRegistryMirror(hosts, fetchedAt)), fetchedAt })
 }

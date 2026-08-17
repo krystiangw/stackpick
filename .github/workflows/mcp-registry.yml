@@ -3,17 +3,25 @@ name: Mirror the MCP registry
 # registry.modelcontextprotocol.io does not answer our dyno at all (measured 2026-08-17: four
 # requests from Heroku EU timed out at 10 and 20 s, api.github.com answered in 50 ms), and its
 # silence used to reach vendors as "No MCP surface". A runner reaches it, so the listing is
-# fetched here once a day and posted to us. A scan then reads a host we control, which also makes
-# the lookup reproducible: the live call was not, and it moved three verdicts between two sweeps.
+# fetched here and posted to us. A scan then reads a host we control, which also makes the lookup
+# reproducible: the live call was not, and it moved three verdicts between two sweeps.
+#
+# Daily asks only what changed; the full pass runs weekly because it is 600 pages and counting.
 on:
   schedule:
     - cron: '17 3 * * *'
+    - cron: '47 2 * * 0'
   workflow_dispatch:
+    inputs:
+      full:
+        description: 'Fetch the whole listing rather than what changed'
+        type: boolean
+        default: false
 
 jobs:
   mirror:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,4 +31,12 @@ jobs:
       - name: Fetch the registry and hand it over
         env:
           STACKPICK_CRON_TOKEN: ${{ secrets.STACKPICK_CRON_TOKEN }}
-        run: npx tsx scripts/mirror-mcp-registry.mts
+          # A weekly schedule and a manual tick are the two ways to ask for the whole listing.
+          FULL: ${{ github.event.schedule == '47 2 * * 0' || inputs.full }}
+        run: |
+          set -euo pipefail
+          if [ "$FULL" = "true" ]; then
+            npx tsx scripts/mirror-mcp-registry.mts --full
+          else
+            npx tsx scripts/mirror-mcp-registry.mts
+          fi

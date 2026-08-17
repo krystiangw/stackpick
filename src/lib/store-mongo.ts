@@ -141,18 +141,23 @@ const registryAnswers: SharedCache = {
  */
 const MIRROR_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
+const MIRROR_META = '_meta'
+
+/** When the mirror was last filled, whatever kind of run filled it. */
+async function mirrorSyncedAt(): Promise<string | null> {
+  const { mcpRegistry } = await collections()
+  const meta = (await mcpRegistry.findOne({ _id: MIRROR_META })) as unknown as { syncedAt?: string } | null
+  return meta?.syncedAt ?? null
+}
+
 const mcpMirror: McpRegistryMirror = {
   async endpointsFor(domain) {
+    const syncedAt = await mirrorSyncedAt()
+    // A mirror nobody refilled says nothing about a vendor, which is the same fact as the registry
+    // not answering and is scored as unmeasurable rather than as a vendor with no server.
+    if (!syncedAt || Date.now() - Date.parse(syncedAt) > MIRROR_TTL_MS) return null
     const { mcpRegistry } = await collections()
     const hosts = await mcpRegistry.find({ under: domain }).limit(20).toArray()
-    if (hosts.length === 0) {
-      // Nothing for this vendor is only an answer when the mirror itself is there and current.
-      const any = await mcpRegistry.findOne({}, { sort: { fetchedAt: -1 } })
-      if (!any || Date.now() - Date.parse(any.fetchedAt) > MIRROR_TTL_MS) return null
-      return []
-    }
-    const newest = hosts.reduce((latest, host) => (host.fetchedAt > latest ? host.fetchedAt : latest), hosts[0].fetchedAt)
-    if (Date.now() - Date.parse(newest) > MIRROR_TTL_MS) return null
     return [...new Set(hosts.flatMap((host) => host.urls))]
   },
 }
@@ -175,8 +180,52 @@ export async function replaceMcpRegistryMirror(
       { ordered: false },
     )
   }
-  const { deletedCount } = await mcpRegistry.deleteMany({ fetchedAt: { $ne: fetchedAt } })
+  const { deletedCount } = await mcpRegistry.deleteMany({ _id: { $ne: MIRROR_META }, fetchedAt: { $ne: fetchedAt } } as never)
+  await markMirrorSynced(fetchedAt)
   return { hosts: entries.length, removed: deletedCount ?? 0 }
+}
+
+/**
+ * The daily half. A full pass over the registry is 600 pages and counting, so the job that keeps
+ * the mirror current asks only for what changed since the last run and adds it. Addresses are
+ * added rather than replaced, because a page of changes carries one server and not every server
+ * its host runs; the weekly full pass is what removes anything that went away. A stale address
+ * costs nothing: it still has to answer a JSON-RPC handshake before it credits anybody.
+ */
+export async function updateMcpRegistryMirror(
+  entries: { host: string; urls: string[] }[],
+  fetchedAt: string,
+): Promise<{ hosts: number }> {
+  const { mcpRegistry } = await collections()
+  if (entries.length > 0) {
+    await mcpRegistry.bulkWrite(
+      entries.map((entry) => ({
+        updateOne: {
+          filter: { _id: entry.host },
+          update: {
+            $set: { under: domainsAbove(entry.host), fetchedAt },
+            $addToSet: { urls: { $each: entry.urls } },
+          },
+          upsert: true,
+        },
+      })) as never,
+      { ordered: false },
+    )
+  }
+  await markMirrorSynced(fetchedAt)
+  return { hosts: entries.length }
+}
+
+async function markMirrorSynced(syncedAt: string): Promise<void> {
+  const { mcpRegistry } = await collections()
+  await mcpRegistry.updateOne({ _id: MIRROR_META }, { $set: { syncedAt } } as never, { upsert: true })
+}
+
+/** What the daily job asks for before it starts: the moment it has to catch up from. */
+export async function mcpRegistryMirrorState(): Promise<{ syncedAt: string | null; hosts: number }> {
+  const { mcpRegistry } = await collections()
+  const hosts = await mcpRegistry.countDocuments({ _id: { $ne: MIRROR_META } } as never)
+  return { syncedAt: await mirrorSyncedAt(), hosts }
 }
 
 /** mcp.eu.phrase.com -> itself, eu.phrase.com, phrase.com. The last one is what a scan asks for. */
