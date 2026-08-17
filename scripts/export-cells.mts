@@ -17,7 +17,17 @@ import { join } from 'node:path'
 import { CATEGORIES } from '../src/lib/categories'
 import { certain, mentionsIn } from '../src/lib/vendors'
 
-const runsRoot = process.env.LETAGENTSIN_RUNS ?? join(homedir(), '.letagentsin-runs')
+/**
+ * Every runs directory we hold, newest tool last. The paid report promises ten runs on two tools,
+ * and one root holds one tool: claude runs on this machine read its operator instructions, codex
+ * reads none of them and answers in English. Publishing both is the honest version of that promise
+ * and the only way a reader can see which half is contaminated.
+ */
+const runsRoots = (process.env.LETAGENTSIN_RUNS_ALL ?? '')
+  .split(':')
+  .filter(Boolean)
+  .concat(process.env.LETAGENTSIN_RUNS ?? join(homedir(), '.letagentsin-runs'))
+const runsRoot = runsRoots[runsRoots.length - 1]
 const asksDir = join(new URL('.', import.meta.url).pathname, '..', 'harness', 'asks')
 
 type Row = { domain: string; named: number; first: number }
@@ -42,7 +52,8 @@ export type Cell = {
 const cells: Cell[] = []
 
 for (const category of CATEGORIES) {
-  const dir = join(runsRoot, 'ask', category.id)
+ for (const root of runsRoots) {
+  const dir = join(root, 'ask', category.id)
   if (!existsSync(dir)) continue
   const runs = readdirSync(dir)
     .filter((name) => name.startsWith('run-'))
@@ -97,6 +108,7 @@ for (const category of CATEGORIES) {
       .map((domain) => ({ domain, named: named.get(domain) ?? 0, first: first.get(domain) ?? 0 }))
       .sort((a, b) => b.named - a.named || b.first - a.first || a.domain.localeCompare(b.domain)),
   })
+ }
 }
 
 const out = join(new URL('.', import.meta.url).pathname, '..', 'src', 'data')

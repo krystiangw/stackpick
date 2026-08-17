@@ -20,7 +20,17 @@ export const revalidate = 600
 
 type Cell = (typeof cells)[number]
 
-const cellFor = (id: string): Cell | undefined => cells.find((cell) => cell.category === id)
+/** Every cell we hold for a category, cleanest first: a run that read none of our instructions
+ * describes an agent at a customer, and a run that read them describes an agent on our machine. */
+const cellsFor = (id: string): Cell[] =>
+  cells
+    .filter((cell) => cell.category === id)
+    .sort((a, b) => a.operatorContext.length - b.operatorContext.length)
+
+const cellFor = (id: string): Cell | undefined => cellsFor(id)[0]
+
+/** The tool, in the words a reader can check, rather than the whole version string. */
+const toolName = (cell: Cell) => cell.tool.split(' ')[0]
 
 export function generateStaticParams() {
   return CATEGORIES.map((category) => ({ category: category.id }))
@@ -47,7 +57,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   if (!category) notFound()
   recordVisit(`/c/${id}`, (await headers()).get('user-agent'))
 
-  const cell = cellFor(id)
+  const held = cellsFor(id)
+  const cell = held[0]
   const { categories } = await loadRankings()
   const ranked = categories.find((entry) => entry.category.id === id)
   const scoreOf = (domain: string) => ranked?.entries.find((entry) => entry.domain === domain)
@@ -63,8 +74,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
         </h1>
         {cell && (
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-soft">
-            We put one question to an agent {cell.runs} times, in {cell.runs} separate sessions with nothing
-            carried between them, and counted the vendors it named.{' '}
+            We put one question to an agent {held.map((one) => `${one.runs} times on ${toolName(one)}`).join(' and ')},
+            every run a separate session with nothing carried between them, and counted the vendors it named.{' '}
             <span className="font-medium text-ink">
               {invisible} of {rows.length} vendors we measure in this category were never named once.
             </span>
@@ -102,7 +113,11 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
             <thead>
               <tr className="border-b border-rule text-left font-mono text-xs uppercase tracking-[0.12em] text-ink-faint">
                 <th className="py-2 pr-4 font-normal">Vendor</th>
-                <th className="py-2 pr-4 text-right font-normal">Named</th>
+                {held.map((one) => (
+                  <th key={one.tool} className="py-2 pr-4 text-right font-normal">
+                    Named ({toolName(one)})
+                  </th>
+                ))}
                 <th className="py-2 pr-4 text-right font-normal">Named first</th>
                 <th className="py-2 pr-4 text-right font-normal">Scan</th>
               </tr>
@@ -117,9 +132,14 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
                         {row.domain}
                       </Link>
                     </td>
-                    <td className="py-2.5 pr-4 text-right font-mono tabular-nums">
-                      {cell ? `${row.named}/${cell.runs}` : '—'}
-                    </td>
+                    {held.map((one) => {
+                      const there = one.rows.find((candidate) => candidate.domain === row.domain)
+                      return (
+                        <td key={one.tool} className="py-2.5 pr-4 text-right font-mono tabular-nums">
+                          {there ? `${there.named}/${one.runs}` : '—'}
+                        </td>
+                      )
+                    })}
                     <td className="py-2.5 pr-4 text-right font-mono tabular-nums">{cell ? row.first : '—'}</td>
                     <td className="py-2.5 pr-4 text-right font-mono tabular-nums text-ink-soft">
                       {scored ? `${scored.total}/${scored.max}` : 'not measured'}
