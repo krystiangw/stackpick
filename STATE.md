@@ -157,6 +157,29 @@ co zostawia, to zdanie prawdziwe, nie puste.
 `audit-delivery`). Strona `/c/<kat>/runs` uzywa z tego modulu wylacznie `matched` do podswietlania,
 wiec **nie wymaga deployu**, zeby poprawka dotarla do klienta.
 
+## RAPORT ZA 49 USD DAL SIE SPRZEDAC TYLKO 177 DOMENOM (2026-08-17, naprawione)
+
+`categoryFor` dopasowuje domene do **listy** w kategorii, a nie do kategorii, wiec kazdy prawdziwy
+prospekt spoza korpusu slyszal "twoj produkt nie nalezy do zadnej z 26 mierzonych kategorii".
+Sprzedawalismy wiec produkt wylacznie tym 177 domenom, o ktorych sami zdecydowalismy sie pisac.
+
+**Teraz:** `client-report.mts <domena> --category <id>` czyta goscia z **tych samych** odpowiedzi.
+Licznik, podzial na narzedzia, kto byl pierwszy i cytaty licza sie ponownie z jego domena w liscie,
+bo matcher rozstrzyga niejednoznaczna nazwe **sasiadami** - inaczej "named first" zostaloby stare.
+Wiersze publikowane zostaja zrodlem dla korpusu, wiec raport o naszej 177 nie moze sie rozjechac ze
+strona, a przy goscia liczeniu ponownym kazda roznica wobec opublikowanych liczb leci na stderr.
+
+**Bezpieczenstwo nazwy, znalezione przez codex review jako P1.** `mentionsIn` wyprowadza marke z
+pierwszego czlonu domeny. Dla goscia to katastrofa, nie halas: `email.com` bylby wymieniony w kazdej
+odpowiedzi ze slowem "email", a `postmark.com` przejalby wszystkie wzmianki `postmarkapp.com`.
+Dlatego **gosc domyslnie lapie sie tylko na swoj adres**, marke moze nadac czlowiek (`--brand`), a
+nazwa **nalezaca juz do kogos publikowanego jest odrzucana**, nie rozstrzygana. Gdy w odpowiedziach
+stoi ich nazwa, a `--brand` nie podano, narzedzie mowi, ile wzmianek zostawiamy niepoliczonych.
+
+**Dokument mowi o tym sam:** akapit, ze zostali dopisani do kategorii **po** biegach, ze nic nie
+przebiegano pod nich i ze liczniki wszystkich policzono na nowo obok nich. Runbook zabrania go
+usuwac. Sprawdzone od poczatku do konca na `mailtrap.io` (skan przez konsole, potem raport).
+
 ## PLATNY RAPORT DAWAL MNIEJ NIZ DARMOWA STRONA (2026-08-17, czeka na deploy)
 
 Dalszy ciag czytania dokumentow klienta zamiast ich audytowania. Trzy rzeczy, wszystkie znalezione
