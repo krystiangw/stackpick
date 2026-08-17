@@ -263,9 +263,9 @@ export default async function MethodologyPage() {
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           The uncomfortable consequence, printed because it is true: our own adversarial audits put the
-          error rate in these verdicts at 0.39 percent, which is now the larger of the two. It sat below
-          the floor until the floor moved, and the floor moved because we stopped counting our own
-          truncated scans against the internet. They are different measurements, a wrong rule against an
+          error rate in these verdicts at 0.39 percent, which is now the smaller of the two. It was the
+          larger of them for a week, until the floor was measured against a pair that does not confound
+          it with a warming cache. They are different measurements, a wrong rule against an
           unstable network, and together they mean no single row is evidence on its own. Rescan before you
           act on one, and treat the checks above the fold as the durable part.
         </p>
