@@ -157,6 +157,35 @@ co zostawia, to zdanie prawdziwe, nie puste.
 `audit-delivery`). Strona `/c/<kat>/runs` uzywa z tego modulu wylacznie `matched` do podswietlania,
 wiec **nie wymaga deployu**, zeby poprawka dotarla do klienta.
 
+## 30. PRZEBIEG ADWERSARYJNY PO RESEEDZIE: ZERO FALSZYWYCH OSKARZEN, JEDNA LUKA W SKANERZE (2026-08-18)
+
+Sonda `audit-provisioning.mts` szuka tego samego co check, ale **drzwiami, ktorych skaner nie
+otwiera**: przez `sitemap.xml` witryny i hosta dokumentacji. Nic z niej nie importuje regul skanera.
+
+**Kontrolka pierwsza, bo bez niej druga strona nic nie znaczy:** na 63 wierszach, ktore punkt
+DOSTALY, sonda znalazla fraze u **18**, czyli **29 procent pokrycia** (dla porownania: 25. przebieg
+przewrocil sie na 2 z 47). To wystarczy, zeby trafienie po drugiej stronie bylo sygnalem.
+
+**Oskarzeni: 54 domeny, 6 kandydatow na falszywe oskarzenie, po obejrzeniu recznie zero.**
+Piec to dokladnie to, co 9.32 mialo odrzucac: `cloudinary` i `configcat` maja fraze w **liscie
+nawigacji** ("Transformation URL API Upload API Admin API Provisioning API"), `auth0` w **cytacie
+klienta na stronie marketingowej**, `bunny.net` pisze "You can find your API key at Account API Key",
+czyli o **znalezieniu istniejacego** klucza, a `bird.com` i `supabase` maja Management API do
+**czegos innego niz poswiadczenia** (routing SMS, wygasanie kodow OTP). Reguła zachowuje sie tak,
+jak opisana.
+
+**Szoste jest realnym znaleziskiem, tyle ze o skanerze, nie o vendorze.** `cloudinary.com` ma strone
+`documentation/provisioning_api`, ktorej **nie przeczytalismy**: wzorzec `CREDENTIAL_PATH` zawiera
+juz `provisioning`, wiec to nie jest kwestia wzorca, tylko **zrodla kandydatow**. Strony dokumentacji
+bierzemy z tego, co jest podlinkowane, a sonda znajduje je w **mapie witryny**, ktorej skaner do tego
+nie uzywa (52 z 63 domen ma mape z obiecujacymi sciezkami). Do tego indeks dokumentacji Cloudinary
+renderuje sie JavaScriptem, wiec linkow tam po prostu nie ma.
+
+**NASTEPNY KROK, swiadomie NIE zrobiony w nocy:** dodac mape witryny jako **zrodlo kandydatow** na
+strony dokumentacji, obok linkow. To zmienia probke, a wiec i punkty, na calym korpusie i wymaga
+wlasnego reseedu oraz pomiaru przed i po. Robienie tego o pierwszej w nocy, tuz po przemiacie, byloby
+zmiana punktacji bez pomiaru, czyli dokladnie tym, czego ta lista zabrania.
+
 ## WARSTWA PLATNOSCI NAPISANA I WYLACZONA (2026-08-18, v486)
 
 Druga polowa planu z audytu decyzji, cala bez zakladania konta. **Wszystko jest martwe, dopoki
