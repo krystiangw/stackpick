@@ -612,7 +612,19 @@ export const CHECKS: Check[] = [
           unblock: 'If you do issue tokens, publish /.well-known/oauth-authorization-server on the host that issues them and we will rescan.',
         }
       }
-      return yes(0, `No OAuth metadata on any of the ${oauth.probedHosts} hosts probed, including the usual auth and api subdomains`)
+      // Named, like every other failing check on the card. This one said "13 hosts probed" and
+      // never which thirteen, so it was the one verdict a vendor could not rerun: an audit of the
+      // customer path on 2026-08-17 found it the only exception to our own rule about naming what
+      // we measured. The list is truncated because thirteen origins is a paragraph, not a sentence.
+      const probed = oauth.probedOrigins ?? []
+      const shown = probed.slice(0, 4).join(', ')
+      const rest = probed.length > 4 ? `, and ${probed.length - 4} more` : ''
+      return yes(
+        0,
+        probed.length > 0
+          ? `No OAuth metadata on any of the ${oauth.probedHosts} hosts probed: ${shown}${rest}`
+          : `No OAuth metadata on any of the ${oauth.probedHosts} hosts probed, including the usual auth and api subdomains`,
+      )
     },
   },
   {

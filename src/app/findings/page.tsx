@@ -4,6 +4,7 @@ import { buildIndustryReport } from '@/lib/industry'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
 import { SITE_URL } from '@/lib/site'
+import { FORMULA_VERSION } from '@/lib/score'
 
 export const dynamic = 'force-dynamic'
 
@@ -141,6 +142,17 @@ export default async function FindingsPage() {
           isolated copies of a real application, and a record of every source each run consulted, separating
           the pages it read from the summaries it only skimmed.
         </p>
+        {/* Every other page carrying these numbers says which formula measured them. This one
+            stated dozens of counts and never did, so a reader could run their own scan on a newer
+            scanner and get a different number with nothing here to explain it. */}
+        {corpus && (
+          <p className="mt-4 max-w-2xl font-mono text-sm leading-relaxed text-ink-faint">
+            {`Every corpus figure below is measured on ${corpus.sampleSize} domains under formula ${corpus.formulaVersion}`}
+            {corpus.formulaVersion === FORMULA_VERSION
+              ? '. A scan you run today uses the same one.'
+              : `, while the scanner behind the box on every page now runs ${FORMULA_VERSION}. A scan you run today can therefore disagree with a number here until the corpus is measured again.`}
+          </p>
+        )}
       </section>
 
       {RESULTS.map((result) => (
