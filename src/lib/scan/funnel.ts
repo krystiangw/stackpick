@@ -1101,6 +1101,18 @@ export function mcpCandidates(domain: string, site: string, fromCard: string[] =
 const REGISTRY_BUDGET_MS = 4_000
 
 /**
+ * The mirror of the MCP registry, handed over by the database rather than imported: this module
+ * knows about HTTP and must not know where anything is stored. `endpointsFor` returns null when
+ * the mirror is missing or older than its window, which is the same fact as the registry not
+ * answering and is scored as unmeasurable rather than as a vendor with no server.
+ */
+export type McpRegistryMirror = { endpointsFor(domain: string): Promise<string[] | null> }
+let registryMirror: McpRegistryMirror | null = null
+export function installMcpRegistryMirror(mirror: McpRegistryMirror | null): void {
+  registryMirror = mirror
+}
+
+/**
  * `answered` is the whole point of the shape. A registry that timed out returns the same empty
  * list as a registry that has nothing about this vendor, and we published the second sentence for
  * the first case: phrase.com, tolgee.io and medusajs.com all register a live endpoint there, all
@@ -1110,6 +1122,16 @@ const REGISTRY_BUDGET_MS = 4_000
  */
 async function registryEndpoints(domain: string): Promise<{ answered: boolean; urls: string[] }> {
   const bare = domain.replace(/^www\./, '')
+  // The mirror first, because the live registry is not reachable from our dyno: measured on
+  // 2026-08-17, four requests from Heroku EU timed out at 10 and 20 seconds while api.github.com
+  // answered the same shell in 50 ms. A daily job on a runner that can reach it writes the listing
+  // to us, so the scan reads a host we control and a scan repeated an hour later gets the same
+  // answer. Without the mirror installed - a scan run from a laptop - the live registry still
+  // answers, which is why the two can disagree.
+  if (registryMirror) {
+    const held = await registryMirror.endpointsFor(bare)
+    return held === null ? { answered: false, urls: [] } : { answered: true, urls: held.slice(0, 4) }
+  }
   const got = await fetchUrl(
     `https://registry.modelcontextprotocol.io/v0/servers?search=${encodeURIComponent(bare.split('.')[0])}&limit=50`,
     { accept: 'application/json' },

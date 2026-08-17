@@ -1,25 +1,30 @@
-# Let Agents In: stan na 2026-08-17 (formula 9.30 na produkcji i w korpusie, baza zdrowa)
+# Let Agents In: stan na 2026-08-17 (formula 9.31 na produkcji, korpus czeka na reseed)
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te trzydziesci linijek, potem reszte)
 
-**NIC NIE JEST W LOCIE.** Oba reseedy na 9.30 skonczone, korpus 170 wierszy, 0 sprzecznosci,
-0 rozjazdu w opublikowanych liczbach. Zadnych procesow w tle poza cronami.
+**W LOCIE JEST JEDNO: petla ponawiajaca reseed na 9.31**, uruchomiona 2026-08-17 okolo 11:00 przez
+`nohup` (log: `/tmp/reseed-931.log`). Czeka na karencje szesciu godzin mediany wieku korpusu i
+ponawia co 20 minut, 18 razy. **Sprawdz `tail -3 /tmp/reseed-931.log` zanim cokolwiek zrobisz.**
+Korpus jest wiec ciagle na **9.30**, a produkcja na **9.31**, i strona sama o tym pisze.
 
 **PODLOGA SZUMU ZMIERZONA, OPUBLIKOWANA I ZWERYFIKOWANA NA PRODUKCJI: 0,59 procent**
 (15 werdyktow na 2550, 170 domen, 9 w gore i 6 w dol, czyli symetrycznie). Zastapila 0,20 z
 formuly 9.8. **Zamrozenie formuly ZDJETE.**
 
-**NASTEPNE DWA KROKI, oba opisane i gotowe do napisania:**
-1. **`signup_reachable`**: osmiu vendorom publikujemy *„its form needs JavaScript"*, a ich strona
-   nie ma zadnego pola i wpuszcza tylko przez dostawce tozsamosci (`modal.com/signup`: 51 983 B,
-   zero `<input>`, trzy przyciski „Continue with"). Sonda audytu juz to rozroznia jako `oauth-only`.
-   Sekcja **„29. PRZEBIEG"**.
-2. **`machine_readable_api`**: sciezek specyfikacji szukamy tylko na witrynie, nigdy na **hoscie
-   dokumentacji**, choc tam leza (`docs.trychroma.com/openapi.json`, `docs.together.ai/openapi.yaml`,
-   `docs.browserless.io/openapi.yaml`). Sekcja **„28. PRZEBIEG"**.
+**9.31 WDROZONA I ZWERYFIKOWANA NA PRODUKCJI** (trzy zmiany, opis w sekcji „9.31 I ODKRYCIE..."):
+rozdzielone zdanie o rejestracji bez formularza, specyfikacje szukane takze na hoscie dokumentacji
+oraz **milczenie rejestru MCP przestalo byc oskarzeniem** (rejestr jest z naszego dyna nieosiagalny,
+zmierzone). Do tego **lustro rejestru** w kolekcji `mcpRegistry`, napelniane dziennym jobem GitHuba.
 
-Obie zmieniaja publikowane zdanie, wiec **obie wymagaja bumpa `FORMULA_VERSION`** i sprawdzenia na
-**170 wierszach** (reseed), a nie na czterech domenach.
+**NASTEPNE KROKI:**
+1. **Napelnij lustro rejestru MCP zanim ruszy reseed**: `STACKPICK_CRON_TOKEN=$(heroku config:get
+   STACKPICK_CRON_TOKEN -a stackpick) npx tsx scripts/mirror-mcp-registry.mts`. Bez tego kazdy
+   wiersz bez endpointu z innego zrodla wyjdzie **niemierzalny** zamiast oblany.
+2. **Po reseedzie**: `npm run audit`, `npx tsx scripts/audit-signup.mts accused` (osiem zdan
+   mylacych ma zejsc do zera) i policzenie, ile wierszy ma `mcp_present` niemierzalny.
+3. **Cennik**: Krystian pyta o jednorazowy raport z biegow agenta za 29 dolarow. Moja odpowiedz:
+   tak, ale **dziesiec biegow na dwoch narzedziach**, tylko w naszych 25 kategoriach i **z cena
+   zaliczana w pierwszy miesiac monitoringu**. Blokuje to samoobslugowa platnosc (Stripe/Paddle).
 
 **Jak powtorzyc pomiar podlogi szumu** (koszt: doba bez zmiany regul i dwa przemiatania oddalone
 o karencje): `MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npm run noise-floor <wersja>`.
@@ -46,6 +51,47 @@ kadencji monitoringu, raport pokrycia obserwacji i research wtyczek agent-ready.
 czysty i to on niesie replikacje), rekord DNS do rejestru MCP, konta w Bing Webmaster i katalogach
 MCP, token npm, licencja korpusu, sciezka zakupu inna niz `mailto:` i Stripe kontra Paddle.
 **agenticpay tego NIE odblokowuje.**
+
+## 9.31 I ODKRYCIE, ZE REJESTR MCP JEST DLA NASZEGO DYNA NIEOSIAGALNY (2026-08-17)
+
+**Trzy zmiany w jednej wersji formuly, wszystkie zmieniaja publikowane zdanie.**
+
+1. **`signup_reachable` rozdzielony.** Osmiu vendorom pisalismy *„its form needs JavaScript"*,
+   choc ich strona nie ma **zadnego** pola i wpuszcza tylko przez dostawce tozsamosci. Nowa regula
+   `entersThroughIdentityProvider` wymaga braku pola tozsamosci **w calym HTML** (nie tylko w
+   `<form>`), wiec jest ostrozniejsza od sondy audytu. **Kontrolka na 85 oskarzonych wierszach
+   przed wdrozeniem: 7 zgod, 0 nadgorliwosci skanera, 1 przypadek gdzie sonda mowi oauth a my nie**
+   (`browserless.io` ma pole email poza formularzem, wiec zostaje przy starym zdaniu). Werdykt
+   sie nie zmienia, zmienia sie tylko to, co twierdzimy, ze widzielismy.
+2. **`machine_readable_api` pyta takze host dokumentacji.** `docs.trychroma.com/openapi.json`
+   znajduje sie teraz sam, a zdanie odmowne mowi, ze pytalismy oba miejsca.
+3. **Milczenie rejestru MCP przestalo byc oskarzeniem** - i to jest najwazniejsze z dzisiaj.
+
+**Skad to wyszlo: badanie szesciu spadkow z pary pomiarowej 9.30.** Trzy z nich to `mcp_present`
+1 -> 0 u `phrase.com`, `tolgee.io` i `medusajs.com`. Wszystkie trzy **maja zywy endpoint w
+rejestrze MCP** (`mcp.eu.phrase.com`, `app.tolgee.io/mcp/developer`, `docs.medusajs.com/mcp`), a
+my opublikowalismy *„No MCP surface"*. Czwarty spadek, `medusajs.com oauth_dcr`, to skutek tego
+samego: metadane OAuth sondujemy na originach znalezionych przez MCP.
+
+**Pomiar, nie hipoteza:** z dyna `registry.modelcontextprotocol.io` **nie odpowiada w ogole**.
+Cztery proby z Heroku EU: `status 000` po 10 i po 20 sekundach, przy `api.github.com` 50 ms. Z
+laptopa ten sam adres odpowiada w 1,1-1,9 s. Czyli **nasz skaner od jakiegos czasu nie widzi
+rejestru** i zamienial to na zdanie o vendorze.
+
+**Zrobione:** `registryEndpoints` zwraca teraz `answered`, a check bez zadnego endpointu przy
+milczacym rejestrze jest **niemierzalny**, nie oblany. Do tego **lustro rejestru**: dzienny job
+GitHuba (`.github/workflows/mcp-registry.yml` + `scripts/mirror-mcp-registry.mts`) przechodzi cala
+liste i wysyla ja do `/api/cron/mcp-registry`, skaner czyta kolekcje `mcpRegistry` po polu `under`
+(host i wszystkie domeny nad nim). Zabezpieczenia: **polowicznie przeczytana lista nie jest
+zapisywana** (kursor musi dobiec konca), endpoint **odrzuca ladunek ponizej 100 hostow**, a lustro
+starsze niz **7 dni** jest traktowane jak brak odpowiedzi.
+
+**Efekt uboczny, ktory jest wlasciwym powodem:** wyszukiwanie w rejestrze bylo **nieodtwarzalne**
+(4 s wyscigu z cudzym hostem), a lustro jest deterministyczne i szuka po **hoscie**, nie po slowie
+kluczowym z nazwy domeny, wiec znajduje tez serwery zarejestrowane pod inna nazwa.
+
+**Do sprawdzenia po reseedzie:** ile wierszy ma `mcp_present` niemierzalny. Jesli duzo, to znaczy,
+ze lustro sie nie zapelnilo albo TTL jest za krotki.
 
 ## NASZ WLASNY WIERSZ OBLEWA DOKLADNIE TEN CHECK, KTORY WLASNIE UZNALISMY ZA NAJWAZNIEJSZY
 

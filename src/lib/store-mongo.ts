@@ -1,10 +1,16 @@
 import { MongoClient, type Collection, type Db } from 'mongodb'
 import { REGISTRY_TTL_MS, installSharedCache, type SharedCache } from './scan/http'
+import { installMcpRegistryMirror, type McpRegistryMirror } from './scan/funnel'
 import type { Fetched } from './scan/http'
 import type { Watch } from './watch'
 import { forStorage, type Lead, type Report, type Store } from './store'
 
 type ReportDoc = Report & { _id: string }
+/**
+ * One host from the MCP registry, written by the daily mirror job. `under` holds the host and every
+ * domain it sits below, so a scan of medusajs.com finds docs.medusajs.com with one indexed read.
+ */
+type McpRegistryDoc = { _id: string; urls: string[]; under: string[]; fetchedAt: string }
 /** One npm registry answer, kept so a deploy does not send us back to asking npm for all of it. */
 type CachedAnswer = { _id: string; at: Date; answer: Fetched }
 
@@ -69,6 +75,7 @@ async function collections(): Promise<{
   answers: Collection<CachedAnswer>
   visits: Collection<{ day: string; path: string; count: number }>
   watches: Collection<Watch>
+  mcpRegistry: Collection<McpRegistryDoc>
 }> {
   const database = await db()
   const reports = database.collection<ReportDoc>('reports')
@@ -76,6 +83,7 @@ async function collections(): Promise<{
   const answers = database.collection<CachedAnswer>('registryAnswers')
   const visits = database.collection<{ day: string; path: string; count: number }>('visits')
   const watches = database.collection<Watch>('watches')
+  const mcpRegistry = database.collection<McpRegistryDoc>('mcpRegistry')
 
   // Before the batch, not after it. createIndex does not change the expiry of an index that already
   // exists: it raises IndexOptionsConflict, which rejects the Promise.all below and skips every
@@ -93,6 +101,7 @@ async function collections(): Promise<{
     // One person watching one domain once. Two rows would mail them the same change twice.
     watches.createIndex({ email: 1, domain: 1 }, { unique: true }),
     watches.createIndex({ checkedAt: 1 }),
+    mcpRegistry.createIndex({ under: 1 }),
     // Mongo expires them, so nothing here has to remember to.
         answers.createIndex({ at: 1 }, { expireAfterSeconds: REGISTRY_TTL_MS / 1000 }),
       ]),
@@ -109,7 +118,7 @@ async function collections(): Promise<{
     })
   await indexesReady
 
-  return { reports, leads, answers, visits, watches }
+  return { reports, leads, answers, visits, watches, mcpRegistry }
 }
 
 const registryAnswers: SharedCache = {
@@ -124,12 +133,67 @@ const registryAnswers: SharedCache = {
   },
 }
 
+/**
+ * How stale the mirror may be before its silence stops being evidence. Seven days, because the
+ * job that fills it runs daily and a registry entry is a claim about a server that then has to
+ * pass the same handshake as an address we guessed: a week-old listing cannot credit anybody with
+ * a server that is not running, and a mirror nobody refilled must not accuse anybody either.
+ */
+const MIRROR_TTL_MS = 7 * 24 * 60 * 60 * 1000
+
+const mcpMirror: McpRegistryMirror = {
+  async endpointsFor(domain) {
+    const { mcpRegistry } = await collections()
+    const hosts = await mcpRegistry.find({ under: domain }).limit(20).toArray()
+    if (hosts.length === 0) {
+      // Nothing for this vendor is only an answer when the mirror itself is there and current.
+      const any = await mcpRegistry.findOne({}, { sort: { fetchedAt: -1 } })
+      if (!any || Date.now() - Date.parse(any.fetchedAt) > MIRROR_TTL_MS) return null
+      return []
+    }
+    const newest = hosts.reduce((latest, host) => (host.fetchedAt > latest ? host.fetchedAt : latest), hosts[0].fetchedAt)
+    if (Date.now() - Date.parse(newest) > MIRROR_TTL_MS) return null
+    return [...new Set(hosts.flatMap((host) => host.urls))]
+  },
+}
+
+/** Replaces the whole mirror in one pass: what the job did not send this time is gone. */
+export async function replaceMcpRegistryMirror(
+  entries: { host: string; urls: string[] }[],
+  fetchedAt: string,
+): Promise<{ hosts: number; removed: number }> {
+  const { mcpRegistry } = await collections()
+  if (entries.length > 0) {
+    await mcpRegistry.bulkWrite(
+      entries.map((entry) => ({
+        replaceOne: {
+          filter: { _id: entry.host },
+          replacement: { _id: entry.host, urls: entry.urls, under: domainsAbove(entry.host), fetchedAt },
+          upsert: true,
+        },
+      })),
+      { ordered: false },
+    )
+  }
+  const { deletedCount } = await mcpRegistry.deleteMany({ fetchedAt: { $ne: fetchedAt } })
+  return { hosts: entries.length, removed: deletedCount ?? 0 }
+}
+
+/** mcp.eu.phrase.com -> itself, eu.phrase.com, phrase.com. The last one is what a scan asks for. */
+function domainsAbove(host: string): string[] {
+  const labels = host.split('.')
+  const found: string[] = []
+  for (let start = 0; start <= labels.length - 2; start += 1) found.push(labels.slice(start).join('.'))
+  return found
+}
+
 const withoutId = { projection: { _id: 0 } } as const
 
 export class MongoStore implements Store {
   constructor() {
     // The scanner cannot import the database, so the database hands itself over.
     installSharedCache(registryAnswers)
+    installMcpRegistryMirror(mcpMirror)
   }
 
   async writable(): Promise<true | string> {
