@@ -56,7 +56,11 @@ export default async function RunsPage({ params }: { params: Promise<{ category:
   if (!category) notFound()
   recordVisit(`/c/${id}/runs`, (await headers()).get('user-agent'))
 
-  const cell = cells.find((candidate) => candidate.category === id)
+  // Cleanest first: a run that read none of this machine's instructions comes before one that did.
+  const held = cells
+    .filter((candidate) => candidate.category === id)
+    .sort((a, b) => a.operatorContext.length - b.operatorContext.length)
+  const cell = held[0]
   if (!cell || cell.answers.length === 0) notFound()
 
   return (
@@ -68,7 +72,7 @@ export default async function RunsPage({ params }: { params: Promise<{ category:
           </Link>
         </p>
         <h1 className="mt-4 max-w-3xl text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-          What the agent actually answered, all {cell.answers.length} times
+          What the agent actually answered, all {held.reduce((sum, one) => sum + one.answers.length, 0)} times
         </h1>
         <blockquote className="mt-6 max-w-2xl border-l-2 border-brass pl-5 leading-relaxed">{cell.question}</blockquote>
         <p className="mt-4 font-mono text-xs leading-relaxed text-ink-faint">
@@ -83,10 +87,13 @@ export default async function RunsPage({ params }: { params: Promise<{ category:
         )}
       </section>
 
-      {cell.answers.map((answer) => (
-        <section key={answer.run} className="border-b border-rule py-10">
+      {held.flatMap((one) =>
+        one.answers.map((answer) => (
+        <section key={`${one.tool}-${answer.run}`} className="border-b border-rule py-10">
           <div className="flex flex-wrap items-baseline gap-3">
-            <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Run {answer.run}</h2>
+            <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">
+              {one.tool.split(' ')[0]} · run {answer.run}
+            </h2>
             <p className="font-mono text-xs text-ink-soft">
               {answer.first ? `named ${answer.first} first` : 'named no vendor we measure'}
               {answer.named.length > 1 ? ` · ${answer.named.length} of ours named in all` : ''}
@@ -96,7 +103,8 @@ export default async function RunsPage({ params }: { params: Promise<{ category:
             {marked(answer.text, category.domains)}
           </div>
         </section>
-      ))}
+        )),
+      )}
 
       <section className="py-10">
         <p className="max-w-2xl text-sm leading-relaxed text-ink-soft">
