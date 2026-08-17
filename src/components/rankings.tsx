@@ -50,7 +50,13 @@ export function Rankings({ rankings }: { rankings: RankedCategory[] }) {
         {rankings.map(({ category, entries, median }) => (
           <div key={category.id}>
             <div className="flex items-baseline justify-between gap-3 border-b border-rule pb-2">
-              <h3 className="font-mono text-sm font-medium">{category.label}</h3>
+              {/* The category page answers what a buyer types before they know us: who an agent
+                  names for this job. Nothing linked to it, so nothing found it. */}
+              <h3 className="font-mono text-sm font-medium">
+                <Link href={`/c/${category.id}`} className="underline-offset-4 hover:underline">
+                  {category.label}
+                </Link>
+              </h3>
               <span className="font-mono text-xs tabular-nums text-ink-faint">
                 median {Math.round(median * 100)}%
               </span>

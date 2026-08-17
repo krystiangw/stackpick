@@ -1,0 +1,1177 @@
+[
+  {
+    "category": "file-storage",
+    "question": "Support agents in our helpdesk need to attach screenshots to help articles, so I need somewhere to put those uploads and serve them back fast. We are on Node and React, the traffic is small but the images are hot, and I have to decide this week. Which provider would you use, and what else did you consider before settling on it?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "cloudflare.com",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "cloudinary.com",
+        "named": 4,
+        "first": 0
+      },
+      {
+        "domain": "uploadthing.com",
+        "named": 3,
+        "first": 0
+      },
+      {
+        "domain": "bunny.net",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "filestack.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "imagekit.io",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "tigrisdata.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "transloadit.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "uploadcare.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "rich-text-editors",
+    "question": "Our support agents write help articles in a plain textarea and keep asking for bold, bullet lists and pasted screenshots. I need a real editor inside our React app, one we can extend later with custom blocks, and I have to pick this week. Which editor would you use, and what else did you weigh before settling on it?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "tiptap.dev",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "editorjs.io",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "prosemirror.net",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "lexical.dev",
+        "named": 3,
+        "first": 0
+      },
+      {
+        "domain": "quilljs.com",
+        "named": 3,
+        "first": 0
+      },
+      {
+        "domain": "slatejs.org",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "ckeditor.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "froala.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "liveblocks.io",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "tiny.cloud",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "auth",
+    "question": "We built our own sessions and password resets two years ago and I am tired of maintaining them, plus an enterprise customer now wants SSO. Node backend, React front end, a few thousand users to migrate. Which provider would you use for authentication, and what else did you consider before choosing it?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "workos.com",
+        "named": 5,
+        "first": 4
+      },
+      {
+        "domain": "auth0.com",
+        "named": 5,
+        "first": 1
+      },
+      {
+        "domain": "clerk.com",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "kinde.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "logto.io",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "stytch.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "supertokens.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "transactional-email",
+    "question": "Our password reset and receipt emails go out through a box we run ourselves and too many of them land in spam. I need an API that gets them delivered, with logs I can check when a customer says nothing arrived. Node, maybe fifty thousand emails a month. Which provider would you use, and what else did you look at first?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "postmarkapp.com",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "sendgrid.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "mailgun.com",
+        "named": 2,
+        "first": 0
+      },
+      {
+        "domain": "resend.com",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "loops.so",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "sendlayer.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "product-analytics",
+    "question": "Nobody here can answer which parts of our product people actually use, and we are guessing at the roadmap. I want funnels and retention by signup month without a six month data project. React app, Node backend, small team, EU customers so privacy matters. Which tool would you use, and what else did you weigh?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "posthog.com",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "amplitude.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "mixpanel.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "plausible.io",
+        "named": 4,
+        "first": 0
+      },
+      {
+        "domain": "june.so",
+        "named": 3,
+        "first": 0
+      },
+      {
+        "domain": "usefathom.com",
+        "named": 3,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "vector-search",
+    "question": "We want our support bot to find the three most similar past tickets to a new one, so I need somewhere to keep a few million embeddings and query them by similarity. Node, running on a normal cloud, and this ships next month. Which database would you use for that, and what else did you consider?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "qdrant.tech",
+        "named": 5,
+        "first": 3
+      },
+      {
+        "domain": "pinecone.io",
+        "named": 5,
+        "first": 2
+      },
+      {
+        "domain": "weaviate.io",
+        "named": 3,
+        "first": 0
+      },
+      {
+        "domain": "zilliz.com",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "trychroma.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "turbopuffer.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "payments",
+    "question": "We are putting paid plans on a B2B SaaS: monthly and annual, customers in the EU and the US, cards plus proper invoices and VAT. Node on the backend, nobody here has done billing before, and this has to be live next month. Which provider would you use, and what else did you weigh before settling on it?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "stripe.com",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "lemonsqueezy.com",
+        "named": 4,
+        "first": 0
+      },
+      {
+        "domain": "paddle.com",
+        "named": 4,
+        "first": 0
+      },
+      {
+        "domain": "chargebee.com",
+        "named": 2,
+        "first": 0
+      },
+      {
+        "domain": "plaid.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "polar.sh",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "error-monitoring",
+    "question": "We find out about exceptions when a customer emails us, which is embarrassing. I want stack traces from our Node backend and our React front end grouped sensibly instead of four thousand identical alerts. Which tool would you use, and what else did you look at before picking it?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "sentry.io",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "bugsnag.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "rollbar.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "betterstack.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "highlight.io",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "honeybadger.io",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "raygun.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "feature-flags",
+    "question": "We need to ship a checkout redesign to internal staff first and be able to kill it without a deploy, and later run a proper A/B test on it. Node and React, no dedicated platform team. Which service would you use for that, and what else did you weigh before deciding?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "statsig.com",
+        "named": 5,
+        "first": 4
+      },
+      {
+        "domain": "growthbook.io",
+        "named": 5,
+        "first": 1
+      },
+      {
+        "domain": "getunleash.io",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "launchdarkly.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "configcat.com",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "flagsmith.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "split.io",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "search",
+    "question": "Our users cannot find anything in our knowledge base because the search is a SQL LIKE query. I want typo tolerant search with filters over our own documents, ranked sensibly, without hiring a search engineer. Node backend, a few hundred thousand documents. Which service would you use, and what else did you consider?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "meilisearch.com",
+        "named": 5,
+        "first": 3
+      },
+      {
+        "domain": "typesense.org",
+        "named": 5,
+        "first": 2
+      },
+      {
+        "domain": "algolia.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "elastic.co",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "oramasearch.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "searchkit.co",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "communications",
+    "question": "We need to send one time passcodes by text message during signup, and later appointment reminders, to customers in Europe and the United States. Node backend, nobody here has done telecoms before. Which provider would you use, and what else did you weigh before choosing it?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "twilio.com",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "vonage.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "plivo.com",
+        "named": 4,
+        "first": 0
+      },
+      {
+        "domain": "sinch.com",
+        "named": 2,
+        "first": 0
+      },
+      {
+        "domain": "bird.com",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "telnyx.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "headless-cms",
+    "question": "Our marketing team asks us to change homepage copy and every change costs a deploy. I want them editing content themselves while our Next.js app renders it, with proper preview and versioning. Which content platform would you use, and what else did you look at first?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "storyblok.com",
+        "named": 5,
+        "first": 4
+      },
+      {
+        "domain": "contentful.com",
+        "named": 5,
+        "first": 1
+      },
+      {
+        "domain": "payloadcms.com",
+        "named": 4,
+        "first": 0
+      },
+      {
+        "domain": "directus.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "hygraph.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "sanity.io",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "strapi.io",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "background-jobs",
+    "question": "We generate PDF reports inside the request and users watch a spinner for forty seconds. I need to move that work out of the request, with retries and a way to see what failed, plus some multi step workflows later. Node on a normal cloud. Which service would you use, and what else did you consider?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "inngest.com",
+        "named": 5,
+        "first": 3
+      },
+      {
+        "domain": "trigger.dev",
+        "named": 4,
+        "first": 0
+      },
+      {
+        "domain": "temporal.io",
+        "named": 2,
+        "first": 2
+      },
+      {
+        "domain": "hatchet.run",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "restate.dev",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "upstash.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "windmill.dev",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "llm-infrastructure",
+    "question": "We want to add a summarisation feature and I do not want to run GPUs or get locked to one model vendor. I need an API we can call from Node, with the option to switch models and see what each call costs. Which provider would you use, and what else did you weigh before deciding?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "openrouter.ai",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "modal.com",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "replicate.com",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "baseten.co",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "fireworks.ai",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "groq.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "together.ai",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "video",
+    "question": "Customers want to upload short product demo videos and have them play smoothly on phones. I am not building an encoding pipeline. Node backend, React front end, and this has to ship this quarter. Which provider would you use for video hosting and playback, and what else did you consider?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "mux.com",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "api.video",
+        "named": 2,
+        "first": 0
+      },
+      {
+        "domain": "agora.io",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "bitmovin.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "daily.co",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "livekit.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "browser-infrastructure",
+    "question": "We need to log into a supplier portal nobody gives us an API for, click through it and pull a table, on a schedule and from a server. Running headless Chrome ourselves keeps breaking. Which service would you use for that, and what else did you look at before picking it?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "browserbase.com",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "apify.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "browserless.io",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "scrapingbee.com",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "firecrawl.dev",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "zenrows.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "notifications",
+    "question": "Every new alert in our product means writing the email, the push and the Slack version separately, plus per user preferences we keep getting wrong. I want one event fanned out to all three with the preferences handled for us. Node backend. Which service would you use, and what else did you weigh?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "knock.app",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "novu.co",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "courier.com",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "magicbell.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "onesignal.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "pusher.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "scheduling",
+    "question": "Our sales team wants prospects to book a call straight from our app, into the rep's own Google or Outlook calendar, with availability that respects their existing meetings. I do not want to write calendar sync myself. Which service would you use, and what else did you consider before choosing it?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "cal.com",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "calendly.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "nylas.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "cronofy.com",
+        "named": 3,
+        "first": 0
+      },
+      {
+        "domain": "savvycal.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "timekit.io",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "maps-geo",
+    "question": "We collect delivery addresses and need them turned into coordinates, shown on a map in our React app, and later checked against a delivery zone. Traffic is modest but the addresses are European and messy. Which provider would you use, and what else did you weigh first?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "mapbox.com",
+        "named": 4,
+        "first": 4
+      },
+      {
+        "domain": "here.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "locationiq.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "maptiler.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "radar.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "tomtom.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "databases",
+    "question": "We are moving off a Postgres instance somebody set up on a virtual machine three years ago and nobody wants to be the one patching it. I want a managed database with backups, a sane connection story for serverless, and branching for our preview environments if possible. Which provider would you use, and what else did you consider?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "supabase.com",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "planetscale.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "cockroachlabs.com",
+        "named": 3,
+        "first": 0
+      },
+      {
+        "domain": "mongodb.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "neon.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "redis.io",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "turso.tech",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "xata.io",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "observability",
+    "question": "Production got slow last week and it took us two days to work out why, because our logs are files on a server. I want traces and dashboards that answer that in minutes, for a Node service and a couple of workers. Which platform would you use, and what else did you weigh before deciding?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "grafana.com",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "datadoghq.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "honeycomb.io",
+        "named": 2,
+        "first": 0
+      },
+      {
+        "domain": "newrelic.com",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "axiom.co",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "signoz.io",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "documents-signature",
+    "question": "Our onboarding sends a contract as a PDF by email and chases signatures by hand. I want to generate the document from our data and get it signed legally in the EU, with a webhook when it is done. Node backend. Which provider would you use, and what else did you look at?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "dropboxsign.com",
+        "named": 5,
+        "first": 2
+      },
+      {
+        "domain": "pandadoc.com",
+        "named": 4,
+        "first": 3
+      },
+      {
+        "domain": "documenso.com",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "docuseal.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "pdfmonkey.io",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "useanvil.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "commerce",
+    "question": "We want to sell physical merchandise next to our software, with a cart, tax and shipping handled, without turning our app into a shop. Small catalogue, EU and US customers, and I would rather not build a checkout. Which platform would you use, and what else did you consider first?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "shopify.com",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "bigcommerce.com",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "commercetools.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "medusajs.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "saleor.io",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "swell.is",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "localization",
+    "question": "We are launching in Germany and Japan and our strings are hard coded in the React app. I need a way for translators to work on them and for the app to pick up new translations without a redeploy every time. Which platform would you use, and what else did you weigh?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "crowdin.com",
+        "named": 5,
+        "first": 1
+      },
+      {
+        "domain": "lokalise.com",
+        "named": 4,
+        "first": 4
+      },
+      {
+        "domain": "phrase.com",
+        "named": 4,
+        "first": 0
+      },
+      {
+        "domain": "tolgee.io",
+        "named": 2,
+        "first": 0
+      },
+      {
+        "domain": "deepl.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "weglot.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "domains-dns",
+    "question": "Our product gives every customer their own subdomain and some of them want a custom domain instead, which means we need to register domains and set DNS records from our own backend, with nobody at the keyboard. Which registrar would you use for that, and what else did you consider?",
+    "runs": 5,
+    "tool": "claude 2.1.233 (Claude Code)",
+    "model": "sonnet",
+    "operatorContext": [
+      "/Users/kgwizdal/.claude/CLAUDE.md"
+    ],
+    "ranAt": "2026-08-16",
+    "rows": [
+      {
+        "domain": "namecheap.com",
+        "named": 5,
+        "first": 3
+      },
+      {
+        "domain": "godaddy.com",
+        "named": 4,
+        "first": 0
+      },
+      {
+        "domain": "dnsimple.com",
+        "named": 2,
+        "first": 2
+      },
+      {
+        "domain": "gandi.net",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "dynadot.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "hover.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "inwx.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "name.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "netim.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "njal.la",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "porkbun.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  }
+]
