@@ -1,0 +1,1 @@
+We have a Node API and a React front end that a single developer deploys by hand to a virtual machine, and every release is a small ceremony. I want pushes to deploy themselves, preview environments per pull request, and no server for anybody to patch. Which platform would you use, and what else did you weigh before settling on it?

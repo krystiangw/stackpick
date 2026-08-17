@@ -224,6 +224,20 @@ export const CATEGORIES: Category[] = [
       'njal.la',
     ],
   },
+  {
+    id: 'app-hosting',
+    label: 'Application hosting and deployment',
+    jobToBeDone: 'get an application running in production without operating servers',
+    // Added 2026-08-17, and the reason is a customer rather than symmetry: somebody is watching
+    // vercel.com, we removed it from the corpus on 2026-08-11 for having no category, and
+    // /pricing promises a monthly agent run to every watched domain. It waited for the noise
+    // floor to be measured, because changing the corpus mid-window would have broken the pair.
+    //
+    // It fits the thesis rather than widening it: deploying an application is the one job where
+    // an agent must make an account, take a token and call an API to finish, which is the funnel
+    // this whole corpus measures. Our own build runs already do it.
+    domains: ['vercel.com', 'netlify.com', 'render.com', 'fly.io', 'railway.com', 'heroku.com', 'koyeb.com'],
+  },
 ]
 
 /**
