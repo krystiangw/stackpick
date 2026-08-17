@@ -698,6 +698,18 @@ export const CHECKS: Check[] = [
       // separates "we guessed six addresses" from "we also read where you said your server is",
       // and neon.com is the row that made the difference matter: their endpoint lives on
       // neon.tech and no guess about neon.com could ever have reached it.
+      // The registry is where three of these vendors publish the endpoint we then said they do not
+      // have. phrase.com, tolgee.io and medusajs.com each register a live address there and each
+      // lost it on one sweep of the corpus, because 170 scans in a few minutes is our load on
+      // somebody else's host. Silence from a host that did not answer is not evidence about them.
+      if (f.funnel.mcpRegistryAnswered === false) {
+        return {
+          points: 0,
+          detail: 'Unmeasurable: the MCP registry did not answer us this time, so nothing answering at the addresses we guessed says nothing about whether you publish a server there',
+          inconclusive: true,
+          unblock: 'Nothing for you to do. We rescan, and a registry that answers decides this in one request.',
+        }
+      }
       const followed = f.funnel.mcpPagesFollowed ?? []
       const alsoRead = followed.length > 0 ? `, nor at any address in ${followed.join(' or ')}` : ''
       if (f.machine.mcp.mentions > 0) {

@@ -560,6 +560,8 @@ export type FunnelFindings = {
   mcpEndpoints: McpEndpoint[]
   /** Whether the endpoint probe got an answer, as opposed to never reaching a host. */
   mcpProbed: boolean
+  /** False when the MCP registry timed out or refused. Then its silence is not about the vendor. */
+  mcpRegistryAnswered?: boolean
   /** The addresses the vendor's own card named, empty when we could not read it. */
   mcpCardNamed: string[]
   /** True when every POST we sent came back an empty 2xx, control included, so we measured nothing. */
@@ -1033,6 +1035,8 @@ async function cardEndpoints(site: string): Promise<string[]> {
 type McpProbe = {
   endpoints: McpEndpoint[]
   answered: boolean
+  /** Whether the MCP registry answered us at all, as opposed to having nothing about this vendor. */
+  registryAnswered: boolean
   /** Whether the card named an address for us, as opposed to us guessing at hostnames. */
   cardNamed: string[]
   /** Their edge answered every POST, including to a path nobody registered, with an empty 2xx. */
@@ -1096,17 +1100,25 @@ export function mcpCandidates(domain: string, site: string, fromCard: string[] =
  */
 const REGISTRY_BUDGET_MS = 4_000
 
-async function registryEndpoints(domain: string): Promise<string[]> {
+/**
+ * `answered` is the whole point of the shape. A registry that timed out returns the same empty
+ * list as a registry that has nothing about this vendor, and we published the second sentence for
+ * the first case: phrase.com, tolgee.io and medusajs.com all register a live endpoint there, all
+ * three lost it on one sweep of the corpus, and each was told "No MCP surface". Three of the six
+ * downward verdict moves in the 9.30 noise-floor pair are this, which is our own load on somebody
+ * else's host published as a finding about a vendor.
+ */
+async function registryEndpoints(domain: string): Promise<{ answered: boolean; urls: string[] }> {
   const bare = domain.replace(/^www\./, '')
   const got = await fetchUrl(
     `https://registry.modelcontextprotocol.io/v0/servers?search=${encodeURIComponent(bare.split('.')[0])}&limit=50`,
     { accept: 'application/json' },
   )
-  if (!got.ok) return []
+  if (!got.ok) return { answered: false, urls: [] }
   try {
     const listing = JSON.parse(got.body) as { servers?: { server?: { remotes?: { url?: string }[] } }[] }
     const urls = (listing.servers ?? []).flatMap((entry) => entry.server?.remotes ?? []).flatMap((remote) => (remote.url ? [remote.url] : []))
-    return [
+    const theirs = [
       ...new Set(
         urls.filter((url) => {
           try {
@@ -1118,8 +1130,11 @@ async function registryEndpoints(domain: string): Promise<string[]> {
         }),
       ),
     ].slice(0, 4)
+    return { answered: true, urls: theirs }
   } catch {
-    return []
+    // A body we could not parse is a registry that did not answer the question, not a vendor
+    // with no server in it.
+    return { answered: false, urls: [] }
   }
 }
 
@@ -1213,14 +1228,20 @@ async function probeMcpEndpoints(
   // Left unbounded it is one external point of failure that can push every MCP handshake past the
   // scan budget for every vendor, which is the mistake the npm phase already learned once.
   const [fromCard, fromRegistry] = onlyDocumented
-    ? [[] as string[], [] as string[]]
+    ? [[] as string[], { answered: true, urls: [] as string[] }]
     : await Promise.all([
         cardEndpoints(site),
-        Promise.race([registryEndpoints(domain), new Promise<string[]>((resolve) => setTimeout(() => resolve([]), REGISTRY_BUDGET_MS))]),
+        Promise.race([
+          registryEndpoints(domain),
+          // The budget expiring is the registry not answering, and it has to be reported as that.
+          new Promise<{ answered: boolean; urls: string[] }>((resolve) =>
+            setTimeout(() => resolve({ answered: false, urls: [] }), REGISTRY_BUDGET_MS),
+          ),
+        ]),
       ])
   const candidates = onlyDocumented
     ? [...new Set(documented)]
-    : [...new Set([...mcpCandidates(domain, site, fromCard), ...fromRegistry, ...documented])]
+    : [...new Set([...mcpCandidates(domain, site, fromCard), ...fromRegistry.urls, ...documented])]
   /** Addresses the vendor named themselves, in their card or in their documentation. Not guesses. */
   const named = [...fromCard, ...documented]
   const handshake = {
@@ -1298,7 +1319,7 @@ async function probeMcpEndpoints(
           // wildcard that answers everything does not discredit it. Without the registry half,
           // mcp.eu.phrase.com would be thrown out on a domain whose wildcard also answers 401 -
           // which is exactly the row 9.22 exists to fix.
-          return !discreditedByWildcard(got) || named.includes(url) || fromRegistry.includes(url)
+          return !discreditedByWildcard(got) || named.includes(url) || fromRegistry.urls.includes(url)
         })
         .map(controlFor),
     ),
@@ -1428,6 +1449,7 @@ async function probeMcpEndpoints(
   return {
     endpoints: routedFirst,
     answered: results.some((got) => got.status !== 0),
+    registryAnswered: fromRegistry.answered,
     cardNamed: fromCard,
     swallowsPosts: routedFirst.length === 0 && swallowed.length > 0,
   }
@@ -1686,6 +1708,7 @@ export async function scanFunnel({
     oauth,
     mcpEndpoints,
     mcpProbed: mcp.answered,
+    mcpRegistryAnswered: firstWave.registryAnswered,
     mcpCardNamed: mcp.cardNamed,
     mcpPostsSwallowed: mcp.swallowsPosts,
     mcpPagesFollowed: deeper.followed,

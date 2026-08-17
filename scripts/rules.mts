@@ -627,6 +627,18 @@ check('bramki strony, ktora dostalismy, sa mierzalne', gates.evaluate({
   funnel: { signup: { url: 'https://v.test/signup', reachable: true, captcha: ['recaptcha'], rendersFormWithoutJs: true } },
 } as never).points, 0)
 
+const surface = CHECKS.find((c) => c.id === 'mcp_present')!
+// phrase.com, tolgee.io and medusajs.com all register a live endpoint in the MCP registry and all
+// three were told "No MCP surface" on the sweep where the registry did not answer us in time.
+const registrySilent = (registryAnswered: boolean) =>
+  surface.evaluate({
+    domain: 'v.test',
+    funnel: { mcpEndpoints: [], mcpProbed: true, mcpPostsSwallowed: false, mcpRegistryAnswered: registryAnswered, mcpPagesFollowed: [] },
+    machine: { wellKnown: {}, mcp: { mentions: 0, mentionsTruncated: false } },
+  } as never)
+check('milczacy rejestr MCP nie jest brakiem serwera', registrySilent(false).inconclusive, true)
+check('rejestr, ktory odpowiedzial, zostawia werdykt', registrySilent(true).inconclusive, undefined)
+
 console.log('odmowa, czyli czy powtorzyla sie na drugiej stronie')
 // "Your edge answered ChatGPT-User 403" is an accusation about a named company built from one
 // fetch of one page. savvycal.com was published as blocking ChatGPT-User on the strength of a
