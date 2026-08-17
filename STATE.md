@@ -176,6 +176,21 @@ wyszukiwarki); pudelko o starej formule obiecywalo noindex, ktorego od 17.08 nie
 o mianowniku bylo arytmetycznie falszywe dla wierszy sprzed pola `measurable`; `stage.measurable`
 szlo do tekstu jako `undefined`. Plus „Same fourteen checks" przy pietnastu.
 
+**ZNALEZIONE PRZY WERYFIKACJI CZEGO INNEGO, I WIEKSZE NIZ TO, CZEGO SZUKALEM:** od wdrozenia 9.32
+po poludniu **kazdy nowy skan tracil caly blok porownania** - zero konkurentow, zero percentyla,
+zero „beaten on". Powod jest poprawny: `buildComparison` filtruje korpus do wersji formuly
+skanowanego, a korpus stoi na 9.31, wiec porownywalnych wierszy bylo ZERO. Odmowa porownywania
+przez wersje jest sluszna; **ciche usuniecie sekcji nie**. Strona mowi teraz, ktore dwie wersje sa
+w grze i ze korpus dogoni sam. **Dotyczy to okna po KAZDYM wdrozeniu formuly.**
+
+**Zrobione z listy audytu:** trzy zastrzezenia na `/v` (przekierowanie, uciety skan, 429) - `/v` jest
+strona indeksowana o cudzej firmie i nie mialo zadnego, a `/corpus.json` niosl `measuredOn` i
+`rateLimited`, wiec plik dla maszyn mowil wiecej niz strona dla ludzi; errata renderuja sie teraz
+takze na `/r`, czyli pod adresem z maila; prog `RANKABLE_MEASURABLE` dziala juz na karcie wyniku,
+wiec bitmovin.com nie stoi jednoczesnie na dole strony glownej i na gorze kazdej karty obok;
+`scaleAnchor` liczy w ulamkach zamiast mieszac surowe totale przy roznych mianownikach; `beatenOn`
+nie oskarza o check nieadekwatny.
+
 **Zostalo z tego audytu, warte zrobienia** (numery jak w raporcie subagenta): brak ostrzezenia o
 `resolvedElsewhere`, o skanie uciętym budzetem i o 429 na `/v` (`/r` ma wszystkie trzy, a `/v` jest
 strona INDEKSOWANA o cudzej firmie); `scaleAnchor` liczy mediane z surowych totali przy roznych
