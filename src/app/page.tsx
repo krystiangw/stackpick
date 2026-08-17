@@ -196,6 +196,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
               Free while we are building it, and we will ask before it ever costs anything. No account, no card,
               and one link in every email stops it.
             </p>
+            {/* The visitor who wants the agent half without the standing part had no way to say so,
+                and the page that sells it is two clicks away behind a price list. */}
+            <p className="text-sm leading-relaxed text-ink-soft">
+              Want the agent runs once rather than every month?{' '}
+              <Link href="/pricing" className="text-brass underline underline-offset-4">
+                One report, ten runs, two tools
+              </Link>
+              , and you keep the transcripts.
+            </p>
             <div className="mt-2">
               <WatchForm />
             </div>
