@@ -107,6 +107,20 @@ zestawow nie stracil ani jednej poprawnej odpowiedzi.
 zmiana w routingu: zamow osmy tym samym sposobem. Co zostalo do poprawy widac na siodmym: **8 pytan,
 na ktore powinien byl odpowiedziec, a milczy** - to teraz slabsza strona, nie precyzja.
 
+**MAIL O ZMIANIE WERDYKTU OPISYWAL METODE, KTOREJ NIE STOSUJEMY** (naprawione, ale zostaje dlug).
+Gdy formula sie zmieni, cron przelicza poprzedni pomiar i mail mowil, ze podstawa „zostala
+przeliczona z tych samych dowodow pod obecnymi regulami". **To nie jest prawda dla checku, ktorego
+odczyt powstaje W TRAKCIE skanu**: dopasowanie fraz w `programmatic_provisioning` dzieje sie przy
+skanowaniu, a w raporcie zostaje **lista trafien, nie strony**, w ktorych je znaleziono (surowe
+ciala sond wyrzucamy, patrz „zapis raportu"). Przeliczenie zapisanych findings odtwarza wiec STARY
+odczyt. 9.32 zaciesnia dokladnie ten check, wiec zdanie stalo sie falszywe akurat teraz. Mail mowi
+teraz, co naprawde robimy, i wprost dopuszcza, ze linia mogla sie ruszyc przez zaostrzenie reguly.
+
+**Dlug do splacenia:** oznaczyc **per check**, czy da sie go uczciwie przeliczyc z zapisanych
+findings, i przy zmianie formuly **wylaczyc nieprzeliczalne z listy zmian** zamiast tlumaczyc je
+zdaniem. Dzis zaden obserwowany domen (stripe.com, vercel.com) nie jest w 28 wierszach dotknietych
+przez 9.32, wiec ryzyko jest odroczone, nie zamkniete.
+
 **Pulapka z tej samej godziny:** opublikowalem najpierw opis, w ktorym przykladem naprawionego bledu
 byl wlasnie modul billing - i to bylo nieprawda, bo tego akurat prog nie naprawia. Sprawdzilem
 kazdy z trzech przykladow zamiast zalozyc i poprawilem. **Przyklad w opisie jest twierdzeniem i
