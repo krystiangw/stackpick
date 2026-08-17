@@ -1,0 +1,35 @@
+{
+  "note": "Czwarty zestaw held-out do routingu find_providers. Pytania napisane 2026-08-17 przez agenta BEZ dostepu do repozytorium i bez zobaczenia listy kategorii, po polsku, bo taki jest jezyk operatora tej maszyny. Etykiety nadane PRZED pierwszym uruchomieniem routera. Trzy poprzednie zestawy zostaly przeczytane i naprawione przeciwko nim, wiec nic juz nie mierza; ten stanie sie taki sam w dniu, w ktorym ktos poprawi pod niego regule.",
+  "expected": {
+    "1": "file-storage", "2": "auth", "3": "transactional-email", "5": "payments",
+    "6": "error-monitoring", "7": "vector-search", "9": "notifications", "11": "headless-cms",
+    "12": "payments", "13": "product-analytics", "15": "video", "17": "feature-flags",
+    "18": "observability", "19": "llm-infrastructure", "20": "communications",
+    "24": "localization", "29": "maps-geo", "32": "documents-signature",
+    "33": "llm-infrastructure", "34": "app-hosting", "37": "search"
+  },
+  "refuse": [4, 8, 10, 14, 21, 22, 23, 25, 26, 27, 30, 31, 35, 36, 39, 40],
+  "refuseWhy": {
+    "4": "wlasny kod, nie dostawca",
+    "8": "KYC to prawdziwy dostawca, ale poza naszymi 26 kategoriami",
+    "10": "algorytm",
+    "14": "decyzja architektoniczna we wlasnym repo",
+    "21": "sharding CI, poza naszymi kategoriami",
+    "22": "wlasny komponent Reacta",
+    "23": "podatki i walidacja VAT, poza kategoriami",
+    "25": "zgodnosc SOC 2, poza kategoriami",
+    "26": "unified API do integracji, poza kategoriami",
+    "27": "rate limiting i ochrona przed botami, poza kategoriami",
+    "30": "projekt wlasnego API",
+    "31": "osadzone dashboardy, poza kategoriami",
+    "35": "RUM i nagrania sesji, poza kategoriami",
+    "36": "strojenie Postgresa",
+    "39": "kodowanie CSV we wlasnym kodzie",
+    "40": "przechowywanie sekretow, poza kategoriami"
+  },
+  "ambiguous": {
+    "16": ["communications", null],
+    "28": ["file-storage", null],
+    "38": ["llm-infrastructure", "observability", null]
+  }
+}
