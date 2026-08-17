@@ -56,7 +56,7 @@ const TIERS: readonly Tier[] = [
   },
   {
     name: 'Monitoring',
-    price: '$99',
+    price: '$79',
     cadence: 'per domain, per month',
     pitch: 'Whether an agent can still use you, and whether it ever considers you at all.',
     includes: [
@@ -67,7 +67,7 @@ const TIERS: readonly Tier[] = [
       'One email when something moves, nothing when nothing does, which is most weeks',
       'No account and no card. One link in every email stops it',
     ],
-    note: 'Free while we are building it, and we will ask before it ever costs anything.',
+    note: 'Three domains $179 a month, ten $499. Free while we are building it, and we will ask before it ever costs anything.',
     featured: true,
     cta: { label: 'Watch a domain', href: '/#watch' },
   },
@@ -242,7 +242,7 @@ export default async function PricingPage() {
         <dl className="mt-6 flex flex-col">
           {[
             [
-              'Monitoring says $99 and also says free. Which is it?',
+              'Monitoring says $79 and also says free. Which is it?',
               'Free today, for everyone, and the price is printed so you know what it will become rather than finding out later. Nobody is charged without being asked first, and there is no card on file to charge.',
             ],
             [
@@ -252,6 +252,14 @@ export default async function PricingPage() {
             [
               'Five runs a month is not much of a sample.',
               'It is not, and it decides what the number is allowed to say. Five runs catch a wall every run hits, and they cannot separate you from a competitor that finishes close. So monitoring does not sell you a position: it reports how many of the five named you, and the thing worth reacting to is the month that number moves.',
+            ],
+            [
+              'Other tools audit a domain for about twenty dollars. Why is this more?',
+              'Because it is a different unit. Those are one pass of an agent over your site, priced per pass, and a single pass cannot tell a wall from a bad day: we publish the noise floor precisely because we measured how much moves on its own. Monitoring is a standing measurement of one domain, rerun weekly against a published formula, with real agents asked your buyers\u2019 question every month and the transcripts handed over. If a one-off is what you want, take the twenty-nine dollar report, which is the same evidence without the standing part.',
+            ],
+            [
+              'We look after a lot of client domains. Is there an agency price?',
+              'Ask. There is a per-domain price above and packs under it, and beyond that it is a conversation rather than a table, because a report with your name on it is work we would rather quote than pretend is automatic.',
             ],
             [
               'Do you bill hourly?',
