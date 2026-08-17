@@ -75,7 +75,7 @@ export function changeEmail(
       ...section(`Gained or moved (${better.length}):`, better),
       ...(rescoredBaseline
         ? [
-            'Our checks changed since your last measurement, so the before above was recomputed from the same evidence under the current rules rather than taken from the older score. Where we started looking somewhere we had not looked before, a line can move without anything changing on your side.',
+            'Our checks changed since your last measurement, so the before above was recomputed from the evidence we still hold rather than taken from the older score. That recompute is honest for a check whose rule reads a stored measurement, and it is not the whole story for a check whose reading was made during the scan itself: we keep what those rules matched, not the pages they matched it in, so the older reading stands and a line can move because we tightened a rule rather than because anything changed on your side. Where you think that is what happened, say so and we will rescan and correct it.',
             '',
           ]
         : []),
