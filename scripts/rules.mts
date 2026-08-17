@@ -283,6 +283,16 @@ check('liczba checkow w ekranie limitu', Number(limitReached.match(/Same (\d+) c
 const findingsSource = readFileSync('src/app/findings/page.tsx', 'utf8')
 check('szoste badanie jest liczone, nie wpisane', findingsSource.includes('namedResult(buildStudy('), true)
 
+// Strony prawne nie moga sie opublikowac z pustym imprintem: dostawca platnosci porownuje nazwe
+// w regulaminie z nazwa na koncie znak w znak, a niedokonczony regulamin na produkcji jest gorszy
+// niz jego brak. Kazda z trzech ma odmawiac, dopoki dane sprzedawcy nie sa uzupelnione.
+for (const page of ['terms', 'privacy', 'refunds']) {
+  const source = readFileSync(`src/app/${page}/page.tsx`, 'utf8')
+  check(`/${page} odmawia bez danych sprzedawcy`, source.includes('if (!SELLER_IS_COMPLETE) notFound()'), true)
+}
+const layout = readFileSync('src/app/layout.tsx', 'utf8')
+check('stopka linkuje je dopiero wtedy', layout.includes('SELLER_IS_COMPLETE && ('), true)
+
 console.log('naglowek, czyli najglosniejsze zdanie na stronie')
 // The headline reads raw findings and the checks read the same findings with four guards on top,
 // so the two disagreed exactly where the guards were: a 429 we caused, a status that varies, a

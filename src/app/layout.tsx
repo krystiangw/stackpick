@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SELLER_IS_COMPLETE } from '@/lib/seller'
 import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google'
 import Link from 'next/link'
 import { SITE_URL } from '@/lib/site'
@@ -131,6 +132,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {/* One person does the work, and a buyer weighing a five-figure engagement with a stranger
                 asks who that is before anything else. Naming him costs nothing and hiding him is what
                 reads as evasive. */}
+            {/* Linked only once the imprint behind them is real: the pages answer 404 while the
+                seller details are unset, and a footer link into a 404 is worse than no link. */}
+            {SELLER_IS_COMPLETE && (
+              <p className="flex gap-4">
+                <Link href="/terms" className="hover:text-ink">
+                  Terms
+                </Link>
+                <Link href="/privacy" className="hover:text-ink">
+                  Privacy
+                </Link>
+                <Link href="/refunds" className="hover:text-ink">
+                  Refunds
+                </Link>
+              </p>
+            )}
             <p>
               Built by{' '}
               <a
