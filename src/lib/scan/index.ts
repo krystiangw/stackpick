@@ -193,6 +193,43 @@ const THIRD_PARTY_CREDENTIAL_PAGES = /resource[-_]catalog|\/integrations?\/|(^|[
  */
 const DATED_RATHER_THAN_DOCUMENTED = /\/(changelog|blog|news|release[-_]notes|whats[-_]new|announcements?)(\/|$|-)/i
 
+/**
+ * Three pages, and never three answers to the same question.
+ *
+ * The sample is ranked by how directly a path promises credentials, and on a vendor with many
+ * pages carrying the best hint that rank alone spends the whole budget on one family of words.
+ * Measured on the corpus of 2026-08-18: supabase.com read `getting-started/api-keys`,
+ * `cli/supabase-projects-api-keys` and `migrating-to-new-api-keys`, three pages about the same
+ * noun; cloudinary.com read a console tutorial about rotating keys and another about finding them,
+ * while `documentation/provisioning_api`, the page that documents creating credentials by machine,
+ * ranked below both and was never opened. The thirtieth adversarial pass found that page through
+ * their sitemap, which this scan had already read.
+ *
+ * So the best page of each hint family is taken first, in rank order, and only then are the
+ * remaining slots filled from what is left. The top-ranked page never moves: the family it belongs
+ * to is served first, which is what keeps datadoghq.com's api-app-keys page in the sample.
+ */
+export function spreadAcrossHints(ranked: string[], want: number): string[] {
+  const families = new Set<number>()
+  const first: string[] = []
+  const rest: string[] = []
+  for (const url of ranked) {
+    let family: number
+    try {
+      family = hintRank(new URL(url).pathname)
+    } catch {
+      rest.push(url)
+      continue
+    }
+    if (families.has(family)) rest.push(url)
+    else {
+      families.add(family)
+      first.push(url)
+    }
+  }
+  return [...first, ...rest].slice(0, want)
+}
+
 export function hintRank(pathname: string): number {
   if (THIRD_PARTY_CREDENTIAL_PAGES.test(pathname)) return HINT_PRIORITY.length + 2
   if (DATED_RATHER_THAN_DOCUMENTED.test(pathname)) return HINT_PRIORITY.length + 1
@@ -266,8 +303,12 @@ async function sitemapCandidates(domain: string, docsUrl: string, seen: Set<stri
       .filter((entry): entry is { page: string; path: string } => entry !== null)
       .sort((a, b) => hintRank(a.path) - hintRank(b.path) || a.path.length - b.path.length)
       .map((entry) => entry.page)
+    // Everything eligible first, then the spread, then the cap. Cutting to `want` inside this loop
+    // is what kept cloudinary.com's documentation/provisioning_api out of a sample drawn from a
+    // sitemap that lists it: the three best-ranked entries were all about finding or rotating a
+    // key, and the page that documents creating one by machine never got looked at.
+    const eligible: string[] = []
     for (const page of ranked) {
-      if (found.length >= want) break
       let url: URL
       try {
         url = new URL(page)
@@ -279,9 +320,12 @@ async function sitemapCandidates(domain: string, docsUrl: string, seen: Set<stri
       // On the label boundary: without the dot, scanning ank.com would follow mybank.com.
       const host = url.hostname.replace(/^www\./, '')
       const sameSite = ownSites.some((site) => host === site || host.endsWith(`.${site}`))
-      if (!sameSite || seen.has(clean)) continue
+      if (!sameSite || seen.has(clean) || eligible.includes(clean)) continue
       if (!CREDENTIAL_PAGE_HINTS.test(url.pathname)) continue
       if (!isDocumentationPage(clean, docsUrl)) continue
+      eligible.push(clean)
+    }
+    for (const clean of spreadAcrossHints(eligible, want - found.length)) {
       seen.add(clean)
       found.push(clean)
     }
@@ -428,7 +472,7 @@ async function readDeeper(
   const fallback = looksMeasurable
     ? []
     : (await Promise.all([llmsIndexCandidates(site, docsUrl), guessedCredentialPages(docsUrl)])).flat()
-  const candidates = [...new Set([...fallback, ...ranked])].filter(onBrand).sort(byHint).slice(0, 3)
+  const candidates = spreadAcrossHints([...new Set([...fallback, ...ranked])].filter(onBrand).sort(byHint), 3)
 
   const pages = await inParallel(candidates, (url) => fetchUrl(url))
   const readable = pages.filter((page) => page.ok)

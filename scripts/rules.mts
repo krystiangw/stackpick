@@ -4,6 +4,7 @@ import { paddle } from '../src/lib/billing/provider'
 import { MONITORING_IS_FREE, priceOf, skuById, skusForPrices } from '../src/lib/billing/catalog'
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { overDomainBudget } from '../src/lib/scan-gate'
+import { spreadAcrossHints } from '../src/lib/scan'
 import { aboutTheirOwnCode, categoryForJob } from '../src/lib/lookup'
 import { pickHeadline } from '../src/lib/headline'
 import { FRESH_QUESTIONS, HELD_OUT_2, HELD_OUT_3, HELD_OUT_4, HELD_OUT_5, HELD_OUT_6, HELD_OUT_7 } from './routing-questions'
@@ -296,6 +297,26 @@ for (const page of ['terms', 'privacy', 'refunds']) {
 const layout = readFileSync('src/app/layout.tsx', 'utf8')
 check('stopka linkuje je dopiero wtedy', layout.includes('SELLER_IS_COMPLETE && ('), true)
 
+console.log('probka dokumentacji, czyli czy trzy strony to trzy pytania')
+// Zmierzone na korpusie 2026-08-18: supabase.com przeczytal trzy strony o api-keys, a cloudinary.com
+// dwa poradniki o kluczach w konsoli, podczas gdy strona documentation/provisioning_api, ktora
+// dokumentuje tworzenie poswiadczen maszynowo, nie zmiescila sie w probce.
+const supabaseLike = [
+  'https://supabase.com/docs/guides/getting-started/api-keys',
+  'https://supabase.com/docs/reference/cli/supabase-projects-api-keys',
+  'https://supabase.com/docs/guides/getting-started/migrating-to-new-api-keys',
+  'https://supabase.com/docs/guides/api/securing-your-api',
+]
+const spread = spreadAcrossHints(supabaseLike, 3)
+// Regula brzmi: kazda obecna rodzina dostaje miejsce, zanim ktorakolwiek dostanie drugie. Przy
+// dwoch rodzinach i trzech miejscach trzecie musi sie powtorzyc, wiec sprawdzamy obecnosc, nie limit.
+check('strona spoza rodziny api-keys wchodzi do probki', spread.includes('https://supabase.com/docs/guides/api/securing-your-api'), true)
+check('i wchodzi przed trzecia strona o api-keys', spread.indexOf('https://supabase.com/docs/guides/api/securing-your-api') < 2, true)
+check('najlepiej oceniona strona zostaje pierwsza', spread[0], supabaseLike[0])
+// Gdy rodzin jest mniej niz miejsc, budzet i tak ma byc wykorzystany.
+check('brakujace miejsca dobiera sie z reszty', spreadAcrossHints(supabaseLike.slice(0, 3), 3).length, 3)
+check('a pusta lista zostaje pusta', spreadAcrossHints([], 3).length, 0)
+
 console.log('platnosci, czyli czy podpis i katalog trzymaja')
 // Webhook przyznaje uprawnienia, wiec podpis musi umiec powiedziec NIE. Sekret wymyslony, konta nie
 // trzeba: to jest ta czesc integracji, ktora da sie napisac i sprawdzic przed zalozeniem czegokolwiek.
@@ -503,6 +524,7 @@ check('kolejnosc wersji nie ma znaczenia', [...rulesChangedBetween('9.32', '9.31
 check('wersja pomiaru nie liczy sie sama sobie', [...rulesChangedBetween('9.32', '9.32')].join(','), '')
 check('ten sam pomiar dwa razy to zero zmian regul', [...rulesChangedBetween('9.31', '9.31')].join(','), '')
 check('9.33 przenosi zmiane w oauth_dcr', [...rulesChangedBetween('9.32', '9.33')].join(','), 'oauth_dcr')
+check('9.35 przenosi zmiane w probce provisioningu', [...rulesChangedBetween('9.34', '9.35')].join(','), 'programmatic_provisioning')
 
 check('mail mowi, ze podstawa byla przeliczona', mailFor(true).text.includes('recomputed from the evidence we still hold'), true)
 check('i nie mowi tego, gdy nie byla', mailFor(false).text.includes('recomputed from the evidence we still hold'), false)

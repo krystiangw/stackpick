@@ -124,6 +124,10 @@ const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   '9.31': ['signup_reachable', 'mcp_present', 'oauth_dcr'],
   '9.32': ['programmatic_provisioning', 'oauth_dcr'],
   '9.33': ['oauth_dcr'],
+  // 9.35 did not touch the rule, it changed which pages the rule reads: the sample no longer lets
+  // one family of words take all three slots. A rescore reproduces the old reading either way, so
+  // a vendor must not be told they lost ground because we looked somewhere else.
+  '9.35': ['programmatic_provisioning'],
 }
 
 const asNumber = (version: string) => Number(version) || 0
