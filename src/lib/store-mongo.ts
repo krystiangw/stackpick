@@ -96,6 +96,8 @@ async function collections(): Promise<{
     reports.createIndex({ domain: 1, scannedAt: -1 }),
     reports.createIndex({ scannedAt: -1 }),
     leads.createIndex({ createdAt: -1 }),
+    // Sparse: only payment leads carry one, and free-scan leads share a report id by design.
+    leads.createIndex({ paymentRef: 1 }, { unique: true, sparse: true }),
     visits.createIndex({ day: -1, path: 1 }, { unique: true }),
     watches.createIndex({ id: 1 }, { unique: true }),
     // One person watching one domain once. Two rows would mail them the same change twice.
@@ -313,7 +315,13 @@ export class MongoStore implements Store {
 
   async saveLead(lead: Lead) {
     const { leads } = await collections()
-    await leads.insertOne(lead)
+    try {
+      await leads.insertOne(lead)
+    } catch (error) {
+      // 11000 is the unique index on paymentRef doing its job: the same payment arrived twice.
+      if ((error as { code?: number }).code === 11000 && lead.paymentRef) return
+      throw error
+    }
   }
 
   async saveWatch(watch: Watch) {
@@ -355,6 +363,11 @@ export class MongoStore implements Store {
       .find({ day: { $gte: since } }, withoutId)
       .sort({ day: -1, count: -1 })
       .toArray()) as { day: string; path: string; count: number }[]
+  }
+
+  async hasPaymentRef(paymentRef: string) {
+    const { leads } = await collections()
+    return (await leads.countDocuments({ paymentRef }, { limit: 1 })) > 0
   }
 
   async listLeads(limit: number) {

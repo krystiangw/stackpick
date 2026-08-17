@@ -16,8 +16,23 @@ export type Report = {
   seeded?: boolean
 }
 
+/** The payment reference a stored line carries, or null when the line is not a payment or not JSON. */
+function paymentRefIn(line: string): string | null {
+  try {
+    return (JSON.parse(line) as { paymentRef?: string }).paymentRef ?? null
+  } catch {
+    return null
+  }
+}
+
 export type Lead = {
   email: string
+  /**
+   * Set only on leads created by a payment event. Unique in Mongo, which is what makes a retried
+   * webhook a no-op rather than a second copy of the same order: two deliveries can both find
+   * nothing and both insert, so the check that matters is the one the database performs.
+   */
+  paymentRef?: string
   domain: string
   reportId: string
   createdAt: string
@@ -40,7 +55,18 @@ export interface Store {
    * silently drops a domain from its own ranking once the corpus outgrows the window.
    */
   latestPerDomain(limit: number, seededOnly?: boolean): Promise<Report[]>
+  /**
+   * Idempotent whenever `paymentRef` is set: a payment provider retries a webhook whose response it
+   * did not receive, so one purchase can arrive three times, and a work record that appears three
+   * times is three people producing the same report.
+   */
   saveLead(lead: Lead): Promise<void>
+  /**
+   * Whether a payment fact with this reference was already written. Used to make a cancellation
+   * durable: webhook delivery is not ordered, so a transaction that was in flight when somebody
+   * cancelled can arrive afterwards and would otherwise turn the plan paid again.
+   */
+  hasPaymentRef(paymentRef: string): Promise<boolean>
   listLeads(limit: number): Promise<Lead[]>
   saveWatch(watch: Watch): Promise<void>
   getWatch(id: string): Promise<Watch | null>
@@ -134,6 +160,9 @@ class FileStore implements Store {
     const dir = await this.dir('leads')
     const file = path.join(dir, 'leads.jsonl')
     const existing = await readFile(file, 'utf8').catch(() => '')
+    // Mongo has a unique index for this; a file has to look. Only for payments, because free-scan
+    // leads legitimately repeat and their reportId is shared by everyone who asked for that scan.
+    if (lead.paymentRef && existing.split('\n').some((line) => paymentRefIn(line) === lead.paymentRef)) return
     await writeFile(file, `${existing}${JSON.stringify(lead)}\n`)
   }
 
@@ -152,6 +181,13 @@ class FileStore implements Store {
   async listVisits() {
     return []
   }
+
+  async hasPaymentRef(paymentRef: string) {
+    const dir = await this.dir('leads')
+    const raw = await readFile(path.join(dir, 'leads.jsonl'), 'utf8').catch(() => '')
+    return raw.split('\n').some((line) => paymentRefIn(line) === paymentRef)
+  }
+
 
   async listLeads(limit: number) {
     const dir = await this.dir('leads')

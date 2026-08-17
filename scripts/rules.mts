@@ -1,4 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs'
+import { createHmac } from 'node:crypto'
+import { paddle } from '../src/lib/billing/provider'
+import { MONITORING_IS_FREE, priceOf, skuById, skusForPrices } from '../src/lib/billing/catalog'
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { overDomainBudget } from '../src/lib/scan-gate'
 import { aboutTheirOwnCode, categoryForJob } from '../src/lib/lookup'
@@ -292,6 +295,60 @@ for (const page of ['terms', 'privacy', 'refunds']) {
 }
 const layout = readFileSync('src/app/layout.tsx', 'utf8')
 check('stopka linkuje je dopiero wtedy', layout.includes('SELLER_IS_COMPLETE && ('), true)
+
+console.log('platnosci, czyli czy podpis i katalog trzymaja')
+// Webhook przyznaje uprawnienia, wiec podpis musi umiec powiedziec NIE. Sekret wymyslony, konta nie
+// trzeba: to jest ta czesc integracji, ktora da sie napisac i sprawdzic przed zalozeniem czegokolwiek.
+const SECRET = 'whsec_test'
+const at = 1_760_000_000
+const body = JSON.stringify({
+  event_type: 'transaction.completed',
+  data: { id: 'txn_1', subscription_id: 'sub_1', custom_data: { domain: 'v.test', email: 'a@v.test' }, items: [{ price: { id: 'pri_report' } }] },
+})
+const signed = createHmac('sha256', SECRET).update(`${at}:${body}`).digest('hex')
+const signatures = paddle(SECRET, () => at * 1000)
+check('wlasciwy podpis przechodzi', signatures.verify(body, `ts=${at};h1=${signed}`), true)
+check('podmieniona tresc nie', signatures.verify(`${body} `, `ts=${at};h1=${signed}`), false)
+check('zly podpis nie', signatures.verify(body, `ts=${at};h1=${'0'.repeat(64)}`), false)
+check('brak naglowka nie', signatures.verify(body, null), false)
+// Powtorka sprzed godziny to darmowa subskrypcja, wiec okno jest czescia weryfikacji, nie dodatkiem.
+check('podpis sprzed godziny nie', paddle(SECRET, () => (at + 3600) * 1000).verify(body, `ts=${at};h1=${signed}`), false)
+// Przy rotacji sekretu Paddle wysyla po jednym h1 na sekret. Branie ostatniego odrzucaloby zadanie
+// podpisane tym, ktory mamy. Znalezione przez codex review.
+check('jeden z wielu h1 wystarczy', signatures.verify(body, `ts=${at};h1=${'0'.repeat(64)};h1=${signed}`), true)
+check('ale zaden pasujacy to nadal nie', signatures.verify(body, `ts=${at};h1=${'0'.repeat(64)};h1=${'1'.repeat(64)}`), false)
+check('timestamp, ktory nie jest liczba, nie', signatures.verify(body, `ts=jutro;h1=${signed}`), false)
+check('zdarzenie czytamy na nasze slowa', signatures.read(body)?.kind, 'paid')
+check('i niesie komu przyznac', signatures.read(body)?.email, 'a@v.test')
+// Transakcja niesie WLASNE id i osobno id subskrypcji. Zapisanie tego pierwszego jako referencji
+// znaczy, ze pozniejsze anulowanie nie trafia w nic, a monitoring zostaje platny na zawsze.
+check('platnosc ma wlasna referencje, transakcje', signatures.read(body)?.paymentRef, 'txn_1')
+// Odnowienie subskrypcji to nowa platnosc: gdyby referencja platnosci byla id subskrypcji, drugi
+// miesiac wygladalby jak powtorka pierwszego i wpadlby w unikalny indeks. Codex review.
+check('a subskrypcje nosi osobno', signatures.read(body)?.subscriptionRef, 'sub_1')
+const canceled = signatures.read(JSON.stringify({ event_type: 'subscription.canceled', data: { id: 'sub_1', custom_data: { email: 'a@v.test' }, items: [{ price: { id: 'pri_watch' } }] } }))
+check('anulowanie to osobne zdarzenie', canceled?.kind, 'subscription-ended')
+check('i nazywa subskrypcje, ktora konczy', canceled?.subscriptionRef, 'sub_1')
+check('zdarzenia, ktorego nie rozumiemy, nie ruszamy', signatures.read(JSON.stringify({ event_type: 'transaction.updated', data: { id: 't', custom_data: { email: 'a@v.test' }, items: [] } })), null)
+// Uprawnienie idzie za cena, ktora naprawde obciazono, a nie za tym, co niesie checkout kupujacego.
+check('nieznana cena nie daje niczego', skusForPrices(['pri_obcy']).length, 0)
+check('pusta lista cen tez nie', skusForPrices([]).length, 0)
+// Reguła produktu, nie szczegol implementacji: dopoki monitoring jest darmowy w trakcie budowy,
+// anulowanie zdejmuje oplate, a nie usluge. Gdy przestanie byc darmowy, zdanie na /pricing musi
+// zniknac w tym samym commicie, wiec straznik wiaze jedno z drugim.
+const pricingSaysFree = readFileSync('src/app/pricing/page.tsx', 'utf8').includes('Free while we are building it')
+check('darmowy monitoring w kodzie i na cenniku mowia to samo', MONITORING_IS_FREE, pricingSaysFree)
+check('smiec nie wysadza czytania', signatures.read('{'), null)
+// Paddle wysyla customer_id, nie adres, wiec adres wozimy we wlasnym custom_data. Bez tego kazde
+// prawdziwe zdarzenie odpadaloby jako niekompletne. Znalezione przez codex review.
+check('adres czytamy z naszego custom_data', signatures.read(JSON.stringify({ event_type: 'transaction.completed', data: { id: 't2', custom_data: { sku: 'report-one', email: 'b@v.test' }, customer: { id: 'ctm_1' } } }))?.email, 'b@v.test')
+// Cennik na stronie i katalog dla dostawcy to ta sama cena, albo dostawca obciazy inna kwota niz ta,
+// ktora klient przeczytal.
+const pricingSource = readFileSync('src/app/pricing/page.tsx', 'utf8')
+for (const id of ['report-one', 'watch-monthly']) {
+  const sku = skuById(id)!
+  check(`cennik pokazuje ${priceOf(sku)} za ${id}`, pricingSource.includes(`price: '${priceOf(sku)}'`), true)
+}
 
 console.log('naglowek, czyli najglosniejsze zdanie na stronie')
 // The headline reads raw findings and the checks read the same findings with four guards on top,
