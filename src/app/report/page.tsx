@@ -49,7 +49,9 @@ export default async function IndustryReportPage() {
     <main className="mx-auto max-w-5xl px-6">
       <section className="border-b border-rule py-12">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">
-          {report.sampleSize} domains · formula v{report.formulaVersion}
+          {/* The date belongs beside the sample, not only in the note at the bottom: a research
+              page without a visible date reads as undated, whatever it says 200 lines lower. */}
+          {report.sampleSize} domains · formula v{report.formulaVersion} · measured {window[1]}
         </p>
         <h1 className="mt-6 max-w-4xl text-balance text-3xl font-semibold leading-[1.15] tracking-tight sm:text-[2.75rem]">
           The market solved being read by agents. It has not solved being joined by one.

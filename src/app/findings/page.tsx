@@ -147,7 +147,7 @@ export default async function FindingsPage() {
             scanner and get a different number with nothing here to explain it. */}
         {corpus && (
           <p className="mt-4 max-w-2xl font-mono text-sm leading-relaxed text-ink-faint">
-            {`Every corpus figure below is measured on ${corpus.sampleSize} domains under formula ${corpus.formulaVersion}`}
+            {`Every corpus figure below is measured on ${corpus.sampleSize} domains under formula ${corpus.formulaVersion}, last scanned ${corpus.scannedTo.slice(0, 10)}`}
             {corpus.formulaVersion === FORMULA_VERSION
               ? '. A scan you run today uses the same one.'
               : `, while the scanner behind the box on every page now runs ${FORMULA_VERSION}. A scan you run today can therefore disagree with a number here until the corpus is measured again.`}
