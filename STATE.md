@@ -4822,3 +4822,24 @@ obiecuje cennik, i to przed platnoscia**. Sprawdzone na `uploadcare.com` (0/5 wy
 
 Do zamkniecia, gdy replikacja sie skonczy: raport ma laczyc oba narzedzia, bo `/pricing` obiecuje
 **dziesiec biegow na dwoch narzedziach**, a dzis sklada piec z jednego.
+
+## ADWERSARYJNY AUDYT NOWYCH STRON KATEGORII (2026-08-17)
+
+Subagent przeliczyl **recznie, z pelnego tekstu odpowiedzi**, szesc kategorii i sprawdzil tabele w
+dziesieciu. **Zero falszywych zer, zero blednej kolejnosci „named first", zero martwych linkow.**
+Sumy sie zgadzaja: 26 kategorii, 177 dostawcow, 78 nigdy niewymienionych, i to samo po zsumowaniu
+wierszy. Sprawdzil takze przypadki graniczne, np. „OSM/HERE" policzone poprawnie jako HERE oraz
+biegi, ktorych faworytem jest dostawca spoza korpusu (AWS Route 53), gdzie „named first" slusznie
+wskazuje pierwszego z mierzonych.
+
+**Dwa realne znaleziska, oba nasze, oba naprawione:**
+1. Link **„how every number here is measured" prowadzil na `/methodology`, ktora opisywala
+   wylacznie skaner** i nie mowila ani slowa o liczeniu wymienien. Link, ktory nie odpowiada na
+   pytanie, ktore obiecuje, jest gorszy niz brak linku. Doszla sekcja `#named` z regula zwyklego
+   slowa, regula typografii i roznica miedzy „named" a „named first".
+2. **Ujawnienie skazenia nie mowilo o jezyku.** Czytelnik widzial polskie zdania i nie mial jak
+   powiazac ich z instrukcjami maszyny. Teraz oba miejsca mowia wprost, ze te instrukcje **prosza o
+   odpowiedzi po polsku**.
+
+Trzecie znalezisko jest kosmetyczne i samo zniknie: `app-hosting` ma w kolumnie „Scan" wszedzie
+„not measured", bo szesc z siedmiu domen nie ma jeszcze skanu. Reseed to zalatwi.
