@@ -48,6 +48,17 @@ audit`, `audit-study.mts`, `audit-delivery.mts` i **przeczytaj, ile wierszy stra
 odtworzenie na cytatach z 9.31 mowilo 19 z 28, ale bylo liczone przed domknieciem okna z drugiej
 strony, wiec prawdziwa liczba bedzie inna.
 
+**Zrobione w tym samym oknie oczekiwania:** `oauth_dcr` mial jedna oblana galaz, ktora **nie
+nazywala niczego** - „OAuth metadata published, but no registration_endpoint in it", bez adresu i
+bez `unblock`, na **17 wierszach**. Adres dokumentu byl wyrzucany, gdy nie mial
+`registration_endpoint`. Teraz zdanie brzmi „OAuth metadata published at
+https://clerk.clerk.com/.well-known/oauth-authorization-server, but no registration_endpoint in it"
+i ma krok do wykonania. To check, ktory w szostym badaniu najmocniej wiaze sie z byciem
+wymienianym, wiec akurat on nie moze konczyc sie zdaniem bez wyjscia.
+
+**Pokrycie obserwacji: 0 z 3 nieobslugiwanych**, kazda obserwowana kategoria ma cele mlodsza niz
+miesiac. Ta pozycja jest zamknieta.
+
 **PULAPKA, ktora prawie opublikowala falszywy wniosek:** skan tuz po wdrozeniu wraca z **okna
 ponownego uzycia** (15 minut) i mierzy POPRZEDNI build. `storyblok.com` po deployu pokazywal stary
 werdykt i wygladalo to jak nieudana poprawka. **Sprawdzaj `reused` w odpowiedzi `/api/scan`, zanim
