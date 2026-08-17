@@ -603,6 +603,12 @@ export type FunnelFindings = {
     programmatic: string[]
     /** The words around each match, so a vendor can see what we read as their provisioning path. */
     programmaticQuotes?: string[]
+    /**
+     * Sentences saying a licence key is needed before anything runs. Collected and published in the
+     * findings, scored by nothing yet: the evidence comes first, the rule after somebody has read
+     * what it matches across the corpus.
+     */
+    licenceGateQuotes?: string[]
     selfServeSignals: string[]
     selfServeQuotes?: string[]
     selfServeIsButtonOnly?: boolean
@@ -1119,6 +1125,44 @@ function provisioningHit(text: string, pattern: RegExp, index: number): number {
     if (corroboratesBareProvisioning(windowAround(text, hit.index, hit[0].length), hit[0])) return hit.index
   }
   return -1
+}
+
+/**
+ * Wording that says a key is needed before the thing runs at all, as opposed to the ordinary "get
+ * your API key from the dashboard" that every vendor writes.
+ *
+ * Collected, not scored. The strongest measured elimination in the agent runs is this one - six
+ * agents out of six chose Tiptap, and CKEditor and Froala were dropped on the licence-key
+ * requirement alone, before a single feature was compared - and it is the one entry condition our
+ * checks do not look for. Turning it into a point without first reading what it matches on 177
+ * vendors would be the same mistake the provisioning check made and had to undo: dual-licensed
+ * open source talks about licence keys innocently, and a measured zero is an accusation.
+ */
+const LICENCE_GATE_PATTERNS: RegExp[] = [
+  /\b(?:you (?:will )?(?:need|must (?:have|obtain))|requires?|required to (?:have|obtain)|obtain) an? (?:valid |commercial |paid |trial )*licen[cs]e key\b/i,
+  // "is" optional: half the pages that say this write it as a heading, "License key required".
+  /\blicen[cs]e key (?:is )?(?:required|mandatory|needed)\b/i,
+  /\bwithout an? (?:valid )?licen[cs]e key\b/i,
+  /\b(?:activation|evaluation|trial) key is (?:required|needed)\b/i,
+  /\brequires? an? (?:paid |commercial )?licen[cs]e\b/i,
+]
+
+/** The sentence each licence-gate phrase sits in, so the evidence can be read before it is scored. */
+export function licenceGateQuotes(html: string): string[] {
+  const text = visibleProse(html)
+  const found: string[] = []
+  // Every occurrence of every pattern, not the first of each. The point of collecting this is to
+  // read what it matches, and the first hit on a page is regularly a nav item or a footnote while
+  // the sentence that decides the question sits three paragraphs down. The same lesson the
+  // provisioning check learned in 9.32.
+  for (const pattern of LICENCE_GATE_PATTERNS) {
+    for (const hit of text.matchAll(new RegExp(pattern.source, `${pattern.flags.replace('g', '')}g`))) {
+      const quote = windowAround(text, hit.index, hit[0].length).replace(/\s+/g, ' ').trim()
+      if (quote && !found.some((seen) => seen.toLowerCase() === quote.toLowerCase())) found.push(quote)
+      if (found.length >= 3) return found
+    }
+  }
+  return found
 }
 
 export function provisioningMatches(html: string): string[] {
@@ -1989,6 +2033,7 @@ export async function scanFunnel({
     provisioning: {
       programmatic: provisioningMatches(await corpus),
       programmaticQuotes: provisioningQuotes(await corpus),
+      licenceGateQuotes: licenceGateQuotes(await corpus),
       selfServeSignals: matching(SELF_SERVE_PATTERNS, pricingText),
       selfServeQuotes: quoting(SELF_SERVE_PATTERNS, pricingText),
       selfServeIsButtonOnly: everyFreeSignalIsAButton(SELF_SERVE_PATTERNS, visibleText(pricingText)),

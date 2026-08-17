@@ -19,7 +19,7 @@ import { sawRateLimit, otherDomainsNamed } from '../src/lib/corpus'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
 import { wasNeverAsked } from '../src/lib/scan/http'
 import { brandTaken, certain, mentionsIn, nameGuest, quotedAbout, whoWentFirst, wordsCarried } from '../src/lib/vendors'
-import { readSnippet, rendersUsableForm, entersThroughIdentityProvider, mcpCandidates, looksLikeADocsPageTwin, answersWithTheSameTemplate, readsAsAnEndpoint, readsAsTheirOwnAddress } from '../src/lib/scan/funnel'
+import { licenceGateQuotes, readSnippet, rendersUsableForm, entersThroughIdentityProvider, mcpCandidates, looksLikeADocsPageTwin, answersWithTheSameTemplate, readsAsAnEndpoint, readsAsTheirOwnAddress } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
 import {
   methodRefusalIsRouted,
@@ -388,6 +388,20 @@ check(
   snippetFor(null, { funnel: { pricingSnippet: null, signup: { url: null } }, discovered: {} }).notApplicable,
   true,
 )
+
+// Zdania o kluczu licencyjnym: na razie tylko zbierane, nic za nie nie odejmujemy. Straznik pilnuje
+// kierunku obu bledow, bo to jest check, w ktorym trafienie BEDZIE oskarzeniem.
+const gate = (html: string) => licenceGateQuotes(html)
+check('wymog klucza jest lapany', gate('<p>To use CKEditor you need a license key from the dashboard.</p>').length, 1)
+check('i cytat niesie zdanie, nie sam wzorzec', gate('<p>To use CKEditor you need a license key from the dashboard.</p>')[0].includes('CKEditor'), true)
+check('zwykle "get your API key" to nie bramka', gate('<p>Get your API key from the dashboard and paste it into the client.</p>').length, 0)
+check('samo slowo licencja tez nie', gate('<p>The library is MIT licensed and free to use.</p>').length, 0)
+// Pierwsze trafienie na stronie bywa nawigacja, a zdanie, ktore rozstrzyga, stoi nizej.
+const twoGates = gate(
+  '<p>Without a license key the editor is read-only.</p><p>Without a valid license key exports are disabled.</p>',
+)
+check('dwa trafienia tego samego wzorca to dwa dowody', twoGates.length, 2)
+check('naglowek "License key required" tez jest bramka', gate('<h2>License key required</h2>').length, 1)
 
 console.log('obserwacja domeny, czyli co jest warte maila')
 const verdict = (points: number, max: number, extra: Record<string, unknown> = {}) =>
