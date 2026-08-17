@@ -65,3 +65,27 @@ jobs:
             echo "::error::monitoring nie uruchomil sie od $(( age / 3600 )) h, choc ma chodzic codziennie"
             exit 1
           fi
+
+      # Zielony przebieg z rosnaca kolejka wyglada identycznie jak zdrowy. Jedna doba to 40
+      # przeskanowanych domen (40 wywolan po jednej), a wiersz staje sie przeterminowany po
+      # szesciu dniach, wiec przy okolo 240 obserwacjach kadencja zaczyna sie sypac po cichu.
+      # Ten straznik czyta jedna liczbe, ktora to widzi: najdluzsze oczekiwanie w kolejce.
+      - name: Check that no watched domain has been waiting too long
+        env:
+          TOKEN: ${{ secrets.STACKPICK_CRON_TOKEN }}
+        run: |
+          set -euo pipefail
+          # GET, nie POST: pytanie o stan kolejki nie moze przy okazji skanowac cudzej domeny
+          # ani wyslac komus maila.
+          body=$(curl -sS --fail-with-body --max-time 30 \
+            https://letagentsin.com/api/cron/watch \
+            -H "authorization: Bearer $TOKEN")
+          echo "$body"
+          waited=$(echo "$body" | jq -r '.longestWaitDays // 0')
+          watches=$(echo "$body" | jq -r '.watches // 0')
+          echo "obserwacji: $watches, najdluzsze oczekiwanie: $waited dni"
+          # Siedem dni to obiecana kadencja plus jeden dzien luzu na przesuniecie crona GitHuba.
+          if [ "$waited" -gt 8 ]; then
+            echo "::error::obserwowana domena czeka $waited dni, a kadencja to tydzien"
+            exit 1
+          fi

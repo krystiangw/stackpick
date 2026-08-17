@@ -29,15 +29,41 @@ function authorised(request: Request): boolean {
   return header === `Bearer ${secret}`
 }
 
+/**
+ * The queue as it stands, without touching it. A guard that has to POST to find out whether the
+ * queue is healthy performs a scan and can send somebody an email as a side effect of asking a
+ * question, which is not a health check.
+ */
+export async function GET(request: Request) {
+  if (!authorised(request)) return NextResponse.json({ error: 'Not for you.' }, { status: 401 })
+  const store = getStore()
+  const now = Date.now()
+  const queue = await store.listWatchesDue(500)
+  const waitedDays = (watch: { checkedAt: string | null }) =>
+    watch.checkedAt === null ? Infinity : (now - Date.parse(watch.checkedAt)) / 86_400_000
+  const longestWait = queue.length === 0 ? 0 : Math.max(...queue.map((watch) => Math.min(waitedDays(watch), 9_999)))
+  const due = queue.filter((watch) => watch.checkedAt === null || now - Date.parse(watch.checkedAt) > STALE_AFTER_MS)
+  return NextResponse.json({ watches: queue.length, due: due.length, longestWaitDays: Math.round(longestWait) })
+}
+
 export async function POST(request: Request) {
   if (!authorised(request)) return NextResponse.json({ error: 'Not for you.' }, { status: 401 })
 
   const store = getStore()
   const now = Date.now()
-  const due = (await store.listWatchesDue(50)).filter(
-    (watch) => watch.checkedAt === null || now - Date.parse(watch.checkedAt) > STALE_AFTER_MS,
-  )
-  if (due.length === 0) return NextResponse.json({ checked: 0, mailed: 0, remaining: 0 })
+  // Asked for far more than one call can serve, because the number that matters to a customer is
+  // not how many we got through: it is whether anybody has been waiting too long. A queue capped
+  // at the batch size reports a healthy `remaining` while the backlog behind it grows, and this
+  // product has already been down for two days once without anything saying so.
+  const queue = await store.listWatchesDue(500)
+  const due = queue.filter((watch) => watch.checkedAt === null || now - Date.parse(watch.checkedAt) > STALE_AFTER_MS)
+  /** The oldest check in the whole queue, in days. The one number a cadence alarm can be built on. */
+  const waitedDays = (watch: { checkedAt: string | null }) =>
+    watch.checkedAt === null ? Infinity : (now - Date.parse(watch.checkedAt)) / 86_400_000
+  const longestWait = queue.length === 0 ? 0 : Math.max(...queue.map((watch) => Math.min(waitedDays(watch), 9_999)))
+  if (due.length === 0) {
+    return NextResponse.json({ checked: 0, mailed: 0, remaining: 0, watches: queue.length, longestWaitDays: Math.round(longestWait) })
+  }
 
   // Asked before the first scan, not after it. saveReport throws when the cluster refuses writes,
   // which aborts the request before anything is mailed, so no watcher is ever told something
@@ -111,5 +137,12 @@ export async function POST(request: Request) {
     done.push(watch.domain)
   }
 
-  return NextResponse.json({ checked: done.length, mailed, remaining: due.length - done.length, domains: done })
+  return NextResponse.json({
+    checked: done.length,
+    mailed,
+    remaining: due.length - done.length,
+    watches: queue.length,
+    longestWaitDays: Math.round(longestWait),
+    domains: done,
+  })
 }
