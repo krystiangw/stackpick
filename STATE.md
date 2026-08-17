@@ -160,13 +160,25 @@ zamiast zakladac, i zapisuje rozwiazane ustawienia (`model`, `model_reasoning_ef
 bo efort jest parametrem pomiaru, a nie kontekstem. 90 dostawcow
 wymienionych choc raz. **Wynik w `scratchpad/named-vs-score-codex.txt`.**
 
+Liczby ponizej sa **po reseedzie na 9.30 i po poprawce matchera**, czyli porownywalne z tabela
+w sekcji wyzej:
+
 | check | claude/sonnet | codex |
 |---|---|---|
-| `oauth_dcr` | +28pp (0.000) | **+30pp (0.000)** |
-| `mcp_present` | +20pp (0.003) | **+24pp (0.001)** |
-| `programmatic_provisioning` | +18pp (0.006) | **+23pp (0.000)** |
-| `llms_txt` | +3pp (0.738) | +13pp (0.145) |
-| wynik powyzej mediany | +19pp (0.003) | **+23pp (0.001)** |
+| `oauth_dcr` | +25pp (0.000) | **+31pp (0.000)** |
+| `programmatic_provisioning` | +18pp (0.008) | **+23pp (0.000)** |
+| `mcp_present` | +14pp (0.048) | **+22pp (0.001)** |
+| `typed_package` | +23pp (0.019) | +19pp (0.066) |
+| `llms_txt` | +3pp (0.716) | +15pp (0.105) |
+
+**`llms_txt` jest jedynym miejscem, gdzie narzedzia sie roznia kierunkiem sily:** claude plasko,
+codex lekko na plus, ale **zadne z dwoch nie przechodzi testu przypadku**, wiec to nadal brak
+sygnalu, a nie sygnal slabszy.
+
+**Uwaga do wydruku codexa:** naglowek nadal wypisuje `memories_1.sqlite` jako kontekst, bo pliki
+`RUN.json` tych biegow powstaly **przed** poprawka wykrywania. Same biegi byly czyste (funkcja
+`memories` wylaczona), a zapisanych metadanych nie ruszam po fakcie: przepisywanie zapisu przebiegu
+po jego zakonczeniu jest dokladnie tym, co niszczy zaufanie do zapisow.
 
 Po kontroli na slawe, codex: `oauth_dcr` **+35pp u popularnych i +19pp u mniej znanych**,
 `mcp_present` +34 i +10, `programmatic_provisioning` +41 i +4, `llms_txt` +20 i -2.
