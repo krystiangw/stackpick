@@ -4854,3 +4854,22 @@ wskazuje pierwszego z mierzonych.
 
 Trzecie znalezisko jest kosmetyczne i samo zniknie: `app-hosting` ma w kolumnie „Scan" wszedzie
 „not measured", bo szesc z siedmiu domen nie ma jeszcze skanu. Reseed to zalatwi.
+
+## KTO NAS DZIS CZYTA (2026-08-17, odczyt z kolekcji `visits`)
+
+**305 wizyt dzis**, a rozklad jest sam w sobie dowodem na teze produktu:
+
+```
+ 101  /            przegladarka
+  14  /            agent
+  13  /docs        agent
+  12  /report      agent
+  11  /methodology agent
+  11  /pricing     agent
+   9  /findings    agent
+   5  /c           agent      <- strona ma godzine
+```
+
+Agenci czytaja nas systematycznie i **`/c` zostalo znalezione w godzine od wdrozenia**. Dni
+wczesniejsze: 460, 23, 228, 615, 172. To nie jest ruch sprzedazowy, ale jest to dokladnie ta
+publicznosc, o ktorej piszemy vendorom, ze istnieje.
