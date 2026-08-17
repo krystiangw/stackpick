@@ -40,6 +40,25 @@
      werdykty za zero, a wartoscia bywa samo zdanie, bo to je czyta vendor.
 
 
+## OBIETNICA BIEGOW AGENTA MA DZIURE: DOMENA SPOZA NASZYCH KATEGORII (2026-08-17)
+
+`/pricing` obiecuje obserwowanej domenie biegi agentow co miesiac, a **cela rozpoznawcza wymaga
+kategorii i pytania**. Odwiedzajacy moze obserwowac dowolna domene na swiecie. **Dzis 1 z 3
+obserwacji nie da sie obsluzyc**: `vercel.com`, usunieta z korpusu 2026-08-11 wlasnie za brak
+mierzonej przez nas kategorii. Nic tego nie mowilo.
+
+`npm run watch-coverage` wypisuje kazda obserwacje z kategoria, obecnoscia pytania i data ostatniej
+celi, i **odmawia brzmiec uspokajajaco**: brak kategorii to `BRAK KATEGORII`, a na koncu leci
+zdanie, ile obserwacji nie da sie obsluzyc.
+
+Obietnica na `/pricing` i na stronie glownej mowi teraz, ze biegi obejmuja **25 mierzonych
+kategorii**, a gdy produkt nie nalezy do zadnej, **mowimy o tym zanim ktos wlaczy monitoring**.
+Wdrozone i sprawdzone na produkcji.
+
+**Swiadomie NIE dodalem kategorii dla vercela**, choc to bylo by prawdziwe rozwiazanie: zmiana
+skladu korpusu w trakcie okna **zepsulaby pare pomiarowa do podlogi szumu**. Do rozwazenia po niej,
+razem z pytaniem, czy w ogole chcemy mierzyc hosting.
+
 ## POJEMNOSC MONITORINGU POLICZONA, I STRAZNIK KADENCJI (wdrozone 2026-08-17)
 
 **Ile klientow obsluzy dzisiejszy monitoring: okolo 240 obserwowanych domen.** Rachunek:
