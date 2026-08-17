@@ -32,8 +32,13 @@ w regule uzywaj domen SPOZA korpusu albo licz sie z odsunieciem reseedu.
    **PUNKT ODNIESIENIA zdjety 2026-08-17 22:12, korpus 177 wierszy, wszystkie na 9.31:**
    `programmatic_provisioning` **80 zaliczonych, 80 z cytatem**; `oauth_dcr` **92 oblane, 75 z
    adresami**; `signup_reachable` 80 „potrzebuje JS" i 9 „wejscie przez dostawce tozsamosci";
-   `mcp_present` **0 niemierzalnych przez milczacy rejestr** (czyli lustro rejestru dziala);
+   `mcp_present` **93 zaliczone, 80 oblanych, 0 niemierzalnych przez milczacy rejestr**;
    errata: wszystkie wpisy wygasly. Roznica wobec tych liczb JEST odpowiedzia na punkty 3 i 4.
+   **Lustro rejestru MCP jest zdrowe: 9322 hosty, sync 2026-08-17 09:51 UTC** (sprawdzasz to
+   `curl -H "authorization: Bearer $(heroku config:get STACKPICK_CRON_TOKEN -a stackpick)"
+   https://letagentsin.com/api/cron/mcp-registry`). **Nie sprawdzaj tego wlasnym klientem Mongo:**
+   `new MongoClient(MONGODB_URI).db()` bez nazwy bazy czyta INNA baze niz aplikacja i pokazal mi
+   dzis 0 dokumentow na kolekcji, ktora ma 9322. Endpoint powyzej obalil to jednym zapytaniem.
 4. `audit-study.mts` prawie na pewno zglosi ruch przy `programmatic_provisioning`: strona
    `/findings` mowi o nim „+37 wsrod znanych, minus trzy wsrod reszty" i te liczby sa z 9.31.
    **Popraw strone albo wycofaj twierdzenie, nie prog w strazniku.**
