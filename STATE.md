@@ -40,6 +40,23 @@
      werdykty za zero, a wartoscia bywa samo zdanie, bo to je czyta vendor.
 
 
+## NASZ WLASNY WIERSZ OBLEWA DOKLADNIE TEN CHECK, KTORY WLASNIE UZNALISMY ZA NAJWAZNIEJSZY
+
+Skan `letagentsin.com` na 9.30: **11/17**, i jedyny check oblany wprost to **`oauth_dcr`** (reszta
+braków to `niemierzalne`: nie mamy rejestracji konta ani pakietu npm, wiec nie ma czego mierzyc).
+
+To jest ta sama regula, ktora w pomiarze wymienialnosci wyszla **jedyna przezywajaca kontrole na
+slawe** (+27pp u popularnych, +12pp u mniej znanych, w obu narzedziach). Czyli **oblewamy check,
+o ktorym wlasnie zebralismy najmocniejszy dowod, ze ma znaczenie.**
+
+**I zostaje tak, jak jest.** `/methodology` publikuje to zdanie od dawna i nadal renderuje sie
+poprawnie: *„We fail `oauth_dcr` (...) our tools take no credential, so there is no client for an
+agent to register, and rewriting the rule until we passed would be marking our own work."* Nasz
+produkt nie ma kont, wiec nie ma klienta do zarejestrowania; napisanie sobie wyjatku byloby
+ocenianiem wlasnej pracy. **Do przemyslenia po zamrozeniu**, ale ostroznie: czy `oauth_dcr` powinien
+byc `notApplicable` dla produktow bez kont. Odpowiedz „tak" poprawia uczciwosc, ale **zdejmuje
+oskarzenie z nas samych**, wiec wymaga podwojnie mocnego uzasadnienia, a nie wygody.
+
 ## PRZEGLAD TEGO, CO WIDZI ODWIEDZAJACY, PO RESEEDZIE (2026-08-17)
 
 Sam korpus moze byc zdrowy, a strona i tak pokazywac cos innego, wiec po reseedzie przeszedlem
