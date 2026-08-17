@@ -56,16 +56,21 @@ async function ours(path: string, init?: RequestInit): Promise<Response> {
 const OVERLAP_MS = 60 * 60 * 1000
 
 let since: string | null = null
+// A daily run that finds nothing to catch up from does the whole listing instead of refusing.
+// Exiting here made the mirror unable to heal itself: the full pass is scheduled weekly, so a
+// mirror that is empty or past its window on a Monday stays that way until Sunday, and every
+// daily run in between stops on this line. The scanner then reads a silent registry for six days
+// and every vendor who publishes no endpoint of their own goes unmeasurable on that check.
+let fullPass = full
 if (!full && !dry) {
   const state = (await (await ours('/api/cron/mcp-registry')).json()) as { syncedAt: string | null; hosts: number }
-  // Nothing to catch up from means the mirror was never filled, and a `since` run would leave it
-  // empty while looking like it worked.
-  if (!state.syncedAt) {
-    console.error('lustro jest puste, uruchom najpierw z --full')
-    process.exit(1)
+  if (state.syncedAt) {
+    since = new Date(Date.parse(state.syncedAt) - OVERLAP_MS).toISOString()
+    console.log(`lustro ma ${state.hosts} hostow, dobieram zmiany od ${since}`)
+  } else {
+    fullPass = true
+    console.log('lustro jest puste, wiec zamiast zmian biore cala liste')
   }
-  since = new Date(Date.parse(state.syncedAt) - OVERLAP_MS).toISOString()
-  console.log(`lustro ma ${state.hosts} hostow, dobieram zmiany od ${since}`)
 }
 
 const MOST_PAGES = 6000
@@ -105,7 +110,7 @@ console.log(`${pages} stron, ${remotes} zdalnych adresow, ${hosts.length} hostow
 
 // A half-read listing must never replace what is stored: every vendor past the cursor would lose
 // the endpoint they publish and go unmeasurable on this check until the next full run.
-if (cursor && full) {
+if (cursor && fullPass) {
   console.error(`kursor nie dobiegl konca po ${pages} stronach, wiec to jest polowa listy i nie zapisujemy jej`)
   process.exit(1)
 }
@@ -118,7 +123,7 @@ if (dry) {
 const posted = await ours('/api/cron/mcp-registry', {
   method: 'POST',
   headers: { 'content-type': 'application/json' },
-  body: JSON.stringify({ fetchedAt: new Date().toISOString(), mode: full ? 'full' : 'since', hosts }),
+  body: JSON.stringify({ fetchedAt: new Date().toISOString(), mode: fullPass ? 'full' : 'since', hosts }),
 })
 console.log(`${posted.status} ${await posted.text()}`)
 process.exit(posted.ok ? 0 : 1)
