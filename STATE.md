@@ -40,6 +40,29 @@
      werdykty za zero, a wartoscia bywa samo zdanie, bo to je czyta vendor.
 
 
+## POJEMNOSC MONITORINGU POLICZONA, I STRAZNIK KADENCJI (wdrozone 2026-08-17)
+
+**Ile klientow obsluzy dzisiejszy monitoring: okolo 240 obserwowanych domen.** Rachunek:
+`watch.yml` chodzi raz na dobe i wywoluje endpoint **do 40 razy**, endpoint bierze **jedna domene
+na wywolanie** (Heroku ubija ciche zadanie po 30 s, a skan trwa do 27 s), czyli **40 skanow na
+dobe**; wiersz przeterminowuje sie po **szesciu dniach**. 40 x 6 = 240. Powyzej tego tygodniowa
+kadencja zaczyna sie sypac.
+
+**Nic tego nie mierzylo.** `quota.yml` sprawdzal tylko, czy przebieg monitoringu konczy sie
+sukcesem, a **przebieg z zalegla kolejka konczy sie sukcesem tak samo jak zdrowy**. To ten sam
+ksztalt awarii, przez ktory monitoring stal kiedys dwa dni i nikt sie nie dowiedzial.
+
+Endpoint raportuje teraz `watches`, `due` i `longestWaitDays`, a straznik alarmuje powyzej **osmiu
+dni** (kadencja plus dzien luzu na przesuniecie crona GitHuba). **Odczyt jest GET-em bez skutkow
+ubocznych**, bo pytanie o stan kolejki nie moze przy okazji przeskanowac cudzej domeny ani wyslac
+komus maila. Sprawdzone na produkcji: `{"watches":3,"due":0,"longestWaitDays":4}`, a bez tokenu
+i ze zlym tokenem 401.
+
+**Dwie rzeczy sprawdzone przy okazji i obie sa w porzadku:** monitoring trzyma **wlasna linie
+bazowa** (`watch.lastReportId`) i przelicza ja pod dzisiejsze reguly, wiec reseed korpusu **nie
+zjada klientowi zmiany**, o ktorej mial dostac maila; a kolejka jest sortowana po `checkedAt`
+rosnaco (nigdy niesprawdzone pierwsze), wiec **nikt nie moze zaglodzic sie na jej koncu**.
+
 ## WERYFIKACJA PUNKTU WEJSCIA PO RESEEDZIE: 120 OSKARZEN, ZERO NIEZGOD
 
 Najwieksza rodzina oskarzen na karcie wynikow, sprawdzona na korpusie 9.30.
