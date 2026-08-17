@@ -34,7 +34,12 @@ const measurableOf = (card: { total: number; measurable?: number; max: number })
  */
 async function publishedRowFor(domain: string) {
   const store = getStore()
-  return (await store.latestForDomain(domain, true)) ?? (categoryFor(domain) ? null : store.latestForDomain(domain))
+  // Only for a domain in the corpus. Anywhere else the seeded row is whatever we happened to scan
+  // from the console once, and preferring it froze our own page on formula 9.22 while the scanner
+  // had moved nine versions: a rule meant to keep the published corpus consistent was aging every
+  // page outside it.
+  if (!categoryFor(domain)) return store.latestForDomain(domain)
+  return (await store.latestForDomain(domain, true)) ?? store.latestForDomain(domain)
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ domain: string }> }): Promise<Metadata> {
