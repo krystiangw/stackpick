@@ -32,6 +32,17 @@ const cellFor = (id: string): Cell | undefined => cellsFor(id)[0]
 /** The tool, in the words a reader can check, rather than the whole version string. */
 const toolName = (cell: Cell) => cell.tool.split(' ')[0]
 
+/** Never named by ANY tool we hold: the sentence is about a vendor, not about how many runs one
+ * tool happened to get. Switching the primary cell from five claude runs to three codex ones moved
+ * this number from 78 to 91 across the corpus without a single vendor changing anything. */
+function neverNamed(id: string): number {
+  const held = cellsFor(id)
+  if (held.length === 0) return 0
+  return held[0].rows.filter((row) =>
+    held.every((one) => (one.rows.find((candidate) => candidate.domain === row.domain)?.named ?? 0) === 0),
+  ).length
+}
+
 export function generateStaticParams() {
   return CATEGORIES.map((category) => ({ category: category.id }))
 }
@@ -41,7 +52,7 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
   const category = CATEGORIES.find((candidate) => candidate.id === id)
   if (!category) return {}
   const cell = cellFor(id)
-  const invisible = cell ? cell.rows.filter((row) => row.named === 0).length : 0
+  const invisible = neverNamed(id)
   return {
     title: `${category.label}: which vendors an AI agent names · Let Agents In`,
     description: cell
@@ -62,7 +73,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   const { categories } = await loadRankings()
   const ranked = categories.find((entry) => entry.category.id === id)
   const scoreOf = (domain: string) => ranked?.entries.find((entry) => entry.domain === domain)
-  const invisible = cell ? cell.rows.filter((row) => row.named === 0).length : 0
+  const invisible = neverNamed(id)
   const rows = cell?.rows ?? category.domains.map((domain) => ({ domain, named: 0, first: 0 }))
 
   return (
@@ -119,7 +130,9 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
                     Named ({toolName(one)})
                   </th>
                 ))}
-                <th className="py-2 pr-4 text-right font-normal">Named first</th>
+                <th className="py-2 pr-4 text-right font-normal">
+                  Named first{cell ? ` (${toolName(cell)})` : ''}
+                </th>
                 <th className="py-2 pr-4 text-right font-normal">Scan</th>
               </tr>
             </thead>

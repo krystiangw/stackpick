@@ -28,7 +28,11 @@ export default async function CategoriesPage() {
       .filter((cell) => cell.category === category.id)
       .sort((a, b) => a.operatorContext.length - b.operatorContext.length)
     const cell = held[0]
-    const named = cell?.rows.filter((row) => row.named > 0).length ?? 0
+    // Named by EITHER tool. Counting only the cleanest cell made the published number depend on
+    // how many runs that tool happened to get: switching the primary from five claude runs to
+    // three codex ones moved "never named" from 78 to 91 without a single vendor changing.
+    const named =
+      cell?.rows.filter((row) => held.some((one) => (one.rows.find((r) => r.domain === row.domain)?.named ?? 0) > 0)).length ?? 0
     const winner = cell?.rows.reduce(
       (best, row) => (row.first > (best?.first ?? 0) ? row : best),
       undefined as (typeof cell.rows)[number] | undefined,
