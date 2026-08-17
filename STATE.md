@@ -131,6 +131,24 @@ byl wlasnie modul billing - i to bylo nieprawda, bo tego akurat prog nie naprawi
 kazdy z trzech przykladow zamiast zalozyc i poprawilem. **Przyklad w opisie jest twierdzeniem i
 sprawdza sie go tak samo jak liczbe.**
 
+**TA SAMA SLABSZA DEFINICJA ZNALEZIONA JESZCZE RAZ, NA STRONIE PUBLICZNEJ.** `/c/<kat>/runs`
+podswietlalo nazwy vendorow szukajac pierwszej etykiety domeny jako **podciagu bez granicy slowa**,
+wiec na `/c/domains-dns/runs` zaznaczalo „name" w *nameservers*, „cal" w *calculates" i „here" w
+*where*. Strona jest DOWODEM dla tabeli nad nia, wiec znacznik klocacy sie z ta tabela podwaza obie.
+Teraz zaznaczane sa wylacznie ciagi zaakceptowane przez opublikowany matcher, z wielkoscia liter.
+Zweryfikowane na produkcji: 28 znacznikow na `/c/domains-dns/runs`, wszystkie to prawdziwe nazwy,
+`name.com` nie dostaje zadnego - zgodnie z tabela, ktora mowi, ze nie padl ani razu.
+
+**Wniosek do zapamietania:** ta sama slabsza definicja „czy go wymieniono" byla w TRZECH miejscach
+niezaleznie (platny raport, mail, strona z biegami). Szukajac takiego bledu raz, poszukaj od razu
+wszystkich miejsc, ktore robia to samo pojecie po swojemu.
+
+**Domkniete przy okazji:** `/r/<id>` liczyl check nieadekwatny jako oblany (zweryfikowane na
+produkcji: uploadthing.com pisze teraz „5 of the checks", przy 5 oblanych i 1 nieadekwatnym);
+`audit-unblock` zglaszal groq.com przy kazdym biegu, bo zawezenie obiecane w naglowku tego skryptu
+14.08 nigdy nie trafilo do reguly (sprawdzone recznie 17.08: `groq.com/pricing` nadal przekierowuje
+na strone glowna, wiec werdykt i rada byly poprawne, blad byl w audycie).
+
 **PULAPKA, ktora prawie opublikowala falszywy wniosek:** skan tuz po wdrozeniu wraca z **okna
 ponownego uzycia** (15 minut) i mierzy POPRZEDNI build. `storyblok.com` po deployu pokazywal stary
 werdykt i wygladalo to jak nieudana poprawka. **Sprawdzaj `reused` w odpowiedzi `/api/scan`, zanim
