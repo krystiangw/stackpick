@@ -35,7 +35,7 @@ const ALIASES: Record<string, string[]> = {
   'api.video': [],
   'cal.com': [],
   'name.com': [],
-  'here.com': ['HERE Technologies'],
+  'here.com': ['HERE Technologies', 'HERE'],
   'tiny.cloud': ['TinyMCE'],
   'njal.la': ['Njalla'],
   'postmarkapp.com': ['Postmark'],
@@ -152,13 +152,18 @@ export function mentionsIn(text: string, domains: readonly string[]): Mention[] 
     let best: Mention | null = null
     for (const name of namesFor(domain)) {
       const ordinary = ORDINARY_WORDS.has(name.toLowerCase())
-      const hit = firstHit(text, new RegExp(`\\b${escape(name)}\\b`, 'i'))
+      // An alias written in capitals is matched in capitals. here.com styles itself HERE, and the
+      // only safe alias for it was "HERE Technologies", so every answer calling it HERE - which is
+      // all five in the maps cell - counted as never naming them. Case is the disambiguation here:
+      // "here" is the English word, "HERE" is the company.
+      const shouty = name.length > 2 && name === name.toUpperCase() && name !== name.toLowerCase()
+      const hit = firstHit(text, new RegExp(`\\b${escape(name)}\\b`, shouty ? '' : 'i'))
       // An ordinary word in lower case is the word, not the company. Capitalised it is ambiguous,
       // which is what `weak` means and why the sentence travels with it.
       if (!hit || (ordinary && !/^[A-Z]/.test(hit.matched))) continue
       const mention: Mention = {
         domain,
-        form: ordinary ? 'weak' : 'name',
+        form: ordinary && !styledAsABrand(text, name) ? 'weak' : 'name',
         ...hit,
         sentence: sentenceAround(text, hit.at),
       }
@@ -170,6 +175,30 @@ export function mentionsIn(text: string, domains: readonly string[]): Mention[] 
     if (best) found.push(best)
   }
   return promoted(found).sort((a, b) => a.at - b.at)
+}
+
+/**
+ * Typography settles what a neighbour cannot.
+ *
+ * The category pages publish "N of M vendors were never named once", and an audit of that sentence
+ * on 2026-08-17 found three companies it was false about: an answer recommending `**Sanity**` in
+ * bold, one calling `HERE` a real competitor in capitals, and one opening with "Neon would be my
+ * choice" and saying Neon three times. Each was the only vendor in its sentence, so the rule that
+ * promotes a weak mention beside a certain one could never reach them, and we published that an
+ * agent had never mentioned a company it had just recommended.
+ *
+ * Three signals, each of which a writer uses for a product name and not for the English word:
+ * emphasis or code or a link label around it, capitals throughout, or the capitalised form used
+ * more than once in the same answer. "the bunny hops" fails all three, which is the test.
+ */
+function styledAsABrand(text: string, name: string): boolean {
+  const word = escape(name)
+  if (new RegExp(`(?:\\*\\*|\`|\\[|_)${word}\\b`, 'i').test(text)) return true
+  if (name.length > 2 && new RegExp(`\\b${word.toUpperCase()}\\b`).test(text) && name.toUpperCase() !== name.toLowerCase()) {
+    if (new RegExp(`\\b${name.toUpperCase()}\\b`).test(text)) return true
+  }
+  const capitalised = text.match(new RegExp(`\\b${name[0].toUpperCase()}${escape(name.slice(1))}\\b`, 'g')) ?? []
+  return capitalised.length > 1
 }
 
 /**

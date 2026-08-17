@@ -124,6 +124,7 @@
           "tiptap.dev",
           "prosemirror.net",
           "quilljs.com",
+          "slatejs.org",
           "lexical.dev",
           "editorjs.io"
         ],
@@ -146,7 +147,9 @@
         "text": "Wybrałbym **TipTap** (na ProseMirrorze).\n\n**Dlaczego TipTap:**\n- `StarterKit` daje bold, listy, nagłówki od ręki, więc pogodzisz się z terminem \"w tym tygodniu\" bez pisania edytora od zera.\n- Wklejanie zrzutów ekranu to gotowe rozszerzenie (`Image` + obsługa paste/drop) - support agenci wkleją screen ze schowka i po sprawie.\n- Model rozszerzeń (custom Node/Mark/Extension) jest dokładnie tym, czego potrzebujesz do własnych bloków później - to nie hack na końcu API, tylko główny sposób, w jaki się z TipTapem pracuje.\n- Duża społeczność, aktywny rozwój, dużo gotowych przykładów integracji z React (hooki, kontrolowany stan, SSR).\n\n**Co jeszcze rozważałem:**\n- **Lexical** (Meta) - realna alternatywa, technicznie bardzo solidna i wydajna, też ma dobry model węzłów pod custom bloki. Odpadł głównie przez czas: mniej gotowych \"z pudełka\" rzeczy (wklejanie obrazków, listy) trzeba doklejać samemu, dokumentacja i ekosystem wciąż węższe niż TipTap/ProseMirror. Wróciłbym do niego, gdyby priorytetem była wydajność na bardzo dużych dokumentach albo collaborative editing na dużą skalę.\n- **Slate** - odrzucony. Elastyczny w teorii, ale API historycznie niestabilne między wersjami i mnóstwo edge case'ów (selection, IME, undo) trzeba łatać samemu. Zbyt duże ryzyko przy terminie tygodnia.\n- **Quill** - szybki start, ale model danych (Delta) słabo się nadaje pod custom bloki, których chcecie dokładać później. Dobry do \"prostego edytora na zawsze\", zły do \"prosty teraz, rozbudowany potem\".\n- **Editor.js** - koncepcyjnie blokowy, czyli pasuje do \"custom blocks\", ale integracja z React jest bardziej DIY, a społeczność i tempo rozwoju mniejsze niż TipTapa.\n\nRozstrzygnęło połączenie: szybki start w tydzień + solidny, długoterminowy model rozszerzeń pod custom bloki. To dwie sprzeczne potrzeby naraz i TipTap jest jedynym z tej listy, który dobrze spełnia obie równocześnie.",
         "named": [
           "tiptap.dev",
+          "lexical.dev",
           "prosemirror.net",
+          "slatejs.org",
           "quilljs.com",
           "editorjs.io"
         ],
@@ -159,6 +162,7 @@
           "tiptap.dev",
           "prosemirror.net",
           "lexical.dev",
+          "slatejs.org",
           "editorjs.io",
           "quilljs.com"
         ],
@@ -170,6 +174,7 @@
         "named": [
           "tiptap.dev",
           "prosemirror.net",
+          "lexical.dev",
           "editorjs.io"
         ],
         "first": "tiptap.dev"
@@ -187,23 +192,23 @@
         "first": 0
       },
       {
+        "domain": "lexical.dev",
+        "named": 5,
+        "first": 0
+      },
+      {
         "domain": "prosemirror.net",
         "named": 5,
         "first": 0
       },
       {
-        "domain": "lexical.dev",
-        "named": 3,
+        "domain": "slatejs.org",
+        "named": 4,
         "first": 0
       },
       {
         "domain": "quilljs.com",
         "named": 3,
-        "first": 0
-      },
-      {
-        "domain": "slatejs.org",
-        "named": 1,
         "first": 0
       },
       {
@@ -254,7 +259,8 @@
         "text": "Rekomendacja: **WorkOS** (User Management + SSO/SCIM w jednym).\n\nDlaczego akurat to pasuje do Waszej sytuacji: głównym triggerem jest SSO dla klienta enterprise, a WorkOS jest zbudowany dokładnie pod ten wzorzec, zwykli użytkownicy logują się przez ich AuthKit (sesje, reset hasła, MFA), a enterprise klienci dostają SAML/OIDC SSO i SCIM jako osobny, dokładany moduł, bez potrzeby przesiadki na jeden model tożsamości dla wszystkich. Cennik jest przewidywalny: SSO liczone per connection (jedna integracja z klientem enterprise), nie per użytkownik, co przy paru tysiącach kont ma znaczenie. Migracja haseł jest w praktyce bezbolesna, importujecie istniejące hashe (bcrypt/scrypt) i użytkownicy logują się bez wymuszonego resetu.\n\nCo jeszcze rozważałem i dlaczego odpadło:\n\n- **Auth0** - dojrzały, najszersze możliwości enterprise SSO, ale drogi przy skalowaniu (MTU pricing), a system Rules/Actions bywa uciążliwy w utrzymaniu, czyli częściowo wraca problem, który chcecie zamknąć. Solidny wybór numer dwa, jeśli WorkOS czegoś zabraknie.\n- **Clerk** - najlepszy DX pod React, bardzo szybkie wdrożenie, ale historia i pozycjonowanie mocniej celują w consumer/prosumer niż B2B enterprise SSO, warto sprawdzić aktualny stan SAML/SCIM u nich, jak coś się zmieniło.\n- **AWS Cognito** - tani i wygodny, jeśli już jesteście głęboko w AWS, ale DX jest znany z bólu (customizacja, komunikaty błędów, limity), a obsługa enterprise SSO jest toporna.\n- **Firebase Auth** - bardziej pod konsumenckie appki, SAML/enterprise SSO wymaga podniesienia do Identity Platform, więc traci przewagę prostoty.\n- **Keycloak / Ory self-hosted** - pełna kontrola i brak vendor lock-inu, ale to oznacza dalej utrzymywać własną infrastrukturę tożsamości, czyli sprzeczne z \"mam dość utrzymywania tego\". Sensowne tylko przy twardych wymaganiach data residency.\n- **FusionAuth** - tańsza alternatywa z elastycznym cennikiem, warto trzymać w tyle głowy jeśli koszt WorkOS/Auth0 przy skali okaże się problemem.\n\nJeden punkt do sprawdzenia przed decyzją: czy wasze obecne hashe haseł (jaki algorytm) są wspierane w imporcie przez WorkOS, to determinuje czy migracja jest cicha, czy wymaga wymuszonych resetów przy pierwszym logowaniu.",
         "named": [
           "workos.com",
-          "auth0.com"
+          "auth0.com",
+          "clerk.com"
         ],
         "first": "workos.com"
       },
@@ -263,7 +269,8 @@
         "text": "Rekomendacja: **WorkOS** (a konkretnie ich User Management + AuthKit dla React, plus SSO). Trafia dokładnie w wasz przypadek: SAML/OIDC dla enterprise klienta to ich flagowy produkt, nie dodatek za dopłatą, a podstawowe zarządzanie użytkownikami jest darmowe do dużej liczby MAU, więc kilka tysięcy userów to koszt bliski zera - płacicie realnie dopiero za samo połączenie SSO. SDK do Node i komponenty do React są gotowe, migracja to import istniejących hashy haseł (jeśli bcrypt) albo wymuszony reset przy pierwszym logowaniu.\n\nCo jeszcze brałem pod uwagę:\n- **Auth0** - najbardziej dojrzały, ale SSO enterprise jest na droższym planie, a pricing i panel admina potrafią się rozjechać przy skalowaniu; dla \"kilku tysięcy userów + jeden enterprise klient\" to przepłacanie za funkcje, których nie użyjecie.\n- **Clerk** - świetne DX z React, ale enterprise SSO też siedzi na wyższym tierze, mocniej celuje w B2C/mniejsze zespoły niż w pojedynczego enterprise klienta z SAML.\n- **Okta** - klasa \"duży korpo\", drogi i przewymiarowany dla waszej skali.\n- **AWS Cognito** - najtańszy, ale słabe wsparcie SAML/SSO out-of-the-box i ciężkie DX - dużo roboty, żeby dowieźć to, co WorkOS ma gotowe.\n- **Self-hosted Keycloak/Ory** - pełna kontrola, ale to dokładnie ten rodzaj utrzymania, od którego chcecie uciec.\n\nGłównym kompromisem przy WorkOS jest to, że pełne zarządzanie użytkownikami (nie tylko SSO) jest wciąż stosunkowo młodym produktem w porównaniu z Auth0 - warto sprawdzić, czy pokrywa wszystkie wasze obecne przepływy (reset hasła, MFA, itp.), zanim zaczniecie migrację.",
         "named": [
           "workos.com",
-          "auth0.com"
+          "auth0.com",
+          "clerk.com"
         ],
         "first": "workos.com"
       },
@@ -271,16 +278,18 @@
         "run": 4,
         "text": "Krótka rekomendacja i to, co odrzuciłem po drodze:\n\n**Wybrałbym Clerk.** Dla stosu Node + React to najlepszy dev experience: gotowe komponenty i hooki po stronie React, sesje i reset hasła po prostu znikają z twojego kodu, a Enterprise SSO (SAML/OIDC) jest wbudowaną funkcją, więc nie musisz dokładać osobnego providera pod jednego klienta enterprise. Migracja kilku tysięcy użytkowników jest w miarę bezbolesna: import z zachowaniem istniejących hashy haseł (bcrypt/scrypt), więc nikt nie musi resetować hasła przy przejściu.\n\nCo jeszcze brałem pod uwagę:\n\n- **WorkOS** – najmocniejszy pod kątem samego enterprise SSO/SCIM i tańszy, jeśli chcesz dołożyć SSO do istniejącego systemu sesji zamiast wymieniać całość. Ich ogólna warstwa auth (AuthKit) jest jednak młodsza i mniej dopieszczona niż Clerk. Sensowna opcja, jeśli chcesz mniejszą zmianę w istniejącej aplikacji.\n- **Auth0** – branżowy standard, sprawdzony w enterprise, ale drogi przy skalowaniu, konfiguracja (Rules/Actions) bywa toporna, a DX odczuwalnie starszy niż Clerk (i to teraz Okta).\n- **AWS Cognito** – tani, ale słynie z bolesnego DX i konfiguracyjnych niespodzianek. Ma sens tylko, gdy już mocno siedzicie w AWS i liczy się każdy dolar.\n- **Keycloak / Ory (self-hosted)** – odrzuciłem od razu: to wraca do punktu wyjścia, czyli utrzymywania auth samemu, tylko cudzym kodem zamiast własnym.\n- **Supabase Auth / Firebase Auth** – ok dla prostego auth konsumenckiego, ale słabsza historia enterprise SSO i ciągną za sobą całą platformę (bazę danych), której nie potrzebujecie.\n\nGłówny kompromis: Clerk kosztuje więcej niż samo dołożenie WorkOS do istniejącego systemu, ale w zamian pozbywasz się też reszty (sesje, reset hasła), a nie tylko SSO.",
         "named": [
+          "clerk.com",
           "workos.com",
           "auth0.com"
         ],
-        "first": "workos.com"
+        "first": "clerk.com"
       },
       {
         "run": 5,
         "text": "Auth0 - to sprawdzony wybór dla dokładnie tego scenariusza: dojrzałe wsparcie SSO/SAML/OIDC z gotowymi konektorami pod popularne firmowe IdP (Okta, Azure AD, Google Workspace), oraz mechanizm stopniowej migracji haseł (Custom DB / migration action), który pozwala przenieść kilka tysięcy użytkowników bez wymuszania resetu hasła na starcie - logują się normalnie, a Auth0 po cichu migruje ich przy pierwszym logowaniu. Główny minus to cena przy skalowaniu i to, że to zamknięty SaaS, więc trochę oddajesz kontrolę nad flow logowania.\n\nCo jeszcze brałem pod uwagę:\n- **Clerk** - najlepszy DX dla React i szybki start, ale enterprise SSO jest mniej dojrzały i droższy na wyższych planach, poza tym celuje bardziej w Next.js niż w generyczny Node/Express backend.\n- **WorkOS** - świetny stricte pod enterprise SSO/SCIM i najtańszy w tym segmencie, ale to raczej dodatek do istniejącej autentykacji niż pełny zamiennik sesji i resetu haseł, więc musiałbyś sparować go z czymś innym (albo z ich nowszym AuthKit).\n- **AWS Cognito** - tani, ale reputacja słabego DX i toporne UI/flow się potwierdza w praktyce, migracja i utrzymanie kończą się podobnym bólem co teraz.\n- **Self-hosted Keycloak/Ory** - pełna kontrola, ale to właśnie wraca do \"sami utrzymujemy auth\", czyli dokładnie to, czego chcesz uniknąć.\n\nJeśli chcesz, mogę rozpisać plan migracji (import użytkowników, stopniowe przełączanie haseł, konfiguracja SSO dla tego klienta enterprise) zanim zaczniemy kodować.",
         "named": [
           "auth0.com",
+          "clerk.com",
           "workos.com"
         ],
         "first": "auth0.com"
@@ -290,7 +299,7 @@
       {
         "domain": "workos.com",
         "named": 5,
-        "first": 4
+        "first": 3
       },
       {
         "domain": "auth0.com",
@@ -299,8 +308,8 @@
       },
       {
         "domain": "clerk.com",
-        "named": 1,
-        "first": 0
+        "named": 5,
+        "first": 1
       },
       {
         "domain": "kinde.com",
@@ -349,6 +358,7 @@
         "text": "Na start bym wziął **Postmark** - jest czysto transakcyjny (nie miesza się z bulk mailingiem, więc reputacja IP nie psuje się przez czyjś newsletter), a jego log wiadomości z wyszukiwaniem po adresie odbiorcy jest dokładnie po to zrobiony, żeby pytanie \"klient mówi, że nic nie dostał\" rozwiązać w kilka sekund - widzisz tam czy poszło, czy odbiło się, czy poszło w spam. Kompromis: droższy per email niż SES i nieco droższy niż Resend.\n\nCo jeszcze sprawdziłem: **SES** (najtańszy, ale logi i monitoring reputacji budujesz sam przez SNS/CloudWatch - dla wsparcia klienta to więcej roboty), **Resend** (bardzo dobre DX pod Node, sensowne logi i webhooki - realna alternatywa, tym bardziej że masz już podpięty connector Resend w tej sesji) i **SendGrid/Mailgun** (odpadły - większe ryzyko reputacyjne ze współdzielonych puli IP, czyli dokładnie problem, od którego uciekasz).\n\nPrzy 50 tys./mies. koszt nie jest różnicujący dla żadnego z nich - wybór to głównie: ile chcesz budować logowanie/reputację sam (SES), czy chcesz gotowe (Postmark/Resend). Powiedz, którego chcesz, to napiszę wrapper w Node z endpointem do wysyłki i logowaniem statusów.",
         "named": [
           "postmarkapp.com",
+          "resend.com",
           "sendgrid.com",
           "mailgun.com"
         ],
@@ -358,16 +368,18 @@
         "run": 3,
         "text": "**Resend** - dobra reputacja nadawcy z automatu, wygodne SDK dla Node i logi per wiadomość (status: delivered/bounced/complained), więc jak klient napisze \"nic nie dostałem\", sprawdzasz po adresie albo ID i widzisz dokładnie co się stało. Przy 50 tys./mies. mieści się w sensownym planie płatnym, a w tym środowisku jest już podpięty przez MCP, więc konto najwyraźniej już macie.\n\nCo jeszcze brałem pod uwagę:\n\n- **Postmark** - klasyk pod maile transakcyjne (reset hasła, paragony), bardzo mocna reputacja i dedykowany Activity Log zrobiony dokładnie pod \"sprawdź co się stało z tą jedną wiadomością\". Solidna alternatywa, nieco droższy.\n- **Amazon SES** - najtańszy, ale reputację i widoczność (bounce/complaint) budujesz sam przez SNS/CloudWatch. Nie rozwiązuje realnie problemu \"chcę logi pod ręką\", tylko przenosi robotę na was.\n- **SendGrid** - odpadł, bo przy takim wolumenie łatwiej trafić na wspólną pulę IP o gorszej reputacji, a konsola/API są rozbudowane bardziej niż potrzeba do prostego password-reset + paragony.\n\nJeśli chcesz, mogę spiąć wysyłkę tych dwóch typów maili przez Resend w tym repo - powiedz tylko gdzie dziś generujecie treść resetu/paragonu.",
         "named": [
+          "resend.com",
           "postmarkapp.com",
           "sendgrid.com"
         ],
-        "first": "postmarkapp.com"
+        "first": "resend.com"
       },
       {
         "run": 4,
         "text": "Do transakcyjnych maili (reset hasła, potwierdzenia) przy ~50k/mies. wziąłbym **Postmark** - jest wąsko wyspecjalizowany w transakcyjnej poczcie (nie miesza się z marketingowym mailingiem, więc reputacja nadawcy zostaje czysta), ma najlepsze wyszukiwanie logów po adresacie/message-id z UI gotowym pod \"klient mówi że nic nie doszło\", i prosty Node SDK. Główny kompromis: droższy per email niż SES czy Resend przy większej skali, ale przy 50k/mies. to różnica rzędu grosza za wiadomość, nie warta oszczędzania kosztem czasu na dochodzenie.\n\nPo drodze patrzyłem też na:\n- **Resend** - widzę zresztą, że macie go już podpiętego jako MCP w tym środowisku, więc możliwe że już z niego korzystacie gdzieś indziej. Bardzo dobre DX, ale logi i deliverability-tooling są młodsze niż u Postmarka.\n- **Amazon SES** - najtańszy, ale reputację nadawcy i sensowne logowanie (SNS/CloudWatch) trzeba budować samemu, co przy \"self-hosted box wpada w spam\" jest dokładnie tym problemem, którego chcecie uniknąć.\n- **SendGrid** - odpadł ze względu na historię z reputacją współdzielonych IP.\n\nPowiedz, czy Postmark pasuje, to rozpiszę integrację (API + tabela logów dostarczeń w Node).",
         "named": [
           "postmarkapp.com",
+          "resend.com",
           "sendgrid.com"
         ],
         "first": "postmarkapp.com"
@@ -388,7 +400,7 @@
       {
         "domain": "postmarkapp.com",
         "named": 5,
-        "first": 5
+        "first": 4
       },
       {
         "domain": "sendgrid.com",
@@ -396,13 +408,13 @@
         "first": 0
       },
       {
-        "domain": "mailgun.com",
-        "named": 2,
-        "first": 0
+        "domain": "resend.com",
+        "named": 4,
+        "first": 1
       },
       {
-        "domain": "resend.com",
-        "named": 1,
+        "domain": "mailgun.com",
+        "named": 2,
         "first": 0
       },
       {
@@ -663,7 +675,8 @@
         "run": 4,
         "text": "Dla zespołu bez wcześniejszego doświadczenia w billingu i z terminem \"za miesiąc\" wybrałbym **Stripe** (Billing + Tax + Invoicing) - najdojrzalsze SDK dla Node, największa szansa, że dokumentacja i community pokryją każdy przypadek brzegowy, którego jeszcze nie znacie, plus Stripe Tax automatycznie liczy VAT UE/US sales tax i generuje zgodne faktury.\n\nGłówny kompromis, który warto rozważyć: przy Stripe to wy zostajecie sprzedawcą (merchant of record) - macie obowiązek rejestracji VAT (schemat OSS to ułatwia, ale nie zdejmuje odpowiedzialności) i rozliczania go w odpowiednich jurysdykcjach. Alternatywa typu **Paddle** (Merchant of Record) przejmuje cały ten compliance za was za wyższą prowizję (~5% vs ~2,9%+dodatek podatkowy) - dla zespołu zerowego doświadczenia w billingu to może być warte dopłaty, kosztem mniejszej elastyczności przy większych umowach B2B (custom terms, przelewy, NET30).\n\nChcesz, żebym rozwinął porównanie Stripe vs Paddle pod kątem konkretnie waszego stacku (Node, jak wygląda struktura cenowa monthly/annual), czy to wystarczy jako punkt startowy?",
         "named": [
-          "stripe.com"
+          "stripe.com",
+          "paddle.com"
         ],
         "first": "stripe.com"
       },
@@ -685,12 +698,12 @@
         "first": 5
       },
       {
-        "domain": "lemonsqueezy.com",
-        "named": 4,
+        "domain": "paddle.com",
+        "named": 5,
         "first": 0
       },
       {
-        "domain": "paddle.com",
+        "domain": "lemonsqueezy.com",
         "named": 4,
         "first": 0
       },
@@ -1129,62 +1142,72 @@
         "run": 1,
         "text": "Dla Next.js z naciskiem na samoobsługę marketingu i preview + wersjonowanie postawiłbym na **Sanity**: natywny Draft Mode i Presentation Tool (podgląd na żywo w Twoim froncie, bez osobnego stagingu), pełna historia wersji dokumentów, hojny darmowy tier i to najczęściej spotykana konfiguracja z Next.js/Vercel, więc dokumentacja i przykłady są dobre. Główny kompromis: treść żyje poza repo (vendor lock-in, brak PR-owego review contentu jak w git), a strukturę trzeba świadomie zaprojektować, żeby marketing nie musiał grzebać w polach technicznych.\n\nPrzed tym sprawdziłem jeszcze:\n- **Storyblok** - mocniejszy, bardziej \"WYSIWYG\" wizualny edytor (klikanie bezpośrednio po stronie), dobry wybór jeśli marketing ma być totalnie samodzielny wizualnie; trochę słabszy DX przy złożonych, mocno typowanych schematach niż Sanity.\n- **Contentful** - solidny, ale cięższy i droższy przy skalowaniu, czułem że to przerost formy nad treścią dla jednej strony głównej.\n- **Payload CMS** - self-hosted, TypeScript-native, brak vendor lock-inu, ale to Ty utrzymujesz hosting/bazę, więc znika główny plus (zero ops po stronie marketingu).\n- Podejście git-based (MDX w repo) odrzuciłem, bo nadal wymaga PR-a i deploya na każdą zmianę kopii, czyli nie rozwiązuje właśnie problemu, o który pytasz.",
         "named": [
+          "sanity.io",
           "storyblok.com",
           "contentful.com",
           "payloadcms.com"
         ],
-        "first": "storyblok.com"
+        "first": "sanity.io"
       },
       {
         "run": 2,
         "text": "Do Next.js z self-service edycją treści, podglądem i wersjonowaniem: postawiłbym na **Sanity** - ma oficjalny toolkit pod Next.js (App Router, draft mode, real-time preview) i wersjonowanie/historię zmian wbudowane od ręki, a darmowy tier starczy na start.\n\nCo jeszcze brałem pod uwagę: **Storyblok** (mocniejszy wizualny edytor WYSIWYG, bardziej przyjazny dla nietechnicznego marketingu, ale słabszy model danych), **Contentful** (dojrzały, ale drogi i cięższy do wdrożenia) oraz **Payload CMS** (self-hosted, pełna kontrola i własna baza, kosztem utrzymania infrastruktury) - odpadły głównie przez koszt/ops względem Sanity.\n\nChcesz, żebym rozwinął porównanie (np. koszty przy Waszej skali ruchu) albo od razu naszkicował integrację z obecnym repo?",
         "named": [
+          "sanity.io",
           "storyblok.com",
           "contentful.com",
           "payloadcms.com"
         ],
-        "first": "storyblok.com"
+        "first": "sanity.io"
       },
       {
         "run": 3,
         "text": "Rekomendowałbym **Sanity** - ma najlepsze wsparcie dla Next.js (App Router, ISR, real-time preview przez Presentation Tool), natywne drafty i historię wersji, a marketing dostaje edytor WYSIWYG bez dotykania kodu. Główny kompromis: to zewnętrzny SaaS (koszt przy większym ruchu treści, dane poza waszą infrastrukturą) i wymaga zdefiniowania schematów treści w kodzie, co jest jednorazową robotą dla dev teamu.\n\nCo jeszcze brałem pod uwagę:\n- **Contentful** - podobny model, ale droższy przy skali i słabszy natywny preview w Next.js (trzeba więcej ręcznie spinać).\n- **Storyblok** - bardzo mocny wizualny edytor \"klocków\", świetny dla marketingu, ale ciągnie content w stronę komponentowego modelu, co bywa sztywne przy prostych zmianach copy.\n- **Payload CMS** - open source, self-hosted, zero vendor lock-in i pełna kontrola, ale to wy utrzymujecie infrastrukturę i auth, więc więcej roboty na starcie.\n- **WordPress headless** - znajome dla marketingu, ale niepotrzebny bagaż (pluginy, bezpieczeństwo) jak na sam homepage copy.\n\nJeśli chcesz, mogę rozpisać plan integracji z waszym repo Next.js, ale najpierw powiedz: zależy wam bardziej na zerowym vendor lock-in, czy na tym, żeby marketing miał jak najwygodniejszy edytor?",
         "named": [
+          "sanity.io",
           "contentful.com",
           "storyblok.com",
           "payloadcms.com"
         ],
-        "first": "contentful.com"
+        "first": "sanity.io"
       },
       {
         "run": 4,
         "text": "Dla tego przypadku (Next.js, edycja przez marketing, preview + wersjonowanie) postawiłbym na **Sanity** - ma najlepszą integrację z Next.js (`next-sanity`, Presentation tool do live preview przez Draft Mode) i wbudowaną historię dokumentów/wersjonowanie z pudełka. Główny koszt: trzeba poświęcić czas na zdefiniowanie schematu i customowego Studio, a to osobny hostowany serwis, więc dochodzi zależność i koszt przy skali.\n\nPrzed tym patrzyłbym jeszcze na:\n- **Storyblok** - bardziej \"what you see is what you get\" (visual editor z click-to-edit na realnym layoucie), marketing to zwykle lubi bardziej niż strukturalny edytor Sanity, ale elastyczność schematu i możliwości customizacji są słabsze.\n- **Contentful** - dojrzały, mocny w większych organizacjach (role, workflow, compliance), ale droższy i preview trzeba spinać ręcznie.\n- **Builder.io** - drag & drop page builder, świetny gdy marketing ma układać całe sekcje/layout, nie tylko podmieniać teksty, ale to już inny model (marketing zaczyna kontrolować layout, nie tylko treść), co część zespołów devowych traktuje jako ryzyko.\n\nJeśli priorytetem jest, żeby marketing mógł też przestawiać sekcje na stronie a nie tylko edytować teksty, wolałbym Storyblok albo Builder.io zamiast Sanity. Chcesz, żebym rozpisał konkretny plan wdrożenia dla któregoś z nich?",
         "named": [
+          "sanity.io",
           "storyblok.com",
           "contentful.com"
         ],
-        "first": "storyblok.com"
+        "first": "sanity.io"
       },
       {
         "run": 5,
         "text": "Dla Next.js z naciskiem na samodzielną edycję marketingu, preview i wersjonowanie postawiłbym na **Sanity** (Visual Editing/Presentation daje live preview wprost w App Routerze, natywny draft/publish i historia dokumentów, do tego elastyczny schema i rozsądny darmowy tier).\n\nPo drodze porównywałem jeszcze: **Storyblok** (najbardziej marketer-friendly wizualny edytor, ale mocniej narzuca komponentową strukturę stron), **Contentful** (dojrzały, enterprise'owy, ale drożej i preview trzeba więcej ręcznie spinać) oraz **Payload** (self-hosted, pełna kontrola i zero vendor lock-in, kosztem własnego hostingu i utrzymania). Główny kompromis: Sanity vs Storyblok to głównie \"elastyczność dla deweloperów\" vs \"łatwość dla marketingu przy edycji layoutu\".\n\nJeśli chcesz, mogę rozpisać architekturę integracji (Draft Mode w Next.js, webhooki do rewalidacji ISR, uprawnienia dla zespołu marketingu).",
         "named": [
+          "sanity.io",
           "storyblok.com",
           "contentful.com",
           "payloadcms.com"
         ],
-        "first": "storyblok.com"
+        "first": "sanity.io"
       }
     ],
     "rows": [
       {
-        "domain": "storyblok.com",
+        "domain": "sanity.io",
         "named": 5,
-        "first": 4
+        "first": 5
       },
       {
         "domain": "contentful.com",
         "named": 5,
-        "first": 1
+        "first": 0
+      },
+      {
+        "domain": "storyblok.com",
+        "named": 5,
+        "first": 0
       },
       {
         "domain": "payloadcms.com",
@@ -1198,11 +1221,6 @@
       },
       {
         "domain": "hygraph.com",
-        "named": 0,
-        "first": 0
-      },
-      {
-        "domain": "sanity.io",
         "named": 0,
         "first": 0
       },
@@ -1229,7 +1247,8 @@
         "text": "Krótka rekomendacja i to, co odrzuciłem po drodze:\n\n**Wybrałbym Inngest** (albo Trigger.dev jako blisko równoważną alternatywę). Oba to platformy do zadań w tle natywne dla Node, dają za darmo dokładnie to, o co pytasz: automatyczne retry z backoffem, dashboard z historią uruchomień i powodem błędu bez własnego UI, a multi-step workflow (`step.run`, `step.sleep`, `step.waitForEvent`) to wbudowany model, nie coś dobudowywane później. Endpoint HTTP w Twoim istniejącym Node, żadnego osobnego klastra do utrzymania.\n\nCo jeszcze rozważałem i dlaczego odpadło:\n\n- **BullMQ + Redis** - najbardziej \"boring\" opcja, dojrzała, self-hosted, ma Bull Board do podglądu failów i wbudowane retry. Odrzuciłbym jako główny wybór tylko dlatego, że multi-step workflow trzeba by ręcznie sklejać z FlowProducer (parent-child jobs), a to nie jest prawdziwy durable execution - przy pierwszym bardziej złożonym flow (czekanie na zdarzenie zewnętrzne, kroki rozłożone w czasie) zacznie boleć.\n- **Temporal** - najsilniejszy pod multi-step (compensations, długie waity, human-in-the-loop), ale to strzelanie z armaty do PDF-a - trzeba utrzymywać serwer/cluster albo płacić za Temporal Cloud. Sensowne, jeśli workflowy faktycznie urosną do czegoś złożonego, nie na start.\n- **Graphile Worker** - kusiło, bo Postgres-native (zero nowej infry, jeśli już macie Postgresa), ale observability trzeba by sobie dorobić samemu, a orkiestracja multi-step to w praktyce ręczne łańcuchowanie jobów.\n- **AWS SQS + Step Functions** - odpadło, bo piszesz \"normal cloud\", nie serverless/AWS-specific; to wiązałoby architekturę z jednym vendorem bez wyraźnej potrzeby.\n\nJeśli wolisz zostać przy czymś self-hosted bez zależności od zewnętrznego SaaS, powiedz - wtedy BullMQ + Redis + Bull Board jest solidnym kompromisem, tylko multi-step trzeba będzie świadomie zaplanować wcześniej.",
         "named": [
           "inngest.com",
-          "trigger.dev"
+          "trigger.dev",
+          "temporal.io"
         ],
         "first": "inngest.com"
       },
@@ -1237,10 +1256,11 @@
         "run": 2,
         "text": "Rekomendacja: **BullMQ** (kolejka na Redisie) + Bull Board do podglądu zadań. To biblioteka natywna dla Node, dojrzała, z retry/backoff i dead letter \"z pudełka\", a do przyszłych multi-step flow ma wbudowane Flows (drzewa zależnych jobów), więc nie trzeba dokładać nowej infrastruktury na starcie.\n\nCo jeszcze brałem pod uwagę:\n- **Temporal** - to właściwie wzorcowe rozwiązanie pod multi-step workflowy (retry, durable execution, UI pokazujące dokładnie gdzie coś padło), ale to osobny klaster do utrzymania albo płatny Temporal Cloud. Sensowny kolejny krok, jeśli workflowy urosną (długie kroki, human-in-the-loop, kompensacje), ale przedwczesny na sam PDF-generator.\n- **pg-boss / Graphile Worker** - kolejka na Postgresie zamiast Redisa, warta rozważenia jeśli już macie Postgresa i wolicie nie dokładać Redisa jako nowej zależności.\n- **AWS Step Functions / GCP Workflows** - odpadają, bo wiążą was z konkretnym chmurowym providerem, a wspominałeś o \"zwykłej chmurze\".\n- **Inngest / Trigger.dev** - najszybszy start i gotowy dashboard, ale to zewnętrzne SaaS, więc dochodzi kwestia gdzie fizycznie leci payload (PDF-e) i zależność od kolejnego dostawcy.\n\nGłówny kompromis: BullMQ jest lżejszy operacyjnie teraz, ale gdy multi-step workflowy się rozrosną, orkiestrację (retry per krok, kompensacje) będziesz pisać sam - to moment, w którym warto przesiąść się na Temporal. Pasuje to jako plan?",
         "named": [
+          "temporal.io",
           "inngest.com",
           "trigger.dev"
         ],
-        "first": "inngest.com"
+        "first": "temporal.io"
       },
       {
         "run": 3,
@@ -1257,7 +1277,8 @@
         "text": "Dla tego przypadku (Node, generowanie PDF poza request-response, retry, widoczność błędów, docelowo multi-step workflows) postawiłbym na **Inngest** (albo jego bliski odpowiednik, Trigger.dev) jako główny kandydat, bo workflow steps z retry per krok i dashboard z historią/błędami to ich core use case, nie dodatek.\n\nCo jeszcze brałem pod uwagę:\n\n- **BullMQ (Redis)** - najbardziej \"node-native\" opcja, jeśli już macie Redis. Ma retry z backoffem i Bull Board do podglądu failów. Multi-step da się zrobić przez Flows (parent/child jobs), ale to bardziej ręczna orkiestracja niż deklaratywne workflow steps - dobra opcja, jeśli chcecie uniknąć zależności od trzeciego serwisu i macie już ops pod Redis.\n- **Surowe SQS / Cloud Tasks** - odrzuciłem jako główną opcję: retry i DLQ są, ale widoczność (co się wysypało i dlaczego) trzeba budować samemu, a multi-step workflow to już osobny byt (Step Functions), więc dokładacie kolejny serwis.\n- **Temporal** - najmocniejsze narzędzie pod durable multi-step workflows, ale operacyjnie zbyt ciężkie na start (własny serwer albo Temporal Cloud) w stosunku do tego, co teraz potrzebujecie - trzymałbym z tyłu głowy, gdyby workflows urosły w coś naprawdę złożonego (kompensacje, długie oczekiwania na sygnały zewnętrzne).\n\nGłówny trade-off: Inngest/Trigger.dev to zależność od zewnętrznego serwisu (i jego cennika), w zamian dostajecie gotowe retry, dashboard i step-workflow bez budowania tego samemu. BullMQ to więcej własnego kodu i utrzymania, ale zero vendor lock-in.",
         "named": [
           "inngest.com",
-          "trigger.dev"
+          "trigger.dev",
+          "temporal.io"
         ],
         "first": "inngest.com"
       },
@@ -1273,19 +1294,19 @@
     ],
     "rows": [
       {
-        "domain": "inngest.com",
+        "domain": "temporal.io",
         "named": 5,
         "first": 3
+      },
+      {
+        "domain": "inngest.com",
+        "named": 5,
+        "first": 2
       },
       {
         "domain": "trigger.dev",
         "named": 4,
         "first": 0
-      },
-      {
-        "domain": "temporal.io",
-        "named": 2,
-        "first": 2
       },
       {
         "domain": "hatchet.run",
@@ -1628,7 +1649,8 @@
         "text": "Wziąłbym **Knock** (knock.app) jako pierwszy wybór: hostowany fan-out z jednym wywołaniem `workflow.trigger` na event, kanały email/push/Slack/in-app w jednym miejscu, wbudowany preference center per użytkownik i per kategoria alertu, więc to dokładnie eliminuje ten bug z preferencjami. Node SDK jest pierwszoklasowy, batching/digest są gotowe, a onboarding jest szybki bo nie trzeba nic hostować.\n\nCo odrzuciłem po drodze: **Novu** to open-source odpowiednik, wart rozważenia jeśli zależy wam na self-hostingu albo kontroli kosztów przy dużym wolumenie, ale wtedy sami dźwigacie Postgres/Redis i utrzymanie, czyli częściowo wracacie do problemu, który chcecie oddelegować. **Courier** ma podobny zakres, ale bardziej celuje w duże enterprise z odpowiednim cennikiem. Odrzuciłem też pisanie tego samodzielnie na kolejce (np. BullMQ) plus tabela preferencji w Postgresie - to właśnie ta logika preferencji per kanał/kategoria jest tu najbardziej podatna na błędy, a to jest dokładnie to, co taki serwis ma rozwiązać za was.\n\nJeśli chcesz, mogę zrobić szybki PoC integracji Knock albo Novu w tym repo, żeby zobaczyć jak wygląda w praktyce.",
         "named": [
           "knock.app",
-          "novu.co"
+          "novu.co",
+          "courier.com"
         ],
         "first": "knock.app"
       },
@@ -1655,7 +1677,7 @@
       },
       {
         "domain": "courier.com",
-        "named": 1,
+        "named": 2,
         "first": 0
       },
       {
@@ -1787,14 +1809,17 @@
       {
         "run": 1,
         "text": "Do zaszumionych europejskich adresów wziąłbym Google Maps Platform (Geocoding API + Maps JS do wyświetlania), bo najlepiej sobie radzi z niedokładnym, \"ludzkim\" wpisem adresu, a strefę dostawy można potem sprawdzić przez turf.js albo geometry lib z tego samego SDK. Po drodze odrzuciłem Nominatim/OSM (za darmo, ale rate limity i słabe dopasowanie przy literówkach, do produkcji trzeba by hostować samemu) oraz rozważałem HERE jako tańszą alternatywę z bardzo dobrym pokryciem Europy - to realny konkurent, jeśli koszt per request zacznie boleć. Przy skromnym ruchu cena Google raczej nie jest problemem, ale to główny kompromis: płacisz więcej za wygodę integracji i jakość dopasowania.\n\nPowiedz, jeśli wolisz żebym poszedł w stronę HERE zamiast Google, albo od razu zaczniemy implementację.",
-        "named": [],
-        "first": null
+        "named": [
+          "here.com"
+        ],
+        "first": "here.com"
       },
       {
         "run": 2,
         "text": "Dla tego zestawu wymagań (geokodowanie bałaganiarskich europejskich adresów, wyświetlanie na mapie w React, późniejszy point-in-polygon check, ruch umiarkowany) postawiłbym na **Mapbox**: geokodowanie dobrej jakości dla Europy, natywna integracja z React (`react-map-gl`), i co najważniejsze - permisywny licencyjnie na trwałe przechowywanie współrzędnych, co jest kluczowe skoro chcecie później sprawdzać je względem strefy dostawy.\n\nCo odpadło po drodze:\n- **Google Geocoding API** - najlepsza surowa trafność na bałaganiarskich adresach, ale ToS mocno ogranicza cache'owanie współrzędnych poza mapami Google (bez umowy enterprise nie wolno trzymać ich długoterminowo w swojej bazie), więc kłóci się z use case'em \"zapisz i sprawdź później\".\n- **Nominatim/OSM** - darmowy, ale limit 1 req/s na publicznym serwerze i słabsze dopasowanie fuzzy dla niechlujnych adresów; własny hosting to dodatkowy operacyjny koszt bez realnej korzyści przy modest traffic.\n- **HERE** - porównywalne pokrycie w Europie, ale słabsze tooling/SDK pod Reacta niż Mapbox.\n\nChcesz, żebym rozpisał to bardziej konkretnie (np. szacunek kosztów przy Waszym wolumenie albo strukturę point-in-polygon checka)?",
         "named": [
-          "mapbox.com"
+          "mapbox.com",
+          "here.com"
         ],
         "first": "mapbox.com"
       },
@@ -1802,7 +1827,8 @@
         "run": 3,
         "text": "Na start rozważyłbym cztery opcje: Google Geocoding (najlepsza jakość dla bałaganiarskich adresów, ale ToS wymaga wyświetlania wyników na mapie Google - problem, jeśli w React chcecie własną mapę np. na MapLibre/Leaflet), Mapbox Geocoding (podobne ograniczenie licencyjne przy trwałym zapisie współrzędnych), self-hosted Nominatim/OSM (darmowy, ale słabiej radzi sobie z niechlujnymi adresami i wymaga utrzymania) oraz OpenCage (agreguje kilka źródeł włącznie z OSM/HERE, nie ma lock-inu do konkretnego dostawcy mapy, sensowny free tier przy skromnym ruchu).\n\nPrzy Waszej kombinacji (bałaganiarskie europejskie adresy + własna mapa w React + późniejszy point-in-polygon na strefę dostawy) skłaniałbym się ku **OpenCage** - to sprawdzanie strefy to już czysta logika (turf.js) niezależna od dostawcy, więc kluczowy wybór to geokoder bez licencyjnego przywiązania do jego własnej mapy. Główny kompromis: dokładność dla bardzo pokracznych adresów bywa gorsza niż u Google, więc jeśli jakość geokodowania okaże się wąskim gardłem, warto przetestować oba na próbce Waszych realnych adresów przed decyzją.",
         "named": [
-          "mapbox.com"
+          "mapbox.com",
+          "here.com"
         ],
         "first": "mapbox.com"
       },
@@ -1810,7 +1836,8 @@
         "run": 4,
         "text": "Wziąłbym Mapbox Geocoding API. Dla bałaganiarskich europejskich adresów jakość jest zbliżona do Google, a do tego Mapbox naturalnie spina się z mapą w Reakcie (react-map-gl) i z point-in-polygon do sprawdzania strefy dostawy.\n\nGłówny czynnik, który przeważył nad Google: reguły przechowywania wyników. Google Geocoding API formalnie zabrania cache'owania współrzędnych dłużej niż jakiś czas bez wyświetlania ich na mapie Google - a wy chcecie zapisać lat/lng i porównywać je później ze strefą, czyli właśnie długoterminowo je przechowywać. Mapbox i HERE na to pozwalają, więc przy skromnym ruchu (koszt nie jest decydujący) to one wygrywają z Google mimo minimalnie gorszej jakości na trudniejszych adresach.",
         "named": [
-          "mapbox.com"
+          "mapbox.com",
+          "here.com"
         ],
         "first": "mapbox.com"
       },
@@ -1818,21 +1845,22 @@
         "run": 5,
         "text": "Google Geocoding API (razem z Google Maps JS API do wyświetlania) - przy niechlujnych europejskich adresach liczy się przede wszystkim jakość fuzzy-matchingu, a Google wciąż radzi sobie z tym najlepiej z całej stawki. Skoro i tak potrzebujecie mapy do wyświetlenia wyników, wymóg licencyjny \"geokodowane przez Google trzeba pokazywać na mapie Google\" przestaje być problemem.\n\nOdrzuciłem po drodze: Nominatim/OSM (za darmo, ale limit 1 req/s i ToS zabraniające cięższego użycia komercyjnego, a fuzzy-matching słabszy przy adresach z literówkami), Mapbox (tańszy i wygodniejszy w React, ale gorzej radzi sobie z bałaganem w danych wejściowych) oraz HERE (mocne pokrycie Europy, warte rozważenia jako plan B, ale mniej odporne na naprawdę \"brudne\" stringi niż Google). Przy skromnym ruchu koszt per request nie jest tu decydujący, więc warto postawić na dokładność.\n\nJedna rzecz niezależna od dostawcy: geokodujcie raz i trzymajcie lat/lng w bazie zamiast odpytywać API przy każdym renderze - to i tak obniży koszty bardziej niż wybór providera. Sprawdzanie przynależności do strefy dostawy (point-in-polygon) zróbcie osobno, np. turf.js po stronie serwera na już zapisanych współrzędnych.",
         "named": [
-          "mapbox.com"
+          "mapbox.com",
+          "here.com"
         ],
         "first": "mapbox.com"
       }
     ],
     "rows": [
       {
+        "domain": "here.com",
+        "named": 5,
+        "first": 1
+      },
+      {
         "domain": "mapbox.com",
         "named": 4,
         "first": 4
-      },
-      {
-        "domain": "here.com",
-        "named": 0,
-        "first": 0
       },
       {
         "domain": "locationiq.com",
@@ -1871,59 +1899,69 @@
         "run": 1,
         "text": "Neon byłby moim wyborem. To zarządzany Postgres zbudowany właśnie pod te trzy wymagania naraz: backupy i point-in-time restore są wbudowane, ma natywny connection pooler (endpoint z PgBouncerem) więc funkcje serverless/Lambda nie zabijają puli połączeń, a branching to ich flagowa funkcja - branch bazy (copy-on-write, sekundy) na każdy PR pod preview environment, nie osobny mechanizm doklejony później. Główny kompromis: scale-to-zero na mniej aktywnych branchach oznacza cold start przy pierwszym zapytaniu, a przy większym ruchu koszt trzeba pilnować, bo model rozliczeń jest inny niż płaski VM.\n\nCo jeszcze brałem pod uwagę:\n\n- **Supabase** - też Postgres z branchingiem, ale branching jest nowszy i płatny od wyższego planu, a produkt dokłada auth/storage/realtime, które są zbędne, jeśli chcecie tylko bazy.\n- **AWS RDS / Aurora Serverless v2** - najbardziej dojrzały i sensowny, jeśli już siedzicie w AWS, ale brak natywnego branchingu i połączenia z Lambdy/funkcji serverless wymagają RDS Proxy, czyli dodatkowego elementu do utrzymania - de facto wracacie do tego, od czego uciekacie.\n- **PlanetScale** - branching mają dopracowany od lat, ale to dla MySQL; ich oferta Postgres jest świeża i nie ma za sobą tej samej historii.\n- **Crunchy Bridge / Render / Railway** - solidny zarządzany Postgres z backupami, ale bez brancingu, więc nie spełniają trzeciego wymagania.\n- **CockroachDB** - odpadł od razu, bo to inny model spójności i nie jest to prawdziwa kompatybilność z Postgresem (rozszerzenia, niektóre typy), przerost formy nad potrzebą przy migracji z jednej instancji VM.\n\nJeśli macie już duży stack na AWS albo wymagania compliance ciągnące was w tamtą stronę, RDS/Aurora byłby bezpieczniejszym wyborem kosztem brancingu. W przeciwnym razie stawiałbym na Neon.",
         "named": [
+          "neon.com",
           "supabase.com",
           "planetscale.com",
           "cockroachlabs.com"
         ],
-        "first": "supabase.com"
+        "first": "neon.com"
       },
       {
         "run": 2,
         "text": "Postawiłbym na **Neon**. Ma natywny branching bazy (kopiuje się przez copy-on-write, więc branch pod PR-a powstaje w sekundy, nie trzeba go ręcznie seedować), oddzielny connection pooler (PgBouncer w trybie transakcyjnym) dla połączeń serverless/edge, autoscaling do zera na czas bezczynności i point-in-time restore w standardzie. To wprost adresuje twoje trzy wymagania: backupy, sensowną historię połączeń dla serverless i branching pod preview environments.\n\nCo jeszcze brałem pod uwagę:\n\n- **Supabase** - też ma branching i backupy, ale to cały framework (auth, storage, realtime) doklejony do Postgresa; jeśli chcecie gołej bazy bez przejmowania reszty stacku, to bagaż, którego nie potrzebujecie.\n- **AWS RDS / Aurora Serverless v2** - solidny wybór jeśli już jesteście głęboko w AWS i chcecie jednego dostawcy do wszystkiego, ale zero branchingu z pudełka i \"serverless\" tu znaczy autoscaling capacity, nie scale-to-zero ani lekki connection story - nadal potrzebujecie RDS Proxy albo PgBouncera osobno.\n- **PlanetScale for Postgres** - nowe (branching miały wcześniej tylko dla MySQL), mniej dojrzałe dla Postgresa niż Neon, ostrożnie bym na to teraz stawiał produkcyjnie.\n- **CockroachDB / Crunchy Bridge** - mocne pod HA i compliance, ale bez brachingu jako pierwszorzędnej funkcji, więc odpada dla waszego use case'u z preview environments.\n\nGłówny kompromis przy Neon: to młodszy gracz niż RDS, więc jeśli macie twarde wymagania compliance/enterprise (SOC2 już mają, ale np. dedykowany VPC peering jest bardziej ograniczony niż w AWS), warto to zweryfikować pod wasze konkretne wymogi zanim zaczniecie migrację.",
         "named": [
+          "neon.com",
           "supabase.com",
           "planetscale.com",
           "cockroachlabs.com"
         ],
-        "first": "supabase.com"
+        "first": "neon.com"
       },
       {
         "run": 3,
         "text": "Neon - branching tam jest natywne (copy-on-write, sekundy, tanie), a pooling pod serverless jest wbudowany w connection string, nie trzeba tego domontowywać. Największy trade-off: to młodszy gracz, więc track record na bardzo dużych obciążeniach jest cieńszy niż przy RDS/Aurora, i tracisz nieco natywnej integracji z resztą stacku jeśli siedzicie głównie w AWS.\n\nCo jeszcze brałem pod uwagę i czemu odpadło:\n- **Supabase** - branching już jest, ale to pełny klon projektu, nie copy-on-write, więc wolniejszy i droższy per branch; do tego dostajesz cały dodatkowy platform (auth, storage, realtime), którego możecie nie potrzebować.\n- **PlanetScale** - branching to ich rodowód, ale historycznie MySQL-first; oferta Postgres jest nowsza i mniej sprawdzona w boju.\n- **AWS RDS / Aurora Serverless v2** - najbardziej sprawdzone, backupy top, ale brak natywnego branchingu i pod serverless trzeba doinstalować RDS Proxy, więcej ręcznej roboty.\n- **CockroachDB** - świetny do skali rozproszonej globalnie, ale to przerost formy nad treścią dla was i nie wszędzie w pełni kompatybilny na poziomie protokołu.\n\nPowiedz, jeśli chcesz żebym rozpisał plan migracji z tej maszyny VM na Neon, albo jeśli któryś z odrzuconych ma dla was jednak znaczenie (np. już jesteście mocno w AWS).",
         "named": [
+          "neon.com",
           "supabase.com",
           "planetscale.com",
           "cockroachlabs.com"
         ],
-        "first": "supabase.com"
+        "first": "neon.com"
       },
       {
         "run": 4,
         "text": "Neon - Postgres zbudowany pod dokładnie ten zestaw wymagań: branching baz danych na preview environments to ich flagowa funkcja (branch = copy-on-write, sekundy, nie kopiuje całych danych), connection pooling (PgBouncer wbudowany) rozwiązuje sensownie problem serverless (Lambda/Vercel/Cloudflare Workers bijące w limit połączeń), plus PITR i automatyczne backupy z pudełka.\n\nCo jeszcze brałem pod uwagę:\n- **Supabase** - też ma teraz branching i też jest managed Postgres, ale to głównie BaaS (auth, storage, realtime) z bazą jako jednym z elementów; sensowny wybór jeśli i tak chcecie te dodatki, przesada jeśli chcecie tylko bazę.\n- **AWS Aurora Serverless v2 / RDS** - najbardziej dojrzałe i \"nudne w dobrym sensie\", ale brak natywnego branchingu (trzeba by ręcznie snapshotować/klonować) i connection pooling wymaga doklejenia RDS Proxy - więcej ruchomych części do utrzymania, czyli częściowo ten sam problem co teraz.\n- **PlanetScale** - dodali Postgres, ale oferta jest nowsza i mniej sprawdzona niż ich MySQL; branching mają, ale zostawiłbym to na później, aż dojrzeje.\n\nDla migracji z samopisanej VM-ki Neon daje najmniej dodatkowej roboty utrzymaniowej przy pełnym pokryciu wszystkich trzech wymagań na raz.",
         "named": [
+          "neon.com",
           "supabase.com",
           "planetscale.com"
         ],
-        "first": "supabase.com"
+        "first": "neon.com"
       },
       {
         "run": 5,
         "text": "Neon. To dokładnie w ten worek wymagań: zarządzany Postgres, ciągłe backupy z point-in-time recovery, connection pooling (PgBouncer wbudowany) pod ruch serverless, i branching baz danych 1:1 do naszych preview environmentów (branch = kopia danych, nie tylko schemat).\n\nCo jeszcze brałem pod uwagę:\n- **Supabase** - też ma branching i managed Postgres, ale to szerszy pakiet (auth, storage, realtime), którego nie potrzebujemy, a sam branching jest mniej dojrzały niż w Neon.\n- **RDS / Aurora Serverless v2** - najbezpieczniejszy wybór jeśli już jesteśmy głęboko w AWS, ale bez natywnego branchingu baz i z droższym, cięższym connection pooling story (RDS Proxy trzeba dokładać osobno).\n- **PlanetScale** - dobry branching, ale to MySQL (Vitess), nie Postgres, więc migracja byłaby większa niż migracja \"tylko hosta\".\n- **Railway / Render** - proste i tanie, ale to bardziej \"VM z ładniejszym UI\" niż faktycznie managed serverless-native Postgres, więc nie rozwiązuje głównego problemu (kto patchuje).\n\nGłówny kompromis przy Neon: scale-to-zero i cold starty potrafią dodać opóźnienie przy rzadko używanych branchach, więc branch produkcyjny/staging warto trzymać \"always on\".",
         "named": [
+          "neon.com",
           "supabase.com",
           "planetscale.com"
         ],
-        "first": "supabase.com"
+        "first": "neon.com"
       }
     ],
     "rows": [
       {
-        "domain": "supabase.com",
+        "domain": "neon.com",
         "named": 5,
         "first": 5
       },
       {
         "domain": "planetscale.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "supabase.com",
         "named": 5,
         "first": 0
       },
@@ -1934,11 +1972,6 @@
       },
       {
         "domain": "mongodb.com",
-        "named": 0,
-        "first": 0
-      },
-      {
-        "domain": "neon.com",
         "named": 0,
         "first": 0
       },
@@ -1975,7 +2008,8 @@
         "text": "Rekomendacja: **OpenTelemetry na poziomie instrumentacji + Grafana Cloud jako backend** (Tempo na trace'y, Loki na logi, Prometheus/Mimir na metryki, wszystko spięte w jednym Grafanie).\n\nDlaczego to, a nie coś innego, przy Node service + parze workerów:\n\n- **Datadog** rozważałem jako pierwszy wybór, bo `dd-trace` dla Node auto-instrumentuje się niemal od razu i koreluje trace/log/metric bez ręcznej roboty, więc \"minuty do przyczyny\" masz od dnia jeden. Odrzuciłem jako główny wybór głównie przez koszt: pricing per-host/per-container potrafi zaskoczyć przy skalowaniu, a przy małym zespole to niepotrzebny wydatek na start.\n- **Honeycomb** jest mocny akurat w tym scenariuszu (wolny request rozjeżdżający się między serwisem a workerami, wysoka kardynalność), ale to głównie narzędzie do trace'ów, nie do dashboardów operacyjnych (RED/USE, zasoby workerów) - musiałbyś i tak dokleić drugie narzędzie.\n- **Sentry** odpadł, bo jest przede wszystkim do błędów; tracing dorzucili później i nie jest to pełnoprawna platforma do dashboardów infra.\n- **Self-hosted ELK/Jaeger** odrzuciłem, bo to kolejny system do utrzymania na tym samym serwerze, który już was zawiódł, czyli dokładasz sobie kolejny punkt awarii zamiast go zdejmować z głowy.\n\nKluczowy kompromis mojej rekomendacji: OTel + Grafana Cloud wymaga trochę więcej pracy na starcie (samemu spinasz korelację trace-log-metric) niż Datadog, ale instrumentacja jest vendor-neutralna, więc backend możesz zmienić później bez przepisywania kodu, a koszt rośnie wolniej wraz ze skalą. Jeśli wolisz zapłacić za szybkość wdrożenia i macie na to budżet, Datadog jest uczciwą alternatywą, po prostu inny kompromis kosztowy.",
         "named": [
           "grafana.com",
-          "datadoghq.com"
+          "datadoghq.com",
+          "honeycomb.io"
         ],
         "first": "grafana.com"
       },
@@ -2032,7 +2066,7 @@
       },
       {
         "domain": "honeycomb.io",
-        "named": 2,
+        "named": 3,
         "first": 0
       },
       {

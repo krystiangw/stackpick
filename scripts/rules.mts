@@ -963,6 +963,18 @@ check('i niepewne nie liczy sie do wyniku', namedIn('Modal is a good fit for GPU
 check('ale domena obok juz tak', namedIn('Modal (modal.com) is a good fit', ['modal.com']), 'modal.com')
 check('cytat leci razem z niepewnym trafieniem', mentionsIn('Modal is a good fit.', ['modal.com'])[0].sentence, 'Modal is a good fit.')
 
+// Typografia rozstrzyga to, czego sasiad nie moze. Strony kategorii publikuja zdanie „nie padl ani
+// razu", a audyt tego zdania 2026-08-17 znalazl trzy firmy, o ktorych bylo nieprawdziwe.
+check('wyroznienie robi z niepewnego pewne', formOf('postawilbym na **Sanity**: natywny Draft Mode', 'sanity.io'), 'name')
+check('backtick tak samo', formOf('uzyj `Neon` jako bazy', 'neon.com'), 'name')
+check('powtorzenie z wielkiej litery tez', formOf('Neon bylby moim wyborem. Neon to zarzadzany Postgres', 'neon.com'), 'name')
+check('jedno wystapienie z wielkiej nadal niepewne', formOf('Neon is one option', 'neon.com'), 'weak')
+// here.com pisze o sobie HERE, a jedyny bezpieczny alias brzmial „HERE Technologies", wiec piec
+// odpowiedzi na piec liczylo sie jako nigdy ich nie wymieniono.
+check('HERE wersalikami to firma', formOf('rozwazalem HERE jako tansza alternatywe', 'here.com'), 'name')
+check('here malymi to nadal zwykle slowo', formOf('here is the plan, step by step', 'here.com'), 'none')
+check('fragment innego slowa nie liczy sie', formOf('Namecheap i OpenSRS sa lepsze', 'name.com'), 'none')
+
 // Zwykle slowo stojace obok dostawcy, ktorego nie da sie pomylic, jest marka. Zdanie nizej to
 // cytat z celi payments, gdzie Paddle padl w pieciu biegach na piec i nie zostal policzony.
 const MOR = 'Alternatywa to Merchant of Record (Paddle, Lemon Squeezy), ktory bierze VAT na siebie.'
