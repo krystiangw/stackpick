@@ -4588,3 +4588,23 @@ sprawdzającą je po dokumencie, i **wyszła pusta na 13 z 13**: te firmy albo n
 
 Rundy 1-106 są w `docs/journal-2026-08.md`. W tym pliku zostaje osiem ostatnich,
 bo starsze nie mówią już nic, czego nie mówi kod albo sekcja kontraktu.
+
+## SZESC SPADKOW Z PARY 9.30 ZBADANYCH PO KOLEI (2026-08-17)
+
+**Piec z pietnastu „ruchow" to nie sa zmiany werdyktu**, tylko wiersz, ktory po jednej stronie jest
+**niemierzalny**: `froala.com` (403 przy trzech probach), `postmarkapp.com`, `upstash.com`,
+`hatchet.run`, `locationiq.com docs_without_js`. Skrypt podlogi szumu porownuje same punkty, wiec
+liczy je jako ruch. **Werdykt kontra werdykt to 10 na 2550, czyli 0,39 procent**, a 0,59 to gorna
+granica razem z wierszami, gdzie po jednej stronie nic nie zmierzylismy. Obie liczby sa uczciwe,
+ale pierwsza odpowiada na pytanie „czy publikowane zdanie sie chwieje".
+
+**Cztery z szesciu spadkow mialy jedna przyczyne**: rejestr MCP (patrz sekcja o 9.31). Trzy razy
+`mcp_present`, a `medusajs.com oauth_dcr` przez to samo, bo metadane OAuth sondujemy na originach
+znalezionych przez MCP.
+
+**Zostal jeden niewyjasniony: `telnyx.com agent_entry_point` 2 -> 1.** Raz znajdujemy
+`/agent-signup.md` (procedura, 2 pkt), raz tylko `/agents.md` (polityka, 1 pkt). Trzy skany z
+laptopa: **za kazdym razem 2 punkty i `agent-signup.md`**. Zadnego obciecia budzetu w obu
+przebiegach (`truncation: null`), wiec teoria „skan nie zdazyl" jest **nieudowodniona**, choc telnyx
+jest jedna z najwolniejszych domen (17-22 s przy budzecie 27 s). Zgodnie z zasada 5 niezgoda,
+ktora sie nie powtarza, nie jest znaleziskiem: zapisane jako instancja szumu, nie jako blad.
