@@ -82,7 +82,18 @@ const toolFailure = (id: RpcId, message: string) =>
 
 export async function GET() {
   // No server-initiated stream, so the spec's SSE channel is honestly declined rather than hung.
-  return new NextResponse('This MCP endpoint accepts POST only.', { status: 405, headers: { allow: 'POST' } })
+  // Still a 405 and still text: an HTML page here would tell a streamable-HTTP client that this
+  // address opens a stream, and our own scanner would read the body as a wall. A person who lands
+  // on it deserves a sentence saying where to go, which is all this adds.
+  return new NextResponse(
+    [
+      'This MCP endpoint speaks JSON-RPC over POST and opens no server-initiated stream, so GET is declined rather than left hanging.',
+      '',
+      'Connect an MCP client to https://letagentsin.com/mcp, or read what the tools do at https://letagentsin.com/docs.',
+      'What every check measures: https://letagentsin.com/methodology',
+    ].join('\n'),
+    { status: 405, headers: { allow: 'POST', 'content-type': 'text/plain; charset=utf-8' } },
+  )
 }
 
 export async function POST(request: Request) {

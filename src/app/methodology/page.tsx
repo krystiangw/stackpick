@@ -206,6 +206,13 @@ export default async function MethodologyPage() {
           from a single row that moved. Measured rather than estimated, so it is printed. */}
       <section className="border-b border-rule py-12">
         <h2 className="text-lg font-semibold tracking-tight">How much the corpus moves on its own</h2>
+        {/* Four percentages follow, each with its own date and pair, and a reader skimming reads
+            that as us not knowing our own figure. The answer goes first; the history explains it. */}
+        <p className="mt-4 max-w-2xl font-medium leading-relaxed">
+          The figure today is {NOISE_FLOOR_PERCENT.toFixed(2)} percent. The paragraphs below are how it was
+          measured and what it replaces, in order, because a number like this is only worth as much as the
+          pair of scans behind it.
+        </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           On 10 August 2026 we rescanned all 167 domains twice, with no rule changed between the two runs,
           and compared every verdict: 15 of 2,338 moved, which is 0.64 percent. A difference smaller than
