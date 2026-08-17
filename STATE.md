@@ -189,6 +189,33 @@ opis `/pricing` niesie "$49" i "Free scan, no account and no card". **Audyt zlap
 reseedzie (karencja 6 h od tego, ktory teraz idzie). Do tego czasu `npm run audit` bedzie zglaszal
 jeden rozjazd na `/llms.txt`, bo czyta **zywa** strone. Po deployu ma zniknac.
 
+## CO JESZCZE Z TEGO RESEARCHU WARTO ZMIERZYC, I CZEGO NIE DA SIE (2026-08-17)
+
+Przeglad `~/projects/seo-agent/Jak-agenty-wyszukuja-produkty.md` obok skilla `agent-discoverability`.
+Zaimplementowany zostal snippet (9.34, sekcja wyzej). Reszta z uzasadnieniem, zeby nikt nie robil
+tego przegladu drugi raz od zera.
+
+**Nastepny kandydat, mocny: bramka na kluczu licencyjnym.** Najmocniejszy zmierzony fakt z calego
+dokumentu, ktorego NIE mierzymy: audyt edytorow N=6, 6/6 agentow wybralo Tiptapa, a CKEditor i
+Froala odpadly **na samym wymogu klucza licencyjnego**, zanim ktokolwiek spojrzal na funkcje. My
+mamy CAPTCHE, karte i dostepnosc rejestracji, ale nie mamy "zeby w ogole uruchomic, potrzebujesz
+klucza komercyjnego". Ksztalt taki jak `programmatic_provisioning`: fraza plus cytat zdania, w
+ktorym padla. **Wymaga przebiegu adwersaryjnego przed wdrozeniem** (ryzyko falszywego oskarzenia
+jest tu wyzsze niz przy snippecie: podwojne licencjonowanie open source mowi o kluczach zupelnie
+niewinnie).
+
+**Drugi kandydat: martwe linki w dokumentacji.** ZMIERZONE, ze agent nie ponawia 404, tylko zmienia
+dostawce. Mamy probowanie linkow w llms.txt i sciezek z robots.txt, ale **nie linkow ze strony
+dokumentacji**. Maszyneria istnieje (probka + tolerancja + znacznik `unasked`), koszt to kilka zadan
+na skan. Odlozone swiadomie: to drugi check w jednym wieczorze i lepiej wydac 9.34 dobrze.
+
+**Czego nie da sie zmierzyc naszym skanerem, i tak ma zostac:** obecnosc w pamieci modelu (to
+warstwa, ktora wygrywa, i nie jest wlasnoscia strony); obecnosc w Bing/Brave/wlasnym indeksie
+OpenAI (rozne indeksy, brak API, a przy Brave nie ma nawet zgloszenia); dopasowanie architektoniczne
+("Vite SPA nie ma backendu do podpisywania"), ktore bije cene i jest wlasciwoscia pary produkt-
+zadanie, nie strony; zalozenia frameworkowe w docsach (UploadThing rozwazony 8/8, wybrany 0/8) -
+realne, ale nie widze reguly, ktora nie generowalaby falszywych oskarzen.
+
 ## RAPORT ZA 49 USD DAL SIE SPRZEDAC TYLKO 177 DOMENOM (2026-08-17, naprawione)
 
 `categoryFor` dopasowuje domene do **listy** w kategorii, a nie do kategorii, wiec kazdy prawdziwy
