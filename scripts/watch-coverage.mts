@@ -81,7 +81,16 @@ if (owed.length > 0) {
 } else {
   console.log('\nkazda obserwowana kategoria ma cele mlodsza niz miesiac')
 }
+// Dwa rozne przypadki, ktore `categoryFor` zwraca tak samo: produkt, ktorego nie mierzymy wcale, i
+// produkt z mierzonej kategorii, ktorego nie ma na naszej liscie. Drugi da sie dzis obsluzyc, ale
+// tylko z decyzja czlowieka o kategorii i marce, bo zgadniete "email" dla email.com liczyloby kazde
+// zdanie o mailu.
 console.log(
   `Domena spoza naszych ${CATEGORIES.length} kategorii nie ma pytania, wiec nie ma celi. To jest do zamkniecia zanim ktos zaplaci.`,
 )
+console.log(
+  'Jesli produkt NALEZY do mierzonej kategorii, a nie ma go na liscie, raport jednorazowy juz go obsluzy:',
+)
+console.log('  npx tsx scripts/client-report.mts <domena> --category <id> [--brand Nazwa]')
+console.log('Miesieczna cela dla takiej obserwacji wymaga zapisania tej decyzji przy obserwacji, czego jeszcze nie ma.')
 process.exit(0)
