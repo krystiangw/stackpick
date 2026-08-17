@@ -89,10 +89,23 @@ wartosci po wszystkich zestawach, ktore wtedy istnialy.
 **Wynik na szostym zestawie: zle odpowiedzi z 14 na 4, poprawne odmowy z 3 na 11, kosztem trzech
 trafien.** Narzedzie jest teraz wyraznie ciche i tak jest opisane.
 
-**Co nadal przecieka:** pytanie o WLASNY kod, ktore uzywa DWOCH naszych slow. „Modul billing i modul
-subscriptions w naszym repo" nadal idzie do `payments`, bo prog dwoch trafien go przepuszcza.
-Nastepny krok, gdy ktos wroci do routingu: **wykrywacz pytan o wlasny kod** („in our repo", „should
-I rewrite", „which data structure"), a przed nim **siodmy zestaw** tym samym protokolem.
+**Wykrywacz pytan o wlasny kod dorobiony i zmierzony** (`ABOUT_THEIR_OWN_CODE` w `lookup.ts`).
+Lapie **ksztalty**, ktore nigdy nie pojawiaja sie w pytaniu o zakup - notacja zlozonosci, slownik
+strojenia bazy, ktora sie juz ma (`EXPLAIN ANALYZE`, `seq scan`, `SKIP LOCKED`, `BRIN`), zwroty
+proszace o kod („what data structure", „how do I refactor", „in our repo") - a **nie slowa z naszych
+kategorii**. Bezpiecznik w buildzie jest mocniejszy niz liczba: regula musi zwrocic false dla
+**kazdego pytania ze wszystkich siedmiu zestawow, ktore ma kategorie**.
+
+**Siodmy zestaw** (`harness/heldout/2026-08-17-c.json`) napisano po obu zmianach, celowo trudny:
+14 z 40 pytan to wlasny kod w handlowych slowach (modul billing, tabela payments, worker
+notifications), 6 to rzeczy prawdziwe, ale spoza katalogu. Wynik: **trafia 29 z 40, odpowiada na 14
+z czego 3 blednie, ZERO zlych kategorii, odmawia poprawnie 18 z 21.** Zaden z szesciu wczesniejszych
+zestawow nie stracil ani jednej poprawnej odpowiedzi.
+
+**Stan protokolu:** zestawy 1-6 sa spalone jako miara (byly zestawami roboczymi kolejnych poprawek),
+**siodmy jest jedyna zywa miara** i tez zginie przy pierwszej poprawce pod niego. Przed kolejna
+zmiana w routingu: zamow osmy tym samym sposobem. Co zostalo do poprawy widac na siodmym: **8 pytan,
+na ktore powinien byl odpowiedziec, a milczy** - to teraz slabsza strona, nie precyzja.
 
 **Pulapka z tej samej godziny:** opublikowalem najpierw opis, w ktorym przykladem naprawionego bledu
 byl wlasnie modul billing - i to bylo nieprawda, bo tego akurat prog nie naprawia. Sprawdzilem
