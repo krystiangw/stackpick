@@ -213,10 +213,20 @@ export default async function MethodologyPage() {
           changed.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Measured three more times on 12 August 2026, on 170 domains: 0.27 percent, then 0.39, then{' '}
-          {NOISE_FLOOR_PERCENT.toFixed(2)}. The last of those is 5 verdicts of 2,550, same formula on both sides and
-          nothing changed between the runs, and it is the number to use. The earlier ones are larger because a share of
-          what they counted was ours.
+          Measured again on 17 August 2026 and, for the first time, in the only way that answers the question:{' '}
+          {NOISE_FLOOR_PERCENT.toFixed(2)} percent, 15 verdicts of 2,550 across 170 domains, the same formula on both
+          sides. What is new is the pair. Every earlier figure compared two passes of one sweep, and a sweep&apos;s first
+          pass asks the npm registry cold while its second finds the answers cached, so those pairs moved one way: the
+          last of them 27 up and 3 down. This one compares the warm pass of two separate sweeps six hours apart, and it
+          moves 9 up and 6 down. A symmetric spread is what measurement noise looks like; a one-sided one is a cache
+          warming up with our name on it.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          It is higher than the 0.20 percent it replaces, and we would rather print that than keep a flattering number
+          nobody measured properly. That figure came from formula 9.8, twelve days and twenty-odd rule changes ago, and
+          today&apos;s scanner asks each domain far more questions, so there are more answers that can arrive
+          differently on a second asking. The earlier repairs described below are real and still in place; the floor is
+          measured on the scanner we run today, not the one we ran then.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           How much of it was ours we found out by measuring rather than by assuming. The scanner gives

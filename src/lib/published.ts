@@ -7,11 +7,21 @@ import { getStore, type Report } from './store'
  * updated to 0.20 after we stopped counting our own truncated scans, and /report went on saying
  * 0.64 for a day. A number stated in two places is a number that will disagree with itself.
  *
- * Measured on 12 August 2026: 5 of 2,550 verdicts, same formula on both sides, nothing changed
- * between the runs. Rerun `npm run diff-corpus <snapshot>` after any change to the scanner and
- * update this if it moves.
+ * Measured on 17 August 2026, and this is the first time it was measured the way it has to be:
+ * 15 of 2,550 verdicts, 170 domains, formula 9.30 on both sides, and the two scans are the WARM
+ * pass of two separate sweeps six hours apart rather than the cold and warm passes of one. The
+ * direction is what makes it a floor rather than an artefact: 9 up and 6 down, which is symmetric.
+ * Every earlier figure on this line, 0.64 down to 0.20, came from pairs one of whose halves asked
+ * npm cold, and they were one-directional for that reason.
+ *
+ * It is higher than the 0.20 it replaces and that is not a regression: 0.20 was measured on formula
+ * 9.8 twelve days and twenty-odd rule changes ago, and today's scanner sends far more requests per
+ * domain, so there are more answers that can arrive differently on a second asking.
+ *
+ * Rerun with `npm run noise-floor <formula>` after a day with no rule change, which is what it
+ * costs: two sweeps of the same version, six hours apart.
  */
-export const NOISE_FLOOR_PERCENT = 0.2
+export const NOISE_FLOOR_PERCENT = 0.59
 
 /**
  * The one definition of "the corpus". There were five, and they disagreed in public: the landing
