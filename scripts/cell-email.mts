@@ -74,8 +74,13 @@ for (const watch of wanted) {
     .find((entry) => entry.said !== null)
   const winners = [...new Set(held.flatMap((one) => one.answers).map((answer) => answer.first).filter((who) => who && who !== watch.domain))]
 
+  // Dated from the runs, not from the day the mail goes out. Nothing here records that a mail was
+  // sent and cells.json is a committed file, so "this month" was a claim about the calendar that
+  // the data could not keep: run the script twice in a week and both mails say it.
+  const ran = [...new Set(held.map((one) => one.ranAt))].sort()
+  const when = ran.length > 1 ? `${ran[0]} to ${ran[ran.length - 1]}` : ran[0]
   const lines = [
-    `${watch.domain} was named in ${named} of ${runs} agent runs this month, and named first in ${first}.`,
+    `${watch.domain} was named in ${named} of ${runs} agent runs, and named first in ${first}. The runs are dated ${when}.`,
     '',
     `The question we asked, the one your buyers type:`,
     `  ${held[0].question}`,
