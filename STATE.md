@@ -4795,3 +4795,30 @@ w tym samym przemiataniu**, czyli korpus urosnie ze 170 do okolo 177 wierszy.
 
 Przy okazji: **liczba kategorii jest teraz liczona, nie wpisana** w trzech miejscach, gdzie stalo
 „25". Pierwsza rzecz, ktora sie rozjezdza po dodaniu kategorii, to zdanie o kategoriach.
+
+## SZOSTE BADANIE OPUBLIKOWANE: KTORE CHECKI MAJA ZWIAZEK Z BYCIEM WYMIENIANYM (2026-08-17)
+
+Na `/findings` stoi teraz badanie, ktorego **nie ma zaden konkurent**, i jako jedyne krytykuje
+nasza wlasna karte wynikow. Publikujemy pietnascie checkow i kazemy je naprawiac, wiec pytanie
+„ktory z nich ma cokolwiek wspolnego z byciem wymienianym" musialo paść u nas, zanim padnie u kogos
+innego.
+
+**Wynik:** `oauth_dcr` +25pp (+26 u znanych, +17 u mniej znanych), `mcp_present` +17pp (+21 i +9),
+`programmatic_provisioning` +24pp ogolem ale **+3pp u mniej znanych**, czyli mierzy glownie slawe,
+a **`llms_txt` nie rozdziela nikogo**: +5pp ogolem i na minusie w obu polowkach.
+
+**Ograniczenia napisane tak samo wyraznie jak wynik**: piec biegow, korelacja a nie eksperyment, i
+skazenie instrukcjami maszyny. Strona **zapowiada replikacje drugim narzedziem i obiecuje ja
+opublikowac niezaleznie od wyniku**, wiec to zobowiazanie do dokonczenia (leci w tle, katalog
+`~/.letagentsin-runs-codex`, 3 biegi na kategorie).
+
+## PLATNY RAPORT MA SCIEZKE DOSTAWY (2026-08-17)
+
+`scripts/client-report.mts <domena>` sklada gotowy markdown: cela (pytanie doslownie, ile razy
+wymieniony, kto byl wybierany zamiast, cytaty run po runie) plus skan (punkty po etapach, kazde
+oblane zdanie z rada). Domena spoza mierzonych kategorii dostaje **te sama odpowiedz, ktora
+obiecuje cennik, i to przed platnoscia**. Sprawdzone na `uploadcare.com` (0/5 wymieniony),
+`sanity.io` (5/5 z cytatami) i `vercel.com` (nowa kategoria, na razie sam skan).
+
+Do zamkniecia, gdy replikacja sie skonczy: raport ma laczyc oba narzedzia, bo `/pricing` obiecuje
+**dziesiec biegow na dwoch narzedziach**, a dzis sklada piec z jednego.
