@@ -91,6 +91,7 @@ for (let run = 1; run <= runs; run++) {
         auth: clean ? 'api-key' : 'subscription',
         cleanRoom: Boolean(clean),
         operatorContext: clean ? [] : agent.contextFiles(dir),
+        toolSettings: agent.settings?.() ?? [],
         startedAt,
         finishedAt: new Date().toISOString(),
         exitCode: result.status,

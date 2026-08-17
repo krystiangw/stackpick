@@ -74,10 +74,18 @@ provisioning trzymaja sie tylko wsrod popularnych, czyli u nich to w duzej mierz
 **`llms_txt` nie pokazuje niczego nigdzie**, co zgadza sie co do joty z trzema zewnetrznymi
 zbiorami logow opisanymi w sekcji o wtyczkach.
 
-### REPLIKACJA NA DRUGIM NARZEDZIU: to samo, mocniej
+### REPLIKACJA NA DRUGIM NARZEDZIU: to samo, mocniej, i BEZ SKAZENIA
 
-Te same 25 kategorii przepuszczone przez **codex (gpt-5.6-sol)**, ktory nie czyta `CLAUDE.md`
-w ogole, wiec wchodzi z zupelnie innym skazeniem (`~/.codex/memories_1.sqlite`). 90 dostawcow
+Te same 25 kategorii przepuszczone przez **codex (gpt-5.6-sol, `model_reasoning_effort=low`)**.
+
+**Korekta mojego wlasnego raportu skazenia, 2026-08-17:** raportowalem przy tych biegach
+`~/.codex/memories_1.sqlite` jako kontekst. **`codex features list` mowi `memories stable false`**,
+czyli ta funkcja jest wylaczona i codex tego pliku nie czyta. Nie ma tez zadnego `AGENTS.md` ani
+w `~/.codex`, ani w katalogach nadrzednych biegow. **Wiec przy biegach codexa zaden plik instrukcji
+nie byl w zasiegu i jest to pierwszy nieskazony pomiar, jaki mamy** - bez klucza API, ktory nadal
+jest blokerem tylko dla drogi `--bare` w claude. Harness pyta teraz narzedzie o stan tej funkcji
+zamiast zakladac, i zapisuje rozwiazane ustawienia (`model`, `model_reasoning_effort`) do `RUN.json`,
+bo efort jest parametrem pomiaru, a nie kontekstem. 90 dostawcow
 wymienionych choc raz. **Wynik w `scratchpad/named-vs-score-codex.txt`.**
 
 | check | claude/sonnet | codex |

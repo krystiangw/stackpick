@@ -7,7 +7,7 @@
  * the run.
  */
 import { execFileSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 
@@ -33,6 +33,8 @@ export type Agent = {
    * a codex run would be a lie in the opposite direction from the one this field exists to catch.
    */
   contextFiles: (runDir: string) => string[]
+  /** Resolved tool settings that change the answer, recorded next to the run rather than assumed. */
+  settings?: () => string[]
 }
 
 /** Every ancestor of the run directory, so a file two levels up is not missed. */
@@ -46,6 +48,37 @@ function upwards(from: string, name: string): string[] {
 }
 
 const ifThere = (...paths: string[]) => paths.filter((path) => existsSync(path))
+
+/**
+ * Whether codex will actually read its memory database. Asked rather than assumed: the file exists
+ * on every machine that has ever run codex, and on 2026-08-17 this one reported it as context for
+ * twenty five cells while `codex features list` said `memories stable false`. Reporting context a
+ * tool does not read is the same error as hiding context it does, one direction kinder.
+ */
+let memoriesOn: boolean | null = null
+function codexReadsMemories(): boolean {
+  if (memoriesOn === null) {
+    try {
+      const listed = execFileSync('codex', ['features', 'list'], { encoding: 'utf8' })
+      memoriesOn = /^memories\s+\S+\s+true/m.test(listed)
+    } catch {
+      // Unknown is reported as read, because an unchecked assumption in our own favour is the
+      // thing this whole field exists to stop.
+      memoriesOn = true
+    }
+  }
+  return memoriesOn
+}
+
+/** What the tool was configured to be, which is a parameter of the measurement rather than context. */
+function codexSettings(): string[] {
+  try {
+    const config = readFileSync(join(homedir(), '.codex', 'config.toml'), 'utf8')
+    return [...config.matchAll(/^(model|model_reasoning_effort)\s*=\s*"([^"]+)"/gm)].map((found) => `${found[1]}=${found[2]}`)
+  } catch {
+    return []
+  }
+}
 
 function firstLine(bin: string, args: string[]): string {
   try {
@@ -75,9 +108,11 @@ export const AGENTS: Record<string, Agent> = {
     // tools reading two different sets of the operator's files is a finding about the vendors.
     // The memory database is listed because it is context we did not write for this question.
     contextFiles: (dir) => [
-      ...ifThere(join(homedir(), '.codex', 'AGENTS.md'), join(homedir(), '.codex', 'memories_1.sqlite')),
+      ...ifThere(join(homedir(), '.codex', 'AGENTS.md')),
+      ...(codexReadsMemories() ? ifThere(join(homedir(), '.codex', 'memories_1.sqlite')) : []),
       ...upwards(dir, 'AGENTS.md'),
     ],
+    settings: codexSettings,
   },
   gemini: {
     bin: 'gemini',

@@ -109,6 +109,13 @@ What was tried, and what it costs:
 | `--system-prompt` replacing the default | user memory survives it. Verified: the answer came back in Polish anyway |
 | `--bare` | shuts out CLAUDE.md, hooks, skills and plugins. **Reads `ANTHROPIC_API_KEY` only, never the keychain**, so a subscription cannot use it |
 
+**The cheap clean room, found 2026-08-17: run the cell on `codex` instead.** It never reads
+CLAUDE.md, `codex features list` reports `memories stable false` on this machine, and there is no
+`AGENTS.md` in `~/.codex` or above a run directory, so `operatorContext` comes back empty. That is
+an uncontaminated measurement on a subscription, and it is why the twenty five discovery cells were
+repeated on it. The harness asks the tool for the feature state rather than assuming it, because
+the first version reported a memory database as context for twenty five cells that never read it.
+
 So `ask` takes the clean path the moment an API key exists in the environment, and without one it
 records every instruction file that was in scope into `RUN.json` and prints them above the table
 rather than below it. A number produced this way describes an agent on this machine, not an agent
