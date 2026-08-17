@@ -4668,3 +4668,28 @@ razy, „service account" 24, „account api" 9.
 zaliczonych wierszy): zaciesnienie trzech golych fraz tak, zeby wymagaly w tym samym zdaniu slowa
 o poswiadczeniu albo o tworzeniu, oraz pisownia „service-account" z myslnikiem, ktora nie trafia ani
 przed zmiana, ani po. Obie zmiany rusza punkty, wiec nie robi sie ich na oko.
+
+## STRONY KATEGORII I PODGLAD BIEGOW (2026-08-17, wdrozone)
+
+Z audytu konkurenta `agentchecker.ai`. Mielismy 25 cel rozpoznawczych z prawdziwymi pomiarami i
+**zero stron, ktore je pokazuja**: biegi leza w `$LETAGENTSIN_RUNS` na laptopie, wiec dyno nie ma
+ich skad wziac. `scripts/export-cells.mts` zamraza je do `src/data/cells.json` (225 kB, razem z
+pelnymi odpowiedziami).
+
+- **`/c/<kategoria>`**: pytanie doslownie, ile biegow, narzedzie, model, data, ostrzezenie o
+  skazeniu instrukcjami maszyny NAD tabela, tabela „wymieniony" i „wymieniony pierwszy" obok wyniku
+  skanu, zdanie ilu dostawcow nie padlo ani razu. Linkowana z rankingow i z mapy witryny.
+- **`/c/<kategoria>/runs`**: wszystkie odpowiedzi w calosci, nazwy dostawcow zaznaczone, tekst
+  nieedytowany. To nasz odpowiednik ich „step-by-step replay": u nich klikniecia, u nas decyzje.
+
+**Cennik przebudowany po audycie** (Krystian zaakceptowal): darmowy skan, **raport jednorazowy 29
+USD** (10 biegow, dwa narzedzia), **monitoring 79 USD za domene** z pakietami (trzy 179, dziesiec
+499), audyt „by conversation". Doszly dwa pytania w FAQ: dlaczego jestesmy drozsi od audytu za
+dwadziescia dolarow (inna jednostka: jeden przebieg kontra stala miara z opublikowana podloga
+szumu) i linia dla agencji.
+
+**Zostalo z tego audytu:** zadanie #45, oferta agencyjna i white label, **zablokowane na decyzji
+biznesowej Krystiana** (model sprzedazy i sciezka platnosci inna niz `mailto:`).
+
+**Czego swiadomie nie kopiujemy:** jednego przebiegu agenta na audyt bez ujawnionej wariancji i
+nieopublikowanej formuly punktacji. To sa dwie rzeczy, ktorymi sie od nich roznimy.
