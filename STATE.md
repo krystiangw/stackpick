@@ -4624,3 +4624,14 @@ medusajs.com   9.31  1  Live MCP endpoint at https://docs.medusajs.com/mcp
 wiec dziewiec tysiecy malych dokumentow nic tu nie zmienia. Kadencja: **przyrostowo co dobe**
 (`updated_since`, dodaje adresy), **cala lista w niedziele** (zastepuje i usuwa to, co zniknelo).
 Pierwsze napelnienie zrobione z laptopa, bo runner GitHuba dopiero zacznie w nocy.
+
+## PYTANIE O `oauth_dcr` DLA PRODUKTOW BEZ KONT: ZAMKNIETE, ZOSTAJE JAK JEST (2026-08-17)
+
+STATE trzymal to jako „do przemyslenia po zamrozeniu, ale ostroznie, bo zdejmuje oskarzenie z nas
+samych". **Zmierzone zamiast rozwazane:** w korpusie **89 wierszy oblewa `oauth_dcr`**, osiem nie
+ma osiagalnej rejestracji, i **czesc wspolna wynosi zero**. Czyli wyjatek „produkt bez kont nie ma
+klienta do zarejestrowania" **nie zmienilby ani jednego wiersza vendora**, a zdjalby oskarzenie
+dokladnie z jednej domeny: naszej.
+
+Do tego regula musialaby opierac sie na „nie znalezlismy rejestracji", a to najczesciej jest nasze
+odkrywanie, ktore zawiodlo, a nie produkt bez kont. **Pozycja zamknieta, check zostaje bez zmian.**
