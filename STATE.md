@@ -2,27 +2,25 @@
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te trzydziesci linijek, potem reszte)
 
-**W LOCIE SA DWIE RZECZY, obie w tle na tym laptopie (stan 15:06, 2026-08-17):**
-1. **Petla ponawiajaca reseed na 9.31**, log `/tmp/reseed-931.log`, proba 13 z 18, co 20 minut.
-   Karencja (6 h mediany wieku korpusu) mija **okolo 16:00**, wiec powinna zlapac probe 16 albo 17.
-   **`tail -3 /tmp/reseed-931.log` zanim cokolwiek zrobisz.** Gdyby przepadla: `for i in $(seq 1
-   18); do npm run reseed; [ $? -eq 3 ] && sleep 1200 || break; done` z `STACKPICK_CONSOLE_TOKEN`.
-2. **Dobijanie cel codeksa do pieciu biegow**, log `/tmp/codex-top-up.log`, 41 z 52 biegow,
-   `npm run ask -- <kategoria> codex --add 2` po kolei. Koniec: linia `KONIEC`.
+**W LOCIE JEST JEDNO (stan 15:20, 2026-08-17): petla ponawiajaca reseed na 9.31.**
+Log `/tmp/reseed-931.log`, proba 13 z 18, co 20 minut. Karencja (6 h mediany wieku korpusu) mija
+**okolo 16:00**, wiec powinna zlapac probe 16 albo 17. **`tail -3 /tmp/reseed-931.log` zanim
+cokolwiek zrobisz.** Gdyby przepadla, wznowienie: `STACKPICK_CONSOLE_TOKEN=$(heroku config:get
+STACKPICK_CONSOLE_TOKEN -a stackpick) bash -c 'for i in $(seq 1 18); do npm run reseed; [ $? -eq 3 ]
+&& sleep 1200 || break; done'`.
 
-**PO ZAKONCZENIU DOBIJANIA:**
-`LETAGENTSIN_RUNS_ALL=$HOME/.letagentsin-runs-codex npx tsx scripts/export-cells.mts`, potem
-`npx tsx scripts/audit-never-named.mts`, `npm run build`, commit i deploy. Cele codeksa maja wtedy
-piec biegow, wiec raport klienta dowozi **dziesiec biegow na dwoch narzedziach** doslownie, a nie
-osiem. Warto tez powtorzyc `LETAGENTSIN_RUNS=$HOME/.letagentsin-runs-codex npm run named-vs-score`
-i **poprawic na `/findings` zdanie o „trzech biegach na kategorie"**, bo przestanie byc prawdziwe.
+**Dobijanie cel codeksa SKONCZONE.** `src/data/cells.json` ma **52 cele, po piec biegow na
+kategorie i narzedzie**, wiec raport klienta dowozi obiecane dziesiec biegow na dwoch narzedziach
+doslownie. Replikacja na `/findings` przeliczona i wdrozona.
 
 **PO RESEEDZIE, w tej kolejnosci:**
 1. `MONGODB_URI=... npx tsx scripts/after-reseed.mts` - jedna komenda zamiast czterech pytan z
    pamieci. Ma pokazac: korpus na 9.31, siedem zdan „brak formularza, wejscie przez dostawce
    tozsamosci" zamiast zera, cytaty przy `programmatic_provisioning`, adresy przy `oauth_dcr`
    i **errata puste** (11 wpisow ma wygasnac samo).
-2. `npm run audit` oraz `npx tsx scripts/audit-signup.mts accused`.
+2. `npm run audit`, `npx tsx scripts/audit-signup.mts accused` oraz **`npx tsx
+   scripts/audit-study.mts`** (straznik zdan szostego badania, konczy sie bledem, gdy ktores
+   przestanie byc prawdziwe wobec danych).
 3. **Policz, ile wierszy ma `mcp_present` niemierzalny.** Duzo znaczy, ze lustro rejestru sie nie
    zapelnilo albo TTL jest za krotki.
 4. Korpus urosnie ze 170 do **177 wierszy** (kategoria `app-hosting`), a `/c/app-hosting` przestanie
@@ -4930,3 +4928,27 @@ traci punkty za markdown, za link i za kazdego innego dostawce w srodku.
 
 Do tego `harness/ask.mts --add` dokleja biegi zamiast zastepowac cele, bo dobicie celi z trzech
 biegow do dziesieciu obiecanych w raporcie kosztowaloby piec swiezych, zeby zachowac trzy zrobione.
+
+## STRAZNIK ZDAN SZOSTEGO BADANIA ZLAPAL TRZY BLEDY NARAZ (2026-08-17)
+
+`scripts/audit-study.mts` powstal po to, zeby opublikowane twierdzenie nie stalo sie po cichu
+falszywe przy nastepnym reseedzie albo dolozeniu biegow. Napisany od zera, zeby **nie zgadzal sie
+z tym, co audytuje** - i od razu sie nie zgodzil: `mcp_present` u mniej znanych dostawcow +9pp
+kontra -5pp. Trzy przyczyny, wszystkie nasze:
+
+1. **`named-vs-score` liczyl wiersze NIEZMIERZONE jako oblane**, dokladnie wbrew wlasnemu
+   komentarzowi („Unmeasured checks are left out rather than counted as failures"). Zbior
+   przechowywal tylko id zdanych i nie umial odroznic „zmierzone i oblane" od „niezmierzone".
+   Teraz to mapa `id -> czy zdal`.
+2. **Czytal najswiezszy skan domeny zamiast wiersza zasianego**, wiec kilka doraznych skanow 9.31
+   po cichu decydowalo o pomiarze. **Ta sama pulapka, ktora tego samego dnia zlapalismy na
+   `/v/<domena>`** - i to jest wzorzec do zapamietania: *kazde miejsce, ktore czyta „najnowszy skan",
+   czyta tez cudze i wlasne skany doraznie uruchomione*.
+3. **Najwazniejsze: strona opisywala inna miare niz ta, ktora policzylismy.** Zdanie mowilo „share
+   of vendors named at least once", a liczby pochodzily ze sredniej czestosci wymieniania. Obie
+   miary sa uczciwe i **roznia sie tam, gdzie to boli**: przy „ilu w ogole" MCP trzyma obie polowki
+   na czystym narzedziu i gubi mniej znanych na skazonym.
+
+Strona mowi teraz, ktora miare cytuje, i **publikuje te roznice zamiast wybierac wygodniejsza**.
+Straznik pilnuje obu miar i **konczy sie kodem bledu**, gdy ktorekolwiek zdanie przestanie byc
+prawdziwe. Do uruchamiania po kazdym reseedzie i po kazdej zmianie cel.
