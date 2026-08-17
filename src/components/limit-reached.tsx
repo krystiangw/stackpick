@@ -47,7 +47,7 @@ export function LimitReached({ error, example, domain }: { error: string; exampl
           <Link href={`/r/${example.id}`} className="font-mono text-brass underline underline-offset-4">
             {example.domain} · {example.total}/{example.max}
           </Link>
-          . Same 15 checks, same formula.
+          . Same 16 checks, same formula.
         </p>
       )}
 

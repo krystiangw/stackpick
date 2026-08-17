@@ -19,7 +19,7 @@ import { sawRateLimit, otherDomainsNamed } from '../src/lib/corpus'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
 import { wasNeverAsked } from '../src/lib/scan/http'
 import { brandTaken, certain, mentionsIn, nameGuest, quotedAbout, whoWentFirst, wordsCarried } from '../src/lib/vendors'
-import { rendersUsableForm, entersThroughIdentityProvider, mcpCandidates, looksLikeADocsPageTwin, answersWithTheSameTemplate, readsAsAnEndpoint, readsAsTheirOwnAddress } from '../src/lib/scan/funnel'
+import { readSnippet, rendersUsableForm, entersThroughIdentityProvider, mcpCandidates, looksLikeADocsPageTwin, answersWithTheSameTemplate, readsAsAnEndpoint, readsAsTheirOwnAddress } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
 import {
   methodRefusalIsRouted,
@@ -352,6 +352,36 @@ check('gosc bez marki nie lapie sie na nazwe', certain(mentionsIn('we tried Mail
 check('gosc bez marki lapie sie na adres', certain(mentionsIn('we tried mailtrap.io and it was fine', ['mailtrap.io'])).length, 1)
 nameGuest('mailtrap.io', ['Mailtrap'])
 check('gosc z marka lapie sie na nazwe', certain(mentionsIn('we tried Mailtrap and it was fine', ['mailtrap.io'])).length, 1)
+
+// Snippet z cennika: to, co agent czyta o cenie ZANIM cokolwiek otworzy. Sprawdzane na obu
+// kierunkach, bo probka, ktora nie umie powiedziec "tak", nie mierzy niczego.
+const snippetCheck = CHECKS.find((one) => one.id === 'price_in_snippet')!
+const snippetFor = (snippet: Record<string, unknown> | null, over: Record<string, unknown> = {}) =>
+  snippetCheck.evaluate({
+    funnel: { pricingSnippet: snippet, signup: { url: 'https://v.test/signup' } },
+    discovered: { pricing: 'https://v.test/pricing' },
+    ...over,
+  } as never)
+// Czytane produkcyjna funkcja, nie druga implementacja tej samej reguly obok niej: straznik, ktory
+// ma wlasne dopasowanie, przestaje pilnowac tego, co naprawde robi skaner.
+const said = (description: string | null, opening = '') =>
+  readSnippet(
+    description === null
+      ? `<html><body><p>${opening}</p></body></html>`
+      : `<html><head><meta name="description" content="${description}"></head><body><p>${opening}</p></body></html>`,
+  )
+check('kwota w tagu daje punkt', snippetFor(said('Plans from $19 a month')).points, 1)
+check('darmowe wejscie tez, i to nie tylko "free tier"', snippetFor(said('Pulumi ESC is free to individuals')).points, 1)
+check('brak liczby i warunku to zero', snippetFor(said('Flexible usage and volume-based plans')).points, 0)
+check('i zero niesie recepte', Boolean(snippetFor(said('Flexible usage and volume-based plans')).unblock), true)
+check('bez taga czytamy pierwsze slowa strony', snippetFor(said(null, 'Start free, upgrade when you grow')).points, 1)
+check('"feel free to contact us" to nie jest cena', snippetFor(said('Questions? Feel free to contact us about enterprise plans')).points, 0)
+check('brak cennika, ale jest rejestracja: niemierzalne', snippetFor(null).inconclusive, true)
+check(
+  'brak cennika i rejestracji: nie dotyczy',
+  snippetFor(null, { funnel: { pricingSnippet: null, signup: { url: null } }, discovered: {} }).notApplicable,
+  true,
+)
 
 console.log('obserwacja domeny, czyli co jest warte maila')
 const verdict = (points: number, max: number, extra: Record<string, unknown> = {}) =>

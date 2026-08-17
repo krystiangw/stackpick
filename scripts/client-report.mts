@@ -389,7 +389,7 @@ if (plan) {
 lines.push(`## ${plan ? 4 : 3}. What this report is not`)
 lines.push('')
 lines.push(
-  `It is not a ranking, and it is not a promise that fixing a row moves an agent. Two of our fifteen checks are the only ones we can show a relationship with being named, and we publish which two rather than implying all fifteen matter equally: ${SITE_URL}/findings. Everything above is reproducible: the formula is published, the question is printed, and the runs are quoted.`,
+  `It is not a ranking, and it is not a promise that fixing a row moves an agent. Two checks are the only ones we can show a relationship with being named, and we publish which two rather than implying every check matters equally: ${SITE_URL}/findings. Everything above is reproducible: the formula is published, the question is printed, and the runs are quoted.`,
 )
 lines.push('')
 lines.push(`Let Agents In · ${SITE_URL}/methodology`)

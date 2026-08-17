@@ -53,6 +53,20 @@ export const REMEDIES: Record<string, Remedy> = {
         ? `Your edge answers ${f.agentStatus} to a browser user-agent as well as to an agent, so this is not a rule aimed at agents: nothing without a JavaScript runtime gets in, from any address like ours. Whatever your bot manager is scoring, it is scoring the request rather than the client.`
         : `Your public pages answer ${f.browserStatus} to Chrome and ${f.agentStatus} to an agent user-agent. Exempt them from that rule and rate limit instead of refusing.`,
   },
+  price_in_snippet: {
+    effort: 'minutes',
+    how: (f) => {
+      const page = f.discovered.pricing ?? 'your pricing page'
+      const snippet = f.funnel.pricingSnippet
+      // Two different jobs behind one verdict: writing the tag, and fixing the tag you already
+      // have. A vendor with no description tag is told where to put one; a vendor with a
+      // priceless one is shown the string to edit, because that is the whole change.
+      if (snippet && !snippet.description) {
+        return `Add a meta description to ${page} and put the number in it, or the entry condition in words ("free tier", "no credit card"). Without the tag a search engine quotes your opening line, and an agent shortlisting from that summary drops candidates without opening the page.`
+      }
+      return `Rewrite the meta description on ${page} so it names the number, or the entry condition in words. Yours reads "${(snippet?.description ?? '').slice(0, 90)}", which says nothing an agent can compare, and comparison at that stage happens without your page being opened.`
+    },
+  },
   llms_txt: {
     // Keyed on why the check failed, not on which check failed. It used to tell a vendor whose
     // llms.txt we had just read, and quoted dead links out of, to publish an llms.txt. A reader

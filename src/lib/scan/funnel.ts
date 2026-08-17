@@ -614,6 +614,25 @@ export type FunnelFindings = {
   /** The same question per namespace, because one does not imply another. */
   catchAll?: CatchAll
   pricingFetched: boolean
+  /**
+   * What an agent reads about your price before it opens anything.
+   *
+   * A search result is a description tag and an opening line, and vendors are eliminated on it
+   * without the page ever being fetched: one run called WorkOS the most attractive on price and
+   * then dropped it on a snippet, and Auth0 lost on an aggregator's claim about a card that the
+   * single run which opened their pricing page found to be false. Null when no pricing page
+   * answered us, because then there is no snippet to read rather than a bad one.
+   */
+  pricingSnippet: {
+    /** The description tag, which is what a search engine usually quotes. */
+    description: string | null
+    /** The first visible words of the page, which is what it quotes when there is no tag. */
+    opening: string
+    /** Which of the snippet patterns matched, named so a vendor can rerun it. */
+    says: string[]
+    /** The words that matched, so the finding can quote them rather than assert them. */
+    quotes: string[]
+  } | null
   /** True when repeated fetches of the pricing page did not carry the same self-serve wording. */
   pricingTriesDisagreed: boolean
   /** Null when no pricing page was found, false when one exists and shows no prices to a plain fetch. */
@@ -911,6 +930,78 @@ async function inspectSignup(url: string | null, site: string): Promise<SignupFi
  * Returns the matched rule in the words it is published in, not its regex source. The verdict
  * quotes these back to the vendor, and one of the seven is an alternation forty characters long.
  */
+/**
+ * What a search engine quotes about a page: its description tag, and failing that its opening
+ * words. Both are read, because the engines use both and a vendor cannot control which.
+ */
+function snippetOf(html: string): { description: string | null; opening: string } {
+  const tags = html.match(/<meta\b[^>]*>/gi) ?? []
+  const contentOf = (tag: string) => {
+    const found = tag.match(/content\s*=\s*("([^"]*)"|'([^']*)')/i)
+    const value = found?.[2] ?? found?.[3] ?? ''
+    return value.replace(/\s+/g, ' ').trim()
+  }
+  const named = (tag: string, want: string) =>
+    new RegExp(`(name|property)\\s*=\\s*("|')${want}("|')`, 'i').test(tag)
+  // The description tag first and og:description second: the second is what a preview card shows
+  // when the first is missing, and a page that has neither is quoted from its own opening line.
+  const description =
+    tags.filter((tag) => named(tag, 'description')).map(contentOf).find((text) => text.length > 0) ??
+    tags.filter((tag) => named(tag, 'og:description')).map(contentOf).find((text) => text.length > 0) ??
+    null
+  return { description, opening: visibleText(html).trim().slice(0, 300) }
+}
+
+/**
+ * What an agent needs to read in that snippet to keep you on its list: a number, or the entry
+ * condition in words. A description with neither reads as "contact sales" and is skipped without
+ * the page being opened, which is the elimination step measured on WorkOS and Auth0.
+ */
+export const SNIPPET_PATTERNS: Record<string, RegExp> = {
+  'an amount': /(?:[$€£]\s?\d|\b\d+(?:[.,]\d+)?\s?(?:usd|eur|gbp|pln)\b)/i,
+  'a rate': /\b\d+(?:[.,]\d+)?\s?(?:\/|per\s)\s?(?:mo\b|month|user|seat|year|yr\b|1k|1,000|thousand|million|gb\b|tb\b|request|call|message|email|minute|hour)/i,
+  // Deliberately the bare word. "free tier", "free plan", "free to individuals", "free for open
+  // source", "starts free" and "free of charge" are all the same fact to an agent deciding whether
+  // it can start, and a list of accepted phrasings would have told pulumi.com that its snippet
+  // names no entry condition while it says "free to individuals" in it. The only exclusion is the
+  // idiom that means nothing about price.
+  'free entry': /\bfree\b/i,
+  'no card asked': /\b(no credit card|without a credit card|no card required|card free)\b/i,
+  'no account asked': /\b(no (account|signup|sign-up) (required|needed)|without an account)\b/i,
+}
+
+/**
+ * Both reads of the pricing page, the way the self-serve wording already treats them. One vendor
+ * served the same URL with and without its free-tier sentence forty minutes apart, and the page is
+ * fetched twice for exactly that reason; scoring the snippet on the first read alone would have
+ * told a vendor to rewrite a description the scanner had just watched pass.
+ */
+function snippetAcrossReads(first: Fetched | null, second: Fetched | null): FunnelFindings['pricingSnippet'] {
+  const reads = [first, second].filter((got): got is Fetched => Boolean(got?.ok)).map((got) => readSnippet(got.body))
+  if (reads.length === 0) return null
+  return reads.find((read) => read.says.length > 0) ?? reads[0]
+}
+
+/** The snippet and what it says, in one value, so the check quotes what it read. */
+export function readSnippet(html: string): NonNullable<FunnelFindings['pricingSnippet']> {
+  const { description, opening } = snippetOf(html)
+  // The description when there is one, the opening when there is not, and never both: an engine
+  // quotes the tag it was given, so a price sitting in the body under a priceless description is
+  // a price the agent doing the eliminating never sees.
+  const read = (description ?? opening).replace(/\bfeel free\b/gi, ' ').trim()
+  const says: string[] = []
+  const quotes: string[] = []
+  for (const [label, pattern] of Object.entries(SNIPPET_PATTERNS)) {
+    const hit = pattern.exec(read)
+    if (!hit) continue
+    says.push(label)
+    // The words around the hit, not the hit: "free" on its own is not evidence a vendor can check,
+    // and the same window rule is what the provisioning check quotes with.
+    quotes.push(windowAround(read, hit.index, hit[0].length).trim())
+  }
+  return { description, opening, says, quotes }
+}
+
 /** The same reduction `matching` uses, exposed so a caller can look at the words in context. */
 function visibleText(html: string): string {
   return stripCodeBlocks(html)
@@ -1873,6 +1964,7 @@ export async function scanFunnel({
     servesCatchAll: catchAll.markdown || catchAll.json || catchAll.text,
     catchAll,
     pricingFetched: Boolean(pricingPage?.ok),
+    pricingSnippet: snippetAcrossReads(pricingPage, pricingRetry),
     pricesVisibleWithoutJs,
     pricingTextLength: firstPricingText ? visibleTextLength(firstPricingText) : 0,
     pricingTruncated,

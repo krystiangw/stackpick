@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.33'
+export const FORMULA_VERSION = '9.34'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -162,6 +162,55 @@ export const CHECKS: Check[] = [
         )
       }
       return yes(1, `Answered ${f.agentStatus} to ${AGENT_UA}${tries}`)
+    },
+  },
+  {
+    id: 'price_in_snippet',
+    stage: 'discovery',
+    label: 'Price or entry condition in the search snippet',
+    why: 'An agent shortlists from search results and drops candidates on the summary alone, without opening the page. A pricing description carrying no number and no entry condition reads as "contact sales" and is skipped there, before anything about the product is compared.',
+    max: 1,
+    evaluate: (f) => {
+      const snippet = f.funnel.pricingSnippet
+      // No pricing page answered us, so there is no snippet to read. Saying "your snippet is
+      // empty" about a page we never opened is the mistake this whole check exists to punish.
+      if (!snippet) {
+        // A product with no pricing page and no signup has nothing to price, and the same line is
+        // already drawn by oauth_dcr and self_serve for the libraries in the corpus.
+        if (!f.discovered.pricing && !f.funnel.signup.url) {
+          return {
+            points: 0,
+            detail: 'Not applicable: nothing on the site links to pricing or to an account, so there is no price for a search result to carry',
+            notApplicable: true,
+          }
+        }
+        return {
+          points: 0,
+          detail: 'Unmeasurable: no pricing page answered us, so we did not read what a search result would quote about your price',
+          inconclusive: true,
+          unblock: 'Let ordinary HTTP reach your pricing page and this becomes measurable.',
+        }
+      }
+      if (snippet.says.length > 0) {
+        const shown = snippet.quotes.slice(0, 2).map((quote) => `“${quote}”`).join(' and ')
+        return yes(
+          1,
+          `Your ${snippet.description ? 'description tag' : 'opening line'} carries ${snippet.says.join(' and ')}: ${shown}`,
+        )
+      }
+      // Quoted back, because the fix is to edit exactly this string and nothing else on the page.
+      const read = snippet.description ?? snippet.opening
+      const quoted = read.length > 160 ? `${read.slice(0, 160)}...` : read
+      return {
+        ...yes(
+          0,
+          snippet.description
+            ? `Your pricing page's description tag names no amount and no entry condition: “${quoted}”`
+            : `Your pricing page has no description tag, and its opening words name no amount and no entry condition: “${quoted}”`,
+        ),
+        unblock:
+          'Put the number, or the entry condition in words ("free tier", "no credit card"), into the pricing page\'s meta description. That string is what an agent reads when it decides whether to open you at all.',
+      }
     },
   },
   {
