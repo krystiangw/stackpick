@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { CHECKS, MAX_SCORE } from '@/lib/score'
 import { CATEGORIES } from '@/lib/categories'
+import { priceOf, skuById } from '@/lib/billing/catalog'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
 import { SITE_URL } from '@/lib/site'
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
   // The prices go in the snippet. A pricing description with no number in it reads as "contact
   // sales", and the runs we published measured agents passing over a vendor on exactly that
   // reading, without opening the page that would have corrected it.
-  description: `Free scan, no account and no card: ${CHECKS.length} deterministic checks. One agent report $49, monitoring $79 a month, the audit priced by conversation.`,
+  description: `Free scan, no account and no card: ${CHECKS.length} deterministic checks. One agent report ${priceOf(skuById('report-one')!)}, monitoring ${priceOf(skuById('watch-monthly')!)} a month, the audit priced by conversation.`,
 }
 
 type Tier = {
@@ -42,7 +43,7 @@ const TIERS: readonly Tier[] = [
   },
   {
     name: 'One agent report',
-    price: '$49',
+    price: priceOf(skuById('report-one')!),
     cadence: 'once, per domain',
     pitch: 'Whether an agent names you at all, asked ten times over on two tools.',
     includes: [
@@ -62,7 +63,7 @@ const TIERS: readonly Tier[] = [
   },
   {
     name: 'Monitoring',
-    price: '$79',
+    price: priceOf(skuById('watch-monthly')!),
     cadence: 'per domain, per month',
     pitch: 'Whether an agent can still use you, and whether it ever considers you at all.',
     includes: [
@@ -73,7 +74,7 @@ const TIERS: readonly Tier[] = [
       'One email when something moves, nothing when nothing does, which is most weeks',
       'No account and no card. One link in every email stops it',
     ],
-    note: 'Pay for ten months, get twelve. Three domains $179 a month; Agency, ten domains, $499. Another buying question, asked the same way, $29 a month. Free while we are building it, and we will ask before it ever costs anything.',
+    note: `Pay for ten months, get twelve. Three domains ${priceOf(skuById('watch-pack-3')!)} a month; Agency, ten domains, ${priceOf(skuById('watch-agency')!)}. Another buying question, asked the same way, ${priceOf(skuById('extra-question')!)} a month. Free while we are building it, and we will ask before it ever costs anything.`,
     featured: true,
     cta: { label: 'Watch a domain', href: '/#watch' },
   },
@@ -248,7 +249,7 @@ export default async function PricingPage() {
         <dl className="mt-6 flex flex-col">
           {[
             [
-              'Monitoring says $79 and also says free. Which is it?',
+              `Monitoring says ${priceOf(skuById('watch-monthly')!)} and also says free. Which is it?`,
               'Free today, for everyone, and the price is printed so you know what it will become rather than finding out later. Nobody is charged without being asked first, and there is no card on file to charge.',
             ],
             [
@@ -261,11 +262,11 @@ export default async function PricingPage() {
             ],
             [
               'Everyone else in AI visibility sells prompts by the hundred. Why does this sell one question?',
-              'Because a hundred prompts asked daily answers how often your name appears, and this answers whether an agent can use you once it does. The two are worth having together and they are not the same purchase. Our unit is a buying question, asked five times in isolation each month so the spread is visible, and you can add more questions at twenty-nine dollars a month each. If what you want is broad share-of-voice tracking across many prompts, a tool built for that will serve you better and we will say so rather than sell you ours.',
+              `Because a hundred prompts asked daily answers how often your name appears, and this answers whether an agent can use you once it does. The two are worth having together and they are not the same purchase. Our unit is a buying question, asked five times in isolation each month so the spread is visible, and you can add more questions at ${priceOf(skuById('extra-question')!)} a month each. If what you want is broad share-of-voice tracking across many prompts, a tool built for that will serve you better and we will say so rather than sell you ours.`,
             ],
             [
               'We look after a lot of client domains. Is there an agency price?',
-              'Ten domains for $499 a month is the Agency pack, and past that it is a conversation rather than a table. A report carrying your name rather than ours is work we would rather quote than pretend is automatic.',
+              `Ten domains for ${priceOf(skuById('watch-agency')!)} a month is the Agency pack, and past that it is a conversation rather than a table. A report carrying your name rather than ours is work we would rather quote than pretend is automatic.`,
             ],
             [
               'Is there an annual price?',

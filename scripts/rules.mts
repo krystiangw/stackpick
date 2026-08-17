@@ -344,11 +344,12 @@ check('smiec nie wysadza czytania', signatures.read('{'), null)
 check('adres czytamy z naszego custom_data', signatures.read(JSON.stringify({ event_type: 'transaction.completed', data: { id: 't2', custom_data: { sku: 'report-one', email: 'b@v.test' }, customer: { id: 'ctm_1' } } }))?.email, 'b@v.test')
 // Cennik na stronie i katalog dla dostawcy to ta sama cena, albo dostawca obciazy inna kwota niz ta,
 // ktora klient przeczytal.
+// Strona bierze ceny z katalogu, wiec nie ma czego porownywac: sprawdzamy, ze nadal je stamtad
+// bierze, a nie ze przypadkiem zgadzaja sie dwie kopie tej samej liczby.
 const pricingSource = readFileSync('src/app/pricing/page.tsx', 'utf8')
-for (const id of ['report-one', 'watch-monthly']) {
-  const sku = skuById(id)!
-  check(`cennik pokazuje ${priceOf(sku)} za ${id}`, pricingSource.includes(`price: '${priceOf(sku)}'`), true)
-}
+check('cennik czyta katalog, nie wpisane kwoty', pricingSource.includes("priceOf(skuById('report-one')!)"), true)
+check('i nie ma juz wklepanej kwoty za raport', /price: '\$49'/.test(pricingSource), false)
+check('kwota formatuje sie bez groszy, gdy ich nie ma', priceOf(skuById('report-one')!), '$49')
 
 console.log('naglowek, czyli najglosniejsze zdanie na stronie')
 // The headline reads raw findings and the checks read the same findings with four guards on top,
