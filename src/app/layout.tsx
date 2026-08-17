@@ -96,6 +96,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/methodology" className="hover:text-ink">
                 Methodology
               </Link>
+              <Link href="/c" className="hover:text-ink">
+                Categories
+              </Link>
               <Link href="/report" className="hover:text-ink">
                 Report
               </Link>
