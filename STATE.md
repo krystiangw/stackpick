@@ -77,10 +77,27 @@ Odwrotnie: „store and search embeddings" i „product search with typos" **prz
 **Narzedzie czyta po angielsku.** Te same 40 pytan po polsku: 11 odpowiedzi, 6 trafien. To tez
 jest opublikowane w opisie narzedzia, bo nigdzie nie pisalismy, ze pytanie ma byc po angielsku.
 
-**Swiadomie NIE poprawilem regul pod ten zestaw.** Zestaw ma jeszcze raz cos zmierzyc, zanim go
-spalimy, a straznik w buildzie pilnuje teraz, ze kazda liczba w opisie narzedzia zgadza sie z tym,
-co reguly naprawde robia na tych 40 pytaniach. **Zanim ktos ruszy routing: zamow szosty zestaw tym
-samym protokolem, bo poprawka pod ten zabije go jako miare.**
+**Szosty zestaw zamowiony, poprawka zrobiona i zmierzona uczciwie** (`harness/heldout/2026-08-17-b.json`).
+Piaty stal sie zestawem ROBOCZYM, szosty napisano **po** wyborze progu i on jest miara.
+
+**Poprawka:** `explainJob` od poczatku mial w komentarzu zdanie „jedno trafienie w zdaniu na dziewiec
+slow to inny rodzaj dowodu niz dwa trafienia w trzech slowach, i regula decyzyjna musi widziec oba",
+a regula decyzyjna **nigdy nie patrzyla na dlugosc pytania**. Teraz pytanie dluzsze niz dwanascie
+slow potrzebuje dwoch trafien ze slownika, nie jednego. Prog wybrany przez przemiatanie pieciu
+wartosci po wszystkich zestawach, ktore wtedy istnialy.
+
+**Wynik na szostym zestawie: zle odpowiedzi z 14 na 4, poprawne odmowy z 3 na 11, kosztem trzech
+trafien.** Narzedzie jest teraz wyraznie ciche i tak jest opisane.
+
+**Co nadal przecieka:** pytanie o WLASNY kod, ktore uzywa DWOCH naszych slow. „Modul billing i modul
+subscriptions w naszym repo" nadal idzie do `payments`, bo prog dwoch trafien go przepuszcza.
+Nastepny krok, gdy ktos wroci do routingu: **wykrywacz pytan o wlasny kod** („in our repo", „should
+I rewrite", „which data structure"), a przed nim **siodmy zestaw** tym samym protokolem.
+
+**Pulapka z tej samej godziny:** opublikowalem najpierw opis, w ktorym przykladem naprawionego bledu
+byl wlasnie modul billing - i to bylo nieprawda, bo tego akurat prog nie naprawia. Sprawdzilem
+kazdy z trzech przykladow zamiast zalozyc i poprawilem. **Przyklad w opisie jest twierdzeniem i
+sprawdza sie go tak samo jak liczbe.**
 
 **PULAPKA, ktora prawie opublikowala falszywy wniosek:** skan tuz po wdrozeniu wraca z **okna
 ponownego uzycia** (15 minut) i mierzy POPRZEDNI build. `storyblok.com` po deployu pokazywal stary
