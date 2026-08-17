@@ -157,6 +157,38 @@ co zostawia, to zdanie prawdziwe, nie puste.
 `audit-delivery`). Strona `/c/<kat>/runs` uzywa z tego modulu wylacznie `matched` do podswietlania,
 wiec **nie wymaga deployu**, zeby poprawka dotarla do klienta.
 
+## 9.34: SZESNASTY CHECK, CZYLI CENA W SNIPPECIE (2026-08-17, w repo, czeka na deploy)
+
+Z przegladu `~/projects/seo-agent/Jak-agenty-wyszukuja-produkty.md` i skilla `agent-discoverability`
+wyszla jedna rzecz, ktorej nie mierzylismy, a ktora **sami u siebie naprawilismy** po self-audycie:
+**agent eliminuje dostawce na podstawie streszczenia, ktorego nie otworzyl**. WorkOS zostal nazwany
+"the most attractive on price" i odrzucony na snippecie; Auth0 wylecial na cudzym twierdzeniu o
+karcie, a jedyny bieg, ktory otworzyl ich cennik, zadnej karty nie znalazl.
+
+**Check `price_in_snippet`** (1 pkt, etap discovery, `MAX_SCORE` 17 -> 18): czyta **tag description**
+strony cennika, a gdy go nie ma - jej pierwsze widoczne slowa, i **nigdy tresci pod spodem**. To jest
+sens tego checka: silnik cytuje tag, ktory dostal, wiec cena trzy akapity nizej nie istnieje w
+momencie, w ktorym zapada decyzja. Przechodzi na kwocie, stawce albo warunku wejscia slowami.
+
+**Trzy rzeczy, ktore wyszly z pomiarow na zywych domenach, zanim to poszlo do repo:**
+1. `pulumi.com` pisze "free to individuals" i moj pierwszy wzorzec (`free tier|free plan|...`) tego
+   nie lapal, czyli **oskarzylbym ich falszywie**. Wzorzec to teraz golе slowo `free` z jednym
+   wyjatkiem na idiom "feel free". Kierunek bledu wybrany swiadomie: hojnie, bo zmierzone zero jest
+   oskarzeniem.
+2. Cytat to **okno wokol trafienia**, nie samo slowo. "carries free entry: free" nie jest dowodem,
+   ktory vendor moze sprawdzic.
+3. Codex zwrocil uwage, ze czytalem tylko **pierwsze** z dwoch pobran cennika, choc reszta checkow
+   cenowych bierze **sume obu** wlasnie dlatego, ze jeden vendor serwowal ta sama strone raz z, raz
+   bez zdania o darmowym planie. Teraz snippet tez patrzy na oba.
+
+**Nasz wlasny wiersz przechodzi** i to jest kontrolka, ze regula umie powiedziec "tak":
+opis `/pricing` niesie "$49" i "Free scan, no account and no card". **Audyt zlapal przy okazji, ze
+`/llms.txt` mowi "15 deterministic checks"** - poprawione na 16, a strony i tak licza z `CHECKS.length`.
+
+**Do zrobienia po deployu:** korpus jest na 9.33, wiec check pojawi sie dopiero przy nastepnym
+reseedzie (karencja 6 h od tego, ktory teraz idzie). Do tego czasu `npm run audit` bedzie zglaszal
+jeden rozjazd na `/llms.txt`, bo czyta **zywa** strone. Po deployu ma zniknac.
+
 ## RAPORT ZA 49 USD DAL SIE SPRZEDAC TYLKO 177 DOMENOM (2026-08-17, naprawione)
 
 `categoryFor` dopasowuje domene do **listy** w kategorii, a nie do kategorii, wiec kazdy prawdziwy
