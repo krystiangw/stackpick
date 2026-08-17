@@ -16,10 +16,10 @@
  */
 import { writeFileSync } from 'node:fs'
 import cells from '../src/data/cells.json'
-import { CATEGORIES, categoryFor } from '../src/lib/categories'
+import { CATEGORIES, CURATED_DOMAINS, categoryFor } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { FORMULA_VERSION } from '../src/lib/score'
-import { quotedAbout, whoWentFirst } from '../src/lib/vendors'
+import { brandTaken, certain, mentionsIn, nameGuest, quotedAbout, whoWentFirst } from '../src/lib/vendors'
 import { normalizeDomain } from '../src/lib/scan/discover'
 import { SITE_URL } from '../src/lib/site'
 import { buildFixPlan } from '../src/lib/fixfirst'
@@ -29,7 +29,7 @@ const plural = (count: number, one: string, many: string) => (count === 1 ? one 
 
 const [given, ...rest] = process.argv.slice(2)
 if (!given) {
-  console.error('usage: npx tsx scripts/client-report.mts <domain> [--out FILE]')
+  console.error('usage: npx tsx scripts/client-report.mts <domain> [--out FILE] [--category ID] [--brand NAME]')
   process.exit(2)
 }
 // A buyer writes the domain the way they say it out loud. Without this, `www.stripe.com` was told
@@ -43,12 +43,48 @@ if (outAt !== -1 && !named) {
 }
 const out = named ?? `report-${domain.replace(/\./g, '-')}.md`
 
-const category = categoryFor(domain)
+// A buyer is almost never in the corpus. The corpus is 177 domains we chose to publish about, and
+// `categoryFor` matches that list, so every real prospect - an email provider we simply had not
+// listed - was told their product is in none of the categories we measure. The category is the
+// unit we sell, not the list, so a domain outside it can be placed into one by hand and read
+// against the same answers. What that must never do is change the runs: the question, the answers
+// and the other providers stay exactly as they were, and only the reading includes the newcomer.
+const askedAt = rest.indexOf('--category')
+const placedIn = askedAt === -1 ? null : rest[askedAt + 1]
+if (askedAt !== -1 && !placedIn) {
+  console.error('--category potrzebuje id kategorii')
+  process.exit(2)
+}
+// Validated on its own, before anything falls back to the corpus. A typo in --category on a domain
+// we already publish would otherwise be swallowed and the operator would read a report for the
+// right vendor produced by the wrong instruction.
+const placedInto = placedIn ? (CATEGORIES.find((one) => one.id === placedIn) ?? null) : null
+if (placedIn && !placedInto) {
+  console.error(`nie ma kategorii o id ${placedIn}. Sa: ${CATEGORIES.map((one) => one.id).join(', ')}`)
+  process.exit(2)
+}
+const known = categoryFor(domain)
+if (placedInto && known && placedInto.id !== known.id) {
+  console.error(`${domain} jest juz w kategorii ${known.id}, wiec --category ${placedIn} nic nie znaczy. Usun ten argument.`)
+  process.exit(2)
+}
+const category = known ?? placedInto
+const guest = category !== null && !category.domains.includes(domain)
+
+// The brand, and only if a person supplies it. Guessing "postmark" for postmark.com would hand a
+// guest every mention of postmarkapp.com, and "email" for email.com every sentence about email.
+const brandAt = rest.indexOf('--brand')
+const brand = brandAt === -1 ? null : rest[brandAt + 1]
+if (brandAt !== -1 && !brand) {
+  console.error('--brand potrzebuje nazwy, np. --brand Mailtrap')
+  process.exit(2)
+}
 if (!category) {
   // The promise on /pricing is that we say this BEFORE anybody pays, so the tool that produces the
   // report has to be able to say it too, in the same words.
   console.error(`${domain} nie nalezy do zadnej z ${CATEGORIES.length} mierzonych kategorii, wiec nie ma celi do uruchomienia.`)
   console.error('To jest odpowiedz, ktora dajemy PRZED platnoscia, nie po.')
+  console.error(`Jesli jednak nalezy do ktorejs, wskaz ja: --category <id>. Sa: ${CATEGORIES.map((one) => one.id).join(', ')}`)
   process.exit(1)
 }
 
@@ -60,8 +96,68 @@ const held = cells
   .sort((a, b) => a.operatorContext.length - b.operatorContext.length)
 const cell = held[0]
 const runsAll = held.reduce((sum, one) => sum + one.runs, 0)
-const namedAll = held.reduce((sum, one) => sum + (one.rows.find((row) => row.domain === domain)?.named ?? 0), 0)
-const firstAll = held.reduce((sum, one) => sum + (one.rows.find((row) => row.domain === domain)?.first ?? 0), 0)
+const labelOfGuest = domain.split('.')[0]
+
+/**
+ * A guest is read out of the same answers, with the same matcher, plus their own domain in the
+ * list it resolves against. That last part matters and is not a detail: the matcher decides an
+ * ambiguous name by its neighbours, so a newcomer has to be in the list to be read at all, and
+ * everybody else has to be re-read alongside them or "named first" would still be the old winner.
+ * The published rows stay the source for the 177 we do publish, so a report about them cannot
+ * disagree with the site.
+ */
+const withGuest = guest ? [...category.domains, domain] : category.domains
+if (guest) {
+  // Nothing but the address, unless a person named the brand and the name is free. A collision is
+  // refused rather than resolved: "Postmark" for postmark.com would silently move postmarkapp.com's
+  // ten mentions onto a stranger's report, and no wording in the document could undo that.
+  if (brand) {
+    const taken = brandTaken(brand, [...CURATED_DOMAINS])
+    if (taken) {
+      console.error(`nazwa "${brand}" nalezy juz do ${taken}, wiec nie moze byc marka goscia. Podaj inna albo pomin --brand.`)
+      process.exit(2)
+    }
+  }
+  nameGuest(domain, brand ? [brand] : [])
+  const missed = held
+    .flatMap((one) => one.answers)
+    .filter((answer) => !certain(mentionsIn(answer.text, withGuest)).some((mention) => mention.domain === domain))
+    .filter((answer) => new RegExp(`\\b${labelOfGuest}\\b`, 'i').test(answer.text)).length
+  if (missed > 0 && !brand) {
+    console.error(
+      `UWAGA: ${missed} odpowiedzi zawiera slowo "${labelOfGuest}", a nie liczy sie jako wymienienie, bo bez --brand szukamy tylko adresu ${domain}.`,
+    )
+    console.error('Sprawdz te odpowiedzi. Jesli to naprawde oni, uruchom ponownie z --brand, byle nazwa nie nalezala do nikogo innego.')
+  }
+}
+const readAgain = () => {
+  const named = new Map<string, number>()
+  const first = new Map<string, number>()
+  for (const one of held) {
+    for (const answer of one.answers) {
+      const sure = certain(mentionsIn(answer.text, withGuest))
+      for (const who of new Set(sure.map((mention) => mention.domain))) named.set(who, (named.get(who) ?? 0) + 1)
+      if (sure[0]) first.set(sure[0].domain, (first.get(sure[0].domain) ?? 0) + 1)
+    }
+  }
+  return { named, first }
+}
+const live = guest ? readAgain() : null
+// Reading everybody again should reproduce what we publish about them, and where it does not, the
+// difference has to be visible to whoever sends the report rather than silently printed as fact.
+// It can move honestly: adding a name to the list can promote an ambiguous mention beside it, and
+// "named first" changes by definition when a newcomer opened an answer. Anything else is a bug.
+if (live) {
+  for (const one of held) {
+    for (const row of one.rows) {
+      const now = live.named.get(row.domain) ?? 0
+      const published = held.reduce((sum, cell) => sum + (cell.rows.find((r) => r.domain === row.domain)?.named ?? 0), 0)
+      if (now !== published) {
+        console.error(`UWAGA ${row.domain}: publikujemy ${published}/${runsAll}, a z ${domain} w liscie wychodzi ${now}. Sprawdz zanim wyslesz.`)
+      }
+    }
+  }
+}
 // Newest, not the corpus row. The corpus row is what makes vendors comparable to each other, and
 // this report compares nobody: a buyer who fixed their llms.txt yesterday and rescanned would have
 // been sold last week's scorecard under a heading written in the present tense.
@@ -85,9 +181,13 @@ const mine = cell?.rows.find((row) => row.domain === domain)
  * same ten runs it led both. Eight pairs in the corpus read that way, and four more vendors were
  * shown nobody at all because they happened to top the one cell we looked at.
  */
-const namedAcross = (of: string) => held.reduce((sum, one) => sum + (one.rows.find((row) => row.domain === of)?.named ?? 0), 0)
-const firstAcross = (of: string) => held.reduce((sum, one) => sum + (one.rows.find((row) => row.domain === of)?.first ?? 0), 0)
-const rivals = (cell?.rows.map((row) => row.domain) ?? [])
+const namedAcross = (of: string) =>
+  live ? (live.named.get(of) ?? 0) : held.reduce((sum, one) => sum + (one.rows.find((row) => row.domain === of)?.named ?? 0), 0)
+const firstAcross = (of: string) =>
+  live ? (live.first.get(of) ?? 0) : held.reduce((sum, one) => sum + (one.rows.find((row) => row.domain === of)?.first ?? 0), 0)
+const namedAll = namedAcross(domain)
+const firstAll = firstAcross(domain)
+const rivals = (live ? withGuest : (cell?.rows.map((row) => row.domain) ?? []))
   .filter((other) => other !== domain && namedAcross(other) > namedAll)
   .sort((a, b) => namedAcross(b) - namedAcross(a))
 // A run apart is inside the noise this many runs can resolve, and the closing sentence says so.
@@ -95,7 +195,7 @@ const rivals = (cell?.rows.map((row) => row.domain) ?? [])
 const ahead = rivals.filter((other) => namedAcross(other) - namedAll > 1)
 const level = rivals.filter((other) => namedAcross(other) - namedAll === 1)
 
-const saidAbout = (text: string) => quotedAbout(text, domain, category.domains)
+const saidAbout = (text: string) => quotedAbout(text, domain, withGuest)
 
 const lines: string[] = []
 lines.push(`# ${domain}: what an AI agent does with you`)
@@ -117,12 +217,25 @@ if (!cell) {
   lines.push('')
   lines.push(`> ${cell.question}`)
   lines.push('')
+  // Said in the document, not only in the runbook. A vendor placed into a category after the runs
+  // has to know the runs were not arranged around them, and a vendor reading a competitor's report
+  // has to be able to tell the two cases apart.
+  if (guest) {
+    lines.push(
+      `You are not one of the ${category.domains.length} providers we publish in this category, so these runs were not collected with you on the list. Nothing about them was rerun for this report: the question, the sessions and the answers are the ones already published, and the only difference is that the reading below resolves your name as well as theirs. That also means the counts for every provider here were recomputed alongside you rather than copied from the published table.`,
+    )
+    lines.push('')
+  }
   lines.push(`**You were named in ${namedAll} of ${runsAll} runs, and named first in ${firstAll}.**`)
   if (held.length > 1) {
     lines.push('')
     for (const one of held) {
-      const there = one.rows.find((row) => row.domain === domain)
-      lines.push(`- ${one.tool.split(' ')[0]}: ${there?.named ?? 0} of ${one.runs}${one.operatorContext.length === 0 ? ', a tool that read none of our instructions' : ''}`)
+      // Per tool, and read the same way as the total above: a guest has no committed row, so the
+      // split would have printed "0 of 5" beside a headline saying they were named nine times.
+      const there = live
+        ? one.answers.filter((answer) => certain(mentionsIn(answer.text, withGuest)).some((mention) => mention.domain === domain)).length
+        : (one.rows.find((row) => row.domain === domain)?.named ?? 0)
+      lines.push(`- ${one.tool.split(' ')[0]}: ${there} of ${one.runs}${one.operatorContext.length === 0 ? ', a tool that read none of our instructions' : ''}`)
     }
   }
   lines.push('')
@@ -165,7 +278,12 @@ if (!cell) {
   // Which provider was picked instead is sold as its own line on /pricing, so it cannot live in
   // the branch that only fires when nothing was said about the buyer. Being named and still losing
   // to somebody is the common case, and it was the one case this never printed.
-  const winners = [...new Set(held.flatMap((one) => one.answers).map((answer) => answer.first).filter((who) => who && who !== domain))]
+  // Who a run named first, re-read with the guest in the list: the committed `first` was decided
+  // without them, so a newcomer who opened three answers would still have been told somebody else
+  // was picked ahead of them.
+  const wentFirstIn = (answer: { text: string; first: string | null }) =>
+    live ? (certain(mentionsIn(answer.text, withGuest))[0]?.domain ?? null) : answer.first
+  const winners = [...new Set(held.flatMap((one) => one.answers).map(wentFirstIn).filter((who) => who && who !== domain))]
   const wentFirst = whoWentFirst(winners as string[], firstAll, runsAll)
   if (wentFirst) {
     lines.push('')

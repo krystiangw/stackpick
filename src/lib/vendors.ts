@@ -115,11 +115,38 @@ const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 /** The first label, which is the brand for most of the corpus and unusable for the rest. */
 const labelOf = (domain: string) => domain.split('.')[0]
 
+/**
+ * Names for a domain nobody curated, set by the operator for one run.
+ *
+ * ALIASES is a hand-kept list, and everything about the matcher assumes it: a label is treated as
+ * a brand because somebody checked that it is one. Guess it for an arbitrary domain and the
+ * failures are severe rather than noisy - `email.com` would be named by every answer using the
+ * word email, and `postmark.com` would inherit postmarkapp.com's mentions. So a guest is matched
+ * on its address alone unless a person names it, and this is where that decision is recorded.
+ */
+const guestNames = new Map<string, readonly string[]>()
+
+export function nameGuest(domain: string, names: readonly string[]): void {
+  guestNames.set(domain, names)
+}
+
 export function namesFor(domain: string): string[] {
+  const guest = guestNames.get(domain)
+  if (guest) return [...guest]
   const aliases = ALIASES[domain]
   if (aliases) return aliases
   const label = labelOf(domain)
   return label.length >= 3 ? [label] : []
+}
+
+/** Whether a name already belongs to somebody we publish, which is what makes it unusable for a guest. */
+export function brandTaken(name: string, byAnyOf: readonly string[]): string | null {
+  const wanted = name.toLowerCase()
+  for (const domain of byAnyOf) {
+    if (domain.toLowerCase() === wanted) return domain
+    if (namesFor(domain).some((known) => known.toLowerCase() === wanted)) return domain
+  }
+  return null
 }
 
 /**

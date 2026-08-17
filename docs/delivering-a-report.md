@@ -14,6 +14,25 @@ in three months will not remember what the pricing page promised today.
 
 ## Before taking money
 
+0. **A buyer is almost never in the corpus.** The 177 domains we publish are the ones we chose to
+   write about; a prospect who finds us is usually not one of them. That is not a refusal any more:
+   place them into the category they belong to and the report is read out of the same answers.
+
+   ```bash
+   MONGODB_URI=... npx tsx scripts/client-report.mts their.com --category transactional-email
+   ```
+
+   Two rules, both enforced by the generator rather than by memory. **Their name is matched only if
+   you give it**: without `--brand` we look for the address alone, because guessing "postmark" for
+   postmark.com would hand them postmarkapp.com's mentions and "email" for email.com every sentence
+   about email. And **a name already belonging to somebody we publish is refused**, not resolved.
+   When the runs contain their brand and you did not pass it, the tool says how many answers you
+   are leaving uncounted, so the decision is yours and visible.
+
+   The document says in its own words that they were placed into the category after the runs, and
+   that every provider's count was recomputed alongside them rather than copied from the published
+   table. Do not delete that paragraph: it is what makes the number defensible.
+
 1. **Is the domain in a category we measure?** `npx tsx -e "import('./src/lib/categories').then(m => console.log(m.categoryFor('their.com')?.label ?? 'BRAK'))"`
    or just run the report generator, which refuses and says so. The page promises we say this
    **before** payment, not after.

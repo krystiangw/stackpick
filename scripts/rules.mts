@@ -18,7 +18,7 @@ import { FLEX_QUOTA_MB, quotaEmail, verdictFor } from '../src/lib/quota'
 import { sawRateLimit, otherDomainsNamed } from '../src/lib/corpus'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
 import { wasNeverAsked } from '../src/lib/scan/http'
-import { certain, mentionsIn, quotedAbout, whoWentFirst, wordsCarried } from '../src/lib/vendors'
+import { brandTaken, certain, mentionsIn, nameGuest, quotedAbout, whoWentFirst, wordsCarried } from '../src/lib/vendors'
 import { rendersUsableForm, entersThroughIdentityProvider, mcpCandidates, looksLikeADocsPageTwin, answersWithTheSameTemplate, readsAsAnEndpoint, readsAsTheirOwnAddress } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
 import {
@@ -340,6 +340,18 @@ check('prowadzimy w czesci biegow: zdanie o reszcie', whoWentFirst(['paddle.com'
 check('jeden taki bieg mowi w liczbie pojedynczej', whoWentFirst(['paddle.com'], 9, 10), 'In the 1 run that did not put you first, the provider named first was paddle.com.')
 check('dwoch zwyciezcow to liczba mnoga', whoWentFirst(['paddle.com', 'stripe.com'], 5, 10), 'In the 5 runs that did not put you first, the providers named first were paddle.com, stripe.com.')
 check('nikt inny nie byl pierwszy: brak zdania', whoWentFirst([], 10, 10), null)
+
+// Gosc, czyli domena spoza korpusu, ktora wskazano recznie do kategorii. Domyslnie liczy sie tylko
+// jej adres: zgadniete "postmark" dla postmark.com przejeloby wzmianki postmarkapp.com, a "email"
+// dla email.com kazde zdanie o mailu. Marke moze nadac czlowiek i tylko wolna.
+check('marka zajeta przez publikowanego vendora', brandTaken('Postmark', ['postmarkapp.com', 'resend.com']), 'postmarkapp.com')
+check('marka wolna przechodzi', brandTaken('Mailtrap', ['postmarkapp.com', 'resend.com']), null)
+check('sama domena tez jest zajeta', brandTaken('resend.com', ['resend.com']), 'resend.com')
+nameGuest('mailtrap.io', [])
+check('gosc bez marki nie lapie sie na nazwe', certain(mentionsIn('we tried Mailtrap and it was fine', ['mailtrap.io'])).length, 0)
+check('gosc bez marki lapie sie na adres', certain(mentionsIn('we tried mailtrap.io and it was fine', ['mailtrap.io'])).length, 1)
+nameGuest('mailtrap.io', ['Mailtrap'])
+check('gosc z marka lapie sie na nazwe', certain(mentionsIn('we tried Mailtrap and it was fine', ['mailtrap.io'])).length, 1)
 
 console.log('obserwacja domeny, czyli co jest warte maila')
 const verdict = (points: number, max: number, extra: Record<string, unknown> = {}) =>
