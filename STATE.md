@@ -157,6 +157,55 @@ co zostawia, to zdanie prawdziwe, nie puste.
 `audit-delivery`). Strona `/c/<kat>/runs` uzywa z tego modulu wylacznie `matched` do podswietlania,
 wiec **nie wymaga deployu**, zeby poprawka dotarla do klienta.
 
+## SCIEZKA PLATNOSCI: DECYZJA Z AUDYTU SUBAGENTA (2026-08-18, do potwierdzenia rano)
+
+**To nie jest decyzja Krystiana, tylko rekomendacja audytu decyzji**, zrobionego subagentem na
+polecenie "jesli blokuje cie decyzja, zrob audyt i dzialaj wedlug niego". Wdrazam wedlug niej, ale
+**punkty 1-3 na koncu wymagaja jego potwierdzenia, zanim cokolwiek pojdzie na konto**.
+
+**REKOMENDACJA: Paddle** (merchant of record), plan B: **Polar**. Skrot uzasadnienia:
+- **VAT UE i podatek w USA zdejmuje z nas MoR.** Goly Stripe tego nie robi: Stripe Tax liczy
+  podatek, ale w wiekszosci jurysdykcji **nie sklada deklaracji i nie odprowadza**.
+- **Paddle to spolka z UK**, wiec dla polskiej JDG sprzedaz idzie **poza UE**: nie uruchamia
+  rejestracji VAT-UE ani informacji podsumowujacej, a przy zwolnieniu podmiotowym nie wlicza sie do
+  limitu 200 tys. zl. **Stripe Managed Payments to psuje**, bo acquirerem bywa podmiot irlandzki,
+  czyli kontrahent z UE.
+- **Prowizje na naszych kwotach:** Paddle 5% + 0,50 (przy 49 USD to 6,0%). Stripe MP w polskim
+  cenniku to **3,5% doliczone do zwyklych oplat**, wiec przy karcie z USA wychodzi ~9%, czyli
+  drozej niz Paddle, wbrew intuicji.
+- **Faktura B2B:** Paddle waliduje NIP w VIES i robi odwrotne obciazenie. Stripe MP wystawia z
+  Linka ("Sold through Link", `LINK.COM*` na wyciagu), co dla dzialu zakupow jest dziwnym
+  kontrahentem.
+- **KSeF od 2026-04-01** to dodatkowy argument przeciw recznej fakturze: przy Paddle **nie
+  wystawiamy faktury nikomu**, bo Paddle robi samofakturowanie.
+- **Audyt "cztery cyfry" zostaje poza bramka** i idzie faktura z infakt: uslugi z czlowiekiem w
+  srodku sa wykluczone z AUP Paddle i wprost z regulaminu Stripe Managed Payments.
+- **Cash flow, o ktorym latwo zapomniec:** Paddle wyplaca raz w miesiacu, prog 100 USD, przelew do
+  15. Pierwsze pieniadze z pojedynczej sprzedazy 49 USD moga lezec u nich 6-10 tygodni. Polar ma 7
+  dni i wyplaty na zadanie, i to jest jedyny powod, dla ktorego moglby wygrac.
+
+**ZROBIONE DZIS Z PLANU WDROZENIA (bez zakladania jakiegokolwiek konta):**
+**Strony prawne**, ktore audyt nazwal bramka numer jeden i ktorych **nie bylo wcale**: `/terms`,
+`/privacy`, `/refunds` (v485). **Zamkniete same z siebie**: dopoki `SELLER_LEGAL_NAME` i
+`SELLER_ADDRESS` nie sa ustawione, kazda z nich zwraca **404**, a stopka ich nie linkuje. Straznik
+w `rules.mts` pilnuje obu polowek tej reguly. Sprawdzone na produkcji: `/terms` = 404.
+Tresc jest prawdziwa wobec kodu, nie wzieta z szablonu: nie mamy ciasteczek, skryptu analitycznego
+ani zadnego taga trzeciej strony, licznik odwiedzin trzyma dzien, sciezke i to, czy to byl agent
+(bez IP i bez user-agenta), a jedyne dane osobowe to adres mailowy podany po wynik albo obserwacje.
+
+**Polityka zwrotow, ktora zaproponowalem i ktora trzeba zatwierdzic:** raport jednorazowy **14 dni,
+bez podania powodu** (plus alternatywy: darmowy przeskan albo powtorzenie biegow); monitoring
+zatrzymywalny w kazdej chwili, **biezacy miesiac bez zwrotu**, bo zostal zmierzony i dostarczony;
+audyt rozliczany rozmowa, ale bez placenia za bieg, ktory sie nie odbyl.
+
+**CZEGO POTRZEBUJE OD KRYSTIANA RANO, zanim cokolwiek ruszy dalej:**
+1. **Status podatkowy JDG** (czynny VAT czy zwolnienie, jest rejestracja VAT-UE czy nie) oraz
+   **dokladna nazwa prawna i adres** - musza sie zgadzac znak w znak miedzy regulaminem a KYC.
+   To sa wartosci do `SELLER_LEGAL_NAME`, `SELLER_ADDRESS`, `SELLER_TAX_ID`.
+2. **Czy sprzedaz ma isc na JDG, czy planowana jest spolka.** Paddle przypina podmiot na stale, a
+   zmiana sprzedawcy to nowe konto i ponowne wpisywanie kart przez klientow.
+3. **Akceptacja polityki zwrotow powyzej** albo jej korekta.
+
 ## /findings PUBLIKOWALO NIEPRAWDE, BO LICZBY BYLY WPISANE RECZNIE (2026-08-18, wdrozone v484)
 
 Lista po reseedzie kazala sprawdzic, czy `audit-study.mts` zglosi ruch przy provisioningu. **Nie
