@@ -53,7 +53,398 @@ czysty i to on niesie replikacje), rekord DNS do rejestru MCP, konta w Bing Webm
 MCP, token npm, licencja korpusu, sciezka zakupu inna niz `mailto:` i Stripe kontra Paddle.
 **agenticpay tego NIE odblokowuje.**
 
-## OKNO NA POMIAR PODLOGI SZUMU: OD TERAZ NIE RUSZAMY FORMULY (2026-08-16, 23:00)
+## NASZ WLASNY WIERSZ OBLEWA DOKLADNIE TEN CHECK, KTORY WLASNIE UZNALISMY ZA NAJWAZNIEJSZY
+
+Skan `letagentsin.com` na 9.30: **11/17**, i jedyny check oblany wprost to **`oauth_dcr`** (reszta
+braków to `niemierzalne`: nie mamy rejestracji konta ani pakietu npm, wiec nie ma czego mierzyc).
+
+To jest ta sama regula, ktora w pomiarze wymienialnosci wyszla **jedyna przezywajaca kontrole na
+slawe** (+27pp u popularnych, +12pp u mniej znanych, w obu narzedziach). Czyli **oblewamy check,
+o ktorym wlasnie zebralismy najmocniejszy dowod, ze ma znaczenie.**
+
+**I zostaje tak, jak jest.** `/methodology` publikuje to zdanie od dawna i nadal renderuje sie
+poprawnie: *„We fail `oauth_dcr` (...) our tools take no credential, so there is no client for an
+agent to register, and rewriting the rule until we passed would be marking our own work."* Nasz
+produkt nie ma kont, wiec nie ma klienta do zarejestrowania; napisanie sobie wyjatku byloby
+ocenianiem wlasnej pracy. **Do przemyslenia po zamrozeniu**, ale ostroznie: czy `oauth_dcr` powinien
+byc `notApplicable` dla produktow bez kont. Odpowiedz „tak" poprawia uczciwosc, ale **zdejmuje
+oskarzenie z nas samych**, wiec wymaga podwojnie mocnego uzasadnienia, a nie wygody.
+
+## PRZEGLAD TEGO, CO WIDZI ODWIEDZAJACY, PO RESEEDZIE (2026-08-17)
+
+Sam korpus moze byc zdrowy, a strona i tak pokazywac cos innego, wiec po reseedzie przeszedlem
+sciezka klienta zamiast ufac audytowi korpusu.
+
+- **Wszystkie strony 200**, a `170` renderuje sie na `/`, `/findings`, `/report` i `/methodology`.
+  Najwolniejsza jest strona glowna, 1,95 s (dynamiczna, liczy rankingi); reszta ponizej 0,4 s.
+- **Skan odwiedzajacego przeszedl end to end**: `vercel.com` w 6,1 s, 11/17 na formule 9.30,
+  **zero checkow bez zdania**, jeden niemierzalny. Strona vendora i **link trwaly** oba 200.
+
+To jest tania kontrola, ktora warto powtarzac po kazdym reseedzie: audyt korpusu sprawdza dane,
+a to sprawdza produkt.
+
+## 29. PRZEBIEG: `signup_reachable` NA 9.30, ZERO OBALONYCH I OSIEM ZDAN, KTORE MYLA
+
+`npm run audit-signup credited|accused` na korpusie 9.30. **Kontrolka: 40 z 42**, czyli dokladnie
+w udokumentowanym progu tej sondy (`docuseal.com` i `deepl.com` to jej znane pudla, opisane w
+naglowku skryptu). **Strona oskarzen: 85 wierszy, zero obalonych** - nigdzie nie ma formularza,
+ktorego byśmy nie widzieli.
+
+**Ale osiem wierszy dostaje zdanie, ktore opisuje formularz, jakiego ten vendor nigdy nie napisal:**
+`cloudinary.com`, `transloadit.com`, `trychroma.com`, `rollbar.com`, `modal.com`, `browserless.io`,
+`cal.com`, `redis.io`. Wszystkim publikujemy *„<url> is reachable, but its form needs JavaScript"*,
+a ich strona rejestracji **nie ma zadnego pola** i wpuszcza wylacznie przez dostawce tozsamosci.
+
+Sprawdzone recznie na `modal.com/signup`: **51 983 bajty HTML z serwera, zero `<input>`**, za to
+trzy przyciski `Continue with GitHub`, `Continue with Google`, `Continue with SSO`.
+
+**Werdykt (zero punktow) jest sluszny** - agent bez czlowieka i tak nie zalozy tam konta - **ale
+zdanie twierdzi istnienie czegos, czego nie zmierzylismy**. To jest dokladnie ten rodzaj bledu,
+ktory ten produkt ma nie popelniac, i vendor czytajacy to zdanie ma prawo uznac, ze nie patrzylismy.
+
+**Poprawka jest gotowa do wdrozenia PO pomiarze podlogi szumu** (dotyka zdania, wiec i wersji
+formuly): gdy strona nie ma zadnego pola formularza, a niesie wejscia przez dostawce tozsamosci,
+publikujemy to zamiast zdania o JavaScripcie. Sonda audytu juz to rozroznia i nazywa `oauth-only`.
+
+## OBIETNICA BIEGOW AGENTA MA DZIURE: DOMENA SPOZA NASZYCH KATEGORII (2026-08-17)
+
+`/pricing` obiecuje obserwowanej domenie biegi agentow co miesiac, a **cela rozpoznawcza wymaga
+kategorii i pytania**. Odwiedzajacy moze obserwowac dowolna domene na swiecie. **Dzis 1 z 3
+obserwacji nie da sie obsluzyc**: `vercel.com`, usunieta z korpusu 2026-08-11 wlasnie za brak
+mierzonej przez nas kategorii. Nic tego nie mowilo.
+
+`npm run watch-coverage` wypisuje kazda obserwacje z kategoria, obecnoscia pytania i data ostatniej
+celi, i **odmawia brzmiec uspokajajaco**: brak kategorii to `BRAK KATEGORII`, a na koncu leci
+zdanie, ile obserwacji nie da sie obsluzyc.
+
+Obietnica na `/pricing` i na stronie glownej mowi teraz, ze biegi obejmuja **25 mierzonych
+kategorii**, a gdy produkt nie nalezy do zadnej, **mowimy o tym zanim ktos wlaczy monitoring**.
+Wdrozone i sprawdzone na produkcji.
+
+**Swiadomie NIE dodalem kategorii dla vercela**, choc to bylo by prawdziwe rozwiazanie: zmiana
+skladu korpusu w trakcie okna **zepsulaby pare pomiarowa do podlogi szumu**. Do rozwazenia po niej,
+razem z pytaniem, czy w ogole chcemy mierzyc hosting.
+
+## POJEMNOSC MONITORINGU POLICZONA, I STRAZNIK KADENCJI (wdrozone 2026-08-17)
+
+**Ile klientow obsluzy dzisiejszy monitoring: okolo 240 obserwowanych domen.** Rachunek:
+`watch.yml` chodzi raz na dobe i wywoluje endpoint **do 40 razy**, endpoint bierze **jedna domene
+na wywolanie** (Heroku ubija ciche zadanie po 30 s, a skan trwa do 27 s), czyli **40 skanow na
+dobe**; wiersz przeterminowuje sie po **szesciu dniach**. 40 x 6 = 240. Powyzej tego tygodniowa
+kadencja zaczyna sie sypac.
+
+**Nic tego nie mierzylo.** `quota.yml` sprawdzal tylko, czy przebieg monitoringu konczy sie
+sukcesem, a **przebieg z zalegla kolejka konczy sie sukcesem tak samo jak zdrowy**. To ten sam
+ksztalt awarii, przez ktory monitoring stal kiedys dwa dni i nikt sie nie dowiedzial.
+
+Endpoint raportuje teraz `watches`, `due` i `longestWaitDays`, a straznik alarmuje powyzej **osmiu
+dni** (kadencja plus dzien luzu na przesuniecie crona GitHuba). **Odczyt jest GET-em bez skutkow
+ubocznych**, bo pytanie o stan kolejki nie moze przy okazji przeskanowac cudzej domeny ani wyslac
+komus maila. Sprawdzone na produkcji: `{"watches":3,"due":0,"longestWaitDays":4}`, a bez tokenu
+i ze zlym tokenem 401.
+
+**Dwie rzeczy sprawdzone przy okazji i obie sa w porzadku:** monitoring trzyma **wlasna linie
+bazowa** (`watch.lastReportId`) i przelicza ja pod dzisiejsze reguly, wiec reseed korpusu **nie
+zjada klientowi zmiany**, o ktorej mial dostac maila; a kolejka jest sortowana po `checkedAt`
+rosnaco (nigdy niesprawdzone pierwsze), wiec **nikt nie moze zaglodzic sie na jej koncu**.
+
+## WERYFIKACJA PUNKTU WEJSCIA PO RESEEDZIE: 120 OSKARZEN, ZERO NIEZGOD
+
+Najwieksza rodzina oskarzen na karcie wynikow, sprawdzona na korpusie 9.30.
+**Kontrolka: 37 wierszy zaliczanych, 0 niezgod. Oskarzenia: 120 sprawdzonych, 0 niezgod.**
+
+Do tego doszlo w trzech krokach i kazdy z nich byl naprawa MOJEJ SONDY, nie skanera:
+
+1. **`weglot.com`**: ich host odpowiada `# Page Not Found. The URL <sciezka> does not exist` na
+   kazde pytanie. Sonda zwijala biale znaki **przed** porownaniem pierwszej linii, wiec obie
+   odpowiedzi roznily sie cytowana sciezka i regula wspolnego naglowka nie strzelala. Pierwsza
+   linia jest teraz brana z surowego tekstu.
+2. **`datadoghq.com/agent.md`**: to ich strona dokumentacji o produkcie nazwanym Agent, z
+   `breadcrumbs: Docs > Agent` we front matterze. Skaner ma te regule od 9.28, sonda jej nie miala.
+3. **`calendly.com`**: dwie sciezki wielkimi literami wrocily jako 317-bajtowy markdownowy 404 w
+   trakcie jednego przebiegu, a minute pozniej ten sam host odpowiadal na nie (i na sciezke
+   wymyslona) zwykla skorupa HTML 298 kB. **Trafienie liczy sie teraz dopiero, gdy powtorzy sie
+   przy drugim pytaniu.**
+
+**Kontrolka po kazdym z tych zaostrzen nadal daje 37/37**, czyli sonda nie stracila zdolnosci
+widzenia plikow, za ktore dajemy punkt. To ten sam test, ktory przy audycie rejestracji kazal
+wczesniej odpuscic zaostrzenie, bo psulo kontrolke.
+
+## RESEED NA 9.30: 170 WIERSZY, ZERO SPRZECZNOSCI, PIEC "POGORSZEN" ZBADANYCH PO KOLEI
+
+`170 rows on formula 9.30, 0 contradictions`, `21 stated numbers and 5 named-vendor claims checked
+against the data, 0 adrift`. Piec werdyktow gorszych niz poprzedni pomiar, **kazdy przeskanowany
+pojedynczo, zanim ktokolwiek nazwal go regresem vendora**, tak jak nakazuje skrypt:
+
+- **`vonage.com` i `phrase.com`, `mcp_present` 1 -> 0: przejsciowe.** Pojedynczy skan odzyskuje oba,
+  lokalnie i na produkcji, i oba wpisane z powrotem do korpusu. Przy okazji **vonage potwierdza
+  druga fale z 9.29**: ich serwer stoi na `documentation-mcp.vonage.dev`, czyli na innej domenie tej
+  samej marki, i znajduje go dopiero regula z tego wydania.
+- **`bitmovin.com`, `user_agents_allowed`: niemierzalne**, ich brzeg odmawia nam `robots.txt`.
+  Werdykt jest oznaczony jako niemierzalny, wiec nie liczy sie przeciwko nim.
+- **`calendly.com`, `agent_entry_point` i `machine_readable_api` 1 -> 0: to NIE jest regres vendora,
+  tylko poprawa naszego pomiaru.** Ich host dokumentacji odpowiada **ta sama skorupa HTML o
+  rozmiarze 298 kB na kazda sciezke**, sprawdzone recznie na `/skill.md`, `/SKILL.md`, `/AGENTS.md`
+  i `/agents.md`: cztery identyczne odpowiedzi. Wczesniejszy przebieg tego samego dnia zaliczyl im
+  `skill.md` i to bylo zaliczenie falszywe. **Fala wielkich liter z 9.28 wzmocnila kontrolke
+  wspolnego ksztaltu** przypadkiem: wiecej sond na tym samym hoscie to wiecej identycznych cial,
+  wiec dedup lapie szablon, ktorego wczesniej nie widzial.
+
+**Do zrobienia po odmrozeniu formuly:** discovery adresu dokumentacji jest niestabilne (raz korzen
+`developer.calendly.com/`, raz `/docs/getting-started/overview`), a `machine_readable_api` czyta
+deklaracje specyfikacji **tylko z tej jednej wylosowanej strony**. To druga rzecz w tym tygodniu
+wskazujaca na te sama poprawke, po 28. przebiegu: **pytaj takze o korzen hosta dokumentacji**.
+
+## PIERWSZY POMIAR: CZY NASZE CHECKI MAJA COKOLWIEK WSPOLNEGO Z TYM, KOGO AGENCI WYMIENIAJA
+
+25 cel rozpoznawczych (wszystkie kategorie, 5 biegow claude/sonnet kazda), **170 dostawcow, 87
+wymienionych choc raz**. `npm run named-vs-score`, wynik w `scratchpad/named-vs-score.txt`.
+Test permutacyjny 10 000 przetasowan ze stalym ziarnem, plus podzial po medianie tygodniowych
+pobran npm, bo **slawa dostawcy jest oczywistym czynnikiem konfundujacym**.
+
+**Na calym korpusie:**
+
+| check | zdaja | oblewaja | roznica | przypadek |
+|---|---|---|---|---|
+| `oauth_dcr` | 56% | 28% | **+28pp** | 0.000 |
+| `mcp_present` | 51% | 31% | **+20pp** | 0.003 |
+| `programmatic_provisioning` | 50% | 31% | **+18pp** | 0.006 |
+| `typed_package` | 42% | 23% | +20pp | 0.050 |
+| **`llms_txt`** | 40% | 37% | **+3pp** | **0.738** |
+| `machine_readable_api` | 39% | 40% | -1pp | 0.908 |
+| `agent_entry_point` | 41% | 40% | +1pp | 0.905 |
+
+Wynik powyzej mediany: **50% wymienialnosci kontra 31%** ponizej, +19pp, przypadek 0.003.
+
+**Ale wiekszosc tego to slawa, nie nasze checki.** Sami popularni (powyzej mediany 243 891 pobran
+tygodniowo): 58% wymienialnosci. Sami mniej znani: 27%. Dopiero wewnatrz polowek widac, co zostaje:
+
+| check | u popularnych | u mniej znanych |
+|---|---|---|
+| **`oauth_dcr`** | **+32pp** | **+16pp** |
+| `mcp_present` | +28pp | +4pp |
+| `programmatic_provisioning` | +35pp | -1pp |
+| `llms_txt` | +1pp | -7pp |
+
+**`oauth_dcr` jest jedynym checkiem, ktory przezywa kontrole na slawe po obu stronach.** MCP i
+provisioning trzymaja sie tylko wsrod popularnych, czyli u nich to w duzej mierze slawa.
+**`llms_txt` nie pokazuje niczego nigdzie**, co zgadza sie co do joty z trzema zewnetrznymi
+zbiorami logow opisanymi w sekcji o wtyczkach.
+
+### REPLIKACJA NA DRUGIM NARZEDZIU: to samo, mocniej, i BEZ SKAZENIA
+
+Te same 25 kategorii przepuszczone przez **codex (gpt-5.6-sol, `model_reasoning_effort=low`)**.
+
+**Korekta mojego wlasnego raportu skazenia, 2026-08-17:** raportowalem przy tych biegach
+`~/.codex/memories_1.sqlite` jako kontekst. **`codex features list` mowi `memories stable false`**,
+czyli ta funkcja jest wylaczona i codex tego pliku nie czyta. Nie ma tez zadnego `AGENTS.md` ani
+w `~/.codex`, ani w katalogach nadrzednych biegow. **Wiec przy biegach codexa zaden plik instrukcji
+nie byl w zasiegu i jest to pierwszy nieskazony pomiar, jaki mamy** - bez klucza API, ktory nadal
+jest blokerem tylko dla drogi `--bare` w claude. Harness pyta teraz narzedzie o stan tej funkcji
+zamiast zakladac, i zapisuje rozwiazane ustawienia (`model`, `model_reasoning_effort`) do `RUN.json`,
+bo efort jest parametrem pomiaru, a nie kontekstem. 90 dostawcow
+wymienionych choc raz. **Wynik w `scratchpad/named-vs-score-codex.txt`.**
+
+Liczby ponizej sa **po reseedzie na 9.30 i po poprawce matchera**, czyli porownywalne z tabela
+w sekcji wyzej:
+
+| check | claude/sonnet | codex |
+|---|---|---|
+| `oauth_dcr` | +25pp (0.000) | **+31pp (0.000)** |
+| `programmatic_provisioning` | +18pp (0.008) | **+23pp (0.000)** |
+| `mcp_present` | +14pp (0.048) | **+22pp (0.001)** |
+| `typed_package` | +23pp (0.019) | +19pp (0.066) |
+| `llms_txt` | +3pp (0.716) | +15pp (0.105) |
+
+**`llms_txt` jest jedynym miejscem, gdzie narzedzia sie roznia kierunkiem sily:** claude plasko,
+codex lekko na plus, ale **zadne z dwoch nie przechodzi testu przypadku**, wiec to nadal brak
+sygnalu, a nie sygnal slabszy.
+
+**Uwaga do wydruku codexa:** naglowek nadal wypisuje `memories_1.sqlite` jako kontekst, bo pliki
+`RUN.json` tych biegow powstaly **przed** poprawka wykrywania. Same biegi byly czyste (funkcja
+`memories` wylaczona), a zapisanych metadanych nie ruszam po fakcie: przepisywanie zapisu przebiegu
+po jego zakonczeniu jest dokladnie tym, co niszczy zaufanie do zapisow.
+
+Po kontroli na slawe, codex: `oauth_dcr` **+35pp u popularnych i +19pp u mniej znanych**,
+`mcp_present` +34 i +10, `programmatic_provisioning` +41 i +4, `llms_txt` +20 i -2.
+
+**Wniosek, ktory przezyl wszystko, co na niego rzucilem:** `oauth_dcr` jest dodatni w **dwoch
+narzedziach, dwoch rodzinach modeli i obu polowkach popularnosci**. `mcp_present` idzie zaraz za
+nim. `llms_txt` nie ma sygnalu w zadnym pomiarze, ktory przechodzi test przypadku.
+
+### AKTUALIZACJA PO RESEEDZIE 9.30 I POPRAWCE MATCHERA (2026-08-17)
+
+Liczby wyzej powstaly na korpusie 9.27/9.28. Po reseedzie na 9.30 i po dolozeniu reguly „dwie
+marki-slowa w jednym zdaniu licza sie obie" przeliczylem wszystko jeszcze raz:
+
+| check | bylo | jest |
+|---|---|---|
+| `oauth_dcr` | +28pp (0.000) | **+25pp (0.000)** |
+| `programmatic_provisioning` | +18pp (0.006) | **+18pp (0.008)** |
+| `mcp_present` | +20pp (0.003) | **+14pp (0.048)** |
+| `typed_package` | +20pp (0.050) | +23pp (0.019) |
+| `llms_txt` | +3pp (0.738) | **+3pp (0.716)** |
+| wynik powyzej mediany | +19pp (0.003) | +16pp (0.019) |
+
+**Najciekawsza zmiana jest w `mcp_present` i warto rozumiec, skad sie wziela: to MOJA poprawka
+rozmyla te korelacje.** Druga fala z 9.29 znalazla prawdziwe endpointy u 15 dodatkowych vendorow
+(73 zaliczanych przed reseedem, 88 po), a to sa z definicji ci trudniejsi do znalezienia, czyli
+mniej znani. Czyli **czesc starej korelacji byla bledem pomiaru skorelowanym ze slawa**: u duzych
+firm endpoint lezal tam, gdzie zgadywalismy. Lepszy pomiar oslabil zwiazek i to jest zdrowy
+kierunek, a nie strata.
+
+Po kontroli na slawe wnioski sie nie zmieniaja: `oauth_dcr` **+27pp u popularnych i +12pp u mniej
+znanych**, `programmatic_provisioning` +26 i +1, `mcp_present` +18 i +5, `llms_txt` +5 i -6.
+
+**Kontrola matchera recznym odczytem** (cela `llm-infrastructure`, najtrudniejsza, bo pelna marek
+bedacych zwyklymi slowami): matcher zgadza sie z moim odczytem na **33 z 35 komorek**, a obie
+rozbieznosci to te, ktorych **odmowil rozstrzygnac i zacytowal czlowiekowi** (`Replicate` i `Modal`
+w liscie z Ollama i vLLM, ktorych nie ma w naszym korpusie). Po poprawce kategoria zgadza sie co do
+biegu.
+
+**Czego to NIE dowodzi, i to musi isc razem z kazda liczba:** nic o przyczynie (znany dostawca i
+publikuje, i jest wymieniany), nic o pojedynczym dostawcy (piec biegow oddziela sciane od ciszy),
+i nic czystego, bo biegi czytaly `~/.claude/CLAUDE.md` tej maszyny. Wiersze z garstka danych sa
+w wydruku oznaczone: `answers_plain_request` pokazuje -54pp na **pieciu** oblewajacych, a wszyscy
+piatka to firmy dosc duze, by stac je na obrone przed botami, wiec to znowu slawa tylnymi drzwiami.
+
+**Co z tym zrobic (decyzje na po pomiarze podlogi szumu, bo dotykaja punktacji):**
+1. `llms_txt` zostaje w formule czy nie? Moja rekomendacja: **zostaje, ale zdanie przy nim mowi, co
+   zmierzylismy** - jest tani i nieszkodliwy, a my wlasnie udowodnilismy, ze nie ma zwiazku z
+   wymienialnoscia. Konkurencja sprzedaje go jako lek.
+2. To jest **material na strone i najmocniejsza roznica wobec Cloudflare i Vercela**, ktorzy mierza
+   czytelnosc tresci. Zdanie do publikacji: check poswiadczen (`oauth_dcr`) jest jedynym, ktory
+   przezywa kontrole na popularnosc.
+3. Powtorzyc na drugim narzedziu (codex) i po odmrozeniu formuly, zanim cokolwiek pojdzie na strone.
+
+## RESEARCH: WTYCZKI "AGENT READY" DLA WORDPRESSA I SKLEPOW (pytanie Krystiana, 2026-08-16)
+
+Pytanie: czy budowac wtyczki gotowosci na agentow dla popularnych platform (WordPress, WooCommerce,
+PrestaShop, Magento, frameworki) jako czesc naszego ekosystemu. **Odpowiedz: nie w wersji ogolnej.**
+Trzy powody, kazdy ze zrodlem.
+
+**1. Wlasciciele platform wchlaniaja te warstwe.** Yoast i Rank Math generuja `llms.txt` natywnie
+(miliony instalacji kazda). Wtyczka Automattica `wordpress-mcp` jest **wygaszana na rzecz
+`WordPress/mcp-adapter`**, czyli MCP wchodzi do rdzenia WP przez Abilities API. Mintlify sam
+generuje `llms.txt`, `llms-full.txt`, `skill.md` **i serwer MCP dla kazdej instancji docsow**, czyli
+cztery nasze checki za darmo. Shopify Spring '26 **automatycznie wlacza kwalifikujacym sie
+sprzedawcom** UCP i Global Catalog MCP z syndykacja do ChatGPT, Copilota, Google AI Mode i Gemini.
+
+**2. To, co te wtyczki dodaja, nie ma zmierzonego efektu.** Trzy niezalezne zbiory logow:
+MaxAEO (19 witryn, luty-kwiecien 2026) **41 zadan o `llms.txt` na ~1,1 mln pobran stron przez
+crawlery AI**; OtterlyAI **84 na 62 100 wizyt botow, 0,1 procent**; Evil Martians **zero zadan o
+pliki markdown** od GPTBot, ClaudeBot i PerplexityBot. Cytowalnosc 11,8 kontra 11,6 procent, czyli
+**0,2 punktu, wewnatrz szumu**.
+
+**3. Pojemnosc.** Jedna osoba, dwa audyty miesiecznie. Wtyczka na cudzej platformie to biezaca
+konserwacja bez konca.
+
+### Wazniejsze od pytania o wtyczki: rynek pomiaru sie zamknal
+
+- **Cloudflare, 17 kwietnia 2026, darmowy `isitagentready.com`**: cztery wymiary, w tym Agent Skills,
+  API Catalog (RFC 9727), OAuth discovery, MCP Server Card, WebMCP.
+- **Vercel** ma wlasna Agent Readability Spec i paczke `@vercel/agent-readability`;
+  **`agent-ready.dev`** robi 70 checkow z opublikowana metodologia (my jestesmy w ich komentarzach
+  w kodzie od dawna).
+- **`agentchecker.ai` sprzedaje juz nasz platny produkt**: prawdziwy agent w prawdziwej
+  przegladarce, ponad 20 zadan lacznie z rejestracja i checkoutem, **od 19 funtow**, plus model
+  odsprzedazy dla agencji po ~13 funtow. Nasz audyt to cztery cyfry.
+
+**Nasza obrona jest metodologiczna i lejkowa, nie technologiczna.** Oni sprzedaja jeden
+pietnastominutowy przebieg; my mamy juz napisane na `/pricing`, dlaczego jeden przebieg niczego nie
+dowodzi, i raportujemy rozrzut z powtarzalnej celi. **Nikt z nich nie mierzy, czy agent zdobedzie
+konto i klucz** (rejestracja, OAuth DCR, provisioning) - Cloudflare i Vercel mierza czytelnosc.
+
+### Waska wersja pomyslu, ktora ma sens
+
+Nie wtyczka dla mas, tylko **mala paczka dla NASZYCH kupujacych** (dostawcy API): karta
+`.well-known/mcp.json`, `agents.md`, link `rel="service-desc"` do OpenAPI, samo-check lejka
+rejestracji, plus akcja CI liczaca nasza opublikowana formule na PR. **Cel to dystrybucja, nie
+przychod** - jestesmy niewidoczni i to byl nasz wlasny wniosek. Jedyny segment z prawdziwa luka to
+**WooCommerce, jako jedyna duza platforma nie dajaca sprzedawcom niczego automatycznie**, ale to
+inny klient i inny zestaw checkow, wiec tylko przy swiadomej zmianie segmentu.
+
+### Co to wymusza na nas
+
+**Punktujemy `llms_txt` jako jeden z 15 checkow, a dowody na jego dzialanie sa zerowe.** Nie wolno
+tego bronic, trzeba sprawdzic na wlasnych danych: cele rozpoznawcze ze wszystkich 25 kategorii
+(leca w nocy 2026-08-16) pozwalaja zapytac wprost, **czy dostawcy z `llms.txt` sa wymieniani przez
+agentow czesciej niz ci bez**. Jesli nie, mowimy to na stronie przed konkurencja. To jest mocniejszy
+produkt niz jakakolwiek wtyczka.
+
+## 28. PRZEBIEG: `machine_readable_api`, ZERO ZNALEZIEN I TYM RAZEM ZERO COS ZNACZY
+
+25. przebieg na tym checku byl pusty, bo apis.guru mial pokrycie 2 na 47. Ten pyta dwa zrodla,
+ktore **udowodnily, ze umieja cos znalezc**, zanim cokolwiek powiedzialy o oskarzonych
+(`scripts/audit-openapi-docs.mts`):
+
+1. **Adres specyfikacji w atrybutach ich strony dokumentacji** (`data-url` Scalara, `spec-url`
+   Redoca, `rel="service-desc"`). Kontrolka: **1 trafienie na 113** wierszy zaliczanych. Slabe, bo
+   te widgety najczesciej montuje JavaScript, a my czytamy HTML z serwera.
+2. **Zwykle sciezki specyfikacji na HOSCIE DOKUMENTACJI**, ktorych skaner nie pyta wcale: probujemy
+   `/openapi.json` i cztery inne **tylko na witrynie**. Kontrolka: **3 trafienia na 113**
+   (`docs.trychroma.com/openapi.json`, `docs.together.ai/openapi.yaml`,
+   `docs.browserless.io/openapi.yaml`), wszystkie prawdziwe, z sparsowana wersja.
+
+**Strona oskarzen: 48 domen, 0 znalezien.** Tym razem zero jest informacyjne, bo to samo narzedzie
+na kontrolce znalazlo cztery specyfikacje. **Zadnego falszywego oskarzenia na tym checku.**
+
+**Do wdrozenia PO pomiarze podlogi szumu** (dotyka punktacji, wiec nie teraz): sciezki specyfikacji
+probowac takze na hoscie dokumentacji. Dzis nie zmienia zadnego werdyktu, bo te trzy domeny sa juz
+zaliczone inna droga, ale to ta sama dziura, ktora `agent_entry_point` mial do 9.19 i `llms_txt`
+przed nim, i przy nastepnym vendorze zamieni sie w falszywe oskarzenie.
+
+## CELA ROZPOZNAWCZA POWTORZONA DRUGIM NARZEDZIEM: WYNIK SIE TRZYMA
+
+`file-storage`, to samo pytanie, 5 biegow claude/sonnet i 5 biegow codex (gpt-5.6-sol). Codex nie
+czyta `CLAUDE.md` w ogole, wiec czyta zupelnie inny zestaw plikow operatora niz claude, i to jest
+sens powtorki: **znalezisko, ktore przezywa dwa narzedzia z dwoma roznymi skazeniami, jest o
+vendorach, a nie o tej maszynie.**
+
+| domena | claude/sonnet | codex |
+|---|---|---|
+| cloudflare.com | 5/5, pierwszy 5x | 5/5, pierwszy 5x |
+| cloudinary.com | 4/5 | 5/5 |
+| uploadthing.com | 3/5 | 1/5 |
+| uploadcare.com | 0/5 | 1/5 |
+| bunny, filestack, imagekit, tigris, transloadit | **0/5** | **0/5** |
+
+**Pieciu dostawcow nie padlo ani razu w zadnym z dziesieciu biegow.** Zgadza sie takze to, kto jest
+wybierany: cloudflare pierwszy we wszystkich dziesieciu. Rozbieznosci sa na ogonie (uploadthing 3/5
+kontra 1/5), czyli dokladnie tam, gdzie FAQ na `/pricing` mowi, ze piec biegow nie rozdziela
+bliskich sobie dostawcow.
+
+**Pulapka narzedziowa przy okazji:** `codex exec` wypisuje "Reading additional input from stdin" i
+czeka, jesli stdin zostanie otwarty. Pierwszy bieg spalil na tym cala minute i skonczylby sie na
+limicie czasu; `spawnSync` dostal `input: ''`.
+
+## PODLOGA SZUMU ZMIERZONA: 0,59 PROCENT, SYMETRYCZNIE (2026-08-17, WDROZONE)
+
+**Zmierzona pierwszy raz w historii tego produktu tak, jak trzeba.** 170 domen, **15 werdyktow na
+2550, czyli 0,59 procent**, formula 9.30 po obu stronach, **9 w gore i 6 w dol**.
+
+**Nowa jest para, nie liczba.** Kazdy wczesniejszy pomiar porownywal dwa przebiegi JEDNEGO
+przemiatania, a pierwszy przebieg pyta npm na zimno i drugi znajduje odpowiedzi w cache, wiec te
+pary ruszaly jednokierunkowo (para sasiednia na 9.30: 27 w gore, 3 w dol). Ta porownuje **cieply
+przebieg dwoch osobnych przemiatan** oddalonych o szesc godzin. **Rozklad symetryczny to szum,
+jednostronny to grzejacy sie cache z nasza nazwa.**
+
+**Zalozenie sprawdzone, a nie przyjete:** miedzy reseedami **zero commitow** w `src/lib/scan`,
+`src/lib/score.ts` i `src/lib/published.ts`, wiec reguly byly bajt w bajt te same.
+
+**Jest WYZSZA niz 0,20, ktore zastepuje, i tak wlasnie ma byc.** Tamta pochodzi z formuly 9.8
+sprzed dwunastu dni i dwudziestu kilku zmian regul, a dzisiejszy skaner zadaje domenie znacznie
+wiecej pytan. Wolimy wydrukowac gorsza liczbe zmierzona porzadnie niz pochlebna, ktorej nikt tak
+nie zmierzyl. Na `/methodology` i `/report` juz stoi, sprawdzone na produkcji.
+
+**ZAMROZENIE FORMULY ZDJETE.**
+
+**Wpadka warta zapamietania:** przygotowujac STATE.md do compactu przepisalem blok startowy przez
+`nowy_naglowek + reszta_od_sekcji_X` i **skasowalem szesc sekcji z tego samego dnia**, bo wszystkie
+lezaly nad sekcja X. Odzyskane z `git show <commit>:STATE.md`. **Nie sklejaj pliku po indeksie
+sekcji, ktora nie jest pierwsza.**
+
+## OKNO NA POMIAR PODLOGI SZUMU: OD TERAZ NIE RUSZAMY FORMULY (2026-08-16, 23:00, ZAMKNIETE)
 
 Podloga szumu jest niezmierzona od poczatku istnienia tego produktu i **powod jest zawsze ten sam:
 kazdy reseed konczy sie zmiana formuly, wiec nigdy nie mamy dwoch cieplych przebiegow na TEJ SAMEJ
