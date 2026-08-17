@@ -27,7 +27,13 @@ export type Lead = {
 export interface Store {
   saveReport(report: Report): Promise<void>
   getReport(id: string): Promise<Report | null>
-  latestForDomain(domain: string): Promise<Report | null>
+  /**
+   * `seededOnly` is what a public vendor page asks for. A stranger's scan lands in the same
+   * collection, and /v/<domain> showed whichever scan was newest: an anonymous request at a bad
+   * moment rewrote the page we publish about a company, while the rankings and the corpus kept
+   * the seeded row. The two then disagreed in public about the same vendor.
+   */
+  latestForDomain(domain: string, seededOnly?: boolean): Promise<Report | null>
   listReports(limit: number): Promise<Report[]>
   /**
    * Newest report per domain. Taking the newest N reports and deduplicating afterwards
@@ -109,9 +115,9 @@ class FileStore implements Store {
     return reports.sort((a, b) => b.scannedAt.localeCompare(a.scannedAt)).slice(0, limit)
   }
 
-  async latestForDomain(domain: string) {
+  async latestForDomain(domain: string, seededOnly = false) {
     const all = await this.listReports(2000)
-    return all.find((report) => report.domain === domain) ?? null
+    return all.find((report) => report.domain === domain && (!seededOnly || report.seeded === true)) ?? null
   }
 
   async latestPerDomain(limit: number, seededOnly = false) {

@@ -269,9 +269,10 @@ export class MongoStore implements Store {
     return (await reports.findOne({ _id: id }, withoutId)) as Report | null
   }
 
-  async latestForDomain(domain: string) {
+  async latestForDomain(domain: string, seededOnly = false) {
     const { reports } = await collections()
-    return (await reports.findOne({ domain }, { ...withoutId, sort: { scannedAt: -1 } })) as Report | null
+    const filter = seededOnly ? { domain, seeded: true } : { domain }
+    return (await reports.findOne(filter, { ...withoutId, sort: { scannedAt: -1 } })) as Report | null
   }
 
   async listReports(limit: number) {

@@ -24,6 +24,19 @@ export const revalidate = 600
 
 const measurableOf = (card: { total: number; measurable?: number; max: number }) => card.measurable ?? card.max
 
+/**
+ * The row we publish about a vendor, which for a vendor in the corpus is the one our own console
+ * measured. A stranger's scan lands in the same collection and used to win this page by being
+ * newer, so an anonymous request at a bad moment rewrote what the site says about a company while
+ * the rankings kept the seeded row, and the two disagreed in public. Outside the corpus there is
+ * no seeded row and the visitor's own scan is the only thing to show, which is the point of that
+ * page.
+ */
+async function publishedRowFor(domain: string) {
+  const store = getStore()
+  return (await store.latestForDomain(domain, true)) ?? (categoryFor(domain) ? null : store.latestForDomain(domain))
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ domain: string }> }): Promise<Metadata> {
   const { domain } = await params
   const name = normalizeDomain(decodeURIComponent(domain))
@@ -90,7 +103,7 @@ function verdictTone(check: ScoredCheck) {
 export default async function VendorPage({ params }: { params: Promise<{ domain: string }> }) {
   const { domain } = await params
   const name = normalizeDomain(decodeURIComponent(domain))
-  const report = await getStore().latestForDomain(name)
+  const report = await publishedRowFor(name)
   // A bare 404 here is the wrong answer to the only visitor who matters: somebody typing their
   // own domain, which is exactly the company we want measuring itself. They get the scan instead.
   if (!report) return <NotMeasured domain={name} />
