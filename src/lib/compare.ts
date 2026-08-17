@@ -1,8 +1,21 @@
+import { RANKABLE_MEASURABLE } from './rankings'
 import { categoryFor, type Category } from './categories'
 import { publishedCorpus } from './published'
 import type { Report } from './store'
 
-export type Peer = { domain: string; total: number; max: number; isSubject: boolean }
+export type Peer = {
+  domain: string
+  total: number
+  max: number
+  isSubject: boolean
+  /**
+   * Too little of the card was readable for the share to be a comparison. The same floor the home
+   * page uses, and it was missing here, so one vendor stood in two places on two of our pages:
+   * bitmovin.com sits at the bottom of Video on the front page with a footnote and sat at the top
+   * of the same category on every scorecard that opened next to it.
+   */
+  undermeasured: boolean
+}
 
 /** Ranking on the paper maximum punished vendors whose sites we could not fully read. */
 const share = (peer: { total: number; max: number }) => (peer.max === 0 ? 0 : peer.total / peer.max)
@@ -53,13 +66,26 @@ export async function buildComparison(subject: Report): Promise<Comparison> {
     .filter((report): report is Report => Boolean(report))
 
   const peers: Peer[] = peerReports
-    .map((report) => ({
-      domain: report.domain,
-      total: report.scorecard.total,
-      max: report.scorecard.measurable ?? report.scorecard.max,
-      isSubject: report.domain === subject.domain,
-    }))
-    .sort((a, b) => share(b) - share(a) || b.total - a.total || a.domain.localeCompare(b.domain))
+    .map((report) => {
+      const measurable = report.scorecard.measurable ?? report.scorecard.max
+      const doesNotApply = report.scorecard.checks.filter((check) => check.notApplicable).reduce((sum, check) => sum + check.max, 0)
+      return {
+        domain: report.domain,
+        total: report.scorecard.total,
+        max: measurable,
+        isSubject: report.domain === subject.domain,
+        // Counted against what we could not read, never against what does not apply: the same two
+        // denominators, and the same mistake, that rankings.ts documents at length.
+        undermeasured: measurable + doesNotApply < RANKABLE_MEASURABLE,
+      }
+    })
+    .sort(
+      (a, b) =>
+        Number(a.undermeasured) - Number(b.undermeasured) ||
+        share(b) - share(a) ||
+        b.total - a.total ||
+        a.domain.localeCompare(b.domain),
+    )
 
   const position = peers.findIndex((peer) => peer.isSubject) + 1
   const rankInCategory = position > 0 && peers.length >= 3 ? { position, outOf: peers.length } : null
@@ -68,7 +94,9 @@ export async function buildComparison(subject: Report): Promise<Comparison> {
   if (peers.length < 3) return { category, peers: [], rankInCategory: null, percentile, beatenOn: [] }
 
   const beatenOn = subject.scorecard.checks
-    .filter((check) => check.points < check.max && !check.inconclusive)
+    // Not applicable is not a shortfall. A library with no accounts was shown "where competitors
+    // pass and you do not" over a free-tier check the table above calls not a question about it.
+    .filter((check) => check.points < check.max && !check.inconclusive && !check.notApplicable)
     .map((check) => {
       const winners = peerReports
         .filter((report) => report.domain !== subject.domain)

@@ -43,14 +43,23 @@ function stageShare(stage: Stage): number | null {
   return measurable === 0 ? null : stage.points / measurable
 }
 
-function scaleAnchor(comparison: Awaited<ReturnType<typeof buildComparison>>, total: number): string | null {
+/**
+ * Fractions, not bare totals. rankings.ts says it in one line - "a median of raw totals is not
+ * comparable when every row has its own denominator" - and this function did exactly that, then
+ * took the best peer by SHARE and printed its raw total beside it. A reader on 8 points was shown
+ * "best a.com 6" and could reasonably conclude they were ahead of the category, while the table
+ * further down put a.com first on 6 of 7.
+ */
+function scaleAnchor(comparison: Awaited<ReturnType<typeof buildComparison>>, total: number, measurable: number): string | null {
   const peers = comparison.peers
-  if (peers.length >= 3) {
-    const scores = peers.map((peer) => peer.total).sort((a, b) => a - b)
-    const middle = Math.floor(scores.length / 2)
-    const median = scores.length % 2 === 0 ? (scores[middle - 1] + scores[middle]) / 2 : scores[middle]
-    const best = peers[0]
-    return `You ${total} · category median ${median} · best ${best.domain} ${best.total}`
+  const rankable = peers.filter((peer) => !peer.undermeasured)
+  if (rankable.length >= 3) {
+    const shares = rankable.map((peer) => (peer.max === 0 ? 0 : peer.total / peer.max)).sort((a, b) => a - b)
+    const middle = Math.floor(shares.length / 2)
+    const median = shares.length % 2 === 0 ? (shares[middle - 1] + shares[middle]) / 2 : shares[middle]
+    const best = rankable[0]
+    const pct = (value: number) => `${Math.round(value * 100)}%`
+    return `You ${total}/${measurable} (${pct(measurable === 0 ? 0 : total / measurable)}) · category median ${pct(median)} · best ${best.domain} ${best.total}/${best.max}`
   }
   if (comparison.percentile) {
     // Named, because unnamed it reads as a rank in your market and is not one. A reader whose
@@ -105,7 +114,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   const fixPlan = buildFixPlan(findings, scorecard, comparison)
   // A number with no scale is not a finding. The anchor answers "is 8 bad?" above the fold,
   // from data this page already loaded, instead of 1,900px down the page.
-  const anchor = scaleAnchor(comparison, scorecard.total)
+  const anchor = scaleAnchor(comparison, scorecard.total, scorecard.measurable ?? scorecard.max)
   // Charging a vendor for our blind spots is the rule the industry report already refuses to
   // apply to the market, and this is the page the vendor actually reads.
   const measurable = scorecard.measurable ?? scorecard.max
