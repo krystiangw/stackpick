@@ -50,7 +50,7 @@ const reports = client
  */
 const SWEEP_GAP_MS = 90 * 60 * 1000
 
-type Card = { scorecard: { checks: { id: string; points: number }[] }; scannedAt: string }
+type Card = { scorecard: { checks: { id: string; points: number; inconclusive?: boolean }[] }; scannedAt: string }
 
 /** The warm scan of each sweep, newest sweep first. */
 function warmPerSweep(rows: Card[]): Card[] {
@@ -70,6 +70,10 @@ let pairs = 0
 let verdicts = 0
 let moved = 0
 let up = 0
+/** Rows where one of the two days did not measure the check at all. A verdict that became "we
+ * could not read this" did not contradict the verdict before it, and counting it as a moved
+ * verdict overstates how much a published sentence wobbles. Both numbers get printed. */
+let onlyMeasuredOnce = 0
 const byCheck = new Map<string, number>()
 
 for (const domain of CURATED_DOMAINS) {
@@ -88,7 +92,11 @@ for (const domain of CURATED_DOMAINS) {
       moved += 1
       if (check.points > was.points) up += 1
       byCheck.set(check.id, (byCheck.get(check.id) ?? 0) + 1)
-      console.log(`${domain.padEnd(20)} ${check.id.padEnd(26)} ${was.points} -> ${check.points}`)
+      const half = was.inconclusive || check.inconclusive
+      if (half) onlyMeasuredOnce += 1
+      console.log(
+        `${domain.padEnd(20)} ${check.id.padEnd(26)} ${was.points} -> ${check.points}${half ? '   (jedna strona niemierzalna)' : ''}`,
+      )
     }
   }
 }
@@ -105,7 +113,11 @@ if (pairs === 0) {
 console.log(
   `\n${pairs} domen z para ${warmPair ? 'CIEPLY-CIEPLY (ostatni skan kazdego z dwoch przemiatan)' : 'sasiednich skanow'} na formule ${wanted}, ${verdicts} porownanych werdyktow`,
 )
-console.log(`${moved} ruszylo bez zmiany regul = ${((moved / verdicts) * 100).toFixed(2)} procent`)
+console.log(`${moved} ruszylo bez zmiany regul = ${((moved / verdicts) * 100).toFixed(2)} procent (gorna granica)`)
+console.log(
+  `${moved - onlyMeasuredOnce} to werdykt kontra werdykt = ${(((moved - onlyMeasuredOnce) / verdicts) * 100).toFixed(2)} procent, ` +
+    `pozostale ${onlyMeasuredOnce} to wiersz niemierzalny po jednej ze stron`,
+)
 for (const [id, n] of [...byCheck].sort((a, b) => b[1] - a[1])) console.log(`  ${id}: ${n}`)
 
 // Direction is what separates noise from a warming cache, and reading the percentage without it

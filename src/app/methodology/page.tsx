@@ -221,6 +221,13 @@ export default async function MethodologyPage() {
           moves 9 up and 6 down. A symmetric spread is what measurement noise looks like; a one-sided one is a cache
           warming up with our name on it.
         </p>
+        {/* Read one by one on 17 August, because a number this small is worth knowing the parts of. */}
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          Ten of those fifteen are a verdict that disagreed with the verdict before it, which is 0.39 percent. The other
+          five are a row we could not measure on one of the two days: a signup page that answered us on Monday and
+          refused on Tuesday is not a changed verdict, it is a missing one, and we count it here rather than quietly
+          leaving it out. The figure we quote is the larger one.
+        </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           It is higher than the 0.20 percent it replaces, and we would rather print that than keep a flattering number
           nobody measured properly. That figure came from formula 9.8, twelve days and twenty-odd rule changes ago, and

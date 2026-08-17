@@ -18,6 +18,10 @@ import { getStore, type Report } from './store'
  * 9.8 twelve days and twenty-odd rule changes ago, and today's scanner sends far more requests per
  * domain, so there are more answers that can arrive differently on a second asking.
  *
+ * Ten of the fifteen are a verdict that disagreed with the verdict before it (0.39 percent) and
+ * five are a row that was unmeasurable on one of the two days. The larger figure is the one
+ * published, because it is the one a reader can check against their own two scans.
+ *
  * Rerun with `npm run noise-floor <formula>` after a day with no rule change, which is what it
  * costs: two sweeps of the same version, six hours apart.
  */
