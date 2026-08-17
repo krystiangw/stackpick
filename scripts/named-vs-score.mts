@@ -38,7 +38,8 @@ type Row = {
   category: string
   named: number
   runs: number
-  passes: Set<string>
+  /** Only checks we could measure: id -> whether it passed. Absent means unmeasured. */
+  passes: Map<string, boolean>
   score: number
   max: number
   /**
@@ -78,13 +79,24 @@ for (const category of CATEGORIES) {
     }
   }
   for (const domain of category.domains) {
-    const report = await store.latestForDomain(domain)
+    // The published row, not the newest scan we happen to hold. Ad-hoc scans run from a console
+    // land in the same collection: on 2026-08-17 a handful of unseeded 9.31 scans of MCP vendors
+    // were silently deciding this measurement, which is the same trap /v/<domain> fell into.
+    const report = await store.latestForDomain(domain, true)
     if (!report) continue
     // Unmeasured checks are left out rather than counted as failures: "we could not read it" is
     // not "they did not do it", and folding the two together is the mistake the scorecard itself
     // refuses to make.
-    const passes = new Set(
-      report.scorecard.checks.filter((check) => !check.inconclusive && !check.notApplicable && check.points > 0).map((check) => check.id),
+    //
+    // The comment above described the intent and the code did the opposite for three weeks: a Set
+    // of passing ids cannot tell "measured and failed" from "not measured", so every unmeasured row
+    // landed in the failing group. An independent guard written on 2026-08-17
+    // (scripts/audit-study.mts) disagreed with this script about mcp_present among lesser known
+    // vendors, +9pp against -5pp, and this was why. The verdict is now stored as measured -> passed.
+    const passes = new Map(
+      report.scorecard.checks
+        .filter((check) => !check.inconclusive && !check.notApplicable)
+        .map((check) => [check.id, check.points > 0] as const),
     )
     const npm = (report.findings as unknown as { npm?: { weeklyDownloads?: number } }).npm
     rows.push({
@@ -141,14 +153,14 @@ if (dirty.size > 0) {
   console.log('')
 }
 
-const CHECKS = [...new Set(rows.flatMap((row) => [...row.passes]))].sort()
+const CHECKS = [...new Set(rows.flatMap((row) => [...row.passes.keys()]))].sort()
 console.log('check                         zdaja  wymieniani   oblewaja  wymieniani   roznica   przypadek')
 for (const check of CHECKS) {
-  const passing = rows.filter((row) => row.passes.has(check))
-  const failing = rows.filter((row) => !row.passes.has(check))
+  const passing = rows.filter((row) => row.passes.get(check) === true)
+  const failing = rows.filter((row) => row.passes.get(check) === false)
   if (passing.length < 5 || failing.length < 5) continue
   const gap = rate(passing) - rate(failing)
-  const chance = byChance(rows, (row) => row.passes.has(check), gap)
+  const chance = byChance(rows.filter((row) => row.passes.has(check)), (row) => row.passes.get(check) === true, gap)
   // A side with under ten rows can produce a large gap and a small chance at the same time and
   // still be about five vendors. `answers_plain_request` reads -54pp on five failing rows, all of
   // them big enough to run bot defence, which is fame arriving through the back door.
@@ -185,8 +197,8 @@ console.log(`  sami mniej znani: ${(rate(quieter) * 100).toFixed(0)}% na ${quiet
 console.log('\ncheck                        roznica u popularnych   roznica u mniej znanych')
 for (const check of CHECKS) {
   const gapIn = (subset: Row[]) => {
-    const passing = subset.filter((row) => row.passes.has(check))
-    const failing = subset.filter((row) => !row.passes.has(check))
+    const passing = subset.filter((row) => row.passes.get(check) === true)
+    const failing = subset.filter((row) => row.passes.get(check) === false)
     return passing.length < 4 || failing.length < 4 ? null : rate(passing) - rate(failing)
   }
   const inPopular = gapIn(popular)
