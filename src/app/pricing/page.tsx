@@ -38,7 +38,7 @@ const TIERS: readonly Tier[] = [
   },
   {
     name: 'One agent report',
-    price: '$29',
+    price: '$49',
     cadence: 'once, per domain',
     pitch: 'Whether an agent names you at all, asked ten times over.',
     includes: [
@@ -61,13 +61,13 @@ const TIERS: readonly Tier[] = [
     pitch: 'Whether an agent can still use you, and whether it ever considers you at all.',
     includes: [
       'The same checks, rerun every week, so a verdict that moves is caught within days',
-      'Real agents every month: one question about your category, put to an agent five times in isolation, and how many of the five named you',
+      'Real agents every month: one buying question, put to an agent five times in isolation, and how many of the five named you. The question is the unit here, and you can add more of them',
       'The agent runs cover the 25 categories we measure. If your product is not in one of them we say so before you switch it on, rather than after',
       'Which provider got picked instead, and the sentence that passed over you, quoted from the transcript',
       'One email when something moves, nothing when nothing does, which is most weeks',
       'No account and no card. One link in every email stops it',
     ],
-    note: 'Three domains $179 a month, ten $499. Free while we are building it, and we will ask before it ever costs anything.',
+    note: 'Pay for ten months, get twelve. Three domains $179 a month; Agency, ten domains, $499. Another buying question, asked the same way, $29 a month. Free while we are building it, and we will ask before it ever costs anything.',
     featured: true,
     cta: { label: 'Watch a domain', href: '/#watch' },
   },
@@ -254,12 +254,16 @@ export default async function PricingPage() {
               'It is not, and it decides what the number is allowed to say. Five runs catch a wall every run hits, and they cannot separate you from a competitor that finishes close. So monitoring does not sell you a position: it reports how many of the five named you, and the thing worth reacting to is the month that number moves.',
             ],
             [
-              'Other tools audit a domain for about twenty dollars. Why is this more?',
-              'Because it is a different unit. Those are one pass of an agent over your site, priced per pass, and a single pass cannot tell a wall from a bad day: we publish the noise floor precisely because we measured how much moves on its own. Monitoring is a standing measurement of one domain, rerun weekly against a published formula, with real agents asked your buyers\u2019 question every month and the transcripts handed over. If a one-off is what you want, take the twenty-nine dollar report, which is the same evidence without the standing part.',
+              'Everyone else in AI visibility sells prompts by the hundred. Why does this sell one question?',
+              'Because a hundred prompts asked daily answers how often your name appears, and this answers whether an agent can use you once it does. The two are worth having together and they are not the same purchase. Our unit is a buying question, asked five times in isolation each month so the spread is visible, and you can add more questions at twenty-nine dollars a month each. If what you want is broad share-of-voice tracking across many prompts, a tool built for that will serve you better and we will say so rather than sell you ours.',
             ],
             [
               'We look after a lot of client domains. Is there an agency price?',
-              'Ask. There is a per-domain price above and packs under it, and beyond that it is a conversation rather than a table, because a report with your name on it is work we would rather quote than pretend is automatic.',
+              'Ten domains for $499 a month is the Agency pack, and past that it is a conversation rather than a table. A report carrying your name rather than ours is work we would rather quote than pretend is automatic.',
+            ],
+            [
+              'Is there an annual price?',
+              'Pay for ten months and get twelve. There is no minimum term on the monthly one either: monitoring stops from a link in any email we send you.',
             ],
             [
               'Do you bill hourly?',
