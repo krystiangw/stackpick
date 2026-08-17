@@ -6,7 +6,7 @@ import { FRESH_QUESTIONS, HELD_OUT_2, HELD_OUT_3, HELD_OUT_4, HELD_OUT_5, HELD_O
 import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
-import { changesBetween, comparableScorecards, turnedAwayAtTheEdge, worthTelling } from '../src/lib/watch'
+import { changesBetween, comparableScorecards, rulesChangedBetween, turnedAwayAtTheEdge, worthTelling } from '../src/lib/watch'
 import { changeEmail } from '../src/lib/watch-email'
 import { CHECKS } from '../src/lib/score'
 import { forStorage } from '../src/lib/store'
@@ -287,6 +287,14 @@ const mailFor = (rescored: boolean) =>
     moved([verdict(0, 1)], [verdict(1, 1)]),
     rescored,
   )
+// A check we changed between two measurements is our news, not the vendor's, and the rescore
+// cannot undo that for a rule that reads during the scan. 9.32 tightened programmatic_provisioning.
+check('regula zmieniona miedzy pomiarami jest pomijana', [...rulesChangedBetween('9.31', '9.32')].sort().join(','), 'oauth_dcr,programmatic_provisioning')
+check('kolejnosc wersji nie ma znaczenia', [...rulesChangedBetween('9.32', '9.31')].sort().join(','), 'oauth_dcr,programmatic_provisioning')
+// The version a measurement was taken under already contains its own change, so it must not count.
+check('wersja pomiaru nie liczy sie sama sobie', [...rulesChangedBetween('9.32', '9.32')].join(','), '')
+check('ten sam pomiar dwa razy to zero zmian regul', [...rulesChangedBetween('9.31', '9.31')].join(','), '')
+
 check('mail mowi, ze podstawa byla przeliczona', mailFor(true).text.includes('recomputed from the evidence we still hold'), true)
 check('i nie mowi tego, gdy nie byla', mailFor(false).text.includes('recomputed from the evidence we still hold'), false)
 // The half that makes the sentence honest: a rule we tightened can move a line on its own, and the

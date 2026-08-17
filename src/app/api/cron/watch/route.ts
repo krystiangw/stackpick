@@ -3,7 +3,7 @@ import { scanDomain } from '@/lib/scan'
 import { scoreFindings } from '@/lib/score'
 import { getStore, reportId, type Report } from '@/lib/store'
 import { sendEmail } from '@/lib/email'
-import { changesBetween, comparableScorecards, measurableOf, turnedAwayAtTheEdge, worthTelling } from '@/lib/watch'
+import { changesBetween, comparableScorecards, measurableOf, rulesChangedBetween, turnedAwayAtTheEdge, worthTelling } from '@/lib/watch'
 import { changeEmail } from '@/lib/watch-email'
 
 export const maxDuration = 60
@@ -120,7 +120,18 @@ export async function POST(request: Request) {
     }
     const previousCard = previous ? (comparableScorecards(previous.scorecard, report.scorecard) ? previous.scorecard : rescored()) : null
     const comparable = previousCard !== null
-    const changes = previousCard ? changesBetween(previousCard.checks, report.scorecard.checks) : []
+    const all = previousCard ? changesBetween(previousCard.checks, report.scorecard.checks) : []
+    // A check whose rule we changed between the two measurements is not news about the vendor, and
+    // the rescore cannot undo that for a rule that does its reading during the scan. Dropped from
+    // the list rather than explained in a paragraph nobody reads under a subject line that already
+    // said they lost ground.
+    const ourDoing = previousCard
+      ? rulesChangedBetween(previous!.scorecard.formulaVersion, report.scorecard.formulaVersion)
+      : new Set<string>()
+    const changes = all.filter((change) => !ourDoing.has(change.checkId))
+    if (all.length !== changes.length) {
+      console.log(`watch ${watch.domain}: ${all.length - changes.length} zmian pominietych, bo zmienila sie regula`)
+    }
     // Nothing is mailed on the first check: there is no before, and "here is your score again"
     // is the email that teaches somebody to stop reading us.
     if (previous && comparable && worthTelling(changes, turnedAwayAtTheEdge(report.findings))) {

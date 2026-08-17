@@ -105,6 +105,45 @@ export function comparableScorecards(
   return before?.formulaVersion === after.formulaVersion
 }
 
+/**
+ * Which checks had their scoring rule changed in each formula version.
+ *
+ * When the formula moves between two measurements the cron rescores the older findings, and that
+ * is honest only where the current rule reads a stored measurement. Where the rule does its own
+ * reading during the scan - matching phrases across documentation pages, probing addresses - the
+ * report keeps what matched, not the pages it matched in, so a rescore reproduces the OLD reading
+ * and the difference is our rule rather than the vendor. 9.32 tightened `programmatic_provisioning`
+ * from a bare phrase to a phrase with its evidence beside it, which would have read as up to
+ * nineteen vendors losing a point they never had taken from them.
+ *
+ * A version missing from here is a version that changed no scoring rule. Keeping the list by hand
+ * is the price of not having to decide, per check and per release, whether the evidence we still
+ * hold is the evidence the new rule wants.
+ */
+const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
+  '9.31': ['signup_reachable', 'mcp_present', 'oauth_dcr'],
+  '9.32': ['programmatic_provisioning', 'oauth_dcr'],
+}
+
+const asNumber = (version: string) => Number(version) || 0
+
+/**
+ * Checks whose rule moved between two formula versions, so a change in them is ours to explain
+ * rather than the vendor's to answer for. Order does not matter: a rescan under an older formula
+ * is as incomparable as one under a newer.
+ */
+export function rulesChangedBetween(before: string, after: string): Set<string> {
+  const [low, high] = [asNumber(before), asNumber(after)].sort((a, b) => a - b)
+  const moved = new Set<string>()
+  for (const [version, checks] of Object.entries(CHECK_RULE_CHANGED)) {
+    const at = asNumber(version)
+    // The version a measurement was taken under is the version it already contains, so only the
+    // releases AFTER the older measurement can have moved anything under it.
+    if (at > low && at <= high) for (const check of checks) moved.add(check)
+  }
+  return moved
+}
+
 export function newWatch(email: string, domain: string, now: string): Watch {
   return {
     id: randomBytes(16).toString('hex'),
