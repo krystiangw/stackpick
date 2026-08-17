@@ -1,19 +1,18 @@
-# Let Agents In: stan na 2026-08-17 (na produkcji 9.32, w repo 9.33, korpus czeka na reseed)
+# Let Agents In: stan na 2026-08-17 (formula 9.33 na produkcji, korpus czeka na reseed)
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te trzydziesci linijek, potem reszte)
 
-**UWAGA NA WERSJE: repo jest na 9.33, produkcja na 9.32, i tak ma zostac do konca reseedu.**
-9.33 (uczciwe liczenie `probedHosts`, sekcja nizej) jest zbudowana, przepuszczona przez straznikow
-i **zacommitowana bez deployu celowo**: reseed jedzie przez zywe dyno, wiec wydanie w trakcie
-mieszaloby dwie formuly w jednym przebiegu. **Deploy dopiero po zamknieciu listy po reseedzie.**
-Skutek uboczny rozjazdu: `scripts/stale-domains.mts` porownuje wiersze z **lokalna**
-`FORMULA_VERSION`, wiec po reseedzie uzna caly korpus za nieaktualny. **Nie uzywaj go do
-dokanczania tego reseedu**, bo kaze przeskanowac 177 domen od nowa.
+**WERSJE (stan 22:20): produkcja i repo na 9.33 (v482), korpus wciaz na 9.31.**
+9.33 (uczciwe liczenie `probedHosts`, sekcja nizej) zostala wydana **przed** startem reseedu
+swiadomie: przemiat i tak dopiero rusza, a drugi kosztowalby szesc godzin karencji i uczyl
+vendorow, ze maja nas blokowac. Jeden przemiat obejmie wiec 9.32 i 9.33 naraz. Sprawdzone po
+wydaniu na domenach **spoza korpusu** (`pulumi.com`, `deno.com`, `railway.app`): skan przechodzi,
+zdanie o sondowanych hostach nadal wymienia trzynascie adresow, czyli filtr nie strzela za szeroko.
 
-**W LOCIE JEST JEDNO (stan 21:55): petla ponawiajaca reseed na 9.32.**
-Log `/tmp/reseed-932.log`, proba 13 z 18, co 20 minut, proces zyje. Karencja liczy sie od
-**mediany wieku korpusu** i o 21:34 zostalo 1,1 h, wiec petla powinna zlapac probe 16 albo 17,
-czyli okolo **22:35-23:00**. **`tail -3 /tmp/reseed-932.log` zanim cokolwiek zrobisz.**
+**W LOCIE JEST JEDNO: petla ponawiajaca reseed** (log `/tmp/reseed-932.log`, nazwa z czasow 9.32,
+wyniki beda na 9.33). Proba 14 z 18 o 21:53, co 20 minut. Karencja liczy sie od **mediany wieku
+korpusu**: 5,2 h przy probie 14, wiec przejdzie okolo **22:53** (proba 17).
+**`tail -3 /tmp/reseed-932.log` zanim cokolwiek zrobisz.**
 Gdyby przepadla: `STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick)
 bash -c 'for i in $(seq 1 18); do npm run reseed >> /tmp/reseed-932.log 2>&1; [ $? -eq 3 ] &&
 sleep 1200 || break; done'`.
@@ -100,7 +99,7 @@ czysty i to on niesie replikacje), rekord DNS do rejestru MCP, konta w Bing Webm
 MCP, token npm, licencja korpusu, sciezka zakupu inna niz `mailto:` i Stripe kontra Paddle.
 **agenticpay tego NIE odblokowuje.**
 
-## 9.33: „13 hostow sondowanych" liczylo hosty, o ktore nigdy nie zapytalismy (2026-08-17, w repo)
+## 9.33: „13 hostow sondowanych" liczylo hosty, o ktore nigdy nie zapytalismy (2026-08-17, v482)
 
 To ostatni nienaprawiony punkt z listy niezaleznego przegladu szesciu wydan (sekcja nizej), tam
 opisany jako *„zostaje `probedHosts` w zdaniu o OAuth, ktory nadal liczy hosty niezapytane"*.
@@ -130,8 +129,11 @@ policzyc tej zmiany jako pogorszenia u vendora, bo zapisane `probedHosts` pochod
 
 **Czego NIE dalo sie zmierzyc przed reseedem:** ile wierszy w korpusie to dotyka. Zapisane findings
 trzymaja `probedOrigins`, ale **nie trzymaja informacji, ktore z nich byly niezapytane**, wiec
-odtworzenia na starych danych nie ma. Liczbe zobaczymy dopiero na pierwszym reseedzie po deployu
-9.33: `oauth_dcr` niemierzalny powinien podskoczyc, i to jest oczekiwany kierunek, nie regres.
+odtworzenia na starych danych nie ma. Liczbe zobaczymy na najblizszym reseedzie: wobec punktu
+odniesienia (**92 oblane `oauth_dcr`, 75 z adresami**) czesc powinna przejsc na **niemierzalne**.
+To jest oczekiwany kierunek, nie regres, i **guard regresji na koncu reseedu je pokaze** jako
+werdykty gorsze niz poprzedni pomiar. Nie skanuj ich pojedynczo jako podejrzanych, dopoki nie
+sprawdzisz, czy nowe zdanie mowi o zadaniach, ktore nie wyszly.
 
 ## DZIESIEC BLEDOW W DWOCH DOKUMENTACH, KTORE DOSTAJE PLACACY KLIENT (2026-08-17, naprawione)
 
