@@ -4778,3 +4778,20 @@ minusie.** Wynik powyzej mediany: 54 procent wymienialnosci kontra 35 procent po
 **Do rozwazenia jako nastepna publikacja:** to jest badanie, ktorego nie ma zaden konkurent,
 „ktore z rzeczy, ktore kazemy naprawiac, maja zwiazek z byciem wymienianym". Wymaga zdania o
 skazeniu (biegi czytaly `CLAUDE.md` tej maszyny), bo bez niego to nie jest czysty pomiar.
+
+## DWUDZIESTA SZOSTA KATEGORIA: HOSTING APLIKACJI (2026-08-17, wdrozone)
+
+Zamkniete zobowiazanie, ktore wisialo od wczoraj: **`vercel.com` byl obserwowany przez klienta i
+nie mial kategorii**, a `/pricing` obiecuje kazdej obserwowanej domenie bieg agenta co miesiac.
+Raport pokrycia mowi teraz **0 z 3 obserwacji nie do obslugi** zamiast 1 z 3.
+
+`app-hosting`, „Application hosting and deployment", siedem domen: `vercel.com`, `netlify.com`,
+`render.com`, `fly.io`, `railway.com`, `heroku.com`, `koyeb.com` (wszystkie odpowiadaja 200).
+Pytanie rozpoznawcze napisane, wiec cela jest do uruchomienia od reki.
+
+**Czekalo na pomiar podlogi szumu**, bo zmiana skladu korpusu w trakcie okna zepsulaby pare
+pomiarowa. Podloga jest zmierzona, wiec blokada znikla, a **reseed na 9.31 zmierzy te siedem domen
+w tym samym przemiataniu**, czyli korpus urosnie ze 170 do okolo 177 wierszy.
+
+Przy okazji: **liczba kategorii jest teraz liczona, nie wpisana** w trzech miejscach, gdzie stalo
+„25". Pierwsza rzecz, ktora sie rozjezdza po dodaniu kategorii, to zdanie o kategoriach.
