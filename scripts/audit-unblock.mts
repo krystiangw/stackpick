@@ -52,6 +52,13 @@ for (const domain of CURATED_DOMAINS) {
       checked += 1
       const already = ask.found(discovered)
       if (!already) continue
+      // A verdict that says it guessed is not claiming to have found the page, and the address it
+      // names is the one it tried rather than one the vendor published. The header of this file
+      // promised this narrowing on 14.08 and only the documentation half of it was ever applied,
+      // so groq.com went on being reported every run. Re-checked by hand 17.08: groq.com/pricing
+      // still redirects to the home page, so both the verdict and the advice are right and it is
+      // this script that was wrong.
+      if (/\bwe guessed\b/i.test(check.detail)) continue
       contradictions += 1
       console.log(`\nSPRZECZNOSC ${domain} [${check.id}]`)
       console.log(`  rada:      ${unblock.slice(0, 120)}`)
