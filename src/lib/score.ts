@@ -583,7 +583,16 @@ export const CHECKS: Check[] = [
               `registration_endpoint published, but none of the ${grants.length} advertised grants (${grants.length > 3 ? 'including ' : ''}${grants.slice(0, 3).join(', ')}) finishes without a person at a browser`,
         )
       }
-      if (oauth.metadataPublished) return yes(0, 'OAuth metadata published, but no registration_endpoint in it')
+      if (oauth.metadataPublished) {
+        // Seventeen rows carried this sentence with neither an address nor a next step, so a
+        // vendor could not check it and could not act on it. It is the only failing branch of this
+        // check that named nothing, and it is the check the runs relate most strongly to.
+        return {
+          ...yes(0, `OAuth metadata published${oauth.metadataAt ? ` at ${oauth.metadataAt}` : ''}, but no registration_endpoint in it`),
+          unblock:
+            'Add registration_endpoint to that document and accept RFC 7591 client registration on it, so an agent can introduce itself without somebody creating credentials for it by hand.',
+        }
+      }
       // Our own corpus said this check was unmeasurable on 37 of 51 domains, because with no MCP
       // endpoint to follow we probed one origin. We now search the hosts an authorization server
       // actually lives on, so finding nothing across all of them is a measurement.

@@ -571,6 +571,8 @@ export type FunnelFindings = {
   oauth: {
     metadataPublished: boolean
     dynamicClientRegistration: boolean
+    /** The metadata document we read, so a verdict about what is missing from it names it. */
+    metadataAt?: string
     /**
      * Whether any advertised grant finishes without a person. A registration endpoint says an
      * agent may introduce itself, not that it may get a token: namecheap.com publishes one and
@@ -670,6 +672,13 @@ type OauthProbe = {
   origins: string[]
   /** The document that carried the registration endpoint, so the verdict can name it. */
   registrationAt?: string
+  /**
+   * The document we read when it had no registration endpoint. Seventeen rows carried "OAuth
+   * metadata published, but no registration_endpoint in it" with no address and no next step, so
+   * a vendor had nothing to check and nothing to do. Every other branch of this check names what
+   * it asked; this one could not, because the address was thrown away.
+   */
+  metadataAt?: string
 }
 
 /**
@@ -742,6 +751,7 @@ async function probeOauthOrigins(targets: OauthTarget[]): Promise<OauthProbe> {
   })
 
   let metadataPublished = false
+  let metadataAt: string | undefined
   for (const got of ordered) {
     if (!got.ok || looksLikeHtml(got)) continue
     try {
@@ -752,6 +762,7 @@ async function probeOauthOrigins(targets: OauthTarget[]): Promise<OauthProbe> {
         grant_types_supported?: string[]
       }
       if (!metadata.issuer && !metadata.authorization_endpoint) continue
+      if (!metadataPublished) metadataAt = got.url
       metadataPublished = true
       if (metadata.registration_endpoint) {
         return {
@@ -766,7 +777,7 @@ async function probeOauthOrigins(targets: OauthTarget[]): Promise<OauthProbe> {
       /* a JSON body that is not JSON tells us nothing */
     }
   }
-  return { metadataPublished, dynamicClientRegistration: false, origins }
+  return { metadataPublished, dynamicClientRegistration: false, origins, metadataAt }
 }
 
 /**
@@ -822,6 +833,7 @@ function mergeOauthProbes(first: OauthProbe, second: OauthProbe): FunnelFindings
   return {
     metadataPublished: first.metadataPublished || second.metadataPublished,
     dynamicClientRegistration: first.dynamicClientRegistration || second.dynamicClientRegistration,
+    ...(first.metadataAt ?? second.metadataAt ? { metadataAt: first.metadataAt ?? second.metadataAt } : {}),
     unattendedGrant: grantTypes.includes('client_credentials'),
     ...(grantTypes.length > 0 ? { grantTypes } : {}),
     probedHosts: origins.length,
