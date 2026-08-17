@@ -17,10 +17,42 @@ const plural = (count: number, one: string, many: string) => (count === 1 ? one 
  * wins, because a scorecard that opens with the fifth most important thing reads as a form
  * letter, and a form letter is indistinguishable from spam.
  */
+/**
+ * Every branch below reads raw findings, which is how it says something the check underneath it
+ * has already learned not to say. `score.ts` grew four guards on the signup verdict alone - a 429
+ * we caused, a gate on the network we ask from, a status that varies across three tries, a form
+ * that is absent rather than blocked - and the headline had none of them, so a burst of our own
+ * requests headlined a vendor's page with "your signup page answers 429 to anything that is not a
+ * browser" in the largest type we set.
+ *
+ * So a branch may now only fire when its check actually failed, measured. The sentences are
+ * unchanged; what changed is that the loudest line on the page can no longer disagree with the
+ * table under it.
+ */
 export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Headline {
   const { robots, funnel, machine, npm, discovered } = findings
+  const verdict = (id: string) => scorecard.checks.find((check) => check.id === id)
+  const failed = (id: string) => {
+    const check = verdict(id)
+    return check !== undefined && !check.inconclusive && !check.notApplicable && check.points < check.max
+  }
+  const measurable = scorecard.measurable ?? scorecard.max
 
-  if (findings.blocksPlainRequests) {
+  // Nothing measured is not a clean sheet and not a list of failures: it is a scan that could not
+  // look. Without this the same scan headlined either "there is no door built for a machine
+  // anywhere on your domain", about paths we never asked for, or "you pass every check a machine
+  // can measure", about nothing at all.
+  if (measurable === 0) {
+    return {
+      claim: 'We could not measure anything on your domain, so there is no finding here to answer.',
+      evidence: `Every check came back unmeasurable${
+        findings.truncation ? `: ${findings.truncation.detail}` : ', which is usually a wall between us and you rather than anything about your product'
+      }. The rows below say what would make each one measurable.`,
+      severity: 'notable',
+    }
+  }
+
+  if (findings.blocksPlainRequests && failed('answers_plain_request')) {
     // Both refused means the WAF is refusing the data centre, not singling out agents.
     // Claiming "the only difference was the user-agent" when both got 403 was false on the
     // one check the product is named after, in the largest type on the page.
@@ -38,7 +70,7 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
         }
   }
 
-  if (robots.blanketDisallowAll) {
+  if (robots.blanketDisallowAll && failed('user_agents_allowed')) {
     return {
       claim: 'Your robots.txt tells every agent to go away, including the ones your customers are running.',
       evidence: `robots.txt has Disallow: / for User-agent: *`,
@@ -46,7 +78,7 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
     }
   }
 
-  if (robots.blockedByClass.user.length > 0) {
+  if (robots.blockedByClass.user.length > 0 && failed('user_agents_allowed')) {
     const blocked = robots.blockedByClass.user
     return {
       claim: `You block ${blocked.join(' and ')}, which is your own prospect reading your docs mid-integration.`,
@@ -55,7 +87,7 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
     }
   }
 
-  if (funnel.signup.url && !funnel.signup.reachable) {
+  if (funnel.signup.url && !funnel.signup.reachable && failed('signup_reachable')) {
     const seen = funnel.signup.consistent ? `${funnel.signup.status}` : funnel.signup.statusesSeen.join(', ')
     return {
       claim: `Your signup page answers ${seen} to anything that is not a browser.`,
@@ -65,7 +97,7 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
   }
 
   const delay = robots.crawlDelaySeconds
-  if (delay !== null && delay > 1) {
+  if (delay !== null && delay > 1 && failed('no_crawl_delay')) {
     return {
       claim: `Reading twenty pages of your documentation takes a well-behaved agent ${delay * 20} seconds.`,
       evidence: `robots.txt sets Crawl-delay: ${delay} for agents. Agents that honour it wait ${delay}s between pages; most give up long before page twenty.`,
@@ -74,7 +106,7 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
   }
 
   // Zero characters can mean thin docs or a page we never got. Only the first is a finding.
-  if (findings.docsTextChars > 0 && findings.docsTextChars < DOCS_SHELL_FLOOR && discovered.docs) {
+  if (findings.docsTextChars > 0 && findings.docsTextChars < DOCS_SHELL_FLOOR && discovered.docs && failed('docs_without_js')) {
     return {
       // Stating the number without stating that it is too little read as a compliment: the same
       // 1,778 characters headlined resend.com's scorecard while the check below it scored zero.
@@ -97,7 +129,7 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
     }
   }
 
-  if (funnel.signup.captcha.length > 0) {
+  if (funnel.signup.captcha.length > 0 && failed('signup_no_captcha')) {
     return {
       claim: `A ${funnel.signup.captcha[0]} challenge sits between an agent and an account it was ready to create.`,
       evidence: `${funnel.signup.url} loads ${funnel.signup.captcha.join(' and ')}. There is no version of that an agent solves.`,
@@ -105,7 +137,7 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
     }
   }
 
-  if (funnel.entryPointsFound.length === 0 && !funnel.servesCatchAll) {
+  if (funnel.entryPointsFound.length === 0 && !funnel.servesCatchAll && failed('agent_entry_point')) {
     const machineReadable = machine.hasLlmsTxt || machine.openapi.length > 0
     return {
       claim: machineReadable
@@ -118,7 +150,7 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
     }
   }
 
-  if (!funnel.provisioning.programmatic.length && (findings.docsPagesRead ?? 0) >= 2) {
+  if (!funnel.provisioning.programmatic.length && (findings.docsPagesRead ?? 0) >= 2 && failed('programmatic_provisioning')) {
     return {
       claim: 'Nowhere in your documentation does an agent learn how to get a key without a human.',
       evidence: 'No management API, service account or programmatic key creation is described in the pages we read.',
@@ -126,7 +158,11 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
     }
   }
 
-  const failing = scorecard.checks.filter((check) => check.points < check.max && !check.inconclusive)
+  // Not applicable is not failing. Counting it here put "2 checks are costing you agent-driven
+  // integrations" in the title and the share card of a library whose only two shortfalls were
+  // checks that do not apply to a product with no accounts, while the gate three sections down
+  // told the same reader it passes everything.
+  const failing = scorecard.checks.filter((check) => check.points < check.max && !check.inconclusive && !check.notApplicable)
   if (failing.length > 0) {
     return {
       claim: `${failing.length} ${plural(failing.length, 'check is', 'checks are')} costing you agent-driven integrations.`,
@@ -137,7 +173,7 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
 
   return {
     claim: 'You pass every check a machine can measure from the outside.',
-    evidence: `${scorecard.total} of ${scorecard.max}. What no scanner can tell you is whether agents actually pick you, which is a different measurement.`,
+    evidence: `${scorecard.total} of ${measurable}. What no scanner can tell you is whether agents actually pick you, which is a different measurement.`,
     severity: 'clean',
   }
 }

@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { overDomainBudget } from '../src/lib/scan-gate'
 import { aboutTheirOwnCode, categoryForJob } from '../src/lib/lookup'
+import { pickHeadline } from '../src/lib/headline'
 import { FRESH_QUESTIONS, HELD_OUT_2, HELD_OUT_3, HELD_OUT_4, HELD_OUT_5, HELD_OUT_6, HELD_OUT_7 } from './routing-questions'
 import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
@@ -268,6 +269,47 @@ check('złych kategorii', wrongCategory, quoted(/sent (\d+) to the wrong categor
 check('odpowiedzi tam, gdzie należało odmówić', shouldHaveRefused, quoted(/answered (\d+) that it should have refused/))
 check('udzielonych odpowiedzi', answered, quoted(/it gave an answer to (\d+) of the/))
 check('złych odpowiedzi razem', wrongCategory + shouldHaveRefused, quoted(/and (\d+) of those answers were wrong/))
+
+console.log('naglowek, czyli najglosniejsze zdanie na stronie')
+// The headline reads raw findings and the checks read the same findings with four guards on top,
+// so the two disagreed exactly where the guards were: a 429 we caused, a status that varies, a
+// check that does not apply. The rule now is that a branch may only fire when its check failed.
+const headlineFindings = (over: Record<string, unknown> = {}) =>
+  ({
+    domain: 'v.test',
+    blocksPlainRequests: false,
+    agentStatus: 200,
+    browserStatus: 200,
+    docsTextChars: 9000,
+    docsPagesRead: 3,
+    robots: { blanketDisallowAll: false, blockedByClass: { user: [] }, crawlDelaySeconds: null },
+    funnel: {
+      signup: { url: 'https://v.test/signup', reachable: false, status: 429, statusesSeen: [429, 429, 429], consistent: true, captcha: [] },
+      entryPointsFound: ['a'],
+      servesCatchAll: false,
+      provisioning: { programmatic: ['management api'] },
+    },
+    machine: { hasLlmsTxt: true, openapi: [] },
+    npm: {},
+    discovered: {},
+    ...over,
+  }) as never
+const headlineCard = (checks: Record<string, unknown>[], measurable: number) =>
+  ({ total: 0, max: 17, measurable, checks }) as never
+const one = (id: string, over: Record<string, unknown> = {}) => ({ id, label: id, stage: 'discovery', why: '', detail: 'x', points: 0, max: 1, ...over })
+
+// Unmeasurable signup: the check says so, the headline must not accuse anyway.
+const throttled = pickHeadline(headlineFindings(), headlineCard([one('signup_reachable', { inconclusive: true })], 12))
+check('naglowek nie oskarza o signup, gdy check jest niemierzalny', throttled.claim.includes('signup page answers'), false)
+// The same shape with a real failure keeps the sentence.
+const refused = pickHeadline(headlineFindings(), headlineCard([one('signup_reachable')], 12))
+check('a oskarza, gdy check naprawde oblal', refused.claim.includes('signup page answers'), true)
+// Nothing measured is neither clean nor a list of failures.
+const blind = pickHeadline(headlineFindings(), headlineCard([one('signup_reachable', { inconclusive: true })], 0))
+check('nic nie zmierzone ma wlasne zdanie', blind.claim.includes('could not measure anything'), true)
+// Not applicable is not failing, in the title and the share card as well as in the table.
+const libraryCard = headlineCard([one('self_serve', { notApplicable: true }), one('llms_txt', { points: 1 })], 12)
+check('nieadekwatny nie jest liczony jako oblany', pickHeadline(headlineFindings({ funnel: { signup: { url: null, reachable: true, captcha: [] }, entryPointsFound: ['a'], servesCatchAll: false, provisioning: { programmatic: ['x'] } } }), libraryCard).severity, 'clean')
 
 console.log('obserwacja domeny, czyli co jest warte maila')
 const verdict = (points: number, max: number, extra: Record<string, unknown> = {}) =>
