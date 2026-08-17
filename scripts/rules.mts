@@ -1,8 +1,8 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { overDomainBudget } from '../src/lib/scan-gate'
-import { categoryForJob } from '../src/lib/lookup'
-import { HELD_OUT_6 } from './routing-questions'
+import { aboutTheirOwnCode, categoryForJob } from '../src/lib/lookup'
+import { FRESH_QUESTIONS, HELD_OUT_2, HELD_OUT_3, HELD_OUT_4, HELD_OUT_5, HELD_OUT_6, HELD_OUT_7 } from './routing-questions'
 import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
@@ -244,7 +244,7 @@ let silent = 0
 let wrongCategory = 0
 let shouldHaveRefused = 0
 let answered = 0
-for (const question of HELD_OUT_6) {
+for (const question of HELD_OUT_7) {
   const got = categoryForJob(question.asked)?.id ?? null
   if (got !== null) answered += 1
   if (got === question.expect) right += 1
@@ -252,10 +252,17 @@ for (const question of HELD_OUT_6) {
   else if (question.expect === null) shouldHaveRefused += 1
   else wrongCategory += 1
 }
+// The own-code rule is only allowed to take answers away from questions that should not have had
+// one. Silencing a real buying question is worse than the wrong answers it prevents, so this asks
+// every question anybody has ever written down, across all six sets.
+const everyQuestion = [...FRESH_QUESTIONS, ...HELD_OUT_2, ...HELD_OUT_3, ...HELD_OUT_4, ...HELD_OUT_5, ...HELD_OUT_6, ...HELD_OUT_7]
+const silencedARealOne = everyQuestion.filter((question) => question.expect !== null && aboutTheirOwnCode(question.asked))
+check('regula o wlasnym kodzie nie ucisza pytan zakupowych', silencedARealOne.map((q) => q.asked.slice(0, 40)).join(' | '), '')
+
 const described = readFileSync('src/app/mcp/route.ts', 'utf8')
 const quoted = (pattern: RegExp) => Number(described.match(pattern)?.[1] ?? -1)
-check('pytań w zestawie odłożonym', HELD_OUT_6.length, quoted(/Measured on (\d+) questions written by an agent/))
-check('odpowiedzi poprawnych', right, quoted(/it got (\d+) of the 40 right/))
+check('pytań w zestawie odłożonym', HELD_OUT_7.length, quoted(/Measured on (\d+) questions written by an agent/))
+check('odpowiedzi poprawnych', right, quoted(/It got (\d+) of the 40 right/))
 check('milczeń tam, gdzie należało odpowiedzieć', silent, quoted(/said nothing on (\d+) it should have answered/))
 check('złych kategorii', wrongCategory, quoted(/sent (\d+) to the wrong category/))
 check('odpowiedzi tam, gdzie należało odmówić', shouldHaveRefused, quoted(/answered (\d+) that it should have refused/))

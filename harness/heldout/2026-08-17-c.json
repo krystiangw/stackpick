@@ -1,0 +1,27 @@
+{
+  "note": "Siodmy zestaw held-out. 40 pytan napisanych 2026-08-17 na slepo, z celowo duza liczba pytan o WLASNY kod uzywajacych handlowo brzmiacych slow (modul billing, tabela payments, worker notifications, przebudowa indeksu search). Nie widzial ani progu dowodowego (wybranego na piatym), ani wykrywacza pytan o wlasny kod (zbudowanego na szostym). Etykiety nadane PRZED pierwszym biegiem.",
+  "expected": {
+    "2": "transactional-email", "5": "communications", "6": "error-monitoring",
+    "11": "feature-flags", "12": "payments", "14": "auth", "16": "file-storage",
+    "19": "observability", "21": "product-analytics", "22": "file-storage",
+    "25": "documents-signature", "26": "headless-cms", "28": "maps-geo",
+    "35": "background-jobs", "36": "observability", "37": "localization",
+    "39": "search", "40": "notifications"
+  },
+  "refuse": [1, 3, 4, 7, 8, 9, 10, 13, 15, 17, 18, 20, 23, 24, 27, 29, 30, 31, 32, 34, 38],
+  "refuseWhy": {
+    "1": "przebudowa wlasnego indeksu", "3": "refaktor wlasnego modulu",
+    "4": "plan zapytania w Postgresie", "7": "idempotencja we wlasnym workerze",
+    "8": "pozycje statkow, poza kategoriami", "9": "model wielonajemnosci we wlasnej bazie",
+    "10": "przyrostowy build w monorepo", "13": "deduplikacja kontaktow, wlasny algorytm",
+    "15": "migracja kolumny w Postgresie", "17": "wokandy sadow US, poza kategoriami",
+    "18": "wyciek pamieci w Node", "20": "wlasny rate limiter",
+    "23": "intensywnosc weglowa sieci, poza kategoriami", "24": "event sourcing we wlasnym module",
+    "27": "niestabilne testy", "29": "rozmiar bundla frontendu",
+    "30": "pozycje wagonow towarowych, poza kategoriami",
+    "31": "weryfikacja tozsamosci i sankcje, poza kategoriami",
+    "32": "przepisanie serwisu z Pythona na Go", "34": "OCR pisma recznego po arabsku, poza kategoriami",
+    "38": "NOTAM i METAR, poza kategoriami"
+  },
+  "ambiguous": { "33": ["communications", null] }
+}

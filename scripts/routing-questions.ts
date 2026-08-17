@@ -363,3 +363,56 @@ export const HELD_OUT_6: Question[] = [
   { asked: 'We\'re selling a desktop app and need to sign the Windows binaries with a certificate that lives in hardware, because the rules changed and a file on disk isn\'t accepted anymore.', expect: null },
   { asked: 'Users book slots with our consultants and we want the booking to land in the consultant\'s own calendar and respect their existing busy times, across Google and Outlook.', expect: 'scheduling' },
 ]
+
+/**
+ * The seventh set, 2026-08-17. Written blind like the others, and deliberately loaded with
+ * questions about the caller's own code phrased in commercial words: a billing module, a payments
+ * table, a notifications worker, a search index rebuild. Twenty-one of the forty should get no
+ * answer at all, six of those because they ask for something real that a small catalogue does not
+ * hold. Labelled before the first run, in harness/heldout/2026-08-17-c.json.
+ *
+ * It had seen neither change it measures: the evidence threshold was chosen on the fifth set and
+ * the own-code rule was built on the sixth.
+ */
+export const HELD_OUT_7: Question[] = [
+  { asked: 'Our search index rebuild takes about 40 minutes and blocks writes the whole time. What\'s a sane way to do it online so the app keeps serving stale-but-working results?', expect: null },
+  { asked: 'We need to send transactional email from our app - password resets, receipts, that kind of thing. Right now it goes through a box we run ourselves and deliverability is terrible. What should we move to?', expect: 'transactional-email' },
+  { asked: 'The billing module is 9k lines in one file and invoice generation is tangled with the subscription state machine. How would you pull invoicing out into its own module without a big-bang rewrite?', expect: null },
+  { asked: 'Query against our payments table went from 80ms to 6s after we added a partial index. EXPLAIN shows a seq scan now. Help me read the plan.', expect: null },
+  { asked: 'Need to add SMS one-time codes at login for maybe 30k users, mostly in Poland and Germany. What are the options and roughly what does it cost per message?', expect: 'communications' },
+  { asked: 'Looking for something to catch and group runtime exceptions in prod with stack traces and release tagging. We have a Django backend and a React frontend.', expect: 'error-monitoring' },
+  { asked: 'The notifications worker sends duplicate pushes when a job retries after a timeout. I want to make the send idempotent without a distributed lock. Ideas?', expect: null },
+  { asked: 'Building a fleet dashboard and I need live positions of cargo ships worldwide, ideally with port call events. Where do you actually get that data?', expect: null },
+  { asked: 'We\'re going multi-tenant. Single database with a tenant_id column everywhere, or a schema per tenant? About 400 tenants expected, largest maybe 2M rows.', expect: null },
+  { asked: 'Our CI takes 28 minutes on a monorepo with 12 packages because everything rebuilds on every PR. How do I get incremental builds and test selection working?', expect: null },
+  { asked: 'Want to stop shipping feature toggles as env vars. Something with percentage rollouts, targeting rules and a UI that PMs can use without me.', expect: 'feature-flags' },
+  { asked: 'Need to accept card payments and SEPA in a B2B SaaS, with invoices, VAT handling for EU customers, and recurring subscriptions. What do people use for this?', expect: 'payments' },
+  { asked: 'Deduplicating imported contacts where the same person shows up with typos in the name and slightly different emails. What matching approach scales to a few million records?', expect: null },
+  { asked: 'Our enterprise prospects keep asking for SAML and SCIM. I do not want to implement SSO myself. What can I bolt onto an existing session-cookie auth?', expect: 'auth' },
+  { asked: 'Changing a Postgres enum column to a lookup table on a 200M row table, and we can\'t take downtime. What\'s the migration sequence?', expect: null },
+  { asked: 'We generate a lot of user-uploaded images and resizing them on our own boxes is eating CPU. Looking for something that serves and transforms images at the edge.', expect: 'file-storage' },
+  { asked: 'I need programmatic access to new filings in US state trial courts, docket-level, ideally with a webhook when a case updates. Does anything like that exist?', expect: null },
+  { asked: 'Node service memory grows about 200MB a day until the pod OOMs. Heap snapshots look fine. Where do I look next?', expect: null },
+  { asked: 'Our logs go to files on 14 machines and grep-over-ssh is not working anymore. What should we send them to, and how much will a few hundred GB a month cost?', expect: 'observability' },
+  { asked: 'I\'m writing a rate limiter in our API gateway. Token bucket in Redis vs sliding window log - which one do I want for per-customer limits with bursts?', expect: null },
+  { asked: 'Need product analytics - funnels, retention, and being able to ask \'which accounts used feature X last month\'. Currently we have nothing but server logs.', expect: 'product-analytics' },
+  { asked: 'We store about 40TB of customer exports. Currently on a NAS in the office, which is insane. What object storage do we move to and what does egress cost?', expect: 'file-storage' },
+  { asked: 'Building a carbon reporting feature and I need grid carbon intensity per region, hourly, for at least the EU and US. Is there an API for that?', expect: null },
+  { asked: 'Should the inventory module be event-sourced or just a normal table with an audit log? We need to answer \'what was the stock level on March 3\' but that\'s about it.', expect: null },
+  { asked: 'Customers need to sign contracts in our onboarding flow. Legally valid in the EU, and I need an API plus webhooks on completion.', expect: 'documents-signature' },
+  { asked: 'Our marketing site is a mess of hardcoded HTML and marketing wants to edit it. Looking for something headless with a decent API that doesn\'t require us to run it.', expect: 'headless-cms' },
+  { asked: 'About 15% of our test suite is flaky - mostly integration tests hitting a shared Postgres. How do we get to a deterministic suite?', expect: null },
+  { asked: 'We need address autocomplete and geocoding in a checkout form, plus distance calculations for delivery zones. What\'s reasonable at maybe 200k lookups a month?', expect: 'maps-geo' },
+  { asked: 'Frontend bundle is 3.1MB gzipped and first paint is over 4 seconds on mobile. Where do I start with splitting it?', expect: null },
+  { asked: 'Need real-time location of freight rail cars in North America for a logistics tool we\'re building. Who provides that as an API?', expect: null },
+  { asked: 'We\'re onboarding regulated customers and have to verify identity documents plus run sanctions checks. Need an API, not a portal someone clicks through.', expect: null },
+  { asked: 'Considering moving our image processing service from Python to Go because it\'s CPU-bound and we\'re paying for it. Is that worth the rewrite or should I fix the Python?', expect: null },
+  { asked: 'Want in-app chat support with a widget, so users can talk to our two-person support team without leaving the product. What\'s cheap and not awful?', expect: 'communications' },
+  { asked: 'We have scanned intake forms filled in by hand in Arabic and need the fields extracted. Everything I\'ve tried chokes on handwriting. Any real option?', expect: null },
+  { asked: 'Our background jobs run on a homegrown thing built on cron and a database table. It falls over regularly. Should we buy a hosted queue/scheduler instead of fixing it?', expect: 'background-jobs' },
+  { asked: 'Need uptime and synthetic checks hitting our public endpoints from a few regions, with escalation to on-call at 3am. Suggestions?', expect: 'observability' },
+  { asked: 'Our translation strings live in JSON files and translators edit them in a shared spreadsheet. It\'s chaos. What do teams use to manage this properly?', expect: 'localization' },
+  { asked: 'Aviation side project - I need current NOTAMs and METAR/TAF for European airfields in a machine-readable feed. Is there anything reliable?', expect: null },
+  { asked: 'Looking for full-text search with typo tolerance and faceting over about 4M product records. Postgres full-text is not cutting it anymore.', expect: 'search' },
+  { asked: 'We want to add web push and mobile push notifications across iOS, Android and web from one backend call. What handles the token management and delivery?', expect: 'notifications' },
+]

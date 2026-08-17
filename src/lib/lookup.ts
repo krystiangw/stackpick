@@ -300,8 +300,38 @@ export function explainJob(job: string): { words: number; top: { id: string; str
   return { words: words.length, top }
 }
 
+/**
+ * A question about the caller's own code, asked in words that also name things we sell.
+ *
+ * This is the failure the evidence threshold cannot reach, because a developer writing about their
+ * own system uses two of our words as readily as one: "a billing module and a subscriptions module
+ * in our repo" scores payments twice and is a refactoring question. So does "two workers process
+ * the same job", which is about a lock.
+ *
+ * Every pattern here is a shape that never appears in a question about buying something, rather
+ * than a word from any of our categories: complexity notation, the vocabulary of tuning a database
+ * you already run, and the openers people use when they want code rather than a vendor. The test
+ * that keeps it honest is in the build: it must fire on NONE of the questions across every set that
+ * expects a category. A rule that silences a real buying question is worse than the wrong answers
+ * it prevents.
+ */
+const ABOUT_THEIR_OWN_CODE = [
+  /\bo\(n[\^ ]?[²2]\)|\bo\(n\s*log\s*n\)|\bo\(1\)|\bbig[- ]o\b/,
+  /\bexplain analyze\b|\bseq scan\b|\bquery planner\b|\bthe planner\b|\bselect \.\.\.|\bfor update\b|\badvisory lock\b|\bbrin\b/,
+  /\bwhat data structure\b|\bwhich data structure\b/,
+  /\bhow do i (?:rewrite|redesign|refactor|restructure|split|migrate)\b|\bwhat.s the clean way\b|\bthe clean way to\b/,
+  /\bin (?:our|my) (?:repo|repository|codebase|monorepo)\b/,
+  /\b(?:two|both) (?:internal|our own) (?:packages|modules|services)\b/,
+  /\bcall sites\b|\bwithout allocating\b|\bin one pass\b/,
+]
+
+/** Exported so the build can assert it never fires on a question that should get an answer. */
+export const aboutTheirOwnCode = (job: string): boolean =>
+  ABOUT_THEIR_OWN_CODE.some((pattern) => pattern.test(job.toLowerCase()))
+
 export function categoryForJob(job: string): Category | null {
   const asked = job.toLowerCase().replace(/\bsign(?:s|ed|ing)? ?up\b/g, ' ')
+  if (aboutTheirOwnCode(asked)) return null
   const phrase = PHRASES.find(([pattern]) => pattern.test(asked))
   if (phrase) return CATEGORIES.find((category) => category.id === phrase[1]) ?? null
 
