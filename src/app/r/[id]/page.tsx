@@ -90,7 +90,10 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
   const { scorecard, findings } = report
   // A check we could not measure is not a failure we can charge someone for.
-  const failing = scorecard.checks.filter((check) => check.points < check.max && !check.inconclusive)
+  // Not applicable is not failing. It counted here and nowhere else, so linear.app was told "5 of
+  // the checks does not pass" while the SARIF from the same scan listed four failures and one check
+  // that does not apply to a product of that kind.
+  const failing = scorecard.checks.filter((check) => check.points < check.max && !check.inconclusive && !check.notApplicable)
   const scanned = new Date(report.scannedAt)
   // The formula assumes a product a developer integrates. Saying so beats scoring a
   // newspaper against an SDK checklist and letting the number imply it failed.

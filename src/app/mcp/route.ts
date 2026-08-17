@@ -215,10 +215,10 @@ export async function POST(request: Request) {
     const measurable = scorecard.measurable ?? scorecard.max
 
     if (args.format === 'agent') {
-      return result(id, { content: [{ type: 'text', text: toAgentInstructions(report, base) }] })
+      return result(id, { content: [{ type: 'text', text: toAgentInstructions(report, base, reused) }] })
     }
     if (args.format === 'sarif') {
-      const sarif = toSarif(report, base)
+      const sarif = toSarif(report, base, reused)
       return result(id, { content: [{ type: 'text', text: JSON.stringify(sarif, null, 2) }], structuredContent: { sarif } })
     }
 

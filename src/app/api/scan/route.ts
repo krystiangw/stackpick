@@ -52,13 +52,13 @@ export async function POST(request: Request) {
   const base = publicBaseUrl(request)
 
   if (format === 'sarif') {
-    return NextResponse.json(toSarif(scan.report, base), {
+    return NextResponse.json(toSarif(scan.report, base, scan.reused), {
       headers: { 'content-type': 'application/sarif+json' },
     })
   }
 
   if (format === 'agent') {
-    return new NextResponse(toAgentInstructions(scan.report, base), {
+    return new NextResponse(toAgentInstructions(scan.report, base, scan.reused), {
       headers: { 'content-type': 'text/markdown; charset=utf-8' },
     })
   }

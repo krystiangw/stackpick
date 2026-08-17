@@ -52,7 +52,7 @@ function locationFor(check: ScoredCheck, report: Report): string {
   return site
 }
 
-export function toSarif(report: Report, baseUrl: string): unknown {
+export function toSarif(report: Report, baseUrl: string, reused = false): unknown {
   const { scorecard, findings } = report
   const measurable = scorecard.measurable ?? scorecard.max
 
@@ -143,6 +143,11 @@ export function toSarif(report: Report, baseUrl: string): unknown {
         invocations: [
           {
             startTimeUtc: report.scannedAt,
+            // A rescan inside the reuse window returns the stored file byte for byte, and the only
+            // trace was a start time fifteen minutes old. Somebody who fixes a page, rescans and
+            // gets the same artefact concludes the fix did nothing. It cost an hour of our own on
+            // 2026-08-17, on a build we had just deployed.
+            ...(reused ? { properties: { reusedFromEarlierScan: true } } : {}),
             // A scan cut short by the time budget measured less than it meant to, and saying it
             // succeeded let a pipeline read "nothing is failing" off a scan that measured nothing.
             executionSuccessful: findings.truncation === null,
@@ -181,7 +186,7 @@ export function toSarif(report: Report, baseUrl: string): unknown {
  * For a caller that is an agent with write access to the site. Everything here is either a
  * measurement we made or a step we already publish; nothing is invented to fill the template.
  */
-export function toAgentInstructions(report: Report, baseUrl: string): string {
+export function toAgentInstructions(report: Report, baseUrl: string, reused = false): string {
   const { scorecard, findings } = report
   const measurable = scorecard.measurable ?? scorecard.max
   const plan = buildFixPlan(findings, scorecard)
@@ -218,6 +223,12 @@ export function toAgentInstructions(report: Report, baseUrl: string): string {
     `Measured by Let Agents In on ${report.scannedAt.slice(0, 10)}, formula v${scorecard.formulaVersion}: ` +
       `${scorecard.total} of ${measurable} points we could measure. Full scorecard: ${baseUrl}/r/${report.id}`,
     '',
+    ...(reused
+      ? [
+          `This domain was scanned at ${report.scannedAt} and that stored result was returned rather than a new one, so a change made since then is not in it. Ask again in a few minutes.`,
+          '',
+        ]
+      : []),
     // The requested domain heads the page while every URL below points at another host, and the
     // HTML scorecard is the only surface that used to say why.
     ...(findings.resolvedElsewhere
