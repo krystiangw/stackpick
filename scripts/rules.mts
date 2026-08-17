@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
+import { CURATED_DOMAINS } from '../src/lib/categories'
 import { overDomainBudget } from '../src/lib/scan-gate'
 import { categoryForJob } from '../src/lib/lookup'
 import { HELD_OUT_4 } from './routing-questions'
@@ -938,6 +939,16 @@ check('mala litera nie awansuje przez sasiada', namedIn('we split the traffic in
 const GPU = 'Self-hosted modele (Ollama, vLLM, Replicate, Modal) odrzucone od razu.'
 check('dwie marki-slowa w jednym zdaniu licza sie obie', namedIn(GPU, ['replicate.com', 'modal.com']), 'replicate.com,modal.com')
 check('jedna marka-slowo sama nadal nie', namedIn('Replicate wygladalo sensownie.', ['replicate.com', 'modal.com']), '')
+
+// Pytanie, ktore wymienia dostawce, samo sobie odpowiedzialo. Regula jest zapisana w
+// harness/asks/README.md i do dzis nikt jej nie sprawdzal, a plikow jest 25 i beda przybywac.
+console.log('\npytania rozpoznawcze nie moga wymieniac zadnego dostawcy')
+const ALL_DOMAINS = [...CURATED_DOMAINS]
+for (const file of readdirSync('harness/asks').filter((name) => name.endsWith('.md') && name !== 'README.md')) {
+  const question = readFileSync(`harness/asks/${file}`, 'utf8')
+  const named = certain(mentionsIn(question, ALL_DOMAINS)).map((mention) => mention.domain)
+  check(`${file}: zaden dostawca nie pada w pytaniu`, named.join(), '')
+}
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)
