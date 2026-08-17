@@ -16,7 +16,7 @@
 import { existsSync, readdirSync, statSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import { categoryFor } from '../src/lib/categories'
+import { CATEGORIES, categoryFor } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 
 const runsRoot = process.env.LETAGENTSIN_RUNS ?? join(homedir(), '.letagentsin-runs')
@@ -60,5 +60,7 @@ for (const watch of watches) {
 console.log(
   `\n${unservable} z ${watches.length} obserwacji nie da sie dzis obsluzyc biegiem rozpoznawczym, a strona obiecuje go co miesiac`,
 )
-console.log('Domena spoza naszych 25 kategorii nie ma pytania, wiec nie ma celi. To jest do zamkniecia zanim ktos zaplaci.')
+console.log(
+  `Domena spoza naszych ${CATEGORIES.length} kategorii nie ma pytania, wiec nie ma celi. To jest do zamkniecia zanim ktos zaplaci.`,
+)
 process.exit(0)

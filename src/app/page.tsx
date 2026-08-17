@@ -6,6 +6,7 @@ import { ScanForm } from '@/components/scan-form'
 import { WatchForm } from '@/components/watch-form'
 import { loadRankings } from '@/lib/rankings'
 import { CHECKS, MAX_SCORE, STAGES } from '@/lib/score'
+import { CATEGORIES } from '@/lib/categories'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
 import { SITE_URL } from '@/lib/site'
@@ -189,8 +190,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
             <p className="text-sm leading-relaxed text-ink-soft">
               Once a month a real agent is asked the question your buyers ask, five times over, and you are told
               how many of the five named you and which provider was picked instead. It answers a question and
-              signs up for nothing, so nothing of yours is touched. That half covers the 25 categories we
-              measure, and if your product is not in one of them we tell you rather than quietly skip it.
+              signs up for nothing, so nothing of yours is touched. That half covers the {CATEGORIES.length} categories
+              we measure, and if your product is not in one of them we tell you rather than quietly skip it.
             </p>
             <p className="text-sm leading-relaxed text-ink-soft">
               Free while we are building it, and we will ask before it ever costs anything. No account, no card,

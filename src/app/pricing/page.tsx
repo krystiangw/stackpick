@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { CHECKS, MAX_SCORE } from '@/lib/score'
+import { CATEGORIES } from '@/lib/categories'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
 import { SITE_URL } from '@/lib/site'
@@ -49,7 +50,7 @@ const TIERS: readonly Tier[] = [
       'Two different tools, five runs each. A result that survives both is about you rather than about the machine we ran it on',
       'How many of the ten named you, which provider was picked instead, and the sentence that passed over you, quoted',
       'Every transcript handed over, so you read what the agent said rather than our summary of it',
-      'Only the 25 categories we measure. If your product is not in one of them we say so before you pay, not after',
+      `Only the ${CATEGORIES.length} categories we measure. If your product is not in one of them we say so before you pay, not after`,
     ],
     note: 'Credited against your first month of monitoring. It is a sample of that, not a competitor to it.',
     cta: { label: 'Ask for a report', href: 'mailto:hello@letagentsin.com?subject=One%20agent%20report' },
@@ -62,7 +63,7 @@ const TIERS: readonly Tier[] = [
     includes: [
       'The same checks, rerun every week, so a verdict that moves is caught within days',
       'Real agents every month: one buying question, put to an agent five times in isolation, and how many of the five named you. The question is the unit here, and you can add more of them',
-      'The agent runs cover the 25 categories we measure. If your product is not in one of them we say so before you switch it on, rather than after',
+      `The agent runs cover the ${CATEGORIES.length} categories we measure. If your product is not in one of them we say so before you switch it on, rather than after`,
       'Which provider got picked instead, and the sentence that passed over you, quoted from the transcript',
       'One email when something moves, nothing when nothing does, which is most weeks',
       'No account and no card. One link in every email stops it',
