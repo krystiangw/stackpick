@@ -22,6 +22,9 @@ import { FORMULA_VERSION } from '../src/lib/score'
 import { quotedAbout } from '../src/lib/vendors'
 import { normalizeDomain } from '../src/lib/scan/discover'
 import { SITE_URL } from '../src/lib/site'
+import { buildFixPlan } from '../src/lib/fixfirst'
+
+const plural = (count: number, one: string, many: string) => (count === 1 ? one : many)
 
 const [given, ...rest] = process.argv.slice(2)
 if (!given) {
@@ -213,7 +216,35 @@ if (unmeasured.length > 0) {
   for (const check of unmeasured) lines.push(`- **${check.label}**: ${check.detail}`)
   lines.push('')
 }
-lines.push('## 3. What this report is not')
+// The free scan page, the mail and the machine export all build this plan, and the document
+// somebody pays for was the only one without it: a buyer was getting the list of what is wrong and
+// none of what to do, which is less than the free page hands out. Found 2026-08-17 by reading a
+// generated report end to end rather than by any audit.
+const plan = buildFixPlan(report.findings, card)
+if (plan) {
+  lines.push('## 3. What to fix first')
+  lines.push('')
+  lines.push(plan.claim)
+  lines.push('')
+  plan.quickWins.forEach((step, index) => lines.push(`${index + 1}. **${step.label}** (+${step.gain} ${plural(step.gain, 'point', 'points')}, ${step.effort}): ${step.how}`))
+  const rest = plan.steps.filter((step) => !plan.quickWins.includes(step))
+  if (rest.length > 0) {
+    lines.push('')
+    lines.push('The rest, in the order we would take them:')
+    lines.push('')
+    for (const step of rest) lines.push(`- **${step.label}** (+${step.gain} ${plural(step.gain, 'point', 'points')}, ${step.effort}): ${step.how}`)
+  }
+  // The ceiling belongs next to the arithmetic, or the plan reads as if every remaining point is
+  // available. It is not: some sit behind checks this scan could not evaluate at all.
+  if (plan.unmeasured > 0) {
+    lines.push('')
+    lines.push(
+      `${plan.unmeasured} further ${plural(plan.unmeasured, 'point sits', 'points sit')} behind checks we could not evaluate, so ${plural(plan.unmeasured, 'it is', 'they are')} outside the arithmetic above.`,
+    )
+  }
+  lines.push('')
+}
+lines.push(`## ${plan ? 4 : 3}. What this report is not`)
 lines.push('')
 lines.push(
   `It is not a ranking, and it is not a promise that fixing a row moves an agent. Two of our fifteen checks are the only ones we can show a relationship with being named, and we publish which two rather than implying all fifteen matter equally: ${SITE_URL}/findings. Everything above is reproducible: the formula is published, the question is printed, and the runs are quoted.`,
