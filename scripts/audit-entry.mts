@@ -28,7 +28,7 @@ const CASINGS = ['/AGENTS.md', '/Agents.md', '/AGENT.md', '/SKILL.md']
 /** Same shape as a real one and deliberately not a convention anybody publishes. */
 const NONSENSE = ['/qx7-not-a-convention.md', '/qx7-not-a-convention.json', '/qx7-not-a-convention.txt']
 
-type Body = { bytes: number; head: string }
+type Body = { bytes: number; head: string; firstLine: string }
 
 /**
  * The header the scanner would send for this path, and the reason is sentry.io: asked with
@@ -59,19 +59,41 @@ async function fileAt(url: string): Promise<Body | null> {
     if (text.startsWith('{') || text.startsWith('[')) {
       try {
         const parsed = JSON.parse(text)
-        if (parsed && Object.keys(parsed).length > 0) return { bytes: text.length, head: text.slice(0, 60).replace(/\s+/g, ' ') }
+        if (parsed && Object.keys(parsed).length > 0) return described(text)
       } catch {
         /* truncated at the read cap, or not JSON after all */
       }
     }
     if (text.length < 120) return null
-    return { bytes: text.length, head: text.slice(0, 60).replace(/\s+/g, ' ') }
+    if (readsAsADocsPage(text)) return null
+    return described(text)
   } catch {
     return null
   } finally {
     clearTimeout(timer)
   }
 }
+
+/**
+ * The first line is kept raw and separately, because collapsing whitespace into `head` destroyed
+ * the only thing that separates a markdown 404 from a file: developers.weglot.com answers every
+ * path with "# Page Not Found\n\nThe URL `<path>` does not exist", and once the newlines are gone
+ * the two bodies differ by the path they quote. That defeated the shared-heading rule and the
+ * probe reported a file we correctly say is not there.
+ */
+const described = (text: string): Body => ({
+  bytes: text.length,
+  head: text.slice(0, 60).replace(/\s+/g, ' '),
+  firstLine: (text.split('\n').map((line) => line.trim()).find(Boolean) ?? '').toLowerCase(),
+})
+
+/**
+ * Front matter with breadcrumbs is a documentation page wearing a file's name, which is a rule the
+ * scanner already publishes and applies. docs.datadoghq.com/agent.md is their page about the
+ * Datadog Agent, not a file for agents, and a probe that cannot tell the two apart is weaker than
+ * the measurement it is auditing.
+ */
+const readsAsADocsPage = (text: string) => /^---[\s\S]{0,400}?^breadcrumbs:/m.test(text)
 
 const extensionOf = (path: string) => (path.endsWith('.json') ? '.json' : path.endsWith('.txt') ? '.txt' : '.md')
 
@@ -82,8 +104,7 @@ async function catchAllFor(base: string): Promise<Map<string, Body | null>> {
   return seen
 }
 
-/** The first line, which is what a template repeats and a real file does not. */
-const heading = (text: string) => text.split(/\s{2,}|\n/).map((line) => line.trim()).find(Boolean)?.toLowerCase() ?? ''
+
 
 async function realFilesOn(base: string): Promise<string[]> {
   const control = await catchAllFor(base)
@@ -99,7 +120,7 @@ async function realFilesOn(base: string): Promise<string[]> {
     // usual shape: a documentation platform's soft 404 lists suggested pages, so every response is
     // a different length. Six of the seven disagreements on 2026-08-16 were this, all of them the
     // probe being weaker than the scanner it audits rather than a finding about anybody.
-    if (nonsense && heading(nonsense.head).length > 3 && heading(got.head) === heading(nonsense.head)) continue
+    if (nonsense && nonsense.firstLine.length > 3 && got.firstLine === nonsense.firstLine) continue
     found.push(`${base}${path} (${got.bytes}B ${got.head})`)
   }
   return found
