@@ -932,7 +932,13 @@ export function provisioningQuotes(html: string, most = 2): string[] {
     if (!hit) continue
     const at = hit.index ?? text.indexOf(hit[0])
     const from = Math.max(text.lastIndexOf('. ', at) + 1, at - 70)
-    const quote = text.slice(from, at + hit[0].length + 70).replace(/\s+/g, ' ').trim()
+    // From a word boundary, because a window cut by character count starts mid-word and the
+    // published sentence then opens with a stray letter.
+    const window = text.slice(from, at + hit[0].length + 70).replace(/\s+/g, ' ').trim()
+    const quote = window
+      .replace(/^[^\s]*\s/, (start) => (from === 0 || /^[A-Z"“]/.test(start) ? start : ''))
+      .replace(/^["“'']+/, '')
+      .trim()
     if (quote && !found.includes(quote)) found.push(quote)
     if (found.length >= most) break
   }
