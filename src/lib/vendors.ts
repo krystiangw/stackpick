@@ -122,13 +122,27 @@ export function namesFor(domain: string): string[] {
   return label.length >= 3 ? [label] : []
 }
 
+/**
+ * A full stop ends a sentence only when whitespace or the end of the text follows it. The dot in
+ * vercel.com does not, and the hit we quote around is very often inside exactly such a token: the
+ * $49 report for vercel.com published five of its six codex quotes as "[Vercel limits](https://vercel."
+ * because the sentence was cut at the dot in the domain the mention was found on. A quote that
+ * stops mid-address carries nothing, and it is the half of that report a buyer reads first.
+ */
+// The closing markup a sentence may end inside is part of the ending, not a reason to run on:
+// answers write `**Vercel is the pick.** Render is second` and `("it is the pick.") Render ...`,
+// and a boundary that insisted on whitespace immediately after the full stop would glue a
+// competitor's sentence onto the quote we send the vendor.
+const sentenceBreak = () => /[.!?][)\]}"'”’*_`]*(?=\s|$)|\n/g
+
 /** The sentence a hit sits in, so a weak mention can be read rather than argued about. */
 function sentenceAround(text: string, at: number): string {
-  const before = text.lastIndexOf('\n', at)
-  const start = Math.max(before + 1, text.slice(0, at).search(/[^.!?]*$/))
+  const opened = [...text.slice(0, at).matchAll(sentenceBreak())].pop()
+  const start = opened ? opened.index + opened[0].length : 0
   const rest = text.slice(at)
-  const end = at + (rest.search(/[.!?\n]/) + 1 || rest.length)
-  return text.slice(Math.max(start, 0), end).trim().replace(/\s+/g, ' ')
+  const closed = sentenceBreak().exec(rest)
+  const end = closed ? at + closed.index + closed[0].length : text.length
+  return text.slice(start, end).trim().replace(/\s+/g, ' ')
 }
 
 function firstHit(text: string, pattern: RegExp): { at: number; matched: string } | null {
@@ -242,5 +256,56 @@ export const certain = (mentions: Mention[]) => mentions.filter((mention) => men
  * The whole category is passed rather than the one domain, because the matcher resolves a name
  * against its neighbours: "HERE" is a vendor here and an ordinary word everywhere else.
  */
-export const quotedAbout = (text: string, domain: string, inCategory: readonly string[]): string | null =>
-  certain(mentionsIn(text, inCategory)).find((mention) => mention.domain === domain)?.sentence ?? null
+/**
+ * Words a reader gets from a sentence, ignoring link syntax and addresses. A run that names a
+ * vendor in a markdown table cell produces "[Vercel limits](https://vercel.com/docs/limits) |",
+ * which is a correct quote of a true mention and tells a buyer nothing.
+ */
+export const wordsCarried = (sentence: string) =>
+  (sentence
+    .replace(/\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/https?:\/\/\S+/g, ' ')
+    // A bare address is as empty as a linked one: "vercel.com |" is a table cell, and counting
+    // "vercel" and "com" as two words a reader takes away is how it survived the first version.
+    .replace(/\b[\w-]+(?:\.[\w-]+)+(?:\/\S*)?/g, ' ')
+    .match(/[\p{L}][\p{L}'-]{2,}/gu) ?? []).length
+
+/** Below this a quote is a link and a pipe, so another occurrence is worth looking for. */
+const CARRIES_ENOUGH = 5
+
+/**
+ * Where a token stands in the text, under the rules the matcher uses to decide it is a company at
+ * all. A capital letter is not enough for a word that is also English: "Split the traffic across
+ * regions" opens a sentence and would otherwise be quoted to split.io as praise. The answer has to
+ * style the word as a product somewhere, which is the test that separates `name` from `weak`, and
+ * it is asked of the whole answer rather than of one sentence on purpose: an answer that writes
+ * `[Neon](url)` in a table and then "Neon would be my choice for branching" has established the
+ * brand, and the second sentence is the one worth quoting.
+ */
+function occurrencesOf(text: string, token: string): number[] {
+  const ordinary = ORDINARY_WORDS.has(token.toLowerCase())
+  const asABrand = ordinary && styledAsABrand(text, token)
+  const shouty = token.length > 2 && token === token.toUpperCase() && token !== token.toLowerCase()
+  return [...text.matchAll(new RegExp(`\\b${escape(token)}\\b`, shouty ? 'g' : 'gi'))]
+    .filter((hit) => !ordinary || (asABrand && /^[A-Z]/.test(hit[0])))
+    .map((hit) => hit.index)
+}
+
+export const quotedAbout = (text: string, domain: string, inCategory: readonly string[]): string | null => {
+  const mention = certain(mentionsIn(text, inCategory)).find((candidate) => candidate.domain === domain)
+  if (!mention) return null
+  // Every occurrence of every form they are known by, not the first hit. The first is what "named
+  // first" is read from and must not move, but the sentence printed to a paying customer should be
+  // one that says something: the vercel.com report quoted three of six codex runs as a bare link,
+  // because their first mention sat in a table of links while the prose two paragraphs down
+  // weighed the vendor. Certainty is already settled above; this only chooses what to print.
+  const sentences = [...new Set([domain, ...namesFor(domain)].flatMap((token) => occurrencesOf(text, token)).sort((a, b) => a - b).map((at) => sentenceAround(text, at)))]
+  const carrying = sentences.find((sentence) => wordsCarried(sentence) >= CARRIES_ENOUGH)
+  const richest = sentences.reduce((best, sentence) => (wordsCarried(sentence) > wordsCarried(best) ? sentence : best), mention.sentence)
+  const best = carrying ?? richest
+  // A run can name a vendor only inside a table of links, and then there is no sentence to quote.
+  // Saying nothing is the honest outcome: the count of runs that named them is read from the run's
+  // own list and does not need a quote to stand, while "[Resend plans](url) |" printed under
+  // "what the runs said about you" is a paragraph that says nothing and looks like a bug.
+  return wordsCarried(best) === 0 ? null : best
+}

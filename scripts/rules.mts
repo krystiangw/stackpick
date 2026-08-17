@@ -17,7 +17,7 @@ import { FLEX_QUOTA_MB, quotaEmail, verdictFor } from '../src/lib/quota'
 import { sawRateLimit, otherDomainsNamed } from '../src/lib/corpus'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
 import { wasNeverAsked } from '../src/lib/scan/http'
-import { certain, mentionsIn } from '../src/lib/vendors'
+import { certain, mentionsIn, quotedAbout, wordsCarried } from '../src/lib/vendors'
 import { rendersUsableForm, entersThroughIdentityProvider, mcpCandidates, looksLikeADocsPageTwin, answersWithTheSameTemplate, readsAsAnEndpoint, readsAsTheirOwnAddress } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
 import {
@@ -1048,6 +1048,37 @@ check('Modal z duzej litery to niepewne', formOf('Modal is a good fit for GPU jo
 check('i niepewne nie liczy sie do wyniku', namedIn('Modal is a good fit for GPU jobs', ['modal.com']), [].join())
 check('ale domena obok juz tak', namedIn('Modal (modal.com) is a good fit', ['modal.com']), 'modal.com')
 check('cytat leci razem z niepewnym trafieniem', mentionsIn('Modal is a good fit.', ['modal.com'])[0].sentence, 'Modal is a good fit.')
+
+// Kropka w adresie nie konczy zdania. Raport za 49 USD dla vercel.com opublikowal piec z szesciu
+// cytatow codeksa jako „[Vercel limits](https://vercel." - trafienie siedzi w domenie, a zdanie
+// bylo ciete na jej wlasnej kropce, wiec platny cytat nie niosl ani jednego slowa o vendorze.
+const INLINE_LINK = 'Vercel jest tu oczywisty. [Vercel limits](https://vercel.com/docs/limits) dotycza funkcji. Render to druga opcja.'
+const linkQuote = mentionsIn(INLINE_LINK, ['vercel.com'])[0].sentence
+check('cytat nie urywa sie na kropce w domenie', linkQuote, '[Vercel limits](https://vercel.com/docs/limits) dotycza funkcji.')
+check('i nie wciaga poprzedniego zdania', linkQuote.includes('oczywisty'), false)
+check('kropka konczaca zdanie nadal konczy', mentionsIn('Wybieram Fly.io. Render odpada.', ['fly.io'])[0].sentence, 'Wybieram Fly.io.')
+// Zdanie konczy sie takze pod zamknieciem wyroznienia albo cudzyslowu, inaczej cytat dla vendora
+// wciaga zdanie o konkurencie. Znalezione przez codex review, 2026-08-17.
+check('kropka pod pogrubieniem konczy zdanie', mentionsIn('**Vercel jest wyborem.** Render odpada.', ['vercel.com'])[0].sentence, '**Vercel jest wyborem.**')
+check('kropka pod cudzyslowem tez', mentionsIn('"Vercel jest wyborem." Render odpada.', ['vercel.com'])[0].sentence, '"Vercel jest wyborem."')
+check('i nawias domykajacy', mentionsIn('(Vercel jest wyborem.) Render odpada.', ['vercel.com'])[0].sentence, '(Vercel jest wyborem.)')
+
+// Prog cytatu w audycie dostawy: nie liczba slow, tylko czy czytelnik wynosi z niego cokolwiek.
+check('cytat z samego linku nie niesie ani slowa', wordsCarried('[Vercel limits](https://vercel.com/docs/limits) |'), 0)
+check('krotkie zdanie obok linku juz tak', wordsCarried('[Git deployments](https://vercel.com/docs/git) | Best if the API can become functions.') > 0, true)
+check('cztery slowa to nadal cytat', wordsCarried('Neon bylby moim wyborem.') > 0, true)
+check('sam adres bez linku tez nie niesie slowa', wordsCarried('vercel.com |'), 0)
+check('ani adres ze sciezka', wordsCarried('| vercel.com/docs/limits |'), 0)
+
+// Cytat dla vendora nie moze pochodzic ze zdania, w ktorym jego nazwa jest zwyklym slowem, nawet
+// gdy stoi z wielkiej litery na poczatku zdania. Znalezione przez codex review, 2026-08-17.
+const SPLIT_WORD = 'Split the traffic across two regions first. We picked split.io for the flags.'
+check('zdanie o dzieleniu ruchu nie jest cytatem o Split', quotedAbout(SPLIT_WORD, 'split.io', ['split.io']), 'We picked split.io for the flags.')
+check('ale wyrozniona marka juz tak', quotedAbout('**Split** obsluguje flagi w kilku regionach naraz. Reszta odpada.', 'split.io', ['split.io']), '**Split** obsluguje flagi w kilku regionach naraz.')
+// ...a gdy marka jest juz ustalona w tej samej odpowiedzi, zwykle zdanie o niej wraca do gry:
+// inaczej cytatem zostawalby wiersz tabeli, a nie zdanie. Znalezione przez codex review.
+const NEON_TABLE = '| [Neon](https://neon.com) | serverless Postgres |\nNeon bylby moim wyborem przy branchowaniu.'
+check('ustalona marka odblokowuje pozniejsze zdanie', quotedAbout(NEON_TABLE, 'neon.com', ['neon.com']), 'Neon bylby moim wyborem przy branchowaniu.')
 
 // Typografia rozstrzyga to, czego sasiad nie moze. Strony kategorii publikuja zdanie „nie padl ani
 // razu", a audyt tego zdania 2026-08-17 znalazl trzy firmy, o ktorych bylo nieprawdziwe.

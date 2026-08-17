@@ -104,6 +104,51 @@ czysty i to on niesie replikacje), rekord DNS do rejestru MCP, konta w Bing Webm
 MCP, token npm, licencja korpusu, sciezka zakupu inna niz `mailto:` i Stripe kontra Paddle.
 **agenticpay tego NIE odblokowuje.**
 
+## PIEC Z SZESCIU CYTATOW W RAPORCIE ZA 49 USD URYWALO SIE W SRODKU ADRESU (2026-08-17)
+
+Znalezione nie przez audyt, tylko przez **wygenerowanie raportu i przeczytanie go jak klient**.
+`scripts/client-report.mts vercel.com` wypisal piec z szesciu cytatow codeksa w tej postaci:
+
+> **codex run 1**: „[Vercel limits](https://vercel."
+
+**Dwie przyczyny, obie w `sentenceAround`.**
+1. **Kropka w domenie konczyla zdanie.** Trafienie na `vercel.com` siedzi w adresie, a granica zdania
+   szla po pierwszym `[.!?]`, wiec zdanie bylo ciete na wlasnej kropce trafienia. Teraz kropka
+   konczy zdanie tylko wtedy, gdy stoi przed bialym znakiem albo koncem tekstu.
+2. **Pierwsze trafienie bywa w tabeli linkow.** Nawet po poprawce trzy biegi dawaly
+   „[Vercel limits](url) |", bo pierwszy raz nazwa pada w komorce tabeli. `quotedAbout` przeglada
+   teraz **wszystkie** wystapienia wszystkich form nazwy (domena + aliasy) i bierze pierwsze zdanie,
+   ktore niesie co najmniej piec slow poza linkami; `at` (czyli „kto padl pierwszy") **nie rusza sie**,
+   bo to inna wielkosc. Zwykle slowo w roli marki nadal wymaga wielkiej litery, wiec „split the
+   traffic" nie stanie sie cytatem o Split.
+
+**Po poprawce** kazdy z szesciu cytatow vercela to zdanie o produkcie
+(„| **Vercel** | Best-in-class React/Next.js preview experience..."). Na calym zbiorze: **803 cytaty,
+11 ponizej pieciu slow i wszystkie jedenascie to prawdziwe krotkie zdania** („Neon bylby moim
+wyborem."). Dlatego straznik w `audit-delivery` nie liczy slow, tylko pyta, **czy cytat niesie
+chocz jedno slowo poza linkiem** (`wordsCarried === 0`) - to jest ten blad, a nie dlugosc.
+
+**Piec rund `codex review`, cztery z realnym znaleziskiem** (pierwsze uzycie przywroconej reguly
+„review codeksem przed commitem"; kazde znalezisko dotyczylo zdania, ktore poszloby do klienta):
+1. granica zdania wymagajaca bialego znaku **gubi kropke pod `**`, `"` i `)`**, wiec cytat wciagalby
+   nastepne zdanie, czesto o konkurencie;
+2. wielka litera **nie wystarczy** dla nazwy, ktora jest zwyklym slowem: „Split the traffic across
+   regions" na poczatku zdania trafiloby do raportu split.io jako pochwala. Warunkiem jest teraz
+   **stylizacja marki w calej odpowiedzi** (ten sam test, ktory odroznia `name` od `weak`).
+   Pierwsza wersja pytala o to **pojedyncze zdanie** i codex pokazal, ze to zabiera cytat tam, gdzie
+   marka jest juz ustalona: `[Neon](url)` w tabeli, a nizej „Neon bylby moim wyborem" - zdanie
+   dobre, odrzucone. Zakres testu to byla cala roznica;
+3. licznik slow **nie moze liczyc golego adresu**: „vercel.com |" bez skladni linku dawalo dwa
+   slowa („vercel", „com") i przechodzilo przez straznik, ktory powstal wlasnie po to;
+4. gdy zaden fragment nie niesie ani slowa, `quotedAbout` zwraca **null** zamiast pustego cytatu.
+   Wyszlo to dopiero z nowego straznika: resend.com, bieg 2, mial tylko komorke tabeli
+   („[Resend plans](url) |"). Raport pokazuje teraz osiem cytatow przy „wymieniony w 9 z 10 biegow",
+   i to jest uczciwe: licznik czyta liste biegu, a nie cytat.
+
+**Zasieg:** dotyczy tylko dokumentow generowanych skryptami (platny raport, miesieczny mail,
+`audit-delivery`). Strona `/c/<kat>/runs` uzywa z tego modulu wylacznie `matched` do podswietlania,
+wiec **nie wymaga deployu**, zeby poprawka dotarla do klienta.
+
 ## 9.33: „13 hostow sondowanych" liczylo hosty, o ktore nigdy nie zapytalismy (2026-08-17, v482)
 
 To ostatni nienaprawiony punkt z listy niezaleznego przegladu szesciu wydan (sekcja nizej), tam

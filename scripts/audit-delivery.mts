@@ -15,7 +15,7 @@
  * the data does not support.
  */
 import { CATEGORIES } from '../src/lib/categories'
-import { quotedAbout } from '../src/lib/vendors'
+import { quotedAbout, wordsCarried } from '../src/lib/vendors'
 import cells from '../src/data/cells.json'
 
 type Complaint = { where: string; says: string }
@@ -46,6 +46,13 @@ for (const category of CATEGORIES) {
     for (const { answer, said } of quotes) {
       if (!answer.named.includes(domain)) {
         complaints.push({ where: `${category.id}/${domain}`, says: `cytat z biegu ${answer.run}, ktory go nie wymienil: "${said?.slice(0, 60)}"` })
+      }
+      // A quote made entirely of link syntax says nothing, and it is the first half of the report
+      // a buyer reads. Three of six codex runs in the vercel.com report were "[Vercel limits](url) |"
+      // until 2026-08-17. Short is fine - "Neon byłby moim wyborem." is four words and a real
+      // answer - so the bar is one word a reader can take away, not a word count.
+      if (said !== null && wordsCarried(said) === 0) {
+        complaints.push({ where: `${category.id}/${domain}`, says: `cytat bez ani jednego slowa poza linkiem, bieg ${answer.run}: "${said.slice(0, 60)}"` })
       }
     }
     if (quotes.length > 0) quoted += 1
