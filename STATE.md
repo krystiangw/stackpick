@@ -28,11 +28,22 @@ co do kierunku". Przy okazji naprawiony blad konstrukcyjny samego straznika: pro
 punktow" byl liczba dobrana pod dane. Teraz sprawdza to, co strona twierdzi (llms_txt jako jedyny z
 czterech NIE przezywa kontroli), wiec zawiedzie w dniu, w ktorym zacznie rozdzielac.
 
-**NASTEPNA POZYCJA MERYTORYCZNA:** zaciesnienie trzech golych fraz w `programmatic_provisioning`
-(`management api`, `account api`, `provisioning api`) plus nigdy niepasujaca pisownia
-`service-account` z lacznikiem. Reseed zapisal cytaty dla **wszystkich 80 zaliczonych wierszy**,
-wiec pierwszy raz jest czym to policzyc: przeczytaj cytaty, zobacz, ile punktow stoi na samej
-frazie bez kontekstu, i dopiero potem zmieniaj regule.
+**FORMULA 9.32 WDROZONA, KORPUS CZEKA NA RESEED.** Zaciesnienie golych fraz w
+`programmatic_provisioning` zrobione: gola fraza liczy sie tylko wtedy, gdy w tym samym oknie,
+ktore cytujemy, stoi nazwa poswiadczenia albo cos jest TWORZONE. Okno jest domkniete z obu stron
+granica bloku, sprawdzane sa wszystkie wystapienia, a cytat pokazuje to, ktore dalo punkt.
+
+**Karencja mija okolo 23:00** (6 h od reseedu o 16:56). Petla:
+`STACKPICK_CONSOLE_TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick) bash -c 'for i
+in $(seq 1 18); do npm run reseed; [ $? -eq 3 ] && sleep 1200 || break; done'`. Po nim: `npm run
+audit`, `audit-study.mts`, `audit-delivery.mts` i **przeczytaj, ile wierszy stracilo punkt** -
+odtworzenie na cytatach z 9.31 mowilo 19 z 28, ale bylo liczone przed domknieciem okna z drugiej
+strony, wiec prawdziwa liczba bedzie inna.
+
+**PULAPKA, ktora prawie opublikowala falszywy wniosek:** skan tuz po wdrozeniu wraca z **okna
+ponownego uzycia** (15 minut) i mierzy POPRZEDNI build. `storyblok.com` po deployu pokazywal stary
+werdykt i wygladalo to jak nieudana poprawka. **Sprawdzaj `reused` w odpowiedzi `/api/scan`, zanim
+uznasz, ze zmiana nie zadziala.**
 
 **PODLOGA SZUMU: 0,59 procent** (15 werdyktow na 2550; 10 to werdykt kontra werdykt, 5 to wiersz
 niemierzalny po jednej stronie). **Zamrozenie formuly zdjete.**
