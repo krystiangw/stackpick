@@ -138,8 +138,12 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
           {cell?.runs ?? 5} runs separate a wall from silence and nothing finer. Two vendors a run or two apart are
           not ranked by this, and we would rather say that than sell the gap.{' '}
+          <Link href={`/c/${id}/runs`} className="text-brass underline underline-offset-4">
+            Read what the agent actually answered
+          </Link>{' '}
+          or{' '}
           <Link href="/methodology" className="text-brass underline underline-offset-4">
-            How every number here is measured
+            how every number here is measured
           </Link>
         </p>
       </section>

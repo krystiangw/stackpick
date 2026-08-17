@@ -9,6 +9,55 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Postawiłbym na **Cloudflare R2 + cache na Cloudflare edge** (ewentualnie Cloudflare Images, jeśli kiedyś dojdzie potrzeba automatycznych wariantów/resize). S3-kompatybilne API, więc integracja z Node przez `aws-sdk` jest banalna, zero opłat za egress, a skoro obrazki są \"gorące\", to i tak trafiają do edge cache CDN i serwują się szybko bez dodatkowej konfiguracji. Główny kompromis: mniej dojrzały ekosystem i słabszy model uprawnień niż w AWS.\n\nCo jeszcze rozważałem i odrzuciłem:\n- **S3 + CloudFront** - branżowy standard, ale przy tak małym ruchu to więcej roboty (osobna dystrybucja CloudFront, invalidacje cache) za podobny efekt końcowy.\n- **Cloudinary / imgix** - mocne w transformacje obrazków na żądanie, ale to zrzuty ekranu do artykułów pomocy, nie resize/crop w locie - płacilibyście za funkcje, których nie użyjecie.\n- **Supabase Storage / Vercel Blob** - sensowne tylko jeśli już siedzicie w tym ekosystemie; jeśli nie, to kolejny provider bez wyraźnej korzyści.\n\nJeśli wolisz zostać w AWS (np. ze względu na resztę infry), S3 + CloudFront też jest w porządku - to bardziej pytanie o to, ile configu chcesz ogarniać w tym tygodniu.",
+        "named": [
+          "cloudflare.com",
+          "cloudinary.com"
+        ],
+        "first": "cloudflare.com"
+      },
+      {
+        "run": 2,
+        "text": "**Cloudflare R2.** Storage kompatybilny z S3, ale bez opłat za egress, plus CDN na krawędzi w cenie. Przy małym ruchu, ale \"gorących\" (często odczytywanych) obrazkach to jest właśnie ten koszt, który przy S3 rośnie bez sensu, a integracja z Node/React to zwykłe `@aws-sdk/client-s3` ze zmienionym endpointem, więc mieścisz się w tydzień.\n\nCo odrzuciłem po drodze:\n- **S3 + CloudFront** - dojrzały standard, ale egress + osobna konfiguracja CDN to więcej ruchomych części niż trzeba na start, a przy hot images koszt egress realnie boli.\n- **Cloudinary/imgix** - mocne w transformacje obrazów w locie, ale to kolejny vendor i wyższa cena za funkcję, której nie potrzebujesz (to są screenshoty do artykułów, nie galeria wymagająca resize/crop na żądanie).\n- **Uploadthing/Vercel Blob** - najszybszy start pod względem DX, ale mocniejszy lock-in i mniej kontroli, gdyby treści pomocy miały żyć długo.\n- **Supabase Storage/DO Spaces** - też S3-compatible i sensowne, ale bez przewagi zerowego egressu R2, więc nie widziałem powodu, żeby wybrać je zamiast niego.\n\nGłówny kompromis: R2 ma uboższy ekosystem transformacji obrazów niż Cloudinary, ale dla zrzutów ekranu to nieistotne, a jakby kiedyś zaszła potrzeba, można dołożyć Cloudflare Images na tym samym buckecie.\n\nChcesz, żebym spiął to z konkretnym uploadem w Node (presigned URL + endpoint) czy to na razie tylko decyzja do zapisania?",
+        "named": [
+          "cloudflare.com",
+          "cloudinary.com",
+          "uploadthing.com"
+        ],
+        "first": "cloudflare.com"
+      },
+      {
+        "run": 3,
+        "text": "Wybrałbym **Cloudflare R2** za backend uploadów, serwowany przez Cloudflare CDN. Powód: S3-kompatybilne API (ten sam SDK `@aws-sdk/client-s3` w Node), zero opłat za egress więc \"gorące\" obrazy nie generują kosztu przy każdym odczycie, a cache na edge daje szybkie serwowanie bez dodatkowej konfiguracji CDN.\n\nRozważałem jeszcze: S3 + CloudFront (branżowy standard, ale przy tym ruchu to głównie dodatkowa konfiguracja dystrybucji i koszt egress bez realnej korzyści), Vercel Blob (najprostszy start, jeśli już hostujecie na Vercelu, ale droższy przy wzroście i lock-in), oraz zapis na dysku serwera (odpadło od razu, brak CDN i skalowania, ryzyko przy redeployu).",
+        "named": [
+          "cloudflare.com"
+        ],
+        "first": "cloudflare.com"
+      },
+      {
+        "run": 4,
+        "text": "Wziąłbym **Cloudflare R2** (S3-compatible storage, zero opłat za egress) w parze z ich CDN-em/cache do serwowania - przy małym ruchu ale \"hot\" plikach liczy się głównie brak kosztów transferu i szybki cache na brzegu, a integracja z Node przez zwykłe S3 SDK jest banalna. Rozważałem też S3+CloudFront (ten sam model, ale egress kosztuje i trzeba samemu spinać CDN), Cloudinary (świetny gdy potrzebujesz transformacji obrazków w locie, ale to nadmiarowa złożoność i koszt dla zwykłych screenshotów) oraz Vercel Blob/Uploadthing (najszybszy start, ale słabsza kontrola i wyższy koszt przy skalowaniu).\n\nGłówny tradeoff: R2 nie ma wbudowanej optymalizacji/resize obrazków jak Cloudinary - jeśli support agenci wrzucają duże, nieoptymalizowane screeny, będziesz to musiał obsłużyć sam (np. prostym resize przy uploadzie). Pasuje to do Waszego stacku i skali?",
+        "named": [
+          "cloudflare.com",
+          "cloudinary.com",
+          "uploadthing.com"
+        ],
+        "first": "cloudflare.com"
+      },
+      {
+        "run": 5,
+        "text": "Dla tego przypadku (małe screenshoty, mały ruch, ale \"hot\" czyli częste odczyty) postawiłbym na **Cloudflare R2 + cache na edge'u Cloudflare** - zero opłat za egress, API kompatybilne z S3 (działa ze standardowym `aws-sdk` w Node), a \"hot\" odczyty obsługuje właśnie edge cache, nie sam storage. Jeśli macie już konto AWS albo Cloudflare, to naturalnie przeważa wybór w tamtą stronę.\n\nCo jeszcze brałem pod uwagę i czemu odpadło:\n- **S3 + CloudFront** - dojrzały, dobrze udokumentowany, ale więcej configu (IAM, dystrybucja CloudFront) i opłaty za egress, które przy R2 są zerowe. Jeśli już żyjecie w AWS, i tak jest to solidny wybór.\n- **Cloudinary / imgix** - świetne gdy potrzebujesz transformacji obrazków w locie (resize, webp), ale dla zwykłych screenshotów w artykułach pomocy to dodatkowa usługa i koszt bez realnej korzyści.\n- **UploadThing** - wygodny DX pod Node/React, ale mniejszy, młodszy dostawca - ryzykowne przy małym zespole bez potrzeby tej wygody.\n- **Lokalny dysk / wolumen na serwerze** - odpada od razu: brak trwałości przy restarcie/skalowaniu i brak CDN pod \"hot\" ruch.\n\nJedno pytanie zanim zamkniesz temat: czy macie już konto AWS albo Cloudflare w firmie? To rozstrzygnie między R2 a S3+CloudFront, bo funkcjonalnie są niemal równoważne.",
+        "named": [
+          "cloudflare.com",
+          "cloudinary.com",
+          "uploadthing.com"
+        ],
+        "first": "cloudflare.com"
+      }
+    ],
     "rows": [
       {
         "domain": "cloudflare.com",
@@ -67,6 +116,65 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Polecam **Tiptap** (nakładka na ProseMirror). Krótkie uzasadnienie i co odrzuciłem po drodze:\n\n**Co brałem pod uwagę:**\n- **Draft.js** - martwy projekt (Meta go porzuciła), więcej problemów niż korzyści na start w 2026.\n- **Quill** - szybki start, ale model dokumentu (Delta) słabo się nadaje do własnych bloków; rozszerzanie o custom node'y jest tam bólem.\n- **Slate** - bardzo elastyczny, ale to w praktyce framework do budowania edytora, nie gotowy edytor. Dużo kodu do napisania samemu zanim dostaniesz bold/listy/wklejanie obrazków - nie zmieścisz się w tydzień.\n- **Lexical** (Meta) - dobra architektura, real-cases w produkcji (Meta), ale API i ekosystem wtyczek wciąż mniej dojrzałe niż Tiptap; więcej czasu na dojście do \"bold + listy + screenshoty\" niż potrzeba.\n- **Editor.js** - blokowy z założenia, ale to osobny format JSON i inny model mentalny niż typowy rich text; sensowny gdy od początku chcesz strukturę blokową, mniej gdy chcesz szybko dowieźć klasyczny WYSIWYG.\n\n**Dlaczego Tiptap wygrywa dla tego przypadku:**\n- Oparty na ProseMirror, więc masz solidny, sprawdzony w produkcji silnik dokumentu (ten sam co w Notion czy Linear) bez pisania go samemu.\n- Bold, listy, wklejanie obrazków/screenshotów (`handlePaste`) i toolbar dostajesz z gotowych rozszerzeń w ciągu dnia-dwóch, nie tygodnia.\n- Model \"custom block = własne `Node` rozszerzenie\" jest udokumentowany i jest to dokładnie ta ścieżka rozbudowy, o której piszesz (\"extend later with custom blocks\") - nie trzeba tego dorabiać na siłę później.\n- Aktywnie rozwijany, dobra dokumentacja, spore community - mniej ryzyka, że utkniesz na czymś niszowym pod presją czasu.\n\nGłówny kompromis: Tiptap/ProseMirror ma bardziej stromą krzywą uczenia niż Quill, jeśli ktoś w zespole będzie majstrował głębiej w schemacie dokumentu - ale na start (bold, listy, obrazki) to nieodczuwalne, a płaci się to później i tak przy każdym z tych wyborów.",
+        "named": [
+          "tiptap.dev",
+          "prosemirror.net",
+          "quilljs.com",
+          "lexical.dev",
+          "editorjs.io"
+        ],
+        "first": "tiptap.dev"
+      },
+      {
+        "run": 2,
+        "text": "Wziąłbym **Tiptap** (na ProseMirror) - ma gotowe, dobrze udokumentowane rozszerzenia na pogrubienie, listy i wklejanie obrazków, a system Node/Mark extensions jest wprost zaprojektowany pod własne bloki, więc dopisanie ich później nie wymaga przepisywania rdzenia edytora.\n\nRozważałem jeszcze **Lexical** (Meta) - solidniejszy pod względem wydajności i modelu dokumentu, ale młodszy ekosystem i więcej boilerplate'u przy własnych node'ach - oraz **Slate**, które daje pełną kontrolę, ale historycznie ma niestabilne API i sporo trzeba zbudować samemu (undo/redo, skróty markdown, obsługa wklejania). **Editor.js** odpadł, bo to raczej block-based edytor JSON niż inline WYSIWYG - gorzej pasuje do zwykłego \"zaznacz i pogrub\", którego oczekują wasi agenci supportu.\n\nGłówny kompromis: Tiptap jest headless, więc UI (toolbar, formatowanie) budujecie sami - ale to akurat pasuje, bo i tak chcecie go dopasować do własnego designu i rozszerzać o custom bloki.",
+        "named": [
+          "tiptap.dev",
+          "prosemirror.net",
+          "lexical.dev",
+          "slatejs.org",
+          "editorjs.io"
+        ],
+        "first": "tiptap.dev"
+      },
+      {
+        "run": 3,
+        "text": "Wybrałbym **TipTap** (na ProseMirrorze).\n\n**Dlaczego TipTap:**\n- `StarterKit` daje bold, listy, nagłówki od ręki, więc pogodzisz się z terminem \"w tym tygodniu\" bez pisania edytora od zera.\n- Wklejanie zrzutów ekranu to gotowe rozszerzenie (`Image` + obsługa paste/drop) - support agenci wkleją screen ze schowka i po sprawie.\n- Model rozszerzeń (custom Node/Mark/Extension) jest dokładnie tym, czego potrzebujesz do własnych bloków później - to nie hack na końcu API, tylko główny sposób, w jaki się z TipTapem pracuje.\n- Duża społeczność, aktywny rozwój, dużo gotowych przykładów integracji z React (hooki, kontrolowany stan, SSR).\n\n**Co jeszcze rozważałem:**\n- **Lexical** (Meta) - realna alternatywa, technicznie bardzo solidna i wydajna, też ma dobry model węzłów pod custom bloki. Odpadł głównie przez czas: mniej gotowych \"z pudełka\" rzeczy (wklejanie obrazków, listy) trzeba doklejać samemu, dokumentacja i ekosystem wciąż węższe niż TipTap/ProseMirror. Wróciłbym do niego, gdyby priorytetem była wydajność na bardzo dużych dokumentach albo collaborative editing na dużą skalę.\n- **Slate** - odrzucony. Elastyczny w teorii, ale API historycznie niestabilne między wersjami i mnóstwo edge case'ów (selection, IME, undo) trzeba łatać samemu. Zbyt duże ryzyko przy terminie tygodnia.\n- **Quill** - szybki start, ale model danych (Delta) słabo się nadaje pod custom bloki, których chcecie dokładać później. Dobry do \"prostego edytora na zawsze\", zły do \"prosty teraz, rozbudowany potem\".\n- **Editor.js** - koncepcyjnie blokowy, czyli pasuje do \"custom blocks\", ale integracja z React jest bardziej DIY, a społeczność i tempo rozwoju mniejsze niż TipTapa.\n\nRozstrzygnęło połączenie: szybki start w tydzień + solidny, długoterminowy model rozszerzeń pod custom bloki. To dwie sprzeczne potrzeby naraz i TipTap jest jedynym z tej listy, który dobrze spełnia obie równocześnie.",
+        "named": [
+          "tiptap.dev",
+          "prosemirror.net",
+          "quilljs.com",
+          "editorjs.io"
+        ],
+        "first": "tiptap.dev"
+      },
+      {
+        "run": 4,
+        "text": "Rekomendacja: **Tiptap** (nakładka na ProseMirror).\n\nDlaczego on:\n- Model dokumentu oparty na schemacie (węzły/marki) to naturalne miejsce na własne bloki później - dodajesz nowy `Node` z własnym React NodeView, nie przepisujesz edytora.\n- Ekosystem jest gotowy do użycia w tydzień: gotowe rozszerzenia na bold/listy, wklejanie obrazów (`handlePaste` + upload), tabele, wklejanie z Worda/Google Docs bez śmieciowego HTML.\n- Duża baza produkcyjna i dokumentacja - mniej ryzyka, że utkniesz na czymś banalnym w piątek przed deadline'em.\n\nCo jeszcze rozważałem i dlaczego odpadło:\n- **Lexical** (Meta) - architektura jest bardzo czysta i wydajna, i długoterminowo pewnie dogoni Tiptap, ale ekosystem gotowych rozszerzeń (upload obrazków, konwertery) jest chudszy, więc więcej klejenia własnoręcznie. Przy presji \"ten tydzień\" to koszt, którego bym nie brał.\n- **Slate** - najbardziej elastyczny, ale to bardziej framework do budowania edytora niż edytor. Toolbar, obsługa list, paste handling - wszystko piszesz sam. Dobry wybór, gdybyś miał miesiąc i bardzo specyficzne wymagania, nie tydzień.\n- **Editor.js** - blokowy, ładny JSON na wyjściu, ale to bardziej \"block builder\" (jak Notion) niż inline rich text. Formatowanie w locie (bold w środku zdania, mieszane listy) jest tam mniej naturalne niż w Tiptap/Slate.\n- **Quill** - najszybszy do wdrożenia, ale to zamknięty model dokumentu (Delta), rozszerzanie o własne bloki jest dużo bardziej bolesne niż w Tiptap. Dobry na \"potrzebuję tylko bold i listy i tyle\", zły na \"będziemy to rozwijać\".\n\nGłówny kompromis: Tiptap kosztuje trochę więcej boilerplate'u na starcie niż Quill, ale to jedyny z tej listy, gdzie \"custom blocki później\" nie oznacza przepisywania edytora od zera.",
+        "named": [
+          "tiptap.dev",
+          "prosemirror.net",
+          "lexical.dev",
+          "editorjs.io",
+          "quilljs.com"
+        ],
+        "first": "tiptap.dev"
+      },
+      {
+        "run": 5,
+        "text": "Wybrałbym **Tiptap** (na ProseMirror) - ma oficjalne bindingi do Reacta, dojrzały model dokumentu, prosty format rozszerzania o własne node'y/bloki (dokładnie pod \"custom blocks\" na później) i gotowe wzorce na wklejanie obrazków ze schowka. To pozwala ruszyć w tydzień, a jednocześnie nie zamyka drogi rozwoju.\n\nGłówny kompromis: **Lexical** (Meta) jest lżejszy i też dobrze się rozszerza, ale ekosystem i dokumentacja są młodsze, więc mniej gotowych przepisów na typowe problemy (wklejanie, drag&drop obrazków) - oszczędzasz na starcie, płacisz później researchem. **Editor.js** odpadł, bo jego model blokowy pasuje do \"custom blocks\", ale integracja z Reactem jest nakładką na czysty JS, nie pierwszej klasy.\n\nCzy mam rozpisać plan integracji Tiptapa w Waszej apce (upload/paste obrazków, toolbar, zapis do backendu), czy najpierw chcesz POC na konkretnym komponencie?",
+        "named": [
+          "tiptap.dev",
+          "prosemirror.net",
+          "editorjs.io"
+        ],
+        "first": "tiptap.dev"
+      }
+    ],
     "rows": [
       {
         "domain": "tiptap.dev",
@@ -130,6 +238,54 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Postawiłbym na **WorkOS (AuthKit)**: SSO wycenia per-connection (nie per-user), więc jeden enterprise klient z SAML/OIDC nie każe płacić za całą bazę paru tysięcy userów, ma gotowe SDK do Node i React, oraz Directory Sync (SCIM) na później, gdyby ten klient tego zażądał. Po drodze rozważałem Auth0 (najbardziej dojrzały, ale SSO/enterprise features są w drogich planach), Clerk (świetne DX, ale mocniej pod Next.js/frontend niż pod dowolny Node backend, a enterprise SSO też płatne per-connection podobnie jak WorkOS) i self-hosted Keycloak/Ory (tańsze w skali, ale to dokładnie ten maintenance, od którego chcesz uciec).\n\nGłówny tradeoff: WorkOS jest młodszy i ma mniejszy ekosystem niż Auth0, więc trochę więcej dłubania przy mniej typowych flow (np. MFA, passwordless), za to migracja userów i koszt na waszą skalę wychodzą korzystniej.",
+        "named": [
+          "workos.com",
+          "auth0.com",
+          "clerk.com"
+        ],
+        "first": "workos.com"
+      },
+      {
+        "run": 2,
+        "text": "Rekomendacja: **WorkOS** (User Management + SSO/SCIM w jednym).\n\nDlaczego akurat to pasuje do Waszej sytuacji: głównym triggerem jest SSO dla klienta enterprise, a WorkOS jest zbudowany dokładnie pod ten wzorzec, zwykli użytkownicy logują się przez ich AuthKit (sesje, reset hasła, MFA), a enterprise klienci dostają SAML/OIDC SSO i SCIM jako osobny, dokładany moduł, bez potrzeby przesiadki na jeden model tożsamości dla wszystkich. Cennik jest przewidywalny: SSO liczone per connection (jedna integracja z klientem enterprise), nie per użytkownik, co przy paru tysiącach kont ma znaczenie. Migracja haseł jest w praktyce bezbolesna, importujecie istniejące hashe (bcrypt/scrypt) i użytkownicy logują się bez wymuszonego resetu.\n\nCo jeszcze rozważałem i dlaczego odpadło:\n\n- **Auth0** - dojrzały, najszersze możliwości enterprise SSO, ale drogi przy skalowaniu (MTU pricing), a system Rules/Actions bywa uciążliwy w utrzymaniu, czyli częściowo wraca problem, który chcecie zamknąć. Solidny wybór numer dwa, jeśli WorkOS czegoś zabraknie.\n- **Clerk** - najlepszy DX pod React, bardzo szybkie wdrożenie, ale historia i pozycjonowanie mocniej celują w consumer/prosumer niż B2B enterprise SSO, warto sprawdzić aktualny stan SAML/SCIM u nich, jak coś się zmieniło.\n- **AWS Cognito** - tani i wygodny, jeśli już jesteście głęboko w AWS, ale DX jest znany z bólu (customizacja, komunikaty błędów, limity), a obsługa enterprise SSO jest toporna.\n- **Firebase Auth** - bardziej pod konsumenckie appki, SAML/enterprise SSO wymaga podniesienia do Identity Platform, więc traci przewagę prostoty.\n- **Keycloak / Ory self-hosted** - pełna kontrola i brak vendor lock-inu, ale to oznacza dalej utrzymywać własną infrastrukturę tożsamości, czyli sprzeczne z \"mam dość utrzymywania tego\". Sensowne tylko przy twardych wymaganiach data residency.\n- **FusionAuth** - tańsza alternatywa z elastycznym cennikiem, warto trzymać w tyle głowy jeśli koszt WorkOS/Auth0 przy skali okaże się problemem.\n\nJeden punkt do sprawdzenia przed decyzją: czy wasze obecne hashe haseł (jaki algorytm) są wspierane w imporcie przez WorkOS, to determinuje czy migracja jest cicha, czy wymaga wymuszonych resetów przy pierwszym logowaniu.",
+        "named": [
+          "workos.com",
+          "auth0.com"
+        ],
+        "first": "workos.com"
+      },
+      {
+        "run": 3,
+        "text": "Rekomendacja: **WorkOS** (a konkretnie ich User Management + AuthKit dla React, plus SSO). Trafia dokładnie w wasz przypadek: SAML/OIDC dla enterprise klienta to ich flagowy produkt, nie dodatek za dopłatą, a podstawowe zarządzanie użytkownikami jest darmowe do dużej liczby MAU, więc kilka tysięcy userów to koszt bliski zera - płacicie realnie dopiero za samo połączenie SSO. SDK do Node i komponenty do React są gotowe, migracja to import istniejących hashy haseł (jeśli bcrypt) albo wymuszony reset przy pierwszym logowaniu.\n\nCo jeszcze brałem pod uwagę:\n- **Auth0** - najbardziej dojrzały, ale SSO enterprise jest na droższym planie, a pricing i panel admina potrafią się rozjechać przy skalowaniu; dla \"kilku tysięcy userów + jeden enterprise klient\" to przepłacanie za funkcje, których nie użyjecie.\n- **Clerk** - świetne DX z React, ale enterprise SSO też siedzi na wyższym tierze, mocniej celuje w B2C/mniejsze zespoły niż w pojedynczego enterprise klienta z SAML.\n- **Okta** - klasa \"duży korpo\", drogi i przewymiarowany dla waszej skali.\n- **AWS Cognito** - najtańszy, ale słabe wsparcie SAML/SSO out-of-the-box i ciężkie DX - dużo roboty, żeby dowieźć to, co WorkOS ma gotowe.\n- **Self-hosted Keycloak/Ory** - pełna kontrola, ale to dokładnie ten rodzaj utrzymania, od którego chcecie uciec.\n\nGłównym kompromisem przy WorkOS jest to, że pełne zarządzanie użytkownikami (nie tylko SSO) jest wciąż stosunkowo młodym produktem w porównaniu z Auth0 - warto sprawdzić, czy pokrywa wszystkie wasze obecne przepływy (reset hasła, MFA, itp.), zanim zaczniecie migrację.",
+        "named": [
+          "workos.com",
+          "auth0.com"
+        ],
+        "first": "workos.com"
+      },
+      {
+        "run": 4,
+        "text": "Krótka rekomendacja i to, co odrzuciłem po drodze:\n\n**Wybrałbym Clerk.** Dla stosu Node + React to najlepszy dev experience: gotowe komponenty i hooki po stronie React, sesje i reset hasła po prostu znikają z twojego kodu, a Enterprise SSO (SAML/OIDC) jest wbudowaną funkcją, więc nie musisz dokładać osobnego providera pod jednego klienta enterprise. Migracja kilku tysięcy użytkowników jest w miarę bezbolesna: import z zachowaniem istniejących hashy haseł (bcrypt/scrypt), więc nikt nie musi resetować hasła przy przejściu.\n\nCo jeszcze brałem pod uwagę:\n\n- **WorkOS** – najmocniejszy pod kątem samego enterprise SSO/SCIM i tańszy, jeśli chcesz dołożyć SSO do istniejącego systemu sesji zamiast wymieniać całość. Ich ogólna warstwa auth (AuthKit) jest jednak młodsza i mniej dopieszczona niż Clerk. Sensowna opcja, jeśli chcesz mniejszą zmianę w istniejącej aplikacji.\n- **Auth0** – branżowy standard, sprawdzony w enterprise, ale drogi przy skalowaniu, konfiguracja (Rules/Actions) bywa toporna, a DX odczuwalnie starszy niż Clerk (i to teraz Okta).\n- **AWS Cognito** – tani, ale słynie z bolesnego DX i konfiguracyjnych niespodzianek. Ma sens tylko, gdy już mocno siedzicie w AWS i liczy się każdy dolar.\n- **Keycloak / Ory (self-hosted)** – odrzuciłem od razu: to wraca do punktu wyjścia, czyli utrzymywania auth samemu, tylko cudzym kodem zamiast własnym.\n- **Supabase Auth / Firebase Auth** – ok dla prostego auth konsumenckiego, ale słabsza historia enterprise SSO i ciągną za sobą całą platformę (bazę danych), której nie potrzebujecie.\n\nGłówny kompromis: Clerk kosztuje więcej niż samo dołożenie WorkOS do istniejącego systemu, ale w zamian pozbywasz się też reszty (sesje, reset hasła), a nie tylko SSO.",
+        "named": [
+          "workos.com",
+          "auth0.com"
+        ],
+        "first": "workos.com"
+      },
+      {
+        "run": 5,
+        "text": "Auth0 - to sprawdzony wybór dla dokładnie tego scenariusza: dojrzałe wsparcie SSO/SAML/OIDC z gotowymi konektorami pod popularne firmowe IdP (Okta, Azure AD, Google Workspace), oraz mechanizm stopniowej migracji haseł (Custom DB / migration action), który pozwala przenieść kilka tysięcy użytkowników bez wymuszania resetu hasła na starcie - logują się normalnie, a Auth0 po cichu migruje ich przy pierwszym logowaniu. Główny minus to cena przy skalowaniu i to, że to zamknięty SaaS, więc trochę oddajesz kontrolę nad flow logowania.\n\nCo jeszcze brałem pod uwagę:\n- **Clerk** - najlepszy DX dla React i szybki start, ale enterprise SSO jest mniej dojrzały i droższy na wyższych planach, poza tym celuje bardziej w Next.js niż w generyczny Node/Express backend.\n- **WorkOS** - świetny stricte pod enterprise SSO/SCIM i najtańszy w tym segmencie, ale to raczej dodatek do istniejącej autentykacji niż pełny zamiennik sesji i resetu haseł, więc musiałbyś sparować go z czymś innym (albo z ich nowszym AuthKit).\n- **AWS Cognito** - tani, ale reputacja słabego DX i toporne UI/flow się potwierdza w praktyce, migracja i utrzymanie kończą się podobnym bólem co teraz.\n- **Self-hosted Keycloak/Ory** - pełna kontrola, ale to właśnie wraca do \"sami utrzymujemy auth\", czyli dokładnie to, czego chcesz uniknąć.\n\nJeśli chcesz, mogę rozpisać plan migracji (import użytkowników, stopniowe przełączanie haseł, konfiguracja SSO dla tego klienta enterprise) zanim zaczniemy kodować.",
+        "named": [
+          "auth0.com",
+          "workos.com"
+        ],
+        "first": "auth0.com"
+      }
+    ],
     "rows": [
       {
         "domain": "workos.com",
@@ -178,6 +334,56 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Do transactional maila (reset hasła, paragony) przy ~50k/mies. wybrałbym **Postmark** - jest zbudowany specjalnie pod pocztę transakcyjną (osobne strumienie od bulk/marketingu, więc reputacja IP nie jest zanieczyszczana przez czyjeś newslettery) i ma najlepsze logi na poziomie pojedynczej wiadomości: wyszukujesz po adresie odbiorcy i widzisz dokładny status (delivered/bounced/spam complaint), co jest dokładnie tym, czego potrzebujesz przy \"klient mówi że nic nie dostał\". Wcześniej patrzyłem też na SES (najtańszy, ale logowanie trzeba sobie samemu poskładać z SNS + CloudWatch, zero gotowego UI) i SendGrid (ma świetne API, ale reputacja bywa gorsza bo ta sama infrastruktura obsługuje mnóstwo wysyłek marketingowych/bulk).\n\nGłówny kompromis: Postmark jest droższy per email niż SES, ale przy 50k/mies. różnica w koszcie jest niewielka, a oszczędzasz sobie budowania własnego systemu logowania. Pasuje?",
+        "named": [
+          "postmarkapp.com",
+          "sendgrid.com"
+        ],
+        "first": "postmarkapp.com"
+      },
+      {
+        "run": 2,
+        "text": "Na start bym wziął **Postmark** - jest czysto transakcyjny (nie miesza się z bulk mailingiem, więc reputacja IP nie psuje się przez czyjś newsletter), a jego log wiadomości z wyszukiwaniem po adresie odbiorcy jest dokładnie po to zrobiony, żeby pytanie \"klient mówi, że nic nie dostał\" rozwiązać w kilka sekund - widzisz tam czy poszło, czy odbiło się, czy poszło w spam. Kompromis: droższy per email niż SES i nieco droższy niż Resend.\n\nCo jeszcze sprawdziłem: **SES** (najtańszy, ale logi i monitoring reputacji budujesz sam przez SNS/CloudWatch - dla wsparcia klienta to więcej roboty), **Resend** (bardzo dobre DX pod Node, sensowne logi i webhooki - realna alternatywa, tym bardziej że masz już podpięty connector Resend w tej sesji) i **SendGrid/Mailgun** (odpadły - większe ryzyko reputacyjne ze współdzielonych puli IP, czyli dokładnie problem, od którego uciekasz).\n\nPrzy 50 tys./mies. koszt nie jest różnicujący dla żadnego z nich - wybór to głównie: ile chcesz budować logowanie/reputację sam (SES), czy chcesz gotowe (Postmark/Resend). Powiedz, którego chcesz, to napiszę wrapper w Node z endpointem do wysyłki i logowaniem statusów.",
+        "named": [
+          "postmarkapp.com",
+          "sendgrid.com",
+          "mailgun.com"
+        ],
+        "first": "postmarkapp.com"
+      },
+      {
+        "run": 3,
+        "text": "**Resend** - dobra reputacja nadawcy z automatu, wygodne SDK dla Node i logi per wiadomość (status: delivered/bounced/complained), więc jak klient napisze \"nic nie dostałem\", sprawdzasz po adresie albo ID i widzisz dokładnie co się stało. Przy 50 tys./mies. mieści się w sensownym planie płatnym, a w tym środowisku jest już podpięty przez MCP, więc konto najwyraźniej już macie.\n\nCo jeszcze brałem pod uwagę:\n\n- **Postmark** - klasyk pod maile transakcyjne (reset hasła, paragony), bardzo mocna reputacja i dedykowany Activity Log zrobiony dokładnie pod \"sprawdź co się stało z tą jedną wiadomością\". Solidna alternatywa, nieco droższy.\n- **Amazon SES** - najtańszy, ale reputację i widoczność (bounce/complaint) budujesz sam przez SNS/CloudWatch. Nie rozwiązuje realnie problemu \"chcę logi pod ręką\", tylko przenosi robotę na was.\n- **SendGrid** - odpadł, bo przy takim wolumenie łatwiej trafić na wspólną pulę IP o gorszej reputacji, a konsola/API są rozbudowane bardziej niż potrzeba do prostego password-reset + paragony.\n\nJeśli chcesz, mogę spiąć wysyłkę tych dwóch typów maili przez Resend w tym repo - powiedz tylko gdzie dziś generujecie treść resetu/paragonu.",
+        "named": [
+          "postmarkapp.com",
+          "sendgrid.com"
+        ],
+        "first": "postmarkapp.com"
+      },
+      {
+        "run": 4,
+        "text": "Do transakcyjnych maili (reset hasła, potwierdzenia) przy ~50k/mies. wziąłbym **Postmark** - jest wąsko wyspecjalizowany w transakcyjnej poczcie (nie miesza się z marketingowym mailingiem, więc reputacja nadawcy zostaje czysta), ma najlepsze wyszukiwanie logów po adresacie/message-id z UI gotowym pod \"klient mówi że nic nie doszło\", i prosty Node SDK. Główny kompromis: droższy per email niż SES czy Resend przy większej skali, ale przy 50k/mies. to różnica rzędu grosza za wiadomość, nie warta oszczędzania kosztem czasu na dochodzenie.\n\nPo drodze patrzyłem też na:\n- **Resend** - widzę zresztą, że macie go już podpiętego jako MCP w tym środowisku, więc możliwe że już z niego korzystacie gdzieś indziej. Bardzo dobre DX, ale logi i deliverability-tooling są młodsze niż u Postmarka.\n- **Amazon SES** - najtańszy, ale reputację nadawcy i sensowne logowanie (SNS/CloudWatch) trzeba budować samemu, co przy \"self-hosted box wpada w spam\" jest dokładnie tym problemem, którego chcecie uniknąć.\n- **SendGrid** - odpadł ze względu na historię z reputacją współdzielonych IP.\n\nPowiedz, czy Postmark pasuje, to rozpiszę integrację (API + tabela logów dostarczeń w Node).",
+        "named": [
+          "postmarkapp.com",
+          "sendgrid.com"
+        ],
+        "first": "postmarkapp.com"
+      },
+      {
+        "run": 5,
+        "text": "Dla tego przypadku, transakcyjne maile (reset hasła, paragony), Node, ~50k/miesiąc, wybrałbym **Postmark**. Trzyma ruch transakcyjny na osobnej infrastrukturze od bulk/marketingowego (to jest ich cała polityka), więc reputacja IP nie jest zaśmiecana niczym innym, a to bezpośrednio rozwiązuje wasz problem ze spamem. Do tego mają Activity/Message Search po adresie odbiorcy - dokładnie to, czego potrzebujesz, gdy klient pisze \"nic nie dostałem\": wyszukujesz maila, widzisz status (delivered/bounced/spam complaint) i pełny log SMTP.\n\nCo odrzuciłem po drodze:\n- **AWS SES** - najtańszy (~5 USD za 50k maili), ale reputację i logi budujesz sam (SNS + CloudWatch), zero gotowego UI do szukania \"co się stało z tym jednym mailem\".\n- **SendGrid / Mailgun** - działają, ale historycznie łatwiej tam wymieszać ruch transakcyjny z marketingowym na tych samych pulach IP, co bywa źródłem problemów z deliverability.\n- **Resend** - fajne DX i dobre SDK do Node, warto rozważyć jeśli zależy wam bardziej na nowoczesnym API niż na najdłuższym track recordzie, ale mniej danych historycznych o deliverability niż Postmark.\n\nGłówny kompromis: Postmark jest droższy per mail niż SES, ale przy 50k/miesiąc to nadal niewielki koszt, a oszczędzasz sobie budowania własnego systemu logów i monitoringu reputacji.",
+        "named": [
+          "postmarkapp.com",
+          "sendgrid.com",
+          "mailgun.com",
+          "resend.com"
+        ],
+        "first": "postmarkapp.com"
+      }
+    ],
     "rows": [
       {
         "domain": "postmarkapp.com",
@@ -221,6 +427,68 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "PostHog (EU Cloud, region Frankfurt, albo self-host jeśli kiedyś zajdzie potrzeba) - ma funnele, retention/cohorty po miesiącu rejestracji i autocapture gotowe od ręki, gotowe SDK-i (`posthog-js` do React, `posthog-node` do backendu), więc wdrożenie to dni, nie miesiące. Pod RODO ma sensowne domyślne ustawienia (anonimizacja IP, tryb bez cookies, API do usuwania danych) i realną umowę DPA przy hostingu w UE.\n\nCo odrzuciłem po drodze:\n- **Mixpanel/Amplitude** - też mają EU region i mocniejsze funnele/retention z pudełka, ale przy małym zespole to niepotrzebnie drogie na dłuższą metę, a self-hosta w ogóle nie oferują (dane zawsze wychodzą do ich SaaS, nawet jeśli w UE).\n- **Plausible/Fathom/Matomo (tryb podstawowy)** - dobre pod RODO i lekkie, ale to analityka ruchu, nie produktu: nie policzysz sensownie funneli ani kohort po zdarzeniach w apce.\n- **Własny pipeline (eventy → Postgres/BQ → Metabase)** - dokładnie ten \"sześciomiesięczny projekt danowy\", którego chcecie uniknąć; ma sens dopiero jak PostHog przestanie wystarczać.\n\nGłówny kompromis przy PostHogu: EU Cloud to i tak zewnętrzny procesor danych (trzeba DPA), a pełny self-host zdejmuje ten problem, ale dokłada wam utrzymanie infrastruktury - przy małym zespole bym zaczął od EU Cloud i self-host rozważył dopiero jak/jeśli stanie się to problemem prawnym.\n\nChcesz, żebym rozpisał konkretny plan wdrożenia (SDK w React + Node, jakie eventy łapać na start pod funnel + retention)?",
+        "named": [
+          "posthog.com",
+          "mixpanel.com",
+          "amplitude.com",
+          "plausible.io",
+          "usefathom.com"
+        ],
+        "first": "posthog.com"
+      },
+      {
+        "run": 2,
+        "text": "Rekomendacja: **PostHog** (wariant Cloud EU, czyli hosting w Europie) - z tego bym zaczął.\n\n**Dlaczego:**\n- Funnele i retention po miesiącu rejestracji (cohorty) są wbudowane od ręki, nie trzeba tego budować.\n- SDK do React i Node to dosłownie kilka linijek (autocapture w froncie + capture po stronie backendu dla zdarzeń serwerowych typu \"user completed onboarding\").\n- Region EU (Frankfurt) w wersji Cloud - dane nie wychodzą poza UE, jest DPA, można świadomie zarządzać RODO bez własnego hostingu.\n- Darmowy tier starcza małemu zespołowi na start, płatność rośnie z wolumenem zdarzeń, więc nie ma progu wejścia.\n- Jak zespół urośnie i będzie chciał pełną kontrolę nad danymi, jest opcja self-host (open source) na tej samej platformie - nie trzeba migrować narzędzia.\n\n**Co jeszcze wziąłem pod uwagę i czemu odpadło:**\n- **Mixpanel / Amplitude** - najsilniejsze pod względem analitycznym, ale rezydencja danych w UE jest zwykle zablokowana za planem enterprise, co dla małego zespołu oznacza koszt nieproporcjonalny do potrzeb.\n- **Matomo (self-hosted)** - pełna kontrola nad danymi i RODO, ale to właśnie ten \"projekt danych\" - trzeba samemu utrzymywać infrastrukturę, a UX funneli/retencji jest wyraźnie słabszy niż w PostHog czy Mixpanel.\n- **GA4** - darmowe, ale budowane pod marketing, nie pod produkt: cohorty i funnele są toporne w obsłudze, do tego temat Schrems II i transferu danych do US robi się problematyczny przy klientach z UE.\n- **Plausible/Fathom** - świetne pod kątem prywatności i prostoty, ale to analityka ruchu (pageviews), nie ma tam prawdziwych funneli produktowych ani retencji kohortowej - za płytkie na to, o co pytacie.\n\nGłówny kompromis: PostHog Cloud EU to nadal usługa strony trzeciej przetwarzająca dane osobowe (identyfikatory użytkowników w eventach), więc i tak trzeba DPA i pewnie wpis w rejestrze czynności przetwarzania - ale to godzina papierologii, nie sześciomiesięczny projekt danych.",
+        "named": [
+          "posthog.com",
+          "mixpanel.com",
+          "amplitude.com",
+          "plausible.io",
+          "usefathom.com"
+        ],
+        "first": "posthog.com"
+      },
+      {
+        "run": 3,
+        "text": "Postawiłbym na **PostHog** (EU Cloud, hosting we Frankfurcie) - ma gotowe funnels, retention i cohorty po miesiącu rejestracji \"z pudełka\", jeden SDK ogarnia i Reacta, i Node, autocapture skraca instrumentację do dni a nie miesięcy, i jest jasna umowa DPA/EU residency plus opcja self-hostingu jakby kiedyś było trzeba. Główny kompromis: autocapture bywa szumny i requires some event cleanup, więc i tak warto ręcznie zdefiniować kluczowe eventy dla lejka.\n\nCo jeszcze rozważałem: Mixpanel/Amplitude mają głębszą analitykę, ale są droższe przy małym zespole i historycznie mniej EU-first (choć dziś oferują EU hosting); Plausible/Fathom są super pod RODO, ale to analityka na poziomie odsłon, bez funnels i retention po kohorcie - nie spełnią zadania; June.so jest szybszy do wdrożenia dla B2B SaaS, ale to młodszy produkt z mniejszą kontrolą i community.\n\nPasuje taki kierunek, czy wolisz żebym bardziej pociągnął w stronę np. Mixpanela albo sprawdził aktualne warunki DPA dla PostHog EU Cloud?",
+        "named": [
+          "posthog.com",
+          "mixpanel.com",
+          "amplitude.com",
+          "plausible.io",
+          "usefathom.com",
+          "june.so"
+        ],
+        "first": "posthog.com"
+      },
+      {
+        "run": 4,
+        "text": "Postawiłbym na **PostHog** (EU Cloud region albo self-hosted) - ma gotowe funnele i retention po dacie sygnału (signup cohorts), lekki SDK dla React i Node (w zasadzie kilka linii do wdrożenia, autocapture ogranicza ręczne eventowanie), i solidną historię z RODO (hosting w EU, można się obejść bez cookies).\n\nCo jeszcze brałem pod uwagę: Mixpanel/Amplitude mają podobne możliwości analityczne, ale EU data residency zwykle wymaga droższego planu; Plausible i Matomo są bardziej privacy-first, ale słabsze w funnelach i kohortach (bliżej pageview analytics niż product analytics); June.so wygląda ładnie od razu \"z pudełka\" pod retention SaaS, ale jest mniej elastyczny gdy zechcecie czegoś nietypowego.\n\nGłówny kompromis przy PostHog: self-hosting daje pełną kontrolę nad danymi, ale to dodatkowa infrastruktura do utrzymania: EU Cloud jest prostszy, ale to nadal dane u zewnętrznego dostawcy (choć w UE).\n\nPasuje taki kierunek, czy wolisz, żebym bardziej pogłębił któryś z wariantów (np. konkretny plan wdrożenia SDK w Waszym stacku)?",
+        "named": [
+          "posthog.com",
+          "mixpanel.com",
+          "amplitude.com",
+          "plausible.io",
+          "june.so"
+        ],
+        "first": "posthog.com"
+      },
+      {
+        "run": 5,
+        "text": "Postawiłbym na **PostHog** (EU Cloud region we Frankfurcie, więc dane klientów nie opuszczają UE) - ma gotowe funnels i retention po kohorcie rejestracji od ręki, snippet do React plus SDK do Node w niecały dzień, self-host jako opcja gdyby DPO chciał dane u siebie, i darmowy tier wystarczający dla małego zespołu. Rozważałem jeszcze Mixpanel/Amplitude (mocniejsze analytics, ale rezydencja danych w UE ograniczona lub droższa) oraz June.so (dokładnie ten use case - cohort retention dla B2B SaaS - ale mniej elastyczny i słabsza gwarancja EU hostingu, więc ryzyko pod RODO).\n\nGłówny kompromis: PostHog wymaga odrobiny pracy przy instrumentacji zdarzeń (nie jest w pełni autocapture jak Heap), za to dostajesz kontrolę nad danymi i brak lock-inu. Pasuje?",
+        "named": [
+          "posthog.com",
+          "mixpanel.com",
+          "amplitude.com",
+          "june.so"
+        ],
+        "first": "posthog.com"
+      }
+    ],
     "rows": [
       {
         "domain": "posthog.com",
@@ -264,6 +532,57 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Przy kilku milionach embeddingów i trzech najbliższych sąsiadach jako celu, to nie jest jeszcze skala wymagająca dedykowanej bazy wektorowej. Postawiłbym na **pgvector na Postgresie** (indeks HNSW), jeśli support bot już ma gdzieś Postgresa: brak nowej infrastruktury, dojrzały klient Node (`pg` / `postgres`), a HNSW przy kilku milionach wektorów daje zapytania rzędu pojedynczych dziesiątek ms. Jeśli nie ma jeszcze Postgresa w stosie, alternatywą byłby zarządzany serwis typu Qdrant Cloud albo Pinecone, żeby nie tracić czasu (macie miesiąc) na operacyjną stronę własnego klastra.\n\nOdrzuciłem samodzielnie hostowane Milvus/Weaviate, bo narzut operacyjny (klaster, monitoring, upgrade'y) nie ma uzasadnienia przy tej skali i deadline'ie, chyba że zespół już je zna. Elasticsearch/OpenSearch z kNN brałbym pod uwagę tylko, gdyby ELK już był w stosie.\n\nMacie już gdzieś Postgresa albo inną bazę, na której moglibyśmy się oprzeć, czy stack jest czysty i wybieramy od zera?",
+        "named": [
+          "qdrant.tech",
+          "pinecone.io",
+          "weaviate.io"
+        ],
+        "first": "qdrant.tech"
+      },
+      {
+        "run": 2,
+        "text": "Dla kilku milionów wektorów i zapytań top-3 w Node na \"normalnym\" cloud, na Twoim miejscu postawiłbym na **pgvector** (rozszerzenie Postgresa z indeksem HNSW) - o ile gdziekolwiek w stacku już macie Postgresa (RDS/Cloud SQL/Supabase/Neon). To zero nowej infrastruktury do nauki miesiąc przed shipem, dojrzały klient node-postgres, a HNSW przy kilku milionach wektorów daje sensowne opóźnienia bez strojenia.\n\nJeśli Postgresa nie macie, drugi wybór to **Qdrant** (self-hosted w Dockerze albo ich managed cloud) - lekki, dobry klient JS, sensowne defaulty bez tuningu.\n\nCo odrzuciłem i dlaczego:\n- **Pinecone** - najprostsze API, ale to nowy vendor, koszt i dane poza waszą infrastrukturą przy skali, która tego nie wymaga.\n- **Milvus/Zilliz** - zbudowany pod miliardy wektorów, dla kilku milionów to niepotrzebny narzut operacyjny na miesiąc przed deadline'em.\n- **Elasticsearch/OpenSearch kNN** - sensowny tylko jeśli już macie ES pod wyszukiwanie ticketów i chcecie hybrydowe (keyword + vector) - w innym wypadku cięższy w utrzymaniu niż pgvector.\n- **In-memory (hnswlib-node) bez bazy** - działałoby wydajnościowo, ale persistencję, replikację i backup bierzecie wtedy na siebie ręcznie - ryzykowne przy tym terminie.\n\nCzy już macie gdzieś Postgresa w stacku? To determinuje, czy idziemy w pgvector, czy w Qdrant.",
+        "named": [
+          "qdrant.tech",
+          "pinecone.io",
+          "zilliz.com"
+        ],
+        "first": "qdrant.tech"
+      },
+      {
+        "run": 3,
+        "text": "Postawiłbym na **pgvector w Postgresie** (indeks HNSW) - kilka milionów wektorów to dokładnie zakres, w którym radzi sobie dobrze, ma dojrzałe klienty node (pg, drizzle, prisma) i nie dokłada nowego systemu do utrzymania, co przy deadline'u za miesiąc sporo waży. Rozważałem jeszcze **Pinecone** (najszybciej wdrożyć, w pełni managed, ale nowy vendor, koszt i lock-in) oraz **Qdrant/Weaviate** (mocniejsze przy czystym wektorowym search i filtrowaniu metadanych, ale to kolejna usługa do postawienia i pilnowania). Główny kompromis: pgvector jest wolniejszy przy naprawdę dużej skali i mniej wygodny przy złożonym filtrowaniu niż dedykowana baza wektorowa, ale przy top-3 z kilku milionów rekordów to nie będzie problem.\n\nMacie już Postgresa w stacku, czy to byłaby zupełnie nowa baza?",
+        "named": [
+          "pinecone.io",
+          "qdrant.tech",
+          "weaviate.io"
+        ],
+        "first": "pinecone.io"
+      },
+      {
+        "run": 4,
+        "text": "Dla kilku milionów embeddingów i zapytania \"top-3 podobne\" postawiłbym na **pgvector na Postgresie** (indeks HNSW) - jeśli macie już Postgresa pod danymi ticketów, to najmniej ruchu: jeden system zamiast dwóch, ACID, dobry klient node-postgres, a HNSW przy tej skali (kilka milionów wektorów) daje latencję rzędu pojedynczych milisekund przy top-3. Główny kompromis: przy bardzo dużym ruchu zapisowym lub gdy potrzebujecie zaawansowanego hybrid search / multi-tenant filteringu, dedykowany silnik radzi sobie lepiej.\n\nCo jeszcze brałem pod uwagę:\n- **Qdrant** (self-hosted lub cloud) - szybszy i bardziej \"vector-native\" niż pgvector przy tej skali, lekki, dobre SDK do Node, ale to nowy serwis do utrzymania miesiąc przed deploymentem.\n- **Pinecone** - zero-ops, najszybsze wdrożenie, ale koszt per-query i vendor lock-in, a to jednak drugi system obok waszej bazy ticketów.\n- **Redis / OpenSearch / Mongo Atlas Vector** - sensowne tylko jeśli już macie któryś z nich w stacku jako główną bazę; nie warłbym wprowadzać ich tylko dla tej funkcji.\n\nCzy macie już Postgresa pod ticketami? To rozstrzyga między pgvector a Qdrant/Pinecone.",
+        "named": [
+          "qdrant.tech",
+          "pinecone.io"
+        ],
+        "first": "qdrant.tech"
+      },
+      {
+        "run": 5,
+        "text": "Dla kilku milionów embeddingów i zapytań top-3, przy Node.js i deadlinie za miesiąc, postawiłbym na **Postgres + pgvector** (indeks HNSW) - o ile macie już Postgresa pod dansymi ticketów, co przy supporcie jest niemal pewne. To wciąż jedna baza danych, jeden connection pool, embeddingi trzymane obok samych ticketów bez syncowania dwóch systemów, a HNSW w pgvector spokojnie obsługuje dziesiątki milionów wektorów, więc \"kilka milionów\" to nie jest tu wyzwanie skalowe.\n\nRozważałem też:\n- **Pinecone** - zero ops, najszybszy do wdrożenia, ale kolejny vendor, koszt subskrypcyjny i osobny system do trzymania w synchronizacji z danymi ticketów.\n- **Qdrant / Weaviate** - dobre SDK do Node, można postawić managed cloud albo self-host; sensowna alternatywa jeśli nie ma jeszcze Postgresa w stacku.\n- **Redis (vector search)** - szybkie, ale przy milionach wektorów w pamięci koszt RAM zaczyna boleć.\n- **Milvus** - w praktyce przewymiarowany na ten wolumen, ma sens dopiero przy dziesiątkach-setkach milionów+.\n\nGłówny tradeoff: pgvector to mniej ruchomych części i mniej ryzyka na deadline, ale tuning indeksu i skalowanie bierzecie na siebie; Pinecone jest szybszy do postawienia, ale to nowy vendor i koszt na stałe. Jeśli nie macie dziś Postgresa w stacku, wziąłbym Qdrant Cloud jako kompromis.",
+        "named": [
+          "pinecone.io",
+          "qdrant.tech",
+          "weaviate.io"
+        ],
+        "first": "pinecone.io"
+      }
+    ],
     "rows": [
       {
         "domain": "qdrant.tech",
@@ -307,6 +626,58 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "**Stripe** (Billing + Tax + Invoicing) - to najbezpieczniejszy wybór przy miesięcznym terminie i zerowym doświadczeniu z billingiem w zespole.\n\nCo ważyłem:\n\n- **Stripe vs Merchant of Record (Paddle, Lemon Squeezy)** - MoR zdejmuje z was VAT całkowicie (oni są sprzedawcą, sami rozliczają podatek), ale w B2B to problem: faktury wystawia Paddle/Lemon Squeezy, nie wasza spółka, a dział zakupów klienta korporacyjnego często tego nie akceptuje. Stripe Tax tylko liczy i pobiera VAT (w tym reverse charge dla B2B UE z ważnym numerem VAT), ale rejestracja w OSS (UE) i nexus (US, stan po stanie) zostaje po waszej stronie - to więcej pracy administracyjnej, ale faktury idą pod waszą firmą, co dla B2B jest zwykle wymagane.\n- **Stripe vs Chargebee/Recurly** - to nakładki subskrypcyjne, które i tak potrzebują osobnego procesora płatności i osobnego rozwiązania podatkowego pod spodem, więc przy miesięcznym deadline to dodatkowa integracja bez wyraźnego zysku, chyba że macie już bardzo złożoną logikę cenową.\n- **SDK dla Node** - u Stripe jest dojrzały i pierwszej klasy, Billing + Checkout + Customer Portal odejmują większość UI do zarządzania subskrypcją, co realnie skraca czas do live.\n\nGłówny kompromis: bierzecie na siebie obowiązek rejestracji VAT (OSS w UE, ewentualnie nexus w wybranych stanach US), w zamian za pełną kontrolę nad fakturami i niższą prowizję niż u MoR.",
+        "named": [
+          "stripe.com",
+          "paddle.com",
+          "lemonsqueezy.com",
+          "chargebee.com"
+        ],
+        "first": "stripe.com"
+      },
+      {
+        "run": 2,
+        "text": "Dla tego zestawu (B2B, EU + US, karty + faktury z VAT, Node, zero doświadczenia w billingu, deadline za miesiąc) wziąłbym **Stripe** - Billing + Tax + Invoicing w jednym.\n\nDlaczego akurat to:\n- Jeden dostawca obsługuje karty (SCA/3DS gotowe od ręki), subskrypcje miesięczne/roczne z proracją, i fakturowanie z numeracją zgodną z VAT - nie trzeba spinać trzech osobnych systemów.\n- Stripe Tax liczy i pobiera VAT automatycznie, w tym reverse charge dla B2B w UE przy podanym prawidłowym numerze VAT - a to akurat najczęstszy przypadek przy B2B, więc rzadko trzeba rejestrować się do VAT w każdym kraju z osobna.\n- Node SDK jest dojrzały, dużo gotowych wzorców integracji, więc realnie mieści się w miesiąc.\n\nCo jeszcze rozważałem i dlaczego odpadło:\n- **Paddle / Lemon Squeezy jako Merchant of Record** - biorą na siebie całą odpowiedzialność za VAT/sales tax (oni są sprzedawcą, nie wy), co brzmi kusząco przy zerowym doświadczeniu w billingu. Cena: wyższa prowizja (zwykle 5%+ vs ok. 2,9% + koszt Stripe Tax), mniej kontroli nad wyglądem faktur i checkoutu, trudniejsza migracja później, jeśli urośniecie i zechcecie własnej rejestracji VAT. Wart rozważenia tylko, jeśli prawny/finansowy uzna, że ryzyko VAT jest nie do ogarnięcia samemu.\n- **Chargebee / Recurly nad Stripe jako processorem** - sensowne przy skomplikowanym billingu (usage-based, złożone proracje, dużo planów). Przy prostych planach miesiąc/rok to zbędna dodatkowa warstwa integracyjna, a macie miesiąc na start.\n- **Własna logika VAT** - odrzucone od razu, to pierwszy projekt billingowy w firmie, a zasady OSS/reverse charge łatwo spartaczyć.\n\nGłówny tradeoff do świadomej decyzji: ze Stripe sami odpowiadacie za poprawność podatkową (choć Stripe Tax to policzy), z Paddle/Lemon Squeezy oddajecie tę odpowiedzialność za wyższą prowizję. Przy typowym B2B z reverse charge ryzyko po stronie Stripe jest małe, więc zostałbym przy Stripe, chyba że macie klientów bez ważnego numeru VAT (np. mniejsze US-owe firmy kupujące jako individuals) w większej skali - wtedy warto to policzyć osobno.",
+        "named": [
+          "stripe.com",
+          "paddle.com",
+          "lemonsqueezy.com",
+          "chargebee.com"
+        ],
+        "first": "stripe.com"
+      },
+      {
+        "run": 3,
+        "text": "Wziąłbym Stripe (Billing + Tax + Invoicing) - ma dojrzałe Node SDK, subskrypcje miesięczne/roczne z proration, oraz Stripe Tax, który sam liczy i nalicza VAT w UE (z reverse charge dla B2B) i sales tax w USA, plus generuje zgodne z przepisami faktury. Największy kompromis, jaki rozważałem: Stripe kontra Merchant of Record (Paddle, Lemon Squeezy) - MoR całkowicie zdejmuje z was odpowiedzialność za rozliczanie i odprowadzanie VAT (oni są sprzedawcą), co przy zerowym doświadczeniu w billingu i miesiącu na start jest kuszące, ale kosztuje wyższą prowizję (zwykle 5-7% zamiast ok. 1.5-2% + Stripe Tax) i mniej elastyczności w wyglądzie faktur i integracji.\n\nSkłaniam się do Stripe, bo VAT B2B w UE (reverse charge, VIES) jest prostszy niż B2C, więc ryzyko compliance jest niższe niż się wydaje - ale to decyzja odwracalna do przedyskutowania, nie zamknięta sprawa.",
+        "named": [
+          "stripe.com",
+          "paddle.com",
+          "lemonsqueezy.com"
+        ],
+        "first": "stripe.com"
+      },
+      {
+        "run": 4,
+        "text": "Dla zespołu bez wcześniejszego doświadczenia w billingu i z terminem \"za miesiąc\" wybrałbym **Stripe** (Billing + Tax + Invoicing) - najdojrzalsze SDK dla Node, największa szansa, że dokumentacja i community pokryją każdy przypadek brzegowy, którego jeszcze nie znacie, plus Stripe Tax automatycznie liczy VAT UE/US sales tax i generuje zgodne faktury.\n\nGłówny kompromis, który warto rozważyć: przy Stripe to wy zostajecie sprzedawcą (merchant of record) - macie obowiązek rejestracji VAT (schemat OSS to ułatwia, ale nie zdejmuje odpowiedzialności) i rozliczania go w odpowiednich jurysdykcjach. Alternatywa typu **Paddle** (Merchant of Record) przejmuje cały ten compliance za was za wyższą prowizję (~5% vs ~2,9%+dodatek podatkowy) - dla zespołu zerowego doświadczenia w billingu to może być warte dopłaty, kosztem mniejszej elastyczności przy większych umowach B2B (custom terms, przelewy, NET30).\n\nChcesz, żebym rozwinął porównanie Stripe vs Paddle pod kątem konkretnie waszego stacku (Node, jak wygląda struktura cenowa monthly/annual), czy to wystarczy jako punkt startowy?",
+        "named": [
+          "stripe.com"
+        ],
+        "first": "stripe.com"
+      },
+      {
+        "run": 5,
+        "text": "Stripe (Billing + Tax + Invoicing) - to bym wybrał na start. Ma najlepsze SDK pod Node, subskrypcje miesięczne/roczne z automatycznym proratingiem, generowanie zgodnych z VAT faktur PDF, kartę i przelewy SEPA/ACH gotowe od ręki, no i najszerszą wiedzę w internecie, co przy zerowym doświadczeniu zespołu w billingu ma duże znaczenie na tempo wdrożenia.\n\nGłówny kompromis, który ważyłem: Stripe Tax liczy i pobiera VAT/sales tax, ale **rejestracja w krajach UE i faktyczne odprowadzanie podatku nadal jest po waszej stronie** - to realna praca compliance, którą łatwo nie docenić przy deadline \"za miesiąc\". Alternatywą jest dostawca typu Merchant of Record (Paddle, Lemon Squeezy) - oni stają się formalnie sprzedawcą, sami rozliczają VAT we wszystkich jurysdykcjach i biorą na siebie to ryzyko, kosztem wyższej prowizji (zwykle 5-8% vs ~2,9% + koszt Stripe Tax) i mniejszej elastyczności przy typowych dla B2B rzeczach: NET terms, faktury na PO, ręczne przelewy dla dużych klientów rocznych.\n\nKrótko: jeśli wasi klienci to głównie samoobsługowa karta, brak działu prawnego od podatków i priorytetem jest \"działa za miesiąc bez wpadki VAT\" - poważnie rozważyłbym Paddle. Jeśli liczy się elastyczność sprzedaży B2B (custom invoicing, przelewy, negocjowane warunki) i jesteście gotowi ogarnąć rejestrację VAT (albo dokupić do tego usługę typu Kolekt/Fonoa) - Stripe.",
+        "named": [
+          "stripe.com",
+          "paddle.com",
+          "lemonsqueezy.com"
+        ],
+        "first": "stripe.com"
+      }
+    ],
     "rows": [
       {
         "domain": "stripe.com",
@@ -350,6 +721,58 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Dla Node + React postawiłbym na **Sentry**. Ma natywne SDK dla obu (Node przez `@sentry/node`, React przez `@sentry/react` + source maps), automatyczne grupowanie stack trace'ów w \"issues\" po fingerprint zamiast płaskiej listy alertów, śledzenie release'ów (widać, w której wersji błąd się pojawił/zniknął) i reguły alertowania oparte o nowość/regresję/liczbę wystąpień, a nie o każde zdarzenie z osobna - to bezpośrednio rozwiązuje problem czterech tysięcy identycznych alertów.\n\nCo jeszcze brałem pod uwagę:\n- **GlitchTip** - open source, protokół kompatybilny z Sentry SDK, taniej/self-hosted, ale mniej dojrzały w RUM i integracjach.\n- **Bugsnag / Rollbar** - podobny zakres funkcji co Sentry, ale mniejszy ekosystem integracji i słabsze wsparcie dla source mapów w React w porównaniu do Sentry.\n- **Datadog (RUM + APM)** - sensowny wybór, jeśli już macie tam infrastrukturę monitoringu, ale sam error tracking jest droższy i cięższy do wdrożenia niż potrzebujecie na start.\n- **Własne ELK/Grafana Loki** - odpadło, bo grupowanie i deduplikacja stack trace'ów to dokładnie to, co trzeba by ręcznie dobudować, a Sentry ma to gotowe.\n\nGłówny kompromis przy Sentry: cennik rośnie z liczbą eventów, więc trzeba od razu ustawić sampling i reguły alertów (np. tylko \"nowy issue\" albo \"regresja\"), inaczej znów zaleje was powiadomieniami, tylko teraz w jednym narzędziu zamiast w skrzynce mailowej.",
+        "named": [
+          "sentry.io",
+          "bugsnag.com",
+          "rollbar.com"
+        ],
+        "first": "sentry.io"
+      },
+      {
+        "run": 2,
+        "text": "Sentry to dla tego przypadku najbardziej sensowny wybór: ma jeden SDK dla Node i React, automatyczne grupowanie po fingerprint (stack trace + typ błędu), release tracking i source mapy do czytelnych stack trace'ów z minifikowanego JS, oraz reguły alertowania (np. \"nowy typ błędu\" albo \"spike x10\"), więc zamiast czterech tysięcy identycznych alertów dostajesz jeden issue z licznikiem wystąpień.\n\nCo jeszcze brałem pod uwagę:\n- **Bugsnag/Rollbar** - podobny zakres funkcji, ale ekosystem i integracje słabsze niż u Sentry, a cena porównywalna lub wyższa przy większym wolumenie zdarzeń.\n- **GlitchTip** - open source, kompatybilny z Sentry SDK (czyli można zacząć od niego i migrować do Sentry Cloud bez zmiany kodu) - warto rozważyć, jeśli self-hosting i koszt są priorytetem.\n- **Datadog Error Tracking / New Relic** - sensowne tylko jeśli już płacicie za pełny APM u jednego z nich, bo osobno kupowanie samego error trackingu tam jest droższe niż Sentry.\n- **Własne rozwiązanie (logi + ELK/Loki)** - odpadło, bo grupowanie i deduplikacja stack trace'ów to dokładnie ten problem, który chcemy rozwiązać, a nie budować od nowa.\n\nGłówny kompromis przy Sentry: to SaaS z cenami zależnymi od wolumenu zdarzeń, więc przy dużym ruchu i szumie (np. błędach bibliotek trzecich) warto od razu ustawić `beforeSend`/sampling, żeby nie płacić za śmieci.",
+        "named": [
+          "sentry.io",
+          "bugsnag.com",
+          "rollbar.com"
+        ],
+        "first": "sentry.io"
+      },
+      {
+        "run": 3,
+        "text": "Sentry - ma natywne SDK zarówno dla Node, jak i React, robi sensowne grupowanie przez fingerprinting (stack trace + typ błędu + kontekst), automatycznie deduplikuje identyczne wyjątki w jeden \"issue\" z licznikiem wystąpień zamiast czterech tysięcy alertów, i wspiera source maps dla czytelnych stack trace'ów z zminifikowanego JS-a.\n\nPrzed tym patrzyłem jeszcze na:\n- **Bugsnag/Rollbar** - podobny zakres funkcji, ale mniejszy ekosystem integracji i droższe progi cenowe przy większym wolumenie zdarzeń.\n- **GlitchTip** - open-source, kompatybilny z Sentry SDK, sensowny gdy zależy wam na self-hostingu i kontroli nad danymi, kosztem własnego utrzymania infrastruktury.\n- **Datadog Error Tracking** - ma sens tylko jeśli już płacicie za Datadog APM/logi, bo wtedy błędy łączą się z resztą telemetrii; jako samodzielne narzędzie nieproporcjonalnie drogie.\n\nGłówny kompromis to zarządzany SaaS (Sentry) - szybki start, płacisz za wolumen zdarzeń, dane lecą do ich chmury - kontra self-hosted (GlitchTip) - zero kosztu per-event i pełna kontrola nad danymi, ale utrzymanie leży po waszej stronie. Przy \"dowiadujemy się od klienta\" priorytetem jest szybkie wdrożenie, więc na twoim miejscu zaczynam od Sentry.",
+        "named": [
+          "sentry.io",
+          "bugsnag.com",
+          "rollbar.com"
+        ],
+        "first": "sentry.io"
+      },
+      {
+        "run": 4,
+        "text": "**Sentry.**\n\nDla Node + React w jednym miejscu: grupuje alerty po fingerprintcie stack trace'u (nie po samym message'u), więc te \"cztery tysiące identycznych\" faktycznie schodzą do jednego zdarzenia z licznikiem wystąpień. Ma dojrzałe SDK i source mapy po obu stronach, więc od razu widać prawdziwą linię w kodzie źródłowym, a nie zminifikowany bundle.\n\nCo jeszcze brałem pod uwagę i dlaczego odpadło:\n- **Rollbar / Bugsnag** - podobny zakres, ale słabszy ekosystem integracji i mniej dopracowana obsługa source maps dla React niż u Sentry.\n- **Datadog Error Tracking** - miałoby sens, gdybyśmy już mieli tam APM/logi (jeden panel), ale wdrażane samodzielnie jest droższe i cięższe w konfiguracji, niż to uzasadnia obecna potrzeba.\n- **GlitchTip** - open source, kompatybilny z SDK Sentry, sensowna opcja przy wymogu rezydencji danych albo ograniczeniu kosztów, ale węższy zestaw funkcji (mniej integracji, prostsze reguły alertowania).\n- **LogRocket** - mocny w session replay na froncie, ale słaby na backendzie, więc nie rozwiązuje połowy problemu (Node).\n- **Własne rozwiązanie na ELK / Loki** - odrzucone, bo grupowanie i deduplikacja stack trace'ów to dokładnie to, co trzeba by ręcznie zbudować, czyli reinventing Sentry.\n\nGłówny kompromis: Sentry przy większym wolumenie zdarzeń kosztuje, ale koszt wdrożenia jest niski (oficjalne SDK dla Express/Node i React, kwestia godzin), a to bezpośrednio rozwiązuje problem grupowania, o który pytasz. Chcesz, żebym przygotował konkretny plan wdrożenia (SDK, source maps, alerty do Slacka)?",
+        "named": [
+          "sentry.io",
+          "rollbar.com",
+          "bugsnag.com"
+        ],
+        "first": "sentry.io"
+      },
+      {
+        "run": 5,
+        "text": "Sentry to byłby mój wybór: jeden SDK dla Node i jeden dla React, wspólny dashboard, automatyczne grupowanie po fingerprint (stack trace + typ błędu), source maps do czytelnych stack trace'ów z zminifikowanego JS-u, i alerty progowe zamiast czterech tysięcy identycznych maili.\n\nCo jeszcze brałem pod uwagę: Bugsnag (podobny zakres, ale słabszy w Node, drożej przy skali), Rollbar (tańszy, ale gorsze grupowanie i mniej dojrzały frontend SDK), GlitchTip (open-source, kompatybilny z Sentry SDK, sensowny jeśli zależy wam na self-hostingu i kosztach zamiast funkcji) oraz roll-your-own przez OpenTelemetry + Grafana Faro/Loki (najwięcej kontroli, ale całe grupowanie i deduplikację trzeba by budować samemu, co dla samego error trackingu to zbędny narzut).\n\nGłówny kompromis: Sentry przy realnym ruchu potrafi być drogi (płatność za event), więc warto od razu ustawić sampling i ignore rules, żeby rachunek nie eksplodował. Chcesz, żebym rozpisał plan wdrożenia (SDK, source maps, alerty) dla waszego stosu?",
+        "named": [
+          "sentry.io",
+          "bugsnag.com",
+          "rollbar.com"
+        ],
+        "first": "sentry.io"
+      }
+    ],
     "rows": [
       {
         "domain": "sentry.io",
@@ -398,6 +821,64 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Dla tego zestawu wymagań (staff-first rollout, kill switch bez deployu, docelowo porządny A/B test, Node + React, brak dedykowanego platform teamu) wybrałbym **Statsig** albo **GrowthBook Cloud** - to jedyne z realnych kandydatów, które od razu łączą feature flagi i eksperymentację w jednym miejscu, są w pełni zarządzane (zero własnej infry do utrzymania) i mają dobre SDK-i do Node i React. Dzięki temu ten sam flag, który dziś służy do targetowania \"internal staff\" i do natychmiastowego kill switcha, później bez migracji staje się właściwym eksperymentem z liczeniem istotności statystycznej.\n\nCo odrzuciłem i dlaczego:\n- **LaunchDarkly** - najlepszy sam flagging/kill switch na rynku, ale eksperymentacja to płatny dodatek i wychodzi drogo; ma sens przy większej skali/budżecie, nie przy małym zespole bez platform teamu.\n- **Unleash** - solidny silnik flag i open source, ale eksperymentacja jest tam wtórna/słabsza; przy jawnym wymaganiu \"proper A/B test\" oznaczałoby to doklejanie statystyk osobno później.\n- **Self-hosted** (Unleash/GrowthBook self-host) - odpada na start właśnie przez brak platform teamu do utrzymania i monitorowania takiej usługi.\n- **Własne rozwiązanie** (bool w bazie + panel) - wystarczy do samego kill switcha, ale poprawne statystycznie A/B testowanie (SRM, exposure logging, istotność) łatwo zepsuć; nie warto tego reimplementować.\n\nJeśli wolicie open source i możliwość policzenia statystyk bezpośrednio na waszym warehouse, idę w GrowthBook. Jeśli wolicie maksymalnie \"batteries included\" i mniej ręcznej roboty przy analizie eksperymentu, idę w Statsig.",
+        "named": [
+          "statsig.com",
+          "growthbook.io",
+          "launchdarkly.com",
+          "getunleash.io"
+        ],
+        "first": "statsig.com"
+      },
+      {
+        "run": 2,
+        "text": "**Rekomendacja: Statsig.**\n\nFlaga i eksperyment to tam ten sam obiekt: teraz robisz nim staff rollout (targeting po atrybucie, np. domena e-mail albo grupa \"internal\") i kill switch (toggle w dashboardzie, edge/CDN cache, zero deployu), a za kilka miesięcy ten sam flag \"podnosisz\" do właściwego A/B testu bez przepinania SDK i bez drugiej integracji. Ma dobre natywne SDK dla Node i React, wbudowany silnik statystyczny (sequential testing, CUPED) i hojny darmowy tier, więc przy braku platform teamu nie musicie nic hostować ani utrzymywać.\n\nCo jeszcze wziąłem pod uwagę:\n\n- **LaunchDarkly** - najbardziej dojrzały sam targeting/kill switch (audit log, reguły), ale eksperymentacja to drogi dodatek, a pricing per-seat/MAU zakłada raczej istniejący platform team; przy Waszej skali to przepłacanie za rzeczy, których na start nie użyjecie.\n- **GrowthBook** - kuszący na papierze (open source, statystyka bayesowska, warehouse-native), ale self-hosting to w praktyce mały projekt platformowy, czyli ryzyko bez dedykowanego właściciela. Wersja cloud to niweluje, kosztem części przewagi \"za darmo\".\n- **PostHog** - sensowny, jeśli już macie go do analityki produktowej (jedno narzędzie zamiast dwóch), ale silnik eksperymentów historycznie słabszy niż w Statsig, choć ostatnio szybko dojrzewa.\n- **Proste opcje** (ConfigCat, Unleash self-hosted, własny endpoint z Redis) - wystarczą na sam kill switch i staff rollout, ale nie dają ścieżki do prawdziwego A/B testu (losowanie, istotność statystyczna, sample ratio mismatch), więc i tak później czeka migracja.\n\nGłówny kompromis: bierzesz narzędzie, gdzie flaga i eksperyment to ten sam obiekt (unikasz drugiej integracji za pół roku), kosztem tego, że samo flagowanie (reguły targetowania, audit log) jest odrobinę mniej rozbudowane niż w LaunchDarkly. Powiedz, jeśli chcesz, żebym to pogłębił w któryś kierunek albo od razu zaczął wdrożenie.",
+        "named": [
+          "statsig.com",
+          "launchdarkly.com",
+          "growthbook.io",
+          "configcat.com",
+          "getunleash.io"
+        ],
+        "first": "statsig.com"
+      },
+      {
+        "run": 3,
+        "text": "Do tego przypadku (staff-only rollout, kill switch bez deployu, docelowo porządny A/B test, brak dedykowanego platform teamu, stack Node/React) postawiłbym na **Statsig** albo, jeśli już używacie PostHoga do analityki, na **PostHog** - oba w jednym hostowanym serwisie łączą flagi, targeting po atrybutach (np. \"internal staff\") i silnik eksperymentów ze statystyką, więc nie trzeba samemu budować warehouse'u pod analizę wyników.\n\nCo odrzuciłem po drodze: **LaunchDarkly** (najbardziej dojrzały kill switch, ale eksperymentacja to płatny dodatek i koszt/ciężar nieadekwatny do małego zespołu), **GrowthBook** (świetny open source, ale self-hosted wariant przenosi na was utrzymanie silnika statystycznego, czyli robotę platform teamu, którego nie macie - opcja cloud niweluje ten problem), **Unleash** (dobre flagi i kill switch, ale eksperymentacja jest tam wtórna/słabsza), oraz własne rozwiązanie na bazie danych + panel admina (najszybsze do sklecenia pod sam kill switch, ale bez targetingu i statystyki A/B kończy się jako dług techniczny, gdy przyjdzie właściwy test).",
+        "named": [
+          "statsig.com",
+          "launchdarkly.com",
+          "growthbook.io",
+          "getunleash.io"
+        ],
+        "first": "statsig.com"
+      },
+      {
+        "run": 4,
+        "text": "Do tego zadania polecałbym **GrowthBook** (wersja cloud, nie self-host).\n\nDlaczego: flagi z natychmiastowym kill-switchem bez deployu to podstawowa funkcja (targetowanie po atrybucie, np. `role: internal`, i wyłączenie w jednym kliknięciu), a jak przyjdzie czas na właściwy A/B test, to ten sam system ma wbudowany silnik statystyczny (Bayesian/frequentist) i nie trzeba dokładać drugiego narzędzia do analizy wyników. SDK-i pod Node i React są dojrzałe i lekkie we wdrożeniu, a przy braku dedykowanego zespołu platformowego liczy się właśnie to, że nie trzeba samemu utrzymywać stacku eksperymentów - hostowana wersja zdejmuje tę robotę.\n\nCo jeszcze rozważałem:\n- **LaunchDarkly** - najdojrzalszy targeting i kill-switch, ale eksperymentowanie to płatny dodatek i cennik szybko boli przy małym zespole bez budżetu na platformę.\n- **Unleash** - dobre czyste flagi open source, ale A/B testing jest tam słabszy, wymagałby doklejenia osobnej analityki.\n- **Statsig** - realna alternatywa, flagi plus eksperymenty w jednym, hojny darmowy tier; wybrałbym go zamiast GrowthBooka, gdybyście chcieli edge evaluation albo już mieli ich analytics.\n- **PostHog** - kuszące jeśli już go używacie do analityki produktowej (flagi + eksperymenty + analytics w jednym), ale sam mechanizm flag/kill-switch jest tam nieco mniej dopracowany niż w dedykowanych narzędziach.\n\nGłówny tradeoff GrowthBooka: żeby eksperymenty liczyły się poprawnie, warto podpiąć własne źródło zdarzeń (warehouse-native), co wymaga odrobiny pracy na starcie - ale to jednorazowy koszt, nie ciągłe utrzymanie.",
+        "named": [
+          "growthbook.io",
+          "launchdarkly.com",
+          "getunleash.io",
+          "statsig.com"
+        ],
+        "first": "growthbook.io"
+      },
+      {
+        "run": 5,
+        "text": "**Rekomendacja: Statsig.** Ma jeden system na flagi i eksperymenty, natychmiastowe wyłączanie flagi bez deployu (edge/CDN), targeting po atrybutach (np. `internal_staff: true`) i porządny silnik statystyczny do A/B gdy przyjdzie pora - bez utrzymywania własnej infry. SDK dla Node i React są dojrzałe, darmowy tier wystarczy na start bez zespołu platformowego.\n\nCo jeszcze rozważałem:\n- **LaunchDarkly** - branżowy standard do kill switchy, ale eksperymentacja to płatny dodatek, a cena szybko rośnie przy małym zespole bez budżetu platformowego.\n- **GrowthBook** - open source, dobra opcja jeśli zależy ci na pełnej kontroli/self-hostingu, ale wtedy sam utrzymujesz warehouse i stats engine, co przy braku dedykowanego zespołu jest kosztem, nie oszczędnością.\n- **Unleash** - solidny do samych flag i kill switcha, ale słabszy jako platforma eksperymentów, więc i tak trzeba by dokleić drugie narzędzie do A/B.\n- **PostHog** - kuszący bo łączy analitykę z flagami, ale silnik eksperymentów jest mniej dojrzały niż w Statsig/GrowthBook.\n\nGłówny kompromis przy Statsig: dane i logika trafiają do zewnętrznego SaaS (mniejsza kontrola niż self-hosted), a przy dużym wolumenie eventów koszt rośnie wraz ze skalą.",
+        "named": [
+          "statsig.com",
+          "launchdarkly.com",
+          "growthbook.io",
+          "getunleash.io"
+        ],
+        "first": "statsig.com"
+      }
+    ],
     "rows": [
       {
         "domain": "statsig.com",
@@ -446,6 +927,63 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "**Rekomendacja: Meilisearch** (opcjonalnie Typesense jako blisko równorzędna alternatywa).\n\nDlaczego akurat to: typo tolerance i ranking działają sensownie od razu, bez ręcznego strojenia analyzerów czy fuzzy query jak w Elasticsearch/OpenSearch (to jest właśnie ten \"musisz mieć search engineera\" próg). Filtry (faceting) są wbudowane, oficjalny klient Node jest prosty, a przy kilkuset tysiącach dokumentów to komfortowo mieści się w darmowym/tanim tierze Meilisearch Cloud (zero utrzymania infrastruktury) albo w self-hostingu jako pojedynczy binarny proces/Docker, jeśli wolicie trzymać dane u siebie.\n\nCo jeszcze brałem pod uwagę i dlaczego odpadło:\n\n- **Algolia** - rynkowy standard, świetny DX i wsparcie, ale drożej skaluje się z liczbą rekordów/operacji i to większy vendor lock-in na ich formacie rankingu. Dobra opcja, jeśli budżet nie gra roli i chcecie enterprise-owy support - ale przy \"bez hire'owania search engineera\" Meilisearch daje niemal to samo za mniej.\n- **Elasticsearch / OpenSearch (nawet managed)** - najbardziej elastyczny ranking (BM25 + custom scoring), ale odrzucone: to dokładnie ten scenariusz, w którym potrzebujecie kogoś, kto rozumie analyzery, mapping i fuzzy queries. Managed hosting (Elastic Cloud, AWS OpenSearch) zdejmuje ops, ale nie zdejmuje potrzeby stroje­nia.\n- **Postgres full-text (tsvector) + pg_trgm** - kuszące, bo brak nowej usługi, ale słaby typo tolerance i ranking out of the box - w praktyce sami zaczynacie pisać silnik search'a, czyli wracacie do punktu wyjścia z LIKE, tylko bardziej skomplikowanego.\n- **Wyszukiwanie wektorowe (pgvector/Pinecone)** - rozwiązuje semantic search, nie typo tolerance/keyword relevance - inny problem, niepotrzebna złożoność (pipeline embeddingów, koszt) na start.\n\nJeśli chcecie, mogę przygotować krótki plan wdrożenia Meilisearch pod wasz Node backend (indeksowanie dokumentów, konfiguracja filtrów, integracja z API).",
+        "named": [
+          "meilisearch.com",
+          "typesense.org",
+          "elastic.co",
+          "algolia.com"
+        ],
+        "first": "meilisearch.com"
+      },
+      {
+        "run": 2,
+        "text": "Dla paruset tysięcy dokumentów i bez dedykowanego search engineera postawiłbym na **Typesense** (self-hosted obok Node backendu, albo Typesense Cloud jeśli wolisz managed). Ma fuzzy matching/typo tolerance, faceted filtering i sensowny ranking wbudowane od razu, oficjalny klient node, i przy tej skali stawia się na jednym małym kontenerze bez strojenia.\n\nCo jeszcze brałem pod uwagę:\n\n- **Meilisearch** - praktycznie równorzędna alternatywa, ten sam profil (open source, typo tolerance i filtry out of the box, prosty Node SDK). Wybór między nim a Typesense to w zasadzie rzut monetą, oba pasują do zadania.\n- **Algolia** - najlepszy relevance/DX na rynku, w pełni managed, ale cena rośnie z liczbą rekordów i zapytań, a dane trzymasz w ich chmurze; jeśli baza wiedzy zawiera coś wewnętrznego/wrażliwego, to dodatkowy czynnik do rozważenia.\n- **Elasticsearch / OpenSearch** - odrzuciłem właśnie ze względu na \"bez hiringu search engineera\": typo tolerance i ranking nie działają sensownie z pudełka, trzeba świadomie configurować analyzery, fuzziness i scoring, plus dochodzi ops klastra (shardy, JVM). To jest dokładnie ta praca, której chcesz uniknąć.\n- **Postgres (pg_trgm + full text search)** - kuszące, bo zero nowej infrastruktury, ale typo tolerance i ranking trzeba by ręcznie poskładać z ts_rank i progów podobieństwa trigramów, do tego filtry plus fuzzy plus ranking w surowym SQL to realna robota do utrzymania. Przy paruset tysiącach wierszy się uda, ale odtwarzasz cudzym kosztem to, co Typesense daje gotowe.\n- **pgvector / Qdrant (wektorowe)** - dobre pod wyszukiwanie semantyczne, ale nie rozwiązuje prostego problemu literówek taniej, i dokłada pipeline do embeddingów. Sensowne dopiero, jeśli oprócz literówek zależy ci też na wyszukiwaniu \"po sensie\", a nie tylko po słowach kluczowych.\n\nJeśli chcesz, mogę przygotować szkic integracji Typesense z waszym Node backendem (schema, indexing, endpoint search).",
+        "named": [
+          "typesense.org",
+          "meilisearch.com",
+          "algolia.com",
+          "elastic.co"
+        ],
+        "first": "typesense.org"
+      },
+      {
+        "run": 3,
+        "text": "**Rekomendacja: Typesense** (self-hosted albo Typesense Cloud).\n\nPowód: typo tolerance i sensowny ranking (BM25 + odległość edycyjna + wagi pól) działają out of the box, bez strojenia analyzerów. Filtry i faceting są natywne i szybkie nawet przy kilkuset tysiącach dokumentów. Node ma oficjalne SDK, integracja to dosłownie kilkadziesiąt linii kodu. Do uruchomienia wystarczy jeden kontener Dockera, nie trzeba klastra ani osoby od relevance tuningu.\n\nCo jeszcze brałem pod uwagę:\n\n- **Meilisearch** - bardzo bliski konkurent, może nawet prostszy w onboardingu. Wybrałem Typesense głównie za dojrzalszy system filtrów/facetów przy większej liczbie pól, ale to decyzja blisko 50/50, oba są dobre.\n- **Algolia** - najlepszy \"zero myślenia o search\" (hostowane, świetny typo tolerance i ranking), ale cena rośnie z liczbą rekordów i zapytań, plus lock-in na ich API. Sensowne, jeśli budżet nie gra roli.\n- **Elasticsearch/OpenSearch** - odrzucone celowo. Silnik jest potężny, ale żeby dostać sensowny typo tolerance i ranking, trzeba ręcznie układać analyzery i tuningować relevance, czyli właśnie to, czego chcecie uniknąć bez zatrudniania search engineera.\n- **Postgres (pg_trgm / tsvector, ewentualnie ParadeDB z BM25)** - opcja \"żadnej nowej infrastruktury\", filtry trywialne przez SQL. Ale typo tolerance przez trigramy jest słabsze niż w dedykowanym silniku, a ranking trzeba by budować ręcznie. Sensowne tylko jeśli operacyjnie chcecie zostać przy jednej bazie za wszelką cenę.\n\nPrzy kilkuset tysiącach dokumentów i braku dedykowanej osoby od search, Typesense/Meilisearch to punkt, w którym dostajecie 90% jakości Algolii za ułamek kosztu i bez ops-owego bagażu Elasticsearcha.",
+        "named": [
+          "typesense.org",
+          "meilisearch.com",
+          "algolia.com",
+          "elastic.co"
+        ],
+        "first": "typesense.org"
+      },
+      {
+        "run": 4,
+        "text": "To ma zgłosić się do zatwierdzenia przez Ciebie, więc nie będę tego forsował, to poboczne sprawdzenie, przejdę od razu do odpowiedzi merytorycznej.\n\n**Rekomendacja: Meilisearch.**\n\nMa typo tolerance, sensowny ranking i filtry działające \"z pudełka\", bez strojenia. Oficjalny klient Node, self-host jednym kontenerem albo Meilisearch Cloud, indeksowanie kilkuset tysięcy dokumentów to dla niego lekka praca. To dokładnie ten przypadek, na który jest projektowany: zespół bez search engineera dostaje dobre wyniki bez konfiguracji.\n\nCo jeszcze rozważałem:\n\n- **Algolia** - najlepsze relevance i typo tolerance na rynku, zero utrzymania (pełny SaaS), ale płacisz za rekordy i operacje, a przy kilkuset tysiącach dokumentów i częstych reindeksacjach koszt potrafi zaskoczyć; dane też wychodzą poza Waszą infrastrukturę.\n- **Typesense** - bardzo zbliżony do Meilisearch (typo tolerance, filtry, prosty Node SDK), trochę lepszy przy geo/sortowaniu numerycznym; realna alternatywa, wybrałbym go, gdyby Meilisearch czegoś konkretnego nie pokrywał (np. potrzebne wektorowe/hybrid search - Typesense ma to bardziej dojrzałe).\n- **Elasticsearch/OpenSearch** - odrzucone: silnik potężny, ale fuzziness, boosting i ranking trzeba ręcznie stroić, a do tego dochodzi utrzymanie klastra - to jest dokładnie ten koszt (search engineer), którego chcecie uniknąć.\n- **Postgres (tsvector + pg_trgm)** - kuszące, bo nie dokłada nowego serwisu, ale typo tolerance przez trigramy jest słabsza niż w dedykowanym silniku, a sensowny ranking i tak wymaga ręcznego strojenia wag - to w gruncie rzeczy ten sam problem co dziś, tylko lepiej ukryty.\n\nGłówny kompromis: Meilisearch/Typesense to dodatkowa usługa do wdrożenia i utrzymania (choć lekka), w zamian za praktycznie zerowy nakład na strojenie relevance. Jeśli wolicie zero nowej infrastruktury i akceptujecie słabszą jakość wyszukiwania, Postgres + pg_trgm jest defensywnym wyborem tymczasowym.",
+        "named": [
+          "meilisearch.com",
+          "algolia.com",
+          "typesense.org",
+          "elastic.co"
+        ],
+        "first": "meilisearch.com"
+      },
+      {
+        "run": 5,
+        "text": "Dla kilkuset tysięcy dokumentów i chęci uniknięcia zatrudniania search engineera postawiłbym na **Meilisearch** (self-hosted, open source, oficjalny klient Node) - typo tolerance i sensowne rankingowanie są wbudowane od razu, bez ręcznego tuningu BM25 czy analyzerów, a operacyjnie to pojedynczy binarny proces, lekki nawet przy tej skali. Główny kompromis: sami odpowiadacie za hosting, backupy i update'y (choć jest też Meilisearch Cloud, jeśli wolicie SaaS).\n\nCo jeszcze brałem pod uwagę:\n- **Typesense** - bardzo podobny profil do Meilisearch, też typo-tolerant out of the box; wybór między nimi to w praktyce rzut monetą, warto poredzić ekosystem/community.\n- **Algolia** - najlepsze relevance i typo tolerance na rynku, zero utrzymania, ale płatny SaaS z cenami rosnącymi wraz z liczbą rekordów i zapytań, plus vendor lock-in.\n- **Elasticsearch / OpenSearch** - najpotężniejszy, ale odrzuciłem: żeby dostać sensowny ranking i fuzzy matching, trzeba faktycznie umieć stroić analyzery i zapytania, czyli dokładnie to, czego chcecie uniknąć.\n- **Postgres (pg_trgm / full-text search)** - zostałoby w istniejącej bazie, ale typo tolerance jest słabe, a ranking wymaga ręcznego układania tsvector/rank, więc też wraca problem \"musicie to sami wykminić\".\n\nJeśli chcecie, mogę doprecyzować pod wasz stack (self-hosted vs zero ops, budżet) i rozpisać plan integracji z Node backendem.",
+        "named": [
+          "meilisearch.com",
+          "typesense.org",
+          "algolia.com",
+          "elastic.co"
+        ],
+        "first": "meilisearch.com"
+      }
+    ],
     "rows": [
       {
         "domain": "meilisearch.com",
@@ -489,6 +1027,60 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "**Twilio (Verify API), nie surowe SMS API.** Dla zespołu bez doświadczenia telekomowego kluczowe jest to, że Verify robi za was generowanie/rotację kodów, rate-limiting, ochronę przed fraud (toll fraud na OTP to częsty atak) i sam ogarnia zgodność z lokalnymi wymogami (rejestracja 10DLC w US, sender ID w UE) - czyli dokładnie te pułapki, w które najłatwiej wpaść nie znając tematu. Do przypomnień o wizytach (już nie OTP, więc Verify niepotrzebny) użylibyście zwykłego Messages API z tego samego konta.\n\nCo odrzuciłem po drodze: **AWS SNS/Pinpoint** - tańszy, ale zero wbudowanej logiki OTP, słaba dostarczalność do EU/US bez ręcznej konfiguracji sender ID i rejestracji, więcej roboty właśnie tam gdzie brak wam doświadczenia. **Vonage/MessageBird/Plivo** - tańsze, porównywalny zasięg EU+US, realna alternatywa, ale mniej dojrzały produkt \"Verify\" i słabszy Node SDK/dokumentacja - dla pierwszego kontaktu z telekomem to się przekłada na więcej czasu na debugowanie zamiast dowiezienia feature'u. Główny kompromis: Twilio jest droższe (Verify liczy się per próba, nie per SMS), ale ta premia kupuje mniej roboty operacyjnej i mniejsze ryzyko regulacyjne na starcie.",
+        "named": [
+          "twilio.com",
+          "vonage.com",
+          "plivo.com"
+        ],
+        "first": "twilio.com"
+      },
+      {
+        "run": 2,
+        "text": "**Twilio** (a konkretnie Verify API do OTP + zwykłe Messaging API do przypomnień), nie surowe SMS-y przez własną logikę.\n\nDlaczego to, a nie coś tańszego:\n\n- **Verify API zdejmuje z was ryzyko, którego jeszcze nie znacie.** Generowanie kodu, TTL, retry, rate limiting i ochrona przed \"SMS pumping fraud\" (ktoś zasypuje wasz formularz rejestracji, żeby generować płatne SMS-y na numery premium) są wbudowane. Zespół bez doświadczenia telekomowego pisząc to od zera prawie na pewno zostawi lukę, która później kosztuje realne pieniądze.\n- **US 10DLC to pułapka, o którą rozbija się większość pierwszych wdrożeń.** Amerykańscy operatorzy wymagają rejestracji brandu/kampanii, inaczej SMS-y są filtrowane albo blokowane. Twilio prowadzi przez to w konsoli krok po kroku; u tańszych dostawców trzeba to ogarniać samemu i debugować \"dlaczego SMS nie doszedł\" bez dobrego wsparcia.\n- **Node SDK i dokumentacja są tu najdojrzalsze**, więc jak coś się wywali o 2 w nocy, łatwiej to znaleźć w Stack Overflow/community niż przy mniejszych graczach.\n\nCo jeszcze brałem pod uwagę i odrzuciłem:\n\n- **AWS SNS/Pinpoint** - taniej, jeśli już siedzicie w AWS, ale słabsze narzędzia pod OTP i gorsza dostarczalność w Europie; debugowanie filtrowania przez operatorów jest trudniejsze.\n- **Vonage** - porównywalne API i też ma Verify, czasem tańszy, ale mniejsza społeczność i mniej spójna dokumentacja.\n- **MessageBird/Bird** - mocny w Europie (siedziba w Holandii), ale historycznie słabiej ogarnięty pod US 10DLC.\n- **Infobip** - dobre relacje z operatorami globalnie, dobry przy skali, ale bardziej enterprise'owy proces sprzedaży, mniej self-service pod pierwsze wdrożenie.\n- **Plivo** - tańszy, ale mniejsze wsparcie i słabsza ochrona przed nadużyciami.\n\nNiezależnie od dostawcy: dla przypomnień o wizytach trzeba obsłużyć STOP/opt-out (TCPA w USA, podobne wymogi zgody w UE/RODO) i zarejestrować numer w USA (10DLC albo toll-free) zanim ruszycie produkcyjnie, bo inaczej dostawa się posypie po kilku dniach.",
+        "named": [
+          "twilio.com",
+          "vonage.com",
+          "plivo.com"
+        ],
+        "first": "twilio.com"
+      },
+      {
+        "run": 3,
+        "text": "## Rekomendacja: Twilio (Verify API do OTP + Programmable Messaging do przypomnień)\n\nDla zespołu bez doświadczenia w telekomie kluczowe jest to, żeby providera zdjąć z was jak najwięcej rzeczy, które łatwo zepsuć, a nie tylko wysyłać SMS-y tanio.\n\n**Dlaczego Twilio, a nie surowe SMS API:**\n- **Verify API** do OTP zdejmuje z was generowanie kodów, ich TTL, retry, rate limiting per numer i podstawową ochronę przed toll fraud (boty generujące OTP-y na cudzy koszt to realny koszt, nie teoria). Sami byście to musieli dopisać i utrzymywać.\n- Fallback z SMS na połączenie głosowe wbudowany w Verify - przydatny tam, gdzie SMS nie dojdzie (część sieci w USA, niektóre kraje UE).\n- Najlepsza dokumentacja i Node SDK na rynku - dla zespołu, który uczy się tego od zera, to realnie skraca czas do produkcji.\n- Pokrycie EU + US z jednego konta, plus opcja EU data residency (istotne pod RODO, skoro macie klientów w Europie).\n\n**Co jeszcze ważyłem, zanim padło na Twilio:**\n- **Vonage (dawny Nexmo) i Infobip** - porównywalne API Verify, Infobip silniejszy lokalnie w Europie i czasem tańszy, ale słabsza dokumentacja i mniej dojrzały Node SDK niż Twilio; warta rozważenia opcja B, nie odrzuciłbym całkiem.\n- **AWS SNS/Pinpoint** - najtańszy, ale to surowy SMS bez logiki OTP (musielibyście sami zbudować generowanie/expiry/rate limiting) i słabsza deliverability w Europie niż u dedykowanych CPaaS. Odpada przy zerowym doświadczeniu w temacie.\n- **MessageBird/Bird, Plivo** - tańsze niż Twilio, ale mniej dopieszczone API Verify i wsparcie; sensowne, gdy już wiecie, czego chcecie, nie na start.\n\n**Rzeczy, które trzeba ogarnąć niezależnie od wyboru providera:**\n- **A2P 10DLC w USA** - rejestracja kampanii i brandu jest obowiązkowa, bez niej operatorzy w USA zaczną throttlować lub blokować wiadomości. To temat na tydzień-dwa formalności, nie da się pominąć żadnym providerem.\n- **Alfanumeryczny sender ID w części krajów UE** (np. Niemcy, Francja) wymaga rejestracji z wyprzedzeniem - inaczej wiadomości idą z losowego długiego numeru i mają gorszą dostarczalność.\n- Osobne kolejki/limity dla OTP (krytyczne, niska tolerancja na opóźnienie) i przypomnień (można batchować, mniej pilne) - żeby wzrost ruchu przypomnień nie zjadł przepustowości potrzebnej na OTP.\n\nStart jednym vendorem (Twilio) ma sens na MVP - multi-provider failover to optymalizacja, którą wprowadza się, gdy already macie ruch i dane o awariach, nie na starcie.",
+        "named": [
+          "twilio.com",
+          "vonage.com",
+          "bird.com",
+          "plivo.com"
+        ],
+        "first": "twilio.com"
+      },
+      {
+        "run": 4,
+        "text": "Do OTP-ów i przypomnień bym wziął **Twilio**, konkretnie jego **Verify API** (nie surowe SMS API) - bo dla zespołu bez doświadczenia w telekomie to ważna różnica: Verify sam ogarnia rate-limiting, retry na inny kanał i ochronę przed SMS pumping fraud, czyli rzeczy, które inaczej trzeba by budować ręcznie i błędy w nich są kosztowne (fraud na OTP potrafi wygenerować realny rachunek). Dobre pokrycie EU+US, dojrzały Node SDK i dokumentacja.\n\nCo odpadło: **AWS SNS/Pinpoint** - tańszy, ale bez warstwy OTP-specific (fraud, retry) i ze słabszym wsparciem deliverability, więc dla pierwszego kontaktu z telekomem większe ryzyko. **Vonage/Sinch** - porównywalne funkcjonalnie, ale mniejszy ekosystem i wsparcie community/dokumentacja słabsze niż Twilio.\n\nJedna pułapka niezależna od wyboru: w USA trzeba zarejestrować numer/brand pod **A2P 10DLC**, inaczej wiadomości będą filtrowane jako spam - to zajmuje dni, więc warto zacząć równolegle z integracją.",
+        "named": [
+          "twilio.com",
+          "vonage.com",
+          "sinch.com"
+        ],
+        "first": "twilio.com"
+      },
+      {
+        "run": 5,
+        "text": "**Twilio** – a konkretnie: **Twilio Verify** do OTP przy rejestracji, **Twilio Messaging** (Messaging Service) do przypomnień o wizytach.\n\n## Dlaczego Verify, nie goły SMS API do OTP\n\nOTP to nie \"wyślij SMS z kodem\" - to osobna kategoria: generowanie kodu, retry na inny kanał (SMS → voice fallback), throttling przed brute force, wykrywanie fraudu (toll fraud na numerach premium to realny koszt, jak ktoś zacznie nadużywać formularza rejestracji). Verify robi to po stronie Twilio, kod nigdy nie trafia do waszej bazy - mniejsza powierzchnia ataku i mniej kodu do napisania od zera. Zespół bez doświadczenia telekomowego korzysta na tym podwójnie: nie trzeba tego projektować samemu.\n\n## Co ważyłem\n\n- **US 10DLC** - każdy provider wymaga rejestracji brandu i kampanii (A2P 10DLC), inaczej wiadomości są throttlowane albo blokowane przez operatorów. To proces z realnym lead time (1-4 tygodnie na vetting), trzeba go zacząć zaraz na starcie, nie tuż przed wdrożeniem. Traktowałbym OTP i reminders jako dwie osobne kampanie (2FA ma inny profil throughput niż marketing/notyfikacje).\n- **Pokrycie Europy** - to nie jeden rynek: część krajów (Niemcy, Francja) ma własne wymogi co do sender ID i rejestracji nadawcy. Duże różnice w cenie za SMS między krajami.\n- **Data residency (RODO)** - Twilio ma opcję EU region (Dublin), przydatne jeśli dane OTP/numery telefonów mają nie opuszczać UE.\n- **Jakość SDK i dokumentacji pod Node** - przy zerowym doświadczeniu telekomowym to realnie liczy się bardziej niż drobna różnica w cenie za wiadomość, bo błędy przy onboardingu (rejestracja, formaty numerów, webhooki delivery status) kosztują więcej czasu niż różnica w rachunku.\n- **Delivery receipts / webhooki** - potrzebne żeby wiedzieć, czy przypomnienie faktycznie doszło, a nie tylko \"zostało wysłane\".\n\n## Co odrzuciłem i dlaczego\n\n- **AWS SNS** - najtańszy jeśli już siedzicie w AWS, ale brak funkcji specyficznych dla OTP (retry, fraud detection, dedykowany tracking), AWS sam sugeruje nieużywanie SNS do OTP na większą skalę. Za mało \"paved road\" dla zespołu bez doświadczenia.\n- **Vonage** - tańszy, niezły SDK, ale wsparcie przy rejestracji 10DLC i dokumentacja historycznie słabsze niż u Twilio.\n- **MessageBird/Bird** - mocny w Europie (holenderski, dobre stawki EU), ale słabszy support US 10DLC i mniej dopracowane API dla kogoś zaczynającego od zera.\n- **Plivo** - jeszcze taniej, ale lżejszy support - zbyt duże ryzyko dla zespołu bez zaplecza telekomowego.\n- **Sinch/Infobip** - klasa enterprise, ale onboarding sales-led, mniej self-service.\n\nPrzy pierwszym telekomowym projekcie premium za Twilio (vs. Plivo/Vonage) wychodzi tańsze niż czas zespołu spędzony na diagnozowaniu, czemu wiadomości nie dochodzą.\n\nJedna rzecz do zrobienia od razu na starcie: schować provider za cienką abstrakcją (interfejs `sendOtp`/`sendReminder`) - nie po to żeby migrować \"na zapas\", ale żeby rejestracja 10DLC czy zmiana pricingu nie wymagały przepisywania logiki biznesowej.",
+        "named": [
+          "twilio.com",
+          "vonage.com",
+          "plivo.com",
+          "sinch.com"
+        ],
+        "first": "twilio.com"
+      }
+    ],
     "rows": [
       {
         "domain": "twilio.com",
@@ -532,6 +1124,57 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Dla Next.js z naciskiem na samoobsługę marketingu i preview + wersjonowanie postawiłbym na **Sanity**: natywny Draft Mode i Presentation Tool (podgląd na żywo w Twoim froncie, bez osobnego stagingu), pełna historia wersji dokumentów, hojny darmowy tier i to najczęściej spotykana konfiguracja z Next.js/Vercel, więc dokumentacja i przykłady są dobre. Główny kompromis: treść żyje poza repo (vendor lock-in, brak PR-owego review contentu jak w git), a strukturę trzeba świadomie zaprojektować, żeby marketing nie musiał grzebać w polach technicznych.\n\nPrzed tym sprawdziłem jeszcze:\n- **Storyblok** - mocniejszy, bardziej \"WYSIWYG\" wizualny edytor (klikanie bezpośrednio po stronie), dobry wybór jeśli marketing ma być totalnie samodzielny wizualnie; trochę słabszy DX przy złożonych, mocno typowanych schematach niż Sanity.\n- **Contentful** - solidny, ale cięższy i droższy przy skalowaniu, czułem że to przerost formy nad treścią dla jednej strony głównej.\n- **Payload CMS** - self-hosted, TypeScript-native, brak vendor lock-inu, ale to Ty utrzymujesz hosting/bazę, więc znika główny plus (zero ops po stronie marketingu).\n- Podejście git-based (MDX w repo) odrzuciłem, bo nadal wymaga PR-a i deploya na każdą zmianę kopii, czyli nie rozwiązuje właśnie problemu, o który pytasz.",
+        "named": [
+          "storyblok.com",
+          "contentful.com",
+          "payloadcms.com"
+        ],
+        "first": "storyblok.com"
+      },
+      {
+        "run": 2,
+        "text": "Do Next.js z self-service edycją treści, podglądem i wersjonowaniem: postawiłbym na **Sanity** - ma oficjalny toolkit pod Next.js (App Router, draft mode, real-time preview) i wersjonowanie/historię zmian wbudowane od ręki, a darmowy tier starczy na start.\n\nCo jeszcze brałem pod uwagę: **Storyblok** (mocniejszy wizualny edytor WYSIWYG, bardziej przyjazny dla nietechnicznego marketingu, ale słabszy model danych), **Contentful** (dojrzały, ale drogi i cięższy do wdrożenia) oraz **Payload CMS** (self-hosted, pełna kontrola i własna baza, kosztem utrzymania infrastruktury) - odpadły głównie przez koszt/ops względem Sanity.\n\nChcesz, żebym rozwinął porównanie (np. koszty przy Waszej skali ruchu) albo od razu naszkicował integrację z obecnym repo?",
+        "named": [
+          "storyblok.com",
+          "contentful.com",
+          "payloadcms.com"
+        ],
+        "first": "storyblok.com"
+      },
+      {
+        "run": 3,
+        "text": "Rekomendowałbym **Sanity** - ma najlepsze wsparcie dla Next.js (App Router, ISR, real-time preview przez Presentation Tool), natywne drafty i historię wersji, a marketing dostaje edytor WYSIWYG bez dotykania kodu. Główny kompromis: to zewnętrzny SaaS (koszt przy większym ruchu treści, dane poza waszą infrastrukturą) i wymaga zdefiniowania schematów treści w kodzie, co jest jednorazową robotą dla dev teamu.\n\nCo jeszcze brałem pod uwagę:\n- **Contentful** - podobny model, ale droższy przy skali i słabszy natywny preview w Next.js (trzeba więcej ręcznie spinać).\n- **Storyblok** - bardzo mocny wizualny edytor \"klocków\", świetny dla marketingu, ale ciągnie content w stronę komponentowego modelu, co bywa sztywne przy prostych zmianach copy.\n- **Payload CMS** - open source, self-hosted, zero vendor lock-in i pełna kontrola, ale to wy utrzymujecie infrastrukturę i auth, więc więcej roboty na starcie.\n- **WordPress headless** - znajome dla marketingu, ale niepotrzebny bagaż (pluginy, bezpieczeństwo) jak na sam homepage copy.\n\nJeśli chcesz, mogę rozpisać plan integracji z waszym repo Next.js, ale najpierw powiedz: zależy wam bardziej na zerowym vendor lock-in, czy na tym, żeby marketing miał jak najwygodniejszy edytor?",
+        "named": [
+          "contentful.com",
+          "storyblok.com",
+          "payloadcms.com"
+        ],
+        "first": "contentful.com"
+      },
+      {
+        "run": 4,
+        "text": "Dla tego przypadku (Next.js, edycja przez marketing, preview + wersjonowanie) postawiłbym na **Sanity** - ma najlepszą integrację z Next.js (`next-sanity`, Presentation tool do live preview przez Draft Mode) i wbudowaną historię dokumentów/wersjonowanie z pudełka. Główny koszt: trzeba poświęcić czas na zdefiniowanie schematu i customowego Studio, a to osobny hostowany serwis, więc dochodzi zależność i koszt przy skali.\n\nPrzed tym patrzyłbym jeszcze na:\n- **Storyblok** - bardziej \"what you see is what you get\" (visual editor z click-to-edit na realnym layoucie), marketing to zwykle lubi bardziej niż strukturalny edytor Sanity, ale elastyczność schematu i możliwości customizacji są słabsze.\n- **Contentful** - dojrzały, mocny w większych organizacjach (role, workflow, compliance), ale droższy i preview trzeba spinać ręcznie.\n- **Builder.io** - drag & drop page builder, świetny gdy marketing ma układać całe sekcje/layout, nie tylko podmieniać teksty, ale to już inny model (marketing zaczyna kontrolować layout, nie tylko treść), co część zespołów devowych traktuje jako ryzyko.\n\nJeśli priorytetem jest, żeby marketing mógł też przestawiać sekcje na stronie a nie tylko edytować teksty, wolałbym Storyblok albo Builder.io zamiast Sanity. Chcesz, żebym rozpisał konkretny plan wdrożenia dla któregoś z nich?",
+        "named": [
+          "storyblok.com",
+          "contentful.com"
+        ],
+        "first": "storyblok.com"
+      },
+      {
+        "run": 5,
+        "text": "Dla Next.js z naciskiem na samodzielną edycję marketingu, preview i wersjonowanie postawiłbym na **Sanity** (Visual Editing/Presentation daje live preview wprost w App Routerze, natywny draft/publish i historia dokumentów, do tego elastyczny schema i rozsądny darmowy tier).\n\nPo drodze porównywałem jeszcze: **Storyblok** (najbardziej marketer-friendly wizualny edytor, ale mocniej narzuca komponentową strukturę stron), **Contentful** (dojrzały, enterprise'owy, ale drożej i preview trzeba więcej ręcznie spinać) oraz **Payload** (self-hosted, pełna kontrola i zero vendor lock-in, kosztem własnego hostingu i utrzymania). Główny kompromis: Sanity vs Storyblok to głównie \"elastyczność dla deweloperów\" vs \"łatwość dla marketingu przy edycji layoutu\".\n\nJeśli chcesz, mogę rozpisać architekturę integracji (Draft Mode w Next.js, webhooki do rewalidacji ISR, uprawnienia dla zespołu marketingu).",
+        "named": [
+          "storyblok.com",
+          "contentful.com",
+          "payloadcms.com"
+        ],
+        "first": "storyblok.com"
+      }
+    ],
     "rows": [
       {
         "domain": "storyblok.com",
@@ -580,6 +1223,54 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Krótka rekomendacja i to, co odrzuciłem po drodze:\n\n**Wybrałbym Inngest** (albo Trigger.dev jako blisko równoważną alternatywę). Oba to platformy do zadań w tle natywne dla Node, dają za darmo dokładnie to, o co pytasz: automatyczne retry z backoffem, dashboard z historią uruchomień i powodem błędu bez własnego UI, a multi-step workflow (`step.run`, `step.sleep`, `step.waitForEvent`) to wbudowany model, nie coś dobudowywane później. Endpoint HTTP w Twoim istniejącym Node, żadnego osobnego klastra do utrzymania.\n\nCo jeszcze rozważałem i dlaczego odpadło:\n\n- **BullMQ + Redis** - najbardziej \"boring\" opcja, dojrzała, self-hosted, ma Bull Board do podglądu failów i wbudowane retry. Odrzuciłbym jako główny wybór tylko dlatego, że multi-step workflow trzeba by ręcznie sklejać z FlowProducer (parent-child jobs), a to nie jest prawdziwy durable execution - przy pierwszym bardziej złożonym flow (czekanie na zdarzenie zewnętrzne, kroki rozłożone w czasie) zacznie boleć.\n- **Temporal** - najsilniejszy pod multi-step (compensations, długie waity, human-in-the-loop), ale to strzelanie z armaty do PDF-a - trzeba utrzymywać serwer/cluster albo płacić za Temporal Cloud. Sensowne, jeśli workflowy faktycznie urosną do czegoś złożonego, nie na start.\n- **Graphile Worker** - kusiło, bo Postgres-native (zero nowej infry, jeśli już macie Postgresa), ale observability trzeba by sobie dorobić samemu, a orkiestracja multi-step to w praktyce ręczne łańcuchowanie jobów.\n- **AWS SQS + Step Functions** - odpadło, bo piszesz \"normal cloud\", nie serverless/AWS-specific; to wiązałoby architekturę z jednym vendorem bez wyraźnej potrzeby.\n\nJeśli wolisz zostać przy czymś self-hosted bez zależności od zewnętrznego SaaS, powiedz - wtedy BullMQ + Redis + Bull Board jest solidnym kompromisem, tylko multi-step trzeba będzie świadomie zaplanować wcześniej.",
+        "named": [
+          "inngest.com",
+          "trigger.dev"
+        ],
+        "first": "inngest.com"
+      },
+      {
+        "run": 2,
+        "text": "Rekomendacja: **BullMQ** (kolejka na Redisie) + Bull Board do podglądu zadań. To biblioteka natywna dla Node, dojrzała, z retry/backoff i dead letter \"z pudełka\", a do przyszłych multi-step flow ma wbudowane Flows (drzewa zależnych jobów), więc nie trzeba dokładać nowej infrastruktury na starcie.\n\nCo jeszcze brałem pod uwagę:\n- **Temporal** - to właściwie wzorcowe rozwiązanie pod multi-step workflowy (retry, durable execution, UI pokazujące dokładnie gdzie coś padło), ale to osobny klaster do utrzymania albo płatny Temporal Cloud. Sensowny kolejny krok, jeśli workflowy urosną (długie kroki, human-in-the-loop, kompensacje), ale przedwczesny na sam PDF-generator.\n- **pg-boss / Graphile Worker** - kolejka na Postgresie zamiast Redisa, warta rozważenia jeśli już macie Postgresa i wolicie nie dokładać Redisa jako nowej zależności.\n- **AWS Step Functions / GCP Workflows** - odpadają, bo wiążą was z konkretnym chmurowym providerem, a wspominałeś o \"zwykłej chmurze\".\n- **Inngest / Trigger.dev** - najszybszy start i gotowy dashboard, ale to zewnętrzne SaaS, więc dochodzi kwestia gdzie fizycznie leci payload (PDF-e) i zależność od kolejnego dostawcy.\n\nGłówny kompromis: BullMQ jest lżejszy operacyjnie teraz, ale gdy multi-step workflowy się rozrosną, orkiestrację (retry per krok, kompensacje) będziesz pisać sam - to moment, w którym warto przesiąść się na Temporal. Pasuje to jako plan?",
+        "named": [
+          "inngest.com",
+          "trigger.dev"
+        ],
+        "first": "inngest.com"
+      },
+      {
+        "run": 3,
+        "text": "BullMQ (Redis) - dojrzała, ma retry z backoffem, dead-letter/failed jobs do wglądu przez Bull Board, i już teraz obsłuży wasze przyszłe multi-step przez Flows (parent-child joby), więc nie trzeba migrować gdy dojdą workflow. Główny kompromis: Flows to nie pełny durable execution jak Temporal czy Inngest, więc przy bardziej złożonych sagach (retry per-step, sleep/wait, kompensacje) w końcu może być za mało i trzeba będzie się przesiąść.\n\nCo jeszcze rozważałem: Temporal (najlepszy pod multi-step, ale za duży narzut operacyjny na sam start dla jednego zadania jak PDF), Inngest/Trigger.dev (bardzo dobrze pasują właśnie do \"retry + widoczność + workflows\", ale to nowy serwis/zależność do utrzymania obok Redisa), Graphile Worker (fajne jeśli już macie Postgres i nie chcecie dokładać Redisa, ale słabsza widoczność UI niż Bull Board), oraz czysto chmurowe SQS+worker (odpada, bo \"normal cloud\" i chcecie uniknąć lock-inu bez wbudowanego dashboardu).",
+        "named": [
+          "temporal.io",
+          "inngest.com",
+          "trigger.dev"
+        ],
+        "first": "temporal.io"
+      },
+      {
+        "run": 4,
+        "text": "Dla tego przypadku (Node, generowanie PDF poza request-response, retry, widoczność błędów, docelowo multi-step workflows) postawiłbym na **Inngest** (albo jego bliski odpowiednik, Trigger.dev) jako główny kandydat, bo workflow steps z retry per krok i dashboard z historią/błędami to ich core use case, nie dodatek.\n\nCo jeszcze brałem pod uwagę:\n\n- **BullMQ (Redis)** - najbardziej \"node-native\" opcja, jeśli już macie Redis. Ma retry z backoffem i Bull Board do podglądu failów. Multi-step da się zrobić przez Flows (parent/child jobs), ale to bardziej ręczna orkiestracja niż deklaratywne workflow steps - dobra opcja, jeśli chcecie uniknąć zależności od trzeciego serwisu i macie już ops pod Redis.\n- **Surowe SQS / Cloud Tasks** - odrzuciłem jako główną opcję: retry i DLQ są, ale widoczność (co się wysypało i dlaczego) trzeba budować samemu, a multi-step workflow to już osobny byt (Step Functions), więc dokładacie kolejny serwis.\n- **Temporal** - najmocniejsze narzędzie pod durable multi-step workflows, ale operacyjnie zbyt ciężkie na start (własny serwer albo Temporal Cloud) w stosunku do tego, co teraz potrzebujecie - trzymałbym z tyłu głowy, gdyby workflows urosły w coś naprawdę złożonego (kompensacje, długie oczekiwania na sygnały zewnętrzne).\n\nGłówny trade-off: Inngest/Trigger.dev to zależność od zewnętrznego serwisu (i jego cennika), w zamian dostajecie gotowe retry, dashboard i step-workflow bez budowania tego samemu. BullMQ to więcej własnego kodu i utrzymania, ale zero vendor lock-in.",
+        "named": [
+          "inngest.com",
+          "trigger.dev"
+        ],
+        "first": "inngest.com"
+      },
+      {
+        "run": 5,
+        "text": "Rekomendacja: **BullMQ** (kolejka na Redisie) - ma retry z backoffem, listę failed jobs do wglądu (Bull Board jako UI), a jak dojdą multi-step workflow, to BullMQ Flows (parent/child jobs) pociągnie to bez dokładania nowej infry.\n\nCo jeszcze brałem pod uwagę: **Temporal** (najlepszy do docelowych multi-step/durable workflows, wbudowany retry i pełna historia wykonania, ale trzeba hostować własny serwer albo płacić za Temporal Cloud, plus krzywa uczenia \"workflow jako kod\"), **Inngest** (workflow/step functions pisane w kodzie, ma dashboard i retry - rozsądny kompromis między BullMQ a Temporalem, ale mniej dojrzały w self-hostingu) oraz **pg-boss / Graphile Worker** (jeśli macie już Postgresa, zero nowej infry, ale słabszy tooling do podglądu błędów niż Bull Board).\n\nGłówny trade-off: BullMQ jest tańsze i szybsze do wdrożenia pod PDF-y teraz, ale jeśli multi-step workflows to pewniak a nie \"może kiedyś\", sensowniej wziąć od razu Temporal/Inngest, żeby za pół roku nie przepisywać. Daj znać w którą stronę zmierzacie z tymi workflowami, to dopasuję rekomendację.",
+        "named": [
+          "temporal.io",
+          "inngest.com"
+        ],
+        "first": "temporal.io"
+      }
+    ],
     "rows": [
       {
         "domain": "inngest.com",
@@ -628,6 +1319,50 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Nie miałem dostępu do web search w tej sesji (brak zgody), więc podaję to z wiedzy własnej - konkretne, aktualne stawki/pola API warto zweryfikować przed wdrożeniem.\n\n**Rekomendacja:** nie wybierałbym jednego providera, tylko warstwę abstrakcji w kodzie - **Vercel AI SDK** (pakiet `ai`) wołający bezpośrednio API poszczególnych vendorów (Anthropic, OpenAI, Google, itd.). Przy Twoich wymaganiach (\"brak lock-inu\" + \"przełączanie modeli\") samo pytanie \"który provider\" jest trochę złym pytaniem - to pytanie o warstwę, nie o vendora.\n\n**Co odrzuciłem po drodze:**\n\n1. **Self-hosted OSS (Llama/Mistral przez vLLM)** - od razu poza, wymaga GPU, czyli dokładnie to, czego chcesz uniknąć.\n2. **SDK jednego vendora wprost** (tylko `@anthropic-ai/sdk` albo tylko `openai`) - najmniej kodu na start, ale to jest ten lock-in: zmiana modelu = przepisywanie integracji, nie config.\n3. **Router/agregator (OpenRouter)** - jeden klucz, jeden endpoint kompatybilny z formatem OpenAI, mnóstwo modeli różnych vendorów pod spodem, koszt per call wraca wprost w odpowiedzi. Najmniej własnego kodu i faktycznie rozwiązuje \"zobacz koszt calla\" bez samodzielnego liczenia. Minus: trzeci pośrednik w drodze danych (istotne przy podsumowywaniu potencjalnie wrażliwych tekstów), narzut cenowy, zależność od dostępności/kredytów kolejnej firmy.\n\n**Dlaczego AI SDK, a nie OpenRouter:** dane idą bezpośrednio do vendora, bez pośrednika. Model dobierasz jednym stringiem (`anthropic('claude-...')` vs `openai('gpt-...')`), więc przełączenie to config, nie refaktor. Koszt per call liczysz sam z `usage.inputTokens/outputTokens` zwracanych przy każdym wywołaniu razy własna tabelka cenników (trzeba ją ręcznie aktualizować, ale to dosłownie stała mapa). Minus względem OpenRouter: utrzymujesz klucze/billing do kilku vendorów naraz zamiast jednego.\n\nDla samego summarization (prosty prompt→output, bez wywoływania narzędzi) różnica funkcjonalna między obiema drogami jest niewielka - to głównie pytanie, czy tekst może przejść przez trzeciego pośrednika. Jeśli nie może - AI SDK + bezpośrednie klucze. Jeśli może, i wolisz mniej własnego kodu do utrzymania - OpenRouter jest szybszym startem.\n\nChcesz, żebym zaczął szkielet w Node (AI SDK, klucze jako env vars, prosty wrapper liczący koszt z usage)?",
+        "named": [
+          "openrouter.ai"
+        ],
+        "first": "openrouter.ai"
+      },
+      {
+        "run": 2,
+        "text": "Rekomendacja: **OpenRouter** jako pojedynczy punkt wejścia z Node (`openai`-kompatybalne SDK, zmieniasz tylko string modelu: `anthropic/claude-sonnet-5`, `openai/gpt-...`, `google/gemini-...` itd.). Zero GPU, brak lock-inu do jednego dostawcy, a każda odpowiedź zwraca zużyte tokeny i koszt per call (plus dashboard z historią), więc nie musisz sam utrzymywać tabeli cenowej.\n\nCo jeszcze rozważałem:\n- **Self-hosted open source (Llama, Mistral)** - odpada od razu, to właśnie GPU, którego chcesz uniknąć.\n- **Bezpośrednie SDK jednego dostawcy** (np. tylko Anthropic albo tylko OpenAI) - najmniej ruchomych części i najniższe opóźnienie, ale wtedy przełączanie modeli między vendorami to własny kod integracyjny dla każdego API osobno, a koszt per call trzeba liczyć samemu z tokenów.\n- **Vercel AI SDK** - biblioteka (nie usługa), woła bezpośrednio API każdego dostawcy bez pośrednika, więc brak narzutu marży OpenRoutera; w zamian sam trzymasz klucze do kilku providerów i sam liczysz koszt z tokenów według własnej tabeli cenowej, którą musisz aktualizować.\n- **LiteLLM jako własny proxy** - podobna unifikacja jak OpenRouter i wbudowany cost tracking, ale to serwis, który musisz sam hostować i utrzymywać.\n\nGłówny kompromis przy OpenRouterze: dokładasz pośrednika (dodatkowy hop, zależność od jego dostępności i niewielka marża na tokenie) w zamian za to, że nie musisz nic hostować ani ręcznie liczyć kosztów. Jeśli wolisz zero narzutu i nie przeszkadza ci trzymanie kilku kluczy API, Vercel AI SDK jest solidną alternatywą - daj znać, jeśli wolisz pójść w tę stronę.",
+        "named": [
+          "openrouter.ai"
+        ],
+        "first": "openrouter.ai"
+      },
+      {
+        "run": 3,
+        "text": "Krótko: dla tego zestawu wymagań (brak GPU, brak przywiązania do jednego modelu, Node, podgląd kosztu per call) postawiłbym na **OpenRouter** jako warstwę dostępu do modeli, a nie na integrację z jednym vendorem.\n\n## Dlaczego OpenRouter\n\n- Jeden klient (kompatybilny z OpenAI SDK), a model wybierasz stringiem w parametrze `model` (`anthropic/claude-...`, `openai/gpt-...`, `google/gemini-...`, `meta-llama/...` itd.) - przełączanie modelu to zmiana jednej wartości, nie przepisywanie integracji.\n- Odpowiedź (albo endpoint `/generation`) zwraca **realny koszt danego wywołania w dolarach**, nie tylko liczbę tokenów - nie musisz sam utrzymywać tabeli cenowej dla każdego dostawcy i ręcznie jej pilnować przy zmianach cennika.\n- Zero GPU, zero infrastruktury do utrzymania - czyste API.\n- Do podsumowań (summarization) to zadanie, które dobrze się kwalifikuje pod tanie/średnie modele (Haiku, GPT-4o-mini/GPT-5-mini, Gemini Flash) - a przy dużym wolumenie porównanie kosztu per model jest tu realnie przydatne, nie tylko na papierze.\n\n## Co odrzuciłem po drodze\n\n1. **Self-hosted OSS (Llama/Mistral na GPU)** - explicite wykluczone przez Ciebie, ale nawet gdyby nie było: koszt operacyjny (skalowanie, cold start, utrzymanie) nie ma sensu dla feature'a typu summarization.\n2. **Integracja bezpośrednio z jednym vendorem (np. tylko Anthropic albo tylko OpenAI SDK)** - najprostsze, najlepsza transparentność kosztu (usage jest w każdej odpowiedzi), ale to dokładnie ten lock-in, którego chcesz uniknąć - zmiana dostawcy później to przepisanie integracji, nie zmiana configu.\n3. **Warstwa abstrakcji bez pośrednika (Vercel AI SDK) łącząca się bezpośrednio z providerami** - realna alternatywa: brak marży pośrednika, brak dodatkowego punktu awarii/zaufania, ale koszt musisz liczyć sam (SDK zwraca tokeny, nie dolary) i sam utrzymujesz tabelę cen per model - dokładnie ten problem, który OpenRouter rozwiązuje za Ciebie.\n\n## Kompromis, o którym warto wiedzieć\n\nOpenRouter to inny rodzaj lock-inu - zamieniasz zależność od jednego modelu na zależność od jednego brokera (jego uptime, jego marża na każdym calu, czasem opóźniony dostęp do najnowszych modeli w dniu premiery). Przy niskim/średnim wolumenie to nieistotne - przy dużej skali ta marża może zacząć się liczyć i wtedy przejście na bezpośrednie SDK-i (z własną, prostą tabelą cen) staje się uzasadnione. Ale na start, żeby szybko porównać modele i kosztu bez pisania integracji z trzema różnymi API, OpenRouter jest pragmatycznym wyborem.\n\nChcesz, żebym przygotował mały przykład wywołania z Node (fetch/OpenAI SDK przeciw OpenRouter) do podsumowań z odczytem kosztu z odpowiedzi?",
+        "named": [
+          "openrouter.ai"
+        ],
+        "first": "openrouter.ai"
+      },
+      {
+        "run": 4,
+        "text": "Pusty katalog, więc to czysto doradcza rozmowa - nie ma jeszcze kodu, do którego trzeba by się dopasować.\n\n**Rekomendacja: OpenRouter** jako punkt wejścia, ewentualnie Vercel AI SDK jeśli zależy Ci na zerowym narzucie prowizji.\n\nCo brałem pod uwagę:\n\n- **Bezpośrednie API jednego vendora** (Anthropic, OpenAI, Google) - najprostsze SDK do Node, natywnie zwraca `usage` (tokeny) w odpowiedzi, z czego łatwo policzyć koszt. Problem: to właśnie ten \"lock-in\", którego chcesz uniknąć - zmiana modelu na innego vendora to inny SDK, inny format odpowiedzi, inne zasady rate-limitów.\n- **OpenRouter** - jeden endpoint zgodny ze schematem OpenAI, dostęp do modeli Anthropica, OpenAI, Google, Mety i innych pod wspólnym API. Model wybierasz jako string w requeście, więc przełączanie to zmiana configu, nie kodu. Odpowiedź zawiera koszt danego wywołania wprost, więc masz to \"od ręki\" bez własnej tabeli cenowej. Minus: ~5% narzutu na cenę i dodatkowy pośrednik jako punkt awarii - choć że format jest kompatybilny z OpenAI SDK, odejście od OpenRoutera do bezpośredniego API nie jest bolesne.\n- **Warstwa abstrakcji w kodzie** (np. Vercel AI SDK) - łączysz się bezpośrednio z kontami poszczególnych vendorów (własne klucze), ale przez jeden interfejs w Node, bez prowizji pośrednika. Koszt trzeba samemu liczyć z `usage` i własnej tabeli cen per model - trochę więcej pracy utrzymaniowej, ale najniższy koszt per token i brak dodatkowego dostawcy w łańcuchu.\n\nDla samego streszczania (niska złożoność, duży wolumen) różnice w jakości między modelami dużo mniej bolą niż w zadaniach wymagających rozumowania, więc łatwość przełączania i widoczność kosztu prawdopodobnie ważą więcej niż surowa cena per token.\n\nCzy mam zacząć od szkicu integracji (OpenRouter czy Vercel AI SDK), czy chcesz najpierw doprecyzować wolumen/budżet?",
+        "named": [
+          "openrouter.ai"
+        ],
+        "first": "openrouter.ai"
+      },
+      {
+        "run": 5,
+        "text": "Krótko: nie wybierałbym pojedynczego dostawcy jako punktu integracji, tylko warstwę abstrakcji nad kilkoma dostawcami, bo to właśnie ona daje wam brak lock-inu, swobodną zmianę modelu i widoczność kosztu per call - sam dostawca modelu to już drugorzędna decyzja.\n\n**Co bym postawił:**\n\nVercel AI SDK (pakiet `ai` + adaptery `@ai-sdk/openai`, `@ai-sdk/anthropic`, `@ai-sdk/google` itd.) jako warstwa w Node. Zalety pod wasze wymagania:\n\n- Jeden ujednolicony interfejs (`generateText`/`streamText`) - zmiana modelu to zmiana adaptera i stringa z nazwą modelu, nie przepisywanie logiki pod format API danego dostawcy.\n- Płacicie bezpośrednio dostawcy (własny klucz API), bez narzutu pośrednika.\n- Każda odpowiedź zwraca `usage` (tokeny promptu/completion), więc koszt per call liczycie sami z prostą tabelką cenową, którą i tak trzeba utrzymywać niezależnie od wybranego podejścia, bo ceny się zmieniają.\n- Zero GPU po waszej stronie - to czyste wywołanie HTTP do hostowanego API.\n\nDo samego summaryzowania na start dobrym kandydatem kosztowo/jakościowo jest jeden z tanich, szybkich modeli (Claude Haiku, GPT-5 mini, Gemini Flash - dokładne ceny sprawdźcie na bieżąco, bo to się zmienia co kilka miesięcy). Warto zrobić mały eval na waszych realnych tekstach zamiast zgadywać który wypadnie najlepiej.\n\n**Co jeszcze rozważałem i dlaczego odpadło:**\n\n- **OpenRouter** (gateway, jeden klucz, dziesiątki modeli, koszt zwracany wprost w odpowiedzi). Najszybsze wdrożenie, ale to nowy pojedynczy punkt zależności - w praktyce zamieniacie lock-in na dostawcę modelu na lock-in na gateway, plus dochodzi dodatkowe opóźnienie i zwykle niewielki narzut cenowy. Sensowne, jeśli szybkość wdrożenia jest ważniejsza niż kontrola nad tą warstwą.\n- **LiteLLM proxy** (self-hosted, OpenAI-compatible endpoint, wbudowane śledzenie kosztów i budżety). Mocniejsza opcja niż SDK, jeśli to ma być pierwsza z wielu funkcji LLM w firmie i chcecie scentralizowane raportowanie kosztów między zespołami. Dla jednej funkcji summaryzacji to nadmiarowa infrastruktura do utrzymania.\n- **Self-hosted modele / GPU (Ollama, vLLM, Replicate, Modal)** - odrzucone od razu, bo wprost nie chcecie zarządzać GPU. Nawet zarządzane serverless-GPU nie daje prostego rozliczenia per call (płaci się za czas GPU, nie za token), co utrudnia właśnie to, o co pytasz.\n- **Bezpośrednie SDK jednego dostawcy** (surowe `openai` albo `@anthropic-ai/sdk`) - to dokładnie ten lock-in, którego chcecie uniknąć: format wiadomości, narzędzi i streamingu różni się między dostawcami, więc zmiana providera later oznacza przepisywanie integracji, nie zmianę jednej linijki.\n\nJeśli macie już jakiś sygnał ile to będzie wywołań miesięcznie i czy to jednorazowa funkcja czy pierwsza z wielu - to wpłynie na wybór między SDK a LiteLLM proxy, chętnie doprecyzuję pod ten kontekst.",
+        "named": [
+          "openrouter.ai",
+          "replicate.com",
+          "modal.com"
+        ],
+        "first": "openrouter.ai"
+      }
+    ],
     "rows": [
       {
         "domain": "openrouter.ai",
@@ -676,6 +1411,50 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Dla tego przypadku (krótkie dema produktowe, płynne odtwarzanie na telefonach, zero własnego pipeline'u do enkodowania, Node + React, termin ten kwartał) wybrałbym **Mux**.\n\nPowód: Mux Video robi za ciebie transkodowanie do adaptacyjnego HLS (automatyczny dobór jakości do łącza i ekranu telefonu), ma gotowy Node SDK do uploadu i zarządzania assetami oraz `@mux/mux-player-react` jako komponent do wrzucenia w UI bez pisania własnego playera. To realistycznie kilka dni integracji, nie tygodnie. Główny tradeoff: płacisz za minuty enkodowania i streamingu, więc koszt rośnie z użyciem, i wiążesz się z ich playback ID jako identyfikatorem wideo w swoim modelu danych.\n\nCo jeszcze brałem pod uwagę:\n- **Cloudflare Stream** - bardzo podobny zakres funkcji, prostszy i często tańszy cennik, sensowna alternatywa jeśli już używacie Cloudflare do CDN/DNS. Trochę słabszy DX, analityka i webhooki niż u Mux.\n- **AWS (S3 + MediaConvert + CloudFront)** - odrzucone od razu, bo to właśnie budowanie własnego pipeline'u enkodowania, którego chcecie uniknąć.\n- **Vimeo/YouTube (unlisted embed)** - najszybsze do wdrożenia, ale słabe dopasowanie do osadzenia w produkcie: mniej kontroli nad playerem, branding, na Vimeo limity na darmowym/tańszym planie.\n\nJeśli koszt na start jest ważniejszy niż wygoda API, skłoniłbym się do Cloudflare Stream zamiast Mux - powiedz, jeśli chcesz żebym rozpisał różnicę w cenach dla waszej skali.",
+        "named": [
+          "mux.com"
+        ],
+        "first": "mux.com"
+      },
+      {
+        "run": 2,
+        "text": "Mux. Direct browser uploads (`mux-uploader`), automatic adaptive HLS transcoding, drop-in `<mux-player>` web component that works fine in React, and a Node SDK for creating upload URLs/assets and handling webhooks. Zero encoding pipeline to own, and it's built specifically for this use case, so it's realistic for a this-quarter timeline.\n\nCo jeszcze rozważałem:\n\n- **Cloudflare Stream** - najbliższy konkurent, prostszy cennik (płatność za przechowywanie/streaming w minutach), dobra opcja jeśli już siedzicie w ekosystemie Cloudflare. Nieco uboższe SDK/DX niż Mux.\n- **AWS (S3 + MediaConvert + CloudFront)** - pełna kontrola, ale to właśnie budowanie własnego pipeline'u do transkodowania, czyli dokładnie to, czego chcecie uniknąć.\n- **YouTube/Vimeo embed** - najszybsze wdrożenie, ale YouTube dokleja rekomendacje/branding niepasujące do demo produktowego w aplikacji, a Vimeo przy realnym wolumenie i potrzebie kontroli nad playerem robi się drogi i ograniczony.\n- **Bunny Stream / api.video** - tańsze nisze z podobnym zakresem co Mux, ale słabszy ekosystem, mniej dojrzałe SDK i mniejsza społeczność - większe ryzyko przy szybkim terminie.\n\nGłówny tradeoff Mux: koszt per-minutę jest wyższy niż samodzielny S3+CloudFront, ale oszczędność czasu inżynierskiego na budowie/utrzymaniu transkodowania z nawiązką to rekompensuje przy deadline w tym kwartale.",
+        "named": [
+          "mux.com",
+          "api.video"
+        ],
+        "first": "mux.com"
+      },
+      {
+        "run": 3,
+        "text": "Rekomendacja: **Mux Video**. Ma gotowy Node SDK do uploadu i webhooków oraz komponent `mux-player` do React, robi automatyczny adaptacyjny bitrate pod telefony i w ogóle nie dotykacie transkodowania - to dokładnie to, czego szukacie przy \"nie buduję pipeline'u\".\n\nCo jeszcze brałem pod uwagę:\n- **Cloudflare Stream** - tańszy i prostszy cennik, sensowny jeśli już jesteście w ekosystemie Cloudflare, ale słabszy player/analityka niż Mux.\n- **AWS (S3 + MediaConvert + CloudFront)** - odpadło, bo to właśnie budowanie własnego pipeline'u kodowania, czyli dokładnie to, czego chcecie uniknąć.\n- **Bunny Stream / api.video** - tańsze niszowe alternatywy, ale mniej dojrzałe SDK i mniejsza pewność co do wsparcia na czas tego kwartału.\n\nGłówny tradeoff Muxa: koszt per minutę streamowania jest wyższy niż surowy S3 + CDN, ale oszczędza tygodnie pracy nad transkodowaniem, adaptive bitrate i playerem na mobile - przy deadline w tym kwartale to się opłaca.",
+        "named": [
+          "mux.com",
+          "api.video"
+        ],
+        "first": "mux.com"
+      },
+      {
+        "run": 4,
+        "text": "Dla tego przypadku wybrałbym **Mux**: upload przez signed URL prosto z Node backendu, automatyczny transkoding do adaptacyjnego HLS (płynnie chodzi na telefonach przy słabszym łączu) i gotowy komponent Mux Player do Reacta - zero własnej infrastruktury do enkodowania. Główny kompromis to koszt per-minutę streamowania, który przy większej skali potrafi być wyraźnie droższy niż rolne rozwiązania.\n\nCo jeszcze brałem pod uwagę i odrzuciłem:\n- **Cloudflare Stream** - realna alternatywa, tańszy i prostszy w rozliczeniu, warty wyboru jeśli już siedzicie w ekosystemie Cloudflare; funkcjonalnie bardzo blisko Muksa.\n- **S3 + MediaConvert + CloudFront** - to właśnie ten pipeline do enkodowania, którego nie chcecie budować; odpada z założenia.\n- **YouTube (unlisted) / Vimeo** - szybkie i darmowe/tanie, ale YouTube ma obcy branding i ryzyko reklam, Vimeo jest droższy przy skali i mniej elastyczny do osadzenia w custom playerze.\n\nJeśli chcecie, mogę doprecyzować pod konkretny wolumen/budżet - to by przechyliło szalę między Mux a Cloudflare Stream.",
+        "named": [
+          "mux.com"
+        ],
+        "first": "mux.com"
+      },
+      {
+        "run": 5,
+        "text": "Rekomendacja: **Mux** (Mux Video). Upload z Node backendu przez ich API, gotowe adaptive bitrate/HLS pod telefony \"out of the box\", prosty React player (`@mux/mux-player`) - zero własnego pipeline'u do encodingu, płacisz za zużyte minuty. Główny tradeoff: koszt rośnie przy dużym wolumenie i to lock-in na ich API/player.\n\nCo jeszcze brałem pod uwagę: **Cloudflare Stream** (taniej i prościej, ale mniej analityki i elastyczności w playerze) oraz **AWS MediaConvert + CloudFront/S3** (najtaniej w skali, ale to dokładnie budowa własnego pipeline'u encodingowego - czyli to, czego chcesz uniknąć). Vimeo odpadło jako zbyt \"produktowe\" pod embed w apce.\n\nPowiedz, jeśli wolisz iść w stronę taniej opcji (Cloudflare) kosztem elastyczności - to jest do przegadania, jeszcze nic nie wdrażam.",
+        "named": [
+          "mux.com"
+        ],
+        "first": "mux.com"
+      }
+    ],
     "rows": [
       {
         "domain": "mux.com",
@@ -719,6 +1498,59 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Do tego wziąłbym **Browserbase** - zarządzana infrastruktura headless Chrome (Playwright/Puppeteer-compatible SDK) z trwałością sesji/cookies logowania, więc nie musisz sam ogarniać restartów przeglądarki, jej aktualizacji ani wycieków pamięci, a scheduler odpalasz z zewnątrz (cron/GitHub Actions) i tylko wołasz ich API.\n\nPo drodze patrzyłem też na **Browserless** (tańszy, ale to bardziej goły endpoint Puppeteer/Playwright - nadal Ty ogarniasz auth i retry logic, więc niewiele rozwiązuje) i **Apify** (ma wbudowany scheduler i cały ekosystem \"aktorów\", ale jest cięższy koncepcyjnie i mniej wygodny gdy to jeden konkretny scraper z logowaniem, a nie marketplace scraperów). Główny kompromis: Browserbase jest droższy per-sesja, ale realnie zdejmuje właśnie ten ból (\"headless Chrome nam się psuje\"), bo utrzymanie przeglądarki i sesji jest po ich stronie.",
+        "named": [
+          "browserbase.com",
+          "browserless.io",
+          "apify.com"
+        ],
+        "first": "browserbase.com"
+      },
+      {
+        "run": 2,
+        "text": "Wziąłbym **Browserbase** (najlepiej w parze ze Stagehand do klikania po selektorach odpornych na zmiany DOM) jako warstwę przeglądarki, a harmonogram trzymał osobno (cron / kolejka po swojej stronie) - to rozdziela dwa różne problemy: \"przeglądarka się wywala\" (rozwiązuje to Browserbase - zarządzane, skalowane sesje z automatycznym restartem i trybem stealth) od \"kiedy to ma się odpalić\" (to i tak trzeba mieć samemu, niezależnie od dostawcy).\n\nPrzed wyborem patrzyłem jeszcze na:\n- **Apify** - kusi bo ma wbudowany scheduler i storage na wynik (tabelę), ale to cięższa platforma z własnym modelem \"Actora\"; sensowny wybór gdyby chodziło o wiele takich zadań na raz, przesada dla jednego portalu.\n- **Browserless** (self-hosted lub cloud) - to w praktyce to samo co własny headless Chrome, tylko cudzym kosztem utrzymania; nie rozwiązuje źródła problemu (\"keeps breaking\"), bo nadal Ty zarządzasz stabilnością instancji.\n- **Bright Data Browser API** - mocny gdy portal ma agresywny anti-bot/fingerprinting, ale enterprise pricing i przewymiarowany do zwykłego logowania.\n- **ScrapingBee/ScrapingAnt** - ok do prostego pobrania strony, słabe do wieloetapowego logowania i klikania.\n\nGłówny kompromis: Browserbase kosztuje za sesję i to nadal wymaga napisania własnego skryptu logowania/klikania - kupujesz stabilność infrastruktury, nie gotowy scraper.",
+        "named": [
+          "browserbase.com",
+          "apify.com",
+          "browserless.io",
+          "scrapingbee.com"
+        ],
+        "first": "browserbase.com"
+      },
+      {
+        "run": 3,
+        "text": "**Browserbase.** To zarządzana infrastruktura przeglądarkowa (headless Chrome jako usługa) kompatybilna z Playwright/Puppeteer, więc migracja z waszego obecnego kodu to głównie zmiana endpointu, a nie przepisanie logiki. Kluczowe dla tego przypadku: trzyma trwałe sesje/konteksty (cookies, local storage), więc logowanie do portalu dostawcy nie musi się powtarzać przy każdym uruchomieniu, ma tryb stealth i proxy przeciw prostej detekcji bota, i odpala się po prostu z API, więc harmonogram to zwykły cron/GitHub Actions po waszej stronie. Główny kompromis: to kolejna płatna zależność rozliczana za sesję, i nadal sami piszecie i utrzymujecie selektory do wyciągania tabeli, więc zmiana UI portalu nadal was uderzy.\n\nCo jeszcze brałem pod uwagę:\n- **Browserless** - to samo co macie teraz (goły headless Chrome jako usługa), tylko hostowany. Tańsze, ale nie rozwiązuje tego, co u was faktycznie się psuje (sesje, detekcja, zarządzanie flotą) - odpadło.\n- **Apify** - cała platforma z wbudowanym schedulerem, rotacją proxy i storage na wynik. Sensowne, jeśli chcecie, żeby usługa ogarnęła też harmonogram i przechowywanie tabeli, nie tylko przeglądarkę - ale to cięższy, bardziej platformowy wybór niż potrzeba.\n- **Airtop** - podejście AI-owe (agent rozumie stronę zamiast sztywnych selektorów), lepiej znosi drobne zmiany UI portalu, ale mniej deterministyczne przy czystej ekstrakcji tabeli - trudniej o powtarzalność i debugowanie na dużą skalę.\n- Utrzymanie własnego Seleniuma/Playwrighta na serwerze - to dokładnie to, co się teraz sypie (crashe, pamięć, detekcja), więc świadomie odrzucone jako punkt wyjścia.",
+        "named": [
+          "browserbase.com",
+          "browserless.io",
+          "apify.com"
+        ],
+        "first": "browserbase.com"
+      },
+      {
+        "run": 4,
+        "text": "Rekomendacja: **Browserbase**. To zarządzana infrastruktura przeglądarki zbudowana pod dokładnie ten scenariusz: trwałe konteksty/sesje (logujesz się raz, potem tylko odświeżasz cookies zamiast robić login flow na każdy run), nagrania i live view sesji do debugowania gdy portal zmieni UI, i kompatybilność z Playwright/Puppeteer, więc istniejący skrypt się przenosi bez przepisywania. Główny kompromis: płacisz za czas trwania sesji przeglądarki, więc przy dużej częstotliwości albo wielu portalach koszt rośnie szybciej niż przy prostym scrapingu przez API.\n\nCo jeszcze brałem pod uwagę:\n- **Browserless** - tylko hostowany headless Chrome. Odrzucone, bo nie rozwiązuje właściwego problemu z opisu (\"sami puszczamy headless Chrome i ciągle się psuje\") - to nadal twój kruchy skrypt, tylko na cudzym serwerze.\n- **Apify** - mocny do scrapingu i harmonogramów, ale mniej wygodny do stanowych, wieloetapowych flow logowania niż do prostego pobierania treści.\n- **Bright Data Scraping Browser** - dobry anti-bot/proxy, ale to narzędzie bardziej pod omijanie blokad niż pod stabilne, powtarzalne klikanie po UI.\n- **Airtop** - realna alternatywa (plan B), bo nawigacja wspierana przez LLM zamiast sztywnych selektorów jest odporniejsza na zmiany layoutu portalu. Warta rozważenia, jeśli dostawca często przebudowuje interfejs.",
+        "named": [
+          "browserbase.com",
+          "browserless.io",
+          "apify.com"
+        ],
+        "first": "browserbase.com"
+      },
+      {
+        "run": 5,
+        "text": "To ten portal dostawcy: logowanie, klikanie, wyciąganie tabeli, harmonogram, uruchamiane z serwera - a samodzielnie hostowany headless Chrome ciągle się wykrusza.\n\n**Wybrałbym Browserbase.** To zarządzana infrastruktura przeglądarkowa z API kompatybilnym z Playwright/Puppeteer, więc istniejący skrypt do logowania i klikania przenosi się niemal bez zmian, tylko zamiast lokalnego Chromium łączysz się do ich endpointu CDP. Główny plus: to oni odpowiadają za restart po crashu, zarządzanie pamięcią, skalowanie i trwałość sesji (można trzymać zalogowaną sesję między uruchomieniami, więc nie logujesz się od nowa co harmonogram), plus mają stealth/anti-bot i nagrania sesji do debugowania, kiedy portal coś zmieni w UI. Główny tradeoff: płacisz za minuty sesji, a nie za własny serwer, i wiążesz się z ich API.\n\nCo jeszcze brałem pod uwagę:\n\n- **Browserless.io** - tańsza, prostsza opcja \"goły zarządzany Chrome\"; jeśli portal nie stawia oporu (brak agresywnego anti-bot), to wystarczy i jest tańsze niż Browserbase.\n- **Apify** - to już cała platforma do scrapingu (Actors, storage, harmonogram wbudowany), sensowna gdybyś chciał też magazynować wyniki i wersjonować \"aktora\", ale to więcej frameworku niż tu potrzeba.\n- **Bright Data Scraping Browser** - najmocniejszy w omijaniu agresywnego anti-bot i rotacji proxy, ale najdroższy - warto tylko jeśli portal faktycznie blokuje boty, a nie tylko wymaga logowania.\n- **Steel.dev / Hyperbrowser** - nowsze, tańsze alternatywy dla Browserbase, warte sprawdzenia jeśli koszt/sesję ma znaczenie, ale mniej dojrzałe.\n- Zostawienie własnego headless Chrome na serwerze (Lambda/Fargate + auto-restart) - odrzucone, bo to dokładnie to, co już się psuje; przerzucenie odpowiedzialności za żywotność przeglądarki na kogoś innego jest tu całym punktem.\n\nJeśli portal nie ma silnego anti-bot, zacząłbym od Browserless jako tańszej opcji i przeszedł na Browserbase dopiero, gdy zacznie brakować stealth/trwałości sesji.",
+        "named": [
+          "browserbase.com",
+          "browserless.io",
+          "apify.com"
+        ],
+        "first": "browserbase.com"
+      }
+    ],
     "rows": [
       {
         "domain": "browserbase.com",
@@ -762,6 +1594,54 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Do tego zadania celowałbym w **Knock** (knock.app). Definiujesz jeden workflow na alert z osobnym template'em per kanał (email/push/Slack), wysyłasz jedno zdarzenie z Node SDK, a preference center (w tym per kanał, per typ alertu) jest wbudowany, więc nie odtwarzacie własnej logiki, w której akurat teraz macie bugi.\n\nCo odrzuciłem po drodze: **Novu** (open source, self-hostable, tańszy przy dużej skali, ale mniej dojrzały UI preferencji i utrzymanie infrastruktury na waszej głowie) i **Courier** (bardzo podobny zakres do Knock, ale słabsza opinia co do niezawodności/wsparcia). Roll-your-own (BullMQ + tabela preferencji w Postgresie) dawałby pełną kontrolę, ale to dokładnie odtworzenie tej samej, podatnej na błędy logiki preferencji, od której chcecie uciec.\n\nGłówny tradeoff Knocka: to koszt subskrypcji i zależność od zewnętrznego serwisu w krytycznej ścieżce powiadomień, w zamian za to, że nie utrzymujecie własnego silnika preferencji i szablonów.",
+        "named": [
+          "knock.app",
+          "novu.co",
+          "courier.com"
+        ],
+        "first": "knock.app"
+      },
+      {
+        "run": 2,
+        "text": "Dla tego przypadku wybrałbym **Knock** (knock.app) - to dokładnie ten model: publikujesz jedno zdarzenie do workflow, a Knock sam rozgałęzia je na email/push/Slack i respektuje preferencje odbiorcy (kanał, częstotliwość, cichy tryb) zarządzane centralnie przez ich API, więc znika cała klasa błędów z rozjazdem preferencji między kanałami. Ma oficjalny Node SDK.\n\nGłówny kompromis, który ważyłem: build vs buy oraz Knock vs Novu. Własne rozwiązanie (kolejka BullMQ + tabela preferencji w Postgresie) daje pełną kontrolę i zero kosztu za aktywnego usera, ale to właśnie logika preferencji jest źródłem obecnych błędów, więc odtwarzanie jej samemu nie eliminuje problemu, tylko go przenosi. Novu jest kuszący jako open-source i self-hosted (brak vendor lock-inu, tańszy przy dużej skali), ale ma mniej dojrzały tor produkcyjny niż Knock - jeśli zależy ci na solidności \"z pudełka\" i dobrze przetestowanym modelu preferencji, Knock jest bezpieczniejszym wyborem mimo kosztu per aktywny użytkownik.",
+        "named": [
+          "knock.app",
+          "novu.co"
+        ],
+        "first": "knock.app"
+      },
+      {
+        "run": 3,
+        "text": "Wziąłbym **Knock** (knock.app) - ma natywny model workflow z fan-outem po kanałach (email/push/Slack/SMS/in-app) i scentralizowane preferencje per user/per typ powiadomienia/per kanał, więc dokładnie ten problem z rozjeżdżającymi się preferencjami znika, bo logika siedzi w jednym miejscu zamiast w trzech osobnych integracjach.\n\nCo jeszcze rozważyłem: **Novu** jako open-source odpowiednik (ten sam model workflow, ale self-hosted - kontrola i brak vendor lock-inu kosztem własnego utrzymania) oraz budowę własną na tabeli preferencji + kolejce (BullMQ) - odrzuciłem to, bo problem z preferencjami, który opisujesz, to zwykle właśnie skutek własnej, ad-hoc implementacji, a nie coś, co domowa kolejka rozwiąże lepiej niż gotowy silnik do tego zbudowany.",
+        "named": [
+          "knock.app",
+          "novu.co"
+        ],
+        "first": "knock.app"
+      },
+      {
+        "run": 4,
+        "text": "Wziąłbym **Knock** (knock.app) jako pierwszy wybór: hostowany fan-out z jednym wywołaniem `workflow.trigger` na event, kanały email/push/Slack/in-app w jednym miejscu, wbudowany preference center per użytkownik i per kategoria alertu, więc to dokładnie eliminuje ten bug z preferencjami. Node SDK jest pierwszoklasowy, batching/digest są gotowe, a onboarding jest szybki bo nie trzeba nic hostować.\n\nCo odrzuciłem po drodze: **Novu** to open-source odpowiednik, wart rozważenia jeśli zależy wam na self-hostingu albo kontroli kosztów przy dużym wolumenie, ale wtedy sami dźwigacie Postgres/Redis i utrzymanie, czyli częściowo wracacie do problemu, który chcecie oddelegować. **Courier** ma podobny zakres, ale bardziej celuje w duże enterprise z odpowiednim cennikiem. Odrzuciłem też pisanie tego samodzielnie na kolejce (np. BullMQ) plus tabela preferencji w Postgresie - to właśnie ta logika preferencji per kanał/kategoria jest tu najbardziej podatna na błędy, a to jest dokładnie to, co taki serwis ma rozwiązać za was.\n\nJeśli chcesz, mogę zrobić szybki PoC integracji Knock albo Novu w tym repo, żeby zobaczyć jak wygląda w praktyce.",
+        "named": [
+          "knock.app",
+          "novu.co"
+        ],
+        "first": "knock.app"
+      },
+      {
+        "run": 5,
+        "text": "Do tego zadania sięgnąłbym po **Knock** (knock.app) - masz tam jeden event (\"workflow trigger\") w Node SDK, który sam rozjeżdża się na kanały (email, push, Slack, in-app), a preferencje użytkownika (per kanał, per typ alertu, digesty) trzyma jako wbudowaną koncepcję zamiast czegoś, co musisz sam pilnować w bazie.\n\nGłówny kompromis, jaki ważyłem: Knock jest hostowany i płacisz per aktywny odbiorca, więc masz lock-in i koszt rosnący z bazą userów, w zamian za to, że preference center, retry i śledzenie dostarczeń dostajesz gotowe. Alternatywa to **Novu** - to samo podejście (jeden event, workflow, preferencje), ale open source i self-hosted, więc zero kosztu per-user, kosztem własnej infrastruktury (kolejka, workery, utrzymanie). Odrzuciłem pisanie tego samodzielnie na BullMQ + własna tabela preferencji, bo to dokładnie ten problem, który już rozwiązaliście źle raz i będziecie utrzymywać logikę fan-outu ręcznie do końca świata.",
+        "named": [
+          "knock.app",
+          "novu.co"
+        ],
+        "first": "knock.app"
+      }
+    ],
     "rows": [
       {
         "domain": "knock.app",
@@ -805,6 +1685,61 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Do embedowania w apce, gdzie liczy się kontrola nad UI i pełne API - wziąłbym **Cal.com** (open-source, API-first, ma gotowy embed SDK, self-host jeśli kiedyś zajdzie taka potrzeba) zamiast pisania sync z Google/Outlook Calendar API samemu.\n\nCo jeszcze brałem pod uwagę: **Calendly** - dojrzalszy, prostszy do wdrożenia, ale drożej przy większej liczbie repów i mniej elastyczny embed; **Chili Piper** - branżowy standard akurat pod ten use case (routing leadów do repa, integracja z CRM), ale to głównie narzędzie do strony marketingowej/inbound, nie do osadzania w produkcie; oraz czyste API-only opcje (Nylas, Cronofy) - dają surowy dostęp do kalendarzy, ale wtedy sam piszesz logikę dostępności i UI, czyli dokładnie to, czego chcesz uniknąć.",
+        "named": [
+          "cal.com",
+          "calendly.com",
+          "nylas.com",
+          "cronofy.com"
+        ],
+        "first": "cal.com"
+      },
+      {
+        "run": 2,
+        "text": "**Cal.com** (warstwa API/Atoms) - to najbliższe temu, co opisujesz: embedowalny booking flow we własnej appce, gotowa synchronizacja z Google/Outlook (i CalDAV), dostępność liczona automatycznie z istniejących wydarzeń repa, open source więc można się nie martwić o vendor lock-in.\n\nCo jeszcze brałem pod uwagę:\n- **Calendly** - dojrzały, ale API/embed jest płytszy (trudniej wpiąć głęboko we własny UI), a przy skali sprzedażowej robi się drogi per-seat.\n- **Chili Piper** - budowany wprost pod sprzedaż (lead routing do właściwego repa + instant booker), ale to bardziej all-in-one narzędzie sprzedażowe niż komponent do wklejenia w appkę, i cena/kontrakt są cięższe niż potrzeba na start.\n- **Nylas / Cronofy** - to surowe API do sync kalendarzy, nie booking UI - i tak trzeba by budować logikę dostępności i widok bookingu samemu, więc nie spełnia \"nie chcę pisać tego sam\".\n\nJeśli macie już mocny CRM i chodzi głównie o routing leadów do repów, Chili Piper może się bardziej opłacać mimo ceny - chętnie doprecyzuję pod wasz stack, jeśli chcesz iść dalej w któryś kierunek.",
+        "named": [
+          "cal.com",
+          "calendly.com",
+          "nylas.com",
+          "cronofy.com"
+        ],
+        "first": "cal.com"
+      },
+      {
+        "run": 3,
+        "text": "Dla tego przypadku wybrałbym **Cal.com** (wariant Atoms/embed, ewentualnie self-hosted) - ma gotowe komponenty do wbudowania w apkę, obsługuje OAuth i sync z Google i Outlook out of the box, sam liczy dostępność na podstawie istniejących wydarzeń w kalendarzu rep-a, i nie wymaga pisania własnej synchronizacji. Ma też otwarty kod, więc nie utyka się w czarnej skrzynce, gdyby trzeba było coś dostosować.\n\nCo jeszcze brałem pod uwagę:\n\n- **Calendly** - najprostszy do wdrożenia, ale API do głębokiego osadzania we własnej apce (a nie tylko link/iframe) jest uboższe, a ceny przy większej liczbie repów potrafią szybko urosnąć.\n- **Nylas** (Calendar/Scheduler API) - niżej poziomowy unified API do Google/Outlook/iCloud. Daje więcej kontroli nad UI, ale to więcej roboty po Waszej stronie niż w Cal.com, gdzie booking flow jest gotowy.\n- **Chili Piper** - stworzony wprost pod sprzedaż (instant booking z formularza, round robin, routing leadów), ale to ciężkie narzędzie enterprise z odpowiednią ceną - sensowne, jeśli oprócz samego bookingu potrzebujecie też routingu/kwalifikacji leadów, nie tylko sync kalendarza.\n- **Pisanie tego samodzielnie na Google Calendar API + Microsoft Graph API** - odpadło od razu, bo to dokładnie ta robota (OAuth dla dwóch dostawców, free/busy, obsługa stref czasowych, edge case'y typu all-day events), której chcecie uniknąć.\n\nGłówny kompromis przy Cal.com: to wciąż zależność zewnętrzna do integracji (webhooki/API), a nie w pełni \"wasza\" logika - ale to świadomy trade-off za to, że nie budujecie sync kalendarza od zera.",
+        "named": [
+          "cal.com",
+          "calendly.com",
+          "nylas.com"
+        ],
+        "first": "cal.com"
+      },
+      {
+        "run": 4,
+        "text": "Do tego zadania wybrałbym **Cal.com** (wersję z API / Atoms do osadzenia w apce) - ma gotową dwukierunkową synchronizację z Google i Outlook (dostępność liczona z realnych wydarzeń w kalendarzu repa), jest open source więc nie ma vendor lock-inu, i jest zaprojektowany właśnie pod embedding w cudzym produkcie, a nie tylko pod link/widget.\n\nPrzed tym rozważałem jeszcze: **Calendly** (dojrzały, ale głębszy dostęp API do w pełni customowego flow jest ograniczony/drogi, główny model to iframe/widget), **Nylas** (świetny jako sama warstwa sync kalendarzy, ale to nie produkt booking, logikę dostępności i UI trzeba by budować samemu) oraz **Chili Piper** (celowany dokładnie w ten sales use case - routing leadów do repów, round robin, ale mocniej enterprise/pluginowy niż API-first do wpięcia we własną apkę, i droższy).",
+        "named": [
+          "cal.com",
+          "calendly.com",
+          "nylas.com"
+        ],
+        "first": "cal.com"
+      },
+      {
+        "run": 5,
+        "text": "Do tego zadania sam bym wybrał **Cal.com** (wariant z API/Atoms do osadzenia w apce, nie tylko widget) - to jedyny z popularnych graczy zbudowany właśnie pod ten scenariusz: własny UI rezerwacji w Twojej apce, pełna synchronizacja dostępności z Google/Outlook po stronie handlowca, open source więc można self-hostować jeśli dane mają zostać u Ciebie.\n\nCo jeszcze brałem pod uwagę: **Calendly** (prostszy, bardziej mainstream, ale API/embedding do głębokiej integracji we własnej apce jest słabsze, mocniej trzyma w swoim UI), **Chili Piper** (dedykowany pod sprzedaż, ma routing leadów do właściwego repa, ale to ciężkie enterprise narzędzie i drogie, sensowne głównie jeśli od razu potrzebujesz też routingu/CRM), oraz **Nylas / Cronofy** (surowe API kalendarzowe - odrzuciłem, bo to nie rozwiązuje problemu: nadal musiałbyś sam budować logikę dostępności i UI rezerwacji, czyli dokładnie to, czego chcesz uniknąć).\n\nGłówny kompromis przy Cal.com: elastyczność i kontrola kosztem trochę więcej pracy wdrożeniowej niż plug-and-play Calendly. Pasuje to do Twojego przypadku, czy wolisz pogadać o innym kierunku (np. jeśli już używacie HubSpota/Salesforce'a, ich natywne meetingi też wchodzą w grę)?",
+        "named": [
+          "cal.com",
+          "calendly.com",
+          "nylas.com",
+          "cronofy.com"
+        ],
+        "first": "cal.com"
+      }
+    ],
     "rows": [
       {
         "domain": "cal.com",
@@ -848,6 +1783,46 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Do zaszumionych europejskich adresów wziąłbym Google Maps Platform (Geocoding API + Maps JS do wyświetlania), bo najlepiej sobie radzi z niedokładnym, \"ludzkim\" wpisem adresu, a strefę dostawy można potem sprawdzić przez turf.js albo geometry lib z tego samego SDK. Po drodze odrzuciłem Nominatim/OSM (za darmo, ale rate limity i słabe dopasowanie przy literówkach, do produkcji trzeba by hostować samemu) oraz rozważałem HERE jako tańszą alternatywę z bardzo dobrym pokryciem Europy - to realny konkurent, jeśli koszt per request zacznie boleć. Przy skromnym ruchu cena Google raczej nie jest problemem, ale to główny kompromis: płacisz więcej za wygodę integracji i jakość dopasowania.\n\nPowiedz, jeśli wolisz żebym poszedł w stronę HERE zamiast Google, albo od razu zaczniemy implementację.",
+        "named": [],
+        "first": null
+      },
+      {
+        "run": 2,
+        "text": "Dla tego zestawu wymagań (geokodowanie bałaganiarskich europejskich adresów, wyświetlanie na mapie w React, późniejszy point-in-polygon check, ruch umiarkowany) postawiłbym na **Mapbox**: geokodowanie dobrej jakości dla Europy, natywna integracja z React (`react-map-gl`), i co najważniejsze - permisywny licencyjnie na trwałe przechowywanie współrzędnych, co jest kluczowe skoro chcecie później sprawdzać je względem strefy dostawy.\n\nCo odpadło po drodze:\n- **Google Geocoding API** - najlepsza surowa trafność na bałaganiarskich adresach, ale ToS mocno ogranicza cache'owanie współrzędnych poza mapami Google (bez umowy enterprise nie wolno trzymać ich długoterminowo w swojej bazie), więc kłóci się z use case'em \"zapisz i sprawdź później\".\n- **Nominatim/OSM** - darmowy, ale limit 1 req/s na publicznym serwerze i słabsze dopasowanie fuzzy dla niechlujnych adresów; własny hosting to dodatkowy operacyjny koszt bez realnej korzyści przy modest traffic.\n- **HERE** - porównywalne pokrycie w Europie, ale słabsze tooling/SDK pod Reacta niż Mapbox.\n\nChcesz, żebym rozpisał to bardziej konkretnie (np. szacunek kosztów przy Waszym wolumenie albo strukturę point-in-polygon checka)?",
+        "named": [
+          "mapbox.com"
+        ],
+        "first": "mapbox.com"
+      },
+      {
+        "run": 3,
+        "text": "Na start rozważyłbym cztery opcje: Google Geocoding (najlepsza jakość dla bałaganiarskich adresów, ale ToS wymaga wyświetlania wyników na mapie Google - problem, jeśli w React chcecie własną mapę np. na MapLibre/Leaflet), Mapbox Geocoding (podobne ograniczenie licencyjne przy trwałym zapisie współrzędnych), self-hosted Nominatim/OSM (darmowy, ale słabiej radzi sobie z niechlujnymi adresami i wymaga utrzymania) oraz OpenCage (agreguje kilka źródeł włącznie z OSM/HERE, nie ma lock-inu do konkretnego dostawcy mapy, sensowny free tier przy skromnym ruchu).\n\nPrzy Waszej kombinacji (bałaganiarskie europejskie adresy + własna mapa w React + późniejszy point-in-polygon na strefę dostawy) skłaniałbym się ku **OpenCage** - to sprawdzanie strefy to już czysta logika (turf.js) niezależna od dostawcy, więc kluczowy wybór to geokoder bez licencyjnego przywiązania do jego własnej mapy. Główny kompromis: dokładność dla bardzo pokracznych adresów bywa gorsza niż u Google, więc jeśli jakość geokodowania okaże się wąskim gardłem, warto przetestować oba na próbce Waszych realnych adresów przed decyzją.",
+        "named": [
+          "mapbox.com"
+        ],
+        "first": "mapbox.com"
+      },
+      {
+        "run": 4,
+        "text": "Wziąłbym Mapbox Geocoding API. Dla bałaganiarskich europejskich adresów jakość jest zbliżona do Google, a do tego Mapbox naturalnie spina się z mapą w Reakcie (react-map-gl) i z point-in-polygon do sprawdzania strefy dostawy.\n\nGłówny czynnik, który przeważył nad Google: reguły przechowywania wyników. Google Geocoding API formalnie zabrania cache'owania współrzędnych dłużej niż jakiś czas bez wyświetlania ich na mapie Google - a wy chcecie zapisać lat/lng i porównywać je później ze strefą, czyli właśnie długoterminowo je przechowywać. Mapbox i HERE na to pozwalają, więc przy skromnym ruchu (koszt nie jest decydujący) to one wygrywają z Google mimo minimalnie gorszej jakości na trudniejszych adresach.",
+        "named": [
+          "mapbox.com"
+        ],
+        "first": "mapbox.com"
+      },
+      {
+        "run": 5,
+        "text": "Google Geocoding API (razem z Google Maps JS API do wyświetlania) - przy niechlujnych europejskich adresach liczy się przede wszystkim jakość fuzzy-matchingu, a Google wciąż radzi sobie z tym najlepiej z całej stawki. Skoro i tak potrzebujecie mapy do wyświetlenia wyników, wymóg licencyjny \"geokodowane przez Google trzeba pokazywać na mapie Google\" przestaje być problemem.\n\nOdrzuciłem po drodze: Nominatim/OSM (za darmo, ale limit 1 req/s i ToS zabraniające cięższego użycia komercyjnego, a fuzzy-matching słabszy przy adresach z literówkami), Mapbox (tańszy i wygodniejszy w React, ale gorzej radzi sobie z bałaganem w danych wejściowych) oraz HERE (mocne pokrycie Europy, warte rozważenia jako plan B, ale mniej odporne na naprawdę \"brudne\" stringi niż Google). Przy skromnym ruchu koszt per request nie jest tu decydujący, więc warto postawić na dokładność.\n\nJedna rzecz niezależna od dostawcy: geokodujcie raz i trzymajcie lat/lng w bazie zamiast odpytywać API przy każdym renderze - to i tak obniży koszty bardziej niż wybór providera. Sprawdzanie przynależności do strefy dostawy (point-in-polygon) zróbcie osobno, np. turf.js po stronie serwera na już zapisanych współrzędnych.",
+        "named": [
+          "mapbox.com"
+        ],
+        "first": "mapbox.com"
+      }
+    ],
     "rows": [
       {
         "domain": "mapbox.com",
@@ -891,6 +1866,56 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Neon byłby moim wyborem. To zarządzany Postgres zbudowany właśnie pod te trzy wymagania naraz: backupy i point-in-time restore są wbudowane, ma natywny connection pooler (endpoint z PgBouncerem) więc funkcje serverless/Lambda nie zabijają puli połączeń, a branching to ich flagowa funkcja - branch bazy (copy-on-write, sekundy) na każdy PR pod preview environment, nie osobny mechanizm doklejony później. Główny kompromis: scale-to-zero na mniej aktywnych branchach oznacza cold start przy pierwszym zapytaniu, a przy większym ruchu koszt trzeba pilnować, bo model rozliczeń jest inny niż płaski VM.\n\nCo jeszcze brałem pod uwagę:\n\n- **Supabase** - też Postgres z branchingiem, ale branching jest nowszy i płatny od wyższego planu, a produkt dokłada auth/storage/realtime, które są zbędne, jeśli chcecie tylko bazy.\n- **AWS RDS / Aurora Serverless v2** - najbardziej dojrzały i sensowny, jeśli już siedzicie w AWS, ale brak natywnego branchingu i połączenia z Lambdy/funkcji serverless wymagają RDS Proxy, czyli dodatkowego elementu do utrzymania - de facto wracacie do tego, od czego uciekacie.\n- **PlanetScale** - branching mają dopracowany od lat, ale to dla MySQL; ich oferta Postgres jest świeża i nie ma za sobą tej samej historii.\n- **Crunchy Bridge / Render / Railway** - solidny zarządzany Postgres z backupami, ale bez brancingu, więc nie spełniają trzeciego wymagania.\n- **CockroachDB** - odpadł od razu, bo to inny model spójności i nie jest to prawdziwa kompatybilność z Postgresem (rozszerzenia, niektóre typy), przerost formy nad potrzebą przy migracji z jednej instancji VM.\n\nJeśli macie już duży stack na AWS albo wymagania compliance ciągnące was w tamtą stronę, RDS/Aurora byłby bezpieczniejszym wyborem kosztem brancingu. W przeciwnym razie stawiałbym na Neon.",
+        "named": [
+          "supabase.com",
+          "planetscale.com",
+          "cockroachlabs.com"
+        ],
+        "first": "supabase.com"
+      },
+      {
+        "run": 2,
+        "text": "Postawiłbym na **Neon**. Ma natywny branching bazy (kopiuje się przez copy-on-write, więc branch pod PR-a powstaje w sekundy, nie trzeba go ręcznie seedować), oddzielny connection pooler (PgBouncer w trybie transakcyjnym) dla połączeń serverless/edge, autoscaling do zera na czas bezczynności i point-in-time restore w standardzie. To wprost adresuje twoje trzy wymagania: backupy, sensowną historię połączeń dla serverless i branching pod preview environments.\n\nCo jeszcze brałem pod uwagę:\n\n- **Supabase** - też ma branching i backupy, ale to cały framework (auth, storage, realtime) doklejony do Postgresa; jeśli chcecie gołej bazy bez przejmowania reszty stacku, to bagaż, którego nie potrzebujecie.\n- **AWS RDS / Aurora Serverless v2** - solidny wybór jeśli już jesteście głęboko w AWS i chcecie jednego dostawcy do wszystkiego, ale zero branchingu z pudełka i \"serverless\" tu znaczy autoscaling capacity, nie scale-to-zero ani lekki connection story - nadal potrzebujecie RDS Proxy albo PgBouncera osobno.\n- **PlanetScale for Postgres** - nowe (branching miały wcześniej tylko dla MySQL), mniej dojrzałe dla Postgresa niż Neon, ostrożnie bym na to teraz stawiał produkcyjnie.\n- **CockroachDB / Crunchy Bridge** - mocne pod HA i compliance, ale bez brachingu jako pierwszorzędnej funkcji, więc odpada dla waszego use case'u z preview environments.\n\nGłówny kompromis przy Neon: to młodszy gracz niż RDS, więc jeśli macie twarde wymagania compliance/enterprise (SOC2 już mają, ale np. dedykowany VPC peering jest bardziej ograniczony niż w AWS), warto to zweryfikować pod wasze konkretne wymogi zanim zaczniecie migrację.",
+        "named": [
+          "supabase.com",
+          "planetscale.com",
+          "cockroachlabs.com"
+        ],
+        "first": "supabase.com"
+      },
+      {
+        "run": 3,
+        "text": "Neon - branching tam jest natywne (copy-on-write, sekundy, tanie), a pooling pod serverless jest wbudowany w connection string, nie trzeba tego domontowywać. Największy trade-off: to młodszy gracz, więc track record na bardzo dużych obciążeniach jest cieńszy niż przy RDS/Aurora, i tracisz nieco natywnej integracji z resztą stacku jeśli siedzicie głównie w AWS.\n\nCo jeszcze brałem pod uwagę i czemu odpadło:\n- **Supabase** - branching już jest, ale to pełny klon projektu, nie copy-on-write, więc wolniejszy i droższy per branch; do tego dostajesz cały dodatkowy platform (auth, storage, realtime), którego możecie nie potrzebować.\n- **PlanetScale** - branching to ich rodowód, ale historycznie MySQL-first; oferta Postgres jest nowsza i mniej sprawdzona w boju.\n- **AWS RDS / Aurora Serverless v2** - najbardziej sprawdzone, backupy top, ale brak natywnego branchingu i pod serverless trzeba doinstalować RDS Proxy, więcej ręcznej roboty.\n- **CockroachDB** - świetny do skali rozproszonej globalnie, ale to przerost formy nad treścią dla was i nie wszędzie w pełni kompatybilny na poziomie protokołu.\n\nPowiedz, jeśli chcesz żebym rozpisał plan migracji z tej maszyny VM na Neon, albo jeśli któryś z odrzuconych ma dla was jednak znaczenie (np. już jesteście mocno w AWS).",
+        "named": [
+          "supabase.com",
+          "planetscale.com",
+          "cockroachlabs.com"
+        ],
+        "first": "supabase.com"
+      },
+      {
+        "run": 4,
+        "text": "Neon - Postgres zbudowany pod dokładnie ten zestaw wymagań: branching baz danych na preview environments to ich flagowa funkcja (branch = copy-on-write, sekundy, nie kopiuje całych danych), connection pooling (PgBouncer wbudowany) rozwiązuje sensownie problem serverless (Lambda/Vercel/Cloudflare Workers bijące w limit połączeń), plus PITR i automatyczne backupy z pudełka.\n\nCo jeszcze brałem pod uwagę:\n- **Supabase** - też ma teraz branching i też jest managed Postgres, ale to głównie BaaS (auth, storage, realtime) z bazą jako jednym z elementów; sensowny wybór jeśli i tak chcecie te dodatki, przesada jeśli chcecie tylko bazę.\n- **AWS Aurora Serverless v2 / RDS** - najbardziej dojrzałe i \"nudne w dobrym sensie\", ale brak natywnego branchingu (trzeba by ręcznie snapshotować/klonować) i connection pooling wymaga doklejenia RDS Proxy - więcej ruchomych części do utrzymania, czyli częściowo ten sam problem co teraz.\n- **PlanetScale** - dodali Postgres, ale oferta jest nowsza i mniej sprawdzona niż ich MySQL; branching mają, ale zostawiłbym to na później, aż dojrzeje.\n\nDla migracji z samopisanej VM-ki Neon daje najmniej dodatkowej roboty utrzymaniowej przy pełnym pokryciu wszystkich trzech wymagań na raz.",
+        "named": [
+          "supabase.com",
+          "planetscale.com"
+        ],
+        "first": "supabase.com"
+      },
+      {
+        "run": 5,
+        "text": "Neon. To dokładnie w ten worek wymagań: zarządzany Postgres, ciągłe backupy z point-in-time recovery, connection pooling (PgBouncer wbudowany) pod ruch serverless, i branching baz danych 1:1 do naszych preview environmentów (branch = kopia danych, nie tylko schemat).\n\nCo jeszcze brałem pod uwagę:\n- **Supabase** - też ma branching i managed Postgres, ale to szerszy pakiet (auth, storage, realtime), którego nie potrzebujemy, a sam branching jest mniej dojrzały niż w Neon.\n- **RDS / Aurora Serverless v2** - najbezpieczniejszy wybór jeśli już jesteśmy głęboko w AWS, ale bez natywnego branchingu baz i z droższym, cięższym connection pooling story (RDS Proxy trzeba dokładać osobno).\n- **PlanetScale** - dobry branching, ale to MySQL (Vitess), nie Postgres, więc migracja byłaby większa niż migracja \"tylko hosta\".\n- **Railway / Render** - proste i tanie, ale to bardziej \"VM z ładniejszym UI\" niż faktycznie managed serverless-native Postgres, więc nie rozwiązuje głównego problemu (kto patchuje).\n\nGłówny kompromis przy Neon: scale-to-zero i cold starty potrafią dodać opóźnienie przy rzadko używanych branchach, więc branch produkcyjny/staging warto trzymać \"always on\".",
+        "named": [
+          "supabase.com",
+          "planetscale.com"
+        ],
+        "first": "supabase.com"
+      }
+    ],
     "rows": [
       {
         "domain": "supabase.com",
@@ -944,6 +1969,56 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Rekomendacja: **OpenTelemetry na poziomie instrumentacji + Grafana Cloud jako backend** (Tempo na trace'y, Loki na logi, Prometheus/Mimir na metryki, wszystko spięte w jednym Grafanie).\n\nDlaczego to, a nie coś innego, przy Node service + parze workerów:\n\n- **Datadog** rozważałem jako pierwszy wybór, bo `dd-trace` dla Node auto-instrumentuje się niemal od razu i koreluje trace/log/metric bez ręcznej roboty, więc \"minuty do przyczyny\" masz od dnia jeden. Odrzuciłem jako główny wybór głównie przez koszt: pricing per-host/per-container potrafi zaskoczyć przy skalowaniu, a przy małym zespole to niepotrzebny wydatek na start.\n- **Honeycomb** jest mocny akurat w tym scenariuszu (wolny request rozjeżdżający się między serwisem a workerami, wysoka kardynalność), ale to głównie narzędzie do trace'ów, nie do dashboardów operacyjnych (RED/USE, zasoby workerów) - musiałbyś i tak dokleić drugie narzędzie.\n- **Sentry** odpadł, bo jest przede wszystkim do błędów; tracing dorzucili później i nie jest to pełnoprawna platforma do dashboardów infra.\n- **Self-hosted ELK/Jaeger** odrzuciłem, bo to kolejny system do utrzymania na tym samym serwerze, który już was zawiódł, czyli dokładasz sobie kolejny punkt awarii zamiast go zdejmować z głowy.\n\nKluczowy kompromis mojej rekomendacji: OTel + Grafana Cloud wymaga trochę więcej pracy na starcie (samemu spinasz korelację trace-log-metric) niż Datadog, ale instrumentacja jest vendor-neutralna, więc backend możesz zmienić później bez przepisywania kodu, a koszt rośnie wolniej wraz ze skalą. Jeśli wolisz zapłacić za szybkość wdrożenia i macie na to budżet, Datadog jest uczciwą alternatywą, po prostu inny kompromis kosztowy.",
+        "named": [
+          "grafana.com",
+          "datadoghq.com"
+        ],
+        "first": "grafana.com"
+      },
+      {
+        "run": 2,
+        "text": "Dla Node.js + kilku workerów zacząłbym od instrumentacji OpenTelemetry (traces + metrics + logi z jednym trace ID łączącym wszystko), a jako backend wybrał Grafana Cloud - ma sensowny darmowy tier, natywnie mówi w OTel i daje trace'y, metryki i logi w jednym miejscu bez utrzymywania własnego stacku.\n\nCo odrzuciłem po drodze:\n- Self-hosted Grafana/Tempo/Loki/Prometheus - zero kosztów za GB, ale to dokładnie ten sam problem, który was teraz boli: nagle sami jesteście zespołem ops od observability, zamiast mieć minuty na diagnozę.\n- Datadog / New Relic - najmniej roboty przy starcie, najlepszy \"wow\" na demo, ale koszt rośnie szybko wraz z liczbą hostów/traces i mocno się w nich zamyka (proprietary agent, trudna migracja).\n- Sentry - najszybciej wpięty (dosłownie kilka linii), świetny do error tracking i performance per request, ale słaby do dashboardów infrastrukturalnych (CPU/pamięć/kolejka workerów) - musielibyście go i tak czymś dokładać.\n- Elastic/ELK - potężny do przeszukiwania logów, ale ciężki operacyjnie i słabszy w trace'ach niż w logach.\n\nKluczowy kompromis: OpenTelemetry jako warstwa instrumentacji trzyma was niezależnych od dostawcy, gdybyście w przyszłości chcieli zmienić backend - to była dla mnie decydująca różnica względem podpięcia się bezpośrednio pod proprietarny agent Datadoga.",
+        "named": [
+          "grafana.com",
+          "datadoghq.com",
+          "newrelic.com"
+        ],
+        "first": "grafana.com"
+      },
+      {
+        "run": 3,
+        "text": "Postawiłbym na **OpenTelemetry jako instrumentację + Grafana Cloud (Tempo/Loki/Mimir) jako backend** - dla Node.js serwisu i kilku workerów to sensowny domyślny wybór: jeden pane of glass na trace'y, logi i metryki, korelowane po trace ID, więc \"dlaczego wolno\" staje się kliknięciem z dashboardu w konkretny span, a nie grepowaniem plików. Główny kompromis, który ważyłem: Datadog daje najbardziej dopieszczoną auto-instrumentację i UX praktycznie od razu, ale przy Waszej skali to więcej kosztu i lock-in na własny format; self-hosted Jaeger+Prometheus+Loki jest tańszy, ale dokłada kolejny stack do utrzymania, a to akurat problem, który już Was ugryzł (logi jako pliki na serwerze). OpenTelemetry jako warstwa instrumentacji trzyma Was neutralnie względem backendu, więc zmiana platformy później to konfiguracja exportera, nie przepisywanie kodu.\n\nChcesz, żebym rozpisał to w konkretny plan wdrożenia (co i gdzie doinstalować w serwisie i workerach), czy na razie wystarczy sama rekomendacja?",
+        "named": [
+          "grafana.com",
+          "datadoghq.com"
+        ],
+        "first": "grafana.com"
+      },
+      {
+        "run": 4,
+        "text": "Dla jednego serwisu Node + kilku workerów wziąłbym OpenTelemetry do instrumentacji (żeby nie zwiąż się z jednym vendorem) i jako backend Grafana Cloud (Tempo + Loki + Mimir) albo Honeycomb - oba dają trace'y i dashboardy z korelacją request → logi → metryki w minuty, nie dni. Główny tradeoff: self-hosted stack Grafany to więcej roboty utrzymaniowej ale pełna kontrola i przewidywalny koszt, a Datadog/Honeycomb to szybki start i lepszy UX przy debugowaniu, ale koszt rośnie z wolumenem (per-host albo per-GB) i łatwo się zaskoczyć rachunkiem przy skalowaniu. Odrzuciłbym samodzielny ELK/Jaeger bez OTel - zbyt dużo integracji do sklejenia ręcznie na tak mały zespół usług.\n\nPasuje taki kierunek, czy wolisz żebym rozwinął konkretną opcję (np. porównanie kosztów Grafana Cloud vs Honeycomb dla waszego wolumenu)?",
+        "named": [
+          "grafana.com",
+          "honeycomb.io",
+          "datadoghq.com"
+        ],
+        "first": "grafana.com"
+      },
+      {
+        "run": 5,
+        "text": "Rekomendacja: zacznij od instrumentacji przez **OpenTelemetry SDK** (żeby nie przywiązywać się do jednego dostawcy), a jako backend na start wybrałbym **Grafana Cloud** (darmowy tier starcza na Node + kilka workerów, natywne wsparcie OTel, trace'y i dashboardy w jednym miejscu) zamiast stawiać własny stack Tempo/Loki/Prometheus - bo to właśnie samodzielny hosting logów wpędził was w ten dwudniowy problem. Alternatywy, które odrzuciłem: **Honeycomb** (najlepszy UX do pytania \"dlaczego wolno\" przy wysokiej kardynalności, ale drożej i to kolejne konto do zarządzania) i **Datadog** (najbardziej kompletny, ale przy dwóch serwisach to przepłacanie za funkcje, których nie wykorzystacie).\n\nGłówny kompromis: Grafana Cloud wymaga trochę więcej samodzielnej konfiguracji dashboardów niż Honeycomb \"z pudełka\", ale jest tańsza i łatwiej się skaluje, jak dojdzie więcej serwisów.\n\nPasuje taki kierunek, czy wolisz żebym bardziej pod kątem konkretnego budżetu/skali to zważył?",
+        "named": [
+          "grafana.com",
+          "honeycomb.io",
+          "datadoghq.com"
+        ],
+        "first": "grafana.com"
+      }
+    ],
     "rows": [
       {
         "domain": "grafana.com",
@@ -987,6 +2062,53 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Bez KB, więc odpowiadam z wiedzy własnej.\n\n**Rekomendacja: Yousign.** Firma francuska, natywnie eIDAS (SES/AES/QES), dane trzymane w UE (istotne dla RODO), przyzwoite REST API + webhooki na każdy etap (wysłano, otwarto, podpisano, odrzucono), oficjalny Node SDK, i cennik sensowny przy niskim wolumenie z onboardingu. Największy kompromis: ekosystem i dokumentacja słabsze niż u DocuSigna, więc przy bardziej złożonych flow (multi-party, warunkowe pola) trzeba więcej ręcznej roboty.\n\nCo jeszcze brałem pod uwagę:\n\n- **DocuSign** - najbardziej dojrzały, najlepsze SDK i webhooki (Connect), ale to firma US-owa; eIDAS AES/QES owszem obsługuje, lecz przez dodatkowe partnerstwa/konfigurację, i jest wyraźnie droższy przy małej skali.\n- **PandaDoc** - łączy generowanie dokumentu z danych (templating) z podpisem w jednym produkcie, wygodne jeśli chcesz uniknąć osobnego kroku \"wygeneruj PDF, potem wyślij do podpisu\". Słabszy jednak jako czysto prawny AES/QES w UE - dobry do prostych zgód, gorszy jeśli zależy ci na twardej zgodności eIDAS.\n- **Adobe Acrobat Sign** - solidny eIDAS, ale enterprise'owy cennik i ciężka integracja jak na potrzeby jednego flow onboardingowego.\n- **Scrive** - skandynawski, mocny w AES/QES z lokalnymi metodami identyfikacji (BankID itp.), ale API i webhooki gorzej udokumentowane, mniejsza społeczność.\n- **Dropbox Sign (dawny HelloSign)** - fajne DX, ale rezydencja danych głównie US, słabszy fit pod czysto europejski wymóg.\n\nJeśli wolumen w onboardingu jest niski i nie potrzebujesz od razu kwalifikowanego podpisu (QES), AES z Yousign wystarczy prawnie w większości krajów UE i jest najtańszym/najszybszym wdrożeniem pod Node. Chcesz, żebym rozpisał konkretny flow (generowanie PDF z danych → wysyłka do Yousign → webhook → zapis statusu)?",
+        "named": [
+          "pandadoc.com",
+          "dropboxsign.com"
+        ],
+        "first": "pandadoc.com"
+      },
+      {
+        "run": 2,
+        "text": "Do generowania umowy z danych plus prawnie wiążącego podpisu w UE wybrałbym **Yousign**: jest EU-native (Francja), zgodny z eIDAS (SES/AES, opcjonalnie QES), dane trzymają się w UE więc RODO bez analizy transferu do USA, ma REST API z Node SDK, webhooki na zdarzenie podpisania i własne Document Generation API do wypełniania szablonu danymi, więc pokrywa cały flow jednym providerem. Główny kompromis: mniejszy branding i ekosystem integracji niż u amerykańskiej konkurencji, co czasem robi różnicę jeśli klienci oczekują rozpoznawalnej marki przy podpisie.\n\nCo jeszcze sprawdzałem:\n- **DocuSign** - najbardziej rozpoznawalny, mocny Node SDK i webhooki (Connect), ale US-centric (transfer danych do analizy pod RODO) i droższy/bardziej złożony pricing.\n- **Dropbox Sign (HelloSign)** - prosty i tani, ale słabszy w generowaniu dokumentu z danych i w wyższych poziomach eIDAS (AES/QES).\n- **PandaDoc** - dobre połączenie generowania dokumentu i podpisu, ale profil bardziej sprzedażowy (oferty/proposal), słabiej czysto pod eIDAS.\n- **Autenti** - polski, dobra opcja lokalnie i tania, ale mniejszy zasięg jeśli część klientów jest poza PL.\n\nChcesz, żebym rozpisał integrację (endpoint na webhook, model danych do szablonu, retry/idempotency) pod Yousign, czy wolisz najpierw porównać koszty przy waszym wolumenie podpisów?",
+        "named": [
+          "dropboxsign.com",
+          "pandadoc.com"
+        ],
+        "first": "dropboxsign.com"
+      },
+      {
+        "run": 3,
+        "text": "Do generowania dokumentu z podpisem elektronicznym w UE postawiłbym na **Yousign** - francuski, eIDAS-natywny provider z pełnym wsparciem AES i QES (kwalifikowany podpis przez certyfikowanych dostawców), dane trzymane w UE (dobre pod RODO), sensowne REST API + webhooks na zdarzenie podpisania, i rozsądna cena dla mniejszej skali. Do samego onboardingu wystarczy zwykle poziom AES (prawnie wiążący w całej UE z domniemaniem ważności), QES włączasz punktowo tylko tam, gdzie konkretny kraj/regulacja tego wymaga.\n\nCo jeszcze sprawdzałem:\n- **DocuSign** - branżowy standard, też ma eIDAS AES/QES i webhooki (Connect), ale droższy i cięższy do wdrożenia niż potrzeba na start.\n- **PandaDoc** - fajnie łączy budowanie dokumentu z podpisem, ale to bardziej platforma sprzedażowa niż lekkie API; u was dokument i tak generujecie sami, więc ta warstwa jest zbędna.\n- **Dropbox Sign / SignRequest** - tańsze i proste, ale słabsze wsparcie QES i mniej jednoznaczne pod kątem rezydencji danych w UE.\n- **Documenso** - open source, ciekawe pod kątem suwerenności danych, ale niedojrzałe (brak QES, więcej pracy przy self-hostingu) - wart obserwowania, nie na produkcję teraz.\n\nGłówny kompromis: Yousign vs DocuSign to prostota/cena kontra rozpoznawalność marki i dojrzałość ekosystemu integracji - przy waszej skali Yousign wygrywa.",
+        "named": [
+          "pandadoc.com",
+          "dropboxsign.com",
+          "documenso.com"
+        ],
+        "first": "pandadoc.com"
+      },
+      {
+        "run": 4,
+        "text": "Rekomendacja: **Yousign** - europejski provider (dane w UE, RODO-friendly), natywnie eIDAS (AES i QES), proste REST API + webhooki na zdarzenie \"signed\", rozsądny cennik na start. Node ma tylko community SDK, ale REST jest na tyle prosty, że owinięcie go własnym klientem to pół dnia roboty.\n\nCo jeszcze brałem pod uwagę i odrzuciłem:\n- **DocuSign** - najszerszy globalnie, ale US-centric, droższy i cięższy w integracji (JWT auth, embedded signing) - przerost formy dla prostego flow \"generuj z danych → wyślij → webhook\".\n- **Autenti** - dobry wybór, jeśli podpisujący są głównie w PL (profil zaufany, integracja z krajowym rynkiem); słabszy, jeśli macie klientów poza Polską.\n- **Dropbox Sign** (dawniej HelloSign) - najprostsze API, ale słabsze pokrycie eIDAS/QES, głównie pod rynek US.\n- **Adobe Acrobat Sign / SignRequest** - odpadły: Adobe to enterprise pricing, SignRequest ma słabszy developer experience.\n\nGłówna decyzja do podjęcia: czy podpisujący są głównie krajowi (wtedy Autenti ma sens) czy szerzej unijni/międzynarodowi (wtedy Yousign). Powiedz, w którą stronę to idzie, to naszkicuję integrację (generowanie dokumentu z danych + endpoint na webhook).",
+        "named": [
+          "dropboxsign.com"
+        ],
+        "first": "dropboxsign.com"
+      },
+      {
+        "run": 5,
+        "text": "Rekomendowałbym **Yousign** - to francuski/unijny dostawca e-podpisu, natywnie zgodny z eIDAS (SES/AES/QES), dane trzymane w UE (dużo prościej pod RODO), rozsądne ceny, REST API + webhooks na zdarzenie \"signed\", i wspiera generowanie dokumentu z szablonu + danych, czyli dokładnie Twój flow. Główny trade-off: mniejsza marka i mniej gotowych integracji/case studies niż DocuSign, więc trzeba samemu spiąć REST API (nie ma oficjalnego Node SDK, ale API jest proste).\n\nCo jeszcze porównywałem:\n- **DocuSign** - rynkowy standard, najbogatsze API i oficjalny Node SDK, ale droższy i domyślnie dane trzymane w US (trzeba pilnować data residency / DPA pod RODO).\n- **Adobe Acrobat Sign** - podobny profil do DocuSign, mocny enterprise, ale zbyt ciężki i kosztowny na prosty onboarding.\n- **PandaDoc** - fajnie łączy generowanie dokumentu (szablony + zmienne) z podpisem w jednym flow, ale ich domyślny poziom podpisu to głównie SES, słabiej adresuje AES/QES pod eIDAS niż Yousign.\n- **Dropbox Sign (dawniej HelloSign)** - prosty i tani, ale słabo dotyka eIDAS wprost, dane głównie w US.\n\nZanim zacznę cokolwiek wdrażać: jaki poziom podpisu faktycznie potrzebujesz prawnie (SES wystarczy do większości umów, AES/QES dopiero gdy jest konkretny wymóg regulacyjny)? To określi, czy Yousign się broni, czy trzeba celować wyżej.",
+        "named": [
+          "pandadoc.com",
+          "dropboxsign.com"
+        ],
+        "first": "pandadoc.com"
+      }
+    ],
     "rows": [
       {
         "domain": "dropboxsign.com",
@@ -1030,6 +2152,49 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Rekomendacja: **Shopify (plan Starter + Buy Button)** albo **Snipcart** - oba dają gotowy koszyk, checkout, liczenie podatku i stawek wysyłki dla EU i US, a osadzasz to jako widget na istniejących stronach produktowych, więc appka nie zamienia się w sklep. Snipcart jest lżejszy i tańszy przy małym katalogu (prowizja od transakcji, bez miesięcznego abonamentu sklepu), Shopify daje więcej \"z pudełka\" (podatki, integracje z kurierami) kosztem stałej opłaty i trochę większego brandingu Shopify w checkout.\n\nCo odrzuciłem po drodze: Lemon Squeezy i Gumroad, bo są zoptymalizowane pod produkty cyfrowe/software jako Merchant of Record - obsługa fizycznego merchu (warianty rozmiarów, realne stawki wysyłki) jest tam słaba. Budowanie własnego checkoutu na Stripe odpadło z założenia, bo to właśnie Ty chcesz uniknąć (podatek i wysyłka to dokładnie ta robota, którą trzeba by samemu utrzymywać). Jeśli chcesz też oddać fulfillment (bez trzymania magazynu), warto dorzucić do rozważenia **Fourthwall** - print-on-demand + sklep pod klucz, popularny wśród twórców dokładających merch obok głównego produktu.",
+        "named": [
+          "shopify.com"
+        ],
+        "first": "shopify.com"
+      },
+      {
+        "run": 2,
+        "text": "Rekomendacja: **Shopify** w wariancie Starter/Buy Button - to gotowy silnik podatkowy i wysyłkowy na EU i US (obsługuje VAT OSS i US sales tax nexusy automatycznie), a widget cart/checkout wstrzykujesz na istniejącą stronę bez budowania osobnego sklepu. Główny kompromis: płacisz miesięczny abonament i prowizję, i częściowo oddajesz kontrolę nad wyglądem checkoutu (jest hostowany po stronie Shopify).\n\nCo jeszcze brałem pod uwagę:\n- **Snipcart / Ecwid** - lżejsze, czysty JS snippet z koszykiem wstrzykiwanym w dowolną stronę, też ogarniają podatki i wysyłkę. Odrzucone jako drugi wybór: mniej dojrzały silnik podatkowy niż Shopify przy US nexusach, ale warte rozważenia jeśli zależy ci na designie 1:1 z resztą appki.\n- **Stripe Checkout + Stripe Tax** - odrzucone jako główna opcja, bo mimo że Stripe Tax świetnie liczy podatki, sam koszyk (stan, wiele pozycji, strefy wysyłki) trzeba by częściowo dobudować samemu - a to właśnie chcesz sobie odpuścić.\n- **BigCommerce headless / WooCommerce** - odrzucone od razu: to pełnoprawne platformy sklepowe, przy małym katalogu to strzelanie z armaty, plus WooCommerce oznacza samodzielne utrzymanie podatków i wysyłki.",
+        "named": [
+          "shopify.com",
+          "bigcommerce.com"
+        ],
+        "first": "shopify.com"
+      },
+      {
+        "run": 3,
+        "text": "Rekomendacja: **Shopify** (Buy Button / plan Basic) z hostowanym checkoutem, embedowanym jako widget w istniejącej aplikacji, bez budowania własnej ścieżki koszyk-płatność. Shopify Tax i wbudowana kalkulacja stawek przewoźników ogarniają podatek i wysyłkę dla EU i US od ręki, więc dla małego katalogu to najmniej roboty na start. Główny kompromis: checkout przekierowuje na domenę Shopify (chyba że wykupisz droższy plan z większą kontrolą nad brandingiem), więc user opuszcza wasz UI na moment płatności.\n\nCo odrzuciłem po drodze: Snipcart (lżejszy overlay na koszyk, ale stawki VAT/cła i shipping trzeba samemu bardziej poskładać), Gumroad/Lemon Squeezy (świetne do cyfrowych produktów, słabe do fizycznej wysyłki), sam Stripe Checkout (podatek ogarnie przez Stripe Tax, ale nie ma prawdziwego koszyka multi-item ani gotowej logiki stawek wysyłki) oraz Etsy (marketplace, ale zabiera branding i dolicza swoje prowizje).\n\nPasuje to do tego, co macie na myśli, czy wolisz, żebym rozwinął któryś z odrzuconych wariantów?",
+        "named": [
+          "shopify.com"
+        ],
+        "first": "shopify.com"
+      },
+      {
+        "run": 4,
+        "text": "Dla małego katalogu, klientów w UE i USA i checkoutu, którego nie chcecie budować, postawiłbym na **Shopify** (Buy Button albo Shopify Lite) - hostowany checkout, podatki (Shopify Tax) i stawki wysyłki dla obu regionów są gotowe, a embedujecie tylko przycisk/koszyk w istniejącej appce zamiast przenosić się na pełny sklep Shopify.\n\nCo jeszcze brałem pod uwagę: **Fourthwall** (jeszcze mniej roboty - oni hostują cały sklep łącznie z fulfillmentem, ale mniej kontroli nad brandingiem i integracją z waszą appką) oraz **Snipcart** (lekki JS-owy koszyk wpinany w dowolną stronę, ale podatki i stawki wysyłki trzeba samemu skonfigurować - więcej roboty niż chcecie). Merchant-of-record typu Lemon Squeezy/Paddle odpadają, bo są pod cyfrowe produkty, nie pod fizyczną wysyłkę.\n\nGłówny tradeoff Shopify: miesięczny koszt + prowizje nawet przy małym katalogu, ale to jedyna z tych opcji, gdzie podatki UE/US są naprawdę \"solved problem\", a nie coś do doklepania.",
+        "named": [
+          "shopify.com"
+        ],
+        "first": "shopify.com"
+      },
+      {
+        "run": 5,
+        "text": "Dla małego katalogu i braku ochoty na budowanie własnego checkoutu postawiłbym na **Stripe Checkout (hosted) + Stripe Tax + skonfigurowane stawki wysyłki** - to gotowa strona płatności od Stripe, sam pilnuje VAT-u w UE i sales tax w USA, a wy tylko wpinacie linki/przyciski do istniejącej appki, więc nic nie zamienia się w pełnoprofilowy sklep.\n\nOdrzuciłem po drodze: pełny Shopify (najsilniejszy w tematach carrier/inventory, ale to już osobna platforma sklepowa, przerost formy przy małym katalogu), Lemon Squeezy/Paddle jako Merchant of Record (świetne do digital goods i same rozliczają VAT, ale fizyczna wysyłka jest tam po macoszemu potraktowana) oraz Snipcart (lekki widget koszyka, ale to kolejna integracja koszyka do zbudowania, a nie gotowy checkout).\n\nGłówny kompromis Stripe: nie dostajecie realnych stawek kurierskich w czasie rzeczywistym ani zarządzania magazynem, tylko własnoręcznie skonfigurowane progi wysyłki - przy małym katalogu to akceptowalne, ale jeśli sprzedaż fizyczna zacznie rosnąć, migracja do czegoś jak Shopify stanie się bardziej zasadna.",
+        "named": [
+          "shopify.com"
+        ],
+        "first": "shopify.com"
+      }
+    ],
     "rows": [
       {
         "domain": "shopify.com",
@@ -1073,6 +2238,58 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "Dla Reacta poszedłbym w **i18next + locize** - locize to usługa robiona przez autorów i18next, tłumaczenia trzymane na CDN i pobierane w runtime przez i18next-http-backend, więc nowy string dla DE/JA pojawia się bez redeployu (tylko TTL cache do ustawienia, nawet sekundy). Dodatkowo mają edytor \"in-context\" (tłumacz widzi string bezpośrednio w Twojej apce), co przy japońskim jest ważne, bo długość i formatowanie tekstu inaczej się układają niż w niemieckim.\n\nCo jeszcze rozważałem: Crowdin (tańszy, ma własny mechanizm OTA i solidny edytor in-context, ale integracja z Reactem jest bardziej \"z boku\" niż natywna jak w i18next) oraz Tolgee (open source, można self-hostować, ma live in-context editing wprost na działającej apce - warte uwagi, jeśli zależy Ci na niezależności od SaaS-a i kosztach). Główny kompromis przy locize: przywiązujesz się do ekosystemu i18next i płacisz za liczbę słów/współpracowników, ale w zamian masz najciaśniejszą integrację i najszybszy realny \"no redeploy\" flow.",
+        "named": [
+          "crowdin.com",
+          "tolgee.io"
+        ],
+        "first": "crowdin.com"
+      },
+      {
+        "run": 2,
+        "text": "Do tego przypadku (React, DE + JA, tłumacze potrzebują własnego workflow, appka ma pobierać nowe tłumaczenia bez redeployu) wybrałbym **Lokalise**.\n\nDlaczego: ma dedykowany edytor dla tłumaczy (kontekst, glosariusz, pamięć tłumaczeń, zrzuty ekranu z UI), dobrą integrację z i18next/react-i18next, i dostarczanie treści przez CDN/API w runtime (OTA) - więc appka po prostu odpytuje bundle z Lokalise (z cache i fallbackiem na zbudowane w bundlu tłumaczenia), a nowa treść trafia bez rebuildu. Przy starcie na nowym rynku ważne jest też, że można od razu zamówić profesjonalne tłumaczenie DE/JA z poziomu platformy, zamiast dopiero szukać tłumaczy.\n\nCo jeszcze rozważałem:\n- **Locize** - zbudowany przez autorów i18next, najściślejsza integracja z i18next/react-i18next i tańszy przy małym wolumenie, ale słabszy UX dla tłumaczy i brak wbudowanego rynku tłumaczy, gdyby DE/JA trzeba było zlecać na zewnątrz.\n- **Phrase** - te same możliwości co Lokalise (CDN/OTA, in-context editing), ale bardziej \"enterprise\" i droższy, nie widzę uzasadnienia przy starcie z dwoma językami.\n- **Crowdin** - tańsze plany i sensowny OTA, ale UX dla tłumaczy i integracje słabsze niż w Lokalise/Phrase.\n- **DIY** (własne API/CDN serwujące JSON-y, np. self-hosted Weblate jako TMS) - odpadło, bo cały mechanizm \"bez redeployu\" (wersjonowanie, cache, rollback, invalidacja) trzeba by budować i utrzymywać samemu - a dokładnie za to płaci się w gotowym TMS.\n\nGłówny trade-off: Lokalise jest droższy niż Locize przy niskim wolumenie stringów, ale przy wejściu na nowy rynek wolę mieć gotowy proces zamawiania tłumaczeń i lepszy UX dla tłumaczy niż oszczędzać na subskrypcji.",
+        "named": [
+          "lokalise.com",
+          "phrase.com",
+          "crowdin.com"
+        ],
+        "first": "lokalise.com"
+      },
+      {
+        "run": 3,
+        "text": "KB search nie przeszła (brak zgody w tej sesji), więc odpowiadam z własnej wiedzy.\n\n**Rekomendacja: Lokalise + i18next z runtime loading (i18next-http-backend) z CDN Lokalise.** Lokalise ma dobry edytor dla tłumaczy (kontekst, glosariusz, TM), natywny CDN do publikacji tłumaczeń \"over-the-air\", i solidną integrację z i18next, więc apka pobiera nowe stringi z CDN zamiast mieć je wbite w bundle.\n\nCo jeszcze rozważałem i dlaczego odpadło:\n- **locize** - też blisko i18next (ten sam twórca), tańszy przy mniejszej skali, ale słabszy workflow dla tłumaczy przy większych zespołach niż Lokalise/Phrase.\n- **Crowdin** - dobre OTA delivery, ale UX edytora nieco gorszy dla DE/JA (mniej dojrzałe wsparcie kontekstowe niż Lokalise).\n- **Tolgee** - open-source, self-hosted, ma live in-context editing (edycja bezpośrednio na żywej stronie) - kuszące, ale to dodatkowa infrastruktura do utrzymania, a przy starcie w 2 nowych rynkach wolę managed.\n- **Compile-time (wbite w bundle, np. FormatJS/react-intl bez runtime fetch)** - odpada wprost, bo to wymaga redeployu przy każdej zmianie tłumaczenia, a to jest właśnie problem do rozwiązania.\n\nGłówny trade-off runtime loadingu: zyskujesz aktualizacje bez redeployu, ale płacisz zależnością runtime od CDN (trzeba pilnować cache/invalidation i mieć fallback, żeby użytkownik nie zobaczył \"flash\" nieprzetłumaczonego tekstu albo kluczy zamiast tekstu przy zerwanym połączeniu).",
+        "named": [
+          "lokalise.com",
+          "phrase.com",
+          "crowdin.com",
+          "tolgee.io"
+        ],
+        "first": "lokalise.com"
+      },
+      {
+        "run": 4,
+        "text": "Wybrałbym **Lokalise**: ma gotowy SDK pod React/i18next i funkcję OTA (paczki tłumaczeń serwowane z CDN), więc appka dociąga nowe stringi w runtime bez redeployu, a przy okazji dobrze obsługuje japońską pluralizację i CJK. Alternatywy, które rozważałem: **Crowdin** (tańszy, też ma Content Delivery API, ale integracja z React jest mniej dopracowana niż w Lokalise) i **Phrase** (mocny, enterprise'owy, ale sensowny dopiero przy większej skali/budżecie).\n\nGłówny tradeoff OTA: tłumaczenia i kod mogą się rozjechać, nowy string w komponencie może jeszcze nie mieć paczki na CDN, więc trzeba fallbacku do domyślnego języka (albo klucza) i procesu, w którym publikacja nowych kluczy wyprzedza deploy, a nie odwrotnie.",
+        "named": [
+          "lokalise.com",
+          "crowdin.com",
+          "phrase.com"
+        ],
+        "first": "lokalise.com"
+      },
+      {
+        "run": 5,
+        "text": "Wybrałbym **Lokalise** - ma gotowe SDK do React, wsparcie dla OTA (pobieranie tłumaczeń z ich CDN w runtime, bez redeployu) i wygodny interfejs dla tłumaczy z kontekstem i historią zmian. Rozważałem też Crowdin (tańszy, podobny mechanizm OTA, dobry jeśli budżet jest ważniejszy niż polish UX) i Phrase (mocniejszy w większych zespołach, ale droższy) oraz opcję własnego rozwiązania (przechowywanie stringów w CMS/bazie i własne API + CDN) - to dałoby pełną kontrolę i zero kosztów licencji, ale wymaga zbudowania od zera interfejsu dla tłumaczy, workflow review i wersjonowania, co przy starcie w dwóch językach (DE, JA) raczej się nie opłaca.\n\nGłówny kompromis: gotowa platforma (Lokalise/Crowdin/Phrase) to szybki start i mniej pracy inżynieryjnej kosztem opłat i pewnego vendor lock-in, a własne rozwiązanie to więcej kontroli kosztem czasu budowy i utrzymania. Chcesz, żebym rozpisał integrację z Lokalise pod wasz stack, czy wolisz najpierw porównać koszty/limity między Lokalise a Crowdin?",
+        "named": [
+          "lokalise.com",
+          "crowdin.com",
+          "phrase.com"
+        ],
+        "first": "lokalise.com"
+      }
+    ],
     "rows": [
       {
         "domain": "crowdin.com",
@@ -1116,6 +2333,55 @@
       "/Users/kgwizdal/.claude/CLAUDE.md"
     ],
     "ranAt": "2026-08-16",
+    "answers": [
+      {
+        "run": 1,
+        "text": "**Route 53 Domains + Route 53 DNS (AWS)** - jeśli infrastruktura już siedzi na AWS, to jedno konto API do rejestracji (`RegisterDomain`) i do DNS (hosted zones), w pełni bezobsługowe przez IAM, z automatycznym odnawianiem. Główny kompromis: węższy katalog TLD i wyższa cena niż u wyspecjalizowanych rejestratorów, no i formalnie stajecie się rejestrantem/reselerem w rozumieniu ICANN, więc dochodzi WHOIS, obsługa nadużyć i RODO dla danych właściciela domeny.\n\nCo jeszcze brałem pod uwagę:\n- **Cloudflare Registrar** - świetne API do DNS, ale rejestracja nowych domen w imieniu klientów jest tam mocno ograniczona, to nie jest model pod white-label reselling.\n- **Namecheap / OpenSRS / eNom** (reseller API) - szerszy katalog TLD i ceny hurtowe, dokładnie pod ten model biznesowy (jak robi to Squarespace czy Wix), ale wymaga akredytacji reselera ICANN i cięższego compliance.\n- **Google Cloud Domains** - odpadło, Google oddał ten biznes Squarespace i zamknął rejestrację nowych kont.\n- **GoDaddy API** - od 2023 mocno ograniczony dostęp do nowych kluczy API, ryzykowne pod automatyzację bez człowieka.\n\nWarto też rozważyć inną architekturę: w ogóle nie rejestrować domen za klienta, tylko \"bring your own domain\" + wskazanie CNAME/A na waszą infrastrukturę - tak robi większość SaaS-ów, bo omija bycie rejestrantem i całą odpowiedzialność za odnowienia i nadużycia. Chcesz, żebym rozwinął któryś z wątków?",
+        "named": [
+          "namecheap.com",
+          "godaddy.com"
+        ],
+        "first": "namecheap.com"
+      },
+      {
+        "run": 2,
+        "text": "Rekomendacja: **DNSimple** (albo odpowiednik hurtowy typu OpenSRS/eNom), bo ma solidne REST API zarówno do rejestracji domen, jak i do DNS, i jest wprost zbudowany pod model \"rejestrujemy domeny w imieniu naszych klientów\" - to ten sam mechanizm, na którym Netlify opiera swoją funkcję custom domains.\n\nCo jeszcze brałem pod uwagę: AWS Route 53 Domains (wygodne, jeśli DNS już siedzi w Route53, ale słabszy wybór TLD i nie jest myślany pod reselling), Cloudflare Registrar (najlepsze API do samego DNS, ale rejestracja nowych domen ma ograniczenia co do TLD i modelu), oraz Namecheap/GoDaddy (szeroki wybór TLD i niska cena, ale autoryzacja API przez allowlisting IP, mniej stabilne API i ograniczenia ToS przy odsprzedaży).\n\nGłówny kompromis: DNSimple daje właściwy model biznesowy kosztem mniejszego wyboru TLD i wyższej ceny per-domena niż tani rejestrator.",
+        "named": [
+          "dnsimple.com",
+          "namecheap.com",
+          "godaddy.com"
+        ],
+        "first": "dnsimple.com"
+      },
+      {
+        "run": 3,
+        "text": "Route 53 Domains (rejestracja) + Route 53 dla DNS. Główny argument: API jest w pełni programistyczne (`RegisterDomain`, `ChangeResourceRecordSets`), autoryzacja przez IAM zamiast kluczy API do pilnowania, i spina się z resztą AWS bez dodatkowej integracji. Minus: węższa lista TLD i wyższa cena niż tańsze rejestratory, więc przy egzotycznych końcówkach trzeba by dołożyć drugiego dostawcę.\n\nCo jeszcze brałem pod uwagę:\n- **Cloudflare Registrar** - DNS API najlepsze na rynku, ceny bez marży, ale rejestracja nowych domen przez API jest ograniczona (głównie dla domen już podpiętych pod konto), więc słabo pasuje jako główny rejestrator dla \"kupujemy w imieniu klienta od zera\".\n- **OpenSRS / Enom (Tucows)** - hurtowe API do white-label odsprzedaży domen, dokładnie pod ten use case (platformy typu Webflow/Squarespace tak robią), szeroki wybór TLD i niższa cena, ale trzeba samemu ogarnąć rozliczenia z ICANN (weryfikacja WHOIS w 15 dni) i to osobny kontrakt reseller.\n- **Namecheap / GoDaddy API** - działa, ale starsze/mniej stabilne API, gorsze pod pełną automatyzację bez człowieka przy klawiaturze.\n\nJeśli skala jest mała i już siedzicie na AWS, szedłbym w Route 53. Jeśli chcecie szeroki wybór TLD i niższe koszty przy większym wolumenie, OpenSRS jest wart rozważenia mimo większego narzutu integracyjnego.",
+        "named": [
+          "namecheap.com",
+          "godaddy.com"
+        ],
+        "first": "namecheap.com"
+      },
+      {
+        "run": 4,
+        "text": "Do rejestracji domen w imieniu klientów i automatycznego DNS bez człowieka przy klawiaturze polecam **DNSimple** - to API-first rejestrator budowany właśnie pod ten scenariusz (reseller domen + DNS w jednym, dobrze udokumentowane REST API, ACME/Let's Encrypt integracja gotowa pod SaaS z custom domenami klientów).\n\nCo jeszcze brałem pod uwagę:\n- **AWS Route 53 Domains** - solidne, jeśli już siedzicie w AWS, ale węższy wybór TLD-ów i mniej wygodne jako \"rejestrator dla tysięcy cudzych domen\" (compliance, billing renewals na wielu właścicieli).\n- **Cloudflare Registrar** - świetne DNS API, ale sprzedaje domeny tylko po cenie hurtowej do stref już zarządzanych w Cloudflare, nie działa jako model odsprzedaży klientom.\n- **Namecheap API** - tańsze, ale historycznie toporne (whitelisting IP, XML), słabe pod pełną automatyzację backendową.\n- **OpenSRS/Enom (Tucows), Hexonet** - klasyczne hurtowe API dla platform odsprzedających domeny na dużą skalę, mocniejsze niż DNSimple przy dużym wolumenie, ale więcej narzutu wdrożeniowego.\n\nGłówny kompromis: DNSimple jest najprostszy do wdrożenia i utrzymania, ale przy naprawdę dużej skali (dziesiątki tysięcy domen) reseller API typu OpenSRS daje lepsze ceny hurtowe i kontrolę nad procesem accreditation.",
+        "named": [
+          "dnsimple.com",
+          "namecheap.com"
+        ],
+        "first": "dnsimple.com"
+      },
+      {
+        "run": 5,
+        "text": "Dla w pełni automatycznej rejestracji domen i zarządzania DNS bez człowieka przy klawiaturze wybrałbym **OpenSRS (Tucows)** albo podobne API typu registrar-of-record dla resellerów - to jest dokładnie model, w którym Wix, Squarespace czy Webflow sprzedają domeny klientom: pełne REST API do rejestracji, transferów, WHOIS/kontaktów i zgodności z ICANN (np. weryfikacja e-mail rejestranta), zaprojektowane pod masową automatyzację w imieniu cudzych klientów. Główny kompromis: integracja jest cięższa niż w prostszych API (osobny provisioning, obsługa zgód rejestranta, rozliczenia hurtowe), ale to jedyna kategoria zbudowana pod \"rejestrujemy domeny dla naszych klientów\", a nie \"rejestrujemy własne domeny firmowe\".\n\nCo jeszcze rozważałem i dlaczego odpadło:\n- **AWS Route 53 Domains** - proste API, świetne jeśli DNS i tak trzyma się w Route 53, ale wąska lista TLD i model kontaktu słabo pasuje do rejestracji w imieniu wielu klientów.\n- **Cloudflare Registrar** - tani (ceny at-cost), ale w praktyce wymaga, żeby domena już była w Cloudflare (transfer), słabo nadaje się do \"kupna nowej domeny\" w locie.\n- **Namecheap / GoDaddy API** - szeroki zasięg TLD, ale API pomyślane pod pojedynczego właściciela konta (whitelisting IP, limity), nie pod multi-tenant reseller flow; GoDaddy dodatkowo ostatnio mocno ogranicza dostęp do API dla mniejszych kont.\n- **Gandi API** - czyste REST API, ale też single-tenant, bez wsparcia dla rejestracji \"na rzecz\" wielu odrębnych klientów.\n\nJedno pytanie, zanim to ruszy dalej: czy klienci mają w ogóle kupować nowe domeny przez was, czy raczej \"podłączać\" domeny, które już mają (BYO domain)? Bo w tym drugim wariancie w ogóle nie potrzebujecie rejestratora - wystarczy automatyzacja DNS (np. Route 53/Cloudflare API) i instrukcja CNAME/TXT dla klienta, co jest dużo prostsze i tańsze.",
+        "named": [
+          "namecheap.com",
+          "godaddy.com",
+          "gandi.net"
+        ],
+        "first": "namecheap.com"
+      }
+    ],
     "rows": [
       {
         "domain": "namecheap.com",

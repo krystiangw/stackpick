@@ -31,6 +31,12 @@ export type Cell = {
   operatorContext: string[]
   ranAt: string
   rows: Row[]
+  /**
+   * The answers themselves. A table of counts is our reading of them; the words are the evidence,
+   * and a vendor who disagrees with a count can only check it against the text. About 1.4 kB per
+   * run, so the whole corpus of cells is smaller than one screenshot.
+   */
+  answers: { run: number; text: string; named: string[]; first: string | null }[]
 }
 
 const cells: Cell[] = []
@@ -78,6 +84,15 @@ for (const category of CATEGORIES) {
     model: answered[0].meta.model,
     operatorContext: [...new Set(answered.flatMap((run) => (run.meta.cleanRoom ? [] : (run.meta.operatorContext ?? []))))],
     ranAt: (answered[answered.length - 1].meta.finishedAt ?? '').slice(0, 10),
+    answers: answered.map((run) => {
+      const sure = certain(mentionsIn(run.answer, category.domains))
+      return {
+        run: run.meta.run,
+        text: run.answer.trim(),
+        named: [...new Set(sure.map((mention) => mention.domain))],
+        first: sure[0]?.domain ?? null,
+      }
+    }),
     rows: category.domains
       .map((domain) => ({ domain, named: named.get(domain) ?? 0, first: first.get(domain) ?? 0 }))
       .sort((a, b) => b.named - a.named || b.first - a.first || a.domain.localeCompare(b.domain)),

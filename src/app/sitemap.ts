@@ -20,10 +20,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }))
   // One per category, ranked above a single vendor page: it answers the question somebody types
   // ("who do agents recommend for X") rather than the one they type only when they know us.
-  const cells = CATEGORIES.map((category) => ({
-    url: `${BASE}/c/${category.id}`,
-    changeFrequency: 'weekly' as const,
-    priority: 0.6,
-  }))
+  const cells = CATEGORIES.flatMap((category) => [
+    { url: `${BASE}/c/${category.id}`, changeFrequency: 'weekly' as const, priority: 0.6 },
+    { url: `${BASE}/c/${category.id}/runs`, changeFrequency: 'monthly' as const, priority: 0.4 },
+  ])
   return [...pages, ...cells, ...vendors]
 }
