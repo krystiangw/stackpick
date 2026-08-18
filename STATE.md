@@ -6614,3 +6614,45 @@ zmienil sie dobor stron, czy ich dokumentacja.
 **Stabilnosc reguly:** `price_in_snippet` dal **dokladnie te same liczby** co poprzedni przemiat
 (67/91/11/8), a bramka `typed_package` znowu 4 oskarzenia z 4 na paczce dopasowanej po wydawcy.
 `oauth_dcr`: 74 z 91 oblanych wymienia adresy - i te 74 zdania sa dzis sprawdzone jedno po drugim.
+
+## 36. PRZEBIEG ADWERSARYJNY: `signup_reachable`, I SKAD SIE BIERZE CISZA (2026-08-18)
+
+**Wynik: 92 wiersze z adresem w zdaniu, zero zdan do poprawy.** Na zadnej z tych stron formularz nie
+jest w serwowanym HTML, czyli twierdzenie, ktoremu vendor uwierzy najmniej („moja rejestracja
+dziala"), broni sie w calosci. Trzy strony odpowiedzialy dzis inaczej niz wtedy (`contentful.com`,
+`nylas.com`, `pandadoc.com`) i wszystkie trzy to znane sciany z markerem wyzwania - wiersz juz o tym
+mowi, wiec to zgodnosc, nie sprzecznosc.
+
+**To domyka cztery najwieksze powierzchnie oskarzen w korpusie:**
+
+| check | oblanych | zapytan | falszywych zdan |
+|---|---|---|---|
+| `agent_entry_point` | 122 | 2304 | 0 |
+| `oauth_dcr` | 74 (+17) | 2987 | 0 |
+| `signup_reachable` | 92 | 92 | 0 |
+| `mcp_present` | 80 | 560 | 0 (zdanie doprecyzowane) |
+
+**Razem 5943 zapytania pod adresy, ktore sami opublikowalismy.**
+
+## SKAD SIE BIERZE CISZA W ETAPIE REJESTRACJI (2026-08-18, zmierzone)
+
+`scripts/audit-signup-discovery.mts` przeczytal glowna i cennik u osiemnastu vendorow, u ktorych
+mowimy „nie znalezlismy linku do rejestracji":
+
+- **11 nie ma w serwowanym HTML zadnego kandydata.** Nawigacja jest skladana JavaScriptem, wiec nie
+  ma czego poszerzac w regule: linku nie widzi ani nasz skan, ani agent.
+- **7 ma link, ktorego regula nie lapie** - i po przeczytaniu ich po kolei **wiekszosc nie powinna
+  byc lapana**: `replicate.com` „Join us" prowadzi do **kariery**, `commercetools.com` „Start free
+  trial" do **kotwicy na tej samej stronie**, `railway.com` do **samej siebie**, `uploadthing.com`
+  „Get Started for Free" do **logowania**, a nie rejestracji. Realnie zostaja dwa ksztalty warte
+  rozwazenia: `admin.timekit.io/create` („Create account") i `console.weaviate.io` („Get started").
+
+**Decyzja: reguly NIE poszerzam.** Dwa trafienia na osiemnascie domen, przy sygnale („Get started"),
+ktory na tym samym zestawie prowadzi do kariery, kotwicy i logowania, to dokladnie ta wymiana, ktora
+`no card` przegral w sekcji o luce, ktorej swiadomie nie zamykamy: **regula, ktora nie kredytuje
+niczego pewnego, a moze skredytowac cos zlego, jest gorsza niz luka**.
+
+**Co za to zrobione:** zdanie nazywa teraz **strony, ktore przeczytalismy** (glowna i cennik) zamiast
+mowic „on the pages we read". Vendor widzi, gdzie patrzylismy, i moze odpowiedziec „link jest na
+/product" zamiast zgadywac. To ta sama zasada, co przy `oauth_dcr` i `agent_entry_point`: **zdanie ma
+byc powtarzalne przez tego, o kim mowi**.

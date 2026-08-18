@@ -1688,6 +1688,31 @@ check('limit z innej poddomeny nie liczy sie do zdania', limitsAtTheirEdge(dwaHo
 check('choc nadal jest limitem na ich brzegu', limitsAtTheirEdge(dwaHosty, 'split.io').onSite, 2)
 check('wiersz bez limitow nie wymysla ich', limitsAtTheirEdge(undefined, 'split.io').onSite, 0)
 
+// Zdanie o braku linku do rejestracji nazywa strony, ktore NAPRAWDE przeszukalismy. Cennik
+// znaleziony przez zgadniecie sciezki jest w discovered.pricing, a nigdy nie byl czytany pod katem
+// linkow - nazwanie go byloby twierdzeniem o dokumencie, ktorego nikt nie otworzyl.
+console.log('\nbrak linku do rejestracji: co nazywamy')
+const bezLinku = (searched: string[] | undefined) =>
+  CHECKS.find((one) => one.id === 'signup_reachable')!.evaluate({
+    site: 'https://v.test',
+    funnel: { signup: { url: null } },
+    discovered: { pricing: 'https://v.test/pricing', signupSearched: searched },
+    blocksPlainRequests: false,
+  } as never).detail
+check(
+  'nazywamy przeszukane strony',
+  bezLinku(['https://v.test', 'https://docs.v.test']).includes('served HTML of https://v.test, https://docs.v.test'),
+  true,
+)
+// Sama lista przeszukanych stron, a nie cale zdanie: cennik pojawia sie w nim slusznie, w klauzuli
+// „publikujesz ceny". Sprawdzenie calego zdania przechodzilo wiec na wszystkim.
+const przeszukane = (searched: string[] | undefined) =>
+  bezLinku(searched).match(/served HTML of (.+?), while/)?.[1] ?? ''
+check('lista nie zawiera cennika, ktorego nie czytalismy', przeszukane(['https://v.test']), 'https://v.test')
+check('a zawiera to, co czytalismy', przeszukane(['https://v.test', 'https://v.test/pricing']), 'https://v.test, https://v.test/pricing')
+check('ale nadal mowimy, ze publikuja ceny', bezLinku(['https://v.test']).includes('while you publish prices at https://v.test/pricing'), true)
+check('stary wiersz bez zapisu mowi po staremu', bezLinku(undefined).includes('the pages we read'), true)
+
 // Odczekanie po 429. Regula projektu mowi, ze 429 to nasze obciazenie, a nie odpowiedz o
 // vendorze - wiec odpowiedzia jest odczekac i zapytac jeszcze raz, w granicach budzetu skanu.
 console.log('\nodczekanie po 429')

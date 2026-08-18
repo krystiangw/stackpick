@@ -23,6 +23,8 @@ export type Discovered = {
   docs: string | null
   pricing: string | null
   signup: string | null
+  /** The pages whose served HTML was searched for a way in, so the sentence can name them. */
+  signupSearched: string[]
   docsPage: Fetched | null
   pricingPage: Fetched | null
   /** Null when no pricing page was found at all, false when one exists but shows no prices. */
@@ -745,7 +747,13 @@ const ACCOUNT_DOOR = /^\/(accounts?|log[_-]?in|sign[_-]?in|my)\/?$/i
  * signup" about a registrar whose registration is one click away. Costs a single request, and
  * only on the domains where every earlier source has already come up empty.
  */
-async function signupBehindTheLoginPage(html: string, base: string, vendor: VendorSite): Promise<string[]> {
+async function signupBehindTheLoginPage(
+  html: string,
+  base: string,
+  vendor: VendorSite,
+  /** Told where it looked, because this page is searched and the published sentence names them. */
+  searched?: string[],
+): Promise<string[]> {
   const doors = extractLinks(html, base).filter((link) => {
     if (!onVendorSite(link, vendor)) return false
     try {
@@ -756,7 +764,9 @@ async function signupBehindTheLoginPage(html: string, base: string, vendor: Vend
   })
   if (doors.length === 0) return []
   const got = await fetchUrl(doors[0])
-  return got.ok ? signupLinksOn(got.body, got.url, vendor) : []
+  if (!got.ok) return []
+  searched?.push(got.url)
+  return signupLinksOn(got.body, got.url, vendor)
 }
 
 const SIGNUP_LABELS = [/sign ?up/, /create (an )?account/, /register/, /free trial/]
@@ -1937,7 +1947,12 @@ export async function discover(domain: string): Promise<Discovered> {
   // Each source is asked in turn and its candidates have to survive the same test, so a link the
   // vendor wrote is preferred to a guess without being trusted more than one. Nothing here runs
   // until the source in front of it has come up empty.
+  // The pages whose served HTML was actually searched for a way in. The sentence we publish when
+  // nothing is found names them, and naming a page we never read would be the same error as
+  // naming a host we never asked: it reads as thoroughness and is a claim about nothing.
+  const signupSearched: string[] = []
   const signupPending = (async () => {
+    signupSearched.push(base)
     const fromSite = await firstRealSignup(signupLinksOn(html, base, vendor), 'site', base)
     if (fromSite) return fromSite
 
@@ -1948,6 +1963,7 @@ export async function discover(domain: string): Promise<Discovered> {
     // typesense.org links /signup from its pricing page and nowhere on its front page.
     const [{ chosenPricing }, { chosen }] = await Promise.all([pricingPending, docsPending])
     const alreadyRead = [chosenPricing?.page, chosen?.page].filter((page): page is Fetched => Boolean(page?.ok))
+    signupSearched.push(...alreadyRead.map((page) => page.url))
     const fromRead = await firstRealSignup(
       alreadyRead.flatMap((page) => signupLinksOn(page.body, page.url, vendor)),
       'site',
@@ -1955,7 +1971,7 @@ export async function discover(domain: string): Promise<Discovered> {
     )
     if (fromRead) return fromRead
 
-    const fromDoor = await firstRealSignup(await signupBehindTheLoginPage(html, base, vendor), 'site', base)
+    const fromDoor = await firstRealSignup(await signupBehindTheLoginPage(html, base, vendor, signupSearched), 'site', base)
     if (fromDoor) return fromDoor
 
     const atPath = await firstRealSignup(
@@ -2016,6 +2032,7 @@ export async function discover(domain: string): Promise<Discovered> {
     pricingPage,
     pricesVisibleWithoutJs,
     signup,
+    signupSearched,
     npmPackage: npm.npmPackage,
     npmSource: npm.npmSource,
     npmConfidence: npm.npmConfidence,

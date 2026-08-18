@@ -112,6 +112,8 @@ export type ScanFindings = {
     docs: string | null
     pricing: string | null
     signup: string | null
+    /** The pages whose served HTML was searched for a way in. Absent on rows scanned before 2026-08-18. */
+    signupSearched?: string[]
     npmPackage: string | null
     npmSource: 'site' | 'docs' | 'llms' | 'registry-search' | null
     npmConfidence: 'strong' | 'weak' | null
@@ -873,6 +875,7 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
       docs: found.docs,
       pricing: found.pricing,
       signup: found.signup,
+      signupSearched: found.signupSearched,
       npmPackage: found.npmPackage,
       npmSource: found.npmSource,
       npmConfidence: found.npmConfidence,

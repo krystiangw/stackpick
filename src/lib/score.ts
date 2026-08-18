@@ -845,7 +845,12 @@ export const CHECKS: Check[] = [
                 // made out of our own failure to find a link. Sixteen of the twenty five rows
                 // carrying it publish a pricing page, and three of them link signup straight from
                 // the home page: filestack.com, magicbell.com and timekit.io.
-                detail: `Unmeasurable: we found no link to an account signup on the pages we read, while you publish prices at ${f.discovered.pricing}, so this is a gap in our reading rather than a finding about you`,
+                // Names the pages, like every other sentence whose evidence is a document we read.
+                // Measured 2026-08-18 across the twenty rows carrying it: eleven have no candidate
+                // link at all in their served HTML, because the navigation is assembled by
+                // JavaScript. Without the addresses a vendor cannot tell that from "you missed it
+                // on my home page", and both are things they would fix differently.
+                detail: `Unmeasurable: we found no link to an account signup in the served HTML of ${searchedForSignup(f)}, while you publish prices at ${f.discovered.pricing}, so this is a gap in our reading rather than a finding about you`,
                 inconclusive: true,
                 unblock: 'Link signup from your home page or your pricing page and this becomes measurable.',
               }
@@ -939,7 +944,12 @@ export const CHECKS: Check[] = [
                 // made out of our own failure to find a link. Sixteen of the twenty five rows
                 // carrying it publish a pricing page, and three of them link signup straight from
                 // the home page: filestack.com, magicbell.com and timekit.io.
-                detail: `Unmeasurable: we found no link to an account signup on the pages we read, while you publish prices at ${f.discovered.pricing}, so this is a gap in our reading rather than a finding about you`,
+                // Names the pages, like every other sentence whose evidence is a document we read.
+                // Measured 2026-08-18 across the twenty rows carrying it: eleven have no candidate
+                // link at all in their served HTML, because the navigation is assembled by
+                // JavaScript. Without the addresses a vendor cannot tell that from "you missed it
+                // on my home page", and both are things they would fix differently.
+                detail: `Unmeasurable: we found no link to an account signup in the served HTML of ${searchedForSignup(f)}, while you publish prices at ${f.discovered.pricing}, so this is a gap in our reading rather than a finding about you`,
                 inconclusive: true,
                 unblock: 'Link signup from your home page or your pricing page and this becomes measurable.',
               }
@@ -1514,6 +1524,18 @@ export type Scorecard = {
  * row claim every request was refused while its neighbours quoted the pages we had just fetched.
  */
 const blindedBy = (f: ScanFindings) => f.blocksPlainRequests && !f.readAnything
+
+/**
+ * The pages the signup search actually read, for the sentence that says we found no way in.
+ *
+ * Named rather than implied, and only the ones we read: a pricing page found by guessing a path is
+ * in `discovered.pricing` without ever being searched for links, so naming it there would be a
+ * claim about a document nobody opened. Rows scanned before this was recorded say it the old way.
+ */
+function searchedForSignup(f: ScanFindings): string {
+  const pages = f.discovered.signupSearched ?? []
+  return pages.length > 0 ? pages.join(', ') : 'the pages we read'
+}
 
 const counts = (check: ScoredCheck) => !check.inconclusive && !check.notApplicable
 
