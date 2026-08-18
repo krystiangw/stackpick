@@ -4,6 +4,7 @@ import { OPENAPI_PATHS } from './scan/machine'
 import { CREDENTIAL_PATH } from './scan'
 import { AI_CRAWLERS } from './scan/robots'
 import type { ScanFindings } from './scan'
+import { challengedUs, challengeSentence, CHALLENGE_UNBLOCK } from './limits'
 
 /**
  * Bumped whenever the rules move, including when they move back. 9.4 published "1 of 8
@@ -321,10 +322,20 @@ export const CHECKS: Check[] = [
         // falsy, so the obvious truthiness test silently dropped the worst refusal of the three.
         const refused = refusedUs(f)
         if (refused !== null) {
+          // A 429 is our own load and says so, unless the edge answered it with a challenge: then
+          // there is nothing on our side to wait out, and the promise to rescan is one the scanner
+          // cannot keep, because it deliberately does not back off in front of a wall.
+          const wall = refused === 429 ? challengedUs(f, f.site, f.site) : null
           return {
             points: 0,
-            detail: `Unmeasurable: ${f.site} answered ${refused} when we asked for a page, so we never got as far as looking for documentation`,
-            unblock: refused === 429 ? 'Nothing for you to do if this was a burst. We rescan later and this becomes measurable.' : 'Let ordinary HTTP through to your public pages and this becomes measurable.',
+            detail: wall
+              ? `Unmeasurable: ${challengeSentence(wall)}, so we never got as far as looking for documentation`
+              : `Unmeasurable: ${f.site} answered ${refused} when we asked for a page, so we never got as far as looking for documentation`,
+            unblock: wall
+              ? CHALLENGE_UNBLOCK
+              : refused === 429
+                ? 'Nothing for you to do if this was a burst. We rescan later and this becomes measurable.'
+                : 'Let ordinary HTTP through to your public pages and this becomes measurable.',
             inconclusive: true,
           }
         }
@@ -1030,10 +1041,15 @@ export const CHECKS: Check[] = [
       // Rows scanned before the statuses were recorded have the count and nothing else, and
       // dropping them into "no refusals" would rewrite their verdict on evidence we never held.
       const unread = statuses.length > 0 ? refusals.length : (f.docsPagesUnread ?? 0)
-      const why =
-        refusals.length > 0
-          ? ` (${[...new Set(refusals)].join(', ')}${refusals.includes(429) ? ', and a 429 is our own burst rather than an answer about agents' : ''})`
+      // Bound to the host we read the documentation on: a challenge met at the signup host says
+      // nothing about why a documentation page went unread.
+      const wall = refusals.includes(429) ? challengedUs(f, f.site, f.discovered.docs ?? f.site) : null
+      const aboutTheLimit = wall
+        ? `, and ${challengeSentence(wall)}`
+        : refusals.includes(429)
+          ? ', and a 429 is our own burst rather than an answer about agents'
           : ''
+      const why = refusals.length > 0 ? ` (${[...new Set(refusals)].join(', ')}${aboutTheLimit})` : ''
       // One page was enough to award two points and too little to conclude anything when the
       // count was zero. That asymmetry inflated every vendor whose first docs page mentioned keys.
       if (found > 0 && pages >= 2) {
@@ -1079,7 +1095,9 @@ export const CHECKS: Check[] = [
           detail:
             pages === 0
               ? refusedUs(f) !== null
-                ? `Unmeasurable: ${f.site} answered ${refusedUs(f)} when we asked for a page, so there was nothing to look in and that is our reading of your edge rather than a finding about your docs`
+                ? refusedUs(f) === 429 && challengedUs(f, f.site, f.site)
+                  ? `Unmeasurable: ${challengeSentence(challengedUs(f, f.site, f.site)!)}, so there was nothing to look in`
+                  : `Unmeasurable: ${f.site} answered ${refusedUs(f)} when we asked for a page, so there was nothing to look in and that is our reading of your edge rather than a finding about your docs`
                 : 'Unmeasurable: we could not read a single documentation page, so there was nothing to look in'
               : `Unmeasurable: only ${pages} documentation page could be read, which is too little to conclude anything`,
           inconclusive: true,

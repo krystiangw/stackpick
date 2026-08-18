@@ -1604,6 +1604,38 @@ check('gosc jest policzony, gdy pada w odpowiedzi', counted.named.get('buttondow
 check('i reszta jest przeliczona obok niego', counted.named.get('postmarkapp.com'), 2)
 check('a pierwszenstwo liczy sie z nim w liscie', counted.first.get('buttondown.com'), 1)
 
+// Zdanie przy niezmierzonym checku, gdy brzeg odpowiedzial wyzwaniem. Punkty sie nie zmieniaja,
+// zmienia sie to, czy mowimy vendorowi prawde: „nic po twojej stronie, przeczekamy" jest falszem w
+// obie strony, bo skaner przed sciana z markerem swiadomie NIE ponawia.
+console.log('\nniezmierzone przy wyzwaniu mowi, czyje to drzwi')
+const docsCheck = CHECKS.find((one) => one.id === 'docs_without_js')!
+const turnedAway = (limits: { url: string; challenge: boolean }[]) =>
+  docsCheck.evaluate({
+    site: 'https://split.io',
+    discovered: { docs: null },
+    machine: { markdownNegotiation: { docsStatus: 429 } },
+    limitsMet: limits.map((one) => ({ ...one, recovered: false })),
+  } as never)
+// Ten check pytal o SAM adres serwisu, wiec tylko wyzwanie na tym hoscie tlumaczy jego odmowe.
+const wall = turnedAway([
+  { url: 'https://split.io/', challenge: true },
+  { url: 'https://split.io/sitemap.xml', challenge: true },
+])
+const burst = turnedAway([{ url: 'https://split.io/', challenge: false }])
+// Wyzwanie na innym hoscie tego samego vendora to inne drzwi. Zdanie o nim tlumaczyloby odmowe,
+// ktorej nie dotyczy - i to jest ten rodzaj falszu, ktory publikujemy pod cudza nazwa.
+const elsewhere = turnedAway([{ url: 'https://dashboard.split.io/', challenge: true }])
+check('przy wyzwaniu wiersz nazywa hosta', wall.detail.includes('split.io answered 2 of the 2 requests it refused'), true)
+check('i mowi, ze to nie minie', wall.detail.includes('not a burst that passes'), true)
+check('a rade kieruje do vendora', wall.unblock?.startsWith('Let plain HTTP clients'), true)
+check('bez markera zostaje stare zdanie', burst.unblock, 'Nothing for you to do if this was a burst. We rescan later and this becomes measurable.')
+check('wyzwanie za innymi drzwiami nie tlumaczy tych', elsewhere.unblock, burst.unblock)
+check('wyzwanie nadal nie zabiera punktu', wall.points, burst.points)
+check('i nadal jest niezmierzone', wall.inconclusive, true)
+// Mianownik: limitsMet trzyma same odmowy, wiec 'z naszych 2 zadan' bylby falszem na skanie,
+// ktory przeczytal dziesiec stron i dostal dwie odmowy na koniec.
+check('mianownik mowi o odmowach, nie o wszystkich zadaniach', wall.detail.includes('of our 2 requests'), false)
+
 // Czyje to byly drzwi. Limit z rejestru npm jest faktem o naszym ruchu, limit z markerem wyzwania
 // na brzegu vendora jest ustaleniem o nim - i te dwa nosza ten sam kod statusu.
 console.log('\nlimity na brzegu vendora')
@@ -1617,6 +1649,9 @@ const theirEdge = met([
 ])
 check('rejestr npm nie liczy sie jako ich brzeg', limitsAtTheirEdge(npmOnly, 'bunny.net').onSite, 0)
 check('poddomena vendora tak', limitsAtTheirEdge(theirEdge, 'split.io').onSite, 2)
+// Checki podaja tu adres, a nie nazwe hosta, i to wlasnie ta forma musi trafiac.
+check('adres tez, bo tak wola checki', limitsAtTheirEdge(theirEdge, 'https://split.io').onSite, 2)
+check('takze z www', limitsAtTheirEdge(theirEdge, 'https://www.split.io').onSite, 2)
 check('i marker wyzwania jest policzony osobno', limitsAtTheirEdge(theirEdge, 'split.io').challenges, 2)
 check('z nazwa hosta, ktory wyzwal', limitsAtTheirEdge(theirEdge, 'split.io').hosts.join(), 'docs.split.io')
 check('wiersz bez limitow nie wymysla ich', limitsAtTheirEdge(undefined, 'split.io').onSite, 0)

@@ -119,7 +119,7 @@ for (const domain of CURATED_DOMAINS) {
   // Czyje to byly drzwi. Rejestr npm odmawia nam stale i to fakt o nas; brzeg vendora, ktory
   // odpowiada wyzwaniem, jest ustaleniem o nim - i dopoki tego nie policzymy na pelnym przemiecie,
   // nie zmieniamy z tego zadnego werdyktu (#48).
-  // Wiersze sprzed 9.41 nie maja tego pola w ogole, wiec bez tego licznika zdanie „zaden vendor nie
+  // Wiersze sprzed 2026-08-18 nie maja tego pola w ogole, wiec bez tego licznika zdanie „zaden vendor nie
   // odmowil" bylaby uspokojeniem o korpusie, ktory o tym nie wie - ten sam falszywy komfort, co przy
   // bramce atrybucji liczonej na wierszach sprzed jej wprowadzenia.
   if (report.findings?.limitsMet !== undefined) rowsWithLimitField += 1
@@ -203,7 +203,7 @@ console.log(
 )
 console.log(
   rowsWithLimitField === 0
-    ? 'zaden wiersz nie niesie jeszcze zapisu, czym nas odmowiono (pole z 9.41, wypelni sie przy nastepnym przemiacie)'
+    ? 'zaden wiersz nie niesie jeszcze zapisu, czym nas odmowiono (pole doszlo 2026-08-18, wypelni sie przy nastepnym przemiacie)'
     : limitedAtEdge === 0
       ? `zaden z ${rowsWithLimitField} wierszy z zapisem nie spotkal limitu na brzegu vendora`
       : `limit na brzegu vendora: ${limitedAtEdge} z ${rowsWithLimitField} wierszy z zapisem, w tym ${challengedAtEdge} z markerem wyzwania (to sciana, nie nasze tempo - #48)`,

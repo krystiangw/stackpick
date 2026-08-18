@@ -6201,3 +6201,73 @@ strony przeszlyby wtedy z niemierzalnych na **oblane**, czyli wiersz powiedzialb
 tworzenia kluczy" komus, kto to dokumentuje, tylko nam tego nie pokazal. Dokladnie to, czego zasada
 domu zabrania. Decyzja o ksztalcie zmiany poszla do **audytu subagenta**; wynik i co potwierdzic z
 Krystianem - w sekcji nizej.
+
+## #48 ROZSTRZYGNIETE AUDYTEM SUBAGENTA: ZDANIE, NIE PUNKTY (2026-08-18)
+
+**Decyzja pochodzi z audytu subagenta** (Agent tool, opus, brief z pelnym pomiarem). Do potwierdzenia
+z Krystianem rano, lista na koncu tej sekcji.
+
+**Pelny pomiar korpusu (177 domen, lokalnie, bez zapisu):**
+
+| co | ile |
+|---|---|
+| limit w rejestrze npm | **89 ze 177** - fakt o naszym ruchu |
+| limit na wlasnym brzegu vendora | **13** |
+| z tego z markerem wyzwania | **11** |
+| z tego wyzwanie na **kazdym** zadaniu | **10** |
+
+Sciany: pandadoc.com (20/20), contentful.com (15/15), locationiq.com (15/15), split.io (13/13),
+timekit.io (10/10), nylas.com (8/8), logto.io (6/6), name.com (5/5), lokalise.com (3/4),
+rollbar.com (2/2), dynadot.com (1/1). Zwykly limit bez markera: postmarkapp.com i savvycal.com,
+w obu **odczekanie odzyskalo po 2 zadania**.
+
+**Audyt poprawil mnie w faktach.** Bal em sie, ze zmiana `isEdgeRefusal` przerobi „niezmierzone" w
+oskarzenie „nie dokumentujesz kluczy". Nieprawda: `programmatic_provisioning` i `docs_without_js`
+**w ogole go nie uzywaja**, stoja na surowym statusie (`refusedUs` w `score.ts`). `isEdgeRefusal`
+czytaja tylko `user_agents_allowed` i `agent_entry_point`. Prawdziwe ryzyko tamtej zmiany jest inne:
+`agent_entry_point` przerwalby fall-through i przestal odpytywac host dokumentacji o `llms.txt` i
+`skill.md`, czyli **cicho ubylby dowod** na wierszach, ktorych nikt nie przeglada.
+
+**Co wiec bylo falszem i co zrobione (opcja B+):** nie brak oskarzenia, tylko **wymowka doklejona do
+niezmierzonego**. Wiersz mowil „a 429 is our own burst rather than an answer about agents" i
+„Nothing for you to do if this was a burst. We rescan later", podczas gdy przy markerze skaner
+**swiadomie nie ponawia** (`backoffFor` zwraca null przed sciana). Obietnica bez pokrycia w kodzie.
+Teraz: te same punkty, prawdziwe zdanie, nazwany **host** (nie firma, bo trzy z czterech scian siedza
+na subdomenie dokumentacji przy apeksie odpowiadajacym 200), i rada skierowana do vendora. Wszystko
+liczone w `src/lib/limits.ts`, bo to samo pojecie stalo w trzech miejscach na karcie.
+
+**Straznik zlapal blad, ktorego przeglad by nie zlapal:** checki podaja `f.site`, czyli
+`https://split.io`, a nie nazwe hosta. Czytane jako host daje to dwuczlonowy string `https://split.io`,
+ktory nie pasuje do niczego - galaz nazywajaca sciane byla **martwa dokladnie tam, gdzie zostala
+napisana**. Stad `siteOf` przyjmuje obie formy i straznik sprawdza obie.
+
+**Dlaczego NIE ruszamy punktacji** (trzy powody, kazdy wystarczy):
+1. **Brak kontrolki.** Zmierzylismy, ze ich brzeg wyzywa **nasz** wzorzec ruchu (do 6 rownoleglych
+   zadan na host, ~19 dokumentow, z ASN Heroku). Nie zmierzylismy, ze wyzwalby pojedyncze zadanie
+   agenta z innej sieci. `docs.split.io` daje 200 z laptopa i 429 z dyna - to juz w STATE bylo.
+2. **Podmiot zdania.** Wieksze sciany siedza na subdomenie dokumentacji przy zdrowym apeksie.
+3. **N w obrebie wiersza.** rollbar.com to dwa zadania. „Wyzywa kazde zadanie" na dwoch to nie pomiar.
+
+**Pulapka cyrkularna, warta zapamietania:** `backoffFor` nie ponawia przed markerem, wiec dla scian
+`recovered` jest z definicji `false`. **Nigdy nie sfalsyfikujemy wlasnej tezy**, bo przestalismy
+pytac. Zeby marker mial kiedykolwiek stac sie dowodem, potrzebny jest osobny **tryb audytowy**:
+jedno zadanie na URL po >=180 s ciszy, z dwoch sieci (dyno i lacze rezydencjalne), trzema
+user-agentami (nasz, Chrome, ChatGPT-User/Claude-User, bo verified-bot allowlist przepuszcza nazwane
+agenty) i w dwoch terminach oddalonych o dobe. **Prog spisany PRZED pomiarem.**
+
+**Wieksze znalezisko przy okazji, osobne zadanie:** **89 ze 177 skanow lapie limit w rejestrze npm.**
+Ponad polowa wierszy ma dowod npm zebrany pod limitem, a na tym stoi `typed_package` i cala
+atrybucja paczek. Liczbowo to powazniejszy problem z danymi niz cale #48 i dotyczy **wylacznie nas**.
+
+**Do potwierdzenia z Krystianem rano:**
+1. Zgoda na B+ (zdanie bez punktow). Czy to zdanie ma isc takze do maila o zmianie werdyktu i do
+   platnego raportu, czy tylko na `/v/<domena>` i do API.
+2. Podmiot zdania: host czy firma (rekomendacja audytu i moja: host).
+3. Czy wolno zbudowac tryb audytowy ponawiajacy mimo markera. To dodatkowe zadania do brzegu, ktory
+   juz nas odrzuca, wiec decyzja jest tez etyczna.
+4. Czy celujemy pozniej w punktowanie i przy jakim progu. Jesli tak, to wylacznie dla
+   `user_agents_allowed` i `agent_entry_point`, po pomiarze z dwoch sieci i recznym przeczytaniu
+   wszystkich trafien.
+5. Zmiana publicznej obietnicy na `/methodology`: bylo „A 429 is never a finding about you", jest
+   „nigdy nie zabiera punktu, ale limit z markerem wyzwania raportujemy". **To juz wdrozone**, bo
+   inaczej strona obiecywalaby cos, czego kod od dzis nie robi.
