@@ -6549,3 +6549,35 @@ formularz jest w serwowanym HTML. **Wymaga sieci, wiec nie w trakcie przemiatu.*
 **125 wierszach** ze 192, a `programmatic_provisioning` na 60. To nie sa falszywe zdania, tylko
 polowa karty, ktorej nie umiemy zmierzyc - i to jest inna robota niz przebieg adwersaryjny: nie
 „czy nie oskarzamy niesprawiedliwie", ale „czy w ogole mamy co powiedziec".
+
+## POLOWA KARTY, KTOREJ NIE MIERZYMY: GDZIE NAPRAWDE JEST CISZA (2026-08-18)
+
+`signup_no_captcha` jest niezmierzony na **125 wierszach ze 192** i wygladalo to na najwieksza dziure
+w pokryciu. Policzone parami z `signup_reachable` (zapytanie do naszej bazy, bez ruszania cudzych
+hostow, wiec dalo sie zrobic w trakcie przemiatu):
+
+| stan | wierszy | co to znaczy |
+|---|---|---|
+| captcha niezmierzona + reachable **oblane** | **87** | vendor **dostaje** werdykt: „formularz wymaga JavaScriptu". Pytanie o captche jest bezprzedmiotowe, bo agent i tak nie dochodzi do formularza |
+| captcha niezmierzona + reachable niezmierzone | **38** | **cisza**: caly etap rejestracji nie mowi nic |
+| captcha zaliczona + reachable zaliczone | 25 | |
+| captcha oblana + reachable zaliczone | 23 | |
+| nd + nd | 10 | produkt bez kont |
+| captcha oblana + reachable oblane | 9 | |
+
+**Wniosek: 125 to nie jest dziura, tylko konsekwencja.** Reguła captchy juz dzis lapie sygnature w
+serwowanym HTML **nawet gdy formularz sklada JavaScript**, wiec tam, gdzie nie widzimy captchy, agent
+tez by jej nie zobaczyl - bo nie dochodzi do formularza. Nie ma czego naprawiac i **nie warto tego
+poszerzac**: captcha ukryta w bundlu JS jest za sciana, ktora karta juz opisuje.
+
+**Prawdziwa cisza to 38 wierszy, a jej glowna przyczyna to my:** na **20 z nich** nie znalezlismy
+linku do rejestracji, choc vendor publikuje cennik (oramasearch, qdrant, weaviate, supertokens,
+stytch, filestack, uploadthing, commercetools, timekit, railway, name.com, signoz, magicbell,
+scrapingbee, livekit, replicate, together.ai, restate, plus my sami - u nas slusznie, bo nie mamy
+kont). Reszta to 403 na stronie rejestracji (neon, algolia, workos, liveblocks, froala, cloudflare,
+vonage) - te sa uczciwie niezmierzone, bo brzeg nas nie wpuscil.
+
+**Narzedzie gotowe, nieuruchomione:** `scripts/audit-signup-discovery.mts` czyta te same strony, co
+skan (glowna i cennik), i wypisuje **kazdy link wygladajacy na wejscie, ktorego nasza regula nie
+lapie**. Ma pokazac, jakiego ksztaltu linku nie widzimy, a nie poszerzyc regule automatycznie:
+poszerzenie dotyka wyboru i wymaga wlasnego pomiaru, jak przy #47.
