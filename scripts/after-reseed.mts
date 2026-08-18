@@ -32,6 +32,9 @@ let snippetFails = 0
 let snippetUnmeasurable = 0
 let snippetNotApplicable = 0
 let licenceGateRows = 0
+let typedGuessed = 0
+let typedFails = 0
+let typedGuessedFails = 0
 const licenceGateSample: string[] = []
 const stillWrong: string[] = []
 
@@ -73,6 +76,19 @@ for (const domain of CURATED_DOMAINS) {
   if (quotes && quotes.length > 0) {
     licenceGateRows += 1
     if (licenceGateSample.length < 8) licenceGateSample.push(`${domain}: ${quotes[0].slice(0, 110)}`)
+  }
+
+  // Zmierzone 2026-08-18: 137 ze 161 mierzalnych werdyktow o paczce stalo na dopasowaniu po
+  // wydawcy, a wszystkie 10 oskarzen. Szesc z tych dziesieciu bylo o zlym artefakcie. Dopoki
+  // bramka z zadania #46 nie powstanie, ta liczba ma byc widoczna po kazdym przemiecie.
+  const typed = check('typed_package')
+  if (typed && !typed.notApplicable && !typed.inconclusive) {
+    const guessed = typed.detail.includes('by who publishes it')
+    if (guessed) typedGuessed += 1
+    if (typed.points === 0) {
+      typedFails += 1
+      if (guessed) typedGuessedFails += 1
+    }
   }
 
   const oauth = check('oauth_dcr')
@@ -118,6 +134,9 @@ console.log(`programmatic_provisioning: ${provisioningQuoted} z ${provisioningCr
 console.log(`oauth_dcr: ${oauthNamesHosts} z ${oauthFails} oblanych wierszy wymienia sprawdzone adresy`)
 console.log(
   `price_in_snippet: ${snippetPasses} przechodzi, ${snippetFails} oblewa, ${snippetUnmeasurable} niemierzalnych, ${snippetNotApplicable} nie dotyczy`,
+)
+console.log(
+  `typed_package: ${typedGuessed} werdyktow stoi na paczce dopasowanej po wydawcy, w tym ${typedGuessedFails} z ${typedFails} oskarzen (bramka: zadanie #46)`,
 )
 console.log(`klucz licencyjny (tylko dowody, bez punktow): ${licenceGateRows} wierszy ma zdanie o wymogu klucza`)
 for (const one of licenceGateSample) console.log(`  ${one}`)
