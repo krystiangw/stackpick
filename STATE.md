@@ -5908,3 +5908,32 @@ Dwie rzeczy od codeksa: podane wprost adresy **nie czytaja juz sitemapy** (tryb 
 moze zalezec od tego, ze strona dziala), a straznik w `rules.mts` pilnuje, ze plik klucza zawiera
 **wlasna nazwe** - inaczej silnik uznaje kazde zgloszenie za cudze i **nic nie mowi**, czyli porazka
 jest cicha z definicji.
+
+## KAZDY PLATNIK JEST GOSCIEM, A MIESIECZNY MAIL TEGO NIE UMIAL (2026-08-18)
+
+Korpus to 177 domen, ktore **my** wybralismy do publikacji, a kupuja ci, ktorych na niej nie ma.
+`watch-coverage` mowil o tym od dawna jednym zdaniem („miesieczna cela dla takiej obserwacji wymaga
+zapisania tej decyzji przy obserwacji, czego jeszcze nie ma"), ale skutek byl gorszy, niz brzmi.
+
+**Pulapka, ktora prawie zaimplementowalem:** wystarczyloby zapisac kategorie przy obserwacji i mail
+by sie wygenerowal - czytajac **gotowe wiersze celi**, w ktorych goscia nigdy nie bylo. Platnik
+dostalby zdanie „named in 0 of 10 agent runs" o biegach, w ktorych **nikt go nie szukal**. Zero,
+ktorego nikt nie zmierzyl, wyglada dokladnie jak zero zmierzone.
+
+Zrobione:
+- `Watch` ma `placedIn` i `brand`; `categoryOfWatch` (w `watch.ts`) rozstrzyga kategorie tak samo
+  dla maila i dla raportu, zeby dwa dokumenty nie odpowiadaly inaczej o jednym kliencie.
+- **`src/lib/guest-cell.ts`**: `readWithGuest` przelicza wymienienia z surowych odpowiedzi, z nazwa
+  goscia w liscie i **z przeliczeniem wszystkich pozostalych obok niego** (matcher rozstrzyga
+  dwuznaczna nazwe po sasiadach). Platny raport robil to od dawna we wlasnym kodzie; teraz to jedna
+  funkcja dla obu.
+- **`npx tsx scripts/assign-watch.mts <domena> <email> --category <id> [--brand Nazwa]`**, bo to
+  decyzja czlowieka, nie zgadywanie: „email" dla email.com liczyloby kazde zdanie o mailu.
+- Marka jest **wylaczna**: sprawdzana wobec korpusu ORAZ wobec **wszystkich** obserwacji przez nowe
+  `store.watchWithBrand`. Codex wytknal dwa razy z rzedu, ze pierwsza wersja pytala tylko o kolejke
+  dostaw, a zatrzymana obserwacja wraca w chwili, gdy ktos zaplaci.
+
+**Sprawdzone na zywym gosciu:** `buttondown.com` (spoza korpusu, kategoria transactional-email) na
+naszej skrzynce testowej. Mail wychodzi z prawdziwymi liczbami: 0 z 10, ale to **zmierzone** zero,
+plus lista tych, ktorzy byli wymieniani czesciej, i uczciwe zdanie o absencji. Obserwacja zostaje
+wlaczona jako zywy przypadek testowy.

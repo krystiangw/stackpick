@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import { createHmac } from 'node:crypto'
 import { paddle } from '../src/lib/billing/provider'
-import { CURATED_DOMAINS } from '../src/lib/categories'
+import { CATEGORIES, CURATED_DOMAINS } from '../src/lib/categories'
 import { overDomainBudget } from '../src/lib/scan-gate'
 import { spreadAcrossHints } from '../src/lib/scan'
 import { aboutTheirOwnCode, categoryForJob } from '../src/lib/lookup'
@@ -17,6 +17,8 @@ import { changeEmail } from '../src/lib/watch-email'
 import { CHECKS, FORMULA_VERSION } from '../src/lib/score'
 import { CORPUS_LICENCE, CORPUS_LICENCE_IS_PUBLISHED } from '../src/lib/seller'
 import { arithmeticExplained, scoreSection } from '../src/lib/report-numbers'
+import { categoryOfWatch } from '../src/lib/watch'
+import { readWithGuest } from '../src/lib/guest-cell'
 import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR } from '../src/lib/scan-gate'
 import { DEFAULT_SCAN_BUDGET_MS } from '../src/lib/scan/http'
 import { forStorage } from '../src/lib/store'
@@ -1544,6 +1546,31 @@ for (const sku of CATALOG) {
   // Domkniecie petli: runbook kaze ustawic zmienna, ktora katalog naprawde czyta.
   check(`${sku.id}: katalog czyta te sama zmienna`, catalogSource.includes(`priceId('${suffix}')`), true)
 }
+
+// Kazdy platnik jest goscia: korpus to lista, ktora sami wybralismy, a kupuja ci, ktorych na niej
+// nie ma. Miesieczny mail czytal gotowe wiersze celi, wiec goscia liczyl na zero, ktorego nikt nie
+// mierzyl - i wyslalby platnikowi „wymieniony w 0 z 10" o biegach, w ktorych nie bylo go w liscie.
+console.log('\nobserwacja spoza korpusu ma kategorie i prawdziwe liczby')
+const asWatch = (over: Record<string, unknown>) => ({ domain: 'gosc.test', placedIn: null, ...over }) as never
+const noneKnown = () => null
+check(
+  'domena, ktora publikujemy, bierze swoja kategorie',
+  categoryOfWatch(asWatch({ domain: 'stripe.com' }), () => ({ id: 'payments' }), CATEGORIES)?.id,
+  'payments',
+)
+check(
+  'domena spoza listy bierze przypisana',
+  categoryOfWatch(asWatch({ placedIn: 'transactional-email' }), noneKnown, CATEGORIES)?.id,
+  'transactional-email',
+)
+check('bez przypisania nie ma kategorii', categoryOfWatch(asWatch({}), noneKnown, CATEGORIES), null)
+check('nieistniejaca kategoria to tez brak', categoryOfWatch(asWatch({ placedIn: 'nie-ma-takiej' }), noneKnown, CATEGORIES), null)
+// Kontrolka: sonda musi umiec policzyc goscia, inaczej „zero" nadal nic nie znaczy.
+const answers = [{ answers: [{ text: 'I would use Buttondown for this, over postmarkapp.com.' }, { text: 'Postmark is the one I would pick.' }] }]
+const counted = readWithGuest(answers, 'buttondown.com', ['postmarkapp.com'], 'Buttondown')
+check('gosc jest policzony, gdy pada w odpowiedzi', counted.named.get('buttondown.com'), 1)
+check('i reszta jest przeliczona obok niego', counted.named.get('postmarkapp.com'), 2)
+check('a pierwszenstwo liczy sie z nim w liscie', counted.first.get('buttondown.com'), 1)
 
 // Klucz IndexNow: plik musi zawierac wlasna nazwe, bo inaczej silnik traktuje kazde zgloszenie jako
 // cudze i NIC nie mowi. Cicha porazka z definicji, wiec pilnowana tutaj, a nie odkrywana po tygodniu.

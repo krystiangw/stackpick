@@ -12,8 +12,10 @@
  * drafts are short enough to read before anybody does.
  */
 import { getStore } from '../src/lib/store'
-import { categoryFor } from '../src/lib/categories'
+import { CATEGORIES, categoryFor } from '../src/lib/categories'
 import { quotedAbout, whoWentFirst } from '../src/lib/vendors'
+import { categoryOfWatch } from '../src/lib/watch'
+import { readWithGuest } from '../src/lib/guest-cell'
 import cells from '../src/data/cells.json'
 
 const BASE_URL = process.env.STACKPICK_BASE_URL ?? 'https://letagentsin.com'
@@ -34,7 +36,7 @@ for (const watch of wanted) {
   if (seen.has(`${watch.email}:${watch.domain}`)) continue
   seen.add(`${watch.email}:${watch.domain}`)
 
-  const category = categoryFor(watch.domain)
+  const category = categoryOfWatch(watch, categoryFor, CATEGORIES) as (typeof CATEGORIES)[number] | null
   if (!category) {
     // The promise covers the categories we measure, and a watcher outside them is owed the truth
     // rather than silence. This is the sentence /pricing says we send before, not after.
@@ -55,24 +57,42 @@ for (const watch of wanted) {
   }
 
   const runs = held.reduce((sum, one) => sum + one.runs, 0)
-  const named = held.reduce((sum, one) => sum + (one.rows.find((row) => row.domain === watch.domain)?.named ?? 0), 0)
-  const first = held.reduce((sum, one) => sum + (one.rows.find((row) => row.domain === watch.domain)?.first ?? 0), 0)
+  // A customer we do not publish was never searched for in these answers, so the stored rows say
+  // zero about them and it is not an answer. Their name goes into the list and everybody is counted
+  // again, which is what the paid report already does and what this mail used to skip: without it a
+  // guest would be told they were named in none of ten runs by a script that never looked.
+  const guest = !category.domains.includes(watch.domain)
+  const live = guest ? readWithGuest(held, watch.domain, category.domains, watch.brand ?? null) : null
+  const namedAcross = (of: string) =>
+    live ? (live.named.get(of) ?? 0) : held.reduce((sum, one) => sum + (one.rows.find((row) => row.domain === of)?.named ?? 0), 0)
+  const named = namedAcross(watch.domain)
+  const first = live
+    ? (live.first.get(watch.domain) ?? 0)
+    : held.reduce((sum, one) => sum + (one.rows.find((row) => row.domain === watch.domain)?.first ?? 0), 0)
   // Across every tool, like the headline. Off one cell the list inverted: netlify.com read
   // "named in 3 of 11" and then "named more often than you: render.com: 6 of 6", two numbers on
   // two scales in one mail, and eight pairs in the corpus where the vendor listed as ahead was
   // behind once both tools were counted.
-  const namedAcross = (of: string) => held.reduce((sum, one) => sum + (one.rows.find((row) => row.domain === of)?.named ?? 0), 0)
-  const ahead = held[0].rows
-    .map((row) => row.domain)
+  const ahead = (live ? category.domains : held[0].rows.map((row) => row.domain))
     .filter((other) => other !== watch.domain && namedAcross(other) - namedAcross(watch.domain) > 1)
     .sort((a, b) => namedAcross(b) - namedAcross(a))
   // Attributed, because two tools both have a run 1 and because one of them answers in Polish:
   // an unattributed foreign-language sentence under "what a run said about you" reads like a
   // mistake rather than like evidence from a named run.
   const quote = held
-    .flatMap((one) => one.answers.map((answer) => ({ tool: one.tool.split(' ')[0], run: answer.run, said: saidAbout(answer.text, watch.domain, category.domains) })))
+    .flatMap((one) =>
+      one.answers.map((answer) => ({
+        tool: one.tool.split(' ')[0],
+        run: answer.run,
+        said: saidAbout(answer.text, watch.domain, guest ? [...category.domains, watch.domain] : category.domains),
+      })),
+    )
     .find((entry) => entry.said !== null)
-  const winners = [...new Set(held.flatMap((one) => one.answers).map((answer) => answer.first).filter((who) => who && who !== watch.domain))]
+  // For a guest the stored `first` was decided without their name in the list, so it can name
+  // somebody an answer only led because we were not looking for the customer in it.
+  const winners = live
+    ? [...live.first.keys()].filter((who) => who !== watch.domain)
+    : [...new Set(held.flatMap((one) => one.answers).map((answer) => answer.first).filter((who) => who && who !== watch.domain))]
 
   // Dated from the runs, not from the day the mail goes out. Nothing here records that a mail was
   // sent and cells.json is a committed file, so "this month" was a claim about the calendar that
@@ -91,9 +111,9 @@ for (const watch of wanted) {
   } else {
     lines.push('No run wrote a sentence about you. That is an absence rather than a bad review, and it is', 'the thing worth acting on.', '')
   }
-  const othersFirst = held
-    .flatMap((one) => one.answers)
-    .filter((answer) => answer.first && answer.first !== watch.domain).length
+  const othersFirst = live
+    ? [...live.first.entries()].filter(([who]) => who !== watch.domain).reduce((sum, [, count]) => sum + count, 0)
+    : held.flatMap((one) => one.answers).filter((answer) => answer.first && answer.first !== watch.domain).length
   const wentFirst = whoWentFirst(winners as string[], first, othersFirst)
   if (wentFirst) {
     lines.push(wentFirst, '')

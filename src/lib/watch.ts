@@ -27,6 +27,17 @@ export type Watch = {
   plan: 'trial' | 'paid'
   /** Set when a payment provider tells us a subscription exists. */
   subscriptionId: string | null
+  /**
+   * Which category to read this domain against, when it is not one of the ones we publish.
+   *
+   * Every paying customer is in this position: the corpus is a list we chose, and they are not on
+   * it. The monthly agent run needs a category to have a question at all, and deciding which one is
+   * a person's call, not a guess: "email" for email.com would count every sentence about email.
+   * Absent on a watch created before 2026-08-18 and on every domain we already publish.
+   */
+  placedIn?: string | null
+  /** The brand to search for beside the address, only when a person checked it belongs to nobody else. */
+  brand?: string | null
 }
 
 export type WatchChange = {
@@ -174,7 +185,24 @@ export function newWatch(email: string, domain: string, now: string): Watch {
     stoppedAt: null,
     plan: 'trial',
     subscriptionId: null,
+    placedIn: null,
+    brand: null,
   }
+}
+
+/**
+ * The category a watch is served from: ours when we publish the domain, the assigned one when a
+ * person placed it, and nothing when neither. Kept here rather than in the mail script because the
+ * report and the mail must not answer this differently about one customer.
+ */
+export function categoryOfWatch(
+  watch: Pick<Watch, 'domain' | 'placedIn'>,
+  published: (domain: string) => { id: string } | null,
+  known: readonly { id: string }[],
+): { id: string } | null {
+  const ours = published(watch.domain)
+  if (ours) return ours
+  return watch.placedIn ? (known.find((one) => one.id === watch.placedIn) ?? null) : null
 }
 
 export const measurableOf = (report: Report) => report.scorecard.measurable ?? report.scorecard.max

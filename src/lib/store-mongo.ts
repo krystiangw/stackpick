@@ -334,6 +334,14 @@ export class MongoStore implements Store {
     return (await watches.findOne({ id }, withoutId)) as Watch | null
   }
 
+  async watchWithBrand(brand: string) {
+    const { watches } = await collections()
+    // Case-insensitive by regex rather than by reading every watch: two customers who both write
+    // their name differently are still one name to the matcher.
+    const escaped = brand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    return (await watches.findOne({ brand: { $regex: `^${escaped}$`, $options: 'i' } }, withoutId)) as Watch | null
+  }
+
   async listWatchesDue(limit: number) {
     const { watches } = await collections()
     return (await watches
