@@ -7374,3 +7374,32 @@ ze globalne `User-agent: *` traktujemy jako wynik pomiaru, a nie prosbe, i ze sk
 czlowieka zawsze sie wykonuje. **Czego jeszcze nie ma:** adnotacji „od <data> prosza, zebysmy nie
 skanowali" na stronie vendora oraz mediany w raporcie branzowym liczonej z zamrozonymi i bez nich.
 Strona `/bot` **nie obiecuje** dzis zadnej z tych dwoch rzeczy.
+
+## OBEJRZALEM RAPORT NA OCZY I ZNALAZLEM CZTERY RZECZY (2026-08-19)
+
+Krystian powtorzyl, ze raport nie zachwyca graficznie. Ocena jest wizualna, wiec **otworzylem strone
+w przegladarce i przewinalem ja**, zamiast czytac wlasny kod. Cztery defekty, ktorych nie widac
+inaczej:
+
+1. **Surowy markdown w cytatach.** Agent pisze markdownem, wiec cytat wygladal doslownie tak:
+   „I'd use \*\*Cloudflare R2 behind a Cloudflare custom domain/CDN\*\*". Gwiazdki na stronie za
+   49 USD czytaja sie jak dokument, ktorego ktos nie skonczyl. **Nie usuwam ich**, bo to byloby ciche
+   edytowanie cytatu, tylko renderuje: pogrubienie jest wtedy emfaza samego agenta.
+2. **Etapy bez zadnego mierzalnego punktu** rysowaly sie jako `0/0` z pustym paskiem, czyli
+   oskarzenie zrobione ukladem strony. Teraz pisza „nothing measurable" i nie maja paska.
+3. **Zdanie z licznikiem** brzmialo „named in 10 of the runs you were named in 0".
+4. **Druk.** Nawigacja i stopka szly na papier, a to ma byc dokument.
+
+**Codex zlapal przy tym blad, ktory zobaczylby dopiero klient przy drukarce:** w `@media print`
+ustawilem biale tlo, ale **zmienne palety zostawaly ciemne**, wiec czytelnik z ciemnym motywem
+systemu dostawal na papierze jasnoszary tekst na bialym. Paleta jest teraz wymuszana w bloku druku.
+Drugie: reguly `break-inside` byly nieobjete zakresem i zmienialyby druk **kazdej innej strony**.
+
+**Stan wdrozenia: commit `aff7c0f` czeka**, bo **reseed na 9.41 wlasnie ruszyl** (log
+`/tmp/reseed-941.log`, wiersze schodza po kolei). Zgodnie z zasada nocy nie wdrazam w trakcie
+przemiatu.
+
+**UWAGA przy nastepnym `npm run audit`:** w trakcie przemiatu audyt pokazal dwa rozjazdy
+(`/findings` mowi 36 serwerow MCP bez udokumentowanego klucza, dane mowia 35). To jest **korpus w
+locie**, nie blad publikacji: czesc wierszy jest juz na 9.41, czesc na 9.40. Liczby sprawdzic
+**po** przemiecie i dopiero wtedy poprawiac, inaczej goni sie ruchomy cel.
