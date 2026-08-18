@@ -6438,3 +6438,45 @@ tam serwer**, sa trzy rzeczy, ktorych szuka sam check: naglowek wyzwania, cialo 
 `application/json` bez HTML-a. Audyt szerszy niz sprawdzana rzecz topi jeden prawdziwy wiersz pod
 trzydziestoma nieprawdziwymi - dokladnie odwrotny blad niz ten z `oauth_dcr`, gdzie audyt byl za
 waski i potwierdzal wlasna teze.
+
+## 35. PRZEBIEG ADWERSARYJNY: `agent_entry_point`, NAJWIEKSZA POWIERZCHNIA W KORPUSIE (2026-08-18)
+
+129 oblanych wierszy, wiecej niz `oauth_dcr` i `mcp_present`. Zdanie brzmi „None of the 21 agent
+entry paths we asked on your site and your documentation host returns a file rather than your page
+shell", wiec vendor, ktory **ma** taki plik, czyta to jako „nie szukali".
+
+`scripts/audit-entry.mts` pyta o kazda sciezke z `AGENT_ENTRY_PATHS` i `UPPERCASE_ENTRY_PATHS`, na
+**obu** hostach z tego zdania, **tym samym naglowkiem Accept, co skaner** (`entryAccept`), z
+**kontrolka osobno dla kazdej przestrzeni nazw** (`.md`, `.json`, `.txt`). Predykaty
+(`answersWithTheSameTemplate`, `looksLikeADocsPageTwin`) sa **zaimportowane ze skanera**, nie
+napisane drugi raz: druga opinia o tym, co jest plikiem, znalazlaby co innego niz check i zadna z
+liczb nie znaczylaby juz nic.
+
+**Trzy poprawki z codex review, wszystkie o tym samym:** audyt musi pytac tak, jak pyta sprawdzana
+rzecz. `*/*` zamiast naglowka skanera moglo **przegapic prawdziwy plik** (sentry.io oddaje web UI na
+`*/*` i deskryptor na `application/json`) - a wtedy „zero znalezionych" nie znaczy nic. Jedna
+kontrolka markdownowa nie rozpoznaje soft-404 w przestrzeni `.json`. Host dokumentacji pytamy tylko
+wtedy, gdy nalezy do vendora, bo `agents.md` na cudzej platformie jest cudzym plikiem.
+
+**Wynik: 122 oblane wiersze, 2304 sciezki, zero plikow.** Zdanie trzyma sie wszedzie.
+
+**Pierwszy przebieg pytal tylko hosta serwisu** (1464 sciezki, tez czysto) - ale to jest **polowa
+zdania**, bo zdanie mowi takze o hoscie dokumentacji. Ta sama pomylka, co przy `oauth_dcr`, gdzie
+audyt byl wezszy niz sprawdzana rzecz; poprawiona zanim wynik trafil do STATE.
+
+## TRZY NAJWIEKSZE POWIERZCHNIE OSKARZEN SPRAWDZONE (2026-08-18, podsumowanie)
+
+| check | oblanych wierszy | zapytan | falszywych zdan |
+|---|---|---|---|
+| `agent_entry_point` | 122 | 2304 sciezki | **0** |
+| `oauth_dcr` | 74 (+17 drugiej galezi) | 2987 | **0** |
+| `mcp_present` | 80 | 560 adresow | **0** (ale zdanie doprecyzowane) |
+
+**Razem 5851 zapytan pod adresy, ktore sami opublikowalismy, i ani jedno zdanie nie okazalo sie
+falszywe.** Jedyna zmiana w tresci to `mcp_present`: „nothing answered at" bylo nieprecyzyjne w
+nasza strone, bo 32 z 560 adresow odpowiadaja zwykla bramka API.
+
+**Trzy skrypty zostaja** (`audit-entry.mts`, `audit-oauth.mts`, `audit-mcp.mts`) i wszystkie maja ten
+sam ksztalt: wez adresy **z opublikowanego zdania**, zapytaj je jeszcze raz, uzyj **predykatow ze
+skanera** zamiast pisac drugie zdanie o tym, co sie liczy. Do powtorzenia po kazdym przemiecie i
+przy kazdym sporze z vendorem.

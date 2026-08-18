@@ -1,176 +1,106 @@
 /**
- * Twenty-first adversarial pass: `agent_entry_point`, the check that carries more published
- * accusations than any other. 139 rows say "none of the 9 known agent entry paths returns a file",
- * against 19 that we credit. A rule failing seven vendors out of eight is either the product's
- * central finding or its biggest systematic error, and nothing had tested which.
+ * Does anything answer at the agent entry paths we say we asked?
  *
- * Two hypotheses about how we could be wrong at scale, both from lessons this repo already
- * learned elsewhere:
- *   1. Casing. The convention people write in repositories is AGENTS.md, and we probe /agents.md.
- *      On a case-sensitive origin those are different files.
- *   2. Host. `llms_txt` probes documentation origins because deepl.com and mixpanel.com publish
- *      only there; this check probes the site root and nothing else.
+ *   MONGODB_URI=... npx tsx scripts/audit-entry.mts [ile]
  *
- * The control is what makes a hit mean anything, and it is per host rather than global: a nonsense
- * path with the same extension. docs.slatejs.org answers /AGENTS.md, /Agents.md and /agents.md with
- * the same 1889 bytes and an invented /llms-agents.md with 1970, so a probe without this would have
- * reported it as a file we missed. That is the failure mode of every naive version of this script.
+ * `agent_entry_point` is the biggest accusation surface in the corpus, 129 rows, and its sentence
+ * names the count rather than the paths: "None of the 21 agent entry paths we asked on your site
+ * and your documentation host returns a file rather than your page shell". A vendor who has one of
+ * those files reads that as us not looking, so it has to be true.
  *
- *   npx tsx scripts/audit-entry.mts accused   # a hit means we published a false accusation
- *   npx tsx scripts/audit-entry.mts credited  # a miss means the probe is broken, not the row
+ * The predicates come from the scanner itself (`isRealTextFile`, `answersWithTheSameTemplate`,
+ * `looksLikeADocsPageTwin`), because a second opinion about what counts as a file would find
+ * different things than the check does, and then neither number would mean anything. Only the
+ * fetching is local. The control path is what separates a published file from a site that answers
+ * every unknown address with its own shell.
  */
 import { CURATED_DOMAINS } from '../src/lib/categories'
-import { AGENT_ENTRY_PATHS } from '../src/lib/scan/funnel'
 import { getStore } from '../src/lib/store'
+import {
+  AGENT_ENTRY_PATHS,
+  UPPERCASE_ENTRY_PATHS,
+  answersWithTheSameTemplate,
+  entryAccept,
+  looksLikeADocsPageTwin,
+} from '../src/lib/scan/funnel'
+import { registrableDomain } from '../src/lib/scan/http'
 
-const UA = 'LetAgentsIn/1.0 (+https://letagentsin.com/methodology)'
-const CASINGS = ['/AGENTS.md', '/Agents.md', '/AGENT.md', '/SKILL.md']
-/** Same shape as a real one and deliberately not a convention anybody publishes. */
-const NONSENSE = ['/qx7-not-a-convention.md', '/qx7-not-a-convention.json', '/qx7-not-a-convention.txt']
+const PAUSE_MS = 250
+const CONTROL = '/letagentsin-audit-probe-8f3a1c'
+const store = getStore()
+const most = Number(process.argv[2] ?? 40)
 
-type Body = { bytes: number; head: string; firstLine: string }
-
-/**
- * The header the scanner would send for this path, and the reason is sentry.io: asked with
- * markdown in front it answers every path, including /.well-known/mcp.json, with the same
- * "you've hit the web UI" notice, and asked with application/json it answers the real 106 byte
- * descriptor. A probe auditing a measurement has to make the measurement's request.
- */
-const acceptFor = (path: string) =>
-  path.endsWith('.json') ? 'application/json' : path.endsWith('.txt') ? 'text/plain' : 'text/markdown, text/plain'
-
-async function fileAt(url: string): Promise<Body | null> {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 9000)
+const get = async (url: string, accept: string) => {
+  await new Promise((done) => setTimeout(done, PAUSE_MS))
   try {
-    const response = await fetch(url, {
-      signal: controller.signal,
-      redirect: 'follow',
-      headers: { 'user-agent': UA, accept: acceptFor(new URL(url).pathname) },
-    })
-    if (!response.ok) return null
-    const body = (await response.text()).slice(0, 4000)
-    // A page shell is not a file, and it is what most sites answer for an unknown path.
-    if (/^\s*<(!doctype|html)/i.test(body)) return null
-    const text = body.trim()
-    // A descriptor is allowed to be tiny, and the first version of this floor was 120 characters
-    // for everything. sentry.io's /.well-known/mcp.json is 106 bytes of real JSON, so the control
-    // reported the probe could not see a file we credit - which is the control doing its job.
-    if (text.startsWith('{') || text.startsWith('[')) {
-      try {
-        const parsed = JSON.parse(text)
-        if (parsed && Object.keys(parsed).length > 0) return described(text)
-      } catch {
-        /* truncated at the read cap, or not JSON after all */
-      }
-    }
-    if (text.length < 120) return null
-    if (readsAsADocsPage(text)) return null
-    return described(text)
+    const answer = await fetch(url, { headers: { accept }, signal: AbortSignal.timeout(8000) })
+    return { ok: answer.ok, status: answer.status, body: (await answer.text()).slice(0, 4000) }
   } catch {
     return null
-  } finally {
-    clearTimeout(timer)
   }
 }
 
-/**
- * The first line is kept raw and separately, because collapsing whitespace into `head` destroyed
- * the only thing that separates a markdown 404 from a file: developers.weglot.com answers every
- * path with "# Page Not Found\n\nThe URL `<path>` does not exist", and once the newlines are gone
- * the two bodies differ by the path they quote. That defeated the shared-heading rule and the
- * probe reported a file we correctly say is not there.
- */
-const described = (text: string): Body => ({
-  bytes: text.length,
-  head: text.slice(0, 60).replace(/\s+/g, ' '),
-  firstLine: (text.split('\n').map((line) => line.trim()).find(Boolean) ?? '').toLowerCase(),
-})
+/** The scanner's own bar for "this is a published file", minus the parts that need a full scan. */
+const readsAsAFile = (body: string) => !/^\s*<(!doctype|html)/i.test(body) && body.trim().length >= 30
 
-/**
- * Front matter with breadcrumbs is a documentation page wearing a file's name, which is a rule the
- * scanner already publishes and applies. docs.datadoghq.com/agent.md is their page about the
- * Datadog Agent, not a file for agents, and a probe that cannot tell the two apart is weaker than
- * the measurement it is auditing.
- */
-const readsAsADocsPage = (text: string) => /^---[\s\S]{0,400}?^breadcrumbs:/m.test(text)
+type Found = { domain: string; url: string; head: string }
+const found: Found[] = []
+let checked = 0
+let asked = 0
 
-const extensionOf = (path: string) => (path.endsWith('.json') ? '.json' : path.endsWith('.txt') ? '.txt' : '.md')
-
-/** What this host answers for a path nobody publishes, per extension. Null when it answers nothing. */
-async function catchAllFor(base: string): Promise<Map<string, Body | null>> {
-  const seen = new Map<string, Body | null>()
-  for (const path of NONSENSE) seen.set(extensionOf(path), await fileAt(`${base}${path}`))
-  return seen
-}
-
-
-
-async function realFilesOn(base: string): Promise<string[]> {
-  const control = await catchAllFor(base)
-  const found: string[] = []
-  for (const path of [...AGENT_ENTRY_PATHS, ...CASINGS]) {
-    const got = await fileAt(`${base}${path}`)
-    if (!got) continue
-    const nonsense = control.get(extensionOf(path))
-    // Same size as the invented path means the host answers everything in that namespace, so the
-    // hit says nothing about what the vendor publishes.
-    if (nonsense && Math.abs(nonsense.bytes - got.bytes) < 200) continue
-    // And the same opening line means the same template even when the sizes differ, which is the
-    // usual shape: a documentation platform's soft 404 lists suggested pages, so every response is
-    // a different length. Six of the seven disagreements on 2026-08-16 were this, all of them the
-    // probe being weaker than the scanner it audits rather than a finding about anybody.
-    if (nonsense && nonsense.firstLine.length > 3 && got.firstLine === nonsense.firstLine) continue
-    // Asked a second time before it counts. developer.calendly.com answered two uppercase paths
-    // with a 317 byte markdown "Page Not Found" during one run and with its usual 298 kB HTML
-    // shell a minute later, and a disagreement that does not reproduce is not a finding.
-    const again = await fileAt(`${base}${path}`)
-    if (!again || Math.abs(again.bytes - got.bytes) > 200) continue
-    found.push(`${base}${path} (${got.bytes}B ${got.head})`)
-  }
-  return found
-}
-
-const mode = process.argv[2] === 'credited' ? 'credited' : 'accused'
-const store = getStore()
-
-const targets: { domain: string; bases: string[] }[] = []
-for (const domain of CURATED_DOMAINS) {
-  const report = await store.latestForDomain(domain)
-  const check = report?.scorecard.checks.find((candidate) => candidate.id === 'agent_entry_point')
-  if (!check || check.inconclusive || check.notApplicable) continue
-  const wanted = mode === 'credited' ? check.points > 0 : check.points === 0
-  if (!wanted) continue
-  const findings = report!.findings as unknown as { site: string; discovered?: { docs?: string | null } }
-  const docs = findings.discovered?.docs
-  const bases = [findings.site.replace(/\/$/, '')]
+for (const domain of [...CURATED_DOMAINS].slice(0, most)) {
+  const report = await store.latestForDomain(domain, true)
+  const check = report?.scorecard.checks.find((one) => one.id === 'agent_entry_point')
+  if (!check || check.inconclusive || check.notApplicable || check.points > 0) continue
+  checked += 1
+  // Both halves of the sentence. It says "on your site and your documentation host", and an audit
+  // that asks only the first one verifies half a claim while reporting it as the whole.
+  const docs = (report?.findings as unknown as { discovered?: { docs?: string | null } })?.discovered?.docs
+  const hosts = [`https://${domain}`]
   if (docs) {
     try {
       const origin = new URL(docs).origin
-      if (origin !== bases[0]) bases.push(origin)
+      // Only the vendor's own documentation host. A shared platform or another company's site can
+      // sit in that field, and a root-level agents.md there is somebody else's file: reporting it
+      // would be a contradiction we invented.
+      const theirs = registrableDomain(new URL(origin).hostname) === registrableDomain(domain)
+      if (theirs && !hosts.includes(origin)) hosts.push(origin)
     } catch {
-      /* the scan already validated this */
+      // A stored value that is not a URL is not a host to ask.
     }
   }
-  targets.push({ domain, bases })
+  for (const host of hosts) {
+    // One control per namespace, because a host can answer .json, .txt and .md unknown paths with
+    // three different templates - which is why the scanner keeps three of them. A single markdown
+    // control would read a JSON soft-404 as a published descriptor.
+    const controls = new Map<string, string | undefined>()
+    for (const suffix of ['.md', '.json', '.txt']) {
+      const at = suffix === '.json' ? `${host}/.well-known${CONTROL}${suffix}` : `${host}${CONTROL}${suffix}`
+      controls.set(suffix, (await get(at, entryAccept(suffix)))?.body)
+    }
+    for (const path of [...AGENT_ENTRY_PATHS, ...UPPERCASE_ENTRY_PATHS]) {
+      asked += 1
+      // The same header the probe sends. sentry.io answers its web UI to */* and the descriptor to
+      // application/json, so asking the lazy way finds nothing and calls it a confirmed absence.
+      const answer = await get(`${host}${path}`, entryAccept(path))
+      if (!answer?.ok) continue
+      if (!readsAsAFile(answer.body)) continue
+      const suffix = path.endsWith('.json') ? '.json' : path.endsWith('.txt') ? '.txt' : '.md'
+      // The two things that make a body look like a file without being one: the site's own shell
+      // served for every unknown address, and a documentation page rendered as text.
+      if (answersWithTheSameTemplate(answer.body, controls.get(suffix))) continue
+      if (looksLikeADocsPageTwin(answer.body)) continue
+      found.push({ domain, url: `${host}${path}`, head: answer.body.replace(/\s+/g, ' ').slice(0, 90) })
+    }
+  }
+  console.log(`${checked} wierszy sprawdzonych, ${found.length} plikow znalezionych`)
 }
 
-console.log(`${mode}: ${targets.length} domen\n`)
-
-let disagree = 0
-for (const { domain, bases } of targets) {
-  const found = (await Promise.all(bases.map(realFilesOn))).flat()
-  const hit = found.length > 0
-  const expected = mode === 'credited' ? hit : !hit
-  if (expected) continue
-  disagree += 1
-  console.log(`NIEZGODA ${domain.padEnd(20)} ${found.join(' | ') || 'nie znalazlem pliku, ktory nasz wiersz zalicza'}`)
-}
-
-console.log(`\n${targets.length} sprawdzonych, ${disagree} niezgodnych`)
+console.log(`\n${checked} oblanych wierszy, ${asked} sciezek zapytanych`)
 console.log(
-  mode === 'credited'
-    ? 'kontrolka: niezgoda znaczy, ze sonda nie widzi pliku, za ktory dajemy punkt'
-    : 'oskarzenia: niezgoda znaczy, ze plik jednak jest, a my opublikowalismy jego brak',
+  found.length === 0
+    ? 'zdanie trzyma sie wszedzie: pod zadna z wymienionych sciezek nie ma dzis pliku'
+    : `${found.length} PLIKOW, ktore jednak sa, mimo ze wiersz mowi, ze zadnej nie ma - kazdy do przeczytania:`,
 )
+for (const one of found) console.log(`  ${one.domain.padEnd(22)} ${one.url}\n     ${one.head}`)
 process.exit(0)

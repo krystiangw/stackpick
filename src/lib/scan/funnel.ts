@@ -274,7 +274,8 @@ export function everyFreeSignalIsAQuestion(patterns: RegExp[], text: string): st
 // content-negotiates: ask it for text/markdown and every path answers with the same 976 byte
 // markdown page, including /.well-known/mcp.json, which is really 106 bytes of JSON naming
 // their MCP server. We were handed a catch-all because we asked for one.
-const entryAccept = (path: string) =>
+/** Exported so an audit of these probes asks the way they ask, rather than the way it guesses. */
+export const entryAccept = (path: string) =>
   path.endsWith('.json')
     ? 'application/json;q=1, text/plain;q=0.8, */*;q=0.5'
     : 'text/markdown, text/plain;q=0.9, */*;q=0.5'
