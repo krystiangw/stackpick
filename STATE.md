@@ -1,12 +1,13 @@
-# Let Agents In: stan na 2026-08-18 (formula 9.36 na produkcji, reseed zamowiony)
+# Let Agents In: stan na 2026-08-18 (formula 9.37 na produkcji, reseed zamowiony)
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te trzydziesci linijek, potem reszte)
 
-**WERSJE (stan 02:10): produkcja i repo na 9.36, korpus na 9.33.**
-Od wieczora doszly trzy wersje: **9.34** (szesnasty check, cena albo warunek wejscia w snippecie z
-cennika), **9.35** (probka dokumentacji rozproszona po rodzinach wskazowek) i **9.36** (cztery
-poprawki `price_in_snippet` z 31. przebiegu adwersaryjnego). Korpus dostanie je wszystkie przy
-najblizszym reseedzie.
+**WERSJE (stan 03:55): produkcja i repo na 9.37, korpus na 9.33.**
+Od wieczora doszly cztery wersje: **9.34** (szesnasty check, cena albo warunek wejscia w snippecie
+z cennika), **9.35** (probka dokumentacji rozproszona po rodzinach wskazowek), **9.36** (cztery
+poprawki `price_in_snippet` z 31. przebiegu adwersaryjnego) i **9.37** (stara paczka, ktora sami
+wybralismy z rejestru, przestaje byc oskarzeniem - w checku i w naglowku raportu). Korpus dostanie je
+wszystkie przy najblizszym reseedzie.
 
 **W LOCIE JEST JEDNO: petla czekajaca na karencje, log `/tmp/reseed-935.log`.** Karencja liczy sie od
 **mediany wieku korpusu**, ostatni przemiat skonczyl sie 2026-08-17 o 23:50, wiec reseed ruszy
@@ -16,7 +17,7 @@ zanim cokolwiek zrobisz.** Gdyby przepadla, komenda jest w sekcji o 9.35 nizej.
 **PULAPKA:** kazdy skan domeny Z KORPUSU, takze zrobiony do weryfikacji poprawki, odmladza mediane i
 **przesuwa karencje**. Do weryfikacji uzywaj domen spoza korpusu.
 
-**PO RESEEDZIE (9.36), w tej kolejnosci:**
+**PO RESEEDZIE (9.37), w tej kolejnosci:**
 1. `MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/after-reseed.mts`
 2. `npm run audit`, `npx tsx scripts/audit-study.mts`, `npm run audit-delivery`
 3. **Nowy check `price_in_snippet`: policz, ilu vendorow go oblewa.** Zmierzona przed reseedem
