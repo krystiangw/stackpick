@@ -6924,3 +6924,52 @@ i dopiero po nim wolno napisac cokolwiek publicznie - zgodnie ze skillem `audit-
 (Ora, agentable), monitoring artefaktow kosztuje 29 USD/mc, a tracker widocznosci 250 USD/mc.
 Nasze 49/79 za raport siedzi miedzy tymi swiatami i po tej nocy trzeba je ustawic wzgledem tego,
 co naprawde jest nasze: **powtarzalnosc zdan i szereg czasowy**, a nie „mierzymy to, czego nikt".
+
+## AUDYT DECYZJI O POZYCJONOWANIU (2026-08-18, decyzja z subagenta, do potwierdzenia rano)
+
+**Decyzja pochodzi z audytu subagenta** (Agent tool, opus), odpalonego po odkryciu Ory i Lightsage.
+Brief zawieral wylacznie zweryfikowane fakty z ich publicznych API.
+
+**Korekta faktu, ktora audyt wylapal u mnie:** **79 USD to monitoring miesieczny za domene**, nie
+rozszerzony raport. Raport jest jeden, 49 USD jednorazowo (`src/lib/billing/catalog.ts`). Nasza realna
+konfrontacja cenowa to **79/mc kontra 29/mc agentable**, a nie „49/79 za raport". Do potwierdzenia
+z Krystianem, czy w jego glowie 79 to to samo.
+
+**Rekomendacja: kierunek B, „weryfikowalny pomiar w czasie".** Nie szerokosc (A: 127 checkow za
+darmo, wyscig przegrany), nie nisza dowodowa jako os (C: najwyzsza gotowosc do zaplaty, ale **nie ma
+dzis przymusu** - nikt nie wymaga dowodu agent-readiness w due diligence), nie interop jako
+pozycjonowanie (D: to jeden dzien roboty i higiena, nie strategia).
+
+Argument, ktory przekonuje najbardziej: **szeregu czasowego nie da sie dopisac wstecz**, a podloga
+szumu jest **niewygodna do skopiowania** - opublikowanie „nasz wynik rusza sie o X bez zmiany u
+vendora" dewaluuje ich wlasna liczbe 0-100 i bramke `--min-score` w CI. To przewaga, ktorej konkurent
+nie chce domknac, a nie tylko nie zdazyl.
+
+**Co juz zrobione z kolumny „moge sam":**
+- **Wlasny katalog ARD** (`/.well-known/ai-catalog.json` + wskazanie w robots.txt), bo tego samego
+  zadamy od innych. Straznik pilnuje, ze katalog jest o nas.
+- **Wyzwanie na brzegu vendora jest teraz warte maila.** Klient wlaczajacy ochrone przed botami
+  przesuwal trzy checki w cisze i nie dostawal nic, choc to jest ta awaria, ktora obiecuje strona
+  glowna. Dwie poprawki z codex review, obie o falszywym alarmie do **placacego** klienta: sygnal
+  filtrowany po domenie wiersza (wyzwanie z `api.npmjs.org` to nie ich brzeg) i **odzyskane**
+  wyzwanie nie liczy sie jako sciana.
+- **Sprawdzone i NIEPRAWDZIWE zalozenie audytu:** teza „nikt inny nie uruchamia agentow" **nie byla
+  opublikowana** na stronie. Zyla w STATE i w mojej glowie, wiec nie ma bledu poprawnosciowego do
+  naprawienia, jest za to teza do napisania od nowa, gdy bedzie czym ja poprzec.
+
+**Co audyt kaze PRZESTAC robic** (i z czym sie zgadzam): przebiegi adwersaryjne w obecnym tempie
+(dziewiec powierzchni, zero falszywych zdan, wartosc krancowa dziesiatego bliska zeru), dokladanie
+checkow dla parytetu ze specyfikacja, poszerzanie pokrycia tam, gdzie cisza jest konsekwencja,
+dopieszczanie tresci raportu **przy niedzialajacym checkoucie**.
+
+**Najwazniejsze ryzyko, ktorego nie widzialem:** nie agentable, tylko **`npx @ora-ai/ax audit
+--min-score` w CI**. Gdy check chodzi w pipelinie, monitoring jako usluga traci racje bytu dla
+zespolu inzynierskiego. Kontra istnieje (CI nie widzi zywej strony po deployu, rejestru npm, cudzych
+powierzchni i nie mowi, ze agent wybral konkurenta), ale **dopoki nie jest napisana, kupujacy sam
+tego nie wymysli**.
+
+**Do potwierdzenia rano z Krystianem:** dane sprzedawcy do Paddle (jedyny prawdziwy blocker), czy 79
+zostaje wobec 29, kiedy monitoring przestaje byc darmowy i co z trzema obecnymi obserwacjami, dolna
+granica ceny audytu, `CORPUS_LICENCE_PUBLISHED` ze swiadomoscia, ze Ora i Lightsage moga zassac
+korpus, zdjecie pakietu 10 domen (499/mc kontra 99/mc za 25 u agentable) i zgoda na opublikowane
+zdanie **„zaplata nie zmienia werdyktu"** przed pierwsza transakcja, nie po pierwszym telefonie.
