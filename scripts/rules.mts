@@ -16,6 +16,7 @@ import { isOlderThan } from '../src/lib/formula'
 import { buildFixPlan } from '../src/lib/fixfirst'
 import { changeEmail } from '../src/lib/watch-email'
 import { CHECKS } from '../src/lib/score'
+import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR } from '../src/lib/scan-gate'
 import { forStorage } from '../src/lib/store'
 import { REMEDIES } from '../src/lib/fixfirst'
 import { ERRATA, erratumFor } from '../src/lib/errata'
@@ -1384,6 +1385,31 @@ const pagesUnder = (dir: string): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
     entry.isDirectory() ? pagesUnder(`${dir}/${entry.name}`) : entry.name === 'page.tsx' ? [`${dir}/${entry.name}`] : [],
   )
+// To samo dla limitow, ktore obiecujemy agentom maszynowo. `agent-access.json` mowilo „10 na
+// godzine na adres", a naprawde jest 5 na domene i 30 na adres: agent planujacy pod ta liczbe albo
+// dusi sie bez powodu, albo wpada w 429. Plik jest statyczny, wiec nic go samo nie poprawi.
+const agentAccess = JSON.parse(readFileSync('public/.well-known/agent-access.json', 'utf8')) as {
+  rate_limit: { limits: { requests: number; scope: string }[] }
+}
+const promised = (scope: string) => agentAccess.rate_limit.limits.find((one) => one.scope.includes(scope))?.requests
+check('agent-access.json obiecuje prawdziwy limit na domene', promised('domain'), PER_DOMAIN_PER_HOUR)
+check('i prawdziwy limit na adres', promised('source address'), PER_CALLER_PER_HOUR)
+// Te same liczby w prozie dla agentow, cyframi zamiast slowem wlasnie po to, zeby dalo sie ich
+// pilnowac. Plikow jest dwa i oba obiecuja co innego czytelnikowi niz kod robi.
+for (const file of ['public/agents.md', 'public/agent-signup.md']) {
+  const told = readFileSync(file, 'utf8')
+  check(`${file}: limit na domene`, told.includes(`${PER_DOMAIN_PER_HOUR} scans per hour`), true)
+  check(`${file}: limit na adres`, told.includes(`${PER_CALLER_PER_HOUR} per hour`), true)
+}
+
+// Ten sam rozjazd, tylko w pliku statycznym: `public/llms.txt` pisze liczbe checkow z reki, a
+// zadna strona go nie renderuje, wiec nikt by nie zauwazyl. To akurat plik, ktory sami kazemy
+// publikowac vendorom.
+check(
+  'public/llms.txt zgadza sie z liczba checkow',
+  readFileSync('public/llms.txt', 'utf8').includes(`${CHECKS.length} deterministic checks`),
+  true,
+)
 for (const page of pagesUnder('src/app')) {
   const withoutComments = readFileSync(page, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ')
   check(`${page}: liczba idzie ze stalej, nie ze slowa`, SPELLED.exec(withoutComments)?.[0] ?? '', '')

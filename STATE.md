@@ -5665,3 +5665,20 @@ w `rules.mts` stoja trzy straznicy z tymi zdaniami, zeby nikt nie poszerzyl tego
 **Wniosek warty powtarzania: puszczaj wlasny pomiar na siebie.** Wlasna kopia jest najtansza
 probka, jaka mamy, i jako jedyna jest napisana przez nas, wiec pokazuje luki, ktorych nie widac na
 cudzych stronach.
+
+## MASZYNOM OBIECYWALISMY INNY LIMIT NIZ LUDZIOM I NIZ ROBI KOD (2026-08-18, naprawione)
+
+`/.well-known/agent-access.json` - plik, ktory sami polecamy agentom jako zrodlo prawdy o wejsciu -
+mowil **„10 zadan na godzine na adres"**. Prawda z `scan-gate.ts` to **5 na godzine na skanowana
+domene i 30 na adres**, czyli dokladnie to, co pisza `/agents.md` i `/agent-signup.md`. Agent
+planujacy pod ten JSON albo dusi sie bez powodu, albo wpada w 429 przy 11. zadaniu, bo dwa limity
+byly sciete do jednego.
+
+Teraz JSON wymienia oba limity osobno, z oknem i z tym, co sie dzieje po przekroczeniu. Liczby w
+`agents.md` i `agent-signup.md` zapisane **cyframi zamiast slowem**, zeby dalo sie ich pilnowac, i
+straznik w `rules.mts` porownuje wszystkie trzy pliki ze stalymi `PER_DOMAIN_PER_HOUR` i
+`PER_CALLER_PER_HOUR`.
+
+**Wzorzec z calej nocy, juz trzeci raz:** liczba wpisana z reki do pliku statycznego nie ma jak sie
+sama poprawic, a pliki statyczne to wlasnie te, ktore czytaja maszyny. `public/llms.txt` dostal ten
+sam straznik (liczba checkow).

@@ -40,7 +40,7 @@ want to argue with the formula, that is the cheapest way to do it.
 
 ## Limits
 
-Five scans per hour per registrable domain and thirty per hour per address. Scanning reads only what any browser can read. IP literals,
+5 scans per hour per registrable domain and 30 per hour per address. Scanning reads only what any browser can read. IP literals,
 private ranges and non-resolving hosts are refused.
 
 ## Read the formula first
