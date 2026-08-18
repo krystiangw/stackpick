@@ -6171,3 +6171,33 @@ Zmierzenie tego wymaga przemiatu z zapisem naglowkow, ktorego nie da sie zrobic 
 **Zadanie na tablicy, z ta notatka jako materialem.** Do rozstrzygniecia rowniez: czy wyzwanie
 wywolane naszym tempem (Cloudflare potrafi odpowiadac na limit „managed challenge") liczy sie tak
 samo jak wyzwanie stale - bo jesli nie, to rozroznienie wymaga drugiego zadania po odczekaniu.
+
+## CZYM NAS ODMAWIAJA: ZMIERZONE NA 92 DOMENACH (2026-08-18, material do #48)
+
+Wiersz zapisuje teraz **kazdy limit, jaki napotkal skan, i czy niosl marker wyzwania**
+(`limitsMet` w findings, `limitsAtTheirEdge` w `corpus.ts`, wypisywane przez `after-reseed.mts`).
+Zapisane, **nie punktowane**: zmiana werdyktu z tego wymaga liczby, a nie jednego przykladu.
+
+Pomiar lokalny (`scripts/audit-limits.mts`, bez zapisu do korpusu, wiec karencja stoi):
+
+| co | ile z 92 |
+|---|---|
+| limit w rejestrze npm (`api.npmjs.org`) | **48** - fakt o naszym ruchu, nie o vendorze |
+| limit na **wlasnym brzegu vendora** | **5** |
+| z tego **kazdy limit z markerem wyzwania** | **4** |
+
+Cztery sciany: `contentful.com` (15/15 na contentful.com i www), `split.io` (13/13 na
+docs.split.io), `logto.io` (6/6), `rollbar.com` (2/2 na docs.rollbar.com). Piaty,
+`postmarkapp.com`, to zwykly limit bez markera i **2 z 7 wrocily po odczekaniu** - czyli to, co
+odczekanie z tej nocy naprawia.
+
+**Pierwsza korekta pomiaru:** poczatkowa wersja liczyla razem limity vendora i rejestru i pokazala
+`bunny.net` jako najbardziej odmawiajacego w korpusie na dziesieciu limitach, z ktorych **kazdy byl
+api.npmjs.org**. Stad `limitsAtTheirEdge` rozdziela, czyje to byly drzwi.
+
+**Druga korekta, wazniejsza, bo dotyczy tego, co byloby wdrozone:** pierwsza mysl byla taka, zeby
+429 z markerem liczylo sie jako odmowa brzegu w `isEdgeRefusal`. To bylby blad. Checki czytajace
+strony przeszlyby wtedy z niemierzalnych na **oblane**, czyli wiersz powiedzialby „nie dokumentujesz
+tworzenia kluczy" komus, kto to dokumentuje, tylko nam tego nie pokazal. Dokladnie to, czego zasada
+domu zabrania. Decyzja o ksztalcie zmiany poszla do **audytu subagenta**; wynik i co potwierdzic z
+Krystianem - w sekcji nizej.
