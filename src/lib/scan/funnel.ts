@@ -1,6 +1,6 @@
 import { AGENT_UA, BROWSER_UA, fetchUrl, registrableDomain, isBotChallenge, isEdgeRefusal, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, timeLeftMs, visibleTextLength, wasNeverAsked, type Fetched } from './http'
 
-export const AGENT_ENTRY_PATH_COUNT = 9
+export const AGENT_ENTRY_PATH_COUNT = 10
 
 /** Asked only when the lower-case set came back empty, so it costs nothing where a file exists. */
 export const UPPERCASE_ENTRY_PATHS = ['/AGENTS.md', '/SKILL.md', '/AGENT.md'] as const
@@ -15,6 +15,13 @@ export const AGENT_ENTRY_PATHS = [
   '/.well-known/mcp.json',
   '/.well-known/agent.json',
   '/.well-known/ai-plugin.json',
+  // A2A's descriptor, and a MUST in the AgentReady standard published at agentready.org. Measured
+  // across the corpus on 2026-08-18 before adding it: five vendors serve one, and four of them
+  // already pass this check by another file. The fifth, tigrisdata.com, was being told "none of
+  // the 12 agent entry paths we asked returns a file" while serving exactly the descriptor the
+  // standard names. One row is a small number and a sentence that is wrong about a published file
+  // is not a small thing.
+  '/.well-known/agent-card.json',
 ]
 
 /**

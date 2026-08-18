@@ -32,6 +32,7 @@ import { wasNeverAsked } from '../src/lib/scan/http'
 import { brandTaken, certain, mentionsIn, nameGuest, quotedAbout, whoWentFirst, wordsCarried } from '../src/lib/vendors'
 import { licenceGateQuotes, readSnippet, rendersUsableForm, entersThroughIdentityProvider, mcpCandidates, looksLikeADocsPageTwin, answersWithTheSameTemplate, readsAsAnEndpoint, readsAsTheirOwnAddress } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
+import { AGENT_ENTRY_PATHS, AGENT_ENTRY_PATH_COUNT } from '../src/lib/scan/funnel'
 import {
   methodRefusalIsRouted,
   provisioningMatches,
@@ -1687,6 +1688,13 @@ const dwaHosty = met([
 check('limit z innej poddomeny nie liczy sie do zdania', limitsAtTheirEdge(dwaHosty, 'split.io').refusedWhereChallenged, 1)
 check('choc nadal jest limitem na ich brzegu', limitsAtTheirEdge(dwaHosty, 'split.io').onSite, 2)
 check('wiersz bez limitow nie wymysla ich', limitsAtTheirEdge(undefined, 'split.io').onSite, 0)
+
+// Karta A2A jest deskryptorem, wiec liczy sie jak mcp.json: punkt za istnienie, nie dwa za
+// procedure. Standard AgentReady stawia ja jako MUST, a my mowilismy tigrisdata.com, ze nie ma
+// zadnego wejscia dla agenta, gdy serwuje dokladnie ten plik.
+console.log('\nkarta A2A w sciezkach wejscia')
+check('pytamy o nia', AGENT_ENTRY_PATHS.includes('/.well-known/agent-card.json'), true)
+check('liczba sciezek zgadza sie z lista', AGENT_ENTRY_PATH_COUNT, AGENT_ENTRY_PATHS.length)
 
 // Brak llms.txt nazywa adresy, ktore pytalismy. „4 locations probed" nie da sie powtorzyc, a dwa
 // z tych adresow sa na hoscie dokumentacji i jeden pod jej sciezka - nikt ich nie zgadnie.

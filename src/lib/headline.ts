@@ -1,6 +1,7 @@
 import type { ScanFindings } from './scan'
 import { type Scorecard } from './score'
 import { DOCS_SHELL_FLOOR } from './scan/http'
+import { AGENT_ENTRY_PATH_COUNT } from './scan/funnel'
 
 export type Headline = {
   /** One sentence a stranger would forward to a colleague. Specific, checkable, unflattering. */
@@ -149,7 +150,7 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
       claim: machineReadable
         ? 'You publish files for machines to read, but nothing that tells one how to become a customer.'
         : 'There is no door built for a machine anywhere on your domain.',
-      evidence: `None of the nine known agent entry paths answered, including /agent-signup.md and /.well-known/agent-access.json.${
+      evidence: `None of the ${AGENT_ENTRY_PATH_COUNT} known agent entry paths answered, including /agent-signup.md and /.well-known/agent-access.json.${
         machineReadable ? ' Reading is solved on your site; joining is not.' : ''
       }`,
       severity: 'notable',

@@ -6,6 +6,7 @@ import { NOISE_FLOOR_PERCENT } from '@/lib/published'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
 import { SITE_URL } from '@/lib/site'
+import { AGENT_ENTRY_PATH_COUNT } from '@/lib/scan/funnel'
 
 export const dynamic = 'force-dynamic'
 
@@ -118,7 +119,7 @@ export default async function IndustryReportPage() {
               <span className="font-mono tabular-nums">
                 {entryPoint.zero} of {report.sampleSize}
               </span>{' '}
-              answer none of the nine known agent entry paths: no{' '}
+              answer none of the {AGENT_ENTRY_PATH_COUNT} known agent entry paths: no{' '}
               <span className="font-mono text-sm">/agent-signup.md</span>, no{' '}
               <span className="font-mono text-sm">/.well-known/agent-access.json</span>, nothing.
               {entryPoint.partial > 0 && (
