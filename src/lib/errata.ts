@@ -114,11 +114,10 @@ export const ERRATA: Erratum[] = [
   {
     domain: 'directus.com',
     checkId: 'typed_package',
-    // Deliberately not the next release. The cause is the name ranking of #47, which is a rewrite
-    // and not a patch, and 9.41 does not touch it. An entry whose fixedIn arrives before its fix
-    // retires itself while the row is still wrong, which is worse than having no entry: the row
-    // goes back to standing unmarked on the site.
-    fixedIn: '10.0',
+    // Fixed in 9.42, and not by the name-ranking rewrite this entry once waited for: the package's
+    // own description now settles it, `@directus/sdk` says "Directus JavaScript SDK" and wins on
+    // installs. Measured on the whole corpus before it shipped.
+    fixedIn: '9.42',
     wrongWhen: /^directus ships without bundled types/,
     says: 'This row is scored on `directus`, the server, matched by publisher. The package a developer installs to use them is `@directus/sdk`, described on the registry as the Directus JavaScript SDK, and it ships types. The row is about the wrong artefact.',
     example: 'directus ships without bundled types, matched from the registry by who publishes it rather than by a link on your site',

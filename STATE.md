@@ -7746,3 +7746,50 @@ projekt **wygasa 2026-08-25** i ma limit 50 pozycji. Odbior zdejmuje jedno i dru
 
 Zalozenie i pulapki opisane tez w KB (`clad-kb show muster-musterboarddev-tablica-zadan-dla-agentow-jak-zalozyc-`),
 bo dotycza kazdego agenta, nie tylko tego projektu.
+
+## 9.42: SLOWA PACZKI DECYDUJA O TYM, KTORY ARTEFAKT JEST BIBLIOTEKA VENDORA (#47, 2026-08-19)
+
+Zadanie #47 czekalo od poprzedniej proby, ktora zostala **zmierzona i wycofana**: awans
+`<scope>/sdk` o range naprawial directus, sanity i configcat, a **odwracal netlify.com**, gdzie
+`@netlify/api` (349 tys.) juz wygrywal z `@netlify/sdk` (89 tys.) na pobraniach. Wniosek stamtad byl
+trafny i wykonalem go doslownie: **nie przesuwac nazw miedzy rangami, tylko pozwolic czemu innemu
+przewazyc jeden krok rankingu**.
+
+**Czym jest to cos innego: opisem samej paczki.** To jedyny sygnal w calym tym rankingu, ktory
+pochodzi z artefaktu, a nie z ksztaltu jego nazwy, i trzy przypadki czytaja sie identycznie dla
+czlowieka, a przeciwnie dla rankingu nazw:
+
+| paczka | co o sobie mowi |
+|---|---|
+| `directus` | „real-time API and App dashboard for managing SQL database content" |
+| `@directus/sdk` | „Directus JavaScript SDK" |
+| `@mux/mux-node` | „The official TypeScript library for the Mux API" |
+| `onesignal-ngx` | „a JavaScript module ... for a website or app that uses Angular" |
+
+Dwie zmiany w `settledOnUsage`: **lider, ktory sam mowi, ze jest biblioteka vendora, nie podlega
+wyzwaniu na pobrania** (to blokuje ksztalt bledu netlify raz na zawsze), a **okno rangi rozszerza sie
+z jednego kroku na dwa, gdy to wyzywajacy mowi o sobie, ze jest biblioteka**. Do tego osobny prog
+dla lidera zasiedzialego (5x zamiast 3x), bo lepiej uksztaltowana nazwa jest dowodem, a nie wyrokiem.
+Nazwa vendora musi padac w opisie: samo slowo „client" nie mowi nic o TYM vendorze i kontrola tego
+pilnuje.
+
+**POMIAR NA CALYM KORPUSIE, bo tego wymagalo #47 i bo poprzednia proba wlasnie na tym polegla.**
+Jedna migawka 177 witryn (`npm-attribution snapshot`), dwa replaye na **jednym cache rejestru**, wiec
+roznica jest kodem, a nie pogoda. Pierwszy replay bez cache'u zabilem i uruchomilem od nowa wlasnie
+po to: dwie godziny odstepu miedzy przebiegami to inne liczby pobran i inna kolejnosc wynikow.
+
+**Trzy zmiany, zero regresji:**
+- `directus.com`: `directus` (serwer, 19 tys., bez typow) → `@directus/sdk` (135 tys., z typami)
+- `onesignal.com`: `onesignal-ngx` (wrapper Angulara, 4,9 tys.) → `@onesignal/node-onesignal` (110 tys.)
+- `axiom.co`: `axiom` (SDK do instrumentacji AI) → `@axiomhq/js` („official javascript bindings")
+- `mux.com` **NIE zmienil sie**, bo `@mux/mux-node` samo mowi, ze jest biblioteka - dokladnie ten
+  przypadek, ktory poprzednia proba psula.
+
+**Sprostowanie directusa dostaje `fixedIn: '9.42'`, i przy okazji poprawilem straznika**, ktory
+wymagal, zeby `fixedIn` bylo PONIZSZE od biezacej formuly. `erratumFor` porownuje `fixedIn` z wersja
+**wiersza**, nie ze stala, wiec rownosc znaczy dokladnie „naprawione w tym wydaniu": wiersze jeszcze
+nie przeliczone trzymaja sprostowanie, przeliczone je traca razem z bledem. Zle jest tylko `fixedIn`
+starsze niz biezaca formula.
+
+**Zostaje do zrobienia: przemiat korpusu na 9.42.** Do tego czasu produkcja stoi na 9.41 i to jest
+poprawny stan, a nie niedokonczony.

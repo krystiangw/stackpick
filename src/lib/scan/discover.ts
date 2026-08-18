@@ -1537,6 +1537,13 @@ const MIN_WEEKLY_DOWNLOADS = 1000
 /** How many times the installs it takes to overturn a name ranking that says nothing. */
 const FAR_MORE_INSTALLED = 3
 
+/**
+ * What it takes to unseat a front-runner that is alive, recent and installed. Higher than the
+ * margin against an unsettled one because the front-runner's name is doing real work here: it is
+ * the shape a developer types, and only a difference nobody can call noise should overrule it.
+ */
+const FAR_MORE_INSTALLED_THAN_A_SETTLED_ONE = 5
+
 /** Past this, a package is not one the vendor is still shipping and its name proves little. */
 const STILL_SHIPPING_MONTHS = 12
 
@@ -1735,6 +1742,35 @@ export async function searchNpmForDomain(
  * downloaded more for that reason alone: apify pulls in apify-client and quill pulls in
  * quill-delta. One manifest read settles it, and only when there is something to settle.
  */
+/**
+ * Whether the package's own description says it is the thing you install to talk to the vendor.
+ *
+ * The one signal in this whole ranking that comes from the artefact rather than from the shape of
+ * its name, and the three cases that forced it read the same way to a person and differently to a
+ * name ranking:
+ *   directus                  "a real-time API and App dashboard for managing SQL database content"
+ *   @directus/sdk             "Directus JavaScript SDK"
+ *   @mux/mux-node             "The official TypeScript library for the Mux API"
+ *   onesignal-ngx             "a JavaScript module ... for a website or app that uses Angular"
+ *
+ * The vendor has to be named in it. "OpenAPI client" alone says nothing about whose.
+ */
+const CALLS_ITSELF_A_LIBRARY = /\b(sdk|client|client library|library|bindings?)\b/i
+
+/**
+ * The same question a rule can ask directly, so the words that now decide attribution can be
+ * argued with without a live registry. Until #47 the only testable half of this ranking was the
+ * shape of the name, which is exactly the half that was wrong.
+ */
+export const readsAsTheirLibrary = (name: string, description: string, domain: string): boolean =>
+  describesItselfAsTheLibrary({ name, description, keywords: [] } as unknown as Candidate, vendorOf(domain))
+
+function describesItselfAsTheLibrary(candidate: Candidate, vendor: Vendor): boolean {
+  const said = candidate.description ?? ''
+  if (!CALLS_ITSELF_A_LIBRARY.test(said)) return false
+  return saysItIsAboutTheVendor(candidate, vendor)
+}
+
 async function settledOnUsage(
   ordered: { candidate: Candidate; downloads: number }[],
   vendor: Vendor,
@@ -1745,15 +1781,34 @@ async function settledOnUsage(
     isProvisional(front.candidate) ||
     monthsSince(front.candidate.publishedAt) >= STILL_SHIPPING_MONTHS ||
     front.downloads < MIN_WEEKLY_DOWNLOADS
-  if (!unsettled) return null
+  // A front-runner that is alive and installed is not beyond challenge, it is just expensive to
+  // beat. Until now a settled front-runner ended the question, and that is how directus.com was
+  // published as `directus` (the server, 19k weekly, untyped) while `@directus/sdk` ("Directus
+  // JavaScript SDK", 135k, typed) sat one rank below it on the shape of its name alone.
+  //
+  // The earlier attempt at this moved `<scope>/sdk` up a rank instead, and inverted netlify.com,
+  // whose `@netlify/api` at 349k already beat `@netlify/sdk` at 89k on downloads. So the names stay
+  // where they are and the download counts are allowed to outweigh one step of them, which is the
+  // asymmetry that was missing: a better-shaped name is evidence, not a verdict.
+  const margin = unsettled ? FAR_MORE_INSTALLED : FAR_MORE_INSTALLED_THAN_A_SETTLED_ONE
+  // A front-runner that says in its own description that it is the vendor's library is not up for
+  // challenge on installs. @mux/mux-node is "The official TypeScript library for the Mux API" at
+  // 309k weekly, and mux-embed and @mux/mux-player are five and seven times that: they are what
+  // most people load, and neither is what an agent installs to call the API.
+  if (!unsettled && describesItselfAsTheLibrary(front.candidate, vendor)) return null
   const challenger = ordered
     .filter(
       (entry) =>
         entry !== front &&
         !isDormant(entry.candidate) &&
         !isStub(entry.candidate) &&
-        shape(entry.candidate) <= shape(front.candidate) + 1 &&
-        entry.downloads >= front.downloads * FAR_MORE_INSTALLED,
+        // One step of name shape normally, two when the challenger's own description says it is the
+        // library. `directus` is the server and ranks 0 because the name IS the vendor name, while
+        // `@directus/sdk` ranks 2 and says "Directus JavaScript SDK": a gap the name ranking cannot
+        // close and the words close immediately.
+        shape(entry.candidate) <=
+          shape(front.candidate) + (describesItselfAsTheLibrary(entry.candidate, vendor) ? 2 : 1) &&
+        entry.downloads >= front.downloads * margin,
     )
     .sort((a, b) => b.downloads - a.downloads)[0]
   if (!challenger) return null

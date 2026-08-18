@@ -14,7 +14,7 @@ import { stayOutAfter } from '../src/lib/stayout'
 import { crawlerName } from '../src/lib/visits'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
-import { looksLikeEntryPackage, readBulkDownloads, shapeRankOf } from '../src/lib/scan/discover'
+import { looksLikeEntryPackage, readBulkDownloads, readsAsTheirLibrary, shapeRankOf } from '../src/lib/scan/discover'
 import { changesBetween, comparableScorecards, rulesChangedBetween, turnedAwayAtTheEdge, worthTelling } from '../src/lib/watch'
 import { withoutTags } from '../src/lib/scan/http'
 import { isOlderThan } from '../src/lib/formula'
@@ -1946,6 +1946,24 @@ check('gola nazwa vendora ma najlepsza range', shapeRankOf('directus', 'directus
 check('a SDK w ich scope nie awansuje sam z nazwy', shapeRankOf('@directus/sdk', 'directus.com') === 0, false)
 check('choc nadal jest paczka wejsciowa', looksLikeEntryPackage('@directus/sdk', 'directus.com'), true)
 
+// #47 ROZWIAZANY INACZEJ (2026-08-19): nie przez przesuwanie nazw miedzy rangami, tylko przez
+// dopuszczenie SLOW paczki do glosu. Zmierzone na calym korpusie przez dwa replaye na jednej
+// migawce i jednym cache rejestru: TRZY zmiany, zero regresji.
+//   directus.com   directus ("real-time API and App dashboard") -> @directus/sdk ("Directus JavaScript SDK")
+//   onesignal.com  onesignal-ngx (wrapper Angulara) -> @onesignal/node-onesignal
+//   axiom.co       axiom (SDK do instrumentacji AI) -> @axiomhq/js ("official javascript bindings")
+// mux.com sie NIE zmienil, bo @mux/mux-node samo mowi, ze jest biblioteka: to ten sam ksztalt bledu
+// co netlify przy poprzedniej probie i jest teraz zablokowany wprost.
+check('SDK w opisie i nazwa vendora to biblioteka', readsAsTheirLibrary('@directus/sdk', 'Directus JavaScript SDK', 'directus.com'), true)
+check('oficjalna biblioteka tez', readsAsTheirLibrary('@mux/mux-node', 'The official TypeScript library for the Mux API', 'mux.com'), true)
+// Serwer, ktory opisuje sam siebie, nie jest biblioteka, nawet gdy nosi gola nazwe vendora.
+check('serwer nie jest biblioteka', readsAsTheirLibrary('directus', 'Directus is a real-time API and App dashboard for managing SQL database content', 'directus.com'), false)
+// Wrapper frameworka nie mowi o sobie „SDK" ani „client", wiec nie chroni sie tym przed wyzwaniem.
+check('wrapper Angulara nie jest biblioteka', readsAsTheirLibrary('onesignal-ngx', 'This is a JavaScript module that can be used to easily include OneSignal code in a website or app that uses Angular for its front-end codebase.', 'onesignal.com'), false)
+// Kontrolka, ktora ma najwieksze znaczenie: samo slowo „client" bez nazwy vendora nie znaczy nic o
+// TYM vendorze, bo inaczej kazda cudza paczka z tym slowem awansowalaby na jego biblioteke.
+check('kontrola: slowo bez nazwy vendora nie wystarcza', readsAsTheirLibrary('some-client', 'A tiny HTTP client library', 'directus.com'), false)
+
 // Runbook dostawy mowi platnikowi, co dostaje za 79 USD miesiecznie. Liczba checkow byla tam
 // wpisana z reki i zostala na 15, gdy checkow bylo juz 16.
 check(
@@ -2041,11 +2059,15 @@ check('i jest niemierzalne, a nie oskarzeniem', /pricingRedirectedAway[\s\S]{0,4
 // oddawala dokladnie te strone, ktora odrzucilismy, tylko pod etykieta „zgadlismy sciezke".
 check('po odrzuceniu nie ma sciezki zapasowej', discoverSource.includes('redirectedAway ? null : await firstLivePath(canonical, PRICING_FALLBACKS)'), true)
 // Sprostowanie, ktorego fixedIn nadchodzi przed naprawa, kasuje sie samo przy zywym bledzie.
+// `erratumFor` porownuje fixedIn z wersja WIERSZA, nie ze stala, wiec rownosc znaczy dokladnie
+// „naprawione w tym wydaniu": wiersze jeszcze nie przeliczone trzymaja sprostowanie, a przeliczone
+// je traca razem z bledem. Zle jest tylko fixedIn STARSZE niz biezaca formula, bo takie
+// sprostowanie zniknelo, zanim naprawa w ogole wyszla.
 const errataSource = readFileSync('src/lib/errata.ts', 'utf8')
 const directusFix = /domain: 'directus\.com'[\s\S]{0,600}?fixedIn: '([^']+)'/.exec(errataSource)?.[1] ?? ''
-check('sprostowanie directusa przezywa biezaca formule', isOlderThan(FORMULA_VERSION, directusFix), true)
-// Kontrolka: sonda musi umiec powiedziec „nie" o wersji, ktora juz minela.
-check('a sonda widzi sprostowanie, ktore juz wygaslo', isOlderThan(FORMULA_VERSION, '9.1'), false)
+check('sprostowanie directusa nie wygaslo przed naprawa', isOlderThan(directusFix, FORMULA_VERSION), false)
+// Kontrolka: sonda musi umiec powiedziec „tak" o wersji, ktora naprawde juz minela.
+check('a sonda widzi sprostowanie, ktore juz wygaslo', isOlderThan('9.1', FORMULA_VERSION), true)
 
 // Renderer platnego raportu w portalu nie jest parserem markdowna: zna dokladnie te konstrukcje,
 // ktore wypisuje generator. Ta reguła jest cala podstawa, zeby taki renderer byl uczciwy - gdy

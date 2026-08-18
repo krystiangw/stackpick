@@ -201,6 +201,9 @@ const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   '9.36': ['price_in_snippet'],
   // 9.37 stopped failing a vendor for an abandoned package we picked for them ourselves.
   '9.37': ['typed_package'],
+  // 9.42 lets a package's own description decide which artefact is the vendor's library, so three
+  // rows are now scored on a different package than before. Nothing about those vendors changed.
+  '9.42': ['typed_package'],
   // 9.40 asks what a searched identification rests on before it accuses, and the facts it asks for
   // are not in a report stored before it, so a rescore reads them as absent and says unmeasured.
   '9.40': ['typed_package'],
