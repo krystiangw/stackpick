@@ -7166,3 +7166,28 @@ przed naprawa, **kasuje sie samo przy zywym bledzie**. Straznik w `rules.mts` pi
 
 **Do zrobienia przy najblizszym przemiecie:** korpus jest na 9.40, kod na 9.41, wiec `self_serve`
 ruszy sie na tych wierszach i **regressions.mts pokaze to w sekcji „nasza zmiana reguly"**.
+
+## PLATNY RAPORT MA TERAZ ADRES W PORTALU (2026-08-18)
+
+Raport za 49 USD istnial wylacznie jako plik markdown na dysku operatora. Teraz `--publish`
+zapisuje go pod nieodgadywalnym adresem `/d/<id>`, a `/d/[id]` renderuje **dokladnie ten sam tekst**,
+ktory dostaje kupujacy. Strona jest **poza indeksem i nigdzie nie linkowana**: dokument nazywa
+porazki vendora dokladniej niz cokolwiek, co publikujemy za darmo, i nalezy do tego, kto zaplacil.
+
+**Renderer nie jest parserem markdowna** i to jest swiadome: zna dokladnie te konstrukcje, ktore
+wypisuje generator, a `rules.mts` oblewa build, gdy generator nauczy sie nowej. Straznik zadzialal
+od razu, jeszcze przed codeksem: generator pisze `*Fix:*` kursywa, ktorej renderer nie znal.
+
+**Codex zlapal blad P1, ktorego nie widac inaczej niz na oczy:** rozdzielacz tabeli idzie jako
+`|---|---|`, bez spacji po kresce, wiec regula pytajaca o `"| "` konczyla tabele na naglowku i kazdy
+wiersz punktacji renderowala jako osobna tabele bez danych. **Cala tabela etapow znikala z raportu**,
+ktory ktos kupil.
+
+**Probka do oceny wartosci: `filestack.com`**, 6/12 w skanie, **wymieniony w 0 z 10 biegow**,
+opublikowana jako sample. Dobra ilustracja, bo pokazuje obie polowy produktu naraz: sciane
+(nikt o nich nie napisal ani jednego zdania) i konkretne, naprawialne porazki techniczne.
+
+**Indeksowanie po zmianach (skill `agent-discoverability`):** wszystkie blokery binarne przechodza
+(SSR, parytet bot kontra czlowiek, piec botow retrievalowych, opis w snippecie z cena, llms.txt,
+katalog ARD, sitemap), 241 adresow zgloszonych do IndexNow. `/d/<id>` **nie jest w sitemapie** i
+zgloszenie go nie objelo.
