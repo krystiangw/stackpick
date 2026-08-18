@@ -6138,8 +6138,20 @@ przeczytac, a nie o to, co vendor opublikowal. Skany split.io oddalone o **90 se
 reguly *naszym* obciazeniem, wiec odpowiedzia ma byc odczekanie i ponowne pytanie, a nie dziura w
 wierszu. Ograniczone z trzech stron: **dwa razy na witryne**, tylko dopoki budzet skanu uniesie
 odczekanie **i** zapytanie po nim, i **najwyzej 3 sekundy** nawet gdy strona prosi o wiecej.
-Poprawia odpowiedz tylko wtedy, gdy druga proba faktycznie sie udala. Regula jest czysta funkcja,
-wiec siedem straznikow w `rules.mts` sprawdza ja bez sieci.
+Poprawia odpowiedz tylko wtedy, gdy druga proba naprawde jest odpowiedzia (200 albo 404). Regula
+jest czysta funkcja, wiec dziesieciu straznikow w `rules.mts` sprawdza ja bez sieci.
+
+**Zweryfikowane na produkcji (v517, 07:18 UTC), na tych samych dwoch domenach, ktore ucierpialy:**
+
+| domena | przed | po |
+|---|---|---|
+| split.io | 8/14, provisioning niezmierzone | **10/16, provisioning 2 pkt** |
+| postmarkapp.com | 9/14, provisioning niezmierzone | **11/17**, najwiecej mierzalnego, jakie mial |
+
+Cztery zastrzezenia codeksa, wszystkie przyjete: odczekanie siedzi **wewnatrz** tego, co trafia do
+memo (inaczej rownolegla faza dostaje odmowe, ktora wlasnie zastepujemy), `fresh` tez ponawia,
+404 z drugiej proby zostaje (to odpowiedz, nie odmowa), a `Retry-After` czytamy takze w formie daty,
+bo `Number()` robil z niej NaN i po cichu domyslne 1,2 s.
 
 ## SPLIT.IO NIE ODMAWIA NAM Z PRZECIAZENIA, TYLKO NAS WYZWANIA (2026-08-18, do zmierzenia)
 
