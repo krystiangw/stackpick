@@ -6035,3 +6035,29 @@ sie plaskim wylaczeniem, ktore audyt odrzucil. Straznik liczy wiersze **tylko na
 (starszy raport nie moze niesc pola, ktorego wtedy nie bylo - policzone inaczej krzyczal o 109
 wierszach, ktore niczego nie lamia) i sprawdza **wszystkie trzy pola**, bo bramka czyta wszystkie
 trzy, a wiersz z sama wlasnoscia jest tak samo slepy.
+
+## PROCEDURA NA SPOR Z VENDOREM (2026-08-18, `docs/handling-a-dispute.md`)
+
+Kazda strona vendora ma `mailto:` z tematem „Wrong verdict on <oni>", publikujemy imienne
+oskarzenia, a **nie bylo spisane, co robi czlowiek, gdy ktos napisze**. Tej nocy pieciu wierszom
+trzeba bylo wystawic sprostowanie recznie, wiec procedura powstala z prawdziwego przypadku.
+
+Cztery rzeczy, ktore w niej sa i ktorych nie da sie odtworzyc z pamieci:
+1. **Odtworz, zanim odpiszesz**, i to z `VERBOSE=1`, bo bez tego widac tylko wynik, a spor nigdy nie
+   jest o wynik.
+2. **Lokalny skan niczego nie publikuje.** Poprawka wiersza to skan **przez produkcje** z ciasteczkiem
+   konsoli, i trzeba sprawdzic pole `saved`: API zwraca pelna karte i `"saved":false`, gdy baza
+   odmowila zapisu (raz zameldowalo 340 pomiarow, z ktorych nie zapisal sie ani jeden).
+3. **Sprostowanie idzie przed poprawka reguly**, z `fixedIn` ustawionym na wersje, ktora naprawde
+   bedzie zawierac fix - wygasle za wczesnie zostawia zly werdykt bez niczego obok.
+4. **Zmiany reguly nie uzasadnia jeden vendor, ktory napisal:** najpierw reczna weryfikacja spornych
+   wierszy, potem pomiar na calym korpusie, nigdy w trakcie przemiatu.
+
+Jest tez lista rzeczy, ktorych nie robimy: nie usuwamy wiersza na zyczenie (dziura w opublikowanym
+korpusie sama jest twierdzeniem), nie zmiekczamy prawdziwego zdania i nie spieramy sie o punkty,
+tylko o werdykt.
+
+**Codex zlapal w pierwszej wersji dwa bledy P1, oba czyniace runbook bezuzytecznym:** komenda bez
+`VERBOSE` nie pokazuje werdyktow, a zdanie „rescan poprawia opublikowany wiersz" bylo **nieprawda**
+dla komendy, ktora podalem. Operator moglby napisac vendorowi, ze poprawione, podczas gdy publiczna
+strona sie nie zmienila.
