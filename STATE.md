@@ -5714,3 +5714,34 @@ dokumentu, a nie tylko przed nia.**
 Przy okazji: opis bledu 429 w specu bral liczby z reki („five per hour... thirty per hour"), teraz
 idzie z `PER_DOMAIN_PER_HOUR` i `PER_CALLER_PER_HOUR`. Sprawdzone tez, ze publikowane kody bledow sa
 prawdziwe: 400 dla zlej domeny i formatu spoza enum, 422 dla domeny, ktora nie odpowiada.
+
+## RUNBOOK PLATNOSCI, A PRZY OKAZJI DWIE DZIURY W SCIEZCE PIENIEDZY (2026-08-18)
+
+**`docs/turning-billing-on.md`**: co dokladnie zrobic, zeby wlaczyc sprzedaz. Produkty do zalozenia
+z cenami i nazwami zmiennych, webhook i zdarzenia, ktore obslugujemy, przelacznik, weryfikacja i to,
+co zostaje reczne. Straznik w `rules.mts` sprawdza **wiersz po wierszu**, ze runbook wymienia kazdy
+produkt z katalogu, z ta cena i z ta zmienna, ktora katalog naprawde czyta (globalne szukanie
+przepuszczalo „$49" schowane w „$499").
+
+**Codex wytknal, ze runbook opisuje checkout, ktorego nie ma** - i mial racje. CTA na `/pricing` to
+`mailto:`, `paddle().checkoutFor` zwraca `null`, nikt go nie wola. Runbook ma teraz krok 3
+„Build the checkout, which does not exist yet" i mowi wprost: samo ustawienie `BILLING_PROVIDER`
+niczego nie sprzedaje, daje tylko mozliwosc wyslania zdarzen testowych.
+
+**Dwie realne dziury, obie w sprzecznosci z komentarzem, ktory sam webhook nosi** („platnosc, ktorej
+nie da sie zastosowac, i tak zostaje zapisana"):
+1. **Platnosc bez `custom_data.email` byla kwitowana 200 i nie zostawiala sladu.** To najbardziej
+   prawdopodobny blad pierwszego dnia (zle skonfigurowany checkout), a Paddle wysyla `customer_id`,
+   nie adres. Teraz `read` odroznia zdarzenie **nieczytelne** od **ignorowanego**, a webhook
+   odpowiada **422**: dostawca ponawia, a nieudana dostawa jest widoczna w jego panelu, czyli tam,
+   gdzie jest jedyny trwaly slad, jakiego sami nie mozemy zapisac. Ksiegowe zdarzenia bez adresu
+   nadal sa po cichu ignorowane.
+2. **Cena spoza katalogu ginela.** Najpierw naprawione tylko dla transakcji, w ktorej NIC nie
+   pasuje; codex zauwazyl, ze transakcja z jedna linia znana i jedna nieznana nadal gubi te druga.
+   Teraz `unmatchedPrices` liczy linie, a nie transakcje.
+
+**Trzecia rzecz, ktora wyszla mimochodem i jest wieksza niz obie:** w srodowisku straznikow **zadna
+cena nie byla skonfigurowana**, wiec `skusForPrices` nie mial czego dopasowac i **cala sciezka
+przyznawania uprawnien byla nietestowana**. `npm run rules` ustawia teraz dwie ceny
+(`pri_watch`, `pri_report`) i sprawdza obie strony: co sie rozwiazuje do produktu i co zostaje
+nieznane.

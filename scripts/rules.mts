@@ -1,7 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import { createHmac } from 'node:crypto'
 import { paddle } from '../src/lib/billing/provider'
-import { MONITORING_IS_FREE, priceOf, skuById, skusForPrices } from '../src/lib/billing/catalog'
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { overDomainBudget } from '../src/lib/scan-gate'
 import { spreadAcrossHints } from '../src/lib/scan'
@@ -39,6 +38,14 @@ import {
   everyFreeSignalIsAButton,
   everyFreeSignalIsAQuestion,
 } from '../src/lib/scan/funnel'
+
+// Ceny dostawcy przychodza ze srodowiska, a bez nich katalog nie rozpoznaje zadnej ceny i cala
+// sciezka przyznawania uprawnien jest nietestowana. Ustawiane TUTAJ, a nie w skrypcie npm: build
+// wola `tsx scripts/rules.mts` wprost, wiec straznik zalezny od sposobu wywolania przechodzil
+// lokalnie i wywracal deploy.
+process.env.BILLING_PRICE_WATCH_MONTHLY ??= 'pri_watch'
+process.env.BILLING_PRICE_REPORT_ONE ??= 'pri_report'
+const { CATALOG, MONITORING_IS_FREE, priceOf, skuById, skusForPrices, unmatchedPrices } = await import('../src/lib/billing/catalog')
 
 /**
  * The scanner's rules against sentences we wrote on purpose, half of which must match and half of
@@ -343,21 +350,47 @@ check('podpis sprzed godziny nie', paddle(SECRET, () => (at + 3600) * 1000).veri
 check('jeden z wielu h1 wystarczy', signatures.verify(body, `ts=${at};h1=${'0'.repeat(64)};h1=${signed}`), true)
 check('ale zaden pasujacy to nadal nie', signatures.verify(body, `ts=${at};h1=${'0'.repeat(64)};h1=${'1'.repeat(64)}`), false)
 check('timestamp, ktory nie jest liczba, nie', signatures.verify(body, `ts=jutro;h1=${signed}`), false)
-check('zdarzenie czytamy na nasze slowa', signatures.read(body)?.kind, 'paid')
-check('i niesie komu przyznac', signatures.read(body)?.email, 'a@v.test')
+// Zawezone do platnosci, bo `read` moze teraz zwrocic tez zdarzenie, ktorego nie da sie przypisac.
+const paidFrom = (raw: string) => {
+  const one = signatures.read(raw)
+  return one && one.kind !== 'unreadable' ? one : null
+}
+check('zdarzenie czytamy na nasze slowa', paidFrom(body)?.kind, 'paid')
+check('i niesie komu przyznac', paidFrom(body)?.email, 'a@v.test')
 // Transakcja niesie WLASNE id i osobno id subskrypcji. Zapisanie tego pierwszego jako referencji
 // znaczy, ze pozniejsze anulowanie nie trafia w nic, a monitoring zostaje platny na zawsze.
-check('platnosc ma wlasna referencje, transakcje', signatures.read(body)?.paymentRef, 'txn_1')
+check('platnosc ma wlasna referencje, transakcje', paidFrom(body)?.paymentRef, 'txn_1')
 // Odnowienie subskrypcji to nowa platnosc: gdyby referencja platnosci byla id subskrypcji, drugi
 // miesiac wygladalby jak powtorka pierwszego i wpadlby w unikalny indeks. Codex review.
-check('a subskrypcje nosi osobno', signatures.read(body)?.subscriptionRef, 'sub_1')
-const canceled = signatures.read(JSON.stringify({ event_type: 'subscription.canceled', data: { id: 'sub_1', custom_data: { email: 'a@v.test' }, items: [{ price: { id: 'pri_watch' } }] } }))
+check('a subskrypcje nosi osobno', paidFrom(body)?.subscriptionRef, 'sub_1')
+const canceled = paidFrom(JSON.stringify({ event_type: 'subscription.canceled', data: { id: 'sub_1', custom_data: { email: 'a@v.test' }, items: [{ price: { id: 'pri_watch' } }] } }))
 check('anulowanie to osobne zdarzenie', canceled?.kind, 'subscription-ended')
 check('i nazywa subskrypcje, ktora konczy', canceled?.subscriptionRef, 'sub_1')
 check('zdarzenia, ktorego nie rozumiemy, nie ruszamy', signatures.read(JSON.stringify({ event_type: 'transaction.updated', data: { id: 't', custom_data: { email: 'a@v.test' }, items: [] } })), null)
 // Uprawnienie idzie za cena, ktora naprawde obciazono, a nie za tym, co niesie checkout kupujacego.
 check('nieznana cena nie daje niczego', skusForPrices(['pri_obcy']).length, 0)
 check('pusta lista cen tez nie', skusForPrices([]).length, 0)
+// Ceny dostawcy przychodza ze srodowiska, wiec bez nich katalog nie rozpoznaje NICZEGO i cala
+// sciezka przyznawania uprawnien byla dotad nieprzetestowana. `npm run rules` ustawia dwie
+// (pri_watch, pri_report), zeby dalo sie sprawdzic obie strony: co pasuje i co nie.
+check('skonfigurowana cena rozwiazuje sie do swojego produktu', skusForPrices(['pri_watch']).map((sku) => sku.id).join(), 'watch-monthly')
+check('dwie linie w jednej transakcji to dwa uprawnienia', skusForPrices(['pri_watch', 'pri_report']).length, 2)
+// Transakcja z jedna cena znana i jedna nieznana: pytanie „czy cokolwiek pasuje" gubi ta druga,
+// wiec obciazenie za nia zostaje potwierdzone bez sladu. Wytkniete przez codeksa.
+check('nieznana linia jest widoczna obok znanej', unmatchedPrices(['pri_watch', 'pri_obcy']).join(), 'pri_obcy')
+check('same znane linie to zero nieznanych', unmatchedPrices(['pri_watch']).length, 0)
+// Platnosc bez adresu to jedyny przypadek, w ktorym 200 jest zla odpowiedzia: nie ma o kim zapisac
+// sladu, wiec potwierdzenie zostawiloby prawdziwa oplate wylacznie w logu dyna. Znalezione przez
+// codex przy pisaniu runbooka.
+const noEmail = signatures.read(JSON.stringify({ event_type: 'transaction.completed', data: { id: 'txn_2', items: [{ price: { id: 'pri_watch' } }] } }))
+check('platnosc bez adresu jest nieczytelna, a nie zignorowana', noEmail?.kind, 'unreadable')
+check('i mowi, czego brakuje', noEmail?.kind === 'unreadable' ? noEmail.missing : '', 'custom_data.email')
+// Ale ksiegowe zdarzenie bez adresu to nadal zdarzenie, ktorego nie ruszamy.
+check(
+  'zdarzenie ksiegowe bez adresu zostaje zignorowane',
+  signatures.read(JSON.stringify({ event_type: 'transaction.updated', data: { id: 'txn_3' } })),
+  null,
+)
 // Reguła produktu, nie szczegol implementacji: dopoki monitoring jest darmowy w trakcie budowy,
 // anulowanie zdejmuje oplate, a nie usluge. Gdy przestanie byc darmowy, zdanie na /pricing musi
 // zniknac w tym samym commicie, wiec straznik wiaze jedno z drugim.
@@ -366,7 +399,7 @@ check('darmowy monitoring w kodzie i na cenniku mowia to samo', MONITORING_IS_FR
 check('smiec nie wysadza czytania', signatures.read('{'), null)
 // Paddle wysyla customer_id, nie adres, wiec adres wozimy we wlasnym custom_data. Bez tego kazde
 // prawdziwe zdarzenie odpadaloby jako niekompletne. Znalezione przez codex review.
-check('adres czytamy z naszego custom_data', signatures.read(JSON.stringify({ event_type: 'transaction.completed', data: { id: 't2', custom_data: { sku: 'report-one', email: 'b@v.test' }, customer: { id: 'ctm_1' } } }))?.email, 'b@v.test')
+check('adres czytamy z naszego custom_data', paidFrom(JSON.stringify({ event_type: 'transaction.completed', data: { id: 't2', custom_data: { sku: 'report-one', email: 'b@v.test' }, customer: { id: 'ctm_1' } } }))?.email, 'b@v.test')
 // Cennik na stronie i katalog dla dostawcy to ta sama cena, albo dostawca obciazy inna kwota niz ta,
 // ktora klient przeczytal.
 // Strona bierze ceny z katalogu, wiec nie ma czego porownywac: sprawdzamy, ze nadal je stamtad
@@ -1425,6 +1458,24 @@ check(
 for (const page of pagesUnder('src/app')) {
   const withoutComments = readFileSync(page, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ')
   check(`${page}: liczba idzie ze stalej, nie ze slowa`, SPELLED.exec(withoutComments)?.[0] ?? '', '')
+}
+
+// Runbook platnosci wymienia produkty do zalozenia u dostawcy. Katalog jest zrodlem prawdy o
+// cenach i o nazwach zmiennych, wiec dopisanie produktu bez wpisu w runbooku znaczy, ze ktos
+// zalozy u dostawcy o jeden produkt za malo i platnosc za niego przepadnie bez dopasowania.
+console.log('\nrunbook platnosci wymienia kazdy produkt z katalogu')
+const runbook = readFileSync('docs/turning-billing-on.md', 'utf8')
+const catalogSource = readFileSync('src/lib/billing/catalog.ts', 'utf8')
+for (const sku of CATALOG) {
+  const suffix = sku.id.toUpperCase().replace(/-/g, '_')
+  // Wiersz tabeli, a nie caly dokument: szukanie „$49" gdziekolwiek przechodzi na „$499" z innego
+  // wiersza, a zamiana zmiennych miedzy wierszami zostaje niezauwazona. Wytkniete przez codeksa.
+  const row = runbook.split('\n').find((line) => line.startsWith('|') && line.includes(`\`${sku.id}\``))
+  check(`${sku.id}: ma wlasny wiersz w runbooku`, Boolean(row), true)
+  check(`${sku.id}: z prawdziwa cena w tym wierszu`, row?.includes(`| ${priceOf(sku)} |`), true)
+  check(`${sku.id}: i wlasna nazwa zmiennej`, row?.includes(`BILLING_PRICE_${suffix}`), true)
+  // Domkniecie petli: runbook kaze ustawic zmienna, ktora katalog naprawde czyta.
+  check(`${sku.id}: katalog czyta te sama zmienna`, catalogSource.includes(`priceId('${suffix}')`), true)
 }
 
 // Arytmetyka platnego raportu: naglowek mowil „9 of 16 measurable points" nad tabela, ktora sumuje

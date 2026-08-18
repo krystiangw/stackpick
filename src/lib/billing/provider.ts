@@ -34,6 +34,13 @@ export type PaidEvent = {
   domain: string | null
 }
 
+/**
+ * An event that says money moved but does not say enough to attribute it. It is not the same as an
+ * event we ignore: a bookkeeping notice is nothing to act on, while this is a payment we cannot
+ * apply and cannot even record, because a work record needs somebody to be about.
+ */
+export type UnreadableEvent = { kind: 'unreadable'; eventType: string; missing: string }
+
 export type BillingProvider = {
   name: string
   /** Where to send a buyer, or null when this provider has no checkout of its own. */
@@ -41,7 +48,7 @@ export type BillingProvider = {
   /** True only when the signature really matches, so a forged body cannot grant anything. */
   verify(rawBody: string, signature: string | null): boolean
   /** What the provider is telling us, in our words, or null when it is an event we do not act on. */
-  read(rawBody: string): PaidEvent | null
+  read(rawBody: string): PaidEvent | UnreadableEvent | null
 }
 
 /**
@@ -111,11 +118,19 @@ export function paddle(secret: string, now: () => number = Date.now): BillingPro
             items?: { price?: { id?: string } }[]
           }
         }
+        // Only the events that move money can be "unreadable": everything else Paddle sends is
+        // bookkeeping, and calling that unreadable would make us reject notices we never wanted.
+        const acted = event.event_type === 'transaction.completed' || event.event_type === 'subscription.canceled'
+        const unreadable = (missing: string): UnreadableEvent | null =>
+          acted ? { kind: 'unreadable', eventType: event.event_type ?? 'unknown', missing } : null
         const data = event.data
-        if (!data) return null
+        if (!data) return unreadable('data')
         const email = data.custom_data?.email ?? data.customer?.email
         const paymentRef = data.id
-        if (!email || !paymentRef) return null
+        // The likeliest first-day mistake is a checkout that forgets custom_data.email, and Paddle
+        // sends a customer id rather than an address. Acknowledging that with a 200 left a real
+        // payment with no trace anywhere but a dyno's log.
+        if (!email || !paymentRef) return unreadable(!email ? 'custom_data.email' : 'data.id')
         const priceIds = (data.items ?? []).flatMap((item) => (item.price?.id ? [item.price.id] : []))
         const domain = data.custom_data?.domain ?? null
         // Only the two that change what somebody is owed. Everything else Paddle sends is

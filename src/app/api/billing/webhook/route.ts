@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { billingProvider } from '@/lib/billing/provider'
-import { MONITORING_IS_FREE, isMonitoring, skusForPrices, type Sku } from '@/lib/billing/catalog'
+import { MONITORING_IS_FREE, isMonitoring, skusForPrices, unmatchedPrices, type Sku } from '@/lib/billing/catalog'
 import { getStore, type Store } from '@/lib/store'
 
 export const dynamic = 'force-dynamic'
@@ -33,6 +33,15 @@ export async function POST(request: Request) {
   // A 200 on an event we do not act on: the provider retries anything else, and retrying a
   // bookkeeping event forever is noise on both sides.
   if (!event) return NextResponse.json({ ok: true, acted: false })
+
+  // A payment we cannot attribute is the one case where a 200 is the wrong answer. There is nobody
+  // to write a work record about, so acknowledging it would leave a real charge existing only in a
+  // dyno's log. Refused instead: the provider retries, and a delivery that keeps failing is visible
+  // to a person in their dashboard, which is the durable record we cannot write ourselves.
+  if (event.kind === 'unreadable') {
+    console.error(`billing: ${event.eventType} arrived without ${event.missing}, refused so it stays visible as a failed delivery`)
+    return NextResponse.json({ error: `cannot attribute this payment: ${event.missing} is missing` }, { status: 422 })
+  }
 
   const store = getStore()
 
@@ -74,10 +83,25 @@ export async function POST(request: Request) {
   // question are bought together and charged together, and collapsing them to one entitlement is
   // how somebody pays for two things and receives one.
   const bought = skusForPrices(event.priceIds)
-  if (bought.length === 0) {
-    console.error(`billing: no catalogue price matches ${event.priceIds.join(', ') || 'nothing'} on ${event.paymentRef}`)
-    return NextResponse.json({ ok: true, acted: false })
+  // Per line, not per transaction. Written down rather than logged, for the same reason as
+  // everything else here: this is a real payment for a price we do not recognise, which happens the
+  // moment somebody creates a product in the dashboard and forgets its BILLING_PRICE_ variable. We
+  // know who paid, so there is somebody to write the record about.
+  const unknown = unmatchedPrices(event.priceIds)
+  if (unknown.length > 0 || bought.length === 0) {
+    await store.saveLead({
+      email: event.email,
+      domain: event.domain ?? '',
+      reportId: event.paymentRef,
+      paymentRef: `${event.paymentRef}:unknown-price`,
+      createdAt: new Date().toISOString(),
+      source: 'paid-unknown-price',
+    })
+    console.error(
+      `billing: ${unknown.join(', ') || 'nothing'} on ${event.paymentRef} matches no catalogue price, recorded for assignment`,
+    )
   }
+  if (bought.length === 0) return NextResponse.json({ ok: true, acted: false })
 
   let acted = false
   for (const sku of bought) {

@@ -47,6 +47,17 @@ export const skusForPrices = (priceIds: readonly string[]): Sku[] =>
   CATALOG.filter((sku) => sku.providerPriceId !== '' && priceIds.includes(sku.providerPriceId))
 
 /**
+ * The charged prices we do not recognise. A transaction can carry a configured price and an
+ * unconfigured one together, and asking only "did anything match" loses the second: somebody
+ * created a product in the dashboard and forgot its variable, and the charge for it would be
+ * acknowledged with no trace of what it was for.
+ */
+export const unmatchedPrices = (priceIds: readonly string[]): string[] => {
+  const known = new Set(CATALOG.filter((sku) => sku.providerPriceId !== '').map((sku) => sku.providerPriceId))
+  return priceIds.filter((id) => !known.has(id))
+}
+
+/**
  * Whether this is the recurring product that turns a watch paid. Asked rather than assumed: the
  * extra buying question is also a monthly charge and grants nothing on its own.
  */
