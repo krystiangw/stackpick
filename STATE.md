@@ -6702,3 +6702,39 @@ stron** po 9.35 (probka rozproszona po rodzinach wskazowek), a nie ze zmiany u n
 
 Zostaly bez przebiegu: `llms_txt` (37 oblanych), `self_serve` (21) i szesc drobnych. `price_in_snippet`
 (92) i `programmatic_provisioning` (66) maja przebiegi 30-31, ale **sprzed** zmian 9.36-9.40.
+
+## 38. PRZEBIEG: `llms_txt`, I JEDYNE ZDANIE NA KARCIE, KTOREGO NIE DALO SIE POWTORZYC (2026-08-18)
+
+Przy szostej powierzchni wyszlo cos wiekszego niz przebieg. `llms_txt` oblewa 37 wierszy zdaniem
+**„No llms.txt at any of the 4 locations probed"** - i **nie nazywa zadnej z nich**. Cztery to nie
+adres. Dwa z tych adresow siedza na hoscie dokumentacji, jeden pod jej sciezka, wiec vendor nie
+zgadnie, gdzie patrzylismy, i nie moze powtorzyc naszego pomiaru. To byla ostatnia taka sentencja na
+karcie: `oauth_dcr`, `agent_entry_point`, `mcp_present` i `signup_reachable` naprawilismy wczesniej.
+
+**Teraz** (zweryfikowane na produkcji): `No llms.txt at any of the 4 locations probed:
+https://www.koyeb.com/llms.txt, https://www.koyeb.com/llms-full.txt, https://docs.koyeb.com/llms.txt,
+https://www.koyeb.com/docs/llms.txt`.
+
+**Poprawka z codex review:** przy dokumentacji na `docs.<domena>` **trzy etykiety wskazuja ten sam
+adres**, wiec lista liczylaby jedno zapytanie trzy razy - zdanie obiecywaloby dokladnosc, ktorej nie
+ma. Odsiew duplikatow stoi w dwoch miejscach, bo straznik pokazal, ze zdanie ufa liscie, ktora
+dostaje, a nie tylko temu, co skaner zbierze.
+
+**Druga galaz tego checka tez sprawdzona:** 28 wierszy niesie zdanie „ten link z waszego llms.txt
+jest martwy" z adresem. **Wszystkie 28 nadal odpowiada 404.** To sa zdania przy werdyktach
+ZALICZONYCH, wiec nikt na nie nie patrzyl, a sa najtansza rzecza, o ktora mozna sie pomylic pod cudza
+nazwa. `scripts/audit-llms-links.mts` sprawdza je jednym zapytaniem na wiersz.
+
+## SZESC POWIERZCHNI, 6484 ZAPYTANIA, ZERO FALSZYWYCH ZDAN (2026-08-18, stan koncowy nocy)
+
+| check | oblanych | zapytan | wynik |
+|---|---|---|---|
+| `agent_entry_point` | 122 | 2304 | czysto |
+| `oauth_dcr` | 74 (+17) | 2987 | czysto |
+| `signup_reachable` | 92 | 92 | czysto |
+| `mcp_present` | 80 | 560 | czysto, zdanie doprecyzowane |
+| `machine_readable_api` | 50 | 513 | czysto |
+| `llms_txt` (martwe linki) | 28 | 28 | czysto, adresy dopisane do zdania |
+
+**Zmienilo sie nie to, czy oskarzamy slusznie, tylko czy da sie nas sprawdzic.** Cztery zdania na
+karcie mowily prawde, ktorej vendor nie mogl powtorzyc - dzis kazde nazywa adres, host albo strone.
