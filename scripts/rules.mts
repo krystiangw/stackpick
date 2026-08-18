@@ -688,6 +688,37 @@ check('i mowi, ze nie liczy sie przeciwko nim', fellOut.includes('nothing in thi
 // A check the earlier scan never had must not be reported as a change from nothing.
 check('nowy check nie jest zmiana', moved([], [verdict(1, 1)]).length, 0)
 
+// Mail, ktory mowi vendorowi, ze stracil punkt, i zostawia go z szukaniem strony tlumaczacej co
+// dalej, jest alertem. Jedna instrukcja przy najgorszej zmianie robi z niego usluge. Bierzemy ja z
+// tej samej tabeli, co raport, wiec mail i raport nie moga zaczac mowic czegos innego o tym samym.
+console.log('\nmail monitoringu mowi, co zrobic z utracona pozycja')
+const withRemedy = changeEmail(
+  { domain: 'v.test', id: 'w1', email: 'a@v.test', lastTotal: 6, lastMeasurable: 10 } as never,
+  {
+    id: 'r1',
+    findings: { machine: { llms: {}, wellKnown: {} } },
+    scorecard: { total: 5, max: 12, checks: [{ id: 'llms_txt', label: 'llms.txt published', points: 0, max: 1, detail: 'brak' }] },
+  } as never,
+  moved([verdict(1, 1, { id: 'llms_txt', label: 'llms.txt published' })], [verdict(0, 1, { id: 'llms_txt', label: 'llms.txt published' })]),
+  false,
+).text
+check('mail niesie instrukcje przy stracie', withRemedy.includes('What to do about llms.txt published:'), true)
+// Kontrolka: przy checku, dla ktorego nie publikujemy kroku, mail nie ma prawa zmyslic instrukcji.
+const noRemedy = changeEmail(
+  { domain: 'v.test', id: 'w1', email: 'a@v.test', lastTotal: 6, lastMeasurable: 10 } as never,
+  {
+    id: 'r1',
+    findings: {},
+    scorecard: { total: 5, max: 12, checks: [{ id: 'robots_paths_resolve', label: 'Paths robots.txt points at answer', points: 0, max: 1, detail: 'brak' }] },
+  } as never,
+  moved(
+    [verdict(1, 1, { id: 'robots_paths_resolve', label: 'Paths robots.txt points at answer' })],
+    [verdict(0, 1, { id: 'robots_paths_resolve', label: 'Paths robots.txt points at answer' })],
+  ),
+  false,
+).text
+check('a przy checku bez kroku nic nie zmysla', noRemedy.includes('What to do about'), false)
+
 // A reseed moves rules, and a rule that moved is not news about the vendor.
 check('inna wersja formuly to nie porownanie', comparableScorecards({ formulaVersion: '9.2' }, { formulaVersion: '9.3' }), false)
 check('ta sama wersja to porownanie', comparableScorecards({ formulaVersion: '9.3' }, { formulaVersion: '9.3' }), true)

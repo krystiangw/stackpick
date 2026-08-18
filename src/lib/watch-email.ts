@@ -2,6 +2,7 @@ import type { Report } from './store'
 import type { Watch, WatchChange } from './watch'
 import { measurableOf } from './watch'
 import { reportUrl } from './email'
+import { remedyFor } from './fixfirst'
 
 const BASE_URL = process.env.STACKPICK_BASE_URL ?? 'http://localhost:3000'
 
@@ -69,6 +70,14 @@ export function changeEmail(
       ? []
       : [title, ...list.flatMap((change) => [`  ${change.label}: ${arrow(change)}`, `    ${change.detail}`]), '']
 
+  // One instruction, for the worst thing that happened, and only when we publish one for that
+  // check. A mail that says a vendor lost a point and leaves them to find the page that explains
+  // what to do is an alert; this is the difference between an alert and a service somebody pays
+  // for monthly. The whole plan stays in the report: more than one step here would bury the change.
+  const lost = worse[0]
+  const scored = lost ? report.scorecard.checks.find((check) => check.id === lost.checkId) : undefined
+  const step = scored ? remedyFor(report.findings, scored) : null
+
   return {
     subject: subject.replace(/[\r\n]+/g, ' '),
     text: [
@@ -77,6 +86,7 @@ export function changeEmail(
       }.`,
       '',
       ...section(`Lost ground (${worse.length}):`, worse),
+      ...(step ? [`What to do about ${lost.label.toLowerCase()}: ${step}`, ''] : []),
       ...section(`Gained or moved (${better.length}):`, better),
       ...section(`We could not measure it this time (${unreadable.length}):`, unreadable),
       ...(unreadable.length > 0

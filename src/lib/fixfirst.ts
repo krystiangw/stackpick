@@ -213,6 +213,18 @@ export const REMEDIES: Record<string, Remedy> = {
 const plural = (count: number, one: string, many: string) => (count === 1 ? one : many)
 
 /** Comparison is optional so the email can build a plan without touching the store. */
+/**
+ * The published step for one check, or null where we publish none.
+ *
+ * Exported because the monthly mail needs exactly one of these and building the whole plan to read
+ * a single line would compute a ranking nobody sees. Both callers read the same table, which is the
+ * only way the mail and the report can keep saying the same thing about the same check.
+ */
+export function remedyFor(findings: ScanFindings, check: ScoredCheck): string | null {
+  const remedy = REMEDIES[check.id]
+  return remedy ? remedy.how(findings, check) : null
+}
+
 export function buildFixPlan(
   findings: ScanFindings,
   scorecard: Scorecard,
