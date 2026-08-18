@@ -6013,11 +6013,29 @@ wygladaly na regresje, a zadna nia nie byla.
    zostaja trzy poprawki, ktore chcielismy (directus, sanity, configcat), znikaja wszystkie ruchy
    watpliwe.
 
-**Stan: zacommitowane lokalnie, NIE wdrozone.** Przemiat wystartowal 05:34, a zawezonej wersji nie
-zmierzylem jeszcze na calym korpusie - `audit-attribution` bije w npm i nie moze chodzic razem ze
-skanerem. **Po przemiecie: uruchomic pomiar ponownie, sprawdzic, ze zmieniaja sie tylko directus,
-sanity i configcat, dopiero wtedy wdrozyc.** Sprostowanie directusa (`fixedIn: 9.41`) zostaje do
-tego czasu.
+**Stan koncowy: ZMIANA WYCOFANA, zadanie zostaje otwarte.** Pomiar po przemiecie na zawezonej
+wersji: 137 wierszy porownanych, 124 bez zmiany, 9 milczacych (rejestr odmowil), **4 zmiany**.
+Trzy to dokladnie te, o ktore chodzilo (configcat, sanity, directus). Czwarta byla nowa:
+
+```
+netlify.com: @netlify/api -> @netlify/sdk
+```
+
+W rejestrze `@netlify/api` to „Netlify Node.js API client", **349 tys. pobran tygodniowo**;
+`@netlify/sdk` to „the toolset for developing Netlify Extensions", **89 tys.** - paczka dla kogos,
+kto **buduje rozszerzenia Netlify**, a nie dla kogos, kto uzywa Netlify. To ta sama rodzina bledu
+co `@datadog/browser-core`, tylko przechodzi przez zawezona regule, bo nazywa sie doslownie „sdk".
+
+**Wniosek, ktory zostaje w kodzie (komentarz przy `shapeRankOf`):** awans po nazwie odwraca przypadek,
+ktory pobrania mialy juz dobrze. Prawdziwa naprawa nie polega na przesuwaniu nazw miedzy rangami,
+tylko na tym, **zeby pobrania mogly przewazyc roznice jednej rangi** - a to jest zmiana calego
+porzadkowania i wymaga wlasnego pomiaru. Trzy poprawki przeciwko jednej regresji na nazwanym
+vendorze to za malo, zeby wysylac.
+
+**Co zostaje na miejscu:** `scripts/audit-attribution.mts` (pomiar sam w sobie jest wart wiecej niz
+zmiana), straznik w `rules.mts` pilnujacy, ze `@directus/sdk` **nie** awansuje sam z nazwy (zeby
+nikt nie wprowadzil tego z powrotem bez pomiaru) oraz sprostowanie directusa. Sprostowanie ma
+`fixedIn: 9.41`, wiec **nie wygasnie samo** - i dobrze, bo wiersz nadal stoi na `directus`.
 
 ## WCZESNA KONTROLA PRZEMIATU I STRAZNIK NA SLEPA BRAMKE (2026-08-18, w trakcie przemiatu)
 

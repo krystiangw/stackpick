@@ -1604,21 +1604,13 @@ check('gosc jest policzony, gdy pada w odpowiedzi', counted.named.get('buttondow
 check('i reszta jest przeliczona obok niego', counted.named.get('postmarkapp.com'), 2)
 check('a pierwszenstwo liczy sie z nim w liscie', counted.first.get('buttondown.com'), 1)
 
-// Ranking ksztaltu nazwy: paczka w SCOPE vendora nazwana samymi slowami SDK stoi rowno z gola
-// nazwa vendora, wiec o wyborze decyduja pobrania. Scope musi BYC ich nazwa, a nie zaczynac sie od
-// niej: luzniejsze dopasowanie wpuscilo `@bunny-agent/sdk` (inna firma) przed `@bunny.net/storage-sdk`.
+// Ranking ksztaltu nazwy. Awans paczki `@vendor/sdk` do rangi golej nazwy zostal ZMIERZONY I
+// WYCOFANY (#47): naprawial directus, sanity i configcat, a psul netlify.com. Straznik pilnuje
+// stanu, ktory zostaje, zeby nikt nie wprowadzil tego z powrotem bez ponownego pomiaru.
 console.log('\nranking nazw paczek')
-check('scope vendora plus "sdk" stoi rowno z gola nazwa', shapeRankOf('@directus/sdk', 'directus.com'), 0)
-check('scope vendora plus "client" tez', shapeRankOf('@sanity/client', 'sanity.io'), 0)
-check('gola nazwa vendora nadal na zero', shapeRankOf('directus', 'directus.com'), 0)
-// Scope musi BYC ich nazwa. `bunny-agent` zaczyna sie od „bunny" i nalezy do innej firmy: przy
-// luzniejszym dopasowaniu awansowal na zero i wygrywal z paczka bunny.net mimo kary za zalazek.
-check('podobny cudzy scope nie awansuje', shapeRankOf('@bunny-agent/sdk', 'bunny.net') === 0, false)
-// I nie kazda nazwa zlozona ze slow SDK: zmierzone na korpusie, szersza wersja awansowala
-// `@datadog/browser-core` (paczka wewnetrzna) ponad ich klienta API.
-check('wewnetrzna paczka o nazwie ze slow SDK nie awansuje', shapeRankOf('@datadog/browser-core', 'datadoghq.com') === 0, false)
-check('ani "api-sdk"', shapeRankOf('@bitmovin/api-sdk', 'bitmovin.com') === 0, false)
-check('a paczka wejsciowa to nadal paczka wejsciowa', looksLikeEntryPackage('@directus/sdk', 'directus.com'), true)
+check('gola nazwa vendora ma najlepsza range', shapeRankOf('directus', 'directus.com'), 0)
+check('a SDK w ich scope nie awansuje sam z nazwy', shapeRankOf('@directus/sdk', 'directus.com') === 0, false)
+check('choc nadal jest paczka wejsciowa', looksLikeEntryPackage('@directus/sdk', 'directus.com'), true)
 
 // Runbook dostawy mowi platnikowi, co dostaje za 79 USD miesiecznie. Liczba checkow byla tam
 // wpisana z reki i zostala na 15, gdy checkow bylo juz 16.
