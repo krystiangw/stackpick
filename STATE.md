@@ -1,8 +1,8 @@
-# Let Agents In: stan na 2026-08-18 (formula 9.37 na produkcji, reseed zamowiony)
+# Let Agents In: stan na 2026-08-18 (formula 9.40 na produkcji, reseed zamowiony)
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te trzydziesci linijek, potem reszte)
 
-**WERSJE (stan 03:55): produkcja i repo na 9.37, korpus na 9.33.**
+**WERSJE (stan 04:10): produkcja i repo na 9.40, korpus na 9.33.**
 Od wieczora doszly cztery wersje: **9.34** (szesnasty check, cena albo warunek wejscia w snippecie
 z cennika), **9.35** (probka dokumentacji rozproszona po rodzinach wskazowek), **9.36** (cztery
 poprawki `price_in_snippet` z 31. przebiegu adwersaryjnego) i **9.37** (stara paczka, ktora sami
@@ -17,7 +17,7 @@ zanim cokolwiek zrobisz.** Gdyby przepadla, komenda jest w sekcji o 9.35 nizej.
 **PULAPKA:** kazdy skan domeny Z KORPUSU, takze zrobiony do weryfikacji poprawki, odmladza mediane i
 **przesuwa karencje**. Do weryfikacji uzywaj domen spoza korpusu.
 
-**PO RESEEDZIE (9.37), w tej kolejnosci:**
+**PO RESEEDZIE (9.40), w tej kolejnosci:**
 1. `MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/after-reseed.mts`
 2. `npm run audit`, `npx tsx scripts/audit-study.mts`, `npm run audit-delivery`
 3. **Nowy check `price_in_snippet`: policz, ilu vendorow go oblewa.** Zmierzona przed reseedem
@@ -5843,10 +5843,28 @@ typy, bo inaczej to zakupy pod wynik). Osobno: galaz „rekord starszy niz 24 mi
 dopasowaniu powinna schodzic do niemierzalnej bezwarunkowo, bo to nie jest zdanie o typach.
 Do tego `NpmMatch.confidence` ma dzis **jedna mozliwa wartosc** - albo urealnic, albo usunac.
 
-**Czego NIE zrobilem tej nocy i dlaczego:** bramka wymaga przeprowadzenia trzech sygnalow przez
-`discover.ts` do ksztaltu findings i do `score.ts`, plus wlasnego pomiaru przed/po. To kilka godzin,
-a reseed rusza o 05:50. Wpychanie tego w przemiat byloby dokladnie ta niestarannoscia, przed ktora
-ostrzega audyt.
+**Bramka jednak powstala tej nocy, jako 9.40, i jest zweryfikowana na produkcji.** Sygnaly
+`ownership`, `saysWhose` i `rivals` ida teraz z `searchNpmForDomain` przez findings do reguly.
+Oskarzenie o brak typow przechodzi tylko przy **udowodnionej wlasnosci**, paczce, ktora **mowi o
+produkcie vendora**, i **zerowej liczbie rywali o tym samym ksztalcie**. Galaz „nie znaleziono w
+rejestrze" na dopasowaniu z rejestru tez schodzi do niemierzalnej, bo takie zdanie jest wtedy
+falszywe, a nie surowe.
+
+**POMIAR NA ZYWO** (skan dziesieciu domen nowym kodem, bez zapisu do bazy):
+**przed: 10 oskarzen, po: 4**. Zostaly cronofy, newrelic i heroku - wszystkie trzy potwierdzone
+recznie jako prawdziwe - oraz directus, ktory przechodzi mimo bledu.
+
+**Pomiar zlapal tez moj wlasny blad, i to jest tu najwazniejsza lekcja.** Pierwsza wersja gubila
+nowe pola po drodze (`scan/index.ts` przepisuje `discovered` recznie), wiec wszystkie przychodzily
+jako `undefined`, a bramka blokowalaby **kazde** oskarzenie - czyli dokladnie plaskie wylaczenie,
+ktore audyt odrzucil, tylko w przebraniu bramki. Typy przechodzily, straznicy przechodzili, codex
+nie mial jak tego zobaczyc. **Zobaczyl to dopiero skan na zywo.**
+
+**Directus zostaje oskarzony i to jest osobne znalezisko (#47):** `@directus/sdk` ma **siedem razy
+wiecej pobran** (135 tys. kontra 19 tys. tygodniowo) i opis „Directus JavaScript SDK", a ranking
+ksztaltu nazwy i tak wybiera gola nazwe `directus`. Z punktu widzenia bramki identyfikacja jest
+czysta, wiec problem jest wyzej, w atrybucji. Dlatego sprostowanie dla directus ma `fixedIn: '9.41'`
+i **nie wygasnie** na 9.40, a pozostale cztery wygasna same, gdy wiersze zostana przemierzone.
 
 **Co zrobilem od razu (9.37, bezpieczna czesc bramki):** galaz „rekord starszy niz 24 miesiace"
 przestaje byc oskarzeniem, gdy paczke wybralismy z rejestru sami. To nie jest zdanie o typach, tylko
