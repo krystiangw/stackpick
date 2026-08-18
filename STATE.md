@@ -19,9 +19,10 @@ zanim cokolwiek zrobisz.** Gdyby przepadla, komenda jest w sekcji o 9.35 nizej.
 **PO RESEEDZIE (9.36), w tej kolejnosci:**
 1. `MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/after-reseed.mts`
 2. `npm run audit`, `npx tsx scripts/audit-study.mts`, `npm run audit-delivery`
-3. **Nowy check `price_in_snippet`: policz, ilu vendorow go oblewa.** Przedreseedowa probka 30 domen
-   dala 12 przechodzi / 12 oblewa / 6 bez czytelnego cennika. Jesli na calym korpusie oblewa
-   drastycznie wiecej niz polowa, przeczytaj kilka opisow, zanim uznasz to za wynik.
+3. **Nowy check `price_in_snippet`: policz, ilu vendorow go oblewa.** Zmierzona przed reseedem
+   probka **34 domen z korpusu**: 13 przechodzi, 19 oblewa, 2 bez odpowiedzi, czyli okolo **40
+   procent przechodzi**. Jesli po reseedzie wyjdzie duzo mniej, czytaj opisy, zanim uznasz to za
+   wynik: pomiar probki byl na `readSnippet` z 9.36, a reseed idzie na tym samym kodzie.
 4. **9.35 zmienila probke dokumentacji**, wiec `programmatic_provisioning` moze sie ruszyc w obie
    strony. `regressions.mts` pokaze te ruchy w osobnej sekcji "nasza zmiana reguly", bo wpis w
    `CHECK_RULE_CHANGED` juz jest. **Nie skanuj ich pojedynczo jako podejrzanych.**
@@ -5548,3 +5549,42 @@ zamykaja klasy pokazane na napisach i naprawiaja dowody, a nie przesuwaja punkta
 
 **Wniosek do powtorzenia:** przy wzorcach jezykowych sprawdzaj nie tylko „czy lapie to, co ma", ale
 **czym jeszcze jest to zdanie** - rabat, gwarancja zwrotu i SLA wygladaja jak cena dla regexpa.
+
+## OFERTA AGENCYJNA / WHITE-LABEL: ODRZUCONE DO ODWOLANIA (2026-08-18, zadanie #45 zamkniete)
+
+**Decyzja podjeta przez audyt subagentem (opus), bo blokowala backlog. WYMAGA POTWIERDZENIA
+KRYSTIANA RANO** - jesli sie nie zgadza, cofniecie kosztuje jeden komentarz na boardzie, bo nic nie
+zostalo zbudowane ani zmienione na stronie.
+
+**Rekomendacja: nie robimy** ani white-label, ani schodzenia z ceny za domene do poziomu
+odsprzedazy. Trzy powody, wszystkie sprawdzone w kodzie przed wykonaniem:
+1. Budowalibysmy kanal dystrybucji dla produktu, ktory **nie przyjal jeszcze zadnej platnosci**:
+   platnosci to dzis `mailto:`, monitoring rozdajemy za darmo (`MONITORING_IS_FREE = true`), a w
+   kolejce watchy nie ma ani jednego obcego platnika. Waskim gardlem jest konto Paddle i decyzja
+   JDG kontra spolka, nie opakowanie oferty.
+2. Zejscie z ceny odwracaloby decyzje sprzed doby, podjeta na researchu (29 -> 49 USD, bo ponizej
+   podlogi rynku techniczny kupujacy czyta cene jako niska jakosc). 17,55 USD za audyt u
+   agentchecker.ai to **inna jednostka**: jeden przebieg bez ujawnionej wariancji, przy naszej
+   opublikowanej podlodze szumu 0,59 procent.
+3. Agencja nie dostarczy lekarstwa, ktore wypisuje nasza diagnoza. `oauth_dcr`, programmatic
+   provisioning czy `signup_reachable` to praca inzynierska w produkcie vendora.
+
+**Argument, ktory rozstrzygnal, i wart zapamietania poza tym zadaniem:** white-label **zrywa petle
+odpowiedzialnosci**. Cala wartosc stoi na tym, ze pod kazdym werdyktem jest regula, bieg i ktos,
+komu mozna ten werdykt podwazyc. Pod cudza marka adresat podwazenia fizycznie znika, a zdanie
+„kazde zdanie mozna powtorzyc i podwazyc" przestaje byc prawdziwe w praktyce. To nie jest kwestia
+kolejnosci prac, tylko sprzecznosci z produktem.
+
+**Warunek ponownego otwarcia:** trzy niezalezne zapytania PRZYCHODZACE o raport pod cudza marka (nie
+o cene za wiele domen), po uruchomieniu platnosci, przy czym co najmniej jedno godzi sie na platny
+pilotaz skladany recznie. Slabszy, ale wystarczajacy sygnal: platnik mowi, ze nie moze kupic, bo
+zakup idzie przez jego agencje. **Kolejna obnizka u konkurenta sygnalem nie jest.**
+
+**Gdyby jednak „tak", to tylko w wersji co-brandingowej:** okladka i rekomendacje pod marka agencji,
+ale kazdy werdykt linkuje do trwalego `/r/<id>` na naszej domenie, ze stopka „measured by Let Agents
+In, formula X, reguly publiczne". Cena za domene nie schodzi; ustepstwo tylko na wolumenie powyzej
+dziesieciu domen i tylko rozmowa.
+
+**Nic nie trzeba zmieniac na stronie:** FAQ na `/pricing` juz odpowiada na to pytanie (Agency pack
+10 domen, dalej rozmowa, a raport pod cudza marka „work we would rather quote than pretend is
+automatic").

@@ -1351,5 +1351,20 @@ for (const file of readdirSync('harness/asks').filter((name) => name.endsWith('.
   check(`${file}: zaden dostawca nie pada w pytaniu`, named.join(), '')
 }
 
+// Liczba checkow i punktow rosnie, a zdanie wypisane slowem nie. `/methodology` mowilo
+// jednoczesnie „Sixteen points exist on paper" i „16 checks, 18 points", bo pierwsze bylo wpisane
+// recznie, gdy punktow bylo szesnascie. Komentarze pomijamy: opisuja historie, a nie to, co widzi
+// czytelnik.
+console.log('\nzadna strona nie wypisuje liczby checkow ani punktow slowem')
+const SPELLED = /\b(ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)\s+(points|checks)\b/i
+const pagesUnder = (dir: string): string[] =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
+    entry.isDirectory() ? pagesUnder(`${dir}/${entry.name}`) : entry.name === 'page.tsx' ? [`${dir}/${entry.name}`] : [],
+  )
+for (const page of pagesUnder('src/app')) {
+  const withoutComments = readFileSync(page, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ')
+  check(`${page}: liczba idzie ze stalej, nie ze slowa`, SPELLED.exec(withoutComments)?.[0] ?? '', '')
+}
+
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

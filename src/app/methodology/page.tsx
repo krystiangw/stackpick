@@ -174,7 +174,7 @@ export default async function MethodologyPage() {
       <section className="border-b border-rule py-12">
         <h2 className="text-lg font-semibold tracking-tight">Three verdict states, and what the score is out of</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Sixteen points exist on paper. A domain is scored out of the points that both apply to it and we
+          {MAX_SCORE} points exist on paper. A domain is scored out of the points that both apply to it and we
           could evaluate, and the scorecard prints that denominator beside the number. Charging a vendor for
           our own blind spots would make a site we could not read look worse than one we could.
         </p>
