@@ -1952,5 +1952,28 @@ check('a sonda rozpoznaje nieznana konstrukcje', RENDERED.test('~~~ blok kodu'),
 // naglowku i kazdy wiersz punktacji renderowala jako osobna tabele bez danych.
 check('renderer widzi rozdzielacz tabeli', renderer.includes("line.startsWith('|') && line.trimEnd().endsWith('|')"), true)
 
+// Piaskownica biegow. Kazda z tych regul opisuje rzecz, ktora juz raz poszla zle albo poszlaby
+// przy pierwszej nieuwadze: bieg startujacy w tym repozytorium, HOME oddane w calosci, dowiazanie
+// zamiast kopii (dowiazanie do ~/.claude oddaje caly katalog, czyli dokladnie to, co zabieramy).
+console.log('\npiaskownica biegow nie oddaje wiecej, niz mowi')
+const sandbox = readFileSync('harness/sandbox/run.sh', 'utf8')
+check('srodowisko jest czyszczone', /^env -i/m.test(sandbox), true)
+check('HOME wskazuje na katalog tymczasowy', sandbox.includes('HOME="$SCRATCH"'), true)
+check('poswiadczenie jest kopiowane, nie dowiazywane', sandbox.includes('cp "$HOME/$WANTS"') && !sandbox.includes('ln -s'), true)
+// Bieg claude nie potrzebuje tokenu codeksa. Kopiowanie obu oddawalo wrogiej paczce poswiadczenie,
+// ktorego ten bieg nigdy nie uzyje, czyli dokladnie odwrotnosc tego, co ten skrypt obiecuje.
+check('kopiowane jest poswiadczenie tego CLI, ktore uruchamiamy', sandbox.includes('case "$(basename "$1")" in'), true)
+check('bieg nie startuje w tym repozytorium', sandbox.includes('"$REPO_ROOT"|"$REPO_ROOT"/*'), true)
+// Obie sciezki fizyczne, inaczej repozytorium osiagane przez dowiazanie porownuje sie z samym soba
+// w dwoch zapisach i granica nie trzyma.
+check('obie strony porownania sa fizyczne', (sandbox.match(/pwd -P/g) ?? []).length >= 2, true)
+// `exec` podmienia powloke i trap EXIT nigdy nie chodzi, wiec kopia poswiadczenia zostawalaby w
+// katalogu tymczasowym po kazdym biegu. Piaskownica rozsypujaca sekrety jest gorsza niz jej brak.
+check('poswiadczenie jest sprzatane po biegu', !sandbox.includes('exec env -i') && sandbox.includes("trap 'rm -rf \"$SCRATCH\"' EXIT"), true)
+// Kontrolka: wzorzec sekretu musi rozpoznac nazwe, ktorej tam nie wpisano z gory.
+const SECRET_ENV = /(_KEY|_TOKEN|_SECRET|PASSWORD|_URI|_DSN|CREDENTIAL|_PAT$|^AWS_|^HEROKU_|^GH_|^GITHUB_TOKEN)/i
+check('wzorzec sekretu widzi nowa nazwe', SECRET_ENV.test('PADDLE_WEBHOOK_SECRET'), true)
+check('i nie krzyczy na zwykla zmienna', SECRET_ENV.test('TERM'), false)
+
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)
