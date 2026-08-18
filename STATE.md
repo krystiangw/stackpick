@@ -6764,3 +6764,32 @@ czyli naglowek byl prawdziwy przez przypadek, a teraz jest prawdziwy z konstrukc
 **Ograniczenie, zapisane swiadomie:** luzny czytelnik to moj wlasny regex, wiec falszywe oskarzenie
 moze sie chowac w sformulowaniu, ktorego nie widzi ani regula, ani on. Dlatego to **uzupelnienie**
 przebiegow 30-31, gdzie 80 opisow przeczytano recznie po kolei, a nie ich zastapienie.
+
+## 40. PRZEBIEG: `self_serve`, OSTATNIA POWIERZCHNIA Z ROZMIAREM (2026-08-18)
+
+19 cennikow przeczytanych na zywo, kazde dopasowanie `SELF_SERVE_PATTERNS` obejrzane po kolei z oknem
+slow wokol niego. **Zadne zdanie nie okazalo sie falszywe**, a te, ktore sa najbardziej szczegolowe,
+trafiaja w punkt: `savvycal.com` („Do you offer a free trial?") i `xata.io` („Is there a free tier?")
+to **pytania z FAQ**, dokladnie jak mowi wiersz; `here.com` ma „Get started for free" jako **link**;
+`replicate.com` ma „Try for free" w **nawigacji**, ktora wisi na kazdej podstronie.
+
+**Jedna obserwacja o wzorcu, warta zapisania, choc nie o oskarzeniu:** na `name.com` wzorzec
+`/\$0(?:\.00)?(?![.,\d])/` trafil w **pozycje cennika** „Advanced Security: $0.00". Opublikowany
+wiersz tego nie skredytowal (mowi „no free tier or no-card wording"), wiec dzis jest zachowawczy, ale
+ryzyko jest realne i **odwrotne niz reszta tej nocy**: to nie groziloby falszywym oskarzeniem, tylko
+falszywym **zaliczeniem** - kredytem za darmowy poziom, ktorego nie ma. `$0` jest jednak takze
+prawdziwym sposobem pisania darmowego planu („$0/month"), wiec zawezenie wymaga pomiaru na korpusie,
+a nie doklejenia warunku. **Nie ruszam bez pomiaru.**
+
+## OSIEM POWIERZCHNI, 6494 ZAPYTANIA, ZERO FALSZYWYCH ZDAN (2026-08-18, koniec przegladu)
+
+`agent_entry_point` (122 wiersze), `oauth_dcr` (74+17), `signup_reachable` (92), `mcp_present` (80),
+`machine_readable_api` (50), `llms_txt` (28 zdan o martwym linku), `price_in_snippet` (91 opisow),
+`self_serve` (19 cennikow). **Kazde oblane zdanie w korpusie, ktore nazywa adres, zostalo dzis
+zapytane ponownie.** Zmienily sie dwie rzeczy: `mcp_present` mowi teraz „nothing spoke MCP" zamiast
+„nothing answered", a cztery checki, ktore podawaly liczbe zamiast adresu, podaja adres.
+
+**Bez przebiegu zostaja tylko drobne** (`answers_plain_request` 4 oblane, `docs_without_js` 3,
+`user_agents_allowed` 3, `robots_paths_resolve` 3, `no_crawl_delay` 2, `typed_package` 6) oraz
+`programmatic_provisioning` (66), ktory ma przebieg 30 sprzed 9.36 i jest najbardziej zlozona regula
+na karcie - to jest naturalny nastepny krok.
