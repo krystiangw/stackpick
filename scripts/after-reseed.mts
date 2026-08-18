@@ -33,6 +33,8 @@ let snippetUnmeasurable = 0
 let snippetNotApplicable = 0
 let licenceGateRows = 0
 let typedGuessed = 0
+let typedSearched = 0
+let typedBlind = 0
 let typedFails = 0
 let typedGuessedFails = 0
 const licenceGateSample: string[] = []
@@ -81,6 +83,24 @@ for (const domain of CURATED_DOMAINS) {
   // Zmierzone 2026-08-18: 137 ze 161 mierzalnych werdyktow o paczce stalo na dopasowaniu po
   // wydawcy, a wszystkie 10 oskarzen. Szesc z tych dziesieciu bylo o zlym artefakcie. Dopoki
   // bramka z zadania #46 nie powstanie, ta liczba ma byc widoczna po kazdym przemiecie.
+  // Fakty, na ktorych stoi bramka z 9.40. Zapisywane przez skaner, wiec ich brak znaczy, ze bramka
+  // jest slepa i po cichu blokuje KAZDE oskarzenie - dokladnie to zdarzylo sie w pierwszej wersji
+  // tej zmiany, gdy `scan/index.ts` przepisywal `discovered` recznie i pominal nowe pola.
+  const attribution = (report.findings as unknown as {
+    discovered?: { npmSource?: string | null; npmOwnership?: unknown; npmSaysWhose?: unknown; npmRivals?: unknown }
+  }).discovered
+  // Tylko wiersze na biezacej formule: starszy raport nie moze niesc pola, ktorego wtedy nie bylo,
+  // a w polowie przemiatu wiekszosc korpusu jest jeszcze stara. Liczone inaczej, straznik krzyczal
+  // o 109 wierszach, ktore niczego nie lamia.
+  if (formula === FORMULA_VERSION && attribution?.npmSource === 'registry-search') {
+    typedSearched += 1
+    // Wszystkie trzy, bo bramka czyta wszystkie trzy: wiersz z sama wlasnoscia i bez reszty jest tak
+    // samo slepy, a straznik liczacy jedno pole zameldowalby, ze jest zdrowo.
+    if (attribution.npmOwnership === undefined || attribution.npmSaysWhose === undefined || attribution.npmRivals === undefined) {
+      typedBlind += 1
+    }
+  }
+
   const typed = check('typed_package')
   if (typed && !typed.notApplicable && !typed.inconclusive) {
     const guessed = typed.detail.includes('by who publishes it')
@@ -137,6 +157,13 @@ console.log(
 )
 console.log(
   `typed_package: ${typedGuessed} werdyktow stoi na paczce dopasowanej po wydawcy, w tym ${typedGuessedFails} z ${typedFails} oskarzen (bramka: zadanie #46)`,
+)
+console.log(
+  typedSearched === 0
+    ? 'bramka atrybucji: zaden wiersz na biezacej formule nie byl wybrany przez wyszukiwarke, wiec nie ma czego sprawdzac'
+    : typedBlind === 0
+      ? `bramka atrybucji widzi swoje fakty we wszystkich ${typedSearched} wierszach z wyszukiwarki na ${FORMULA_VERSION}`
+      : `UWAGA: ${typedBlind} z ${typedSearched} wierszy na ${FORMULA_VERSION} NIE MA zapisanych faktow bramki, wiec bramka blokuje tam kazde oskarzenie po cichu`,
 )
 console.log(`klucz licencyjny (tylko dowody, bez punktow): ${licenceGateRows} wierszy ma zdanie o wymogu klucza`)
 for (const one of licenceGateSample) console.log(`  ${one}`)

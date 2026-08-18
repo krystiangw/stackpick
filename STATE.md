@@ -6018,3 +6018,20 @@ zmierzylem jeszcze na calym korpusie - `audit-attribution` bije w npm i nie moze
 skanerem. **Po przemiecie: uruchomic pomiar ponownie, sprawdzic, ze zmieniaja sie tylko directus,
 sanity i configcat, dopiero wtedy wdrozyc.** Sprostowanie directusa (`fixedIn: 9.41`) zostaje do
 tego czasu.
+
+## WCZESNA KONTROLA PRZEMIATU I STRAZNIK NA SLEPA BRAMKE (2026-08-18, w trakcie przemiatu)
+
+Zamiast czekac na koniec, sprawdzilem pierwsze 30 wierszy juz zapisanych przez przemiat, zeby
+ewentualny problem zlapac przy trzydziestym, a nie przy sto siedemdziesiatym:
+
+- **`price_in_snippet`: 12 przechodzi, 12 oblewa, 1 niemierzalny, 5 nie dotyczy.** Czyli 50 procent
+  na mierzalnych, przy przewidywaniu 45 procent z dwoch probek przedreseedowych. Bez niespodzianki.
+- **Bramka atrybucji z 9.40 dziala w produkcji:** wszystkie wiersze wybrane przez wyszukiwarke niosa
+  zapisane fakty (`npmOwnership`, `npmSaysWhose`, `npmRivals`), zero oskarzen w tej probce.
+
+**Nowy straznik w `after-reseed.mts`, na blad, ktory sam popelnilem dzis w pierwszej wersji bramki:**
+gdy skaner przestanie zapisywac te pola, bramka **po cichu blokuje kazde oskarzenie**, czyli staje
+sie plaskim wylaczeniem, ktore audyt odrzucil. Straznik liczy wiersze **tylko na biezacej formule**
+(starszy raport nie moze niesc pola, ktorego wtedy nie bylo - policzone inaczej krzyczal o 109
+wierszach, ktore niczego nie lamia) i sprawdza **wszystkie trzy pola**, bo bramka czyta wszystkie
+trzy, a wiersz z sama wlasnoscia jest tak samo slepy.
