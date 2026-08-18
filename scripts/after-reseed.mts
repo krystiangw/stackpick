@@ -37,6 +37,7 @@ let typedGuessed = 0
 let typedSearched = 0
 let throttled = 0
 let limitedAtEdge = 0
+let rowsWithLimitField = 0
 let challengedAtEdge = 0
 const challengeSample: string[] = []
 const throttledSample: string[] = []
@@ -118,6 +119,10 @@ for (const domain of CURATED_DOMAINS) {
   // Czyje to byly drzwi. Rejestr npm odmawia nam stale i to fakt o nas; brzeg vendora, ktory
   // odpowiada wyzwaniem, jest ustaleniem o nim - i dopoki tego nie policzymy na pelnym przemiecie,
   // nie zmieniamy z tego zadnego werdyktu (#48).
+  // Wiersze sprzed 9.41 nie maja tego pola w ogole, wiec bez tego licznika zdanie „zaden vendor nie
+  // odmowil" bylaby uspokojeniem o korpusie, ktory o tym nie wie - ten sam falszywy komfort, co przy
+  // bramce atrybucji liczonej na wierszach sprzed jej wprowadzenia.
+  if (report.findings?.limitsMet !== undefined) rowsWithLimitField += 1
   const edge = limitsAtTheirEdge(report.findings, domain)
   if (edge.onSite > 0) {
     limitedAtEdge += 1
@@ -197,9 +202,11 @@ console.log(
     : `429 od nas: ${throttled} wierszy jest chudszych, niz strona na to zasluguje (${throttledSample.join(', ')}${throttled > throttledSample.length ? ', ...' : ''})`,
 )
 console.log(
-  limitedAtEdge === 0
-    ? 'zaden vendor nie odmowil nam limitem na swoim wlasnym brzegu'
-    : `limit na brzegu vendora: ${limitedAtEdge} wierszy, w tym ${challengedAtEdge} z markerem wyzwania (to sciana, nie nasze tempo - #48)`,
+  rowsWithLimitField === 0
+    ? 'zaden wiersz nie niesie jeszcze zapisu, czym nas odmowiono (pole z 9.41, wypelni sie przy nastepnym przemiacie)'
+    : limitedAtEdge === 0
+      ? `zaden z ${rowsWithLimitField} wierszy z zapisem nie spotkal limitu na brzegu vendora`
+      : `limit na brzegu vendora: ${limitedAtEdge} z ${rowsWithLimitField} wierszy z zapisem, w tym ${challengedAtEdge} z markerem wyzwania (to sciana, nie nasze tempo - #48)`,
 )
 for (const one of challengeSample) console.log(`  ${one}`)
 console.log(`klucz licencyjny (tylko dowody, bez punktow): ${licenceGateRows} wierszy ma zdanie o wymogu klucza`)
