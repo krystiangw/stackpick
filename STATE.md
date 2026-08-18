@@ -7704,3 +7704,23 @@ zgadza (12 + 1 + 2 = 15).
 **Co z tego wynika dla gotowosci:** brakuje **wylacznie checkoutu**. Pomiar, adres, strona vendora,
 odmowa dla zlej kategorii, straznik marki i deliverable dzialaja i sa uczciwe. Sciezka „napisz na
 hello@" jest do przejscia recznie w jednej komendzie.
+
+## ZERO WYMIENIEN NIESIE TERAZ SWOJA DWUZNACZNOSC (2026-08-19)
+
+Wyszlo z przejscia sciezki klienta, nie z audytu. `railway.app` dostal z generatora **„wymieniony
+0 z 11 biegow"**, podczas gdy **dziesiec odpowiedzi mowilo Railway**: ta nazwa nalezy w naszych
+danych do `railway.com`, a to ta sama firma po zmianie domeny. Generator ostrzegal o tym **na
+stderr**, czyli operatora, a zero czyta kupujacy.
+
+**Poprawka jest jednym zdaniem w dokumencie i jednym polem w modelu:** raport pisze, ile odpowiedzi
+uzywa nazwy bez podania domeny, dlaczego ich nie liczymy (liczymy domene, nie slowo, bo slowo moze
+nalezec do kogos innego, a wymienienia przeniesionego na cudzy raport nie cofnie zadne zdanie w
+srodku) i co zrobic, jesli to jednak oni. Strona `/d/<id>` pokazuje to samo, bo caveat, ktory
+zostaje tylko w markdownie, ginie dokladnie dla polowy kupujacych.
+
+Sprawdzone w obie strony: `railway.app` niesie to zdanie, `svix.com` nie niesie go wcale.
+
+**Czego to NIE naprawia:** nadal nie umiemy policzyc wymienien firmy po zmianie domeny, bo
+`--brand Railway` jest slusznie odrzucane (nazwa nalezy do wiersza w korpusie). Wlasciwe
+rozwiazanie to znane zadanie **#47** (atrybucja po golej nazwie) plus pojecie „ta sama firma pod
+dwoma adresami", ktorego w danych nie mamy. Teraz przynajmniej kupujacy widzi, ze pytanie istnieje.

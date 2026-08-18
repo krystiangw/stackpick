@@ -236,6 +236,14 @@ export function ReportView({ model }: { model: ReportModel }) {
             as theirs. Every count here was recomputed alongside you rather than copied.
           </p>
         )}
+        {model.missedByWord > 0 && (
+          <p className="mt-5 max-w-2xl border-l-2 border-warn pl-4 text-sm leading-relaxed text-ink-soft">
+            {model.missedByWord} of these answers use your name as a word without naming {model.domain}, and we did
+            not count them. We count a domain rather than a word, because a word can belong to somebody else and a
+            mention moved onto the wrong report cannot be undone by any sentence in it. If those answers are about you
+            under a different domain, tell us and we will recount.
+          </p>
+        )}
         {model.runsUrl && (
           <p className="mt-4 font-mono text-sm">
             <a href={model.runsUrl} className="text-brass underline underline-offset-4">

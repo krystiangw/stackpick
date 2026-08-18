@@ -16,6 +16,12 @@ export type ReportModel = {
   scannedAt: string
   /** True when the vendor is not one of the providers the runs were collected for. */
   guest: boolean
+  /**
+   * Answers carrying the vendor's name as a word without naming their domain, which we did not
+   * count. Zero for everybody whose name is theirs alone; non-zero for a company that moved domain,
+   * where the bare count would otherwise read as a confident zero.
+   */
+  missedByWord: number
   score: { total: number; measurable: number; max: number }
   stages: { title: string; question: string; points: number; measurable: number }[]
   question: string | null

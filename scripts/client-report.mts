@@ -133,6 +133,16 @@ const labelOfGuest = domain.split('.')[0]
  * disagree with the site.
  */
 const withGuest = guest ? [...category.domains, domain] : category.domains
+/**
+ * Answers that carry the guest's name as a word while not counting as a mention of their domain.
+ *
+ * railway.app came out of this generator as "named in 0 of 11 runs" while ten answers said Railway,
+ * because the name belongs to railway.com in our data and the two are the same company after a
+ * move. Warning the operator on stderr is not enough: the buyer reads the zero, not our console. A
+ * number a known ambiguity could overturn has to carry the ambiguity with it.
+ */
+let missedByWord = 0
+
 if (guest) {
   // Nothing but the address, unless a person named the brand and the name is free. A collision is
   // refused rather than resolved: "Postmark" for postmark.com would silently move postmarkapp.com's
@@ -145,13 +155,13 @@ if (guest) {
     }
   }
   nameGuest(domain, brand ? [brand] : [])
-  const missed = held
+  missedByWord = held
     .flatMap((one) => one.answers)
     .filter((answer) => !certain(mentionsIn(answer.text, withGuest)).some((mention) => mention.domain === domain))
     .filter((answer) => new RegExp(`\\b${labelOfGuest}\\b`, 'i').test(answer.text)).length
-  if (missed > 0 && !brand) {
+  if (missedByWord > 0 && !brand) {
     console.error(
-      `UWAGA: ${missed} odpowiedzi zawiera slowo "${labelOfGuest}", a nie liczy sie jako wymienienie, bo bez --brand szukamy tylko adresu ${domain}.`,
+      `UWAGA: ${missedByWord} odpowiedzi zawiera slowo "${labelOfGuest}", a nie liczy sie jako wymienienie, bo bez --brand szukamy tylko adresu ${domain}.`,
     )
     console.error('Sprawdz te odpowiedzi. Jesli to naprawde oni, uruchom ponownie z --brand, byle nazwa nie nalezala do nikogo innego.')
   }
@@ -258,6 +268,15 @@ if (!cell) {
     lines.push('')
   }
   lines.push(`**You were named in ${namedAll} of ${runsAll} runs, and named first in ${firstAll}.**`)
+  if (missedByWord > 0) {
+    lines.push('')
+    lines.push(
+      `${missedByWord} of these answers use the word "${labelOfGuest}" without naming ${domain}, and we did not count them. ` +
+        'We count a domain, not a word, because a word can belong to somebody else and a mention moved onto the wrong ' +
+        'report cannot be undone by any sentence in it. If those answers are about you under a different domain, tell us ' +
+        'and we will recount with your name as well as your address.',
+    )
+  }
   // The model gets every tool, always. The markdown prints the split only when there is more than
   // one, because "codex: 0 of 5" under a headline that already said 0 of 5 is noise on paper; the
   // page has a table with a column for it, and an empty table there is a report that cannot say
@@ -480,6 +499,7 @@ if (rest.includes('--publish')) {
     formulaNow: card.formulaVersion === FORMULA_VERSION ? null : FORMULA_VERSION,
     scannedAt: report.scannedAt,
     guest,
+    missedByWord,
     score: { total: card.total, measurable, max: card.max },
     stages: card.stages.map((stage) => ({
       title: stage.title,

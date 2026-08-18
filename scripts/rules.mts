@@ -363,6 +363,18 @@ check('opis watcha nie mowi juz „nic wiecej"', privacySource.includes('belongs
 // Lista pol idzie z typu (`Record<keyof Watch, string>`), wiec nowe pole lamie kompilacje, a nie
 // cicho zostawia niepelna liste na stronie. Tu pilnujemy tylko, ze strona nadal jej uzywa.
 check('lista pol jest generowana z rekordu', privacySource.includes('Object.values(WATCH_FIELDS_DISCLOSED)'), true)
+
+// Zero wymienien, ktore moze obalic znana dwuznacznosc, musi te dwuznacznosc niesc. railway.app
+// wyszlo z generatora jako „wymieniony 0 z 11", podczas gdy dziesiec odpowiedzi mowilo Railway: ta
+// nazwa nalezy w naszych danych do railway.com, a to ta sama firma po zmianie domeny. Ostrzezenie
+// na stderr widzi operator, a zero czyta kupujacy.
+console.log('\nzero wymienien niesie swoja dwuznacznosc')
+const generatorSource = readFileSync('scripts/client-report.mts', 'utf8')
+check('markdown pisze o niepoliczonych wystapieniach', generatorSource.includes('without naming ${domain}, and we did not count them'), true)
+check('model niesie te liczbe', generatorSource.includes('missedByWord,'), true)
+check('strona raportu tez ja pokazuje', readFileSync('src/app/d/[id]/report-view.tsx', 'utf8').includes('model.missedByWord > 0'), true)
+// Kontrolka: to nie jest tylko komunikat dla operatora.
+check('kontrola: nie zostalo samo stderr', generatorSource.includes('UWAGA: ${missedByWord}'), true)
 check('kazde pole watcha ma opis', Object.keys(WATCH_FIELDS_DISCLOSED).length, 14)
 check('kontrola: opis nie jest pusty', Object.values(WATCH_FIELDS_DISCLOSED).every((one) => one.length > 5), true)
 check('formularz tez nie mowi „nic wiecej"', formSource.includes('the domain, nothing else'), false)
