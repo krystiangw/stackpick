@@ -7813,3 +7813,29 @@ cudzym artefakcie.
 
 **Zostaje do zrobienia: przemiat korpusu na 9.42.** Do tego czasu produkcja stoi na 9.41 i to jest
 poprawny stan, a nie niedokonczony.
+
+## SPRAWDZILEM TEZ DRUGA STRONE: „NIE ZNALEZLISMY PACZKI" (2026-08-19)
+
+Blad gandi.net byl falszywie POZYTYWNY (cudza paczka przypisana vendorowi). Falszywie negatywne sa
+lagodniejsze, bo nie stawiaja twierdzenia o nikim, ale nadal sa bledem, wiec przejrzalem szesnascie
+domen bez paczki. Wiekszosc to rejestratorzy domen i hosting, gdzie brak paczki jest prawda.
+
+Trzy sprawdzone w danych z cache'u rejestru, nie z pamieci:
+- `fireworks.ai`: wyszukiwanie zwrocilo `fireworks`, `fireworks-js`, `fireworks-canvas`, czyli
+  **biblioteki do animacji sztucznych ogni**. Odrzucone poprawnie.
+- `weglot.com`: tylko `@weglot/cloudworker`, „node.js runner for Cloudflare Workers". Odrzucone.
+- `here.com`: w zadnym zapytaniu nie pojawila sie ani jedna paczka `@here/*`, wiec to nie jest nasze
+  odrzucenie, tylko brak trafienia w wyszukiwarce rejestru.
+- `betterstack.com`: brak jest **udokumentowana decyzja** w kodzie (github.com/betterstack nalezy do
+  innej firmy), a nie przeoczenie.
+
+Wniosek: ta strona jest zdrowa i nie wymaga zmiany.
+
+**Przy okazji, potwierdzone na oczy na produkcji:** strona glowna sama opisuje stan przejsciowy
+miedzy wersjami, bez niczyjej interwencji: „measured under formula 9.41 while the scanner runs 9.42,
+so a scan you run today can disagree with the row below it". Zdanie jest generowane z dwoch liczb,
+wiec rozjazd wersji jest widoczny dla czytelnika, zanim ktos go zglosi.
+
+**Czego NIE zrobie przy zgloszeniu do katalogu konektorow Anthropica:** zrzutow ekranu. Przechwyt
+przez przegladarke oddaje obraz w polowie rozmiaru okna (606 px przy oknie 1440 px), a katalog chce
+1000 px i wiecej. Reszta wymagan technicznych jest spelniona.
