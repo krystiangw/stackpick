@@ -6656,3 +6656,49 @@ niczego pewnego, a moze skredytowac cos zlego, jest gorsza niz luka**.
 mowic „on the pages we read". Vendor widzi, gdzie patrzylismy, i moze odpowiedziec „link jest na
 /product" zamiast zgadywac. To ta sama zasada, co przy `oauth_dcr` i `agent_entry_point`: **zdanie ma
 byc powtarzalne przez tego, o kim mowi**.
+
+## 37. PRZEBIEG ADWERSARYJNY: `machine_readable_api` (2026-08-18)
+
+**50 oblanych wierszy, 513 zapytan, zero trafien.** Sprawdzone wszystkie czesci zdania:
+`OPENAPI_PATHS` na hoscie serwisu **i** na hoscie dokumentacji, deklaracje na stronie dokumentacji
+(czytane `declaredSpecs` ze skanera i **pobierane**, bo deklaracja to wskazanie, nie dokument),
+negocjacja markdownu **po naglowku** (liczy sie typ odpowiedzi, nie ksztalt ciala) oraz **wariant
+`<docs>.md`**. Nigdzie nie ma dzis specu, deklaracji ani markdownu tam, gdzie mowimy, ze ich nie ma.
+
+**Cztery poprawki z codex review, jedna podwazala wynik:** pierwsza wersja nie pytala o `<docs>.md`,
+a check liczy oba mechanizmy razem - vendor, ktory zaczal serwowac ten wariant, kwalifikuje sie do
+punktu bez negocjacji naglowkiem, wiec „zero trafien" bez tej sondy nie znaczylo tego, co mowilo.
+Pozostale trzy szly w strone falszywych trafien (deklaracja bez pobrania celu, `text/plain` jako
+markdown) albo dotyczyly liczenia limitu przed filtrem, wiec nie moglyby niczego ukryc - ale i tak
+sa naprawione, bo nastepny przebieg ma znaczyc to samo.
+
+## VERCEL: JEDYNY WERDYKT, KTORY NIE WROCIL, JEST UCZCIWY (2026-08-18, sprawdzone recznie)
+
+`programmatic_provisioning` 1 -> 0 po przemiecie, zdanie: „None of the 7 provisioning phrases
+appears in the 4 documentation pages and 1 machine-readable file we read". Sprawdzone po kolei:
+
+1. **Obciecie odczytu nie jest przyczyna**, choc wygladalo na nia: strona `/docs/sign-in-with-vercel/tokens`
+   ma **928 kB** przy naszym limicie 400 kB, a `access token` malymi literami siedzi na pozycji
+   917 kB. Ale `Access Token` jest na 179 kB, czyli **w zasiegu**, wiec obciecie niczego nie ukryło.
+2. **Prawdziwy predykat (`provisioningMatches`) nie znajduje fraz ani w calym dokumencie, ani w
+   obcietym prefiksie.** Sama fraza „access token" nie wystarcza od 9.32: musi niesc dowod w
+   cytowanym oknie, a tam go nie ma.
+3. **Ich strona REST API tez nie ma fraz** (958 kB, zero trafien), a dwa inne adresy dokumentacji
+   oddaja **15 znakow** bez JavaScriptu.
+
+**Wniosek: to zmierzona nieobecnosc, nie dziura w odczycie.** Wiersz nazywa strony, wiec vendor moze
+wskazac te, ktora pominelismy. Zmiana wzgledem poprzedniego pomiaru bierze sie z **innej probki
+stron** po 9.35 (probka rozproszona po rodzinach wskazowek), a nie ze zmiany u nich.
+
+## PIEC POWIERZCHNI SPRAWDZONYCH, RAZEM 6456 ZAPYTAN (2026-08-18)
+
+| check | oblanych | zapytan | falszywych zdan |
+|---|---|---|---|
+| `agent_entry_point` | 122 | 2304 | 0 |
+| `oauth_dcr` | 74 (+17) | 2987 | 0 |
+| `signup_reachable` | 92 | 92 | 0 |
+| `mcp_present` | 80 | 560 | 0 (zdanie doprecyzowane) |
+| `machine_readable_api` | 50 | 513 | 0 |
+
+Zostaly bez przebiegu: `llms_txt` (37 oblanych), `self_serve` (21) i szesc drobnych. `price_in_snippet`
+(92) i `programmatic_provisioning` (66) maja przebiegi 30-31, ale **sprzed** zmian 9.36-9.40.
