@@ -5740,6 +5740,11 @@ nie da sie zastosowac, i tak zostaje zapisana"):
    pasuje; codex zauwazyl, ze transakcja z jedna linia znana i jedna nieznana nadal gubi te druga.
    Teraz `unmatchedPrices` liczy linie, a nie transakcje.
 
+**Pulapka przy okazji, warta zapamietania:** ceny ustawilem najpierw w skrypcie `npm run rules`, a
+`build` wola `tsx scripts/rules.mts` **wprost**, wiec lokalnie przechodzilo i **wywrocilo deploy**.
+Straznik nie moze zalezec od sposobu wywolania: wartosci domyslne siedza teraz w samym pliku
+(`process.env.X ??= ...` plus dynamiczny `import`, bo statyczny wykonalby sie przed przypisaniem).
+
 **Trzecia rzecz, ktora wyszla mimochodem i jest wieksza niz obie:** w srodowisku straznikow **zadna
 cena nie byla skonfigurowana**, wiec `skusForPrices` nie mial czego dopasowac i **cala sciezka
 przyznawania uprawnien byla nietestowana**. `npm run rules` ustawia teraz dwie ceny
