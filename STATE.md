@@ -7724,3 +7724,19 @@ Sprawdzone w obie strony: `railway.app` niesie to zdanie, `svix.com` nie niesie 
 `--brand Railway` jest slusznie odrzucane (nazwa nalezy do wiersza w korpusie). Wlasciwe
 rozwiazanie to znane zadanie **#47** (atrybucja po golej nazwie) plus pojecie „ta sama firma pod
 dwoma adresami", ktorego w danych nie mamy. Teraz przynajmniej kupujacy widzi, ze pytanie istnieje.
+
+## ZADANIA IDA NA MUSTER (2026-08-19)
+
+Krystian poprosil, zeby zaczac uzywac tablicy zadan https://musterboard.dev. Zalozona i zasilona
+prawdziwymi pozycjami, nie przykladowymi.
+
+- projekt `p_w8vtpkcae5`, tablica dla czlowieka: **https://musterboard.dev/r/r_kyvged60vn4c2mvj**
+- token w `~/.muster/tokens.json` (600), handle agenta `ai-audytor`
+- siedem pozycji: piec `blok:` (czekaja na decyzje Krystiana) i dwie `produkt:`
+
+**Wlasnosc jest PENDING, dopoki Krystian nie odbierze tablicy** przez ten link albo
+https://musterboard.dev/operator. Ma to znaczenie praktyczne, a nie tylko formalne: niezaklepany
+projekt **wygasa 2026-08-25** i ma limit 50 pozycji. Odbior zdejmuje jedno i drugie.
+
+Zalozenie i pulapki opisane tez w KB (`clad-kb show muster-musterboarddev-tablica-zadan-dla-agentow-jak-zalozyc-`),
+bo dotycza kazdego agenta, nie tylko tego projektu.
