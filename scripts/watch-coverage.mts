@@ -112,15 +112,16 @@ if (owed.length > 0) {
   console.log('\nkazda obserwowana kategoria ma cele mlodsza niz miesiac')
 }
 // Dwa rozne przypadki, ktore `categoryFor` zwraca tak samo: produkt, ktorego nie mierzymy wcale, i
-// produkt z mierzonej kategorii, ktorego nie ma na naszej liscie. Drugi da sie dzis obsluzyc, ale
-// tylko z decyzja czlowieka o kategorii i marce, bo zgadniete "email" dla email.com liczyloby kazde
-// zdanie o mailu.
-console.log(
-  `Domena spoza naszych ${CATEGORIES.length} kategorii nie ma pytania, wiec nie ma celi. To jest do zamkniecia zanim ktos zaplaci.`,
-)
-console.log(
-  'Jesli produkt NALEZY do mierzonej kategorii, a nie ma go na liscie, raport jednorazowy juz go obsluzy:',
-)
-console.log('  npx tsx scripts/client-report.mts <domena> --category <id> [--brand Nazwa]')
-console.log('Miesieczna cela dla takiej obserwacji wymaga zapisania tej decyzji przy obserwacji, czego jeszcze nie ma.')
+// produkt z mierzonej kategorii, ktorego nie ma na naszej liscie. Drugi ma juz swoja sciezke, wiec
+// mowimy o niej tylko wtedy, gdy ktos naprawde czeka - i mowimy, co dokladnie zrobic z ta jedna
+// obserwacja, zamiast powtarzac ogolna uwage pod kazdym uruchomieniem.
+if (unservable > 0) {
+  console.log(
+    `\n${unservable} obserwacji nie ma kategorii, wiec nie ma dla nich pytania ani celi. To jest do zamkniecia zanim ktos zaplaci.`,
+  )
+  console.log('Jesli produkt NALEZY do mierzonej kategorii, przypisz go, a miesieczna cela zacznie go obejmowac:')
+  console.log(`  MONGODB_URI=... npx tsx scripts/assign-watch.mts <domena> <email> --category <id> [--brand Nazwa]`)
+  console.log(`  kategorie: ${CATEGORIES.map((one) => one.id).join(', ')}`)
+  console.log('Jednorazowy raport bez obserwacji: npx tsx scripts/client-report.mts <domena> --category <id>')
+}
 process.exit(0)
