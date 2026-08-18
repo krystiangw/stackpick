@@ -7438,3 +7438,45 @@ schowac opcjonalny link.
 **Dlaczego akurat filestack:** ich wiersz i tak jest publiczny na `/v/filestack.com`, a cytaty z
 biegow sa publiczne na `/c/file-storage/runs`. Raport **nie ujawnia niczego nowego**, tylko sklada
 to w dokument. Strona jest poza indeksem, wiec to material sprzedazowy, a nie SEO.
+
+## INDEKSOWANIE: WSZYSTKO POZA REJESTREM MCP JEST ZROBIONE (2026-08-18)
+
+Pytanie Krystiana: czy mozemy zaindeksowac projekt tak, jak opisuje skill `agent-discoverability`.
+Wiekszosc byla zrobiona wczesniej, wiec przemierzylem to od nowa zamiast wierzyc STATE.md.
+
+**Blokery binarne: 9 przechodzi, 0 oblewa, 1 nie dotyczy** (`check.py` na produkcji). SSR, parytet
+bot kontra czlowiek (bot widzi 100% strony), piec botow retrievalowych wpuszczonych, opis strony i
+opis cennika z liczba w srodku, `llms.txt`, katalog ARD, sitemap. `llms-links` jest SKIP, bo nasz
+`llms.txt` nie ma linkow, wiec nie ma czego sprawdzac.
+
+**IndexNow: sitemap ma 243 adresy, ostatnie zgloszenie objelo 241.** Roznica to `/bot` i
+`/standard`, ktore powstaly wczoraj. `npm run indexnow` zglosil zestaw staly, **66 adresow, 200 OK**.
+Obie nowe strony maja wlasny opis w `<meta>`, wiec wchodza do indeksu z odpowiedzia, a nie z
+naglowkiem.
+
+**Jedyna realna dziura: nie ma nas w oficjalnym rejestrze MCP** (`presence.py`: 1 FAIL). To zrodlo
+kanoniczne, z ktorego ciagna Smithery, Glama, mcp.so i MCPfinder, wiec nieobecnosc tam jest
+nieobecnoscia wszedzie. `server.json` lezy w repo od dawna i nikt go nigdy nie opublikowal.
+
+**Logowanie domenowe nie wymaga niczyjego konta ani dostepu do DNS.** Rejestr akceptuje dowod przez
+HTTP: plik pod naszym wlasnym adresem z kluczem publicznym. Zrobione i sprawdzone od konca do konca:
+`/.well-known/mcp-registry-auth` odpowiada 200 na produkcji, a `mcp-publisher login http` przeszedl.
+Klucz prywatny siedzi w `.env.local` jako `MCP_REGISTRY_SEED` (`.env*` jest w `.gitignore`).
+
+**Zostala jedna komenda i ona wymaga zgody Krystiana**, bo tworzy publiczny wpis pod nasza
+przestrzenia nazw: `mcp-publisher publish` z katalogu repo. Nazwa `com.letagentsin/scanner`, opis to
+zdanie, ktore agent czyta zamiast tytulu strony.
+
+**Regula pilnuje formatu dowodu**, bo zly format nie objawia sie niczym poza odmowa logowania w
+momencie publikacji, czyli miesiace pozniej. Kontrola: sam klucz bez naglowka `v=MCPv1` odpada.
+
+**Trzy indeksy zostaja niesprawdzalne bez kont** (Bing Webmaster Tools, Search Console, Brave bez
+API). Mamy licznik odwiedzin, ale zapisuje tylko `agent` albo `browser`, wiec nie odroznia
+`OAI-SearchBot` od `curl`. Gdyby zapisywal nazwe dla piatki botow retrievalowych, mielibysmy wlasny
+pomiar tego, kto nas faktycznie czyta, zamiast trzech pol „nie do sprawdzenia". Przeczolganie nie
+jest tym samym co indeks, wiec to dowod slabszy w jedna strone i mocny w druga: brak wizyty jest
+mocnym dowodem nieobecnosci.
+
+**Profil skilla:** `~/.claude/skills/agent-discoverability/profiles/letagentsin.json`. Kanaly B i C.
+Kanalu A praktycznie nie mamy: repo jest prywatne, na npm nie ma nic, wiec dla agenta kodujacego
+istniejemy tylko przez dokumentacje i serwer MCP.
