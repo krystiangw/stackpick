@@ -329,7 +329,7 @@ export const CHECKS: Check[] = [
           return {
             points: 0,
             detail: wall
-              ? `Unmeasurable: ${challengeSentence(wall)}, so we never got as far as looking for documentation`
+              ? `Unmeasurable: we never got as far as looking for documentation, because ${challengeSentence(wall)}`
               : `Unmeasurable: ${f.site} answered ${refused} when we asked for a page, so we never got as far as looking for documentation`,
             unblock: wall
               ? CHALLENGE_UNBLOCK
@@ -1096,7 +1096,7 @@ export const CHECKS: Check[] = [
             pages === 0
               ? refusedUs(f) !== null
                 ? refusedUs(f) === 429 && challengedUs(f, f.site, f.site)
-                  ? `Unmeasurable: ${challengeSentence(challengedUs(f, f.site, f.site)!)}, so there was nothing to look in`
+                  ? `Unmeasurable: there was nothing to look in, because ${challengeSentence(challengedUs(f, f.site, f.site)!)}`
                   : `Unmeasurable: ${f.site} answered ${refusedUs(f)} when we asked for a page, so there was nothing to look in and that is our reading of your edge rather than a finding about your docs`
                 : 'Unmeasurable: we could not read a single documentation page, so there was nothing to look in'
               : `Unmeasurable: only ${pages} documentation page could be read, which is too little to conclude anything`,
@@ -1410,11 +1410,17 @@ export const CHECKS: Check[] = [
       // was serving `link: </swagger/server.yml>; rel="service-desc"` and the spec answered 200.
       const docsStatus = f.machine.markdownNegotiation.docsStatus
       if (docsStatus !== undefined && (docsStatus === 0 || docsStatus >= 400)) {
+        // The third place this row can talk about a 429, and the one that used to contradict the
+        // other two: on the same scan pandadoc.com read "answered with a browser challenge" beside
+        // "a 429 is our own burst". One concept, one answer, computed in one place.
+        const wall = docsStatus === 429 ? challengedUs(f, f.site, f.discovered.docs ?? f.site) : null
         return {
           points: 0,
-          detail: `Unmeasurable: ${f.discovered.docs ?? f.site} answered ${docsStatus === 0 ? 'nothing' : docsStatus} when we asked it for markdown${docsStatus === 429 ? ', and a 429 is our own burst rather than an answer about you' : ''}, so what it declares about your API is not something this scan read`,
+          detail: wall
+            ? `Unmeasurable: what ${f.discovered.docs ?? f.site} declares about your API is not something this scan read, because ${challengeSentence(wall)}`
+            : `Unmeasurable: ${f.discovered.docs ?? f.site} answered ${docsStatus === 0 ? 'nothing' : docsStatus} when we asked it for markdown${docsStatus === 429 ? ', and a 429 is our own burst rather than an answer about you' : ''}, so what it declares about your API is not something this scan read`,
           inconclusive: true,
-          unblock: 'Nothing for you to do if this was a 429. We will rescan later and this becomes measurable.',
+          unblock: wall ? CHALLENGE_UNBLOCK : 'Nothing for you to do if this was a 429. We will rescan later and this becomes measurable.',
         }
       }
       // "Not found on your domain" is what we measured. "Does not exist" is not, and the

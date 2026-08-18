@@ -1635,6 +1635,25 @@ check('i nadal jest niezmierzone', wall.inconclusive, true)
 // Mianownik: limitsMet trzyma same odmowy, wiec 'z naszych 2 zadan' bylby falszem na skanie,
 // ktory przeczytal dziesiec stron i dostal dwie odmowy na koniec.
 check('mianownik mowi o odmowach, nie o wszystkich zadaniach', wall.detail.includes('of our 2 requests'), false)
+// Trzecie miejsce w tym samym wierszu, ktore umie mowic o 429. Na jednym skanie pandadoc.com
+// czytalo 'odpowiedzial wyzwaniem' obok 'to nasz wlasny nawal'. Jedno pojecie, jedna odpowiedz.
+const machine = CHECKS.find((one) => one.id === 'machine_readable_api')!
+const markdownRefused = (challenge: boolean) =>
+  machine.evaluate({
+    site: 'https://pandadoc.com',
+    discovered: { docs: 'https://www.pandadoc.com/docs' },
+    machine: {
+      markdownNegotiation: { docsStatus: 429, acceptHeader: false, dotMdSuffix: false, answeredAt: null },
+      openapi: [],
+      openapiOnDocsHost: null,
+      openapiDeclared: null,
+    },
+    funnel: { servesCatchAll: false, catchAll: null },
+    limitsMet: [{ url: 'https://www.pandadoc.com/docs', challenge, recovered: false }],
+  } as never)
+check('markdown przy wyzwaniu mowi to samo, co reszta wiersza', markdownRefused(true).detail.includes('browser challenge'), true)
+check('i nie nazywa tego naszym nawalem', markdownRefused(true).detail.includes('our own burst'), false)
+check('bez markera zostaje przy naszym nawale', markdownRefused(false).detail.includes('our own burst'), true)
 
 // Czyje to byly drzwi. Limit z rejestru npm jest faktem o naszym ruchu, limit z markerem wyzwania
 // na brzegu vendora jest ustaleniem o nim - i te dwa nosza ten sam kod statusu.

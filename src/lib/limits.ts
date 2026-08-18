@@ -92,7 +92,9 @@ export function challengeSentence(limits: EdgeLimits): string {
   // so "13 of our 13 requests" would claim every request was refused on a scan that read the site
   // fine and met two limits at the end of it.
   const refusals = limits.onSite === 1 ? 'the one request it refused' : `${limits.challenges} of the ${limits.onSite} requests it refused`
-  return `${where} answered ${refusals} with a browser challenge rather than a limit, so this is not a burst that passes`
+  // Written to be appended after a clause that already says what we could not do, so it reads as
+  // the reason rather than as a second sentence bolted on: "..., because X answered ...".
+  return `${where} answered ${refusals} with a browser challenge rather than a limit, which is not a burst that passes`
 }
 
 /** Aimed at the vendor, because with a challenge there is nothing on our side left to wait out. */
