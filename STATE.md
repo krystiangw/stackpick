@@ -6880,3 +6880,47 @@ liczba urosnie.
 agenta SEO o **Sapient** (czy raportuja wybor head-to-head, powod odrzucenia w slowach agenta, os
 czasu, rozbicie per rodzina modeli). Jesli Sapient ma dwa pierwsze, nasza teza sprzedazowa wymaga
 przepisania.
+
+## ORA I LIGHTSAGE: NASZA TEZA SPRZEDAZOWA WYMAGA PRZEPISANIA (2026-08-18)
+
+Dwa researche z rekomendacji, oba zrobione, oba zmieniaja obraz.
+
+**Ora (`ora.ai`, era labs) - „oficjalny skaner" standardu AgentReady.** Zweryfikowane na ich
+publicznym API, same odczyty:
+- **127 checkow** w czterech warstwach: usability 62, accessibility 44, discovery 15, payments 6.
+- **Wynik 0-100 i ocena A-F** - czyli dokladnie to, czego nasza metodologia zabrania.
+- **Agent journeys**: prawdziwy agent probuje wykonac zadanie na domenie, trajektoria leci po SSE,
+  wraca werdykt, liczba krokow i „insight". Intencje: `pricing`, `signup`, `api-docs`, `integrate`,
+  `support`. Uruchamialne agenty: Claude Code (Haiku 4.5, Sonnet 4.6), harness `ash` na Sonnecie
+  i na GPT.
+- **Darmowe i agentowe do szpiku**: `/pricing` zwraca JSON, jest serwer MCP, CLI (`npx @ora-ai/ax
+  audit`, `--min-score` bramkuje CI), skille, katalog ARD, feedback pisany przez agenty.
+- Nas jeszcze nie skanowali (`No cached score for this domain`).
+
+**Lightsage (dawniej Sapient, `usesapient.com`).** Free: 1 prompt dziennie, 1 platforma. **Pro 250
+USD/mc**, 19 platform. **Agent Experience Arena: 177 API ocenionych przez Claude Code i Codex**,
+z ocenami Experience/Discovery/Usability, raportem per narzedzie i data aktualizacji z dzisiaj.
+
+**Co to znaczy dla nas, bez owijania:** zdanie „nikt nie uruchamia prawdziwych agentow i nie mowi,
+czym odrzucaja" **przestalo byc prawdziwe**. Ora uruchamia agenty na zadaniach, Lightsage ocenia
+177 API dwoma tymi samymi rodzinami modeli, ktorych my uzywamy. Ryzyko z sekcji 4 rekomendacji
+agenta SEO zmaterializowalo sie na dwoch frontach naraz.
+
+**Co po tej weryfikacji nadal wyglada na nasze i tylko nasze:**
+1. **Kazde zdanie da sie powtorzyc.** 6777 zapytan tej nocy pod adresy, ktore sami publikujemy, i
+   zero falszywych zdan. Konkurenci publikuja oceny, nie zdania z adresem.
+2. **Podloga szumu 0,59 procent** i regresje w czasie liczone medianami. Ocena punktowa bez podlogi
+   szumu nie mowi, czy ruch o dwa punkty cokolwiek znaczy.
+3. **Odmowa jednej liczby 0-100.** Oba produkty ja publikuja; my mamy zmierzone, ze ta sama strona
+   dostaje 33 albo 67 zaleznie od presetu.
+
+**Czego NIE udalo sie zweryfikowac tanio** (i czego wobec tego nie wolno nam twierdzic publicznie):
+czy Ora albo Lightsage pokazuja **slowa odmowy** agenta, czy maja **os czasu i regresje**, i czy
+Lightsage rozbija wynik per rodzina modeli w raporcie. Strony sa renderowane po stronie klienta
+(3,7 MB payloadu), a raporty per narzedzie sa za routingiem. **To jest nastepny krok researchu**
+i dopiero po nim wolno napisac cokolwiek publicznie - zgodnie ze skillem `audit-published-claims`.
+
+**Decyzja dla Krystiana, nie moja:** teza sprzedazowa i cennik. Skan zgodnosci jest dzis darmowy
+(Ora, agentable), monitoring artefaktow kosztuje 29 USD/mc, a tracker widocznosci 250 USD/mc.
+Nasze 49/79 za raport siedzi miedzy tymi swiatami i po tej nocy trzeba je ustawic wzgledem tego,
+co naprawde jest nasze: **powtarzalnosc zdan i szereg czasowy**, a nie „mierzymy to, czego nikt".
