@@ -6800,3 +6800,32 @@ zapytane ponownie.** Zmienily sie dwie rzeczy: `mcp_present` mowi teraz „nothi
 `user_agents_allowed` 3, `robots_paths_resolve` 3, `no_crawl_delay` 2, `typed_package` 6) oraz
 `programmatic_provisioning` (66), ktory ma przebieg 30 sprzed 9.36 i jest najbardziej zlozona regula
 na karcie - to jest naturalny nastepny krok.
+
+## 41. PRZEBIEG: `programmatic_provisioning`, NAJCIEZSZY CHECK NA KARCIE (2026-08-18)
+
+66 oskarzen, dwa punkty kazde, przebieg 30 sprzed 9.36. **60 wierszy, 283 strony przeczytane na
+zywo**, kazda dwoma czytelnikami: naszym `provisioningMatches` i **niedbalym** regexem szukajacym
+jezyka tworzenia klucza (`creat|generat|issu|mint` + `api key|token|credential|secret`).
+
+**42 miejsca do przeczytania recznie, przeczytane, zero falszywych oskarzen.** Wszystkie sa jednego z
+trzech ksztaltow, ktore regula odrzuca **slusznie**:
+- **instrukcja klikania w panelu**: loops.so „Go to Settings -> API and click Generate key",
+  inngest.com „create an API key **from the Inngest Cloud dashboard**", together.ai to samo,
+- **podpisywanie tokenow**, nie tworzenie kluczy: bunny.net „Generate tokens server-side",
+  transloadit „API2 mints a token",
+- **regeneracja istniejacego klucza**: bunny.net „Regenerating your API key", rollbar to samo.
+
+Powod jest wypisany w samej regule: fraza „create an api key" liczy sie **„next to something
+programmatic"**. Klikniecie w panelu jest dokladnie tym, czego ten check szuka jako brakujacego, wiec
+kazde z tych 42 trafien potwierdza regule zamiast ja podwazac.
+
+**Jeden wiersz byl nieaktualny, nie falszywy:** na `docs.medusajs.com/api/admin` nasza wlasna regula
+znajduje juz fraze. Przeskanowany przez produkcje - **wciaz 0 punktow**, bo przemiat czyta inny
+zestaw stron niz ten, ktory audyt wzial z wiersza. To jest znane zachowanie proby dokumentacji po
+9.35 i nie jest bledem w zdaniu.
+
+## DZIEWIEC POWIERZCHNI, 6777 ZAPYTAN, ZERO FALSZYWYCH ZDAN (2026-08-18)
+
+Do osmiu z poprzedniego podsumowania dochodzi `programmatic_provisioning` (60 wierszy, 283 strony).
+**Przeglad oskarzen w korpusie jest domkniety**: kazdy check, ktory oskarza wiecej niz szesc razy,
+zostal zapytany ponownie pod adresami, ktore sam publikuje.
