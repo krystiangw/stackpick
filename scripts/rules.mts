@@ -2027,5 +2027,26 @@ const cronSource = readFileSync('src/app/api/cron/watch/route.ts', 'utf8')
 check('pominiety watch idzie na koniec kolejki', cronSource.includes('watch.checkedAt = new Date().toISOString()\n      await store.saveWatch(watch)'), true)
 check('i nie jest po cichu zatrzymywany', cronSource.includes('watch.stoppedAt = ') , false)
 
+// Strona o cudzym standardzie publikuje werdykt o czyms, czego nie kontrolujemy, wiec liczby na
+// niej musza byc liczone, a nie wpisane. Liczba MUST-ow i lista checkow bez odpowiednika to jedyne
+// rzeczy wpisane recznie i obie sa sprawdzone wobec zrodel.
+console.log('\nstrona o standardzie nie wpisuje liczb recznie')
+const standard = readFileSync('src/app/standard/page.tsx', 'utf8')
+check('liczba checkow idzie ze stalej', standard.includes('CHECKS.length'), true)
+check('liczba wierszy idzie z korpusu', standard.includes('corpus.reports.length'), true)
+check('liczba kart A2A jest liczona, nie wpisana', standard.includes("check.detail.includes('agent-card.json')"), true)
+// Siedem MUST-ow przeczytanych z agentready.org 2026-08-19. Gdy tabela urosnie albo sie skurczy
+// bez zmiany zdania we wstepie, strona zacznie klamac o standardzie, ktorego nie kontrolujemy.
+const musts = (standard.match(/id: 'AR-[A-Z]+-\d+'/g) ?? []).length
+check('tabela ma dokladnie siedem MUST-ow', musts, 7)
+check('i wstep mowi te sama liczbe', standard.includes('seven of them are MUST'), true)
+// Wstep mowil „piec z siedmiu", a tabela mierzyla szesc. Liczba w zdaniu i liczba w tabeli to jedno
+// pojecie liczone w dwoch miejscach, czyli dokladnie ten blad, ktory ten projekt sobie juz zrobil.
+const measured = (standard.match(/ours: '/g) ?? []).length
+check('wstep zgadza sie z tabela', standard.includes(`We measure six of the seven`) && measured === 6, true)
+// Opis w snippecie to zdanie, ktore agent czyta ZAMIAST otwierac strone: mamy o tym wlasny check.
+check('opis dla wyszukiwarki mowi to samo', standard.includes('We measure six of those seven'), true)
+check('bez wyniku zgodnosci', /compliance score/i.test(standard) && standard.includes('there will not be'), true)
+
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

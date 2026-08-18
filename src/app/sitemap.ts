@@ -3,7 +3,7 @@ import { CATEGORIES, CURATED_DOMAINS } from '@/lib/categories'
 
 const BASE = process.env.STACKPICK_BASE_URL ?? 'http://localhost:3000'
 
-const PAGES = ['', '/c', '/docs', '/methodology', '/report', '/findings', '/audit', '/audit/froala-editors', '/audit/uploadcare-storage', '/audit/workos-auth', '/audit/paddle-payments', '/pricing', '/bot']
+const PAGES = ['', '/c', '/docs', '/methodology', '/report', '/findings', '/audit', '/audit/froala-editors', '/audit/uploadcare-storage', '/audit/workos-auth', '/audit/paddle-payments', '/pricing', '/bot', '/standard']
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const pages = PAGES.map((path) => ({
