@@ -763,6 +763,15 @@ pojedynczo, zanim ktokolwiek nazwal go regresem vendora**, tak jak nakazuje skry
 deklaracje specyfikacji **tylko z tej jednej wylosowanej strony**. To druga rzecz w tym tygodniu
 wskazujaca na te sama poprawke, po 28. przebiegu: **pytaj takze o korzen hosta dokumentacji**.
 
+> **ZAMKNIETE POMIAREM 2026-08-18: nie robimy tego.** Napisalem te poprawke i zmierzylem ja, zanim
+> weszla: na **wszystkich 26 wierszach korpusu**, ktore ten check oblewaja i ktorych strona
+> dokumentacji nie jest korzeniem hosta, korzen deklaruje specyfikacje w **zero** przypadkach.
+> Poprawka kosztowalaby jedno zadanie na kazdej trudnej domenie i nie zmienilaby ani jednego
+> werdyktu, wiec kod zostal wycofany. Sama niestabilnosc discovery zostaje, ale **przez deklaracje
+> nie przeklada sie na ten check**. Gdyby ktos chcial to otworzyc ponownie, potrzebny jest inny
+> dowod niz „to sie moze zdarzyc": lista domen, ktore deklaruja spec w korzeniu i nie deklaruja go
+> glebiej.
+
 ## PIERWSZY POMIAR: CZY NASZE CHECKI MAJA COKOLWIEK WSPOLNEGO Z TYM, KOGO AGENCI WYMIENIAJA
 
 25 cel rozpoznawczych (wszystkie kategorie, 5 biegow claude/sonnet kazda), **170 dostawcow, 87
