@@ -1688,6 +1688,29 @@ check('limit z innej poddomeny nie liczy sie do zdania', limitsAtTheirEdge(dwaHo
 check('choc nadal jest limitem na ich brzegu', limitsAtTheirEdge(dwaHosty, 'split.io').onSite, 2)
 check('wiersz bez limitow nie wymysla ich', limitsAtTheirEdge(undefined, 'split.io').onSite, 0)
 
+// Brak llms.txt nazywa adresy, ktore pytalismy. „4 locations probed" nie da sie powtorzyc, a dwa
+// z tych adresow sa na hoscie dokumentacji i jeden pod jej sciezka - nikt ich nie zgadnie.
+console.log('\nbrak llms.txt: co nazywamy')
+const brakLlms = (probed: string[] | undefined) =>
+  CHECKS.find((one) => one.id === 'llms_txt')!.evaluate({
+    machine: { llms: { root_llms_txt: { present: false }, docs_origin_llms_txt: { present: false } }, llmsProbed: probed, llmsLinks: null },
+    blocksPlainRequests: false,
+    readAnything: true,
+  } as never).detail
+check(
+  'nazywamy adresy',
+  brakLlms(['https://v.test/llms.txt', 'https://docs.v.test/llms.txt']),
+  'No llms.txt at any of the 2 locations probed: https://v.test/llms.txt, https://docs.v.test/llms.txt',
+)
+check('stary wiersz bez zapisu mowi po staremu', brakLlms(undefined), 'No llms.txt at any of the 2 locations probed')
+// Trzy etykiety moga wskazywac ten sam adres, gdy dokumentacja siedzi na docs.<domena>. Policzone
+// osobno robilyby ze zdania obietnice dokladnosci, ktorej nie ma.
+check(
+  'ten sam adres liczy sie raz',
+  brakLlms(['https://docs.v.test/llms.txt', 'https://docs.v.test/llms.txt', 'https://v.test/llms.txt']).includes('3 locations'),
+  false,
+)
+
 // Zdanie o braku linku do rejestracji nazywa strony, ktore NAPRAWDE przeszukalismy. Cennik
 // znaleziony przez zgadniecie sciezki jest w discovered.pricing, a nigdy nie byl czytany pod katem
 // linkow - nazwanie go byloby twierdzeniem o dokumencie, ktorego nikt nie otworzyl.

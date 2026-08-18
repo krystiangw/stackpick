@@ -301,8 +301,19 @@ export const CHECKS: Check[] = [
       if (blindedBy(f)) {
         return { points: 0, detail: 'Unmeasurable: every request was refused', inconclusive: true }
       }
+      // Named, like every other failing sentence whose evidence is a request. "4 locations probed"
+      // told a vendor nothing they could rerun, and the four are not guessable: two of them are on
+      // the documentation host and one is under the documentation path.
+      // Deduplicated here as well as where it is collected: the sentence must not repeat an address
+      // whatever produced the list, and a row scanned by an older build can carry repeats.
+      const where = [...new Set(f.machine.llmsProbed ?? [])]
       const probed = Object.keys(f.machine.llms).length
-      return yes(0, `No llms.txt at any of the ${probed} locations probed`)
+      return yes(
+        0,
+        where.length > 0
+          ? `No llms.txt at any of the ${where.length} locations probed: ${where.join(', ')}`
+          : `No llms.txt at any of the ${probed} locations probed`,
+      )
     },
   },
   {

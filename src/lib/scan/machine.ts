@@ -16,6 +16,12 @@ export type LlmsFile = { present: boolean; bytes: number; links: number; truncat
 
 export type MachineFindings = {
   llms: Record<string, LlmsFile>
+  /**
+   * The addresses those probes went to. The verdict used to say "no llms.txt at any of the 4
+   * locations probed" and name none of them, which is the one thing this project asks of every
+   * other failing sentence: a vendor has to be able to rerun it. Four is not an address.
+   */
+  llmsProbed?: string[]
   hasLlmsTxt: boolean
   hasLlmsFullTxt: boolean
   /**
@@ -344,6 +350,11 @@ export async function scanMachineContext(
   ])
 
   const llms: Record<string, LlmsFile> = {}
+  // Deduplicated, because three labels can be the same address: with documentation on
+  // docs.<domain>, the conventional guess, the docs origin and the docs path all resolve to
+  // docs.<domain>/llms.txt. Counting one request three times would make the sentence claim a
+  // thoroughness it does not have.
+  const llmsProbed = [...new Set(Object.values(locations))]
   let corpus = ''
   /** The count of a word is only a fact about a file we hold all of. */
   let countable = ''
@@ -410,6 +421,7 @@ export async function scanMachineContext(
   return {
     findings: {
       llms,
+      llmsProbed,
       hasLlmsTxt: Object.values(llms).some((f) => f.present),
       llmsUrls,
       hasLlmsFullTxt: Object.entries(llms).some(([label, f]) => label.includes('full') && f.present),
