@@ -58,10 +58,19 @@ if (brand) {
     process.exit(2)
   }
 }
-const watches = (await store.listWatchesForEmail(email)).filter((watch) => watch.domain === domain)
-if (watches.length === 0) {
+// The address identifies who asked, and the placement applies to every watch on the domain: which
+// category a product belongs to is a fact about the product, not about the subscriber. Placing it
+// per address let two people watching one domain be read against two different categories, and the
+// report then picked whichever the database returned first.
+const mine = (await store.listWatchesForEmail(email)).filter((watch) => watch.domain === domain)
+if (mine.length === 0) {
   console.error(`${email} nie obserwuje ${domain}`)
   process.exit(1)
+}
+const watches = await store.watchesForDomain(domain)
+const others = [...new Set(watches.filter((watch) => watch.email !== email.toLowerCase()).map((watch) => watch.email))]
+if (others.length > 0) {
+  console.error(`uwaga: ${domain} obserwuje tez ${others.join(', ')} - przypisanie dotyczy wszystkich, bo kategoria jest cecha produktu`)
 }
 
 for (const watch of watches) {

@@ -63,18 +63,39 @@ if (placedIn && !placedInto) {
   console.error(`nie ma kategorii o id ${placedIn}. Sa: ${CATEGORIES.map((one) => one.id).join(', ')}`)
   process.exit(2)
 }
+// What the monthly mail already knows about this customer. A domain we do not publish can have been
+// placed into a category by a person, and that decision is stored on their watch: reading it here
+// means the report and the mail describe one customer the same way, and the operator does not have
+// to remember a flag that has already been decided once.
+const placedWatches = (await getStore().watchesForDomain(domain)).filter((one) => one.placedIn)
+// Two watches disagreeing is not something to resolve by picking one: whichever the database
+// returned first would be a different category from the one the other subscriber's mail uses.
+// Marka porownywana bez wielkosci liter, bo tak samo dziala jej wylacznosc i sam matcher:
+// „Mailtrap" i „mailtrap" to jedno przypisanie, a nie sprzecznosc.
+const disagreement = [...new Set(placedWatches.map((one) => `${one.placedIn}/${(one.brand ?? '').toLowerCase()}`))]
+if (disagreement.length > 1) {
+  console.error(`${domain} ma sprzeczne przypisania: ${disagreement.join(' oraz ')}. Uporzadkuj je przez assign-watch, zanim wygenerujesz raport.`)
+  process.exit(2)
+}
+const watched = placedWatches[0]
 const known = categoryFor(domain)
 if (placedInto && known && placedInto.id !== known.id) {
   console.error(`${domain} jest juz w kategorii ${known.id}, wiec --category ${placedIn} nic nie znaczy. Usun ten argument.`)
   process.exit(2)
 }
-const category = known ?? placedInto
+const fromWatch = watched?.placedIn ? (CATEGORIES.find((one) => one.id === watched.placedIn) ?? null) : null
+if (!known && !placedInto && fromWatch) {
+  console.error(`${domain} jest obserwowana i przypisana do kategorii ${fromWatch.id}, wiec czytam ja tak samo jak miesieczny mail`)
+}
+const category = known ?? placedInto ?? fromWatch
 const guest = category !== null && !category.domains.includes(domain)
 
 // The brand, and only if a person supplies it. Guessing "postmark" for postmark.com would hand a
 // guest every mention of postmarkapp.com, and "email" for email.com every sentence about email.
 const brandAt = rest.indexOf('--brand')
-const brand = brandAt === -1 ? null : rest[brandAt + 1]
+// The stored brand only when a person did not name one here, and only when the placement came from
+// the watch: a flag on the command line is somebody deciding now, and it wins.
+const brand = brandAt === -1 ? (known || placedInto ? null : (watched?.brand ?? null)) : rest[brandAt + 1]
 if (brandAt !== -1 && !brand) {
   console.error('--brand potrzebuje nazwy, np. --brand Mailtrap')
   process.exit(2)
@@ -373,5 +394,8 @@ lines.push(`Let Agents In · ${SITE_URL}/methodology`)
 
 writeFileSync(out, `${lines.join('\n')}\n`)
 console.log(`${out} zapisany, ${lines.length} linii`)
-console.log(`${domain}: ${card.total}/${measurable} w skanie, wymieniony ${mine?.named ?? 0}/${cell?.runs ?? 0} w biegach`)
+// Te same liczby, ktore trafily do dokumentu. Linia konsoli brala je z pierwszej celi i z
+// opublikowanych wierszy, wiec dla goscia pisala „0/5" nad raportem mowiacym „0 of 10": operator
+// decyduje o wyslaniu wlasnie po tej linii.
+console.log(`${domain}: ${card.total}/${measurable} w skanie, wymieniony ${namedAll}/${runsAll} w biegach`)
 process.exit(0)

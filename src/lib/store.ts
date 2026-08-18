@@ -78,6 +78,8 @@ export interface Store {
    * comes back the moment somebody pays, so a brand free only while they are away is not free.
    */
   watchWithBrand(brand: string): Promise<Watch | null>
+  /** Every watch on one domain, so the report can be told what the mail already knows about them. */
+  watchesForDomain(domain: string): Promise<Watch[]>
   /** One counter per day and path. Upserted, so a page render costs one small write. */
   recordVisit(visit: { day: string; path: string }): Promise<void>
   /**
@@ -242,6 +244,10 @@ class FileStore implements Store {
   async watchWithBrand(brand: string) {
     const wanted = brand.toLowerCase()
     return (await this.watches()).find((watch) => (watch.brand ?? '').toLowerCase() === wanted) ?? null
+  }
+
+  async watchesForDomain(domain: string) {
+    return (await this.watches()).filter((watch) => watch.domain === domain)
   }
 }
 

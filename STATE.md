@@ -5964,3 +5964,21 @@ sprawdza trzy przypadki.
 Do tego `watch-coverage` czytal kategorie przez `categoryFor`, wiec o przypisanej obserwacji mowil
 „BRAK KATEGORII", podczas gdy mail juz umial ja obsluzyc. **Trzeci raz tej nocy to samo pojecie w
 dwoch implementacjach**; teraz oba ida przez `categoryOfWatch`.
+
+## JEDEN KLIENT, JEDNA KATEGORIA: RAPORT CZYTA TO, CO WIE MAIL (2026-08-18)
+
+Po dodaniu przypisania przy obserwacji zostal rozjazd: **platny raport nadal wymagal flag**
+`--category` i `--brand`, choc decyzja byla juz zapisana. Dwa dokumenty o jednym kliencie mogly
+opisywac go inaczej, a operator musial pamietac cos, co raz juz rozstrzygnal. Teraz raport czyta
+przypisanie z obserwacji, gdy domeny nie publikujemy i nikt nie podal flagi.
+
+Trzy rzeczy, ktore wyszly przy okazji, wszystkie od codeksa:
+1. **Przypisanie jest cecha produktu, nie subskrybenta.** `assign-watch` zmienialo tylko obserwacje
+   podanego adresu, wiec dwie osoby obserwujace jedna domene mogly byc czytane wedlug dwoch roznych
+   kategorii, a raport bral te, ktora baza zwrocila pierwsza. Teraz przypisanie obejmuje wszystkie
+   obserwacje domeny i mowi, kogo jeszcze dotyczy.
+2. **Sprzecznych przypisan nie rozstrzyga sie losowaniem:** raport odmawia i kaze je uporzadkowac.
+3. Porownanie marek **bez wielkosci liter**, tak samo jak dziala ich wylacznosc i sam matcher.
+
+Poprawiona tez linia konsoli, po ktorej operator decyduje o wyslaniu: brala liczby z pierwszej celi
+i z opublikowanych wierszy, wiec dla goscia pisala „0/5" nad raportem mowiacym „0 of 10".

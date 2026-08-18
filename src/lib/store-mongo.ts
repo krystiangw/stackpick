@@ -334,6 +334,11 @@ export class MongoStore implements Store {
     return (await watches.findOne({ id }, withoutId)) as Watch | null
   }
 
+  async watchesForDomain(domain: string) {
+    const { watches } = await collections()
+    return (await watches.find({ domain }, withoutId).toArray()) as unknown as Watch[]
+  }
+
   async watchWithBrand(brand: string) {
     const { watches } = await collections()
     // Case-insensitive by regex rather than by reading every watch: two customers who both write
