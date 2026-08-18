@@ -7671,3 +7671,36 @@ nie obciazamy bez pytania i nie ma karty do obciazenia"), a kod robi dokladnie t
 **Czego audyt NIE potwierdzil, a co bylo w moim briefie:** ze brak zywego adresu polityki jest
 najczestsza przyczyna odrzutu w katalogu konektorow Anthropica. Przyjal to z briefu i nie
 weryfikowal niezaleznie. Trzyma sie tego skill `agent-discoverability`, ale to nie jest nasz pomiar.
+
+## PRZESZEDLEM SCIEZKE KLIENTA OD KONCA DO KONCA NA PRODUKCJI (2026-08-19)
+
+Nie z pamieci i nie na domenie z korpusu, zeby nie odmladzac mediany. Trzy domeny spoza korpusu,
+zlecone przez publiczne API tak, jak zrobilby to kupujacy.
+
+**Skan → link → strona vendora dziala.** `POST /api/scan` dla `tally.so` odpowiedzial 200 w 13
+sekundach, `12/16`, formula 9.41, a `/r/<id>` i `/v/tally.so` obie 200. Odpowiedz API ma trzy pola i
+zaden nie jest nieudokumentowany.
+
+**Generator raportu odmawia PRZED platnoscia, nie po.** `tally.so` nie nalezy do zadnej z 26
+kategorii i skrypt konczy sie bledem, ktory to mowi i wypisuje wszystkie kategorie. To jest wlasciwa
+strona tej odmowy: kupujacy dowiaduje sie, ze nie mamy dla niego celi, zanim zaplaci.
+
+**Straznik marki zadzialal na przypadku, ktorego bym nie wymyslil.** Dla `railway.app` generator
+ostrzegl, ze **10 odpowiedzi zawiera slowo „railway", ale nie liczy ich jako wymienien**, a proba
+`--brand Railway` zostala odrzucona, bo ta nazwa nalezy juz do `railway.com` z korpusu. To ta sama
+firma po zmianie domeny. **Wniosek, ktory zostaje jako otwarty problem:** firma, ktora przeniosla
+sie na nowa domene, dostanie u nas raport „wymieniony 0 razy", podczas gdy agent wymienial ja pod
+stara nazwa. To jest ten sam problem co zadanie #47 (atrybucja po golej nazwie), tylko od drugiej
+strony, i **nie jest rozwiazany**.
+
+**Raport za 49 USD przeczytany w calosci jak klient**, na `svix.com` (kategoria notifications,
+`12/16`, wymieniony 0 z 10). Ma to, czego brakowalo w wersji, ktora nie zachwycila: pytanie zakupowe
+w calosci, rozbicie na narzedzia i modele z datami, kto zostal wymieniony zamiast niego z liczbami,
+**cytaty slowami, ktorymi wybrano konkurenta**, etapy, oblane checki z konkretnym adresem, ktory
+oblal, sekcja „czego nie zmierzylismy i dlaczego to nie liczy sie przeciwko wam", plan naprawy z
+liczba punktow i szacunkiem pracy, oraz „czym ten raport nie jest". Arytmetyka planu naprawy sie
+zgadza (12 + 1 + 2 = 15).
+
+**Co z tego wynika dla gotowosci:** brakuje **wylacznie checkoutu**. Pomiar, adres, strona vendora,
+odmowa dla zlej kategorii, straznik marki i deliverable dzialaja i sa uczciwe. Sciezka „napisz na
+hello@" jest do przejscia recznie w jednej komendzie.
