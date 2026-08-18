@@ -16,3 +16,7 @@ Disallow: /watch/
 Content-Signal: search=yes, ai-input=yes, ai-train=yes
 
 Sitemap: https://letagentsin.com/sitemap.xml
+
+# The agentic catalog, so a client can read what we expose before invoking any of it. ARD is barely
+# adopted today; we publish it because we tell vendors to and it costs one static file.
+AI-Catalog: https://letagentsin.com/.well-known/ai-catalog.json

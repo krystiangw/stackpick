@@ -1689,6 +1689,20 @@ check('limit z innej poddomeny nie liczy sie do zdania', limitsAtTheirEdge(dwaHo
 check('choc nadal jest limitem na ich brzegu', limitsAtTheirEdge(dwaHosty, 'split.io').onSite, 2)
 check('wiersz bez limitow nie wymysla ich', limitsAtTheirEdge(undefined, 'split.io').onSite, 0)
 
+// Nasz wlasny katalog ARD. Mowimy vendorom, zeby publikowali to, co wystawiaja agentom, wiec
+// najtansza rzecza, o ktora mozna sie potknac, jest niepublikowanie tego samemu.
+console.log('\nnasz katalog ARD')
+const katalog = JSON.parse(readFileSync('public/.well-known/ai-catalog.json', 'utf8')) as {
+  host: { identifier: string }
+  entries: { identifier: string; url: string; representativeQueries?: string[] }[]
+}
+check('katalog jest o nas', katalog.host.identifier, 'letagentsin.com')
+check('kazdy wpis ma adres na naszej domenie', katalog.entries.every((e) => e.url.startsWith('https://letagentsin.com/')), true)
+// Identyfikator zakotwiczony w domenie to caly sens urn:air - bez tego wpis moze twierdzic, ze jest
+// czyims zasobem.
+check('kazdy identyfikator zakotwiczony w domenie', katalog.entries.every((e) => e.identifier.startsWith('urn:air:letagentsin.com:')), true)
+check('robots.txt wskazuje katalog', readFileSync('public/robots.txt', 'utf8').includes('AI-Catalog: https://letagentsin.com/.well-known/ai-catalog.json'), true)
+
 // Karta A2A jest deskryptorem, wiec liczy sie jak mcp.json: punkt za istnienie, nie dwa za
 // procedure. Standard AgentReady stawia ja jako MUST, a my mowilismy tigrisdata.com, ze nie ma
 // zadnego wejscia dla agenta, gdy serwuje dokladnie ten plik.
