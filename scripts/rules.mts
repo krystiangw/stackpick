@@ -8,6 +8,8 @@ import { aboutTheirOwnCode, categoryForJob } from '../src/lib/lookup'
 import { pickHeadline } from '../src/lib/headline'
 import { FRESH_QUESTIONS, HELD_OUT_2, HELD_OUT_3, HELD_OUT_4, HELD_OUT_5, HELD_OUT_6, HELD_OUT_7 } from './routing-questions'
 import { asksUsToStayOut, crawlDelayForAgents, parseRobots, stanceFrom } from '../src/lib/scan/robots'
+import { CONTROLLER_IS_NAMED } from '../src/lib/seller'
+import { WATCH_FIELDS_DISCLOSED } from '../src/lib/watch'
 import { stayOutAfter } from '../src/lib/stayout'
 import { crawlerName } from '../src/lib/visits'
 import { thinnerForAgents } from '../src/lib/scan'
@@ -309,12 +311,64 @@ check('szoste badanie jest liczone, nie wpisane', findingsSource.includes('named
 // Strony prawne nie moga sie opublikowac z pustym imprintem: dostawca platnosci porownuje nazwe
 // w regulaminie z nazwa na koncie znak w znak, a niedokonczony regulamin na produkcji jest gorszy
 // niz jego brak. Kazda z trzech ma odmawiac, dopoki dane sprzedawcy nie sa uzupelnione.
-for (const page of ['terms', 'privacy', 'refunds']) {
+for (const page of ['terms', 'refunds']) {
   const source = readFileSync(`src/app/${page}/page.tsx`, 'utf8')
   check(`/${page} odmawia bez danych sprzedawcy`, source.includes('if (!SELLER_IS_COMPLETE) notFound()'), true)
 }
+// Prywatnosc stoi na wlasnej fladze, bo odpowiada na obowiazek, ktory zaczyna sie przy ZBIERANIU
+// adresow, a nie przy sprzedazy, i formularz na stronie glownej zbiera je dzisiaj. Administrator to
+// nie forma prawna: rejestracja firmy go nie tworzy, a jej brak nie zdejmuje obowiazku.
+const privacySource = readFileSync('src/app/privacy/page.tsx', 'utf8')
+check('/privacy stoi na fladze administratora', privacySource.includes('if (!CONTROLLER_IS_NAMED) notFound()'), true)
+check('kontrola: nie stoi juz na fladze sprzedawcy', privacySource.includes('if (!SELLER_IS_COMPLETE) notFound()'), false)
+// Bez danych sprzedawcy strona nie moze udawac, ze stoi za nia zarejestrowany podmiot.
+check('mowi wprost, ze nie ma jeszcze spolki', privacySource.includes('There is no registered company behind this yet'), true)
 const layout = readFileSync('src/app/layout.tsx', 'utf8')
-check('stopka linkuje je dopiero wtedy', layout.includes('SELLER_IS_COMPLETE && ('), true)
+check('stopka linkuje regulamin dopiero z danymi sprzedawcy', layout.includes('{SELLER_IS_COMPLETE && (\n                <Link href="/terms"'), true)
+check('a prywatnosc na fladze administratora', layout.includes('{CONTROLLER_IS_NAMED && (\n                <Link href="/privacy"'), true)
+// Sitemapa wymienia strone prawna tylko wtedy, gdy ta strona jest serwowana: adres, ktory oddaje
+// 404, mowi indeksowi, ze jestesmy zepsuci.
+const sitemapSource = readFileSync('src/app/sitemap.ts', 'utf8')
+check('sitemapa bramkuje strony prawne', sitemapSource.includes("CONTROLLER_IS_NAMED ? ['/privacy'] : []"), true)
+check('i regulamin osobno', sitemapSource.includes("SELLER_IS_COMPLETE ? ['/terms', '/refunds'] : []"), true)
+// Formularz linkuje /privacy przy samym polu, wiec ta strona musi byc domyslnie serwowana.
+check('administrator jest nazwany domyslnie', CONTROLLER_IS_NAMED, true)
+// Polowicznie skonfigurowana spolka nie moze opublikowac zadnej z dwoch tozsamosci, bo obie byly by
+// falszywe: odmowa strony jest jedyna odpowiedzia, ktora nie klamie.
+const sellerSource = readFileSync('src/lib/seller.ts', 'utf8')
+check('flaga zamyka sie przy polowicznej spolce', sellerSource.includes('(!CONTROLLER.isSeller || SELLER_IS_COMPLETE)'), true)
+const formSource = readFileSync('src/components/watch-form.tsx', 'utf8')
+check('formularz linkuje polityke przy polu', formSource.includes('href="/privacy"'), true)
+// Flaga wchodzi propsem, bo to komponent kliencki: zmienna srodowiskowa tylko serwerowa czyta sie
+// w bundlu jako undefined i formularz linkowalby strone, ktora serwer wlasnie wylaczyl.
+check('flaga idzie propsem, nie z importu', formSource.includes('privacyLinked'), true)
+check('kontrola: nie czyta flagi u siebie', formSource.includes('CONTROLLER_IS_NAMED'), false)
+// Prop bez wartosci domyslnej, bo domyslne `true` jest zla odpowiedzia wszedzie, gdzie sie do niego
+// dochodzi przez pominiecie, a raz juz sie tak stalo: przez bramke na stronie raportu.
+check('prop jest wymagany', formSource.includes('privacyLinked: boolean'), true)
+check('kontrola: nie ma wartosci domyslnej', formSource.includes('privacyLinked = true'), false)
+// Tozsamosc administratora nie wynika z kompletnosci danych sprzedawcy. Spolka moze sprzedawac,
+// a administratorem zostac osoba, ktora prowadzi witryne; wyprowadzenie jednego z drugiego
+// opublikowaloby zla nazwe na jedynej stronie, ktorej caly sens to nazwac wlasciwa.
+check('administrator nie jest wywnioskowany ze sprzedawcy', privacySource.includes('CONTROLLER.isSeller && SELLER_IS_COMPLETE'), true)
+check('kontrola: nie renderuje sprzedawcy sama flaga sprzedawcy', privacySource.includes('{SELLER_IS_COMPLETE ? ('), false)
+// Adres do praw z RODO idzie do administratora, nie do sprzedawcy: to on odpowiada za dane, wiec
+// zadanie usuniecia ma trafiac tam, gdzie jest obowiazek na nie odpowiedziec.
+check('prawa RODO pisze sie do administratora', privacySource.includes('mailto:${CONTROLLER.email}'), true)
+check('kontrola: nie do sprzedawcy', privacySource.includes('mailto:${SELLER.email}'), false)
+// Zdanie „i nic wiecej" o rekordzie watcha bylo nieprawda: trzymamy tez daty, identyfikator
+// raportu, ostatni wynik, plan i identyfikator subskrypcji. Strona, ktorej caly sens to opisac, co
+// przechowujemy, nie moze tego opisywac z pamieci.
+check('opis watcha nie mowi juz „nic wiecej"', privacySource.includes('belongs to and nothing else'), false)
+// Lista pol idzie z typu (`Record<keyof Watch, string>`), wiec nowe pole lamie kompilacje, a nie
+// cicho zostawia niepelna liste na stronie. Tu pilnujemy tylko, ze strona nadal jej uzywa.
+check('lista pol jest generowana z rekordu', privacySource.includes('Object.values(WATCH_FIELDS_DISCLOSED)'), true)
+check('kazde pole watcha ma opis', Object.keys(WATCH_FIELDS_DISCLOSED).length, 14)
+check('kontrola: opis nie jest pusty', Object.values(WATCH_FIELDS_DISCLOSED).every((one) => one.length > 5), true)
+check('formularz tez nie mowi „nic wiecej"', formSource.includes('the domain, nothing else'), false)
+// Zdanie o braku spolki wisi na istnieniu spolki, a nie na tym, czy jest administratorem:
+// zarejestrowany sprzedawca, ktory nie jest administratorem, to wspierany uklad.
+check('zaprzeczenie spolki wisi na danych sprzedawcy', privacySource.includes('{!SELLER_IS_COMPLETE && ('), true)
 // Licencja korpusu jest bramkowana osobno i z mocniejszego powodu: udzielenia licencji na dane juz
 // opublikowane nie da sie cofnac, wiec nie moze sie wlaczyc razem z danymi sprzedawcy.
 check(

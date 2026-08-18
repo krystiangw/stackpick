@@ -41,6 +41,32 @@ export type Watch = {
   brand?: string | null
 }
 
+/**
+ * Every field a watch persists, in the words the privacy notice uses.
+ *
+ * Written here rather than in the page because a prose list of what a record holds drifts away from
+ * the record on the first field somebody adds, and it did: the page said "the domain it belongs to
+ * and nothing else" while the type had grown eleven more. The guard in `scripts/rules.mts` fails the
+ * build when `Watch` gains a key that is not described here, so the disclosure cannot silently
+ * become incomplete.
+ */
+export const WATCH_FIELDS_DISCLOSED: Record<keyof Watch, string> = {
+  id: 'an identifier for the watch itself',
+  email: 'the address you gave us',
+  domain: 'the domain you asked us to watch',
+  createdAt: 'when it was created',
+  confirmedAt: 'when you confirmed it',
+  lastReportId: 'which measurement the last alert was compared against',
+  lastTotal: 'the score at that measurement',
+  lastMeasurable: 'how many points were measurable then',
+  checkedAt: 'when we last checked',
+  stoppedAt: 'when you stopped it, kept so we cannot undo your unsubscribe',
+  plan: 'whether it is a trial or paid',
+  subscriptionId: 'the subscription identifier, when there is one',
+  placedIn: 'which category to read the domain against, when it is not one we publish',
+  brand: 'the brand name to search for beside the domain, when you gave one',
+}
+
 export type WatchChange = {
   checkId: string
   label: string

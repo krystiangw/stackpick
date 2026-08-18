@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { CORPUS_LICENCE, CORPUS_LICENCE_IS_PUBLISHED, SELLER_IS_COMPLETE } from '@/lib/seller'
+import { CONTROLLER_IS_NAMED, CORPUS_LICENCE, CORPUS_LICENCE_IS_PUBLISHED, SELLER_IS_COMPLETE } from '@/lib/seller'
 import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google'
 import Link from 'next/link'
 import { SITE_URL } from '@/lib/site'
@@ -138,19 +138,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 reads as evasive. */}
             {/* Linked only once the imprint behind them is real: the pages answer 404 while the
                 seller details are unset, and a footer link into a 404 is worse than no link. */}
-            {SELLER_IS_COMPLETE && (
-              <p className="flex gap-4">
+            {/* Privacy is linked on its own flag: it answers a duty that starts when the email form
+                starts collecting addresses, and that is already true. Terms and refunds describe a
+                sale and stay behind the seller details. */}
+            <p className="flex gap-4">
+              {SELLER_IS_COMPLETE && (
                 <Link href="/terms" className="hover:text-ink">
                   Terms
                 </Link>
+              )}
+              {CONTROLLER_IS_NAMED && (
                 <Link href="/privacy" className="hover:text-ink">
                   Privacy
                 </Link>
+              )}
+              {SELLER_IS_COMPLETE && (
                 <Link href="/refunds" className="hover:text-ink">
                   Refunds
                 </Link>
-              </p>
-            )}
+              )}
+            </p>
             <p>
               Built by{' '}
               <a

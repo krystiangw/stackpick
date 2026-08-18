@@ -7,6 +7,7 @@ import { categoryFor } from '@/lib/categories'
 import { SITE_URL } from '@/lib/site'
 import { CHECKS, FORMULA_VERSION, STAGES, type ScoredCheck } from '@/lib/score'
 import { WatchForm } from '@/components/watch-form'
+import { CONTROLLER_IS_NAMED } from '@/lib/seller'
 import { erratumFor } from '@/lib/errata'
 import { challengedUs } from '@/lib/limits'
 
@@ -330,7 +331,7 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
           and one link in every email that stops it.
         </p>
         <div className="mt-4 max-w-2xl">
-          <WatchForm domain={name} />
+          <WatchForm domain={name} privacyLinked={CONTROLLER_IS_NAMED} />
         </div>
       </section>
 

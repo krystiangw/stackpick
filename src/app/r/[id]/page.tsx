@@ -4,6 +4,7 @@ import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { ComparisonSection } from '@/components/comparison'
 import { buildComparison } from '@/lib/compare'
+import { CONTROLLER_IS_NAMED } from '@/lib/seller'
 import { EmailGate } from '@/components/email-gate'
 import { FixFirst } from '@/components/fix-first'
 import { FunnelMark } from '@/components/funnel-mark'
@@ -321,7 +322,13 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           the corpus is public and the formula is published, so gating the number would cost us
           the thing that makes it worth reading and buy nothing. */}
       <section className="border-b border-rule py-12">
-        <EmailGate domain={report.domain} reportId={report.id} failingCount={failing.length} temporary={isHeldOnly(id)} />
+        <EmailGate
+          domain={report.domain}
+          reportId={report.id}
+          failingCount={failing.length}
+          temporary={isHeldOnly(id)}
+          privacyLinked={CONTROLLER_IS_NAMED}
+        />
       </section>
 
       {/* The one sentence that separates a scan from an audit, at the only moment the reader

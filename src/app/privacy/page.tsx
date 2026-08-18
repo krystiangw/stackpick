@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import { recordVisit } from '@/lib/visits'
-import { SELLER, SELLER_IS_COMPLETE } from '@/lib/seller'
+import { CONTROLLER, CONTROLLER_IS_NAMED, SELLER, SELLER_IS_COMPLETE } from '@/lib/seller'
+import { WATCH_FIELDS_DISCLOSED } from '@/lib/watch'
 import { SITE_URL } from '@/lib/site'
 
 export const metadata: Metadata = {
@@ -17,19 +18,39 @@ export const metadata: Metadata = {
  * stores a date and a path with no identifier at all.
  */
 export default async function PrivacyPage() {
-  if (!SELLER_IS_COMPLETE) notFound()
+  // Gated on the controller rather than on the seller, because the duty this page answers begins
+  // when the email form starts collecting addresses, not when a checkout opens. The seller fields
+  // still gate the terms and the refund policy, which really are about a sale.
+  if (!CONTROLLER_IS_NAMED) notFound()
   recordVisit('/privacy', (await headers()).get('user-agent'))
   return (
     <main className="mx-auto max-w-3xl px-6">
       <section className="border-b border-rule py-14">
         <h1 className="text-4xl font-semibold leading-tight tracking-tight">Privacy</h1>
         <p className="mt-5 leading-relaxed text-ink-soft">
-          {SELLER.legalName}, {SELLER.address}
-          {SELLER.taxId ? `, ${SELLER.taxId}` : ''}, is the controller of the data described here. Write to{' '}
-          <a href={`mailto:${SELLER.email}`} className="text-brass underline underline-offset-4">
-            {SELLER.email}
+          {CONTROLLER.isSeller && SELLER_IS_COMPLETE ? (
+            <>
+              {SELLER.legalName}, {SELLER.address}
+              {SELLER.taxId ? `, ${SELLER.taxId}` : ''}, is the controller
+            </>
+          ) : (
+            <>{CONTROLLER.name}, a private individual in {CONTROLLER.country}, is the controller</>
+          )}{' '}
+          of the data described here. Write to{' '}
+          <a href={`mailto:${CONTROLLER.email}`} className="text-brass underline underline-offset-4">
+            {CONTROLLER.email}
           </a>{' '}
           about anything on this page, including deletion.
+          {/* Gated on whether a company exists, not on whether it is the controller: a registered
+              seller that is not the controller is a supported setup, and denying the company there
+              would publish a false sentence. */}
+          {!SELLER_IS_COMPLETE && (
+            <>
+              {' '}
+              There is no registered company behind this yet. If one is formed and becomes the controller, this page
+              will say so and everyone whose address we hold will be told.
+            </>
+          )}
         </p>
       </section>
 
@@ -44,8 +65,10 @@ export default async function PrivacyPage() {
             </li>
             <li>
               <strong className="text-ink">An email address</strong>, when you give one: to send a scan result, to
-              confirm a domain you asked us to watch, or to deliver something you bought. Stored with the domain it
-              belongs to and nothing else.
+              confirm a domain you asked us to watch, or to deliver something you bought. A watch record holds{' '}
+              {Object.values(WATCH_FIELDS_DISCLOSED).join(', ')}. That list is generated from the record itself rather
+              than written here, so it cannot fall behind it. Nothing is bought from anybody, nothing is joined to
+              anything, and no third party receives it.
             </li>
             <li>
               <strong className="text-ink">A page counter.</strong> A date, a path, and whether the request looked like
@@ -90,8 +113,8 @@ export default async function PrivacyPage() {
           <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Your rights</h2>
           <p className="mt-4">
             Access, correction, deletion, portability and objection, under the GDPR. One email to{' '}
-            <a href={`mailto:${SELLER.email}`} className="text-brass underline underline-offset-4">
-              {SELLER.email}
+            <a href={`mailto:${CONTROLLER.email}`} className="text-brass underline underline-offset-4">
+              {CONTROLLER.email}
             </a>{' '}
             is enough, and there is no account to close first. You can also complain to your data protection authority.
           </p>

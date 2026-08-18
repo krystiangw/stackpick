@@ -7588,3 +7588,74 @@ Brave nie jest dowodem niczego**.
 wygladalo na przegladarke albo agenta". Zdanie o tym, co zbieramy, jest obietnica prawna, wiec
 regula wiaze teraz jedno z drugim: gdy licznik nazywa crawlery, prywatnosc musi o tym mowic, i
 kontrola oblewa, gdy wroci stare zdanie.
+
+## POLITYKA PRYWATNOSCI ZYJE, REGULAMIN NADAL NIE (2026-08-19, decyzja z audytu subagenta)
+
+Przy weryfikacji indeksowania wyszlo, ze **`/privacy`, `/terms` i `/refunds` zwracaja 404 na
+produkcji**. To nie byl bug: wszystkie trzy zaczynaly sie od `if (!SELLER_IS_COMPLETE) notFound()`,
+a danych sprzedawcy nie ma, bo forma prawna jest nierozstrzygnieta. Blokada byla wewnetrznie spojna
+(stopka ich nie linkowala, sitemapa ich nie zawierala, zero martwych linkow).
+
+**Decyzja pochodzi z audytu subagenta (opus) i brzmi: rozdzielic flagi.** Kluczowa obserwacja audytu,
+ktora obala pierwotne zalozenie: **administrator danych to nie forma prawna**. Administratorem jest
+ten, kto decyduje o celach i sposobach przetwarzania, czyli dzis Krystian jako osoba fizyczna.
+Rejestracja firmy administratora nie tworzy, a jej brak nie zdejmuje obowiazku. Do tego **obowiazek
+z art. 13 wiaze sie z momentem ZBIERANIA danych, a nie ze sprzedaza**, a formularz monitoringu na
+stronie glownej zbiera adresy e-mail dzisiaj. Wiec 404 nie bylo opcja neutralna: wybor byl miedzy
+strona z niepelnym imprintem a brakiem informacji, do ktorej jest obowiazek, i to drugie jest gorsze.
+
+**Wykonane:** `CONTROLLER` i `CONTROLLER_IS_NAMED` obok `SELLER_IS_COMPLETE`. `/privacy` stoi na
+fladze administratora i **jest serwowana**: imie i nazwisko, e-mail, jurysdykcja, zero adresu
+domowego i zero NIP-u (art. 13 chce tozsamosci i kanalu kontaktu, a nie siedziby), plus zdanie
+wprost, ze **nie ma jeszcze zarejestrowanej spolki** i ze przy jej powstaniu kazdy, czyj adres
+trzymamy, zostanie o tym powiadomiony. `/terms` i `/refunds` zostaja na 404 pod stara flaga, bo
+opisuja sprzedaz, ktorej nie ma, a merchant of record porownuje nazwe znak w znak z KYC. Stopka
+linkuje kazda z trzech osobno, sitemapa tez, a **formularz linkuje polityke przy samym polu**, bo
+tam zaczyna sie obowiazek, a nie trzy strony dalej.
+
+**Codex zlapal P1 dokladnie w miejscu, w ktorym rozdzielilem role w glowie, a w kodzie je z powrotem
+skleilem:** strona brala tozsamosc administratora z `SELLER_IS_COMPLETE`, wiec przy uzupelnionych
+danych sprzedawcy publikowalaby spolke jako administratora, choc caly sens tej zmiany jest taki, ze
+to dwie niezalezne role. Teraz jest osobne `CONTROLLER.isSeller` (domyslnie falsz), a nazwa
+sprzedawcy pojawia sie na tej stronie **tylko wtedy, gdy ktos wprost powie, ze sprzedawca jest
+administratorem**. Drugie znalezisko: flaga do formularza idzie **propsem**, bo `WatchForm` to
+komponent kliencki i zmienna srodowiskowa tylko serwerowa czyta sie tam jako `undefined`, wiec
+formularz linkowalby strone, ktora serwer wlasnie wylaczyl.
+
+**Trzecie znalezisko tej samej rodziny:** trzecie miejsce, w ktorym renderuje sie ten formularz
+(bramka na stronie raportu `/r/<id>`), nie dostawalo flagi i brala sie wartosc domyslna. Prop jest
+teraz **wymagany**, bo domyslne `true` jest zla odpowiedzia wszedzie, gdzie sie do niego dochodzi
+przez pominiecie. Adres do praw z RODO tez poszedl na administratora, nie na sprzedawce: to on
+odpowiada za dane, wiec zadanie usuniecia ma trafiac tam, gdzie jest obowiazek na nie odpowiedziec.
+
+**Najostrzejsze znalezisko calej tej sekcji, i nie dotyczy prawa, tylko prawdy:** napisalem przy
+formularzu „przechowujemy adres i domene, **nic wiecej**", a rekord watcha trzyma tez daty
+utworzenia i potwierdzenia, date ostatniego sprawdzenia, identyfikator ostatniego raportu, ostatni
+wynik, plan i identyfikator subskrypcji. To samo zdanie stalo od dawna na `/privacy`. Strona, ktorej
+caly sens to opisac, co przechowujemy, opisywala to **z pamieci**, a nie z typu. Pierwsza poprawka byla za slaba: wypisalem
+pola recznie i codex od razu pokazal cztery pominiete, w tym `brand`, ktore jest danymi podanymi
+przez czlowieka, wiec zdanie „zaden profil" tez bylo nieprawda.
+
+**Poprawka wlasciwa jest typem, nie prosza:** `WATCH_FIELDS_DISCLOSED` to
+`Record<keyof Watch, string>` obok samego typu, a strona sklada zdanie z jego wartosci. Nowe pole w
+`Watch` **lamie kompilacje**, dopoki nikt nie napisze, czym ono jest dla czytelnika. To mocniejsze
+niz straznik, bo nie da sie tego ominac przez przeoczenie.
+
+**PULAPKA NAZWANA PRZEZ AUDYT, WARTA PRZECZYTANIA RANO:** ustawienie `SELLER_LEGAL_NAME` i
+`SELLER_ADDRESS` w ENV "zeby odblokowac polityke" odblokowuje **jednoczesnie regulamin i zwroty**,
+publikuje adres domowy jako adres sprzedawcy i czyni osobe fizyczna strona umowy sprzedazy. Po tej
+zmianie nie trzeba tego robic i nie nalezy.
+
+**DO POTWIERDZENIA RANO:** (1) zgoda na publikacje imienia i nazwiska jako administratora na
+`/privacy` (formalnie jest juz w stopce, ale to jego dane); (2) JDG czy spolka, bo to blokuje
+`/terms`, `/refunds` i wybor PSP; (3) dokladna nazwa, adres i NIP zgodne z przyszlym KYC;
+(4) polityka zwrotow (14 dni na raport, biezacy miesiac monitoringu bez zwrotu).
+
+**Rozbieznosc znaleziona przy okazji, nie naprawiona:** `/pricing` mowi o monitoringu za 79 USD
+miesiecznie, a formularz na stronie glownej zapisuje na monitoring **za darmo**, bez platnosci.
+Strona sama sie z tym mierzy zdaniem „Monitoring says $79 and also says free. Which is it?", ale
+warto potwierdzic, ze to zamierzone, a nie pozostalosc.
+
+**Czego audyt NIE potwierdzil, a co bylo w moim briefie:** ze brak zywego adresu polityki jest
+najczestsza przyczyna odrzutu w katalogu konektorow Anthropica. Przyjal to z briefu i nie
+weryfikowal niezaleznie. Trzyma sie tego skill `agent-discoverability`, ale to nie jest nasz pomiar.

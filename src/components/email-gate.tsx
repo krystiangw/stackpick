@@ -8,6 +8,7 @@ export function EmailGate({
   reportId,
   failingCount,
   temporary = false,
+  privacyLinked,
 }: {
   domain: string
   reportId: string
@@ -18,6 +19,8 @@ export function EmailGate({
    */
   temporary?: boolean
   failingCount: number
+  /** Whether /privacy is served. Threaded from the server page for the same reason as in WatchForm. */
+  privacyLinked: boolean
 }) {
   const [email, setEmail] = useState('')
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'undelivered'>('idle')
@@ -66,7 +69,7 @@ export function EmailGate({
           This is one photograph. Should we rerun it every week and write only when a verdict moves?
         </p>
         <div className="mt-4 max-w-xl">
-          <WatchForm domain={domain} initialEmail={email} />
+          <WatchForm domain={domain} initialEmail={email} privacyLinked={privacyLinked} />
         </div>
       </div>
     )

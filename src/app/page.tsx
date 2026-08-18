@@ -4,6 +4,7 @@ import { FunnelMark } from '@/components/funnel-mark'
 import { Rankings } from '@/components/rankings'
 import { ScanForm } from '@/components/scan-form'
 import { WatchForm } from '@/components/watch-form'
+import { CONTROLLER_IS_NAMED } from '@/lib/seller'
 import { loadRankings } from '@/lib/rankings'
 import { CHECKS, MAX_SCORE, STAGES } from '@/lib/score'
 import { CATEGORIES } from '@/lib/categories'
@@ -207,7 +208,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
               , and you keep the transcripts.
             </p>
             <div className="mt-2">
-              <WatchForm />
+              <WatchForm privacyLinked={CONTROLLER_IS_NAMED} />
             </div>
           </div>
         </div>

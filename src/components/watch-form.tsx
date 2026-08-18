@@ -7,7 +7,23 @@ import { useState } from 'react'
  * unattended signup, so this form renders in the server HTML, takes no card and sets no
  * password: an agent can complete it as easily as a person.
  */
-export function WatchForm({ domain, initialEmail }: { domain?: string; initialEmail?: string }) {
+export function WatchForm({
+  domain,
+  initialEmail,
+  privacyLinked,
+}: {
+  domain?: string
+  initialEmail?: string
+  /**
+   * Passed in rather than read here. This is a client component, so a server-only environment
+   * variable reads as undefined in the bundle and the flag would fall back to its default: the
+   * form would keep linking /privacy after the server had turned that page off.
+   *
+   * Required rather than defaulted: a default of `true` is the wrong answer everywhere it is
+   * reached by omission, and it was already reached that way once, through the report page's gate.
+   */
+  privacyLinked: boolean
+}) {
   const [email, setEmail] = useState(initialEmail ?? '')
   const [site, setSite] = useState(domain ?? '')
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'already' | 'undelivered'>('idle')
@@ -101,6 +117,24 @@ export function WatchForm({ domain, initialEmail }: { domain?: string; initialEm
         </button>
       </div>
       {error && <p className="font-mono text-xs text-fail">{error}</p>}
+      {/* At the point of collection, not three pages away: the duty to say who holds the address
+          and how to have it deleted starts with the field that asks for it. */}
+      <p className="mt-3 text-xs text-ink-faint">
+        The address and the domain are the only things you give us. We keep them with what the watch
+        needs to run: when it was created and confirmed, when it was last checked, and the score it
+        was last compared against.
+        {privacyLinked ? (
+          <>
+            {' '}
+            <a href="/privacy" className="underline underline-offset-4 hover:text-ink">
+              Who holds it and how to have it deleted
+            </a>
+            .
+          </>
+        ) : (
+          ' Write to us to have it deleted.'
+        )}
+      </p>
     </form>
   )
 }

@@ -29,6 +29,49 @@ export const SELLER = {
 export const SELLER_IS_COMPLETE = Boolean(SELLER.legalName && SELLER.address)
 
 /**
+ * Who answers for the data, which is a different person from who sells and becomes answerable on a
+ * different day.
+ *
+ * The controller is whoever decides why and how personal data is processed. That is a fact about
+ * today, not about a company that may or may not be registered later: registering a business does
+ * not create a controller and not registering one does not remove the duty. The duty attaches when
+ * the data is collected, and the email form on the home page collects it now.
+ *
+ * Held apart from `SELLER_IS_COMPLETE` on purpose. Folded together, the only way to publish the
+ * privacy notice would be to fill in the seller fields, which would also publish the terms and the
+ * refund policy, put a home address up as a registered seller address, and make a private person a
+ * party to a sale that does not exist yet.
+ *
+ * Name and email only: article 13 asks for identity and contact details, and an email address is a
+ * contact channel. A registered address and a tax number belong to the seller and arrive with it.
+ */
+export const CONTROLLER = {
+  name: process.env.CONTROLLER_NAME ?? 'Krystian Gwizdała',
+  email: process.env.CONTROLLER_EMAIL ?? SELLER.email,
+  /**
+   * Whether the registered seller is also the controller, which is a separate fact and not a
+   * consequence of the seller fields being filled. A company can sell the product while the
+   * individual who runs the site stays the controller, and inferring one from the other would
+   * publish the wrong name on the one page whose whole job is to name the right one.
+   */
+  isSeller: process.env.CONTROLLER_IS_SELLER === 'true',
+  /**
+   * Where the controller is, which is its own fact. `SELLER.jurisdiction` is the law that governs a
+   * sale, and the two can differ the moment a company is registered somewhere the person is not.
+   */
+  country: process.env.CONTROLLER_COUNTRY ?? 'Poland',
+} as const
+
+/**
+ * Fails closed on a half-configured company. Saying the seller is the controller while the seller
+ * fields are empty would publish the individual's name under a sentence claiming a company holds
+ * the data, or the reverse; refusing the page is the only answer that is not a false one.
+ */
+export const CONTROLLER_IS_NAMED = Boolean(
+  CONTROLLER.name && CONTROLLER.email && (!CONTROLLER.isSeller || SELLER_IS_COMPLETE),
+)
+
+/**
  * What we promise about money, written once and read by the refunds page and by the terms.
  *
  * The shape is deliberate rather than generous: a report is produced the moment it is bought and
