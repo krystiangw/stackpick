@@ -7488,3 +7488,21 @@ napisanym drugi raz.
 **Zasada, ktora z tego zostaje:** liczba na stronie publicznej ma pochodzic z **zapytania, ktore da
 sie powtorzyc** (`scripts/audit-agent-card.mts`), a nie z naszej wlasnej pamieci o tym, co kiedys
 zmierzylismy. Przechowywana liczba wygladala solidnie i byla o czym innym.
+
+## PROBKA RAPORTU POD STALYM ADRESEM, LINKOWANA Z CENNIKA (2026-08-19)
+
+Cennik sprzedawal raport za 49 USD i **nie pokazywal ani jednego**. Cztery opublikowane audyty sa
+probka audytu, nie raportu. Teraz `/pricing` linkuje **`/d/sample`**, czyli prawdziwy, skonczony
+dokument (filestack.com), ten sam, ktory dostaje kupujacy. Generator przyjmuje `--id`, wiec link
+raz wyslany dziala dalej po przegenerowaniu raportu.
+
+**Codex zlapal w tym ryzyko prywatnosci, ktore samo by kiedys wybuchlo:** flagi `--id` i `--sample`
+sa niezalezne, wiec **opublikowanie raportu klienta pod `--id sample` bez `--sample` wystawiloby
+jego dokument z cennika**. Link renderuje sie teraz tylko dla dostawy **oznaczonej jako probka**:
+istnienie to nie zgoda. Do tego dwie rzeczy mniejsze: `--id --sample` przechodzilo przez wzorzec i
+publikowalo raport pod nazwa flagi, a odczyt z bazy przy awarii wywracalby caly cennik zamiast
+schowac opcjonalny link.
+
+**Dlaczego akurat filestack:** ich wiersz i tak jest publiczny na `/v/filestack.com`, a cytaty z
+biegow sa publiczne na `/c/file-storage/runs`. Raport **nie ujawnia niczego nowego**, tylko sklada
+to w dokument. Strona jest poza indeksem, wiec to material sprzedazowy, a nie SEO.
