@@ -774,7 +774,7 @@ export const CHECKS: Check[] = [
         }
         return yes(
           0,
-          `/.well-known/mcp.json names ${named.join(', ')}, and nothing answered there or at mcp.${f.domain} or /mcp. A card is a claim about a server, not a server.`,
+          `/.well-known/mcp.json names ${named.join(', ')}, and nothing there or at mcp.${f.domain} or /mcp spoke MCP. A card is a claim about a server, not a server.`,
         )
       }
       // Only when the probe itself found nothing out. Eleven of the twelve rows that published
