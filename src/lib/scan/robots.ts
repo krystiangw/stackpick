@@ -31,6 +31,8 @@ export type RobotsFindings = {
    */
   unreadable: boolean
   crawlers: Record<string, CrawlerVerdict>
+  /** True when a group naming us disallows everything, which is the opt-out /bot promises. */
+  asksUsToStayOut: boolean
   blockedByClass: Record<CrawlerClass, string[]>
   blanketDisallowAll: boolean
   /** A polite agent reading 20 doc pages waits this many seconds times 20. */
@@ -103,6 +105,31 @@ function verdictFor(groups: Map<string, Rules>, crawler: string): CrawlerVerdict
 }
 
 /**
+ * Whether the site's robots.txt tells US, by name, to stay out.
+ *
+ * `/bot` promises that two lines in robots.txt stop the scanner, and a promise about our own
+ * behaviour is the one kind we cannot leave to good intentions. Only a group naming us counts: the
+ * wildcard is deliberately ignored, because a site that disallows `*` is describing a policy for
+ * crawlers that take content, and we take none. RFC 9309 reads a name as everything before the
+ * slash, so `LetAgentsIn/1.0` and `letagentsin` are one group.
+ *
+ * A vendor can use this to leave the corpus, and that is the point rather than a flaw: the row
+ * says they asked us not to look, which is a published fact about them and not a score they hid.
+ */
+export function asksUsToStayOut(groups: Map<string, Rules>): boolean {
+  // Every group that names us, not the first one. `LetAgentsIn` and `LetAgentsIn/1.0` are separate
+  // keys in the parsed map, so a file that spells it both ways would have been read as a refusal
+  // to stop on the strength of whichever came first.
+  for (const [agent, rules] of groups) {
+    const token = agent.toLowerCase().split('/')[0].trim()
+    if (token !== 'letagentsin') continue
+    // An empty `Disallow:` means the opposite in RFC 9309, so only the explicit slash counts.
+    if (rules.disallow.includes('/')) return true
+  }
+  return false
+}
+
+/**
  * The worst delay any AI crawler is actually subject to, not only the wildcard group.
  *
  * RFC 9309 says a crawler obeys the group naming it and ignores the wildcard once it has one of
@@ -126,6 +153,23 @@ function directiveValue(body: string, name: string): string | null {
   return match ? match[1].trim() : null
 }
 
+/**
+ * Asked once, before an automated scan, so a domain that told us to stay out is never fetched.
+ *
+ * Deliberately its own request rather than a flag read out of the scan that already happened: by
+ * the time a scan has parsed robots.txt it has also asked for the home page, the documentation and
+ * a dozen well-known paths, which is the traffic the opt-out is about.
+ *
+ * A scan a person asked for on our own site still runs. That is the line Google draws between a
+ * crawler and a user-triggered fetcher, and it is the honest one: robots.txt speaks to automation
+ * deciding for itself, not to somebody asking a question about their own domain.
+ */
+export async function asksUsToStayOutOf(site: string): Promise<boolean> {
+  const robots = await fetchUrl(`${site}/robots.txt`, { accept: 'text/plain' })
+  if (!robots.ok || looksLikeHtml(robots)) return false
+  return asksUsToStayOut(parseRobots(robots.body))
+}
+
 export async function scanRobots(site: string): Promise<RobotsFindings> {
   const robots = await fetchUrl(`${site}/robots.txt`, { accept: 'text/plain' })
   const present = robots.ok && !looksLikeHtml(robots)
@@ -145,6 +189,7 @@ export async function scanRobots(site: string): Promise<RobotsFindings> {
   return {
     present,
     unreadable,
+    asksUsToStayOut: asksUsToStayOut(groups),
     crawlers,
     blockedByClass,
     blanketDisallowAll: wildcard?.disallow.includes('/') ?? false,

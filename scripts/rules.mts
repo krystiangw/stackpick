@@ -7,7 +7,7 @@ import { spreadAcrossHints } from '../src/lib/scan'
 import { aboutTheirOwnCode, categoryForJob } from '../src/lib/lookup'
 import { pickHeadline } from '../src/lib/headline'
 import { FRESH_QUESTIONS, HELD_OUT_2, HELD_OUT_3, HELD_OUT_4, HELD_OUT_5, HELD_OUT_6, HELD_OUT_7 } from './routing-questions'
-import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
+import { asksUsToStayOut, crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
 import { looksLikeEntryPackage, readBulkDownloads, shapeRankOf } from '../src/lib/scan/discover'
@@ -2004,6 +2004,28 @@ check('tlumaczy, czemu mianownik jest mniejszy', view.includes('model.notApplica
 check('odroznia przewage od jednego wymienienia roznicy', view.includes('row.clear'), true)
 // Kontrolka: sonda ma widziec brak pola, ktorego tam nie ma.
 check('a sonda widzi pole, ktorego nie uzywamy', view.includes('model.nieistniejace'), false)
+
+// Obietnica o wlasnym zachowaniu jest jedyna, ktorej nie wolno zostawic dobrym checiom: strona
+// /bot mowi administratorowi, ze dwie linijki w robots.txt nas zatrzymuja.
+console.log('\nczytamy robots.txt takze jako prosbe do nas')
+const nazwanaGrupa = parseRobots('User-agent: LetAgentsIn\nDisallow: /')
+check('grupa nazywajaca nas i zamykajaca wszystko', asksUsToStayOut(nazwanaGrupa), true)
+check('wersja z wersja w nazwie tez', asksUsToStayOut(parseRobots('User-agent: LetAgentsIn/1.0\nDisallow: /')), true)
+check('inna wielkosc liter tez', asksUsToStayOut(parseRobots('user-agent: letagentsin\ndisallow: /')), true)
+// Wildcard NIE liczy sie swiadomie: to polityka wobec crawlerow zabierajacych tresc, a my nie
+// zabieramy zadnej. Gdyby liczyl, zniknelaby polowa korpusu bez niczyjej decyzji o nas.
+check('wildcard nie jest prosba do nas', asksUsToStayOut(parseRobots('User-agent: *\nDisallow: /')), false)
+check('nasza grupa bez zamkniecia calosci to nie prosba', asksUsToStayOut(parseRobots('User-agent: LetAgentsIn\nDisallow: /admin')), false)
+check('brak naszej grupy to brak prosby', asksUsToStayOut(parseRobots('User-agent: GPTBot\nDisallow: /')), false)
+// Puste `Disallow:` znaczy w RFC 9309 dokladnie odwrotnie: wpuszcza wszystko.
+check('puste Disallow to nie prosba', asksUsToStayOut(parseRobots('User-agent: LetAgentsIn\nDisallow:')), false)
+// Dwie pisownie tej samej nazwy to dwa wpisy w mapie, wiec czytanie tylko pierwszej grupy
+// przeoczyloby prosbe zapisana w drugiej.
+check('prosba w drugiej grupie tez sie liczy', asksUsToStayOut(parseRobots('User-agent: LetAgentsIn\nDisallow: /admin\nUser-agent: LetAgentsIn/1.0\nDisallow: /')), true)
+// Wpis o pominietym watchu musi przesuwac kolejke, inaczej jedna domena blokuje wszystkie inne.
+const cronSource = readFileSync('src/app/api/cron/watch/route.ts', 'utf8')
+check('pominiety watch idzie na koniec kolejki', cronSource.includes('watch.checkedAt = new Date().toISOString()\n      await store.saveWatch(watch)'), true)
+check('i nie jest po cichu zatrzymywany', cronSource.includes('watch.stoppedAt = ') , false)
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

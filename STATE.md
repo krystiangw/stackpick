@@ -7322,3 +7322,55 @@ agent poradzil sobie, gdy mu kazano isc wlasnie z toba.** To wymaga biegu buduja
 rejestracja, cennik, klucz), prawdziwej skrzynki (mamy `agentaudit@agentmail.to`) i **zakladania
 kont**, czego agent nie robi sam. Do tego szersza siatka narzedzi: dzis claude i codex, docelowo
 gemini i cursor, co jest **decyzja o platnych subskrypcjach dla Krystiana**.
+
+## HONORUJEMY ROBOTS.TXT WOBEC SIEBIE, ALE TYLKO IMIENNIE (2026-08-19, decyzja z audytu subagenta)
+
+Pisalem strone `/bot` dla administratora, ktory znajdzie nas w logach, i chcialem tam obiecac, ze
+dwie linijki w robots.txt nas zatrzymuja. **Sprawdzilem i tego nie robilismy**: robots.txt czytalismy
+wylacznie jako przedmiot pomiaru. Obietnica o wlasnym zachowaniu jest jedyna, ktorej nie wolno
+zostawic dobrym checiom, wiec zanim cokolwiek poszlo na produkcje, poszedl audyt decyzji.
+
+**Decyzja pochodzi z audytu subagenta (opus), rekomendacja B z rozroznieniem:**
+
+| sygnal | co robimy |
+|---|---|
+| `User-agent: LetAgentsIn` + `Disallow: /` | **prosba do nas**: automat przestaje skanowac, wiersz zostaje z ostatnim pomiarem i data |
+| `User-agent: *` + `Disallow: /` | **wynik pomiaru**, nie prosba: to samo trafia agenta szukajacego vendora, wiec zostaje w korpusie |
+| skan zlecony przez czlowieka na naszej stronie | **zawsze sie wykonuje**, bo ktos o niego poprosil |
+
+**Dlaczego nie usuwamy wiersza:** usuniecie na zadanie tworzy przycisk „skasuj swoj zly wynik",
+ktorego nie ma nikt inny, a mediana korpusu staje sie mediana tych, ktorzy nie protestowali. Przy
+177 wierszach i raporcie branzowym liczonym z mediany to jest **kanal autoselekcji**, nie detal.
+Najmocniejszy kontrargument audytu: zamrozony wiersz starzeje sie i moze klamac o firmie, ktora
+poprosila nas o odejscie. Stoi, bo nieaktualnosc jest jawna i datowana, a **odmrozenie jest o jeden
+darmowy skan od nich**. Warunek konieczny: ta sciezka musi dzialac i byc widoczna, inaczej wracamy
+do usuwania.
+
+**Precedens, ktory audyt przytoczyl i ktory przekonuje najbardziej:** Google rozdziela crawlery od
+„user-triggered fetchers", ktore z zalozenia ignoruja robots.txt, bo fetch zlecil czlowiek. To jest
+gotowa, cudza podpora pod nasz wyjatek.
+
+**Wdrozone:** `asksUsToStayOut` czyta **kazda** grupe nazywajaca nas (dwie pisownie to dwa wpisy w
+mapie), puste `Disallow:` nie liczy sie zgodnie z RFC 9309, wildcard swiadomie nie liczy sie wcale.
+`asksUsToStayOutOf` pyta raz, **przed** skanem, bo po sparsowaniu robots.txt w trakcie skanu ruch
+juz poszedl. Sprawdzane w dwoch miejscach automatycznych: reseed korpusu (przez `seeded` w
+`runScan`) i cron monitoringu.
+
+**Codex zlapal blad, ktory zablokowalby caly monitoring:** kolejka watchow idzie od najstarszego i
+bierze jeden na wywolanie, wiec **jedna domena z opt-outem byla by wybierana i pomijana w kolko, a
+wszystkie za nia glodowalyby w nieskonczonosc**. Teraz pominiety watch dostaje `checkedAt` i idzie
+na koniec kolejki, **nie jest po cichu zatrzymywany**: subskrybent za to zaplacil, nikt mu nie
+powiedzial, a gdy blokada zniknie, nastepny przebieg wznawia pomiar.
+
+**Przy okazji, `/bot` i naglowek `From`:** nasz user-agent wskazuje teraz na `/bot` zamiast na
+metodologie, a kazde zapytanie niosace nasz wlasny UA ma `From: hello@letagentsin.com`. Zapytania
+udajace `Claude-User` czy `GPTBot` **celowo nie niosa niczego naszego**: gdybysmy sie tam
+przedstawiali, vendor moglby nas wpuscic na biala liste i publikowana liczba opisywalaby nasza
+wlasna liste, a nie jego witryne. Liczby na `/bot` (6 zapytan naraz, 27 sekund, 400 kB) ida ze
+stalych, ktore je egzekwuja.
+
+**DO POTWIERDZENIA RANO:** ze honorujemy imienne `User-agent: LetAgentsIn` z **zamrozeniem** wiersza,
+ze globalne `User-agent: *` traktujemy jako wynik pomiaru, a nie prosbe, i ze skan zlecony przez
+czlowieka zawsze sie wykonuje. **Czego jeszcze nie ma:** adnotacji „od <data> prosza, zebysmy nie
+skanowali" na stronie vendora oraz mediany w raporcie branzowym liczonej z zamrozonymi i bez nich.
+Strona `/bot` **nie obiecuje** dzis zadnej z tych dwoch rzeczy.

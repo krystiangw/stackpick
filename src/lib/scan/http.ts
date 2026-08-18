@@ -62,7 +62,18 @@ export function confirmedRefusals(seen: { name: string; status: number; second: 
   return seen.filter(({ second }) => isEdgeRefusal(second)).map(({ name, status }) => ({ name, status }))
 }
 
-export const AGENT_UA = `LetAgentsIn/1.0 (+${SITE_URL}/methodology)`
+export const AGENT_UA = `LetAgentsIn/1.0 (+${SITE_URL}/bot)`
+
+/**
+ * The address an administrator can write to, on the requests that already say who we are.
+ *
+ * RFC 9110 keeps `From` for exactly this: a machine asking politely leaves a way to be told to
+ * stop. It goes only on requests carrying our own user-agent. The requests that ask as
+ * `Claude-User` or `GPTBot` measure how an edge treats those identities, and anything of ours
+ * bolted onto them would let a vendor wave us through while everybody else is still turned away,
+ * which turns the measurement into a description of our own allowlist.
+ */
+const CONTACT = 'hello@letagentsin.com' 
 
 /**
  * Under undici's own 10 s connect timeout, so a host that resolves and then accepts nothing -
@@ -73,7 +84,9 @@ const TIMEOUT_MS = 8_000
 
 /** Three eight second waits is most of the budget already; a fourth buys nothing. */
 const MOST_TIMEOUTS_PER_SITE = 3
-const MAX_BYTES = 400_000
+/** Published on /bot, so the promise about our own load and the cap that keeps it are one thing. */
+export const MAX_BYTES_PER_RESPONSE = 400_000
+const MAX_BYTES = MAX_BYTES_PER_RESPONSE
 
 /**
  * Heroku's router answers 503 to a request that has sent no byte for 30 seconds, so a scan
@@ -108,7 +121,7 @@ export const ranOutOfTime = (fetched: Fetched): boolean => fetched.error?.starts
  * than it did when the phases ran one after another; what it stops paying for is the stall at
  * the end of every wave, where five finished requests waited on the slowest.
  */
-const MAX_PER_SITE = 6
+export const MAX_PER_SITE = 6
 
 /**
  * docs.x, api.x and the apex are one site behind one edge, and the cap has to mean something
@@ -540,6 +553,7 @@ async function runFetch(url: string, options: FetchOptions, state: ScanState | n
         headers: {
           'user-agent': ua,
           accept,
+          ...(ua === AGENT_UA ? { from: CONTACT } : {}),
           ...(body === undefined ? {} : { 'content-type': 'application/json' }),
         },
         ...(body === undefined ? {} : { body }),

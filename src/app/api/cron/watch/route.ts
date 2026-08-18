@@ -4,6 +4,7 @@ import { scoreFindings } from '@/lib/score'
 import { getStore, reportId, type Report } from '@/lib/store'
 import { sendEmail } from '@/lib/email'
 import { changesBetween, comparableScorecards, measurableOf, rulesChangedBetween, turnedAwayAtTheEdge, worthTelling } from '@/lib/watch'
+import { asksUsToStayOutOf } from '@/lib/scan/robots'
 import { changeEmail } from '@/lib/watch-email'
 
 export const maxDuration = 60
@@ -87,7 +88,22 @@ export async function POST(request: Request) {
 
   let mailed = 0
   const done: string[] = []
+  /** Domains that asked us to stay out. Reported rather than silently missing from `checked`. */
+  const skipped: string[] = []
   for (const watch of due.slice(0, MOST_PER_CALL)) {
+    // The same rule the reseed follows: a group naming us in robots.txt stops the automated pass.
+    // A watch is not a person asking; it runs on a schedule and nobody is at the keyboard.
+    if (await asksUsToStayOutOf(`https://${watch.domain}`)) {
+      console.log(`watch ${watch.domain}: prosza w robots.txt, zebysmy nie skanowali, pomijam`)
+      skipped.push(watch.domain)
+      // Moved to the back of the queue rather than left where it is. The queue is oldest first and
+      // this call takes one watch, so a domain that opts out would otherwise be picked and skipped
+      // for ever and every watch behind it would starve. Not stopped either: the subscriber paid
+      // for this and nobody has told them, and if the block goes away the next pass resumes.
+      watch.checkedAt = new Date().toISOString()
+      await store.saveWatch(watch)
+      continue
+    }
     const findings = await scanDomain(watch.domain)
     const report: Report = {
       id: reportId(findings.domain, findings.scannedAt),
@@ -158,7 +174,10 @@ export async function POST(request: Request) {
   return NextResponse.json({
     checked: done.length,
     mailed,
-    remaining: due.length - done.length,
+    // A skipped domain is not remaining work: nothing here will ever check it again until they
+    // change robots.txt, and leaving it in the count would make the queue look permanently behind.
+    skippedByRobots: skipped,
+    remaining: due.length - done.length - skipped.length,
     watches: queue.length,
     longestWaitDays: Math.round(longestWait),
     domains: done,

@@ -1,4 +1,5 @@
 import { scanDomain, UnreachableDomainError } from './scan'
+import { asksUsToStayOutOf } from './scan/robots'
 import { scoreFindings } from './score'
 import { gateScan } from './scan-gate'
 import { getStore, reportId, type Report , holdUnsaved } from './store'
@@ -32,6 +33,18 @@ export async function runScan(request: Request, domain: string): Promise<ScanRun
       status: 429,
       retryAfterSeconds: gate.retryAfterSeconds,
       example: gate.example,
+      domain: gate.domain,
+    }
+  }
+
+  // An automated pass honours a robots.txt group that names us; a scan somebody asked for on our
+  // own site always runs, because they asked. The corpus reseed comes through here with the
+  // console token, which is what `seeded` means, so this is the line between the two.
+  if (seeded && (await asksUsToStayOutOf(`https://${gate.domain}`))) {
+    return {
+      kind: 'error',
+      error: `${gate.domain} asks us to stay out in robots.txt, so this pass skipped it. Their published row keeps its last measurement and its date.`,
+      status: 403,
       domain: gate.domain,
     }
   }
