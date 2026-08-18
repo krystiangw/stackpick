@@ -807,13 +807,18 @@ export const CHECKS: Check[] = [
       }
       const followed = f.funnel.mcpPagesFollowed ?? []
       const alsoRead = followed.length > 0 ? `, nor at any address in ${followed.join(' or ')}` : ''
+      // "Nothing answered" and "nothing spoke MCP" are different claims, and only the second one is
+      // ours to make. Measured 2026-08-18 by asking all 560 addresses these sentences name: 32 of
+      // them answer, every one with an ordinary gateway saying "Missing API Key", "Invalid CSRF
+      // Token" or "Method not allowed". A vendor rereading the old sentence against their own 405
+      // would be right that something answered, and wrong about what it means.
       if (f.machine.mcp.mentions > 0) {
         return yes(
           0,
-          `MCP mentioned ${f.machine.mcp.mentions}x in your own files, but nothing answered at ${MCP_ADDRESSES(f.domain)}${alsoRead}`,
+          `MCP mentioned ${f.machine.mcp.mentions}x in your own files, but nothing spoke MCP at ${MCP_ADDRESSES(f.domain)}${alsoRead}`,
         )
       }
-      return yes(0, `No MCP surface: nothing answered at ${MCP_ADDRESSES(f.domain)}${alsoRead}, and no file mentions MCP`)
+      return yes(0, `No MCP surface: nothing spoke MCP at ${MCP_ADDRESSES(f.domain)}${alsoRead}, and no file mentions MCP`)
     },
   },
   {

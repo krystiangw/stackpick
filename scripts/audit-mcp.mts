@@ -36,15 +36,18 @@ for (const domain of [...CURATED_DOMAINS].slice(0, most)) {
   const report = await store.latestForDomain(domain, true)
   const check = report?.scorecard.checks.find((one) => one.id === 'mcp_present')
   if (!check || check.inconclusive || check.notApplicable || check.points > 0) continue
-  // The addresses out of the sentence itself, because that is the list the vendor rereads.
-  const list = check.detail.match(/nothing answered at ([^.]+?)(?: or |$)/)?.[1]
+  // The addresses out of the sentence itself, because that is the list the vendor rereads. It ends
+  // where the sentence stops naming addresses and starts describing sources, and the tail entries
+  // are site-relative: "..., /mcp or /api/mcp, and any address you publish in the MCP registry".
+  // Both wordings: rows scanned before 2026-08-18 say "nothing answered at", newer ones say
+  // "nothing spoke MCP at", and an audit that only knows the current phrasing silently checks
+  // nothing on a corpus that has not been swept since the change.
+  const list = check.detail.match(/nothing (?:answered|spoke MCP) at (.+?), and any address/)?.[1]
   if (!list) continue
   checked += 1
-  const urls = list
-    .split(',')
-    .map((one) => one.trim())
-    .filter((one) => one.length > 0 && !one.startsWith('/'))
-    .map((one) => (one.startsWith('http') ? one : `https://${one}`))
+  const urls = [...new Set(list.split(/,| or /).map((one) => one.trim()).filter((one) => one.length > 0))].map((one) =>
+    one.startsWith('http') ? one : one.startsWith('/') ? `https://${domain}${one}` : `https://${one}`,
+  )
   for (const url of urls) {
     asked += 1
     await new Promise((done) => setTimeout(done, PAUSE_MS))
@@ -56,12 +59,21 @@ for (const domain of [...CURATED_DOMAINS].slice(0, most)) {
         signal: AbortSignal.timeout(8000),
       })
       if (answer.status === 404) continue
-      const body = (await answer.text()).slice(0, 200)
-      const how = answer.headers.get('www-authenticate')
-        ? `challenge: ${answer.headers.get('www-authenticate')?.slice(0, 60)}`
-        : /jsonrpc/i.test(body)
-          ? 'odpowiedz JSON-RPC'
-          : `cialo: ${body.replace(/\s+/g, ' ').slice(0, 60)}`
+      const body = (await answer.text()).slice(0, 400)
+      const challenge = answer.headers.get('www-authenticate')
+      const type = answer.headers.get('content-type') ?? ''
+      // Not "anything that is not silence": a static site answers 403 or 405 with an HTML error
+      // page to any POST, and reporting those buries the one row that matters under thirty that do
+      // not. What says "a server is here" is a challenge header, a JSON-RPC body, or a JSON or
+      // event-stream content type - the same three things the check reasons from.
+      const how = challenge
+        ? `challenge: ${challenge.slice(0, 70)}`
+        : /"jsonrpc"/i.test(body)
+          ? `JSON-RPC: ${body.replace(/\s+/g, ' ').slice(0, 70)}`
+          : /json|event-stream/i.test(type) && !/<html/i.test(body)
+            ? `${type}: ${body.replace(/\s+/g, ' ').slice(0, 70)}`
+            : null
+      if (how === null) continue
       answered.push({ domain, url, status: answer.status, how })
     } catch {
       continue

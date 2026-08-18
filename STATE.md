@@ -6404,3 +6404,37 @@ ktory sami podalismy** - skrypt pyta teraz dokladnie o niego.
 
 Narzedzie zostaje: `MONGODB_URI=... npx tsx scripts/audit-oauth.mts [ile]`, do powtorzenia po
 kazdym przemiecie albo przy sporze.
+
+## 34. PRZEBIEG ADWERSARYJNY: `mcp_present`, I JEDNA NIESCISLOSC W ZDANIU (2026-08-18)
+
+Ten sam ksztalt, co przy `oauth_dcr`: wziac adresy z **opublikowanego zdania** i zapytac je jeszcze
+raz. `scripts/audit-mcp.mts` wysyla pod kazdy z nich `initialize` po JSON-RPC.
+
+**Wynik: 80 oblanych wierszy, 560 adresow, zero serwerow MCP.** Werdykt sie broni.
+
+**Ale 32 adresy JEDNAK odpowiadaja** - i to jest znalezisko, ktore zmienia zdanie, nie werdykt.
+Kazda z tych odpowiedzi to zwykla bramka API: „Missing API Key" (uploadthing), „Invalid CSRF Token"
+(imagekit), „Method not allowed" (temporal, groq, planetscale, swell), „Missing required header
+Twilio-Api-Version", „Only HTML requests are supported here" (hatchet), 401 bez naglowka wyzwania
+(turbopuffer, rollbar). Zaden nie mowi MCP.
+
+**Wiec zdanie bylo nieprecyzyjne w nasza strone.** Mowilismy „nothing answered at api.split.io/mcp",
+a api.split.io/mcp odpowiada 405 z JSON-em. Vendor czytajacy to zdanie i widzacy wlasna odpowiedz ma
+racje, ze cos odpowiedzialo, i myli sie co do tego, co to znaczy - a to my postawilismy go w tej
+sytuacji. **Teraz: „nothing spoke MCP at ..."**, ze straznikiem na obie polowki i z audytem, ktory
+czyta obie wersje zdania (stare wiersze do najblizszego przemiatu maja stare brzmienie).
+
+**To samo zdanie zylo jeszcze w trzecim miejscu** (`fixfirst.ts`, plan naprawy: „nothing answered at
+the addresses named above"), znalezione przez codex review. Trzeci raz tej nocy jedno pojecie stalo w
+kilku miejscach po swojemu - po `429` w trzech checkach i po mianowniku zdania o wyzwaniu.
+
+**Wersji formuly NIE podbijam**, choc codex to zasugerowal: werdykty nie ruszaja sie ani o punkt,
+zmienia sie brzmienie, a podbicie na 9.41 **wygasiloby sprostowanie directusa**, ktorego naprawa nie
+jest napisana. To ta sama pulapka, ktora opisalem wyzej przy zapisie limitow.
+
+**Warte zapamietania przy pisaniu takiego audytu:** pierwsza wersja skryptu raportowala „wszystko,
+co nie jest cisza ani 404" i utonela w 403/405 z HTML-em od statycznych stron. Sygnalem, ze **jest
+tam serwer**, sa trzy rzeczy, ktorych szuka sam check: naglowek wyzwania, cialo JSON-RPC albo typ
+`application/json` bez HTML-a. Audyt szerszy niz sprawdzana rzecz topi jeden prawdziwy wiersz pod
+trzydziestoma nieprawdziwymi - dokladnie odwrotny blad niz ten z `oauth_dcr`, gdzie audyt byl za
+waski i potwierdzal wlasna teze.

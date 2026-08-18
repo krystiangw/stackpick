@@ -1055,6 +1055,11 @@ const registrySilent = (registryAnswered: boolean) =>
   } as never)
 check('milczacy rejestr MCP nie jest brakiem serwera', registrySilent(false).inconclusive, true)
 check('rejestr, ktory odpowiedzial, zostawia werdykt', registrySilent(true).inconclusive, undefined)
+// „Nic nie odpowiedzialo" i „nic nie mowilo MCP" to dwa rozne twierdzenia i tylko drugie jest nasze.
+// Zmierzone 2026-08-18 (audit-mcp.mts): z 560 adresow, ktore te zdania wymieniaja, 32 odpowiadaja,
+// kazdy zwykla bramka API - „Missing API Key", „Invalid CSRF Token", „Method not allowed".
+check('nie mowimy, ze nic nie odpowiedzialo', registrySilent(true).detail.includes('nothing answered'), false)
+check('mowimy, ze nic nie mowilo MCP', registrySilent(true).detail.includes('nothing spoke MCP at'), true)
 
 console.log('odmowa, czyli czy powtorzyla sie na drugiej stronie')
 // "Your edge answered ChatGPT-User 403" is an accusation about a named company built from one

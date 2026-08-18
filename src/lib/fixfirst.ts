@@ -145,7 +145,7 @@ export const REMEDIES: Record<string, Remedy> = {
     // to ship the thing they had shipped.
     how: (f) =>
       f.machine.mcp.mentions > 0
-        ? 'You already talk about MCP, and nothing answered at the addresses named above. If your server is at another path, declare it at /.well-known/mcp.json: that file is what an agent reads first, and it is what makes the path stop mattering.'
+        ? 'You already talk about MCP, and nothing at the addresses named above spoke it. If your server is at another path, declare it at /.well-known/mcp.json: that file is what an agent reads first, and it is what makes the path stop mattering.'
         : 'Wrap your top three API calls in an MCP server and declare it at /.well-known/mcp.json.',
   },
   signup_no_captcha: {
