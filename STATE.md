@@ -6829,3 +6829,54 @@ zestaw stron niz ten, ktory audyt wzial z wiersza. To jest znane zachowanie prob
 Do osmiu z poprzedniego podsumowania dochodzi `programmatic_provisioning` (60 wierszy, 283 strony).
 **Przeglad oskarzen w korpusie jest domkniety**: kazdy check, ktory oskarza wiecej niz szesc razy,
 zostal zapytany ponownie pod adresami, ktore sam publikuje.
+
+## KONKURENCJA: agentable.is I STANDARD AgentReady (2026-08-18)
+
+**agentable.is** zadaje to samo pytanie co my („can AI agents use your site?"), ale mierzy co innego i
+sam to pisze w stopce: *„Static spec-compliance scan · implements the open AgentReady standard · not
+affiliated with Ora, the official scanner · **verifies artifacts exist, not live agent success**"*.
+Skan darmowy i nielimitowany, recepty i prompt za e-mail. **MONITOR 29 USD/mc za domene** (tygodniowy
+re-skan, alerty przy regresji, historia, odznaka), **AGENCY 99 USD/mc do 25 domen** z CSV. Maja
+leaderboard i llms.txt, nie maja `/docs`. Nasz skan na nich: 7 z 8 mierzalnych.
+
+**Wazniejsze od nich samych: pojawil sie standard.** `agentready.org` v1.0.0, **30 wymagan** w pieciu
+sekcjach, MUST/SHOULD/MAY plus podzial na bazowe i warunkowe, Discord i GitHub, oraz „oficjalny
+skaner" o nazwie Ora. Ich wlasne uzasadnienie: *skanery, odznaki i oceny gotowosci sa juz wszedzie i
+zaden nie zgadza sie z drugim*. Skan zgodnosci ze specyfikacja zostal wlasnie wyceniony na **zero**
+przez kogos, kto go implementuje.
+
+**Mapowanie 7 wymagan MUST na nasza karte:**
+
+| wymaganie | nasz check | kto idzie dalej |
+|---|---|---|
+| AR-DISC-01 robots.txt z polityka AI | `user_agents_allowed`, `no_crawl_delay`, `robots_paths_resolve` | **my** (sprawdzamy, czy sciezki z robots.txt naprawde odpowiadaja) |
+| AR-CAPA-01 MCP | `mcp_present` | **my** (handshake JSON-RPC, nie istnienie pliku) |
+| AR-CAPA-08 OpenAPI | `machine_readable_api` | **my** (5 sciezek + deklaracje + negocjacja markdownu) |
+| AR-IDEN-02 OAuth 2.0 | `oauth_dcr` | **my** (metadane na kilkunastu hostach) |
+| AR-IDEN-03 metadane serwera autoryzacji | `oauth_dcr` | remis |
+| AR-IDEN-05 PKCE | **brak** | spec |
+| AR-CAPA-04 karta A2A | **brak, dolozone dzis** | remis |
+
+**Osiem z naszych szesnastu checkow nie ma w specyfikacji zadnego odpowiednika**: `signup_reachable`,
+`signup_no_captcha`, `self_serve`, `programmatic_provisioning`, `typed_package`, `price_in_snippet`,
+`docs_without_js`, `answers_plain_request`. To jest cala polowa karty pytajaca „czy agent **naprawde**
+wejdzie i dostanie klucz", czyli dokladnie to, czego konkurent nie robi i o czym pisze w stopce.
+
+**Zmierzone przed zmiana, nie zalozone:** `/.well-known/agent-card.json` serwuje **5 domen ze 177**,
+a metadane OAuth z `code_challenge_methods_supported` (PKCE) - **12**. Karte A2A dolozylismy do
+sciezek wejscia, bo cztery z tych piatki i tak przechodzily check innym plikiem, a **piata,
+`tigrisdata.com`, czytala u nas „zadna z 12 sciezek nie zwraca pliku" przy serwowanej karcie**.
+Po wdrozeniu: `Only service descriptors: .../.well-known/agent-card.json`, jeden punkt, tak samo jak
+`mcp.json`.
+
+**PKCE swiadomie NIE dokladamy jako check.** 12 domen ze 177 to za malo, zeby zmierzyc prog i falszywe
+oskarzenia, a kazdy check kosztuje zadania i miejsce na karcie - ta sama decyzja, co przy kluczu
+licencyjnym (2 wiersze). **Dowod juz zbieramy** przy okazji `oauth_dcr`, wiec decyzja wraca, gdy
+liczba urosnie.
+
+**Czego NIE robimy:** leaderboardow i odznak. Ta gra ma juz trzech graczy i cene zero.
+
+**Do sprawdzenia nastepne:** czym jest **Ora** („oficjalny skaner" standardu) oraz cztery pytania
+agenta SEO o **Sapient** (czy raportuja wybor head-to-head, powod odrzucenia w slowach agenta, os
+czasu, rozbicie per rodzina modeli). Jesli Sapient ma dwa pierwsze, nasza teza sprzedazowa wymaga
+przepisania.
