@@ -1,62 +1,65 @@
-# Let Agents In: stan na 2026-08-18 (formula 9.40, przemiat w locie od 12:20)
+# Let Agents In: stan na 2026-08-18 (formula 9.40, nic nie jest w locie)
 
-## OD CZEGO ZACZAC PO COMPACT (przeczytaj te trzydziesci linijek, potem reszte)
+## OD CZEGO ZACZAC PO COMPACT (przeczytaj te czterdziesci linijek, potem reszte)
 
-**WERSJE (stan 12:20): produkcja, repo i korpus na 9.40.** Formula nie ruszyla sie przez cala noc i
-**nie ma jej podbijac bez potrzeby**: podbicie wygasi sprostowanie directusa, ktorego naprawa nie
-jest napisana (patrz sekcja o #47).
+**WERSJE: produkcja, repo i korpus na 9.40.** Formula stoi od doby i **nie ma jej podbijac bez
+potrzeby**: podbicie wygasi sprostowanie directusa, ktorego naprawa nie jest napisana (sekcja o #47).
 
-**W LOCIE JEST JEDNO: przemiat, log `/tmp/reseed-940b.log`**, ruszyl 12:20, dwa przejscia, konczy sie
-zwykle po okolo godzinie. **`tail -3 /tmp/reseed-940b.log` zanim cokolwiek zrobisz.**
-W trakcie: **nie wdrazac** (dyno restartuje sie w polowie zbioru) i **nie uruchamiac audytow**
-(`audit-oauth`, `audit-mcp`, `audit-entry`, `audit-signup`, `audit-attribution`) - pytaja te same
-hosty, co skaner.
+**NIC NIE JEST W LOCIE.** Przemiat 9.40 skonczyl sie 13:15 (`/tmp/reseed-940b.log`, kod 0), komplet
+kontroli po przemiacie przeszedl, drzewo robocze czyste, ostatni commit `883e8b1` wdrozony na Heroku.
+Zanim ruszysz cokolwiek ciezkiego: `tail -3 /tmp/reseed-940b.log` i `pgrep -fl "tsx scripts"`.
 
-**CO TA NOC ZMIENILA W SKANERZE** (wszystko wdrozone i zweryfikowane, czeka tylko na wiersze):
-- **Odczekanie po 429**: 429 to nasze obciazenie, wiec czekamy i pytamy jeszcze raz. Dwa razy na
-  witryne, szesc razy u rejestru npm, najwyzej 3 s, tylko w budzecie skanu.
-- **Zapis limitow** (`limitsMet`): wiersz niesie, czym nas odmowiono i czy niosl marker wyzwania.
-- **Sciana na brzegu**: przy niezmierzonym checku wiersz nazywa host, ktory nas wyzwal, a nie mowi
-  „nic po twojej stronie, przeczekamy". Panel na `/v/<domena>`, pole `challengedAt` w API.
-- **Rejestr npm**: pobrania pytane zbiorczo dla nazw bez scope'u.
-- **`mcp_present`**: „nothing spoke MCP at", bo „nothing answered" bylo nieprawda o 32 adresach.
+**STAN KORPUSU PO PRZEMIECIE:** 177 wierszy, 0 sprzecznosci, 0 rozjazdow, kadencja monitoringu
+zdrowa, 241 adresow w IndexNow. **16 wierszy ze 177 spotkalo limit na brzegu vendora, 12 z markerem
+wyzwania** (przewidywanie zapisane przed pomiarem: 13 i 11). Panel „Your edge challenged us" zywy na
+`/v/split.io`, pole `challengedAt` wraca z `/api/scan`.
 
-**TRZY POWIERZCHNIE OSKARZEN SPRAWDZONE, CZWARTA MA GOTOWE NARZEDZIE** (przebiegi 33-35):
-`agent_entry_point` (122 wiersze, 2304 sciezki), `oauth_dcr` (74+17, 2987 zapytan), `mcp_present`
-(80, 560 adresow) - **5851 zapytan, zero falszywych zdan**. `scripts/audit-signup.mts` jest gotowy i
-**nieuruchomiony** na `signup_reachable` (96 oskarzen): to pierwsza rzecz do zrobienia po przemiecie.
+**DZIEWIEC POWIERZCHNI OSKARZEN SPRAWDZONYCH ADWERSARYJNIE, 6777 ZAPYTAN, ZERO FALSZYWYCH ZDAN**
+(przebiegi 33-41): `oauth_dcr`, `mcp_present`, `agent_entry_point`, `signup_reachable`,
+`machine_readable_api`, `llms_txt`, `price_in_snippet`, `self_serve`, `programmatic_provisioning`.
+**Audyt decyzji kazal na tym przestac**: wartosc krancowa dziesiatego przebiegu jest bliska zeru,
+a checkout nie dziala. Nie zaczynaj dziesiatego.
+
+**CO ZOSTALO ZMIENIONE PO PRZEMIECIE** (wszystko wdrozone, codex czysty, zweryfikowane na produkcji):
+- **Wlasny katalog ARD**: `public/.well-known/ai-catalog.json` + linia `AI-Catalog:` w robots.txt.
+  Karty A2A dla siebie **swiadomie nie publikujemy** (to wymaganie warunkowe dla powierzchni
+  agent-do-agenta, my wystawiamy MCP i HTTP).
+- **Sciana na brzegu KLIENTA wyzwala teraz maila** (`turnedAwayAtTheEdge`): klient wlaczajacy ochrone
+  przed botami dostaje sygnal. Dwa falszywe alarmy zlapane przez codeksa i naprawione: liczy sie
+  tylko wyzwanie **na jego wlasnej domenie** i tylko takie, przez ktore **nie przeszlismy**
+  (`challenge && !recovered`).
+
+**NASTEPNE W KOLEJCE** (kolumna „moge zrobic sam" z audytu pozycjonowania, sekcja na dole pliku):
+1. **Kontra na `npx @ora-ai/ax audit --min-score` w CI.** Audyt nazwal to najwiekszym zagrozeniem,
+   wiekszym niz agentable: gdy check chodzi w pipelinie, monitoring jako usluga traci racje bytu.
+   Kontra: CI nie widzi zywej strony po deployu, rejestru npm, cudzych powierzchni i **nie mowi, ze
+   agent wybral konkurenta**. Dopoki tego nie napiszemy, kupujacy sam tego nie wymysli.
+2. **Polityka serii**: co uniewaznia porownywalnosc i regula „nasz 429 i nasza zmiana reguly nigdy
+   nie alarmuja klienta".
+3. **Strona mapujaca 7 MUST-ow AgentReady** pass/fail, bez wymyslonej liczby.
+4. **Ile regresji zglosilby cotygodniowy przeskan** (tryb agentable), ktorych nasza podloga szumu
+   (0,59 proc.) nie liczy jako zmiany.
+
+**CZEGO NIE WOLNO ZROBIC PRZED BADANIEM:** zadnego publicznego porownania z Ora ani Lightsage.
+Nie wiemy, czy publikuja slowa odmowy, os czasu i rozbicie per rodzina modeli (ich strony sa
+renderowane po stronie klienta, 3,7 MB). Kazde zdanie „vendor X nie robi Y" przechodzi przez skill
+`audit-published-claims`.
 
 **PULAPKA:** kazdy skan domeny Z KORPUSU, takze zrobiony do weryfikacji poprawki, odmladza mediane i
 **przesuwa karencje**. Do weryfikacji uzywaj domen spoza korpusu.
 
-**PO RESEEDZIE (9.40), w tej kolejnosci:**
-1. `MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/after-reseed.mts`
-2. `npm run audit`, `npx tsx scripts/audit-study.mts`, `npm run audit-delivery`
-3. **Nowy check `price_in_snippet`: policz, ilu vendorow go oblewa.** Zmierzone przed reseedem na
-   **dwoch rozlacznych probkach po 34 domeny z korpusu**: 13/19/2 oraz 14/14/6
-   (przechodzi/oblewa/bez odpowiedzi). Razem **27 z 60 mierzalnych, czyli okolo 45 procent
-   przechodzi**. Spodziewaj sie **70-85 zaliczonych wierszy** na pelnym korpusie. Jesli wyjdzie
-   duzo mniej, czytaj opisy, zanim uznasz to za wynik. Oba komplety oblanych opisow przeczytane po
-   kolei: **zero falszywych oskarzen na 80 domenach**.
-4. **9.35 zmienila probke dokumentacji**, wiec `programmatic_provisioning` moze sie ruszyc w obie
-   strony. `regressions.mts` pokaze te ruchy w osobnej sekcji "nasza zmiana reguly", bo wpis w
-   `CHECK_RULE_CHANGED` juz jest. **Nie skanuj ich pojedynczo jako podejrzanych.**
-5. `npx tsx scripts/read-provisioning-quotes.mts` i porownaj z dzisiejszym: 63 zaliczone, 0 stojace
-   wylacznie na golej frazie.
-6. `npm run watch-coverage` - dolozona kadencja: pokazuje, czy ktoras obserwacja czeka za dlugo.
-7. `npm run audit-our-api` - czy nasz OpenAPI opisuje kazde pole, ktore API zwraca (nie wymaga bazy).
-8. `npm run indexnow -- --all` - zgloszenie zmienionych stron do IndexNow (Bing, a przez niego
-   wyszukiwarka ChatGPT). Po reseedzie zmienia sie kazda strona vendora, wiec to wtedy ma sens.
-9. **`typed_package`: oskarzen ma byc okolo czterech, nie dziesieciu.** Bramka z 9.40 zmierzona na
-   zywo przed przemiatem: zostaja cronofy, newrelic, heroku i directus. `after-reseed.mts` wypisuje
-   te liczbe sam („X werdyktow stoi na paczce dopasowanej po wydawcy, w tym Y z Z oskarzen").
-   Sprostowania dla xata, honeycomb, namecheap i godaddy **wygasna same**, bo maja `fixedIn: 9.40`;
-   sprostowanie directusa ma zostac, bo jego przyczyna jest w rankingu ksztaltu nazwy (#47).
-
-**Wszystko naraz, jednym wklejeniem:**
+**Komplet kontroli po nastepnym przemiecie, jednym wklejeniem:**
 ```
 cd ~/projects/stackpick && export MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick)
 npx tsx scripts/after-reseed.mts && npm run audit && npx tsx scripts/audit-study.mts   && npm run audit-delivery && npm run regressions && npm run watch-coverage && npm run audit-our-api
+```
+
+**ZABLOKOWANE NA KRYSTIANIE (osiem rzeczy, jedna jest prawdziwym blokerem):** dane sprzedawcy do
+Paddle (JDG czy spolka) - bez tego checkout nie istnieje; czy 79 USD zostaje przy 29 u agentable;
+kiedy monitoring przestaje byc darmowy i co powiedziec trzem obecnym obserwatorom; dolna granica
+ceny audytu („from X"); `CORPUS_LICENCE_PUBLISHED`; usuniecie SKU na 10 domen; opublikowanie „platnosc
+nie zmienia werdyktu"; potwierdzenie, ze **79 USD to monitoring miesieczny za domene**, a nie
+rozszerzony raport (audyt poprawil mnie w tym fakcie).
 ```
 
 **PUNKT ODNIESIENIA po reseedzie 9.33 (2026-08-18 00:00):** 177 wierszy, `programmatic_provisioning`
