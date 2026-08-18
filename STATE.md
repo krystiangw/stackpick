@@ -7901,3 +7901,16 @@ akapit o wartosci za domene zaprasza arytmetyke, ktora **przegrywamy na pakiecie
 (rekomendacja audytu: darmowe do startu checkoutu, potem 30 dni trialu, kohorta sprzed billingu z
 grandfatheringiem); (5) czy wolno mierzyc klikniecia w CTA; (6) czy publikujemy porownanie nazywajace
 konkurenta (dzis cennik mowi wprost, ze nie mierzylismy cudzego produktu).
+
+## SONDA, KTORA ZNALAZLA SAMA SIEBIE (2026-08-19, drobiazg wart zapisania)
+
+Bramka „nie deployuj w trakcie przemiatu" to `pgrep -f "scripts/reseed.sh"`. Odmowila deployu, choc
+przemiat nie chodzil, bo **znalazla wlasna petle czekajaca**: jej linia polecen zawierala dokladnie
+ten ciag, ktorego szukala. To ta sama rodzina bledu, co reszta tej nocy - probe, ktore nie odrozniaja
+siebie od tego, o co pytaja.
+
+**Poprawny predykat to log, nie lista procesow:** `grep -q "karencja otwarta" /tmp/reseed-942.log`.
+Log pisze tylko przemiat i tylko wtedy, gdy naprawde ruszyl.
+
+Przy okazji wyszlo, ze **chodzily dwa czekacze naraz**, wiec przemiat mogl wystartowac podwojnie -
+dokladnie to obciazenie, przed ktorym chroni karencja. Jeden ubity, zostal jeden.
