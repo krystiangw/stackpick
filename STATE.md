@@ -1,73 +1,56 @@
-# Let Agents In: stan na 2026-08-19 (formula 9.41, nic nie jest w locie)
+# Let Agents In: stan na 2026-08-19 (kod 9.42, korpus 9.41, przemiat zaplanowany)
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te czterdziesci linijek, potem reszte)
 
-**WERSJE: produkcja, repo i korpus na 9.41.** Drzewo czyste, wszystko wdrozone i sprawdzone na
-produkcji, **nic nie chodzi w tle** (`pgrep -f "reseed.sh"`). Formula sie tej nocy nie zmieniala,
-wiec komplet kontroli po przemiecie 9.41 jest nadal aktualny.
+**WERSJE SIE ROZJEZDZAJA I TAK MA BYC, DOPOKI PRZEMIAT NIE WEJDZIE.** Kod i produkcja na **9.42**,
+korpus nadal na **9.41**. Strona sama o tym pisze na stronie glownej („measured under formula 9.41
+while the scanner runs 9.42"), wiec to stan opisany, a nie ukryty. Drzewo czyste, wszystko wdrozone.
 
-**SPROSTOWANIE DIRECTUSA MA `fixedIn: 10.0`**, bo jego przyczyna to przepisanie rankingu nazw (#47),
-ktorego 9.41 nie dotyka. **Podbijajac formule, sprawdz ten wpis.**
+**PRZEMIAT ODPALI SIE SAM.** `/tmp/reseed-when-ready.sh` (log `/tmp/reseed-942.log`) pilnuje karencji
+i startuje, gdy mediana wieku korpusu osiagnie 6 h, czyli okolo **01:59**. **W trakcie przemiatu NIE
+DEPLOYUJ.** Po nim: komplet kontroli nizej, a potem blok startowy do przepisania.
 
 **CO TA NOC ZMIENILA, w kolejnosci waznosci:**
-- **`/privacy` ZYJE.** Trzy strony prawne zwracaly 404, bo wisialy na jednej fladze danych
-  sprzedawcy. Decyzja z audytu subagenta: **administrator danych to nie forma prawna**, a obowiazek
-  informacyjny wiaze sie z momentem **zbierania** danych, ktore zbieramy dzisiaj formularzem na
-  stronie glownej. `/terms` i `/refunds` nadal 404 i tak ma byc.
-- **Zamrozony wiersz mowi, ze jest zamrozony.** Audyt polityki robots.txt nazwal swoj warunek
-  konieczny (sciezka powrotna ma dzialac i byc widoczna) i **nie byl spelniony ani w jednej polowie**.
-  Teraz jest: trzy daty na stronie vendora, oznaczenie na `/v`, mediana w raporcie branzowym liczona
-  z zamrozonymi i bez nich, a `/bot` przestal opisywac droge powrotna, ktorej nie ma.
-- **Jestesmy w oficjalnym rejestrze MCP** (`com.letagentsin/scanner`, 1.0.0). To zrodlo, z ktorego
-  ciagna Smithery, Glama, mcp.so i MCPfinder. Logowanie domenowe przez HTTP, klucz prywatny w
-  `.env.local` jako `MCP_REGISTRY_SEED`.
-- **Licznik odwiedzin nazywa crawlery** (13 robotow), wiec pierwszy raz zobaczymy, ktory indeks nas
-  faktycznie czyta. Brave jest wyjatkiem: nie ma crawlera, wiec brak wiersza nie znaczy nic.
-- **IndexNow: 67 adresow, 200 OK.** Sitemapa ma 244 adresy.
-- **Poprawka w skillu `agent-discoverability`** (nie w produkcie): jego kontrola rejestru MCP pytala
-  o **marke**, a wyszukiwarka rejestru nie dopasowuje wieloczlonowej nazwy. Mowila opublikowanemu
-  serwerowi, ze go nie ma. Teraz pyta o przestrzen nazw z profilu. Sprawdzone w obie strony:
-  nasz wpis daje PASS, zmyslony profil nadal FAIL.
+- **9.42: opis paczki rozstrzyga, ktory artefakt jest biblioteka vendora** (zadanie #47, wisialo od
+  wycofanej proby). Zmierzone na calym korpusie: **trzy zmiany, zero regresji** (directus.com,
+  onesignal.com, axiom.co), a `mux.com` celowo zostaje przy swojej. Sprostowanie directusa dostalo
+  `fixedIn: '9.42'`.
+- **Publikowalismy wiersz o `gandi.net` na paczce innej firmy** (`@gandi-ide/gandi-ui`, opis po
+  chinsku, wydawca z prywatnego adresu, zero linkow poza rejestrem). Scope, ktory tylko zaczyna sie
+  od nazwy vendora, potrzebuje teraz jednego dowodu poza rejestrem. Jedna zmiana na 177 domen.
+- **`/privacy` ZYJE** (byla 404 razem z `/terms` i `/refunds`, bo wszystkie wisialy na jednej fladze
+  danych sprzedawcy). Administrator danych to nie forma prawna, a obowiazek z art. 13 zaczyna sie
+  przy ZBIERANIU danych, ktore zbieramy formularzem. `/terms` i `/refunds` nadal 404 i tak ma byc.
+- **Zamrozony wiersz mowi, ze jest zamrozony**: trzy daty na stronie vendora, oznaczenie na `/v`,
+  mediana w raporcie branzowym z zamrozonymi i bez nich. `/bot` przestal opisywac droge powrotna,
+  ktorej nie ma.
+- **Jestesmy w oficjalnym rejestrze MCP** (`com.letagentsin/scanner`). Klucz w `.env.local` jako
+  `MCP_REGISTRY_SEED`, dowod domenowy pod `/.well-known/mcp-registry-auth`.
+- **Raport za 49 USD**: zero wymienien niesie swoja dwuznacznosc, a gosc, ktorego adres laduje w
+  korpusie, dostaje odmowe zamiast falszywego zera. Probka odswiezona: `/d/sample`.
+- **Licznik odwiedzin nazywa 13 crawlerow**, wiec pierwszy raz zobaczymy, ktory indeks nas czyta.
 
-**ZASADA, KTORA WYSZLA Z TEJ NOCY:** kazde miejsce, gdzie **„nie wiem" ma wartosc domyslna**, jest
-tym samym bledem, i trzeba go szukac **na kazdej warstwie osobno**. Nieczytelny robots.txt czytal sie
-jak „nie prosza", nieudany odczyt bazy jak „nie ma prosby", a nieudany odczyt na stronie jak „nic nie
-jest zamrozone". Codex zglosil to trzy razy z rzedu jako osobne P1 na trzech warstwach tej samej
-funkcji. Zapisane tez w KB: `clad-kb show domyslna-wartosc-dla-nie-wiem-powtarza-sie-na-kazdej-warstwi`.
+**ZADANIA IDA NA MUSTER: https://musterboard.dev/r/r_kyvged60vn4c2mvj** (projekt `p_w8vtpkcae5`,
+token w `~/.muster/tokens.json`). **Tablica wygasa 2026-08-25, dopoki Krystian jej nie odbierze.**
 
-**DRUGA ZASADA, TANSZA:** zdanie o tym, co przechowujemy, ma isc **z typu**, nie z pamieci.
-`WATCH_FIELDS_DISCLOSED` to `Record<keyof Watch, string>`, wiec nowe pole lamie kompilacje, dopoki
-nikt nie napisze, czym jest dla czytelnika. Recznie wypisana lista przeoczyla cztery pola za pierwszym
-razem.
+**DWIE ZASADY Z TEJ NOCY, OBIE ZAPISANE TEZ W KB:**
+1. Kazde miejsce, gdzie **„nie wiem" ma wartosc domyslna**, jest tym samym bledem i trzeba go szukac
+   **na kazdej warstwie osobno**. Codex zglosil to trzy razy z rzedu na trzech warstwach jednej
+   funkcji (`clad-kb show domyslna-wartosc-dla-nie-wiem-powtarza-sie-na-kazdej-warstwi`).
+2. Zdanie o tym, co przechowujemy, ma isc **z typu**, nie z pamieci: `WATCH_FIELDS_DISCLOSED` to
+   `Record<keyof Watch, string>`, wiec nowe pole lamie kompilacje, dopoki nikt go nie opisze.
 
-**CO ZOSTAJE I CZEGO SAM NIE ODBLOKUJE:**
-1. **Dane sprzedawcy do Paddle** (JDG czy spolka). Bez tego nie ma checkoutu, `/terms` ani `/refunds`.
-   **UWAGA:** nie ustawiaj `SELLER_LEGAL_NAME` i `SELLER_ADDRESS` „zeby cos odblokowac" - to publikuje
-   adres domowy jako adres sprzedawcy i czyni osobe fizyczna strona umowy sprzedazy.
-2. **Zgoda na publikacje imienia i nazwiska jako administratora** na `/privacy`. Jest tam od tej nocy,
-   decyzja z audytu subagenta; formalnie nazwisko bylo juz w stopce, ale to Twoje dane.
-3. **Klucz do `agentaudit@agentmail.to`** z `console.agentmail.to`. Bez niego bieg z nazwanym vendorem
-   nie domknie rejestracji, a nasza sciana zapisze sie jako sciana vendora.
-4. **Platne subskrypcje cursora i gemini**, jesli chcemy os „rozne narzedzia". Na darmowych planach ta
-   os jest **niemierzalna, a nie tania**.
-5. **Potwierdzenie polityki robots.txt** (zamrozenie zamiast usuniecia) i **czy 79 USD to monitoring
-   miesieczny za domene**.
-6. **Monitoring: 79 USD kontra darmowy zapis.** Sprawdzone w kodzie i na stronie: to **nie jest
-   sprzecznosc pozostawiona otwarta**. `/pricing` odpowiada wprost („darmowy dzisiaj, dla wszystkich,
-   a cena jest wydrukowana, zebys wiedzial, czym sie stanie"), kod zaklada watcha z `plan: 'trial'`,
-   karty nie ma. Do potwierdzenia jest **tylko decyzja**, czy i kiedy „darmowy dzisiaj" sie konczy.
+**CZEGO SAM NIE ODBLOKUJE (pelna lista na Musterze):** dane sprzedawcy do Paddle · zgoda na imie i
+nazwisko jako administratora na `/privacy` · klucz do `agentaudit@agentmail.to` · platne subskrypcje
+cursora i gemini · potwierdzenie polityki robots.txt i ceny monitoringu.
 
-**CZEGO NIE ROBIC:** dziesiatego przebiegu adwersaryjnego, leaderboardow i odznak, jednej liczby 0-100,
-oraz publicznego porownania z Ora albo Lightsage, dopoki nie wiemy, czy publikuja slowa odmowy i os czasu.
+**PULAPKA:** kazdy skan domeny Z KORPUSU, takze do weryfikacji poprawki, odmladza mediane i przesuwa
+karencje przemiatu. Do weryfikacji uzywaj domen spoza korpusu (dzis: neon.tech, tally.so, svix.com).
 
-**PULAPKA:** kazdy skan domeny Z KORPUSU, takze zrobiony do weryfikacji poprawki, odmladza mediane i
-przesuwa karencje reseedu. Do weryfikacji uzywaj domen spoza korpusu.
-
-**Komplet kontroli po nastepnym przemiecie, jednym wklejeniem:**
+**Komplet kontroli po przemiecie, jednym wklejeniem:**
 ```
 cd ~/projects/stackpick && export MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick)
 npx tsx scripts/after-reseed.mts && npm run audit && npx tsx scripts/audit-study.mts   && npm run audit-delivery && npm run regressions && npm run watch-coverage && npm run audit-our-api
-```
 ```
 ## PIEC Z SZESCIU CYTATOW W RAPORCIE ZA 49 USD URYWALO SIE W SRODKU ADRESU (2026-08-17)
 
