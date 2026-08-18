@@ -6581,3 +6581,36 @@ vonage) - te sa uczciwie niezmierzone, bo brzeg nas nie wpuscil.
 skan (glowna i cennik), i wypisuje **kazdy link wygladajacy na wejscie, ktorego nasza regula nie
 lapie**. Ma pokazac, jakiego ksztaltu linku nie widzimy, a nie poszerzyc regule automatycznie:
 poszerzenie dotyka wyboru i wymaga wlasnego pomiaru, jak przy #47.
+
+## PRZEMIAT 12:20-13:15: PIERWSZE PRAWDZIWE LICZBY SCIAN NA BRZEGU (2026-08-18)
+
+177 wierszy na 9.40, **0 sprzecznosci**, **0 rozjazdow** w publikowanych liczbach, kazde zdanie
+szostego badania nadal prawdziwe, kadencja monitoringu zdrowa, 241 adresow zgloszonych do IndexNow.
+
+**Przewidywanie sprzed przemiatu i pomiar** (przewidywanie bylo zapisane w STATE zanim padly liczby):
+
+| co | przewidywane | zmierzone |
+|---|---|---|
+| wierszy z limitem na brzegu vendora | okolo 13 | **16 ze 177** |
+| z tego z markerem wyzwania | okolo 11 | **12** |
+
+Sciany: `contentful.com` (20/20), `split.io` (13/13 na docs.split.io), `timekit.io` (11/11 na
+developers.timekit.io), `logto.io` (10/10), `nylas.com` (8/8 na dashboard-v3.nylas.com),
+`rollbar.com` (2/2 na docs.rollbar.com), `mailgun.com` i `sinch.com` po jednym. **Panel „Your edge
+challenged us" jest zywy na `/v/split.io`**, a `challengedAt` wraca z `/api/scan`.
+
+**Siedem werdyktow gorszych, piec wrocilo po pojedynczym skanie.** To jest ta sama historia, co rano,
+i teraz wiersz sam ja opowiada: `split.io` mial `docs_without_js`, `machine_readable_api` i
+`programmatic_provisioning` na zero, bo `docs.split.io` wyzwal **trzynascie z trzynastu** naszych
+zadan; po przeskanowaniu pojedynczo wszystkie trzy wrocily (1, 1, 2). Tak samo `calendly.com`
+(`agent_entry_point`) i `vercel.com` (`llms_txt`). **Bitmovin** jest teraz mierzalny tylko w 7
+punktach z 18, bo ich brzeg wyzywa nas na okraglo - i wiersz to mowi zamiast udawac pomiar.
+
+**Jedyny werdykt, ktory NIE wrocil:** `vercel.com`, `programmatic_provisioning` 1 -> 0, ze zdaniem
+„none of the 7 provisioning phrases appears in the 4 documentation pages we read". To jest zmierzona
+nieobecnosc na czterech przeczytanych stronach, nie dziura w odczycie - do sprawdzenia recznie, czy
+zmienil sie dobor stron, czy ich dokumentacja.
+
+**Stabilnosc reguly:** `price_in_snippet` dal **dokladnie te same liczby** co poprzedni przemiat
+(67/91/11/8), a bramka `typed_package` znowu 4 oskarzenia z 4 na paczce dopasowanej po wydawcy.
+`oauth_dcr`: 74 z 91 oblanych wymienia adresy - i te 74 zdania sa dzis sprawdzone jedno po drugim.
