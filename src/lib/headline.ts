@@ -119,7 +119,13 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
     }
   }
 
-  if (npm.package && npm.staleMonths !== undefined && npm.staleMonths >= 18) {
+  // Only about a package they pointed us at. "The SDK agents will install for you" is a stronger
+  // claim than the check underneath it makes, and on a package we picked out of the registry
+  // ourselves it is a claim we cannot support: june.so would have read this headline about
+  // `@june-so/analytics-node` while their own scope carries a newer SDK. The check went unmeasured
+  // for that case in 9.37 and the headline has to agree, or the page accuses in bigger type than
+  // the row it is summarising.
+  if (npm.package && npm.staleMonths !== undefined && npm.staleMonths >= 18 && discovered.npmSource !== 'registry-search') {
     return {
       claim: `The SDK agents will install for you was last published ${npm.staleMonths} months ago.`,
       evidence: `${npm.package}@${npm.version} last published ${npm.lastPublish?.slice(0, 10)}${

@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.36'
+export const FORMULA_VERSION = '9.37'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -1296,6 +1296,22 @@ export const CHECKS: Check[] = [
         // What we measure is the registry record's Last-Modified, which any metadata write moves,
         // so it is a floor on the age and not the publish date. june.so read as 28 months where
         // the newest version is 35.6 months old, and the sentence claimed the smaller number.
+        //
+        // And it stops being a verdict at all when we picked the package ourselves. This branch
+        // says nothing about types: it says the thing we found looks abandoned, which is exactly
+        // what a wrong guess looks like. june.so was failed on `@june-so/analytics-node` while
+        // their own scope also carries `@june-so/analytics-next`, described on the registry as
+        // June's JS SDK. Accusing somebody of an abandoned SDK on a package we chose for them is
+        // the one shape of this check that cannot be defended, so it is unmeasured instead.
+        if (f.discovered.npmSource === 'registry-search') {
+          return {
+            points: 0,
+            detail: `Unmeasurable: ${f.npm.package} is typed but its registry record has not changed in ${stale} months, and we matched it by who publishes it rather than by a link on your site, so we may be looking at a package you have replaced`,
+            inconclusive: true,
+            unblock:
+              'Name the package a developer installs in your docs or link it from your repository. We measure the one you point at, and this stops being a guess.',
+          }
+        }
         return yes(0, `${f.npm.package} is typed, and its registry record has not changed in ${stale} months${basis}`)
       }
       return yes(1, `${f.npm.package}@${f.npm.version} ships types${basis}`)

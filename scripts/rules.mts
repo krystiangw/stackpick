@@ -468,6 +468,15 @@ check('naglowek nie oskarza o signup, gdy check jest niemierzalny', throttled.cl
 // The same shape with a real failure keeps the sentence.
 const refused = pickHeadline(headlineFindings(), headlineCard([one('signup_reachable')], 12))
 check('a oskarza, gdy check naprawde oblal', refused.claim.includes('signup page answers'), true)
+// Ta sama zasada dla paczki: „The SDK agents will install for you" to mocniejsze zdanie niz
+// werdykt pod nim, wiec nie moze paść o paczce, ktora sami wybralismy z rejestru. 9.37.
+const staleNpm = (npmSource: string) =>
+  pickHeadline(
+    headlineFindings({ npm: { package: '@june-so/analytics-node', version: '1.0.0', staleMonths: 28 }, discovered: { npmSource } }),
+    headlineCard([one('typed_package', { inconclusive: npmSource === 'registry-search' })], 12),
+  )
+check('naglowek nie mowi o starym SDK, gdy paczke zgadlismy', staleNpm('registry-search').claim.includes('last published'), false)
+check('a mowi, gdy to paczka z ich strony', staleNpm('site-link').claim.includes('last published'), true)
 // Nothing measured is neither clean nor a list of failures.
 const blind = pickHeadline(headlineFindings(), headlineCard([one('signup_reachable', { inconclusive: true })], 0))
 check('nic nie zmierzone ma wlasne zdanie', blind.claim.includes('could not measure anything'), true)
@@ -1141,6 +1150,19 @@ check(
   remedy('typed_package', npmRow('site-link')).includes('not by a link on your site'),
   false,
 )
+// 9.37: galaz o wieku paczki nie jest zdaniem o typach, wiec na paczce, ktora sami wybralismy z
+// rejestru, nie moze byc oskarzeniem. Zmierzone: june.so oblane na `@june-so/analytics-node`,
+// podczas gdy ten sam scope niesie `@june-so/analytics-next`, opisana w rejestrze jako ich SDK.
+const typedCheck = CHECKS.find((one) => one.id === 'typed_package')!
+const staleRow = (npmSource: string) =>
+  typedCheck.evaluate({
+    npm: { package: '@june-so/analytics-node', found: true, bundledTypes: true, staleMonths: 28, version: '1.0.0' },
+    discovered: { npmSource },
+  } as never)
+check('stara paczka, ktora sami znalezlismy: niemierzalne', staleRow('registry-search').inconclusive, true)
+check('i nie jest to oskarzenie o brak typow', staleRow('registry-search').detail.includes('is typed but'), true)
+check('ta sama paczka wskazana przez nich: nadal oblewa', staleRow('site-link').inconclusive ?? false, false)
+check('bo tam wiemy, ze to ta paczka', staleRow('site-link').points, 0)
 
 // 52 of 91 rows in the plan are partial: provisioning language found, one phrase short. Telling
 // them to document a management API when we just matched "management api" reads as not having looked.

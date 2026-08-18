@@ -5845,6 +5845,21 @@ Do tego `NpmMatch.confidence` ma dzis **jedna mozliwa wartosc** - albo urealnic,
 a reseed rusza o 05:50. Wpychanie tego w przemiat byloby dokladnie ta niestarannoscia, przed ktora
 ostrzega audyt.
 
+**Co zrobilem od razu (9.37, bezpieczna czesc bramki):** galaz „rekord starszy niz 24 miesiace"
+przestaje byc oskarzeniem, gdy paczke wybralismy z rejestru sami. To nie jest zdanie o typach, tylko
+o tym, ze znalezione przez nas cos wyglada na porzucone - czyli dokladnie tak, jak wyglada zly
+strzal. june.so bylo oblane na `@june-so/analytics-node`, podczas gdy ten sam scope niesie
+`@june-so/analytics-next`, opisana w rejestrze jako ich SDK.
+
+**I to samo w naglowku raportu, o czym bym nie pomyslal.** Codex zauwazyl, ze `headline.ts` robi
+mocniejsze twierdzenie niz check pod nim („The SDK agents will install for you was last published
+N months ago"), przy **18** miesiacach zamiast 24, calkiem niezaleznie od werdyktu. Naprawiona
+regula w checku zostawilaby strone oskarzajaca **wiekszym drukiem niz wiersz, ktory streszcza**.
+Znowu to samo pojecie w dwoch implementacjach.
+
+**Co zostalo na potem:** wlasciwa bramka (wlasnosc udowodniona, paczka mowi o ich produkcie, brak
+lepszego rodzenstwa) - zadanie **#46** na boardzie, z cala rekomendacja audytu.
+
 **Co zrobilem zamiast tego:** **piec sprostowan w `errata.ts`** dla wierszy o zlym artefakcie
 (directus, xata, honeycomb, namecheap, godaddy), z `fixedIn: '9.40'`, czyli wersja, ktora ma przyniesc
 bramke. Sprostowanie pojawia sie **przy werdykcie na opublikowanej stronie**, wiec czytelnik widzi,

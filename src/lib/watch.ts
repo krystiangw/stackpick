@@ -132,6 +132,8 @@ const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   // 9.36 reads the same description with a wider eye: an amount with the currency symbol after the
   // number, and "no card needed" beside "no credit card".
   '9.36': ['price_in_snippet'],
+  // 9.37 stopped failing a vendor for an abandoned package we picked for them ourselves.
+  '9.37': ['typed_package'],
 }
 
 /**
