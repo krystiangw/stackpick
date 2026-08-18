@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { billingProvider } from '@/lib/billing/provider'
-import { MONITORING_IS_FREE, isMonitoring, skusForPrices, unmatchedPrices, type Sku } from '@/lib/billing/catalog'
+import { monitoringIsFree, isMonitoring, skusForPrices, unmatchedPrices, type Sku } from '@/lib/billing/catalog'
 import { getStore, type Store } from '@/lib/store'
 
 export const dynamic = 'force-dynamic'
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
       // not read it. That is deliberate while monitoring is free, because a cancelled subscriber
       // keeps exactly what a stranger gets. It stops being deliberate the moment it costs money,
       // so the rule lives next to the price rather than in this branch.
-      if (!MONITORING_IS_FREE) watch.stoppedAt = new Date().toISOString()
+      if (!monitoringIsFree()) watch.stoppedAt = new Date().toISOString()
       await store.saveWatch(watch)
     }
     if (ending.length === 0) console.error(`billing: cancellation of ${event.subscriptionRef} matched no watch`)
@@ -190,7 +190,7 @@ async function apply(
       // The same rule as the cancellation branch, and for the same reason: the grant above cleared
       // stoppedAt, so rolling back the plan without rolling back that would leave a cancelled
       // watch running the day monitoring stops being free.
-      if (!MONITORING_IS_FREE) watch.stoppedAt = new Date().toISOString()
+      if (!monitoringIsFree()) watch.stoppedAt = new Date().toISOString()
       await store.saveWatch(watch)
     }
     await record(`paid-after-cancel-${sku.id}`)

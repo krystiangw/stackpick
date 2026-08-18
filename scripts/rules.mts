@@ -55,7 +55,7 @@ import {
 // lokalnie i wywracal deploy.
 process.env.BILLING_PRICE_WATCH_MONTHLY ??= 'pri_watch'
 process.env.BILLING_PRICE_REPORT_ONE ??= 'pri_report'
-const { CATALOG, MONITORING_IS_FREE, priceOf, skuById, skusForPrices, unmatchedPrices } = await import('../src/lib/billing/catalog')
+const { CATALOG, monitoringIsFree, priceOf, skuById, skusForPrices, unmatchedPrices } = await import('../src/lib/billing/catalog')
 
 /**
  * The scanner's rules against sentences we wrote on purpose, half of which must match and half of
@@ -504,7 +504,22 @@ check(
 // anulowanie zdejmuje oplate, a nie usluge. Gdy przestanie byc darmowy, zdanie na /pricing musi
 // zniknac w tym samym commicie, wiec straznik wiaze jedno z drugim.
 const pricingSaysFree = readFileSync('src/app/pricing/page.tsx', 'utf8').includes('Free while we are building it')
-check('darmowy monitoring w kodzie i na cenniku mowia to samo', MONITORING_IS_FREE, pricingSaysFree)
+check('darmowy monitoring w kodzie i na cenniku mowia to samo', monitoringIsFree(), pricingSaysFree)
+// „Darmowy dzisiaj" bez niczego, co go konczy, nie jest decyzja, tylko stanem, do ktorego nikt nie
+// musi wrocic. Data nalezy do wlasciciela i tu jej nie ma; mechanizm jest, wiec ustawienie jej to
+// jedna linijka zamiast sporu o to, co znaczylo „darmowy".
+check('koniec darmowego jest warunkiem, nie pamiecia', typeof monitoringIsFree, 'function')
+// Celowo NIE ma tu reguly „data musi byc null". Taka regula oblewalaby build dokladnie w kroku,
+// ktory opisuje runbook billingu, czyli zabraniala uruchomienia tego, co sama ma chronic.
+// Kontrolka: mechanizm naprawde dziala, gdy data zostanie wpisana.
+check('przed data monitoring jest darmowy', monitoringIsFree(new Date('2026-09-01'), '2026-10-01'), true)
+// Kontrolka, ktora naprawde sprawdza mechanizm: po dacie przestaje byc.
+check('po dacie przestaje byc', monitoringIsFree(new Date('2026-11-01'), '2026-10-01'), false)
+// Data bez wiadomosci do zapisanych lamie obietnice ze strony glownej, wiec runbook billingu musi
+// niesc oba kroki w jednym miejscu.
+const runbookBillingu = readFileSync('docs/turning-billing-on.md', 'utf8')
+check('runbook billingu zna kohorte sprzed ceny', runbookBillingu.includes('FREE_MONITORING_ENDS_ON'), true)
+check('i mowi, ze trzeba do nich napisac', runbookBillingu.includes('Write to everyone already subscribed'), true)
 check('smiec nie wysadza czytania', signatures.read('{'), null)
 // Paddle wysyla customer_id, nie adres, wiec adres wozimy we wlasnym custom_data. Bez tego kazde
 // prawdziwe zdarzenie odpadaloby jako niekompletne. Znalezione przez codex review.

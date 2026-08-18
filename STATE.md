@@ -7830,3 +7830,63 @@ wiec rozjazd wersji jest widoczny dla czytelnika, zanim ktos go zglosi.
 **Czego NIE zrobie przy zgloszeniu do katalogu konektorow Anthropica:** zrzutow ekranu. Przechwyt
 przez przegladarke oddaje obraz w polowie rozmiaru okna (606 px przy oknie 1440 px), a katalog chce
 1000 px i wiecej. Reszta wymagan technicznych jest spelniona.
+
+## AUDYT DECYZJI O CENIE MONITORINGU (2026-08-19, decyzja z subagenta, do potwierdzenia rano)
+
+**Rekomendacja: 79 USD zostaje.** Trzy powody, kazdy sprawdzony przez audyt w kodzie i na cudzych
+stronach, a nie z rynku „jak wiadomo":
+
+1. **To nie ten sam towar co 29 USD u agentable.** Ich wlasna stopka mowi, ze weryfikuja **istnienie
+   artefaktow, a nie realny sukces agenta**. Nasza polowa „checki co tydzien" jest z nimi
+   porownywalna i jest commodity; polowa „pytanie zakupowe zadane agentowi piec razy, kto zostal
+   wybrany zamiast ciebie i jakim zdaniem" nie ma u nich odpowiednika.
+2. **Obnizka nie naprawia lejka, w ktorym nie da sie zaplacic.** Przy zerowej sprzedazy roznica
+   79 kontra 59 nie ma jak sie objawic.
+3. **Koszt krancowy jest bliski zeru**, bo cele agentowe sa **per kategoria, nie per klient**, i
+   ponosimy je i tak dla korpusu. Cene ustala wartosc, a wartosci jeszcze nie zmierzylismy.
+
+**Co audyt znalazl przy okazji, a czego nie szukalem:** pakiet agencyjny 499 USD za 10 domen to
+**49,90 za domene**, przy 99 USD za 25 domen u agentable, czyli **3,96**. Na pojedynczej domenie
+roznica jest 2,7x, w pakiecie **12,6x**. Agencja policzy to w dwie sekundy. Liczby docelowej nie
+podaje ani audyt, ani ja, bo nikt z nas nie ma danych o gotowosci do zaplaty.
+
+**Druga rzecz, ktorej nie szukalem:** relacja 49 do 79 sprzedaje w pierwszym miesiacu **mniej za
+wiecej**. Raport za 49 USD to 10 biegow na dwoch narzedziach; miesiac monitoringu to 5 biegow.
+Zdanie „credited against your first month" jest **proza bez mechanizmu**. Audyt rekomenduje dac
+pierwszemu miesiacowi 10 biegow (cele juz je trzymaja, wiec nie kosztuje nic) albo usunac to zdanie.
+Trzeciej mozliwosci nie ma.
+
+**WYKONANE DZIS, bo nie wymagalo niczyjej decyzji:**
+- **„Darmowy dzisiaj" ma teraz koniec zapisany jako warunek**, a nie pamietany:
+  `FREE_MONITORING_ENDS_ON` (dzis `null`) obok `monitoringIsFree()`. Sama data nalezy do wlasciciela.
+  Przy okazji naprawione: `MONITORING_IS_FREE` bylo **stala czytana raz przy ladowaniu modulu**, wiec
+  data ustawiona w poniedzialek odpowiadalaby „darmowy" az do nastepnego deployu. To ten sam ksztalt
+  bledu co liczba policzona raz i cytowana na zawsze.
+- **Runbook billingu niesie kohorte sprzed ceny.** Strona glowna obiecuje wprost, ze **zapytamy,
+  zanim to cokolwiek bedzie kosztowac**, a formularz, ktory zebral wszystkich obecnych subskrybentow,
+  **nigdy nie pokazal kwoty**. Wiec dzien uruchomienia billingu jest dniem, w ktorym ta obietnica
+  jest dotrzymana albo zlamana, i nie da sie jej dotrzymac pamiecia. Straznik pilnuje, ze runbook
+  niesie oba kroki: ustawienie daty i napisanie do zapisanych.
+
+**CODEX ZLAPAL, ZE ZBUDOWALEM POL MECHANIZMU I OPISALEM GO JAK CALY.** Ustawienie
+`FREE_MONITORING_ENDS_ON` **nie konczy niczego**: cron monitoringu obsluguje kazdego watcha
+potwierdzonego i niezatrzymanego, a **nie czyta ani daty, ani pola `plan`**. Data zmienia dzis tylko
+to, co robi anulowanie subskrypcji. Kod, ktory to egzekwuje, **swiadomie nie powstal**, bo decyzja o
+tym, co sie dzieje z darmowym watchem po dacie (obslugiwany dalej, wstrzymany z informacja, czy
+poproszony o platnosc), dotyczy ludzi, ktorzy zapisali sie ze strony bez ceny. Komentarz przy stalej
+i runbook mowia to wprost, zamiast udawac przelacznik.
+
+**Drugie znalezisko codeksa, wazniejsze niz wyglada:** moj wlasny straznik „data musi byc null"
+**oblewalby build dokladnie w kroku, ktory opisuje runbook**, czyli zabranialby uruchomienia tego, co
+mial chronic. Usuniety, z komentarzem, zeby nikt go nie dopisal z powrotem.
+
+**CZEGO NIE WYKONALEM, choc audyt to proponowal, i dlaczego:** pomiaru klikniec w CTA. To jedyna
+rzecz, ktora zamienilaby cene z hipotezy w obserwacje, ale **kilka godzin wczesniej opublikowalem na
+`/privacy` zdanie „no profile, no behaviour"**. Liczenie klikniec bez identyfikatora da sie z tym
+pogodzic, ale to jest **handel wymienny obietnica**, a nie detal techniczny, wiec nalezy do Krystiana.
+
+**DO POTWIERDZENIA RANO:** (1) czy 79 zostaje; (2) czy pakiet agencyjny schodzi w dol wobec 12,6x;
+(3) czy pierwszy miesiac dostaje 10 biegow, czy zdanie o kredycie znika; (4) ksztalt konca darmowego
+(rekomendacja audytu: darmowe do startu checkoutu, potem 30 dni trialu, kohorta sprzed billingu z
+grandfatheringiem); (5) czy wolno mierzyc klikniecia w CTA; (6) czy publikujemy porownanie nazywajace
+konkurenta (dzis cennik mowi wprost, ze nie mierzylismy cudzego produktu).

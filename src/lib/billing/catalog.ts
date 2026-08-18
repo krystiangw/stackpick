@@ -70,14 +70,42 @@ export function priceOf(sku: Sku): string {
 }
 
 /**
+ * The day the giveaway ends, or null while there is no date.
+ *
+ * Written as a condition rather than remembered, because "free today" with nothing that ends it is
+ * not a decision, it is a state nobody has to revisit. The date is deliberately absent: it belongs
+ * to whoever owns the business and it cannot be set from a rule. What is here is the mechanism, so
+ * that setting it later is one line rather than an argument about what free meant.
+ *
+ * Two promises constrain what may be written here. `/pricing` says the price is printed so the
+ * reader knows what it will become, and the home page says we will ask before it ever costs
+ * anything. So a date arriving without a message to everyone already subscribed would break the
+ * second one, and `docs/turning-billing-on.md` carries that step.
+ *
+ * WHAT THIS DATE DOES NOT DO, because a half-built mechanism described as a whole one is worse than
+ * none: the monitoring cron serves every confirmed, unstopped watch and reads neither this date nor
+ * `plan`. Setting it changes only what a cancellation does. Ending the giveaway for the watches that
+ * already exist is a decision about people who subscribed from a page that never showed a price, so
+ * the code for it is deliberately not written ahead of that decision. `docs/turning-billing-on.md`
+ * names it as work, not as a switch.
+ */
+export const FREE_MONITORING_ENDS_ON: string | null = null
+
+/**
  * Whether monitoring is currently given away while it is being built, which is what /pricing
  * promises in so many words: "Free while we are building it, and we will ask before it ever costs
  * anything." It decides one thing here, and it is not a detail: a cancelled subscription stops the
  * charge, and only when the service is no longer free does it also stop the service.
  *
  * The day this turns false, the sentence on /pricing has to change in the same commit.
+ *
+ * A function rather than a constant, because a constant is read once when the module loads and a
+ * dyno stays up for days: a date set on Monday would keep answering "free" until the next deploy,
+ * which is the same class of mistake as a number computed once and quoted for ever.
  */
-export const MONITORING_IS_FREE = true
+export function monitoringIsFree(now = new Date(), endsOn = FREE_MONITORING_ENDS_ON): boolean {
+  return endsOn === null || now < new Date(endsOn)
+}
 
 /**
  * The audit is deliberately absent from this catalog. It is scoped in a conversation and invoiced

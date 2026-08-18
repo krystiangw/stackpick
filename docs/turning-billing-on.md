@@ -90,6 +90,28 @@ heroku config:set BILLING_PRICE_REPORT_ONE=pri_... -a stackpick
 Setting `BILLING_PROVIDER` is the whole switch. Unset it and the webhook answers 404 again, which is
 the rollback: no code change, no deploy.
 
+## 5b. The people who subscribed before there was a price
+
+The home page says, in these words, that we will ask before monitoring ever costs anything, and the
+form that captured every current subscriber never showed a figure. So the day billing starts is the
+day that promise is either kept or broken, and it cannot be kept by remembering it.
+
+Two things belong in the same change as `BILLING_PROVIDER`:
+
+1. **Set `FREE_MONITORING_ENDS_ON` in `src/lib/billing/catalog.ts`, and write the code that reads
+   it.** The date is one line and `monitoringIsFree()` reads it live, but today it changes only what
+   a cancellation does: the monitoring cron serves every confirmed, unstopped watch and looks at
+   neither the date nor `plan`. Deciding what happens to a trial watch after the date - served,
+   paused with a notice, or asked to pay - is a decision about people who subscribed from a page
+   that never showed a price, so the code is deliberately not written ahead of it.
+2. **Write to everyone already subscribed before that date passes**, and say what changes and when.
+   `npx tsx -e "..."` over `listWatchesDue` prints them; there were four on 2026-08-19, all trial.
+   Whatever they are offered - a frozen price, a free period, a plain notice - it is cheap: another
+   watch in a category we already run costs one HTTP sweep a week and one email a month.
+
+The cost of getting this wrong is not the four addresses. It is that the sentence on the home page
+is one of the few promises on this site that a reader can check against their own inbox.
+
 ## 6. Check it actually works, in this order
 
 1. `curl -s -o /dev/null -w '%{http_code}' -X POST https://letagentsin.com/api/billing/webhook` -
