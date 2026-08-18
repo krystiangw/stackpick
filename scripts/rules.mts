@@ -1547,6 +1547,37 @@ for (const sku of CATALOG) {
   check(`${sku.id}: katalog czyta te sama zmienna`, catalogSource.includes(`priceId('${suffix}')`), true)
 }
 
+// Obserwacja, ktorej jeszcze nie skanowalismy, czeka od zalozenia, a nie w nieskonczonosc. Czytana
+// jako nieskonczonosc dawala longestWaitDays = 9999 w chwili, gdy ktokolwiek potwierdzil adres, a
+// alarm kadencji w quota.yml pada powyzej osmiu dni: kazdy NOWY klient odpalalby alarm o naszej
+// wlasnej dostawie, dopoki nocny przebieg go nie obsluzyl.
+console.log('\nnowa obserwacja nie jest spoznionA')
+const waitOf = (watch: { checkedAt: string | null; confirmedAt?: string | null; createdAt: string }, now: number) =>
+  (now - Date.parse(watch.checkedAt ?? watch.confirmedAt ?? watch.createdAt)) / 86_400_000
+const now = Date.parse('2026-08-18T04:00:00Z')
+check(
+  'zalozona godzine temu i nieskanowana: czeka godzine',
+  Math.round(waitOf({ checkedAt: null, createdAt: '2026-08-18T03:00:00Z' }, now)),
+  0,
+)
+check(
+  'zalozona dziesiec dni temu i nieskanowana: czeka dziesiec dni',
+  Math.round(waitOf({ checkedAt: null, createdAt: '2026-08-08T04:00:00Z' }, now)),
+  10,
+)
+// Potwierdzenie po dwoch tygodniach to nie jest ktos, kogo kazalismy czekac: przed potwierdzeniem
+// obserwacji nie ma w kolejce i nie mielismy jak jej obsluzyc.
+check(
+  'zegar rusza od potwierdzenia, a nie od zapisu',
+  Math.round(waitOf({ checkedAt: null, confirmedAt: '2026-08-18T03:00:00Z', createdAt: '2026-07-01T00:00:00Z' }, now)),
+  0,
+)
+check(
+  'skanowana pieć dni temu liczy od skanu, nie od zalozenia',
+  Math.round(waitOf({ checkedAt: '2026-08-13T04:00:00Z', createdAt: '2026-07-01T00:00:00Z' }, now)),
+  5,
+)
+
 // Kazdy platnik jest goscia: korpus to lista, ktora sami wybralismy, a kupuja ci, ktorych na niej
 // nie ma. Miesieczny mail czytal gotowe wiersze celi, wiec goscia liczyl na zero, ktorego nikt nie
 // mierzyl - i wyslalby platnikowi „wymieniony w 0 z 10" o biegach, w ktorych nie bylo go w liscie.

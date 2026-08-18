@@ -33,14 +33,21 @@ function authorised(request: Request): boolean {
  * The queue as it stands, without touching it. A guard that has to POST to find out whether the
  * queue is healthy performs a scan and can send somebody an email as a side effect of asking a
  * question, which is not a health check.
+ *
+ * A watch nobody has scanned yet waits from the day it became servable, not forever. Reading it as
+ * forever made `longestWaitDays` 9999 the moment anybody confirmed an address, and the weekly
+ * cadence alarm in quota.yml fails above eight: every new customer would have set off an alarm
+ * about our own delivery until the next nightly run served them. From the confirmation rather than
+ * the signup, because an unconfirmed watch is not in this queue and we could not have served it:
+ * somebody who confirms a fortnight later is not somebody we kept waiting.
  */
 export async function GET(request: Request) {
   if (!authorised(request)) return NextResponse.json({ error: 'Not for you.' }, { status: 401 })
   const store = getStore()
   const now = Date.now()
   const queue = await store.listWatchesDue(500)
-  const waitedDays = (watch: { checkedAt: string | null }) =>
-    watch.checkedAt === null ? Infinity : (now - Date.parse(watch.checkedAt)) / 86_400_000
+  const waitedDays = (watch: { checkedAt: string | null; confirmedAt: string | null; createdAt: string }) =>
+    (now - Date.parse(watch.checkedAt ?? watch.confirmedAt ?? watch.createdAt)) / 86_400_000
   const longestWait = queue.length === 0 ? 0 : Math.max(...queue.map((watch) => Math.min(waitedDays(watch), 9_999)))
   const due = queue.filter((watch) => watch.checkedAt === null || now - Date.parse(watch.checkedAt) > STALE_AFTER_MS)
   return NextResponse.json({ watches: queue.length, due: due.length, longestWaitDays: Math.round(longestWait) })
@@ -58,8 +65,8 @@ export async function POST(request: Request) {
   const queue = await store.listWatchesDue(500)
   const due = queue.filter((watch) => watch.checkedAt === null || now - Date.parse(watch.checkedAt) > STALE_AFTER_MS)
   /** The oldest check in the whole queue, in days. The one number a cadence alarm can be built on. */
-  const waitedDays = (watch: { checkedAt: string | null }) =>
-    watch.checkedAt === null ? Infinity : (now - Date.parse(watch.checkedAt)) / 86_400_000
+  const waitedDays = (watch: { checkedAt: string | null; confirmedAt: string | null; createdAt: string }) =>
+    (now - Date.parse(watch.checkedAt ?? watch.confirmedAt ?? watch.createdAt)) / 86_400_000
   const longestWait = queue.length === 0 ? 0 : Math.max(...queue.map((watch) => Math.min(waitedDays(watch), 9_999)))
   if (due.length === 0) {
     return NextResponse.json({ checked: 0, mailed: 0, remaining: 0, watches: queue.length, longestWaitDays: Math.round(longestWait) })

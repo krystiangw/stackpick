@@ -5937,3 +5937,21 @@ Zrobione:
 naszej skrzynce testowej. Mail wychodzi z prawdziwymi liczbami: 0 z 10, ale to **zmierzone** zero,
 plus lista tych, ktorzy byli wymieniani czesciej, i uczciwe zdanie o absencji. Obserwacja zostaje
 wlaczona jako zywy przypadek testowy.
+
+## ALARM KADENCJI ZAPALALBY SIE PRZY KAZDYM NOWYM KLIENCIE (2026-08-18, naprawione)
+
+Wyszlo przez zalozenie testowej obserwacji goscia: moje wlasne `watch-coverage` wypisalo
+„1 obserwacji CZEKA ZA DLUGO" o obserwacji sprzed pieciu minut. Przyczyna byla glebiej niz w
+skrypcie: `GET /api/cron/watch` mapowal `checkedAt === null` na **nieskonczonosc**, wiec
+`longestWaitDays` skakalo do 9999 w chwili, gdy ktokolwiek potwierdzil adres, a tygodniowy alarm w
+`quota.yml` pada powyzej osmiu dni. **Kazdy nowy klient odpalalby alarm o naszej wlasnej dostawie**,
+dopoki nocny przebieg go nie obsluzyl.
+
+Teraz obserwacja nieskanowana czeka od **potwierdzenia** (nie od zapisu i nie w nieskonczonosc):
+przed potwierdzeniem nie ma jej w kolejce, wiec ktos, kto potwierdzil po dwoch tygodniach, nie jest
+kims, kogo kazalismy czekac. Endpoint i skrypt licza to jedna formula, straznik w `rules.mts`
+sprawdza trzy przypadki.
+
+Do tego `watch-coverage` czytal kategorie przez `categoryFor`, wiec o przypisanej obserwacji mowil
+„BRAK KATEGORII", podczas gdy mail juz umial ja obsluzyc. **Trzeci raz tej nocy to samo pojecie w
+dwoch implementacjach**; teraz oba ida przez `categoryOfWatch`.
