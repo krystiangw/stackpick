@@ -7276,3 +7276,49 @@ wszystkie przepiete. Straznik pilnuje, ze **na sciezce skanu nie ma juz `/<[^>]+
 **Codex zdjal moj wlasny prog czasowy z `rules.mts`** i mial racje: `rules.mts` chodzi w buildzie,
 wiec prog na zegarze oblewalby poprawny build na obcazonej maszynie. Deterministyczny odpowiednik
 to nieobecnosc wzorca w zrodle; czas mierzy osobny skrypt.
+
+## RAPORT DOSTAJE MODEL DANYCH, WYKRESY I CYTATY ZWYCIEZCY (2026-08-19)
+
+Krystian obejrzal probke i wypunktowal: **malo miesa** (nie widac, jakie rozmowy toczylismy z
+agentami), **brak slow, ktorymi agent wybral konkurenta**, **brak informacji, jakich narzedzi i
+modeli uzywamy**, brak polowy audytowej (jak agent poradzil sobie z dokumentacja, rejestracja,
+cennikiem) i osobno: **raport nie zachwyca graficznie**, nie da sie z niego zrobic PDF-a na
+spotkanie.
+
+**Co bylo w danych i czego nie pokazywalismy:**
+- **Cytaty zwyciezcy.** Cytowalismy tylko zdania o kupujacym, wiec raport filestacka mowil „zaden
+  bieg nie napisal o was zdania" i nic wiecej. Teraz cytuje **slowa, ktorymi wybrano konkurenta**,
+  wylacznie z biegow, w ktorych ten konkurent **byl wymieniony pierwszy** (codex poprawil mi to:
+  wzmianka w polowie odpowiedzi to nie jest „tak brzmi bycie wybranym").
+- **Czym mierzylismy.** Tabela narzedzie, wersja, model, liczba biegow, data. Przy okazji widac
+  rzecz, ktora sama jest znaleziskiem: **codex na darmowym planie raportuje model jako `default`**.
+
+**Prezentacja: `/d/<id>` renderuje teraz model, nie markdown.** Dwie liczby na wierzchu (wymieniony
+w N z M biegow oraz punkty mierzalne), paski udzialu, **wykres slupkowy kto zostal wymieniony
+zamiast ciebie**, cytaty w ramce, piec etapow z paskami, karty oblanych checkow z poprawka przy
+kazdym, plan naprawy z zyskiem i naklademem, oraz co niemierzalne i co niedotyczace. Klasy `print:`
+i `break-inside-avoid`, wiec Cmd+P daje sensowny PDF. **Markdown zostaje bez zmian** jako to, co
+kupujacy przesyla dalej.
+
+**Jedna decyzja projektowa, ktora byla warta calej reszty:** model jest **liczony raz**, w tym samym
+przebiegu co markdown, i zapisywany razem z nim. Dwa renderery czytajace dwa liczenia to jest
+dokladnie ten blad, ktory juz raz zrobilismy („wymieniony 9 z 10" obok tabeli mowiacej 5).
+
+**Codex zglosil w tej zmianie dziewiec rzeczy i osiem z nich to byly zastrzezenia, ktore ladniejsza
+wersja po cichu gubila:** brak informacji, ze vendor nie byl na liscie przy biegach; brak
+ostrzezenia, ze bieg mogl czytac lokalne instrukcje operatora; brak wyjasnienia, czemu mianownik
+jest mniejszy (checki niedotyczace); brak linku do pelnych odpowiedzi; brak sekcji „czym ten raport
+nie jest"; brak informacji, ze skan jest ze starszej formuly; brak wyjasnienia, czemu cytatow jest
+mniej niz wymienien; brak poprawki przy pojedynczym oblanym checku. Do tego jeden prawdziwy blad
+logiczny: przy kategorii **bez biegow** strona pisalaby „zaden bieg nie wymienil ciebie" zamiast
+„jeszcze nie odpowiedzieliśmy na te polowe". Straznik w `rules.mts` pilnuje teraz czterech z tych
+pol, zeby nie wypadly przy nastepnym przepisywaniu.
+
+**Nowa probka: https://letagentsin.com/d/3JaaRSTr2A4H**
+
+**CZEGO WCIAZ NIE MA I CO JEST NASTEPNE (polowa audytowa).** Raport nadal odpowiada tylko na dwa
+pytania: czy cie wymieniaja i czy technicznie da sie ciebie uzyc. **Nie odpowiada na trzecie: jak
+agent poradzil sobie, gdy mu kazano isc wlasnie z toba.** To wymaga biegu budujacego (dokumentacja,
+rejestracja, cennik, klucz), prawdziwej skrzynki (mamy `agentaudit@agentmail.to`) i **zakladania
+kont**, czego agent nie robi sam. Do tego szersza siatka narzedzi: dzis claude i codex, docelowo
+gemini i cursor, co jest **decyzja o platnych subskrypcjach dla Krystiana**.
