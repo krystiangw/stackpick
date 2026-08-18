@@ -7056,11 +7056,17 @@ i sekcja „Three verdict states" na `/methodology`. Subagent nie mial dostepu d
 | zadnej strony cennika nie znalezlismy | 19 z 177 |
 | strona cennika ponizej 1200 znakow tekstu | 12 z 177 |
 
-`scripts/price-without-js.mts`. **Skaner mierzy `pricesVisibleWithoutJs` od dawna i nic tego nie
-scoruje.** To jest jedyny kandydat na check z tej calej nocy, ktory ma zmierzona powierzchnie
-(14 procent korpusu) i nie wymaga ani jednego nowego zapytania. **Przed checkiem nalezy sie przebieg
-adwersaryjny**: 12 cienkich stron moze byc nawigacja z guzikiem, a nie cennikiem renderowanym w JS,
-a to sa dwa rozne zarzuty. Check oznacza tez podbicie formuly, wiec dopiero po sprostowaniu directusa.
+`scripts/price-without-js.mts`. **Poprawka do mojego wlasnego zdania sprzed godziny:** napisalem, ze
+nic tego nie scoruje, i to bylo za mocne. Flaga jest uzywana w galezi checku o darmowym progu
+(„answers a plain request with no price and no free-tier wording in the N characters it serves"),
+ale **nie jest osobnym checkiem** i nikt nie pyta wprost, czy agent zobaczy cene.
+
+**Powierzchnia dzieli sie na dwie i tylko polowe wolno nam oskarzyc.** `pricesVisible: false` powstaje
+na dwa sposoby: kanoniczne `/pricing` o wadze cenowej zero (fakt o vendorze) albo strona zapasowa,
+ktora sami wybralismy, bo nic kanonicznego nie odpowiedzialo (fakt o naszym odkrywaniu, i punktacja
+juz dzis nazywa go niemierzalnym). Rozbicie liczbowe w `/tmp/pricejs2.txt`, skrypt rozdziela je sam.
+Check oznacza podbicie formuly, wiec dopiero po sprostowaniu directusa, i dopiero po przebiegu
+adwersaryjnym na tej kanonicznej polowie.
 
 2. **Slownik porazek z PostHoga, odwrocony na strone produktu.** Ich lista opisuje wine agenta
 („picked the wrong tool", „retrieval pulled bad context"), nasza wersja opisuje wine produktu
@@ -7100,3 +7106,34 @@ z zapisanego korpusu: **94 ze 177** publikuje metadane serwera autoryzacji, **77
 DCR. RFC 9728 pytamy tylko na hoscie witryny, wiec ta osemka to **dolna granica**. Wniosek na dzis:
 mechanizm wycofywany jest wciaz tym, co realnie stoi w sieci (77 kontra 8), wiec `oauth_dcr` zostaje
 jako check, a zmienilismy tylko zdanie, ktore obiecywalo wiecej niz specyfikacja.
+
+## 42. PRZEBIEG: CENA NIEWIDOCZNA DLA ZWYKLEGO POBRANIA (2026-08-18)
+
+25 kanonicznych stron cennika zapytanych ponownie, `scripts/audit-price-js.mts`, z kontrolka na
+trzech stronach, ktorym cene zaliczylismy (skaner znajduje na nich kwoty, wiec sonda umie powiedziec
+„jest"). Szerszy zestaw wzorcow niz nasz wlasny: funty, jeny, rupie, kwota przed kodem waluty,
+„per seat", miesiecznie po polsku, francusku i niemiecku.
+
+**Wynik: 16 potwierdzonych, 7 z cena wylacznie w payloadzie skryptu, 0 naszej slepoty, 2 nie na ich
+cenniku.** Zero wierszy, gdzie cena stoi w widocznym tekscie, a my jej nie widzimy: nasza lista
+sygnalow (dolar, euro, „per month", „/mo", „per user", „billed annually") **nie przegapila zadnej
+ceny w innej walucie ani w innym jezyku** na tych 25 stronach.
+
+**Dwa wiersze sa nasze do naprawy, znalezione dopiero po zaostrzeniu sondy:**
+- `sendgrid.com/pricing` **przekierowuje na `twilio.com/en-us/sendgrid`**, strone produktowa. Zdanie
+  „twoja strona cennika odpowiada bez ceny" jest o stronie, ktorej vendor nigdy nie nazwal cennikiem.
+- `deepl.com/pricing` przekierowuje na `deepl.com/en/pro`, ktora ma cene w payloadzie.
+
+**Skad to sie bierze:** `bestPricing` sprawdza sciezke, ktora **zapytalismy**, i nie patrzy, gdzie
+zapytanie **wyladowalo**. Sonda tez tego nie sprawdzala w pierwszej wersji i dlatego pierwszy
+przebieg wyszedl 0 z 25, a poprawny jest 2 z 25. To ta sama lekcja, co przy oauth: **sonda musi
+pytac dokladnie o to, co twierdzi zdanie**, a zdanie mowi „twoja strona cennika".
+
+**Twilio i elastic sprawdzone recznie, bo 15 tysiecy znakow bez ceny brzmi nieprawdopodobnie:**
+`twilio.com/pricing` konczy na `www.twilio.com/en-us/pricing` z tytulem „Twilio Pricing", serwuje
+15 543 znaki i **ani jednej kwoty w calym dokumencie**, tylko „free", „trial" i „Contact sales".
+`elastic.co/pricing` tak samo. To sa uczciwe znaleziska, nie luka w odczycie.
+
+**Powierzchnia dla ewentualnego checku: 23 z 25** (16 bez ceny gdziekolwiek plus 7 z cena tylko dla
+JavaScriptu), czyli **13 procent korpusu**. Poprawka `bestPricing` i tak jest potrzebna niezaleznie
+od checku, bo dzis produkuje dwa zdania o cudzych stronach, ktore nie sa cennikami.
