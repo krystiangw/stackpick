@@ -1762,9 +1762,13 @@ console.log('\ndowod domeny dla rejestru MCP')
 const DOWOD_MCP = /^v=MCPv1; k=ed25519; p=[A-Za-z0-9+/]{43}=$/
 check('plik ma format v=MCPv1', DOWOD_MCP.test(readFileSync('public/.well-known/mcp-registry-auth', 'utf8').trim()), true)
 check('kontrola: sam klucz bez naglowka odpada', DOWOD_MCP.test('p=dxvT0jHk9iEnguAEfhDL+/7vu0EEHeJ6A0Y1MBktzag='), false)
-const serwerMcp = JSON.parse(readFileSync('server.json', 'utf8')) as { name: string; remotes: { url: string }[] }
+const serwerMcp = JSON.parse(readFileSync('server.json', 'utf8')) as { name: string; description: string; remotes: { url: string }[] }
 check('przestrzen nazw zgodna z domena', serwerMcp.name.startsWith('com.letagentsin/'), true)
 check('wpis wskazuje nasz wlasny endpoint', serwerMcp.remotes.every((r) => r.url.startsWith('https://letagentsin.com/')), true)
+// Rejestr odrzuca opis dluzszy niz 100 znakow calym 422 i mowi to dopiero przy publikacji, a opis
+// jest dla agenta tym, czym tytul strony dla czlowieka. Pierwsza proba publikacji poszla w kosz
+// wlasnie na tym.
+check('opis miesci sie w limicie rejestru', serwerMcp.description.length <= 100, true)
 
 // Karta A2A jest deskryptorem, wiec liczy sie jak mcp.json: punkt za istnienie, nie dwa za
 // procedure. Standard AgentReady stawia ja jako MUST, a my mowilismy tigrisdata.com, ze nie ma
