@@ -7885,6 +7885,17 @@ rzecz, ktora zamienilaby cene z hipotezy w obserwacje, ale **kilka godzin wczesn
 `/privacy` zdanie „no profile, no behaviour"**. Liczenie klikniec bez identyfikatora da sie z tym
 pogodzic, ale to jest **handel wymienny obietnica**, a nie detal techniczny, wiec nalezy do Krystiana.
 
+**LICZBY KONKURENTA SPRAWDZILEM SAM, NIE Z RELACJI SUBAGENTA** (agentable.is, 2026-08-19, pobrane z
+naglowkiem przegladarki): MONITOR **29 USD/mies. za domene** to cotygodniowe re-skany, alerty przy
+spadku wyniku albo peknieciu checka MUST, historia wyniku i badge do osadzenia. AGENCY **99 USD/mies.
+do 25 domen** plus eksport CSV. Ich wlasna stopka opisuje produkt jako statyczny skan zgodnosci,
+ktory - ich slowami - **„verifies artifacts exist, not live agent success"**. To jest jedyny material,
+na ktorym wolno budowac porownanie, bo pochodzi od nich.
+
+**Szkic akapitu lezy w `docs/draft-priced-against.md` i JEST NIEPUBLIKOWANY.** Dopisalem tam trzy
+warunki, ktore musza byc spelnione, zanim cokolwiek pojdzie na strone, w tym ten, ktory boli:
+akapit o wartosci za domene zaprasza arytmetyke, ktora **przegrywamy na pakiecie agencyjnym**.
+
 **DO POTWIERDZENIA RANO:** (1) czy 79 zostaje; (2) czy pakiet agencyjny schodzi w dol wobec 12,6x;
 (3) czy pierwszy miesiac dostaje 10 biegow, czy zdanie o kredycie znika; (4) ksztalt konca darmowego
 (rekomendacja audytu: darmowe do startu checkoutu, potem 30 dni trialu, kohorta sprzed billingu z
