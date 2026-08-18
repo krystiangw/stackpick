@@ -28,6 +28,14 @@ zanim cokolwiek zrobisz.** Gdyby przepadla, komenda jest w sekcji o 9.35 nizej.
    `CHECK_RULE_CHANGED` juz jest. **Nie skanuj ich pojedynczo jako podejrzanych.**
 5. `npx tsx scripts/read-provisioning-quotes.mts` i porownaj z dzisiejszym: 63 zaliczone, 0 stojace
    wylacznie na golej frazie.
+6. `npm run watch-coverage` - dolozona kadencja: pokazuje, czy ktoras obserwacja czeka za dlugo.
+7. `npm run audit-our-api` - czy nasz OpenAPI opisuje kazde pole, ktore API zwraca (nie wymaga bazy).
+
+**Wszystko naraz, jednym wklejeniem:**
+```
+cd ~/projects/stackpick && export MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick)
+npx tsx scripts/after-reseed.mts && npm run audit && npx tsx scripts/audit-study.mts   && npm run audit-delivery && npm run regressions && npm run watch-coverage && npm run audit-our-api
+```
 
 **PUNKT ODNIESIENIA po reseedzie 9.33 (2026-08-18 00:00):** 177 wierszy, `programmatic_provisioning`
 **63 zaliczone** (bylo 80 przed 9.32), `oauth_dcr` **91 oblanych, 74 z adresami**, `mcp_present`
