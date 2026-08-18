@@ -2078,5 +2078,20 @@ check('wstep zgadza sie z tabela', standard.includes(`We measure six of the seve
 check('opis dla wyszukiwarki mowi to samo', standard.includes('We measure six of those seven'), true)
 check('bez wyniku zgodnosci', /compliance score/i.test(standard) && standard.includes('there will not be'), true)
 
+// Cennik pokazuje przyklad dostarczanego dokumentu tylko wtedy, gdy ten dokument istnieje: swieze
+// wdrozenie nie ma zadnych dostaw, a link do 404 jest gorszy niz brak linku.
+console.log('\ncennik nie linkuje probki, ktorej nie ma')
+const pricingPage = readFileSync('src/app/pricing/page.tsx', 'utf8')
+check('probka jest sprawdzana w magazynie', pricingPage.includes("getDelivery('sample')"), true)
+// Istnienie to nie zgoda: raport klienta opublikowany pod tym id, ale bez znacznika probki, nie ma
+// prawa trafic na cennik.
+check('i musi byc oznaczona jako probka', pricingPage.includes('delivery?.sample === true'), true)
+// Baza, ktora odmawia odczytu, nie moze wywrocic cennika przez opcjonalny link.
+check('a awaria bazy tylko chowa link', pricingPage.includes('.catch(() => false)'), true)
+check('i link renderuje sie warunkowo', pricingPage.includes('tier.sample && sampleReady'), true)
+// `--id --sample` przechodzilo przez wzorzec i publikowalo raport pod nazwa flagi.
+const reportScript = readFileSync('scripts/client-report.mts', 'utf8')
+check('--id nie bierze innej flagi za wartosc', reportScript.includes("chosen.startsWith('--')"), true)
+
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

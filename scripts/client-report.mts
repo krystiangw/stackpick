@@ -463,7 +463,15 @@ console.log(`${out} zapisany, ${lines.length} linii`)
 // id is the only key: the report names a vendor's failures in more detail than anything we publish
 // for free, so it is never indexed and never listed.
 if (rest.includes('--publish')) {
-  const id = randomBytes(9).toString('base64url')
+  // A fixed id when the operator asks for one, so a link that has been sent to somebody keeps
+  // working when the report behind it is regenerated. Anything else gets an unguessable one.
+  const at = rest.indexOf('--id')
+  const chosen = at === -1 ? null : rest[at + 1]
+  if (at !== -1 && (!chosen || chosen.startsWith('--') || !/^[\w-]{3,40}$/.test(chosen))) {
+    console.error('--id potrzebuje nazwy z liter, cyfr, myslnika lub podkreslenia (3-40 znakow)')
+    process.exit(2)
+  }
+  const id = chosen ?? randomBytes(9).toString('base64url')
   const model: ReportModel = {
     domain,
     category: category.label,

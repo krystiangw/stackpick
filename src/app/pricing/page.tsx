@@ -6,6 +6,7 @@ import { priceOf, skuById } from '@/lib/billing/catalog'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
 import { SITE_URL } from '@/lib/site'
+import { getStore } from '@/lib/store'
 import { NOISE_FLOOR_PERCENT } from '@/lib/published'
 
 export const metadata: Metadata = {
@@ -24,6 +25,8 @@ type Tier = {
   pitch: string
   includes: readonly string[]
   note?: string
+  /** A finished example of the deliverable. Nobody buys a document they have never seen. */
+  sample?: { label: string; href: string }
   featured?: boolean
   cta: { label: string; href: string }
 }
@@ -60,6 +63,7 @@ const TIERS: readonly Tier[] = [
       `Only the ${CATEGORIES.length} categories we measure. If your product is not in one of them we say so before you pay, not after`,
     ],
     note: 'Credited against your first month of monitoring. It is a sample of that, not a competitor to it.',
+    sample: { label: 'Read a real one, start to finish', href: '/d/sample' },
     cta: { label: 'Ask for a report', href: 'mailto:hello@letagentsin.com?subject=One%20agent%20report' },
   },
   {
@@ -97,6 +101,16 @@ const TIERS: readonly Tier[] = [
 ]
 
 export default async function PricingPage() {
+  // Linked only when it is there AND marked as a sample. A fresh deployment has no deliveries and a
+  // link to a 404 is worse than no link, but the flags are independent: publishing a customer's
+  // report with `--id sample` and no `--sample` would otherwise put their document on the pricing
+  // page. Existence is not permission.
+  // And never at the cost of the page: on 2026-08-13 the cluster hit its quota and every read
+  // failed, so an awaited lookup here would have turned the pricing page into a 500 over a link.
+  const sampleReady = await getStore()
+    .getDelivery('sample')
+    .then((delivery) => delivery?.sample === true)
+    .catch(() => false)
   recordVisit('/pricing', (await headers()).get('user-agent'))
   return (
     <main className="mx-auto max-w-5xl px-6">
@@ -138,6 +152,13 @@ export default async function PricingPage() {
               </ul>
               {tier.note && (
                 <p className="font-mono text-xs leading-relaxed text-ink-faint">{tier.note}</p>
+              )}
+              {tier.sample && sampleReady && (
+                <p className="font-mono text-xs">
+                  <Link href={tier.sample.href} className="text-brass underline underline-offset-4">
+                    {tier.sample.label}
+                  </Link>
+                </p>
               )}
               <Link
                 href={tier.cta.href}
