@@ -6480,3 +6480,30 @@ nasza strone, bo 32 z 560 adresow odpowiadaja zwykla bramka API.
 sam ksztalt: wez adresy **z opublikowanego zdania**, zapytaj je jeszcze raz, uzyj **predykatow ze
 skanera** zamiast pisac drugie zdanie o tym, co sie liczy. Do powtorzenia po kazdym przemiecie i
 przy kazdym sporze z vendorem.
+
+## PRZEMIAT ZAMOWIONY, CZEKA NA KARENCJE (2026-08-18, 12:00)
+
+Wszystko, co ta noc naprawila, dociera do **opublikowanego** korpusu dopiero przez przemiat: zapis
+limitow (`limitsMet`), odczekanie po 429, zbiorcze pytania do rejestru, zdanie o wyzwaniu na brzegu,
+„nothing spoke MCP". Wiersze maja teraz 5,8 h, a karencja to 6 h liczone od **mediany**, wiec petla
+czeka i probuje co 20 minut.
+
+```
+log: /tmp/reseed-940b.log
+```
+
+**W trakcie przemiatu NIE WDRAZAC** (dyno restartuje sie w polowie zbioru) i **nie uruchamiac
+audytow** (`audit-oauth`, `audit-mcp`, `audit-entry`, `audit-attribution`) - wszystkie pytaja te same
+hosty, co skaner, i limit trafiony tam dociera tu jako brak dowodu.
+
+**Po przemiecie, w tej kolejnosci:**
+```
+cd ~/projects/stackpick && export MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick)
+npx tsx scripts/after-reseed.mts && npm run audit && npx tsx scripts/audit-study.mts && npm run audit-delivery && npm run regressions && npm run watch-coverage
+npm run indexnow -- --all
+```
+`after-reseed.mts` wypisze teraz **pierwsza prawdziwa liczbe scian na brzegu** („limit na brzegu
+vendora: X z Y wierszy z zapisem, w tym Z z markerem wyzwania"), bo do dzis zaden wiersz nie niosl
+tego pola. Spodziewac sie okolo **13 wierszy z limitem i 11 z markerem** - tyle dal pomiar lokalny
+na 177 domenach. Duza roznica w dol znaczy, ze odczekanie po 429 dziala lepiej, niz zakladalem;
+duza w gore, ze przemiat bije mocniej niz pojedyncze skany.
