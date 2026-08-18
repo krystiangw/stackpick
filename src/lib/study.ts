@@ -145,16 +145,18 @@ export function studyClaims(study: Study): { says: string; holds: boolean }[] {
       holds: clean !== null && separates('mcp_present', clean, 'ever'),
     },
     {
-      // What the page says, and nothing stronger. It prints both halves and calls the gap one that
-      // "leans on the better known half", so that is the claim to test: popular above quieter, on
-      // every tool. The old bar asked for three times the quieter half, which the page never
-      // claimed, and it failed after the 9.40 sweep at 29pp against 10pp on one tool while the
-      // sentence stayed true. A guard stricter than the sentence it guards reports a false alarm
-      // and teaches everybody to ignore the colour.
-      says: 'programmatic_provisioning leans on the popular half, every tool, how often measure',
+      // The page has two sentences here and picks between them by the sign in the quiet half, so
+      // the guard mirrors the branch instead of testing one of them always. Only the positive
+      // branch ("leans on the better known half") asserts an ordering; when the quiet half is at or
+      // below zero the page says the check does not survive the split, and there is nothing left to
+      // contradict. Testing `popular > quieter` unconditionally passed on two negative halves while
+      // claiming a lean that the page was not claiming, and a threshold on top of it would make the
+      // guard stricter than the sentence it guards, which is how the previous version produced a
+      // false alarm after the 9.40 sweep.
+      says: 'where the page says programmatic_provisioning leans on the popular half, it does',
       holds: study.tools.every((tool) => {
         const gap = study.gap('programmatic_provisioning', tool, 'share')
-        return gap.popular > gap.quieter
+        return gap.quieter <= 0 || gap.popular > gap.quieter
       }),
     },
     {
