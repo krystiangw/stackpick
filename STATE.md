@@ -35,6 +35,11 @@ zanim cokolwiek zrobisz.** Gdyby przepadla, komenda jest w sekcji o 9.35 nizej.
 7. `npm run audit-our-api` - czy nasz OpenAPI opisuje kazde pole, ktore API zwraca (nie wymaga bazy).
 8. `npm run indexnow -- --all` - zgloszenie zmienionych stron do IndexNow (Bing, a przez niego
    wyszukiwarka ChatGPT). Po reseedzie zmienia sie kazda strona vendora, wiec to wtedy ma sens.
+9. **`typed_package`: oskarzen ma byc okolo czterech, nie dziesieciu.** Bramka z 9.40 zmierzona na
+   zywo przed przemiatem: zostaja cronofy, newrelic, heroku i directus. `after-reseed.mts` wypisuje
+   te liczbe sam („X werdyktow stoi na paczce dopasowanej po wydawcy, w tym Y z Z oskarzen").
+   Sprostowania dla xata, honeycomb, namecheap i godaddy **wygasna same**, bo maja `fixedIn: 9.40`;
+   sprostowanie directusa ma zostac, bo jego przyczyna jest w rankingu ksztaltu nazwy (#47).
 
 **Wszystko naraz, jednym wklejeniem:**
 ```
