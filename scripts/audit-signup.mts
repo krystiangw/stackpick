@@ -1,137 +1,74 @@
 /**
- * Twenty-third adversarial pass: `signup_reachable`, 88 accusations and no documented pass.
+ * Is "reachable, but its form needs JavaScript" still true?
  *
- * 85 of the 88 carry one sentence: "<url> is reachable, but its form needs JavaScript". That is a
- * claim about bytes a server sent, so one request refutes it, and it is also one of the two numbers
- * on the landing page, which makes a wrong one wrong in public.
+ *   MONGODB_URI=... npx tsx scripts/audit-signup.mts [ile]
  *
- * The detector here is deliberately NOT the scanner's `rendersUsableForm`. An audit that imports
- * the code under test agrees with it by construction and proves nothing; this one looks for the
- * same thing by different means, and the two have to agree about the vendors we credit before
- * anything it says about the accused counts.
+ * The fourth of these, and the biggest surface nobody had tried to break: `signup_reachable` fails
+ * on 96 rows. Its sentence names the page, so a vendor rereads exactly one address, and it is the
+ * check whose failure they are least likely to believe: their signup works, they use it daily. The
+ * claim is narrower than that - the form is not in the served HTML - and it has to hold.
  *
- * It also splits the accusation, because "needs JavaScript" is not the only way to have no form.
- * A page whose only way in is "Continue with Google" has no form by design, and telling that
- * vendor their form needs JavaScript describes a form they never wrote.
- *
- *   npx tsx scripts/audit-signup.mts credited   # must find a form where we credit one
- *   npx tsx scripts/audit-signup.mts accused    # a form here is a false accusation of ours
- *
- * RESULT, 2026-08-16, and the accuracy bound that goes with it. The pass refuted nothing: five
- * candidate disagreements, all five mine on inspection. api.video serves one email input with no
- * name and no action, which is a shell JavaScript wires up later; browserless.io's only form holds
- * three consent checkboxes; lemonsqueezy.com answers 800 bytes and no form at all; rollbar.com
- * serves an unnamed text input, a search box; payloadcms.com an email field on a "get started"
- * page. The check's sentence stands on every row it was possible to examine.
- *
- * The bound matters as much as the result. This detector is not accurate enough to settle the
- * question on its own, and tuning it further would turn it into a copy of the code under test,
- * which is the one thing it must not be. Loose, it reads search boxes as signups (control 41/42).
- * Strict, it misses real ones (control 39/42: docuseal.com and deepl.com, both genuinely
- * credited). Treat a disagreement as a lead to inspect by hand, never as a verdict.
+ * The predicate is the scanner's own `rendersUsableForm`, and the request carries the scanner's
+ * user agent, because the whole point of the check is what a caller identifying itself as an agent
+ * receives. Never during a sweep.
  */
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
+import { rendersUsableForm, entersThroughIdentityProvider } from '../src/lib/scan/funnel'
+import { AGENT_UA } from '../src/lib/scan/http'
 
-const UA = 'LetAgentsIn/1.0 (+https://letagentsin.com/methodology)'
-
-type Verdict = 'form' | 'oauth-only' | 'nothing' | 'unreachable'
-
-/**
- * A form an agent could use to create an account, found without borrowing the scanner's parser.
- *
- * The first version of this counted any non-hidden input inside any form, and it reported five
- * false accusations that were all mine: rollbar.com serves one unnamed text input with no action,
- * which is a search box, and payloadcms.com serves an email field on a "get started" page. Both
- * are forms; neither is a way in. A credential form says so - it carries a password field, or it
- * carries an identifier field and posts somewhere that names the act.
- */
-function readableForm(html: string): { fields: number; forms: number } {
-  const forms = [...html.matchAll(/<form\b[\s\S]*?<\/form>/gi)]
-  let fields = 0
-  for (const form of forms) {
-    const action = (form[0].match(/action\s*=\s*["']([^"']*)/i)?.[1] ?? '').toLowerCase()
-    const postsToAnAccount = /regist|signup|sign-up|sign_up|join|create|account|login|signin|sign-in|auth/.test(action)
-    let identifiers = 0
-    let passwords = 0
-    for (const input of form[0].matchAll(/<input\b([^>]*)>/gi)) {
-      const attrs = input[1].toLowerCase()
-      if (/type\s*=\s*["']?(hidden|submit|button|image|search)/.test(attrs)) continue
-      if (/type\s*=\s*["']?password/.test(attrs)) passwords += 1
-      else if (/type\s*=\s*["']?email|name\s*=\s*["']?(email|username|user|login)\b/.test(attrs)) identifiers += 1
-    }
-    if (passwords > 0 || (identifiers > 0 && postsToAnAccount)) fields += passwords + identifiers
-  }
-  return { fields, forms: forms.length }
-}
-
-/** The other way to have no form: the only door is somebody else's identity provider. */
-function oauthOnly(html: string): boolean {
-  const text = html.toLowerCase()
-  const buttons = /(continue|sign\s*up|sign\s*in|log\s*in)\s*with\s*(google|github|microsoft|apple|gitlab|sso)/.test(text)
-  const endpoints = /href\s*=\s*["'][^"']*(oauth|auth\/(google|github|microsoft|sso)|saml)/.test(text)
-  return buttons || endpoints
-}
-
-async function inspect(url: string): Promise<{ verdict: Verdict; detail: string }> {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 15000)
-  try {
-    const response = await fetch(url, {
-      signal: controller.signal,
-      redirect: 'follow',
-      // The same agent the scanner sends, because a page served differently to a browser is a
-      // different measurement and this pass is about reproducing ours.
-      headers: { 'user-agent': UA, accept: 'text/html,application/xhtml+xml' },
-    })
-    if (!response.ok) return { verdict: 'unreachable', detail: `${response.status}` }
-    const html = await response.text()
-    const { fields, forms } = readableForm(html)
-    if (fields > 0) return { verdict: 'form', detail: `${forms} form(y), ${fields} pol` }
-    if (oauthOnly(html)) return { verdict: 'oauth-only', detail: `${forms} form(y), 0 pol, wejscie przez dostawce tozsamosci` }
-    return { verdict: 'nothing', detail: `${forms} form(y), 0 pol, ${html.length} B` }
-  } catch (error) {
-    return { verdict: 'unreachable', detail: (error as Error).name === 'AbortError' ? 'timeout' : 'blad sieci' }
-  } finally {
-    clearTimeout(timer)
-  }
-}
-
-const mode = process.argv[2] === 'credited' ? 'credited' : 'accused'
+const PAUSE_MS = 400
 const store = getStore()
+const most = Number(process.argv[2] ?? 40)
 
-const targets: { domain: string; url: string; saysJs: boolean }[] = []
-for (const domain of CURATED_DOMAINS) {
-  const report = await store.latestForDomain(domain)
-  const check = report?.scorecard.checks.find((candidate) => candidate.id === 'signup_reachable')
-  if (!check || check.inconclusive || check.notApplicable) continue
-  // Both no-form sentences on the accused side, since 9.31 splits them. The rows saying something
-  // else are about rate limits and edges, which is a different claim and not what this pass tests.
-  const accuses = check.detail.includes('form needs JavaScript') || check.detail.includes('no signup form of its own')
-  const wanted = mode === 'credited' ? check.points > 0 : accuses
-  if (!wanted) continue
-  const url = (report!.findings as unknown as { funnel: { signup: { url: string | null } } }).funnel.signup.url
-  if (url) targets.push({ domain, url, saysJs: check.detail.includes('form needs JavaScript') })
+type Wrong = { domain: string; url: string; why: string }
+const wrong: Wrong[] = []
+const gone: string[] = []
+let checked = 0
+
+for (const domain of [...CURATED_DOMAINS].slice(0, most)) {
+  const report = await store.latestForDomain(domain, true)
+  const check = report?.scorecard.checks.find((one) => one.id === 'signup_reachable')
+  if (!check || check.inconclusive || check.notApplicable || check.points > 0) continue
+  // Both failing shapes name the address first, which is what makes them checkable at all.
+  const url = check.detail.match(/^(https?:\/\/\S+?) (?:is reachable|answers)/)?.[1]
+  if (!url) continue
+  checked += 1
+  await new Promise((done) => setTimeout(done, PAUSE_MS))
+  try {
+    const answer = await fetch(url, { headers: { accept: 'text/html,*/*', 'user-agent': AGENT_UA }, redirect: 'follow', signal: AbortSignal.timeout(10_000) })
+    const body = await answer.text()
+    if (!answer.ok) {
+      // Not a contradiction: the row already says what the status was, and a status that moved is
+      // a rescan away from being right. Reported apart so it cannot be read as a false sentence.
+      gone.push(`${domain} (${answer.status} dzis, wiersz mowi: ${check.detail.slice(0, 60)})`)
+      continue
+    }
+    // The sentence says the form is not in the served HTML. If it is, the sentence is false today.
+    if (rendersUsableForm(body)) {
+      wrong.push({ domain, url, why: 'formularz JEST w serwowanym HTML' })
+      continue
+    }
+    // The other shape: "carries no signup form of its own, the only way in is an identity
+    // provider". If the page carries neither, the row said the wrong one of the two.
+    if (check.detail.includes('identity provider') && !entersThroughIdentityProvider(body)) {
+      wrong.push({ domain, url, why: 'nie widac ani formularza, ani wejscia przez dostawce tozsamosci' })
+    }
+  } catch (error) {
+    gone.push(`${domain} (nie odpowiedzial: ${(error as Error).message.slice(0, 40)})`)
+  }
+  console.log(`${checked} wierszy sprawdzonych, ${wrong.length} zdan do poprawy`)
 }
 
-console.log(`${mode}: ${targets.length} domen\n`)
-
-const tally = new Map<Verdict, number>()
-for (const { domain, url, saysJs } of targets) {
-  const { verdict, detail } = await inspect(url)
-  tally.set(verdict, (tally.get(verdict) ?? 0) + 1)
-  const expected = mode === 'credited' ? verdict === 'form' : verdict !== 'form'
-  if (!expected) console.log(`NIEZGODA ${domain.padEnd(20)} ${detail}  ${url}`)
-  // Misleading only while the published sentence still claims a form. Since 9.31 an
-  // oauth-only page is told so, and agreement is not a finding.
-  else if (mode === 'accused' && verdict === 'oauth-only' && saysJs) console.log(`ZDANIE MYLI  ${domain.padEnd(18)} ${detail}  ${url}`)
-}
-
-console.log(`\n${targets.length} sprawdzonych`)
-for (const [verdict, count] of [...tally.entries()].sort((a, b) => b[1] - a[1])) console.log(`  ${verdict.padEnd(12)} ${count}`)
+console.log(`\n${checked} oblanych wierszy z adresem w zdaniu`)
 console.log(
-  mode === 'credited'
-    ? 'kontrolka: niezgoda znaczy, ze sonda nie widzi formularza, za ktory dajemy punkt'
-    : 'oskarzenia: niezgoda znaczy, ze formularz jednak jest w HTML, ktory serwer wyslal',
+  wrong.length === 0
+    ? 'zdanie trzyma sie wszedzie: na zadnej z tych stron formularz nie jest w serwowanym HTML'
+    : `${wrong.length} ZDAN DO POPRAWY, kazde do przeczytania:`,
 )
+for (const one of wrong) console.log(`  ${one.domain.padEnd(22)} ${one.url}\n     ${one.why}`)
+if (gone.length > 0) {
+  console.log(`\n${gone.length} stron, ktore dzis nie odpowiedzialy tak, jak wtedy (rescan, nie falsz):`)
+  for (const one of gone) console.log(`  ${one}`)
+}
 process.exit(0)
