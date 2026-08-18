@@ -32,7 +32,8 @@
     "audit-captcha": "tsx scripts/audit-captcha.mts",
     "audit-llms": "tsx scripts/audit-llms.mts",
     "noise-floor": "tsx scripts/noise-floor.mts",
-    "audit-delivery": "tsx scripts/audit-delivery.mts"
+    "audit-delivery": "tsx scripts/audit-delivery.mts",
+    "audit-our-api": "tsx scripts/audit-our-api.mts"
   },
   "dependencies": {
     "mongodb": "^7.5.0",

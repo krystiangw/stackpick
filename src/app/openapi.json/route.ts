@@ -1,4 +1,5 @@
 import { CHECKS, MAX_SCORE, STAGES } from '@/lib/score'
+import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR } from '@/lib/scan-gate'
 
 const BASE = process.env.STACKPICK_BASE_URL ?? 'http://localhost:3000'
 
@@ -67,12 +68,29 @@ export function GET() {
                             type: 'integer',
                             description: 'The denominator: points that applied and could be evaluated on this domain',
                           },
+                          stages: {
+                            type: 'array',
+                            description: 'The same score split by funnel stage, in the order an agent meets them',
+                            items: {
+                              type: 'object',
+                              properties: {
+                                stage: { type: 'string', enum: STAGES.map((one) => one.id) },
+                                letter: { type: 'string', description: 'A to E, the order an agent meets the stages in' },
+                                title: { type: 'string' },
+                                question: { type: 'string', description: 'What the stage asks, in the words the site uses' },
+                                points: { type: 'integer' },
+                                max: { type: 'integer', description: 'The stage paper maximum, so the column can sum to more than the scorecard measurable' },
+                                measurable: { type: 'integer', description: 'The stage denominator, after what did not apply and what we could not read' },
+                              },
+                            },
+                          },
                           checks: {
                             type: 'array',
                             items: {
                               type: 'object',
                               properties: {
                                 id: { type: 'string', enum: CHECKS.map((check) => check.id) },
+                                why: { type: 'string', description: 'What this costs a vendor, in the words the report uses' },
                                 points: { type: 'integer' },
                                 max: { type: 'integer' },
                                 detail: { type: 'string' },
@@ -144,7 +162,9 @@ export function GET() {
               description:
                 'The scan did not finish inside the gateway timeout. /api/scan/stream reports progress and does not go silent. A store that will not accept the write is NOT this: that answers 200 with saved: false, because the measurement is finished and it is yours either way.',
             },
-            '429': { description: 'Rate limit reached, five per hour per registrable domain, thirty per hour per address' },
+            '429': {
+              description: `Rate limit reached: ${PER_DOMAIN_PER_HOUR} per hour per registrable domain, ${PER_CALLER_PER_HOUR} per hour per address`,
+            },
           },
         },
       },
