@@ -1015,8 +1015,19 @@ export const SNIPPET_PATTERNS: Record<string, RegExp> = {
   // names no entry condition while it says "free to individuals" in it. The only exclusion is the
   // idiom that means nothing about price.
   'free entry': /\bfree\b/i,
-  // The bare "no credit card" stays as its own alternative: narrowing it to the phrasings that name
-  // a verb would have stopped reading "Start free, no credit card." at all.
+  // No verb needed after the noun. Our own pricing description says "no account and no card", which
+  // this check would not have read as an entry condition: it passed us on the word "free" beside it.
+  // A vendor writing only "Pay per use, no card" would have been told their snippet names neither.
+  // The bare "no credit card" stays, and the bare "no card" deliberately does not.
+  //
+  // Our own description says "no account and no card", so the gap is real, and three attempts to
+  // close it all reintroduced the same false credit for payment vendors: "no card processing fees"
+  // is about their pricing, "no card payments accepted" is about what they refuse, and "No card,
+  // ACH, or wire transfer fees" is a fee list that happens to start with the word. Each attempt was
+  // one more exclusion on a list whose other side has no end. What settled it is that widening this
+  // changed no verdict at all across 46 real pricing descriptions: the label never arrived alone,
+  // always beside "free entry" or an amount. A rule that credits nothing measurable and can credit
+  // the wrong thing is worse than the gap it closes.
   'no card asked': /\b(no credit card|no card( is)? (required|needed|necessary)|without a credit card|card free)\b/i,
   'no account asked': /\b(no (account|signup|sign-up) (required|needed)|without an account)\b/i,
 }

@@ -485,6 +485,13 @@ check('bezsensowna encja nie wysadza skanu', said('Plans from &#999999999999; a 
 check('symbol waluty po liczbie tez jest kwota', snippetFor(said('ab 9,90 € pro Monat')).points, 1)
 check('"no card needed" znaczy to samo co "no credit card required"', said('Start free today, no card needed').says.includes('no card asked'), true)
 check('samo "no credit card" nadal wystarcza', said('Start free, no credit card.').says.includes('no card asked'), true)
+// Gole "no card" swiadomie NIE liczy sie jako warunek wejscia, choc tak wlasnie brzmi nasz wlasny
+// opis. Trzy proby poszerzenia wracaly z tym samym falszywym kredytem u bramek platniczych, a
+// pomiar na 46 opisach pokazal, ze ta etykieta nigdy nie przychodzi sama. Uzasadnienie stoi przy
+// wzorcu w funnel.ts; te trzy linijki pilnuja, zeby nikt nie poszerzyl tego z rozpedu.
+check('"no card processing fees" to nie warunek wejscia', snippetFor(said('Accept payments with no card processing fees')).points, 0)
+check('"no card payments accepted" to zdanie o tym, czego nie przyjmuja', snippetFor(said('No card payments accepted')).points, 0)
+check('lista oplat zaczynajaca sie od karty to nadal lista oplat', snippetFor(said('No card, ACH, or wire transfer fees')).points, 0)
 // Werdykt sie nie zmienia, zmienia sie zdanie, ktore vendor dostaje do poprawienia.
 check(
   'cytujemy trafienie mowiace o wejsciu, a nie pierwsze z brzegu',

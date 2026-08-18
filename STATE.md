@@ -5638,3 +5638,30 @@ zaczal odsylac agenta, czego czlowiek w przegladarce nie zauwazy. Czytalo sie ja
 Teraz sa trzy grupy, a pod trzecia stoi zdanie, ze to nie werdykt o nich, ze nic z tej grupy nie
 liczy sie przeciwko wynikowi i ze **czasem to nasz zasieg, a nie ich brzeg**. Straznik w
 `rules.mts` sprawdza obie strony: ze naglowek istnieje i ze `unmeasured` nie stoi pod „Gained".
+
+## SKAN NAS SAMYCH ZNALAZL LUKE, KTOREJ SWIADOMIE NIE ZAMYKAMY (2026-08-18)
+
+Puscilismy nasz wlasny skaner na `letagentsin.com` (nie jestesmy w korpusie, wiec to nic nie
+kosztuje). Wynik **12 z 13 mierzalnych**, jedyne oblanie to `oauth_dcr`, czyli poprawnie: nie mamy
+kont, wiec nie mamy gdzie miec rejestracji klienta OAuth.
+
+Ale przy okazji wyszlo, ze **nasz wlasny opis cennika** brzmi „Free scan, no account and no card", a
+check zaliczyl go tylko na slowie `free`: fraza `no card` bez czasownika po niej nie byla warunkiem
+wejscia. Vendor, ktory napisze „Pay per use, no card", uslyszalby od nas, ze jego opis nie nazywa
+ani kwoty, ani warunku wejscia.
+
+**Proba poszerzenia i decyzja, zeby tego NIE robic.** Trzy podejscia z rzedu wracaly z tym samym
+falszywym kredytem u bramek platniczych, za kazdym razem na innym zdaniu, ktore codex wymyslal
+szybciej, niz ja dopisywalem wykluczenia: „no card processing fees" (o ich cenniku), „no card
+payments accepted" (o tym, czego nie przyjmuja) i „No card, ACH, or wire transfer fees" (lista
+oplat, ktora zaczyna sie od tego slowa). Lista wykluczen nie ma konca, a **pomiar rozstrzygnal**:
+poszerzenie nie ruszylo ani jednego werdyktu na 46 prawdziwych opisach, bo etykieta `no card asked`
+nigdy nie przychodzi sama - zawsze stoi obok `free entry` albo kwoty.
+
+**Zasada z tego, warta wiecej niz sam wzorzec:** regula, ktora nie kredytuje niczego mierzalnego, a
+moze skredytowac cos zlego, jest gorsza niz luka, ktora zamyka. Wersja formuly zostaje na **9.36**;
+w `rules.mts` stoja trzy straznicy z tymi zdaniami, zeby nikt nie poszerzyl tego z rozpedu.
+
+**Wniosek warty powtarzania: puszczaj wlasny pomiar na siebie.** Wlasna kopia jest najtansza
+probka, jaka mamy, i jako jedyna jest napisana przez nas, wiec pokazuje luki, ktorych nie widac na
+cudzych stronach.
