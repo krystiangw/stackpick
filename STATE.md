@@ -7137,3 +7137,32 @@ pytac dokladnie o to, co twierdzi zdanie**, a zdanie mowi „twoja strona cennik
 **Powierzchnia dla ewentualnego checku: 23 z 25** (16 bez ceny gdziekolwiek plus 7 z cena tylko dla
 JavaScriptu), czyli **13 procent korpusu**. Poprawka `bestPricing` i tak jest potrzebna niezaleznie
 od checku, bo dzis produkuje dwa zdania o cudzych stronach, ktore nie sa cennikami.
+
+## 9.41: STRONA, KTOREJ VENDOR NIGDY NIE NAZWAL CENNIKIEM (2026-08-18)
+
+Wynik 42. przebiegu naprawiony w kodzie. `bestPricing` sprawdzalo sciezke, o ktora **pytamy**, i nie
+patrzylo, gdzie zapytanie **wyladowalo**. Teraz strona liczy sie jako cennik tylko wtedy, gdy
+**laduje na sciezce cennika I na domenie, ktora jest ich wlasna** (skanowana albo ta, na ktora
+rozwiazuje sie ich witryna). Gdy nie, wiersz mowi wprost: „`X` przekierowuje na `Y`, ktore nie jest
+strona cennika, wiec nie mamy z czego odczytac twoich progow", jako **niemierzalne, nie oskarzenie**.
+
+**Codex zlapal dwa bledy P1, oba byly tym samym bledem, ktory naprawialem:**
+1. Sama sciezka nie wystarcza. `sendgrid.com/pricing` laduje na `twilio.com/en-us/pricing`, co jest
+   nadal sciezka cennika i nadal **cudzym** cennikiem, chyba ze ich witryna tam sie rozwiazuje.
+   Stad warunek o domenie.
+2. Sciezka zapasowa (`firstLivePath`) pytala te same dwa adresy jeszcze raz i brala, co odpowie,
+   **oddajac dokladnie te strone, ktora odrzucilismy**, tylko pod etykieta „zgadlismy sciezke".
+   Po odrzuceniu nie ma juz sciezki zapasowej.
+
+**Zweryfikowane na czterech domenach po kazdej poprawce:** `deepl.com` dostaje zdanie niemierzalne z
+oboma adresami, `sendgrid.com` czyta cennik Twilio, bo ich witryna tam sie rozwiazuje, `plausible.io`
+(cennik z kotwicy na stronie glownej) i `resend.com` bez zmian.
+
+**Formula 9.41**, wpis w `CHECK_RULE_CHANGED` dla `self_serve`, bo to ta sama regula czytajaca inna
+strone. **Sprostowanie directusa przesuniete z `fixedIn: 9.41` na `10.0`**: jego przyczyna to
+przepisanie rankingu nazw (#47), ktorego 9.41 nie dotyka, a sprostowanie, ktorego `fixedIn` nadchodzi
+przed naprawa, **kasuje sie samo przy zywym bledzie**. Straznik w `rules.mts` pilnuje teraz, ze
+`fixedIn` directusa jest zawsze pozniejsze niz biezaca formula.
+
+**Do zrobienia przy najblizszym przemiecie:** korpus jest na 9.40, kod na 9.41, wiec `self_serve`
+ruszy sie na tych wierszach i **regressions.mts pokaze to w sekcji „nasza zmiana reguly"**.

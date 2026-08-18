@@ -111,6 +111,12 @@ export type ScanFindings = {
   discovered: {
     docs: string | null
     pricing: string | null
+    /**
+     * Where a pricing path we asked for actually landed, when that is not a pricing page. Absent on
+     * rows scanned before 2026-08-19, and the reason a row can say "we could not measure your tiers"
+     * with an address instead of judging somebody else's product page as your price list.
+     */
+    pricingRedirectedAway?: { asked: string; landedAt: string } | null
     signup: string | null
     /** The pages whose served HTML was searched for a way in. Absent on rows scanned before 2026-08-18. */
     signupSearched?: string[]
@@ -874,6 +880,7 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     discovered: {
       docs: found.docs,
       pricing: found.pricing,
+      pricingRedirectedAway: found.pricingRedirectedAway,
       signup: found.signup,
       signupSearched: found.signupSearched,
       npmPackage: found.npmPackage,

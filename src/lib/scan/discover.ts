@@ -29,6 +29,8 @@ export type Discovered = {
   pricingPage: Fetched | null
   /** Null when no pricing page was found at all, false when one exists but shows no prices. */
   pricesVisibleWithoutJs: boolean | null
+  /** Set when a pricing path we asked for redirected somewhere that is not one, so we can say so. */
+  pricingRedirectedAway: { asked: string; landedAt: string } | null
   npmPackage: string | null
   npmSource: NpmSource | null
   /**
@@ -404,12 +406,47 @@ function isCanonicalPricingPath(url: string): boolean {
   }
 }
 
+/** Anywhere a vendor would put prices, not only the canonical path: /en-us/pricing counts. */
+function isPricingPath(url: string): boolean {
+  try {
+    return /(^|\/)(pricing|plans)(\/|$)/i.test(new URL(url).pathname)
+  } catch {
+    return false
+  }
+}
+
 async function bestPricing(
   candidates: (string | null)[],
-): Promise<{ url: string; page: Fetched; pricesVisible: boolean } | null> {
+  /** The domains whose pages are the vendor's own: what we scanned, and where their site resolved. */
+  theirs: string[],
+): Promise<{ pick: { url: string; page: Fetched; pricesVisible: boolean } | null; redirectedAway: { asked: string; landedAt: string } | null }> {
   const unique = [...new Set(candidates.filter((url): url is string => Boolean(url)))].slice(0, 4)
-  if (unique.length === 0) return null
-  const pages = await inParallel(unique, (url) => fetchUrl(url))
+  if (unique.length === 0) return { pick: null, redirectedAway: null }
+  const fetched = await inParallel(unique, (url) => fetchUrl(url))
+  // A request for /pricing that ends on a product page has not found a pricing page, and judging
+  // what it landed on judges a page the vendor never called their pricing. sendgrid.com/pricing
+  // redirects to twilio.com/en-us/sendgrid and deepl.com/pricing to deepl.com/en/pro, and both
+  // rows said "your pricing page answers a plain request with no price" about somebody else's
+  // marketing. The home page is exempt because we ask for it on purpose, when a vendor sells from
+  // an anchor there and has no pricing page to find.
+  //
+  // The path alone is not enough, and codex caught it on the row that prompted the change:
+  // sendgrid.com/pricing lands on twilio.com/en-us/pricing, which is still a pricing path and
+  // still somebody else's price list unless sendgrid.com resolves to twilio.com, which it does.
+  // So the landing has to be a pricing path AND on a domain that is theirs.
+  const ours = new Set(theirs.filter(Boolean).map((one) => registrableDomain(one)))
+  const stillTheirs = (url: string) => {
+    const host = hostOf(url)
+    return Boolean(host) && ours.has(registrableDomain(host as string))
+  }
+  let redirectedAway: { asked: string; landedAt: string } | null = null
+  const pages = fetched.map((page, index) => {
+    const asked = unique[index]
+    if (!page.ok || !isPricingPath(asked)) return page
+    if (isPricingPath(page.url) && stillTheirs(page.url)) return page
+    if (!redirectedAway) redirectedAway = { asked, landedAt: page.url }
+    return { ...page, ok: false }
+  })
   // The page at /pricing is the pricing page whether or not it prints a number. plaid.com's
   // renders 7,671 characters and no price at all, and ranking on how many prices a page carries
   // sent us to a docs billing reference instead, which is a worse answer to give Plaid than
@@ -420,7 +457,7 @@ async function bestPricing(
     .filter((entry) => entry.page.ok && isCanonicalPricingPath(entry.url))
     .sort((a, b) => pricingWeight(b.page) - pricingWeight(a.page))[0]
   if (canonical) {
-    return { url: canonical.url, page: canonical.page, pricesVisible: pricingWeight(canonical.page) > 0 }
+    return { pick: { url: canonical.url, page: canonical.page, pricesVisible: pricingWeight(canonical.page) > 0 }, redirectedAway }
   }
 
   let best: { url: string; page: Fetched; weight: number } | null = null
@@ -434,8 +471,8 @@ async function bestPricing(
       fallback = { url: unique[index], page }
     }
   }
-  if (best) return { url: best.url, page: best.page, pricesVisible: true }
-  return fallback ? { ...fallback, pricesVisible: false } : null
+  if (best) return { pick: { url: best.url, page: best.page, pricesVisible: true }, redirectedAway }
+  return { pick: fallback ? { ...fallback, pricesVisible: false } : null, redirectedAway }
 }
 
 /** Picks the best-ranked documentation candidate, and says nothing when none of them is one. */
@@ -1934,14 +1971,15 @@ export async function discover(domain: string): Promise<Discovered> {
     // plausible.io sells from an anchor on its home page, so there is no pricing page to find and
     // "we could not fetch one" was the wrong sentence: the prices are right there, one fetch away.
     const pricingOnHome = /href=["'][^"']*#(pricing|plans)\b/i.test(html) ? site : null
-    const chosenPricing = await bestPricing([
-      fromSitePricing,
-      `${site}/pricing`,
-      `${site}/plans`,
-      fromLlmsPricing,
-      pricingOnHome,
-    ])
-    return { chosenPricing, pricing: chosenPricing?.url ?? (await firstLivePath(canonical, PRICING_FALLBACKS)) }
+    const { pick: chosenPricing, redirectedAway } = await bestPricing(
+      [fromSitePricing, `${site}/pricing`, `${site}/plans`, fromLlmsPricing, pricingOnHome],
+      [domain, hostOf(home.url) ?? '', hostOf(canonical) ?? ''],
+    )
+    // The fallback asks the same two paths again and takes whatever answers, redirect and all, so
+    // running it after a rejection hands back the page we just refused and hides the diagnostic
+    // behind "we guessed a path". A rejection is an answer: there is no pricing page of theirs here.
+    const fallbackPricing = redirectedAway ? null : await firstLivePath(canonical, PRICING_FALLBACKS)
+    return { chosenPricing, redirectedAway, pricing: chosenPricing?.url ?? fallbackPricing }
   })()
 
   // Each source is asked in turn and its candidates have to survive the same test, so a link the
@@ -1984,7 +2022,7 @@ export async function discover(domain: string): Promise<Discovered> {
 
   const npmPending = docsPending.then(({ chosen }) => attributePackage(domain, html, llmsBody, chosen?.page ?? null))
 
-  const [{ chosen, hosts }, { chosenPricing, pricing }, signupPick, npm] = await Promise.all([
+  const [{ chosen, hosts }, { chosenPricing, pricing, redirectedAway }, signupPick, npm] = await Promise.all([
     docsPending,
     pricingPending,
     signupPending,
@@ -2031,6 +2069,7 @@ export async function discover(domain: string): Promise<Discovered> {
     pricing,
     pricingPage,
     pricesVisibleWithoutJs,
+    pricingRedirectedAway: redirectedAway,
     signup,
     signupSearched,
     npmPackage: npm.npmPackage,

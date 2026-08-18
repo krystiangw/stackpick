@@ -15,7 +15,7 @@ import { challengedUs, challengeSentence, CHALLENGE_UNBLOCK } from './limits'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.40'
+export const FORMULA_VERSION = '9.41'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -1272,6 +1272,18 @@ export const CHECKS: Check[] = [
         }
       }
       if (!f.funnel.pricingFetched) {
+        // A redirect off the pricing path is a different answer from silence, and saying so names
+        // the address the vendor can check. Two rows read "your pricing page answers a plain
+        // request with no price" about a page that was not their pricing page at all.
+        const away = f.discovered.pricingRedirectedAway
+        if (away) {
+          return {
+            points: 0,
+            detail: `Unmeasurable: ${away.asked} redirects to ${away.landedAt}, which is not a pricing page, so we have nothing of yours to read your tiers from`,
+            inconclusive: true,
+            unblock: 'Serve your prices at the address you redirect from, or link the page that has them from your home page.',
+          }
+        }
         // A library with nothing to buy has no free tier to state, and marking that unmeasurable
         // implied we had failed to find something that does not exist. The signup checks already
         // draw this line; this one was still charging open-source projects for our confusion.

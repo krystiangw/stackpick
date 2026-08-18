@@ -1903,5 +1903,29 @@ check(
   true,
 )
 
+// Sciezka cennika, ktora nas gdzies odsyla, nie jest cennikiem vendora. Reguly sa tu, bo obie
+// pomylki juz sie zdarzyly: sonda, ktora tego nie sprawdzala, wypisala 0 falszywych zdan na 25,
+// a po zaostrzeniu 2, i to byly zdania o cudzych stronach produktowych.
+console.log('\ncennik, ktory odsyla gdzie indziej, nie jest cennikiem')
+const discoverSource = readFileSync('src/lib/scan/discover.ts', 'utf8')
+check('odrzucamy strone, ktora wyladowala poza sciezka cennika', discoverSource.includes('if (!page.ok || !isPricingPath(asked)) return page'), true)
+check('strona domowa zostaje, bo pytamy o nia celowo', /isPricingPath\(asked\)/.test(discoverSource), true)
+// Sama sciezka nie wystarcza: cudzy /pricing jest nadal cudzy. sendgrid.com/pricing laduje na
+// twilio.com/en-us/pricing i wolno je czytac wylacznie dlatego, ze ich witryna tam sie rozwiazuje.
+check('laduje na sciezce cennika I na ich wlasnej domenie', discoverSource.includes('isPricingPath(page.url) && stillTheirs(page.url)'), true)
+check('a „ich wlasna" to domena skanowana i ta, na ktora sie rozwiazuje', discoverSource.includes('[domain, hostOf(home.url) ?? \'\', hostOf(canonical) ?? \'\']'), true)
+const scoreSource = readFileSync('src/lib/score.ts', 'utf8')
+check('zdanie nazywa oba adresy', scoreSource.includes('redirects to ${away.landedAt}, which is not a pricing page'), true)
+check('i jest niemierzalne, a nie oskarzeniem', /pricingRedirectedAway[\s\S]{0,400}inconclusive: true/.test(scoreSource), true)
+// Sciezka zapasowa pyta te same dwa adresy jeszcze raz i bierze, co odpowie, wiec po odrzuceniu
+// oddawala dokladnie te strone, ktora odrzucilismy, tylko pod etykieta „zgadlismy sciezke".
+check('po odrzuceniu nie ma sciezki zapasowej', discoverSource.includes('redirectedAway ? null : await firstLivePath(canonical, PRICING_FALLBACKS)'), true)
+// Sprostowanie, ktorego fixedIn nadchodzi przed naprawa, kasuje sie samo przy zywym bledzie.
+const errataSource = readFileSync('src/lib/errata.ts', 'utf8')
+const directusFix = /domain: 'directus\.com'[\s\S]{0,600}?fixedIn: '([^']+)'/.exec(errataSource)?.[1] ?? ''
+check('sprostowanie directusa przezywa biezaca formule', isOlderThan(FORMULA_VERSION, directusFix), true)
+// Kontrolka: sonda musi umiec powiedziec „nie" o wersji, ktora juz minela.
+check('a sonda widzi sprostowanie, ktore juz wygaslo', isOlderThan(FORMULA_VERSION, '9.1'), false)
+
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

@@ -178,6 +178,9 @@ const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   // 9.40 asks what a searched identification rests on before it accuses, and the facts it asks for
   // are not in a report stored before it, so a rescore reads them as absent and says unmeasured.
   '9.40': ['typed_package'],
+  // 9.41 stopped reading a page the vendor never called their pricing. Same rule, different page,
+  // so a rescore reproduces the old reading and the movement is ours.
+  '9.41': ['self_serve'],
 }
 
 /**
