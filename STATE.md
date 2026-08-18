@@ -2,53 +2,57 @@
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te czterdziesci linijek, potem reszte)
 
-**WERSJE: produkcja, repo i korpus na 9.41.** Przemiat skonczony, `/tmp/reseed-941.log`, komplet
-kontroli po nim zielony: 177 wierszy, 0 sprzecznosci, 0 rozjazdow, badanie na `/findings` nadal
-prawdziwe, kadencja monitoringu zdrowa, nasz OpenAPI opisuje kazde zwracane pole. **Nic nie chodzi w
-tle** (`pgrep -f "reseed.sh"`), drzewo czyste, wszystko wdrozone i sprawdzone na produkcji.
+**WERSJE: produkcja, repo i korpus na 9.41.** Drzewo czyste, wszystko wdrozone i sprawdzone na
+produkcji, **nic nie chodzi w tle** (`pgrep -f "reseed.sh"`). Formula sie tej nocy nie zmieniala,
+wiec komplet kontroli po przemiecie 9.41 jest nadal aktualny.
 
-**SPROSTOWANIE DIRECTUSA PRZESUNIETE NA `fixedIn: 10.0`**, bo jego przyczyna to przepisanie rankingu
-nazw (#47), ktorego 9.41 nie dotyka. Straznik pilnuje, ze to `fixedIn` jest zawsze pozniejsze niz
-biezaca formula: sprostowanie, ktorego termin nadchodzi przed naprawa, kasuje sie samo przy zywym
-bledzie. **Podbijajac formule, sprawdz ten wpis.**
+**SPROSTOWANIE DIRECTUSA MA `fixedIn: 10.0`**, bo jego przyczyna to przepisanie rankingu nazw (#47),
+ktorego 9.41 nie dotyka. **Podbijajac formule, sprawdz ten wpis.**
 
 **CO TA NOC ZMIENILA, w kolejnosci waznosci:**
-- **Raport za 49 USD ma model danych, wykresy i cytaty zwyciezcy.** `/d/<id>` renderuje model, nie
-  markdown: dwie liczby na wierzchu, wykres kto zostal wymieniony zamiast ciebie, cytaty **slowami,
-  ktorymi wybrano konkurenta**, tabela narzedzie/model/data, etapy, oblane checki z poprawka przy
-  kazdym. Markdown zostaje jako to, co kupujacy przesyla dalej. **Probka: `/d/sample`, linkowana z
-  cennika** (tylko gdy istnieje I jest oznaczona jako probka).
-- **`/standard`**: gdzie stoimy wobec AgentReady (28 wymagan, 7 MUST, mierzymy szesc), bez wyniku
-  zgodnosci.
-- **`/bot`**: co robi nasz skaner w cudzych logach, plus naglowek `From` i **honorowanie imiennego
-  `User-agent: LetAgentsIn` w robots.txt**. Wildcard to pomiar, nie prosba. Skan zlecony przez
-  czlowieka zawsze sie wykonuje.
-- **Polityka serii na `/methodology`** i **kontra na bramke w CI na `/pricing`**.
-- **`oauth_dcr`**: zdanie „RFC 7591 is the only standard path" przestalo byc prawda po specyfikacji
-  MCP z 2026-07-28 i jest poprawione w czterech miejscach, ze straznikiem.
-- **Skaner**: strona z samych nawiasow zabierala **53 sekundy** przy budzecie 27; `withoutTags` jest
-  liniowe i daje identyczny wynik (200 000 losowych ciagow bez rozjazdu).
-- **Bezpieczenstwo**: `scripts/audit-gate.mts` (co sie wykona przed audytem) i
-  `harness/sandbox/run.sh` (bieg bez naszych sekretow), plus zmierzona ekspozycja.
+- **`/privacy` ZYJE.** Trzy strony prawne zwracaly 404, bo wisialy na jednej fladze danych
+  sprzedawcy. Decyzja z audytu subagenta: **administrator danych to nie forma prawna**, a obowiazek
+  informacyjny wiaze sie z momentem **zbierania** danych, ktore zbieramy dzisiaj formularzem na
+  stronie glownej. `/terms` i `/refunds` nadal 404 i tak ma byc.
+- **Zamrozony wiersz mowi, ze jest zamrozony.** Audyt polityki robots.txt nazwal swoj warunek
+  konieczny (sciezka powrotna ma dzialac i byc widoczna) i **nie byl spelniony ani w jednej polowie**.
+  Teraz jest: trzy daty na stronie vendora, oznaczenie na `/v`, mediana w raporcie branzowym liczona
+  z zamrozonymi i bez nich, a `/bot` przestal opisywac droge powrotna, ktorej nie ma.
+- **Jestesmy w oficjalnym rejestrze MCP** (`com.letagentsin/scanner`, 1.0.0). To zrodlo, z ktorego
+  ciagna Smithery, Glama, mcp.so i MCPfinder. Logowanie domenowe przez HTTP, klucz prywatny w
+  `.env.local` jako `MCP_REGISTRY_SEED`.
+- **Licznik odwiedzin nazywa crawlery** (13 robotow), wiec pierwszy raz zobaczymy, ktory indeks nas
+  faktycznie czyta. Brave jest wyjatkiem: nie ma crawlera, wiec brak wiersza nie znaczy nic.
+- **IndexNow: 67 adresow, 200 OK.** Sitemapa ma 244 adresy.
 
-**ZASADA, KTORA WYSZLA Z TEJ NOCY I JEST WARTA WIECEJ NIZ RESZTA:** liczba na stronie publicznej ma
-pochodzic z **zapytania, ktore da sie powtorzyc**, a nie z naszej pamieci o tym, co kiedys
-zmierzylismy. Ta sama karta A2A dala 2 (liczac zdania), 11 (liczac znaleziska) i **0 z 52** (pytajac
-wprost pod adresem). Przechowywana liczba wygladala solidnie i byla o czym innym.
+**ZASADA, KTORA WYSZLA Z TEJ NOCY:** kazde miejsce, gdzie **„nie wiem" ma wartosc domyslna**, jest
+tym samym bledem, i trzeba go szukac **na kazdej warstwie osobno**. Nieczytelny robots.txt czytal sie
+jak „nie prosza", nieudany odczyt bazy jak „nie ma prosby", a nieudany odczyt na stronie jak „nic nie
+jest zamrozone". Codex zglosil to trzy razy z rzedu jako osobne P1 na trzech warstwach tej samej
+funkcji. Zapisane tez w KB: `clad-kb show domyslna-wartosc-dla-nie-wiem-powtarza-sie-na-kazdej-warstwi`.
+
+**DRUGA ZASADA, TANSZA:** zdanie o tym, co przechowujemy, ma isc **z typu**, nie z pamieci.
+`WATCH_FIELDS_DISCLOSED` to `Record<keyof Watch, string>`, wiec nowe pole lamie kompilacje, dopoki
+nikt nie napisze, czym jest dla czytelnika. Recznie wypisana lista przeoczyla cztery pola za pierwszym
+razem.
 
 **CO ZOSTAJE I CZEGO SAM NIE ODBLOKUJE:**
-1. **Dane sprzedawcy do Paddle.** Bez tego checkout nie istnieje i raport sprzedaje sie przez `mailto:`.
-2. **Klucz do `agentaudit@agentmail.to`** z `console.agentmail.to`. Bez niego bieg z nazwanym
-   vendorem (`harness/briefs/directed-build.md`) dojdzie do formularza i **nie domknie rejestracji**,
-   co zapisze sie jako sciana vendora, choc bedzie nasza.
-3. **Platne subskrypcje cursora i gemini**, jesli chcemy os „rozne narzedzia". Na darmowych planach
-   ta os jest **niemierzalna, a nie tania**.
-4. **Potwierdzenie polityki robots.txt** (zamrozenie zamiast usuniecia wiersza).
-5. **Czy 79 USD to monitoring miesieczny za domene** i czy zostaje przy 29 u agentable.
+1. **Dane sprzedawcy do Paddle** (JDG czy spolka). Bez tego nie ma checkoutu, `/terms` ani `/refunds`.
+   **UWAGA:** nie ustawiaj `SELLER_LEGAL_NAME` i `SELLER_ADDRESS` „zeby cos odblokowac" - to publikuje
+   adres domowy jako adres sprzedawcy i czyni osobe fizyczna strona umowy sprzedazy.
+2. **Zgoda na publikacje imienia i nazwiska jako administratora** na `/privacy`. Jest tam od tej nocy,
+   decyzja z audytu subagenta; formalnie nazwisko bylo juz w stopce, ale to Twoje dane.
+3. **Klucz do `agentaudit@agentmail.to`** z `console.agentmail.to`. Bez niego bieg z nazwanym vendorem
+   nie domknie rejestracji, a nasza sciana zapisze sie jako sciana vendora.
+4. **Platne subskrypcje cursora i gemini**, jesli chcemy os „rozne narzedzia". Na darmowych planach ta
+   os jest **niemierzalna, a nie tania**.
+5. **Potwierdzenie polityki robots.txt** (zamrozenie zamiast usuniecia) i **czy 79 USD to monitoring
+   miesieczny za domene**.
+6. **Rozbieznosc do rozstrzygniecia:** `/pricing` mowi o monitoringu za 79 USD, a formularz na stronie
+   glownej zapisuje na monitoring **za darmo**. Strona sama o tym pisze, ale to nie jest odpowiedz.
 
-**CZEGO NIE ROBIC:** dziesiatego przebiegu adwersaryjnego (wartosc krancowa bliska zeru przy dziewieciu
-z zerem falszywych zdan), leaderboardow i odznak, jednej liczby 0-100 opisujacej widocznosc, oraz
-publicznego porownania z Ora albo Lightsage, dopoki nie wiemy, czy publikuja slowa odmowy i os czasu.
+**CZEGO NIE ROBIC:** dziesiatego przebiegu adwersaryjnego, leaderboardow i odznak, jednej liczby 0-100,
+oraz publicznego porownania z Ora albo Lightsage, dopoki nie wiemy, czy publikuja slowa odmowy i os czasu.
 
 **PULAPKA:** kazdy skan domeny Z KORPUSU, takze zrobiony do weryfikacji poprawki, odmladza mediane i
 przesuwa karencje reseedu. Do weryfikacji uzywaj domen spoza korpusu.
@@ -57,6 +61,7 @@ przesuwa karencje reseedu. Do weryfikacji uzywaj domen spoza korpusu.
 ```
 cd ~/projects/stackpick && export MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick)
 npx tsx scripts/after-reseed.mts && npm run audit && npx tsx scripts/audit-study.mts   && npm run audit-delivery && npm run regressions && npm run watch-coverage && npm run audit-our-api
+```
 ```
 ## PIEC Z SZESCIU CYTATOW W RAPORCIE ZA 49 USD URYWALO SIE W SRODKU ADRESU (2026-08-17)
 
