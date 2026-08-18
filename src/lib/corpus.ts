@@ -1,4 +1,5 @@
 import type { ScanFindings } from './scan'
+import { CORPUS_LICENCE, CORPUS_LICENCE_IS_PUBLISHED } from './seller'
 import { registrableDomain } from './scan/http'
 import { SITE_URL } from './site'
 import { categoryFor , CURATED_DOMAINS } from './categories'
@@ -231,7 +232,12 @@ export async function buildCorpus(baseUrl: string, now: string): Promise<Corpus 
     awaitingRescan: Math.max(0, CURATED_DOMAINS.size - rows.length),
     max: MAX_SCORE,
     methodology: `${baseUrl}/methodology`,
-    terms: 'Free to use, quote and republish with attribution to Let Agents In and a link to the methodology.',
+    // One declaration of the terms, so the dataset a machine downloads cannot say something the
+    // pages do not. Until the licence grant is agreed the sentence is the one that has always been
+    // published here.
+    terms: CORPUS_LICENCE_IS_PUBLISHED
+      ? `Free to use, quote and republish under ${CORPUS_LICENCE.short} (${CORPUS_LICENCE.url}). Terms and what attribution means: ${baseUrl}/corpus-licence.`
+      : 'Free to use, quote and republish with attribution to Let Agents In and a link to the methodology.',
     notes: [
       'One row per domain, the most recent scan we hold, scored under a single formula version.',
       'domains is how many we can publish under one formula and curated is how many we hold. When they differ, a reseed is part way through: scores from two formula versions are not comparable, so the rest wait for their next scan rather than appear here under a number that cannot be compared with the others.',

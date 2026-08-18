@@ -15,6 +15,7 @@ import { isOlderThan } from '../src/lib/formula'
 import { buildFixPlan } from '../src/lib/fixfirst'
 import { changeEmail } from '../src/lib/watch-email'
 import { CHECKS, FORMULA_VERSION } from '../src/lib/score'
+import { CORPUS_LICENCE, CORPUS_LICENCE_IS_PUBLISHED } from '../src/lib/seller'
 import { arithmeticExplained, scoreSection } from '../src/lib/report-numbers'
 import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR } from '../src/lib/scan-gate'
 import { DEFAULT_SCAN_BUDGET_MS } from '../src/lib/scan/http'
@@ -307,6 +308,30 @@ for (const page of ['terms', 'privacy', 'refunds']) {
 }
 const layout = readFileSync('src/app/layout.tsx', 'utf8')
 check('stopka linkuje je dopiero wtedy', layout.includes('SELLER_IS_COMPLETE && ('), true)
+// Licencja korpusu jest bramkowana osobno i z mocniejszego powodu: udzielenia licencji na dane juz
+// opublikowane nie da sie cofnac, wiec nie moze sie wlaczyc razem z danymi sprzedawcy.
+check(
+  '/corpus-licence odmawia, dopoki grant nie jest potwierdzony',
+  readFileSync('src/app/corpus-licence/page.tsx', 'utf8').includes('if (!CORPUS_LICENCE_IS_PUBLISHED) notFound()'),
+  true,
+)
+// I nikt na nia nie wskazuje, dopoki odmawia. Link do wlasnej strony, ktora zwraca 404, to
+// dokladnie ten blad, za ktory sami odejmujemy vendorom punkty.
+for (const page of ['src/app/docs/page.tsx', 'src/app/report/page.tsx']) {
+  const source = readFileSync(page, 'utf8')
+  const mentions = source.includes('/corpus-licence')
+  check(`${page}: link do licencji tylko za flaga`, !mentions || source.includes('CORPUS_LICENCE_IS_PUBLISHED ?'), true)
+}
+// Pliki statyczne nie znaja flagi, wiec w dniu wlaczenia licencji trzeba je poprawic recznie. Ten
+// straznik chodzi w buildzie, a build na produkcji widzi produkcyjne zmienne: jesli grant jest
+// wlaczony, a llms.txt albo agent-access.json nadal mowi tylko „with attribution", deploy staje.
+if (CORPUS_LICENCE_IS_PUBLISHED) {
+  for (const file of ['public/llms.txt', 'public/.well-known/agent-access.json']) {
+    const told = readFileSync(file, 'utf8')
+    check(`${file}: nazywa licencje`, told.includes(CORPUS_LICENCE.short), true)
+    check(`${file}: i prowadzi do warunkow`, told.includes('/corpus-licence'), true)
+  }
+}
 
 console.log('probka dokumentacji, czyli czy trzy strony to trzy pytania')
 // Zmierzone na korpusie 2026-08-18: supabase.com przeczytal trzy strony o api-keys, a cloudinary.com

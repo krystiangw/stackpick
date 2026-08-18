@@ -41,3 +41,33 @@ export const REFUNDS = {
   /** Whether a monitoring month already begun is refundable. */
   refundsCurrentMonth: false,
 } as const
+
+/**
+ * The terms the published corpus is offered under.
+ *
+ * `/docs`, `/llms.txt` and `agent-access.json` have all said "free to use and quote with
+ * attribution" for weeks, and nothing said what that means: no licence text, no statement of what
+ * attribution is, nothing a reuser can hand to their own legal. Reuse is the distribution strategy,
+ * so the promise has to be real.
+ *
+ * CC BY 4.0 because it IS the sentence already published, in words a lawyer and a scraper both
+ * already understand. Off until confirmed, for the one reason that matters here: a licence grant on
+ * data already published cannot be taken back, so it is the rare thing worth a person saying yes to.
+ */
+export const CORPUS_LICENCE = {
+  name: 'Creative Commons Attribution 4.0 International',
+  short: 'CC BY 4.0',
+  url: 'https://creativecommons.org/licenses/by/4.0/',
+  /** What a reuser must say, so "attribution" is a sentence rather than a word. */
+  attribution: 'Measured by Let Agents In (letagentsin.com), formula version stated in the data.',
+} as const
+
+/**
+ * Set CORPUS_LICENCE_PUBLISHED=true once the grant is agreed. Until then /corpus-licence is 404.
+ *
+ * Two files cannot read this flag because they are served as they are written, and the build stops
+ * until they are edited by hand: in `public/llms.txt` and `public/.well-known/agent-access.json`,
+ * replace "Free to use with attribution" with "Free to use under CC BY 4.0, terms at
+ * /corpus-licence". The guard that stops the build names both files.
+ */
+export const CORPUS_LICENCE_IS_PUBLISHED = process.env.CORPUS_LICENCE_PUBLISHED === 'true'

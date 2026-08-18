@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { SELLER_IS_COMPLETE } from '@/lib/seller'
+import { CORPUS_LICENCE, CORPUS_LICENCE_IS_PUBLISHED, SELLER_IS_COMPLETE } from '@/lib/seller'
 import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google'
 import Link from 'next/link'
 import { SITE_URL } from '@/lib/site'
@@ -80,9 +80,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   isAccessibleForFree: true,
                   // The terms live in prose beside the data, and /terms is not a page we have.
                   // A licence field pointing at a 404 is a claim about our own terms that fails.
-                  license: `${SITE_URL}/methodology`,
+                  // The licence when there is one, the methodology when there is not: a dataset that
+                  // names a page of rules as its licence tells a crawler nothing about reuse.
+                  license: CORPUS_LICENCE_IS_PUBLISHED ? CORPUS_LICENCE.url : `${SITE_URL}/methodology`,
                   conditionsOfAccess:
-                    'Free to use, quote and republish with attribution to Let Agents In and a link to the methodology.',
+                    CORPUS_LICENCE_IS_PUBLISHED
+                      ? `Free to use, quote and republish under ${CORPUS_LICENCE.short}. Terms at ${SITE_URL}/corpus-licence.`
+                      : 'Free to use, quote and republish with attribution to Let Agents In and a link to the methodology.',
                   distribution: [
                     { '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: `${SITE_URL}/corpus.json` },
                     { '@type': 'DataDownload', encodingFormat: 'text/csv', contentUrl: `${SITE_URL}/corpus.csv` },

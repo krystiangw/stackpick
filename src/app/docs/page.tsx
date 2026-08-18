@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { CORPUS_LICENCE_IS_PUBLISHED } from '@/lib/seller'
 import Link from 'next/link'
 import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR, REUSE_WINDOW_MS } from '@/lib/scan-gate'
 import { CHECKS, FORMULA_VERSION, MAX_SCORE, STAGES } from '@/lib/score'
@@ -133,7 +134,15 @@ data: {"id":"example-com-202608072143","total":9,"max":${MAX_SCORE}}`}</Code>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           Every scan we publish is downloadable as one dataset: <span className="font-mono text-xs">/corpus.json</span>{' '}
           and <span className="font-mono text-xs">/corpus.csv</span>, one row per domain and check, with the
-          verdict and the sentence it was measured from. Free to use and quote with attribution, which makes it
+          verdict and the sentence it was measured from. Free to use and quote{' '}
+          {CORPUS_LICENCE_IS_PUBLISHED ? (
+            <Link href="/corpus-licence" className="text-brass underline underline-offset-4">
+              under these terms
+            </Link>
+          ) : (
+            'with attribution'
+          )}
+          , which makes it
           the fastest way to disagree with us.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">

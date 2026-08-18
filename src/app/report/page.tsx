@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { CORPUS_LICENCE_IS_PUBLISHED } from '@/lib/seller'
 import Link from 'next/link'
 import { buildIndustryReport, type CheckTally } from '@/lib/industry'
 import { NOISE_FLOOR_PERCENT } from '@/lib/published'
@@ -274,7 +275,15 @@ export default async function IndustryReportPage() {
           <h3 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Take the data</h3>
           <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
             Every row behind this page, one entry per domain and check, with the verdict, the points and the
-            sentence we measured it from. Free to use and quote with attribution. Disagreeing with us is easier
+            sentence we measured it from. Free to use and quote{' '}
+            {CORPUS_LICENCE_IS_PUBLISHED ? (
+              <Link href="/corpus-licence" className="text-brass underline underline-offset-4">
+                under these terms
+              </Link>
+            ) : (
+              'with attribution'
+            )}
+            . Disagreeing with us is easier
             with the data than with the prose.
           </p>
           <p className="mt-4 flex flex-wrap gap-4 font-mono text-sm">

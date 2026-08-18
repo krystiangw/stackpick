@@ -5750,3 +5750,24 @@ cena nie byla skonfigurowana**, wiec `skusForPrices` nie mial czego dopasowac i 
 przyznawania uprawnien byla nietestowana**. `npm run rules` ustawia teraz dwie ceny
 (`pri_watch`, `pri_report`) i sprawdza obie strony: co sie rozwiazuje do produktu i co zostaje
 nieznane.
+
+## LICENCJA KORPUSU: NAPISANA, WYLACZONA, CZEKA NA JEDNO SLOWO (2026-08-18)
+
+**Publikowalismy w trzech miejscach „free to use and quote with attribution" i nie bylo za tym
+zadnych warunkow**: ani tekstu licencji, ani zdania, co znaczy „attribution". Ponowne uzycie korpusu
+jest nasza strategia dystrybucji, wiec ta obietnica musi byc prawdziwa.
+
+Przygotowane: `/corpus-licence` z **CC BY 4.0**, bo to dokladnie to zdanie, ktore juz publikujemy, w
+slowach, ktore rozumie i prawnik, i scraper. Strona **odmawia (404), dopoki
+`CORPUS_LICENCE_PUBLISHED=true`**, tak jak strony sprzedawcy, ale z mocniejszego powodu:
+**udzielenia licencji na dane juz opublikowane nie da sie cofnac**, wiec to rzadka rzecz warta tego,
+zeby czlowiek powiedzial „tak". **DO DECYZJI KRYSTIANA RANO** - wlaczenie to jedna zmienna.
+
+Wszystko, co sie z tym wiaze, chodzi za ta sama flaga: zdania na `/docs` i `/report`, pole `terms` w
+`corpus.json` i `license` w danych strukturalnych. Dwa pliki statyczne (`llms.txt`,
+`agent-access.json`) flagi nie znaja, wiec **straznik zatrzymuje build**, gdy flaga jest wlaczona, a
+one nadal mowia stare; instrukcja co wpisac stoi przy samej fladze w `seller.ts`.
+
+**Codex zlapal tu blad, ktory bylby realnym bledem prawnym:** moja lista wymogow atrybucji stawiala
+„zachowaj wersje formuly" jako czwarty warunek licencji, a **CC BY nie pozwala dokladac warunkow**.
+Teraz sa trzy wymogi licencji i osobno prosba, ktora niczego nie warunkuje.
