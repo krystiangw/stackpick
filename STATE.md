@@ -30,6 +30,8 @@ zanim cokolwiek zrobisz.** Gdyby przepadla, komenda jest w sekcji o 9.35 nizej.
    wylacznie na golej frazie.
 6. `npm run watch-coverage` - dolozona kadencja: pokazuje, czy ktoras obserwacja czeka za dlugo.
 7. `npm run audit-our-api` - czy nasz OpenAPI opisuje kazde pole, ktore API zwraca (nie wymaga bazy).
+8. `npm run indexnow -- --all` - zgloszenie zmienionych stron do IndexNow (Bing, a przez niego
+   wyszukiwarka ChatGPT). Po reseedzie zmienia sie kazda strona vendora, wiec to wtedy ma sens.
 
 **Wszystko naraz, jednym wklejeniem:**
 ```
@@ -5866,3 +5868,22 @@ bramke. Sprostowanie pojawia sie **przy werdykcie na opublikowanej stronie**, wi
 ze wiemy, i co dokladnie jest nie tak. Trzy prawdziwe oskarzenia zostaja bez sprostowania, bo sa
 prawdziwe. `after-reseed.mts` bedzie od teraz wypisywal te piec jako „nadal wymaga sprostowania" -
 to nie awaria reseedu, tylko widoczny dlug.
+
+## KLUCZ INDEXNOW LEZAL NA STRONIE OD TYGODNI I NIKT GO NIE UZYWAL (2026-08-18)
+
+`public/61910d946de69abaddd574578a8da3a0.txt` byl na miejscu, a **nic nigdy nie zglaszalo zadnego
+adresu**. Plik reklamowal mozliwosc, z ktorej nie korzystalismy. To wazniejsze niz przy zwyklej
+stronie: **wyszukiwarka ChatGPT pobiera z Bing**, a nasze strony vendorow zmieniaja sie przy kazdym
+przemiecie, wiec korpus, ktorego indeks nie przeczytal ponownie, to korpus, z ktorego nikt nie
+odpowiada na pytania.
+
+**`npm run indexnow`** (steady: 64 adresy) i **`npm run indexnow -- --all`** (241 adresow, po
+reseedzie). Zgloszone dzis, odpowiedz 200. Lista bierze sie **z naszej wlasnej `sitemap.xml`**, a nie
+z listy wpisanej w skrypcie: pierwsza wersja miala `/audits`, przepisane z etykiety w nawigacji,
+podczas gdy trasa nazywa sie `/audit`. Recznie wpisana lista wlasnych stron jest bledna nastepnego
+dnia po zmianie nazwy.
+
+Dwie rzeczy od codeksa: podane wprost adresy **nie czytaja juz sitemapy** (tryb na zly moment nie
+moze zalezec od tego, ze strona dziala), a straznik w `rules.mts` pilnuje, ze plik klucza zawiera
+**wlasna nazwe** - inaczej silnik uznaje kazde zgloszenie za cudze i **nic nie mowi**, czyli porazka
+jest cicha z definicji.

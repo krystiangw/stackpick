@@ -1525,6 +1525,15 @@ for (const sku of CATALOG) {
   check(`${sku.id}: katalog czyta te sama zmienna`, catalogSource.includes(`priceId('${suffix}')`), true)
 }
 
+// Klucz IndexNow: plik musi zawierac wlasna nazwe, bo inaczej silnik traktuje kazde zgloszenie jako
+// cudze i NIC nie mowi. Cicha porazka z definicji, wiec pilnowana tutaj, a nie odkrywana po tygodniu.
+console.log('\nklucz IndexNow zgadza sie z wlasna nazwa pliku')
+const keyFile = readdirSync('public').find((name) => /^[0-9a-f]{32}\.txt$/.test(name))
+check('plik klucza istnieje', Boolean(keyFile), true)
+if (keyFile) {
+  check('i zawiera swoja nazwe', readFileSync(`public/${keyFile}`, 'utf8').trim(), keyFile.replace(/\.txt$/, ''))
+}
+
 // Arytmetyka platnego raportu: naglowek mowil „9 of 16 measurable points" nad tabela, ktora sumuje
 // sie do 17, i nic tego nie tlumaczylo, bo brakujacy punkt to check, ktory klienta nie dotyczy.
 // Regula jest jedna: jesli kolumna nie sumuje sie do mianownika, sekcja musi powiedziec dlaczego.

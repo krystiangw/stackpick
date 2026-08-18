@@ -33,7 +33,8 @@
     "audit-llms": "tsx scripts/audit-llms.mts",
     "noise-floor": "tsx scripts/noise-floor.mts",
     "audit-delivery": "tsx scripts/audit-delivery.mts",
-    "audit-our-api": "tsx scripts/audit-our-api.mts"
+    "audit-our-api": "tsx scripts/audit-our-api.mts",
+    "indexnow": "tsx scripts/indexnow.mts"
   },
   "dependencies": {
     "mongodb": "^7.5.0",
