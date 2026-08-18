@@ -203,6 +203,24 @@ if (!report) {
   process.exit(1)
 }
 
+/**
+ * A guest whose address redirects into the corpus is not a guest, it is a vendor we already publish
+ * under the address they moved from.
+ *
+ * railway.app came out of here as "named in 0 of 11 runs" with ten answers saying Railway, because
+ * the mentions belong to railway.com and the two are one company after a move. The scanner already
+ * knew: it followed the 301 and recorded the domain it landed on. Refusing here rather than
+ * printing the zero is the same call as refusing an unmeasured category, and for the same reason:
+ * the answer costs nothing before payment and is a refund after it.
+ */
+const landedOn = report.findings.resolvedElsewhere?.finalDomain
+if (guest && landedOn && landedOn !== domain && CURATED_DOMAINS.has(landedOn)) {
+  console.error(`${domain} przekierowuje na ${landedOn}, ktory juz publikujemy, wiec to ta sama firma pod dwoma adresami.`)
+  console.error(`Wymienienia agentow ida na ${landedOn}, a raport dla ${domain} pokazalby zero, ktore nie jest prawda o nich.`)
+  console.error(`Uruchom: npx tsx scripts/client-report.mts ${landedOn}`)
+  process.exit(2)
+}
+
 const card = report.scorecard
 const measurable = card.measurable ?? card.max
 const failed = card.checks.filter((check) => !check.inconclusive && !check.notApplicable && check.points < check.max)

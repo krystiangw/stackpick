@@ -7720,6 +7720,12 @@ zostaje tylko w markdownie, ginie dokladnie dla polowy kupujacych.
 
 Sprawdzone w obie strony: `railway.app` niesie to zdanie, `svix.com` nie niesie go wcale.
 
+**Druga polowa, dopisana po tym, jak sprawdzilem, co skaner juz wie:** skaner **poszedl za 301** i
+zapisal, ze `railway.app` laduje na `railway.com` (`resolvedElsewhere.finalDomain`). Nie trzeba wiec
+zadnej recznie trzymanej tabeli „ta sama firma": generator **odmawia** goscia, ktorego adres laduje
+w korpusie, i podaje komende dla adresu, ktory publikujemy. To ta sama decyzja co odmowa dla
+niemierzonej kategorii i z tego samego powodu: przed platnoscia kosztuje zero, po platnosci jest zwrotem.
+
 **Czego to NIE naprawia:** nadal nie umiemy policzyc wymienien firmy po zmianie domeny, bo
 `--brand Railway` jest slusznie odrzucane (nazwa nalezy do wiersza w korpusie). Wlasciwe
 rozwiazanie to znane zadanie **#47** (atrybucja po golej nazwie) plus pojecie „ta sama firma pod

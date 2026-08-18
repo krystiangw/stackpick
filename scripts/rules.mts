@@ -375,6 +375,12 @@ check('model niesie te liczbe', generatorSource.includes('missedByWord,'), true)
 check('strona raportu tez ja pokazuje', readFileSync('src/app/d/[id]/report-view.tsx', 'utf8').includes('model.missedByWord > 0'), true)
 // Kontrolka: to nie jest tylko komunikat dla operatora.
 check('kontrola: nie zostalo samo stderr', generatorSource.includes('UWAGA: ${missedByWord}'), true)
+// Gosc, ktorego adres przekierowuje do korpusu, nie jest gosciem, tylko vendorem, ktorego juz
+// publikujemy pod adresem, z ktorego sie wyprowadzil. Skaner juz to wie: poszedl za 301 i zapisal,
+// gdzie wyladowal. Odmowa kosztuje nic przed platnoscia i jest zwrotem po niej.
+check('generator odmawia gosciowi, ktory laduje w korpusie', generatorSource.includes('CURATED_DOMAINS.has(landedOn)'), true)
+check('i mowi, ktora komende uruchomic', generatorSource.includes('Uruchom: npx tsx scripts/client-report.mts ${landedOn}'), true)
+check('kontrola: nie odmawia przy braku przekierowania', generatorSource.includes('landedOn && landedOn !== domain'), true)
 check('kazde pole watcha ma opis', Object.keys(WATCH_FIELDS_DISCLOSED).length, 14)
 check('kontrola: opis nie jest pusty', Object.values(WATCH_FIELDS_DISCLOSED).every((one) => one.length > 5), true)
 check('formularz tez nie mowi „nic wiecej"', formSource.includes('the domain, nothing else'), false)
