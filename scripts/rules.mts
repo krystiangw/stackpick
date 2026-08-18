@@ -2036,15 +2036,35 @@ check('liczba checkow idzie ze stalej', standard.includes('CHECKS.length'), true
 check('liczba wierszy idzie z korpusu', standard.includes('corpus.reports.length'), true)
 // Liczona z tego, co skan zastal pod adresem, nie ze zdania, ktore o tym napisal: zdanie nazywa
 // jeden plik, wiec domena serwujaca kilka bylaby policzona raz albo wcale.
-check('liczba kart A2A idzie ze znalezisk, nie ze zdania', standard.includes('usableEntryPoints'), true)
+// Liczba kart agenta nie idzie juz z naszej pamieci w ogole: przechowywana liczba mowila 11 ze 177,
+// a bezposrednia proba 59 domen nie znalazla ani jednej. Publikujemy pomiar, ktory da sie powtorzyc.
+check('strona nie liczy kart z wlasnej pamieci', standard.includes('usableEntryPoints'), false)
+// Mianownik to hosty, ktore odpowiedzialy, nie wszystkie zapytane: 403 od szesciu vendorow nie jest
+// informacja, ze karty nie maja, a wliczenie ich zamienia odmowe w brak.
+check('mianownik to hosty, ktore odpowiedzialy', standard.includes('Fifty-two answered'), true)
+check('a odmowy sa wylaczone wprost', standard.includes('counted in neither'), true)
+check('i brak jest sprawdzony wobec kontrolki', standard.includes("path nobody registered"), true)
+// 404 nie potrzebuje kontrolki, wiec zdanie nie moze mowic, ze KAZDY brak przez nia przeszedl.
+check('zdanie nie obiecuje kontrolki przy kazdym braku', standard.includes('most said 404 outright'), true)
+const cardProbe = readFileSync('scripts/audit-agent-card.mts', 'utf8')
+check('sonda odroznia odmowe od braku', cardProbe.includes('const unclear') && cardProbe.includes('const absent'), true)
+check('i nie bierze kazdego JSON-a za karte', cardProbe.includes('looksLikeACard'), true)
+// 200 z markerem wyzwania to sciana, nie odpowiedz: bez tego bramka botowa zwracajaca 200 zapisalaby
+// sie jako „nie maja karty", czyli dokladnie to oskarzenie, ktoremu ta sonda ma zapobiegac.
+check('sciana z kodem 200 nie jest brakiem', cardProbe.includes("cf-mitigated"), true)
+// Brakiem jest tylko HTML pod adresem .json, czyli miekkie 404. Kazda inna odpowiedz 200, ktorej
+// nie umiemy odczytac, zostaje niejasna, bo mianownik cytowany publicznie nie moze jej wchlonac.
+// Brak jest ustalany wobec wlasnej kontrolki witryny, a nie z ksztaltu odpowiedzi: strona logowania
+// i miekkie 404 wygladaja tak samo, dopoki nie zapytasz o sciezke, ktorej nikt nie rejestruje.
+check('brak jest ustalany wobec kontrolki', cardProbe.includes('NONSENSE') && cardProbe.includes('sameStatus'), true)
+// „Oba sa HTML" to nie porownanie: strona logowania i miekkie 404 sa oba HTML.
+check('kontrolka uzywa porownania szablonu ze skanera', cardProbe.includes('answersWithTheSameTemplate'), true)
+// Witryna z calym /.well-known za logowaniem odpowiada tak samo pod kazda sciezka, wiec kontrolka
+// pasuje, a to nadal jest sciana, nie brak pliku.
+check('sciana logowania nie jest brakiem karty', cardProbe.includes('const wall'), true)
 check('i nie czyta opublikowanego zdania', standard.includes('check.detail.includes'), false)
 // Witryna odpowiadajaca kazdej sciezce swoja powloka ma pozorne trafienie pod kazdym adresem;
 // check to odrzuca, wiec liczenie samych sciezek publikowaloby te powloki jako karty agenta.
-check('strona filtruje tak samo jak check', standard.includes('usableEntryPoints(report.findings)'), true)
-check('a nie powtarza jego reguly u siebie', standard.includes('servesCatchAll'), false)
-// AR-CAPA-04 nazywa jeden adres. `/.well-known/agent.json` to starszy, osobny plik, ktory tez
-// badamy, i wliczanie go zawyzaloby statystyke o tym konkretnym wymaganiu.
-check('liczymy tylko adres z AR-CAPA-04', standard.includes("path.includes('agent.json')"), false)
 // Siedem MUST-ow przeczytanych z agentready.org 2026-08-19. Gdy tabela urosnie albo sie skurczy
 // bez zmiany zdania we wstepie, strona zacznie klamac o standardzie, ktorego nie kontrolujemy.
 const musts = (standard.match(/id: 'AR-[A-Z]+-\d+'/g) ?? []).length

@@ -92,11 +92,12 @@ function everyNamespaceFakesFor(f: ScanFindings): boolean {
 /**
  * The entry files a scan may be believed about, which is not the same list as the one it found.
  *
- * Exported because /standard counts how many vendors serve an agent card, and counting the raw
- * findings there published app shells as agent cards. One concept computed in two places drifts
- * exactly where it hurts, and this project has the scars to prove it.
+ * Named rather than inlined because a page once counted the raw findings to say how many vendors
+ * serve an agent card, and app shells came out as agent cards. That count is gone: a direct probe
+ * of 59 domains found none where the stored figure implied about four, so the number published now
+ * comes from asking the address rather than from reading our own storage.
  */
-export function usableEntryPoints(f: ScanFindings): string[] {
+function usableEntryPoints(f: ScanFindings): string[] {
   const found = f.funnel.entryPointsFound
   if (!everyNamespaceFakesFor(f)) return found
   return found.filter((entry) => entry.startsWith('http') && !entry.startsWith(f.site))

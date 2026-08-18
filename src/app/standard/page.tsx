@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { headers } from 'next/headers'
-import { CHECKS, usableEntryPoints } from '@/lib/score'
+import { CHECKS } from '@/lib/score'
 import { publishedCorpus } from '@/lib/published'
 import { recordVisit } from '@/lib/visits'
 import { SITE_URL } from '@/lib/site'
@@ -95,14 +95,6 @@ export default async function StandardPage() {
   // Counted from what the scan found at each address, not from the sentence it wrote. Reading the
   // published detail instead gave 2, because a domain serving several of these files is described
   // by whichever one the sentence names first: a number about our prose rather than about them.
-  // Through the same filter the check uses, not the raw findings: a site that answers every path
-  // with its app shell has an apparent hit at every address, and counting those would publish app
-  // shells as agent cards.
-  const withCard = corpus.reports.filter((report) =>
-    // The address AR-CAPA-04 names and no other. `/.well-known/agent.json` is an older, separate
-    // file we also probe, and counting it here would inflate a statistic about this requirement.
-    usableEntryPoints(report.findings).some((path) => path.includes('agent-card.json')),
-  ).length
   const labelOf = (id: string) => CHECKS.find((check) => check.id === id)?.label ?? id
   recordVisit('/standard', (await headers()).get('user-agent'))
 
@@ -170,9 +162,13 @@ export default async function StandardPage() {
           moment the number grows.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          For the same reason we watch AR-CAPA-04 rather than celebrate it: {withCard} of the {corpus.reports.length}{' '}
-          domains we publish serve an agent card at all. We added the address to the paths we probe because a vendor
-          who publishes one was reading as if they published nothing, which was our error and not theirs.
+          For the same reason we watch AR-CAPA-04 rather than celebrate it. On {READ_ON} we asked 59 domains spread
+          across this corpus for a card at the address the standard names. Fifty-two answered and none of them served
+          one: most said 404 outright, and where a site answered 200 with something else we checked it against that
+          site&apos;s own answer to a path nobody registered. The other seven
+          refused us or answered with something we could not read either way, and they are counted in neither
+          direction, because a host that will not answer is not a host without a card. We still probe that address, since a vendor who does publish one was
+          reading as if they published nothing, and that was our error rather than theirs.
         </p>
       </section>
 

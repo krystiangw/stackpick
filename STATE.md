@@ -7459,3 +7459,32 @@ niemierzalne, nie oskarzenia. Sprostowanie directusa **nadal stoi**, zgodnie z p
 **Wdrozone i zweryfikowane na produkcji:** cytaty renderuja pogrubienie zamiast surowych gwiazdek
 (`<strong>` w zrodle strony), etapy bez mierzalnego punktu pisza „nothing measurable" zamiast rysowac
 pusty pasek przy `0/0`.
+
+## STRONA O STANDARDZIE, I LICZBA, KTORA SIE NIE OBRONILA (2026-08-19)
+
+`/standard`. Kupujacy, ktory znajdzie agentready.org, ma o nas jedno pytanie: czy jestescie zgodni.
+Uczciwa odpowiedz to **mapowanie, nie odznaka**, bo piec z siedmiu MUST-ow jest **warunkowych**
+(dotycza tylko produktow wystawiajacych dana powierzchnie). Zweryfikowane bezposrednio na
+agentready.org: **28 wymagan**, nie 30 jak mialem w notatkach, piec sekcji, siedem MUST-ow.
+Mierzymy **szesc z siedmiu**, na czterech pytamy ostrzej niz spec, jednego (PKCE, AR-IDEN-05)
+swiadomie nie mierzymy. **Bez wyniku zgodnosci**, bo standard powstal wlasnie dlatego, ze kazdy
+wynik gotowosci klocil sie z kazdym innym.
+
+**Historia jednej liczby, warta zapamietania.** Chcialem napisac, ilu vendorow serwuje karte A2A.
+Pierwsza wersja liczyla **opublikowane zdania** i dala **2**. Poprawiona liczyla znaleziska z
+korpusu i dala **11**. Notatki mowily **5**. Zamiast wybierac, **zapytalem wprost**: 59 domen
+rozlozonych po korpusie, bezposrednio pod `/.well-known/agent-card.json`. **Zero.** Przy stopie
+11/177 w probie 59 domen spodziewalibysmy sie okolo czterech, wiec przechowywana liczba mierzyla
+cos innego niz to, co zdanie obiecywalo.
+
+**Codex przepuscil te sonde przez siedem rund** i kazda byla o tym samym: **co wolno nazwac brakiem**.
+Po kolei wypadly z mianownika: hosty, ktore nie odpowiedzialy; kod 403 i 429; `{}` z kodem 200
+uznawane za karte; 200 z markerem wyzwania; 200, ktorego nie umiemy odczytac; porownanie „oba sa
+HTML" zamiast szablonu; i wreszcie sciana logowania, ktora pasuje do kontrolki, bo cale
+`/.well-known` stoi za nia. Konczy sie na **52 hostach, ktore odpowiedzialy, zero kart**, siedmiu
+niejednoznacznych wypisanych z nazwy, i porownaniu szablonu **zaimportowanym ze skanera**, a nie
+napisanym drugi raz.
+
+**Zasada, ktora z tego zostaje:** liczba na stronie publicznej ma pochodzic z **zapytania, ktore da
+sie powtorzyc** (`scripts/audit-agent-card.mts`), a nie z naszej wlasnej pamieci o tym, co kiedys
+zmierzylismy. Przechowywana liczba wygladala solidnie i byla o czym innym.
