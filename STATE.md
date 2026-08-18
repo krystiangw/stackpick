@@ -1,131 +1,63 @@
-# Let Agents In: stan na 2026-08-18 (formula 9.40, nic nie jest w locie)
+# Let Agents In: stan na 2026-08-19 (formula 9.41, nic nie jest w locie)
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te czterdziesci linijek, potem reszte)
 
-**WERSJE: produkcja, repo i korpus na 9.40.** Formula stoi od doby i **nie ma jej podbijac bez
-potrzeby**: podbicie wygasi sprostowanie directusa, ktorego naprawa nie jest napisana (sekcja o #47).
+**WERSJE: produkcja, repo i korpus na 9.41.** Przemiat skonczony, `/tmp/reseed-941.log`, komplet
+kontroli po nim zielony: 177 wierszy, 0 sprzecznosci, 0 rozjazdow, badanie na `/findings` nadal
+prawdziwe, kadencja monitoringu zdrowa, nasz OpenAPI opisuje kazde zwracane pole. **Nic nie chodzi w
+tle** (`pgrep -f "reseed.sh"`), drzewo czyste, wszystko wdrozone i sprawdzone na produkcji.
 
-**NIC NIE JEST W LOCIE.** Przemiat 9.40 skonczyl sie 13:15 (`/tmp/reseed-940b.log`, kod 0), komplet
-kontroli po przemiacie przeszedl, drzewo robocze czyste, ostatni commit `883e8b1` wdrozony na Heroku.
-Zanim ruszysz cokolwiek ciezkiego: `tail -3 /tmp/reseed-940b.log` i `pgrep -fl "tsx scripts"`.
+**SPROSTOWANIE DIRECTUSA PRZESUNIETE NA `fixedIn: 10.0`**, bo jego przyczyna to przepisanie rankingu
+nazw (#47), ktorego 9.41 nie dotyka. Straznik pilnuje, ze to `fixedIn` jest zawsze pozniejsze niz
+biezaca formula: sprostowanie, ktorego termin nadchodzi przed naprawa, kasuje sie samo przy zywym
+bledzie. **Podbijajac formule, sprawdz ten wpis.**
 
-**STAN KORPUSU PO PRZEMIECIE:** 177 wierszy, 0 sprzecznosci, 0 rozjazdow, kadencja monitoringu
-zdrowa, 241 adresow w IndexNow. **16 wierszy ze 177 spotkalo limit na brzegu vendora, 12 z markerem
-wyzwania** (przewidywanie zapisane przed pomiarem: 13 i 11). Panel „Your edge challenged us" zywy na
-`/v/split.io`, pole `challengedAt` wraca z `/api/scan`.
+**CO TA NOC ZMIENILA, w kolejnosci waznosci:**
+- **Raport za 49 USD ma model danych, wykresy i cytaty zwyciezcy.** `/d/<id>` renderuje model, nie
+  markdown: dwie liczby na wierzchu, wykres kto zostal wymieniony zamiast ciebie, cytaty **slowami,
+  ktorymi wybrano konkurenta**, tabela narzedzie/model/data, etapy, oblane checki z poprawka przy
+  kazdym. Markdown zostaje jako to, co kupujacy przesyla dalej. **Probka: `/d/sample`, linkowana z
+  cennika** (tylko gdy istnieje I jest oznaczona jako probka).
+- **`/standard`**: gdzie stoimy wobec AgentReady (28 wymagan, 7 MUST, mierzymy szesc), bez wyniku
+  zgodnosci.
+- **`/bot`**: co robi nasz skaner w cudzych logach, plus naglowek `From` i **honorowanie imiennego
+  `User-agent: LetAgentsIn` w robots.txt**. Wildcard to pomiar, nie prosba. Skan zlecony przez
+  czlowieka zawsze sie wykonuje.
+- **Polityka serii na `/methodology`** i **kontra na bramke w CI na `/pricing`**.
+- **`oauth_dcr`**: zdanie „RFC 7591 is the only standard path" przestalo byc prawda po specyfikacji
+  MCP z 2026-07-28 i jest poprawione w czterech miejscach, ze straznikiem.
+- **Skaner**: strona z samych nawiasow zabierala **53 sekundy** przy budzecie 27; `withoutTags` jest
+  liniowe i daje identyczny wynik (200 000 losowych ciagow bez rozjazdu).
+- **Bezpieczenstwo**: `scripts/audit-gate.mts` (co sie wykona przed audytem) i
+  `harness/sandbox/run.sh` (bieg bez naszych sekretow), plus zmierzona ekspozycja.
 
-**DZIEWIEC POWIERZCHNI OSKARZEN SPRAWDZONYCH ADWERSARYJNIE, 6777 ZAPYTAN, ZERO FALSZYWYCH ZDAN**
-(przebiegi 33-41): `oauth_dcr`, `mcp_present`, `agent_entry_point`, `signup_reachable`,
-`machine_readable_api`, `llms_txt`, `price_in_snippet`, `self_serve`, `programmatic_provisioning`.
-**Audyt decyzji kazal na tym przestac**: wartosc krancowa dziesiatego przebiegu jest bliska zeru,
-a checkout nie dziala. Nie zaczynaj dziesiatego.
+**ZASADA, KTORA WYSZLA Z TEJ NOCY I JEST WARTA WIECEJ NIZ RESZTA:** liczba na stronie publicznej ma
+pochodzic z **zapytania, ktore da sie powtorzyc**, a nie z naszej pamieci o tym, co kiedys
+zmierzylismy. Ta sama karta A2A dala 2 (liczac zdania), 11 (liczac znaleziska) i **0 z 52** (pytajac
+wprost pod adresem). Przechowywana liczba wygladala solidnie i byla o czym innym.
 
-**CO ZOSTALO ZMIENIONE PO PRZEMIECIE** (wszystko wdrozone, codex czysty, zweryfikowane na produkcji):
-- **Wlasny katalog ARD**: `public/.well-known/ai-catalog.json` + linia `AI-Catalog:` w robots.txt.
-  Karty A2A dla siebie **swiadomie nie publikujemy** (to wymaganie warunkowe dla powierzchni
-  agent-do-agenta, my wystawiamy MCP i HTTP).
-- **Sciana na brzegu KLIENTA wyzwala teraz maila** (`turnedAwayAtTheEdge`): klient wlaczajacy ochrone
-  przed botami dostaje sygnal. Dwa falszywe alarmy zlapane przez codeksa i naprawione: liczy sie
-  tylko wyzwanie **na jego wlasnej domenie** i tylko takie, przez ktore **nie przeszlismy**
-  (`challenge && !recovered`).
+**CO ZOSTAJE I CZEGO SAM NIE ODBLOKUJE:**
+1. **Dane sprzedawcy do Paddle.** Bez tego checkout nie istnieje i raport sprzedaje sie przez `mailto:`.
+2. **Klucz do `agentaudit@agentmail.to`** z `console.agentmail.to`. Bez niego bieg z nazwanym
+   vendorem (`harness/briefs/directed-build.md`) dojdzie do formularza i **nie domknie rejestracji**,
+   co zapisze sie jako sciana vendora, choc bedzie nasza.
+3. **Platne subskrypcje cursora i gemini**, jesli chcemy os „rozne narzedzia". Na darmowych planach
+   ta os jest **niemierzalna, a nie tania**.
+4. **Potwierdzenie polityki robots.txt** (zamrozenie zamiast usuniecia wiersza).
+5. **Czy 79 USD to monitoring miesieczny za domene** i czy zostaje przy 29 u agentable.
 
-**NASTEPNE W KOLEJCE** (kolumna „moge zrobic sam" z audytu pozycjonowania, sekcja na dole pliku):
-1. **Kontra na `npx @ora-ai/ax audit --min-score` w CI.** Audyt nazwal to najwiekszym zagrozeniem,
-   wiekszym niz agentable: gdy check chodzi w pipelinie, monitoring jako usluga traci racje bytu.
-   Kontra: CI nie widzi zywej strony po deployu, rejestru npm, cudzych powierzchni i **nie mowi, ze
-   agent wybral konkurenta**. Dopoki tego nie napiszemy, kupujacy sam tego nie wymysli.
-2. **Polityka serii**: co uniewaznia porownywalnosc i regula „nasz 429 i nasza zmiana reguly nigdy
-   nie alarmuja klienta".
-3. **Strona mapujaca 7 MUST-ow AgentReady** pass/fail, bez wymyslonej liczby.
-4. **Ile regresji zglosilby cotygodniowy przeskan** (tryb agentable), ktorych nasza podloga szumu
-   (0,59 proc.) nie liczy jako zmiany.
-
-**CZEGO NIE WOLNO ZROBIC PRZED BADANIEM:** zadnego publicznego porownania z Ora ani Lightsage.
-Nie wiemy, czy publikuja slowa odmowy, os czasu i rozbicie per rodzina modeli (ich strony sa
-renderowane po stronie klienta, 3,7 MB). Kazde zdanie „vendor X nie robi Y" przechodzi przez skill
-`audit-published-claims`.
+**CZEGO NIE ROBIC:** dziesiatego przebiegu adwersaryjnego (wartosc krancowa bliska zeru przy dziewieciu
+z zerem falszywych zdan), leaderboardow i odznak, jednej liczby 0-100 opisujacej widocznosc, oraz
+publicznego porownania z Ora albo Lightsage, dopoki nie wiemy, czy publikuja slowa odmowy i os czasu.
 
 **PULAPKA:** kazdy skan domeny Z KORPUSU, takze zrobiony do weryfikacji poprawki, odmladza mediane i
-**przesuwa karencje**. Do weryfikacji uzywaj domen spoza korpusu.
+przesuwa karencje reseedu. Do weryfikacji uzywaj domen spoza korpusu.
 
 **Komplet kontroli po nastepnym przemiecie, jednym wklejeniem:**
 ```
 cd ~/projects/stackpick && export MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick)
 npx tsx scripts/after-reseed.mts && npm run audit && npx tsx scripts/audit-study.mts   && npm run audit-delivery && npm run regressions && npm run watch-coverage && npm run audit-our-api
 ```
-
-**ZABLOKOWANE NA KRYSTIANIE (osiem rzeczy, jedna jest prawdziwym blokerem):** dane sprzedawcy do
-Paddle (JDG czy spolka) - bez tego checkout nie istnieje; czy 79 USD zostaje przy 29 u agentable;
-kiedy monitoring przestaje byc darmowy i co powiedziec trzem obecnym obserwatorom; dolna granica
-ceny audytu („from X"); `CORPUS_LICENCE_PUBLISHED`; usuniecie SKU na 10 domen; opublikowanie „platnosc
-nie zmienia werdyktu"; potwierdzenie, ze **79 USD to monitoring miesieczny za domene**, a nie
-rozszerzony raport (audyt poprawil mnie w tym fakcie).
-
-**PUNKT ODNIESIENIA po reseedzie 9.33 (2026-08-18 00:00):** 177 wierszy, `programmatic_provisioning`
-**63 zaliczone** (bylo 80 przed 9.32), `oauth_dcr` **91 oblanych, 74 z adresami**, `mcp_present`
-93 zaliczone / 80 oblanych / 0 niemierzalnych, lustro rejestru MCP 9374 hosty, errata pusta,
-`npm run audit` bez rozjazdow.
-
-**CO DZIS ZROBIONE, w skrocie** (kazde ma sekcje nizej): formula **9.32** (gola fraza w
-`programmatic_provisioning` musi niesc dowod w cytowanym oknie); **dziesiec bledow w platnym
-raporcie i mailu**; **audyt formatow maszynowych** (SARIF zglaszal 15 alertow o domenie, ktora
-przeszla wszystko); **audyt stron darmowego uzytkownika, 27 znalezisk, zamkniety**; **routing
-`find_providers`** poprawiony dwukrotnie i zmierzony na dwoch swiezych zestawach held-out
-(zle odpowiedzi 14 -> 3, zero zlych kategorii); **mail o zmianie werdyktu** nie wysyla juz zmiany,
-ktora jest nasza regula, a nie zmiana u vendora.
-
-**JEDNA ZASADA Z CALEGO DNIA, warta wiecej niz reszta:** *to samo pojecie liczone w kilku miejscach
-po swojemu rozjedzie sie dokladnie tam, gdzie boli.* „Czy go wymieniono" bylo w trzech miejscach
-(platny raport, mail, strona z biegami). Naglowek liczyl werdykty inaczej niz checki, ktore
-opisuje. Mianownik byl raz `max`, raz `measurable`. Prog rankingu byl na stronie glownej i nie bylo
-go na karcie wyniku. **Szukajac takiego bledu raz, poszukaj od razu wszystkich miejsc, ktore robia
-to samo pojecie po swojemu.**
-
-**PODLOGA SZUMU: 0,59 procent** (15 werdyktow na 2550; 10 to werdykt kontra werdykt, 5 to wiersz
-niemierzalny po jednej stronie). **Zamrozenie formuly zdjete.**
-
-**Zablokowane na Krystianie:** sciezka platnosci inna niz `mailto:` (Stripe kontra Paddle) - przy
-raporcie za 49 USD to decyduje, czy ten poziom w ogole istnieje; `ANTHROPIC_API_KEY` do czystego
-pokoju dla biegow claude; oferta agencyjna (zadanie #45); dolna granica ceny audytu („from X").
-
-**Jak powtorzyc pomiar podlogi szumu** (koszt: doba bez zmiany regul i dwa przemiatania oddalone
-o karencje): `MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npm run noise-floor <wersja>`.
-Skrypt grupuje skany po przerwie 90 minut i sam wybiera pare cieply-cieply; `... <wersja> adjacent`
-pokazuje stara, mylaca pare z jednego przebiegu (na 9.30: 27 w gore, 3 w dol).
-
-**Co zrobione dzis, w skrocie** (kazde ma wlasna sekcje nizej): formula **9.31** z trzema
-poprawkami, **lustro rejestru MCP** (rejestr jest z dyna nieosiagalny), **dwie poprawki SEO** po
-mailu z Search Console, **26. kategoria** hosting aplikacji, **strony `/c`, `/c/<kat>` i
-`/c/<kat>/runs`**, **szoste badanie na `/findings`** z replikacja drugim narzedziem, **przebudowany
-cennik** po researchu dwoch rynkow (49 / 79 / pakiety / rok za dziesiec miesiecy), **generator
-platnego raportu**, **szkic miesiecznego maila z biegow**, **runbook dostawy**, poprawka matchera
-(trzy firmy, o ktorych publikowalismy „nie padl ani razu") i **30. przebieg adwersaryjny** na
-`programmatic_provisioning`.
-
-**Co jeszcze zrobione poprzedniej nocy, w skrocie:** 26. przebieg (katalogi MCP odpadly na pokryciu, zrodlem
-zostala ich wlasna dokumentacja, dwa falszywe oskarzenia naprawione w 9.29), 27. (CAPTCHA na calej
-witrynie, 9.30), 28. (`machine_readable_api`, 0 znalezien i tym razem to cos znaczy), 29.
-(`signup_reachable`, 0 obalonych, osiem mylacych zdan), weryfikacja punktu wejscia (120 oskarzen,
-0 niezgod, kontrolka 37/37), **pomiar zwiazku checkow z wymienialnoscia u agentow na 25 celach i
-dwoch narzedziach** (`oauth_dcr` jedyny przezywa kontrole na slawe, `llms_txt` zero), straznik
-kadencji monitoringu, raport pokrycia obserwacji i research wtyczek agent-ready.
-
-**Zasady, ktore oszczedzaja dzien pracy:**
-0. **Dokument, ktory laczy licznik z cytatem, bierze oba z jednej definicji.** Dwie implementacje
-   „czy go wymieniono" w jednym akapicie to dwie rozne prawdy obok siebie, a slabsza zawsze wygra,
-   bo jest hojniejsza. Patrz sekcja o dziesieciu bledach w dokumentach dla klienta.
-1. Zmiane w punktacji sprawdza sie na **170 wierszach**, nie na czterech.
-2. Sonda audytujaca pomiar musi najpierw **umiec ten pomiar wykonac**. **Kontrolka zawsze pierwsza.**
-3. **Czytaj zdanie, ktore publikujemy, nie liczbe punktow.**
-4. Reseed planuj **petla ponawiajaca**, bo karencja (6 h mediany wieku korpusu) odbija pojedyncze
-   proby: `for i in $(seq 1 18); do npm run reseed; [ $? -eq 3 ] && sleep 1200 || break; done`
-5. **Niezgoda, ktora sie nie powtarza przy drugim pytaniu, nie jest znaleziskiem.**
-
-**Zablokowane na Krystianie:** `ANTHROPIC_API_KEY` (czysty pokoj dla biegow claude; codex jest
-czysty i to on niesie replikacje), rekord DNS do rejestru MCP, konta w Bing Webmaster i katalogach
-MCP, token npm, licencja korpusu, sciezka zakupu inna niz `mailto:` i Stripe kontra Paddle.
-**agenticpay tego NIE odblokowuje.**
-
 ## PIEC Z SZESCIU CYTATOW W RAPORCIE ZA 49 USD URYWALO SIE W SRODKU ADRESU (2026-08-17)
 
 Znalezione nie przez audyt, tylko przez **wygenerowanie raportu i przeczytanie go jak klient**.
