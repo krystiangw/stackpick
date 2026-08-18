@@ -48,8 +48,10 @@ razem.
    os jest **niemierzalna, a nie tania**.
 5. **Potwierdzenie polityki robots.txt** (zamrozenie zamiast usuniecia) i **czy 79 USD to monitoring
    miesieczny za domene**.
-6. **Rozbieznosc do rozstrzygniecia:** `/pricing` mowi o monitoringu za 79 USD, a formularz na stronie
-   glownej zapisuje na monitoring **za darmo**. Strona sama o tym pisze, ale to nie jest odpowiedz.
+6. **Monitoring: 79 USD kontra darmowy zapis.** Sprawdzone w kodzie i na stronie: to **nie jest
+   sprzecznosc pozostawiona otwarta**. `/pricing` odpowiada wprost („darmowy dzisiaj, dla wszystkich,
+   a cena jest wydrukowana, zebys wiedzial, czym sie stanie"), kod zaklada watcha z `plan: 'trial'`,
+   karty nie ma. Do potwierdzenia jest **tylko decyzja**, czy i kiedy „darmowy dzisiaj" sie konczy.
 
 **CZEGO NIE ROBIC:** dziesiatego przebiegu adwersaryjnego, leaderboardow i odznak, jednej liczby 0-100,
 oraz publicznego porownania z Ora albo Lightsage, dopoki nie wiemy, czy publikuja slowa odmowy i os czasu.
@@ -7656,10 +7658,11 @@ zmianie nie trzeba tego robic i nie nalezy.
 `/terms`, `/refunds` i wybor PSP; (3) dokladna nazwa, adres i NIP zgodne z przyszlym KYC;
 (4) polityka zwrotow (14 dni na raport, biezacy miesiac monitoringu bez zwrotu).
 
-**Rozbieznosc znaleziona przy okazji, nie naprawiona:** `/pricing` mowi o monitoringu za 79 USD
-miesiecznie, a formularz na stronie glownej zapisuje na monitoring **za darmo**, bez platnosci.
-Strona sama sie z tym mierzy zdaniem „Monitoring says $79 and also says free. Which is it?", ale
-warto potwierdzic, ze to zamierzone, a nie pozostalosc.
+**Rozbieznosc, ktora audyt zglosil przy okazji, i ktora sprawdzilem:** `/pricing` mowi o monitoringu
+za 79 USD, a formularz zapisuje za darmo. **To nie jest pozostalosc.** Strona odpowiada na to wprost
+(„darmowy dzisiaj, dla wszystkich, a cena jest wydrukowana, zebys wiedzial, czym sie stanie; nikogo
+nie obciazamy bez pytania i nie ma karty do obciazenia"), a kod robi dokladnie to: nowy watch dostaje
+`plan: 'trial'`. Otwarta jest **decyzja**, kiedy „darmowy dzisiaj" ma sie skonczyc, a nie stan kodu.
 
 **Czego audyt NIE potwierdzil, a co bylo w moim briefie:** ze brak zywego adresu polityki jest
 najczestsza przyczyna odrzutu w katalogu konektorow Anthropica. Przyjal to z briefu i nie
