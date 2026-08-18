@@ -1192,8 +1192,14 @@ function shapeRank(name: string, vendor: Vendor, description = ''): number {
   // which is right for deciding ownership and wrong here: it promoted `@bunny-agent/sdk`, published
   // by another company entirely, over bunny.net's own `@bunny.net/storage-sdk`. Caught by measuring
   // the change against the corpus before it shipped, on the sixth domain.
+  // Exactly `sdk` or `client`, not any combination of the words an SDK is called. Measured on the
+  // whole corpus before shipping: accepting every SDK-shaped name promoted `@datadog/browser-core`,
+  // an internal package, over their API client, and moved four more rows sideways between two of a
+  // vendor's real packages. The two names below are the ones that mean "the thing you install" and
+  // nothing else. The scope has to BE their name rather than start with it: a looser test promoted
+  // `@bunny-agent/sdk`, published by another company, over bunny.net's own package.
   const scope = name.startsWith('@') ? name.slice(1).split('/')[0] : null
-  if (scope !== null && isVendorName(scope, vendor) && onlySdkWords(part)) return 0
+  if (scope !== null && isVendorName(scope, vendor) && /^(sdk|client)$/.test(part)) return 0
   // launchdarkly-js-client-sdk is what LaunchDarkly ships; launchdarkly-eventsource is what it
   // depends on, at 3.1M weekly against 2.8M, and both carry the brand and publish from the
   // same account. Nothing but the shape of the name separates them.

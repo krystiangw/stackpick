@@ -1608,11 +1608,16 @@ check('a pierwszenstwo liczy sie z nim w liscie', counted.first.get('buttondown.
 // nazwa vendora, wiec o wyborze decyduja pobrania. Scope musi BYC ich nazwa, a nie zaczynac sie od
 // niej: luzniejsze dopasowanie wpuscilo `@bunny-agent/sdk` (inna firma) przed `@bunny.net/storage-sdk`.
 console.log('\nranking nazw paczek')
-check('SDK w scope vendora stoi rowno z gola nazwa', shapeRankOf('@directus/sdk', 'directus.com'), 0)
+check('scope vendora plus "sdk" stoi rowno z gola nazwa', shapeRankOf('@directus/sdk', 'directus.com'), 0)
+check('scope vendora plus "client" tez', shapeRankOf('@sanity/client', 'sanity.io'), 0)
 check('gola nazwa vendora nadal na zero', shapeRankOf('directus', 'directus.com'), 0)
 // Scope musi BYC ich nazwa. `bunny-agent` zaczyna sie od „bunny" i nalezy do innej firmy: przy
 // luzniejszym dopasowaniu awansowal na zero i wygrywal z paczka bunny.net mimo kary za zalazek.
 check('podobny cudzy scope nie awansuje', shapeRankOf('@bunny-agent/sdk', 'bunny.net') === 0, false)
+// I nie kazda nazwa zlozona ze slow SDK: zmierzone na korpusie, szersza wersja awansowala
+// `@datadog/browser-core` (paczka wewnetrzna) ponad ich klienta API.
+check('wewnetrzna paczka o nazwie ze slow SDK nie awansuje', shapeRankOf('@datadog/browser-core', 'datadoghq.com') === 0, false)
+check('ani "api-sdk"', shapeRankOf('@bitmovin/api-sdk', 'bitmovin.com') === 0, false)
 check('a paczka wejsciowa to nadal paczka wejsciowa', looksLikeEntryPackage('@directus/sdk', 'directus.com'), true)
 
 // Runbook dostawy mowi platnikowi, co dostaje za 79 USD miesiecznie. Liczba checkow byla tam

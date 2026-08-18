@@ -5987,3 +5987,34 @@ Trzy rzeczy, ktore wyszly przy okazji, wszystkie od codeksa:
 
 Poprawiona tez linia konsoli, po ktorej operator decyduje o wyslaniu: brala liczby z pierwszej celi
 i z opublikowanych wierszy, wiec dla goscia pisala „0/5" nad raportem mowiacym „0 of 10".
+
+## 47: RANKING NAZW PACZEK, ZMIERZONY NA CALYM KORPUSIE PRZED WDROZENIEM (2026-08-18)
+
+**Przyczyna:** gola nazwa vendora miala najlepsza mozliwa range, wiec `directus` (serwer, 19 tys.
+pobran tygodniowo, bez typow) wygrywal z `@directus/sdk` (135 tys., z typami, opisana w rejestrze
+jako „Directus JavaScript SDK") **niezaleznie od pobran**. Paczka w scope vendora nazwana `sdk` albo
+`client` stoi teraz rowno z gola nazwa, wiec rozstrzygaja pobrania.
+
+**Nowy skrypt `scripts/audit-attribution.mts`**: dla kazdego wiersza korpusu wybranego przez
+wyszukiwarke porownuje dzisiejszy wybor z tym, na czym stoi opublikowany wiersz. Tylko rejestr, bez
+dotykania stron vendorow i bez zapisu. **Nie uruchamiac w trakcie przemiatu** - skaner pyta npm o to
+samo w tym samym czasie, a limit trafiony tutaj dociera tam jako paczka, ktorej nikt nie publikuje.
+Pomiar chodzi **wolno i pyta dwa razy** wlasnie dlatego: bez tego trzy z pierwszych szesciu domen
+wygladaly na regresje, a zadna nia nie byla.
+
+**Pomiar zlapal dwie rzeczy, ktorych nie zlapalby przeglad:**
+1. **Cudzy scope.** Pierwsza wersja uzywala `isVendorScope`, ktore akceptuje **prefiks**, wiec
+   `@bunny-agent/sdk` (firma `vikainc`, „AI Provider and React hooks") awansowal ponad wlasna paczke
+   bunny.net. Teraz scope musi **byc** nazwa vendora.
+2. **Za szeroka definicja SDK.** Wersja przyjmujaca kazda nazwe zlozona ze slow SDK dala na 137
+   porownanych wierszy **9 zmian, w tym regresje**: `@datadog/browser-core` (paczka wewnetrzna)
+   ponad ich klienta API, plus cztery ruchy w bok miedzy dwiema prawdziwymi paczkami vendora
+   (launchdarkly, bitmovin, searchkit, commercetools). Zawezone do **doslownie `sdk` albo `client`**:
+   zostaja trzy poprawki, ktore chcielismy (directus, sanity, configcat), znikaja wszystkie ruchy
+   watpliwe.
+
+**Stan: zacommitowane lokalnie, NIE wdrozone.** Przemiat wystartowal 05:34, a zawezonej wersji nie
+zmierzylem jeszcze na calym korpusie - `audit-attribution` bije w npm i nie moze chodzic razem ze
+skanerem. **Po przemiecie: uruchomic pomiar ponownie, sprawdzic, ze zmieniaja sie tylko directus,
+sanity i configcat, dopiero wtedy wdrozyc.** Sprostowanie directusa (`fixedIn: 9.41`) zostaje do
+tego czasu.
