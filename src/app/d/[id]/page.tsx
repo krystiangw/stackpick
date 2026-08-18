@@ -29,7 +29,8 @@ export default async function DeliveredReportPage({ params }: { params: Promise<
   if (!delivery) notFound()
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-14">
+    // The attribute the print stylesheet looks for. Only this page is a document somebody prints.
+    <main data-deliverable className="mx-auto max-w-5xl px-6 py-14">
       <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-rule pb-4 print:pb-2">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">
           {delivery.sample ? 'Sample report' : 'Your report'} · formula v{delivery.formulaVersion}

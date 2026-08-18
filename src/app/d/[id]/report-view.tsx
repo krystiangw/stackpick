@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { ReportModel } from '@/lib/client-report-model'
 
 /**
@@ -12,6 +13,28 @@ import type { ReportModel } from '@/lib/client-report-model'
  */
 
 const share = (points: number, of: number) => (of === 0 ? 0 : Math.round((points / of) * 100))
+
+/**
+ * An agent writes markdown, so its sentences arrive carrying `**` and backticks. Printed raw inside
+ * a designed page they read as a document somebody forgot to finish, and stripping them would
+ * silently edit a quotation. Rendered, the emphasis is the agent's own.
+ */
+function Quoted({ said }: { said: string }) {
+  const parts: ReactNode[] = []
+  const pattern = /\*\*([^*]+)\*\*|`([^`]+)`/g
+  let at = 0
+  let match: RegExpExecArray | null
+  let index = 0
+  while ((match = pattern.exec(said))) {
+    if (match.index > at) parts.push(said.slice(at, match.index))
+    index += 1
+    if (match[1]) parts.push(<strong key={index} className="font-semibold">{match[1]}</strong>)
+    else parts.push(<code key={index} className="font-mono text-[0.95em]">{match[2]}</code>)
+    at = match.index + match[0].length
+  }
+  if (at < said.length) parts.push(said.slice(at))
+  return <>{parts}</>
+}
 
 function Bar({ points, of, tone }: { points: number; of: number; tone: 'pass' | 'fail' | 'brass' }) {
   const filled = share(points, of)
@@ -116,9 +139,9 @@ export function ReportView({ model }: { model: ReportModel }) {
           </div>
           {strongest && missed > 0 && (
             <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
-              {strongest.domain} was named in {strongest.named} of the runs you were named in {named.named}. A single
-              mention apart is inside what {named.of} runs can separate, and the rows where that is the case are marked
-              above rather than presented as a lead.
+              {strongest.domain} was named in {strongest.named} of these {named.of} runs; you were named in{' '}
+              {named.named}. A single mention apart is inside what {named.of} runs can separate, and the rows where
+              that is the case are marked above rather than presented as a lead.
             </p>
           )}
         </section>
@@ -133,7 +156,9 @@ export function ReportView({ model }: { model: ReportModel }) {
           <ul className="mt-5 space-y-4">
             {winnerQuotes.map((quote) => (
               <li key={`${quote.tool}-${quote.run}`} className="border-l-2 border-brass pl-4">
-                <p className="leading-relaxed text-ink">“{quote.said}”</p>
+                <p className="leading-relaxed text-ink">
+                  “<Quoted said={quote.said} />”
+                </p>
                 <p className="mt-1 font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">
                   {quote.tool} · run {quote.run}
                 </p>
@@ -149,7 +174,9 @@ export function ReportView({ model }: { model: ReportModel }) {
           <ul className="mt-5 space-y-4">
             {yourQuotes.map((quote) => (
               <li key={`${quote.tool}-${quote.run}`} className="border-l-2 border-rule pl-4">
-                <p className="leading-relaxed text-ink">“{quote.said}”</p>
+                <p className="leading-relaxed text-ink">
+                  “<Quoted said={quote.said} />”
+                </p>
                 <p className="mt-1 font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">
                   {quote.tool} · run {quote.run}
                 </p>
@@ -233,20 +260,24 @@ export function ReportView({ model }: { model: ReportModel }) {
         <div className="mt-6 space-y-5">
           {model.stages.map((stage) => (
             <div key={stage.title}>
+              {/* A stage where nothing could be measured is not a stage scoring zero, and drawing
+                  an empty bar beside "0/0" is the version of this page that accuses by layout. */}
               <div className="flex items-baseline justify-between gap-4">
                 <p className="font-medium">{stage.title}</p>
                 <p className="font-mono text-sm tabular-nums text-ink-faint">
-                  {stage.points}/{stage.measurable}
+                  {stage.measurable === 0 ? 'nothing measurable' : `${stage.points}/${stage.measurable}`}
                 </p>
               </div>
               <p className="mt-1 text-sm text-ink-soft">{stage.question}</p>
-              <div className="mt-2">
-                <Bar
-                  points={stage.points}
-                  of={stage.measurable}
-                  tone={stage.measurable === 0 ? 'brass' : share(stage.points, stage.measurable) >= 60 ? 'pass' : 'fail'}
-                />
-              </div>
+              {stage.measurable > 0 && (
+                <div className="mt-2">
+                  <Bar
+                    points={stage.points}
+                    of={stage.measurable}
+                    tone={share(stage.points, stage.measurable) >= 60 ? 'pass' : 'fail'}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>

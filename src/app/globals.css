@@ -61,3 +61,52 @@ body {
   outline: 2px solid var(--color-brass);
   outline-offset: 2px;
 }
+
+/*
+ * Printing a delivered report.
+ *
+ * The buyer's next move after reading it is Cmd+P and an attachment to somebody who was not in the
+ * conversation. What that person needs is the document; what they do not need is our navigation,
+ * our footer and a dark background eating a toner cartridge. Scoped to the page that is a
+ * deliverable, so nothing else on the site changes shape when somebody prints it.
+ */
+@media print {
+  /*
+   * The light palette, forced. Paper has no dark mode, and without this a reader whose system
+   * prefers dark prints pale grey text on white: the page looks correct on screen and arrives at
+   * the meeting unreadable, which is the worst moment to find out.
+   */
+  body:has([data-deliverable]) {
+    --color-ground: #faf9f6;
+    --color-surface: #ffffff;
+    --color-sunken: #e3dfd4;
+    --color-ink: #16181c;
+    --color-ink-soft: #55575c;
+    --color-ink-faint: #63656a;
+    --color-rule: #c9c5b8;
+    --color-brass: #7d5c10;
+    --color-brass-soft: #f4edda;
+    --color-pass: #2c6a4c;
+    --color-warn: #9a4f0a;
+    --color-fail: #a4382a;
+    background: #ffffff;
+    color: var(--color-ink);
+  }
+
+  body:has([data-deliverable]) > header,
+  body:has([data-deliverable]) > footer {
+    display: none;
+  }
+
+  body:has([data-deliverable]) a {
+    text-decoration: none;
+  }
+
+  /* A quote broken across a page break loses the sentence it was quoting. Scoped, because every
+     other page on this site is prose and forcing its lists to stay whole leaves blank half-pages. */
+  body:has([data-deliverable]) blockquote,
+  body:has([data-deliverable]) table,
+  body:has([data-deliverable]) li {
+    break-inside: avoid;
+  }
+}
