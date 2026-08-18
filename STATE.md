@@ -5804,3 +5804,50 @@ skan (144 h) i kiedy pada alarm. Prog jest **liczony tak samo jak w `quota.yml`*
 alarm powyzej osmiu, czyli faktycznie 8,5 dnia) - codex wytknal, ze moja pierwsza wersja krzyczalaby
 przez pol dnia, w ktorym produkcyjny alarm jest zdrowy, i przy prawdziwej awarii nie wiadomo byloby,
 ktoremu wierzyc.
+
+## 32. PRZEBIEG: `typed_package` STOI NA ZGADYWANEJ PACZCE, I ZMIERZYLEM, W ILU WIERSZACH (2026-08-18)
+
+**Zmierzone na calym korpusie:** dopasowanie po wydawcy (`npmSource === 'registry-search'`) niesie
+**127 przejsc i 10 oblan**; mocne dopasowanie (paczka nazwana na ich stronie) **24 przejscia i zero
+oblan**. Czyli **wszystkie dzisiejsze oskarzenia stoja na paczce, ktora sami wybralismy z rejestru**.
+
+**Zweryfikowane recznie, wszystkie 10, wobec rejestru npm** (audyt decyzji slusznie kazal zrobic to
+PRZED zmiana reguly, nie po):
+
+| domena | ocenilismy | werdykt o vendorze |
+|---|---|---|
+| cronofy.com | `cronofy`, opisana jako „SDK for Cronofy" | **PRAWDZIWY** |
+| newrelic.com | `newrelic`, agent Node, ktory sie instaluje | **PRAWDZIWY** |
+| heroku.com | `heroku-client`, ich wrapper API v3 | **PRAWDZIWY** |
+| timekit.io | `timekit-booking` zamiast `timekit-sdk` | zly artefakt, ale alternatywa tez bez typow |
+| directus.com | `directus` (serwer) zamiast `@directus/sdk` (otypowany) | **ZLY ARTEFAKT** |
+| xata.io | `@xata.io/api`, przy kilku otypowanych paczkach w tym samym scope | **ZLY ARTEFAKT** |
+| honeycomb.io | `libhoney` zamiast `@honeycombio/opentelemetry-node` (otypowany) | **ZLY ARTEFAKT** |
+| namecheap.com | `node-vault-client`, klient HashiCorp Vault | **ZLY ARTEFAKT**, nie maja SDK |
+| godaddy.com | `warehouse.ai-api-client`, ich wewnetrzny deploy | **ZLY ARTEFAKT**, nie maja SDK |
+| june.so | `@june-so/analytics-node`, oblane na 28 miesiacach bez zmiany rekordu | galaz o wieku, nie o typach |
+
+**To unieważnilo moja pierwotna propozycje.** Chcialem po prostu zamienic kazde oblanie na slabym
+dopasowaniu w niemierzalne. Cztery z dziesieciu oskarzen sa prawdziwe, wiec plaskie wylaczenie
+**zniszczyloby prawdziwe znaleziska, zeby uniknac falszywych**.
+
+**Rekomendacja audytu decyzji (subagent, opus), do wykonania NA SPOKOJNIE:** bramka na samej galezi
+oblania, z materialu, ktory juz liczymy i wyrzucamy na granicy funkcji (`ownershipOf` zwraca
+`proved|suggested|none`, `readScrapedPackage` zwraca `aboutThem`, jest `linksToVendorSite`).
+Oskarzenie przechodzi tylko, gdy wlasnosc jest **udowodniona**, paczka **mowi o ich produkcie**, i
+**nie ma rodzenstwa o rownym lub lepszym `cheapRank`** (sprawdzanego niezaleznie od tego, czy ma
+typy, bo inaczej to zakupy pod wynik). Osobno: galaz „rekord starszy niz 24 miesiace" na slabym
+dopasowaniu powinna schodzic do niemierzalnej bezwarunkowo, bo to nie jest zdanie o typach.
+Do tego `NpmMatch.confidence` ma dzis **jedna mozliwa wartosc** - albo urealnic, albo usunac.
+
+**Czego NIE zrobilem tej nocy i dlaczego:** bramka wymaga przeprowadzenia trzech sygnalow przez
+`discover.ts` do ksztaltu findings i do `score.ts`, plus wlasnego pomiaru przed/po. To kilka godzin,
+a reseed rusza o 05:50. Wpychanie tego w przemiat byloby dokladnie ta niestarannoscia, przed ktora
+ostrzega audyt.
+
+**Co zrobilem zamiast tego:** **piec sprostowan w `errata.ts`** dla wierszy o zlym artefakcie
+(directus, xata, honeycomb, namecheap, godaddy), z `fixedIn: '9.40'`, czyli wersja, ktora ma przyniesc
+bramke. Sprostowanie pojawia sie **przy werdykcie na opublikowanej stronie**, wiec czytelnik widzi,
+ze wiemy, i co dokladnie jest nie tak. Trzy prawdziwe oskarzenia zostaja bez sprostowania, bo sa
+prawdziwe. `after-reseed.mts` bedzie od teraz wypisywal te piec jako „nadal wymaga sprostowania" -
+to nie awaria reseedu, tylko widoczny dlug.

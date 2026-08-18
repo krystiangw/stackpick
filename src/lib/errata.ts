@@ -103,6 +103,51 @@ export const ERRATA: Erratum[] = [
       'This row says their signup form needs JavaScript. Their page carries no form at all: no field anywhere in the HTML the server sent, and the only way in is an identity provider. The verdict is the same either way, because an unattended agent gets through neither, but the sentence describes a form they never wrote. A corrected scan says what we actually saw.',
     example: 'https://signup.example/signup is reachable, but its form needs JavaScript',
   },
+  // Piec wierszy `typed_package` ocenionych na paczce, ktorej nikt nie instaluje, zeby korzystac z
+  // tego produktu. Zweryfikowane recznie 2026-08-18 wobec rejestru npm: dla kazdej istnieje paczka
+  // tego samego wydawcy, ktora jest SDK, a w trzech przypadkach ma typy. Wiersz nadal sie publikuje,
+  // bo reguly nie da sie poprawic bez przebudowy dopasowania (plan w STATE.md), ale nie moze stac
+  // bez sprostowania: to zdanie o cudzym produkcie.
+  {
+    domain: 'directus.com',
+    checkId: 'typed_package',
+    fixedIn: '9.40',
+    wrongWhen: /^directus ships without bundled types/,
+    says: 'This row is scored on `directus`, the server, matched by publisher. The package a developer installs to use them is `@directus/sdk`, described on the registry as the Directus JavaScript SDK, and it ships types. The row is about the wrong artefact.',
+    example: 'directus ships without bundled types, matched from the registry by who publishes it rather than by a link on your site',
+  },
+  {
+    domain: 'xata.io',
+    checkId: 'typed_package',
+    fixedIn: '9.40',
+    wrongWhen: /^@xata\.io\/api ships without bundled types/,
+    says: 'This row is scored on `@xata.io/api`, matched by publisher. Xata publishes several typed packages under the same scope, and the client a developer installs is not this one. The row is about the wrong artefact.',
+    example: '@xata.io/api ships without bundled types, matched from the registry by who publishes it rather than by a link on your site',
+  },
+  {
+    domain: 'honeycomb.io',
+    checkId: 'typed_package',
+    fixedIn: '9.40',
+    wrongWhen: /^libhoney ships without bundled types/,
+    says: 'This row is scored on `libhoney`, their low-level legacy library. What their documentation sends a developer to today is `@honeycombio/opentelemetry-node`, which ships types. The row is about the wrong artefact.',
+    example: 'libhoney ships without bundled types, matched from the registry by who publishes it rather than by a link on your site',
+  },
+  {
+    domain: 'namecheap.com',
+    checkId: 'typed_package',
+    fixedIn: '9.40',
+    wrongWhen: /^node-vault-client ships without bundled types/,
+    says: 'This row is scored on `node-vault-client`, a HashiCorp Vault client that says nothing about Namecheap. They publish no Node SDK for their API, so this check has nothing to measure on them and the row should be unmeasured rather than failed.',
+    example: 'node-vault-client ships without bundled types, matched from the registry by who publishes it rather than by a link on your site',
+  },
+  {
+    domain: 'godaddy.com',
+    checkId: 'typed_package',
+    fixedIn: '9.40',
+    wrongWhen: /^warehouse\.ai-api-client ships without bundled types/,
+    says: 'This row is scored on `warehouse.ai-api-client`, their internal deployment tooling. They publish no Node SDK for their API, so this check has nothing to measure on them and the row should be unmeasured rather than failed.',
+    example: 'warehouse.ai-api-client ships without bundled types, matched from the registry by who publishes it rather than by a link on your site',
+  },
   {
     domain: 'medusajs.com',
     checkId: 'mcp_present',
