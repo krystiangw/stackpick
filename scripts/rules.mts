@@ -15,7 +15,8 @@ import { changesBetween, comparableScorecards, rulesChangedBetween, turnedAwayAt
 import { isOlderThan } from '../src/lib/formula'
 import { buildFixPlan } from '../src/lib/fixfirst'
 import { changeEmail } from '../src/lib/watch-email'
-import { CHECKS } from '../src/lib/score'
+import { CHECKS, FORMULA_VERSION } from '../src/lib/score'
+import { arithmeticExplained, scoreSection } from '../src/lib/report-numbers'
 import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR } from '../src/lib/scan-gate'
 import { DEFAULT_SCAN_BUDGET_MS } from '../src/lib/scan/http'
 import { forStorage } from '../src/lib/store'
@@ -1425,6 +1426,33 @@ for (const page of pagesUnder('src/app')) {
   const withoutComments = readFileSync(page, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ')
   check(`${page}: liczba idzie ze stalej, nie ze slowa`, SPELLED.exec(withoutComments)?.[0] ?? '', '')
 }
+
+// Arytmetyka platnego raportu: naglowek mowil „9 of 16 measurable points" nad tabela, ktora sumuje
+// sie do 17, i nic tego nie tlumaczylo, bo brakujacy punkt to check, ktory klienta nie dotyczy.
+// Regula jest jedna: jesli kolumna nie sumuje sie do mianownika, sekcja musi powiedziec dlaczego.
+console.log('\nraport tlumaczy wlasna arytmetyke')
+const cardWith = (extra: Record<string, unknown>, stageMax: number) => ({
+  card: {
+    formulaVersion: FORMULA_VERSION,
+    total: 9,
+    max: 17,
+    measurable: 16,
+    stages: [{ stage: 'discovery', letter: 'A', title: 'Discovery', question: '?', points: 9, max: stageMax, measurable: stageMax }],
+    checks: [{ id: 'robots_paths_resolve', label: 'Paths robots.txt points at answer', detail: 'nie ma czego sprawdzac', points: 0, max: 1, ...extra }],
+  },
+  scannedAt: '2026-08-17T00:00:00Z',
+  findings: {},
+}) as never
+check('check, ktory nie dotyczy, jest wytlumaczony', arithmeticExplained(cardWith({ notApplicable: true }, 17)), true)
+check('check niemierzalny tez', arithmeticExplained(cardWith({ inconclusive: true }, 17)), true)
+// Kontrolka: sonda musi umiec powiedziec „nie".
+check('a rozjazd bez zadnego powodu jest wytykany', arithmeticExplained(cardWith({}, 17)), false)
+check('gdy kolumna zgadza sie z mianownikiem, nie ma czego tlumaczyc', arithmeticExplained(cardWith({}, 16)), true)
+check(
+  'i sekcja cytuje check, ktory nie dotyczy',
+  scoreSection(cardWith({ notApplicable: true }, 17)).join('\n').includes('Paths robots.txt points at answer'),
+  true,
+)
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

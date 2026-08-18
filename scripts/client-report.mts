@@ -23,7 +23,7 @@ import { brandTaken, certain, mentionsIn, nameGuest, quotedAbout, whoWentFirst }
 import { normalizeDomain } from '../src/lib/scan/discover'
 import { SITE_URL } from '../src/lib/site'
 import { buildFixPlan } from '../src/lib/fixfirst'
-import { turnedAwayAtTheEdge } from '../src/lib/watch'
+import { scoreSection } from '../src/lib/report-numbers'
 
 const plural = (count: number, one: string, many: string) => (count === 1 ? one : many)
 
@@ -171,7 +171,6 @@ const card = report.scorecard
 const measurable = card.measurable ?? card.max
 const failed = card.checks.filter((check) => !check.inconclusive && !check.notApplicable && check.points < check.max)
 const unmeasured = card.checks.filter((check) => check.inconclusive)
-const notApplicable = card.checks.filter((check) => check.notApplicable)
 
 const mine = cell?.rows.find((row) => row.domain === domain)
 
@@ -315,46 +314,7 @@ if (!cell) {
 lines.push('')
 lines.push('## 2. Whether an agent could use you once it names you')
 lines.push('')
-lines.push(`Scanned ${report.scannedAt.slice(0, 10)} under formula ${card.formulaVersion}${card.formulaVersion === FORMULA_VERSION ? '' : ` (the scanner now runs ${FORMULA_VERSION})`}: **${card.total} of ${measurable} measurable points**.`)
-// Before the table, not in a footnote. froala.com refuses every request we make, including one
-// from a Chrome user-agent, so eight of their fifteen checks are unmeasured; the report opened
-// with "4 of 6 measurable points" and went straight on to advise them about OAuth. A buyer whose
-// site we could not read has to be told that first, in the same breath as the number.
-if (unmeasured.length > 0) {
-  // Counted, then the conditions named separately. A scan can be refused at the edge AND run out
-  // of time AND hold a check that is inconclusive for its own unrelated reason, so attaching every
-  // unmeasured check to one cause would be exactly the kind of claim this report exists not to
-  // make. Each line below carries its own reason in its own words.
-  lines.push('')
-  lines.push(
-    `${unmeasured.length} of the ${card.checks.length} checks could not be measured, so the number above is out of what we could see rather than out of everything. Every one of them is listed below with the reason, and none counts against you.`,
-  )
-  const conditions = [
-    turnedAwayAtTheEdge(report.findings) ? 'your edge refused ordinary requests' : null,
-    report.findings.truncation ? 'we reached our time budget with work still outstanding, which is ours rather than yours' : null,
-  ].filter((one): one is string => one !== null)
-  if (conditions.length > 0) {
-    lines.push('')
-    lines.push(`During this scan ${conditions.join(', and ')}. Where that is why a check is unmeasured, the line below says so.`)
-  }
-}
-// The other half of the same duty, and the half that was missing. tiptap.dev was told "9 of 16
-// measurable points" above a table whose column adds up to 17, and the paragraph before it only
-// covers checks we could not measure. Their missing point is a check that does not apply to them
-// at all, so nothing explained it and a buyer adding up the column finds a point that is not there.
-if (notApplicable.length > 0) {
-  lines.push('')
-  lines.push(
-    `${notApplicable.length} of the ${card.checks.length} checks ${plural(notApplicable.length, 'does', 'do')} not apply to you, which is why the table below counts ${card.max} points on paper and your score is out of ${measurable}:`,
-  )
-  lines.push('')
-  for (const check of notApplicable) lines.push(`- **${check.label}**: ${check.detail}`)
-}
-lines.push('')
-lines.push('| Stage | Points |')
-lines.push('|---|---|')
-for (const stage of card.stages) lines.push(`| ${stage.title} | ${stage.points}/${stage.max} |`)
-lines.push('')
+lines.push(...scoreSection({ card, scannedAt: report.scannedAt, findings: report.findings }))
 if (failed.length > 0) {
   lines.push('### What an agent hits, in the order it hits it')
   lines.push('')

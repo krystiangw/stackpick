@@ -5605,10 +5605,12 @@ liczy 17 na papierze, a wynik jest z 16.
 raz `measurable`, raz suma `stage.max`. **Za kazdym razem, gdy dokument stawia liczbe obok tabeli,
 sprawdz, czy tabela sumuje sie do tej liczby.**
 
-**Znana luka:** nie ma na to straznika, bo logika raportu siedzi w skrypcie, a nie w bibliotece, i
-`audit-delivery.mts` swiadomie nie chodzi do bazy. Zeby to zabezpieczyc, trzeba by wyciagnac liczbowa
-czesc raportu do `src/lib`. Nie robie tego w nocy; wolne strony (`/v`, `/r`) tej wady nie maja, bo
-wypisuja kazdy check z werdyktem, a miesieczny mail nie drukuje tabeli punktow.
+**Luka domknieta tej samej nocy.** Liczbowa czesc raportu siedzi teraz w `src/lib/report-numbers.ts`
+(`scoreSection` plus `arithmeticExplained`), a `rules.mts` sprawdza jedna regule: **jesli kolumna
+etapow nie sumuje sie do mianownika, sekcja musi powiedziec dlaczego.** Kontrolka na miejscu -
+straznik potwierdza tez, ze rozjazd BEZ powodu jest wytykany, wiec sonda umie powiedziec „nie".
+Wolne strony (`/v`, `/r`) tej wady nie mialy, bo wypisuja kazdy check z werdyktem, a miesieczny mail
+nie drukuje tabeli punktow.
 
 ## ZDANIE O CUDZEJ PRZEWADZE LICZYLO BIEGI, W KTORYCH NIKT NIE WYGRAL (2026-08-18, naprawione)
 
