@@ -7434,3 +7434,28 @@ od mierzonej rzeczy, nie jest pomiarem.
 pozwala przypiac modelu (`auto`, bez zapisu, ktory model odpowiadal), a gemini wyczerpuje darmowy
 limit przed koncem biegu. Bez platnych subskrypcji os „rozne narzedzia" jest **niemierzalna, a nie
 tania**.
+
+## PRZEMIAT NA 9.41 ZAMKNIETY (2026-08-19)
+
+**177 wierszy na 9.41, 0 sprzecznosci, 0 rozjazdow.** Dwa rozjazdy, ktore audyt pokazywal w trakcie
+przemiatu, byly korpusem w locie i **zniknely same** po jego zakonczeniu, tak jak zapisalem, ze
+powinny. Komplet kontroli przeszedl: badanie na `/findings` nadal prawdziwe, platny raport i mail
+bez zdania kloccego sie z danymi, kadencja obserwacji zdrowa, nasz OpenAPI opisuje kazde zwracane
+pole.
+
+**Cztery werdykty gorsze, kazdy przeskanowany pojedynczo, i tak to sie rozlozylo:**
+
+| domena | check | co pokazal pojedynczy skan |
+|---|---|---|
+| split.io | `machine_readable_api` | **wrocil** 1/1, markdown dla maszyn jest |
+| split.io | `programmatic_provisioning` | **wrocil** 2/2 |
+| kinde.com | `mcp_present` | stoi: kazdy POST JSON-RPC wraca pustym 2xx, takze pod sciezka, ktorej nikt nie rejestrowal |
+| froala.com | `answers_plain_request` | stoi: 403 w trzech probach, to jest froala bedaca soba |
+
+Czyli **polowa „regresow" to byl nasz zasieg w trakcie przemiatu**, a druga polowa to uczciwe
+niemierzalne, nie oskarzenia. Sprostowanie directusa **nadal stoi**, zgodnie z przesunieciem
+`fixedIn` na 10.0.
+
+**Wdrozone i zweryfikowane na produkcji:** cytaty renderuja pogrubienie zamiast surowych gwiazdek
+(`<strong>` w zrodle strony), etapy bez mierzalnego punktu pisza „nothing measurable" zamiast rysowac
+pusty pasek przy `0/0`.
