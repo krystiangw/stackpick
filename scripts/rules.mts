@@ -1689,6 +1689,23 @@ check('limit z innej poddomeny nie liczy sie do zdania', limitsAtTheirEdge(dwaHo
 check('choc nadal jest limitem na ich brzegu', limitsAtTheirEdge(dwaHosty, 'split.io').onSite, 2)
 check('wiersz bez limitow nie wymysla ich', limitsAtTheirEdge(undefined, 'split.io').onSite, 0)
 
+// Wyzwanie na brzegu vendora liczy sie jako odwrocenie nas od drzwi. Bez tego klient, ktory wlacza
+// ochrone przed botami, przesuwa trzy checki w cisze i NIE dostaje od nas maila - a to jest ta
+// awaria, ktora strona glowna obiecuje lapac.
+console.log('\nwyzwanie na brzegu a mail do klienta')
+const zWyzwaniem = { limitsMet: [{ url: 'https://docs.v.test/x', challenge: true, recovered: false }] }
+const zLimitem = { limitsMet: [{ url: 'https://docs.v.test/x', challenge: false, recovered: false }] }
+// Rejestr npm wyzywa nas regularnie i nie jest niczyim brzegiem. Bez filtra po domenie mail
+// szedlby do klienta za cudze drzwi.
+const cudzeDrzwi = { limitsMet: [{ url: 'https://api.npmjs.org/downloads/point/last-week/x', challenge: true, recovered: false }] }
+check('wyzwanie to odwrocenie od drzwi', turnedAwayAtTheEdge(zWyzwaniem, 'v.test'), true)
+check('samo 429 to nasze obciazenie, nie ich sciana', turnedAwayAtTheEdge(zLimitem, 'v.test'), false)
+check('wyzwanie u strony trzeciej to nie ich brzeg', turnedAwayAtTheEdge(cudzeDrzwi, 'v.test'), false)
+check('bez podanej domeny nie zgadujemy', turnedAwayAtTheEdge(zWyzwaniem), false)
+const spadek = [{ checkId: 'docs_without_js', label: 'x', from: 'pass', to: 'unmeasured', detail: '', worse: false }] as never
+check('spadek w cisze przy wyzwaniu jest wart maila', worthTelling(spadek, turnedAwayAtTheEdge(zWyzwaniem, 'v.test')), true)
+check('a przy naszym limicie nie jest', worthTelling(spadek, turnedAwayAtTheEdge(zLimitem, 'v.test')), false)
+
 // Nasz wlasny katalog ARD. Mowimy vendorom, zeby publikowali to, co wystawiaja agentom, wiec
 // najtansza rzecza, o ktora mozna sie potknac, jest niepublikowanie tego samemu.
 console.log('\nnasz katalog ARD')

@@ -3,6 +3,7 @@ import type { Report } from './store'
 import type { ScoredCheck } from './score'
 import { verdictOf, type CorpusVerdict } from './corpus'
 import { inReleaseOrder, isOlderThan } from './formula'
+import { challengedUs } from './limits'
 
 /**
  * Somebody asking to be told when their agent readiness changes. The scan already answers "how
@@ -98,9 +99,31 @@ export function worthTelling(changes: WatchChange[], theirEdgeTurnedUsAway = fal
   return theirEdgeTurnedUsAway && changes.some((change) => change.to === 'unmeasured')
 }
 
-/** Their edge, not our reach: the two signals that mean a scan was turned away rather than slow. */
-export function turnedAwayAtTheEdge(findings: { blocksPlainRequests?: boolean; robots?: { unreadable?: boolean } }): boolean {
-  return Boolean(findings.blocksPlainRequests || findings.robots?.unreadable)
+/**
+ * Their edge, not our reach: the signals that mean a scan was turned away rather than slow.
+ *
+ * A challenge counts, and it did not until 2026-08-18. An edge that answers a browser and hands an
+ * HTTP client `cf-mitigated: challenge` is the exact failure the landing page promises to catch:
+ * nothing a person sees changes, and every check that needed those pages falls to unmeasured. With
+ * only `blocksPlainRequests` here, a customer switching that on moved three checks into silence and
+ * heard nothing from us. A plain 429 is still not this: that is our own load, and it is filtered
+ * where the limits are recorded rather than here.
+ */
+export function turnedAwayAtTheEdge(
+  findings: {
+    blocksPlainRequests?: boolean
+    robots?: { unreadable?: boolean }
+    limitsMet?: { url: string; challenge: boolean; recovered: boolean }[]
+  },
+  /**
+   * The domain the row is about. Without it a challenge from a third party we touch during a scan,
+   * `api.npmjs.org` above all, would read as this vendor turning us away and could mail a paying
+   * customer that their edge closed. The registry refusing us is a fact about our traffic.
+   */
+  domain?: string | null,
+): boolean {
+  const challenged = domain ? challengedUs(findings as never, domain) !== null : false
+  return Boolean(findings.blocksPlainRequests || findings.robots?.unreadable || challenged)
 }
 
 /**

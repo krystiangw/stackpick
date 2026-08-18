@@ -141,7 +141,7 @@ export async function POST(request: Request) {
     }
     // Nothing is mailed on the first check: there is no before, and "here is your score again"
     // is the email that teaches somebody to stop reading us.
-    if (previous && comparable && worthTelling(changes, turnedAwayAtTheEdge(report.findings))) {
+    if (previous && comparable && worthTelling(changes, turnedAwayAtTheEdge(report.findings, report.domain))) {
       const { subject, text } = changeEmail(watch, report, changes, previousCard !== previous.scorecard)
       const sent = await sendEmail(watch.email, subject, text)
       if (sent.delivered) mailed += 1
