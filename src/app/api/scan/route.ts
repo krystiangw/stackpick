@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { publicBaseUrl, toAgentInstructions, toSarif } from '@/lib/export'
 import { runScan } from '@/lib/scan-run'
+import { challengedUs } from '@/lib/limits'
 
 // Vercel reads this; the host we run on does not. What actually keeps a scan inside Heroku's
 // 30-second router timeout is SCAN_BUDGET_MS, enforced by scanDomain for every caller.
@@ -66,12 +67,28 @@ export async function POST(request: Request) {
   // A CI step reading this has no scorecard page to look at, so the truncation travels with
   // the score rather than only being rendered: a partial scan must not read as a full one.
   const { truncation } = scan.report.findings
+  // Why the row is thin, for a caller with no page to look at. A challenge at the vendor's edge is
+  // the one refusal that is a fact about them rather than about our traffic, and without this the
+  // machine-readable answer looks like a product with nothing to measure.
+  const challenged = challengedUs(
+    scan.report.findings,
+    scan.report.findings.resolvedElsewhere?.finalDomain ?? scan.report.domain,
+  )
   return NextResponse.json({
     id: scan.report.id,
     domain: scan.report.domain,
     scorecard: scan.report.scorecard,
     ...(scan.reused ? { reused: true } : {}),
     ...(truncation ? { truncation } : {}),
+    ...(challenged
+      ? {
+          challengedAt: {
+            hosts: challenged.hosts,
+            challenged: challenged.challenges,
+            refused: challenged.refusedWhereChallenged,
+          },
+        }
+      : {}),
     // Said out loud rather than left to a broken link. The measurement is complete and correct;
     // what failed is our storage, so the caller gets the score and the warning that the id above
     // will not resolve.

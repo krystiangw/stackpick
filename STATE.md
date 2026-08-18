@@ -6325,3 +6325,43 @@ paczki - zaden wiersz nie wskazuje dzis czego innego niz wczoraj.
 `valueOf` **sa prawdziwymi paczkami na npm**, wiec `name in parsed` na odpowiedzi rejestru znajduje
 je na prototypie i zamienia „rejestr o tej nie odpowiedzial" w „nikt jej nie instaluje". Teraz
 `Object.hasOwn`, ze straznikiem na dokladnie ta nazwe.
+
+## SKRACANIE LISTY WYCENIANYCH: KORPUS POWIEDZIAL NIE (2026-08-18, zmierzone i wycofane)
+
+Druga polowa #49: `MOST_DOWNLOAD_LOOKUPS` z 16 na 8, zeby zetnac o polowe zapytania do endpointu,
+ktory odmawia nam najczesciej. Zmierzone `audit-attribution.mts` na calym korpusie **przed**
+wdrozeniem: **137 wierszy, 130 bez zmiany, 3 zmieniaja paczke**, i to na gorsze:
+
+```
+agora.io:          agora-rtc-sdk-ng -> agora-token
+commercetools.com: @commercetools/platform-sdk -> @commercetools/sdk-client
+ckeditor.com:      @ckeditor/ckeditor5-ui -> ckeditor5
+```
+
+`agora-rtc-sdk-ng` to SDK, ktore instaluje developer, a `agora-token` to buildery tokenow.
+`@commercetools/sdk-client` wyszedl **pietnascie miesiecy przed** `platform-sdk`. Trzeci ruch
+(ckeditor) jest prawdopodobnie poprawa, ale dwa pierwsze wystarcza. **Liczby w dole listy nie sa
+ozdoba: to one powstrzymuja dobrze nazwanego kuzyna przed wygraniem.** Zostaje 16.
+
+**Zasada, ktora dzisiejsza noc potwierdzila trzeci raz** (po #47 i po bramce atrybucji): oszczednosc,
+ktora dotyka reguly wyboru, jest **zmiana wyboru**, dopoki korpus nie powie inaczej. Koszt sprawdzenia
+to dwadziescia minut skryptu, koszt pomylki to cudza nazwa pod naszym werdyktem.
+
+**Co z tego zostalo wdrozone** (zmiany o obciazeniu, nie o wyborze): zbiorcze pytanie o pobrania i
+szesc prob odczekania u rejestru, obie zmierzone na zero zmian w atrybucji.
+
+## SCIANA NA BRZEGU JEST TERAZ WIDOCZNA TAM, GDZIE PATRZY KLIENT (2026-08-18)
+
+Zdanie przy niezmierzonym checku bylo tylko polowa roboty: **fix plan swiadomie pomija checki
+niezmierzone** (sa poza mianownikiem, wiec nie obiecuja punktow), wiec vendor ze sciana nie mial
+nigdzie jednego zdania tlumaczacego chudosc calego wiersza. Doszly dwa miejsca:
+
+- **`/v/<domena>`**: panel nad checkami, tylko gdy cos naprawde wyszlo niezmierzone. Liczony wobec
+  domeny, ktora skan **naprawde czytal** (`resolvedElsewhere`), bo sendgrid.com lada na twilio.com.
+- **`/api/scan`**: pole `challengedAt { hosts, challenged, refused }`, opisane w `openapi.json`, bo
+  wywolanie z CI nie ma strony do ogladania.
+
+**Poprawka z codex review, warta zapamietania:** mianownik zdania musi dotyczyc **tych hostow, ktore
+w nim nazywamy**. `hosts` zawieral tylko hosty z wyzwaniem, a `onSite` liczyl wszystkie odmowy na
+domenie, wiec zdanie kazalo `app.vendor.com` odpowiadac za limit, ktory przyslal `docs.vendor.com`.
+Stad `refusedWhereChallenged` i dwa straznicy.

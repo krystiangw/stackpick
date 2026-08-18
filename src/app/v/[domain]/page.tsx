@@ -8,6 +8,7 @@ import { SITE_URL } from '@/lib/site'
 import { CHECKS, FORMULA_VERSION, STAGES, type ScoredCheck } from '@/lib/score'
 import { WatchForm } from '@/components/watch-form'
 import { erratumFor } from '@/lib/errata'
+import { challengedUs } from '@/lib/limits'
 
 /**
  * The address for a vendor, as opposed to the address for one scan of it. /r/<id> names a
@@ -122,6 +123,13 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
   const category = categoryFor(name)
   const scannedOn = report.scannedAt.slice(0, 10)
   const unmeasured = scorecard.checks.filter((check) => check.inconclusive).length
+  // Only when something went unmeasured. A wall we met while everything still got read is a fact
+  // about their edge that cost this row nothing, and printing a warning over a complete row would
+  // be us dramatising our own traffic.
+  // Against the domain the scan actually read, not the one in the address: sendgrid.com lands on
+  // twilio.com, and asking about sendgrid.com would drop every limit twilio.com's edge answered
+  // with, on a row whose own sentences say they were measured there.
+  const challenged = unmeasured > 0 ? challengedUs(findings, findings.resolvedElsewhere?.finalDomain ?? name) : null
 
   return (
     <main className="mx-auto flex max-w-3xl flex-col px-6 py-16">
@@ -170,6 +178,24 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
             never got evidence and {findings.truncation.unmeasuredChecks.length === 1 ? 'is' : 'are'} marked
             unmeasurable rather than scored. The number below is out of what we did measure: not a worse result, a
             smaller one.
+          </p>
+        </div>
+      )}
+
+      {/*
+        Said once, above the checks, because one wall thins several of them at once and the fix plan
+        below cannot carry it: the plan only offers points, and these checks are unmeasured rather
+        than failed, so the one action that would unlock the most had nowhere to be printed.
+      */}
+      {challenged && (
+        <div className="mt-6 border-l-2 border-warn bg-surface p-6">
+          <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">Your edge challenged us</h2>
+          <p className="mt-3 max-w-2xl leading-relaxed">
+            {challenged.hosts.join(', ')} answered {challenged.challenges} of the {challenged.refusedWhereChallenged}{' '}
+            requests it refused with a browser challenge rather than a rate limit. A browser passes one of those invisibly and
+            an HTTP client cannot pass it at all, which is the difference this scorecard is about. It costs no
+            points: wherever that stopped us, the check says so and is marked unmeasurable rather than failed. What
+            it costs is a row thinner than your product deserves, and an agent that stops where we stopped.
           </p>
         </div>
       )}

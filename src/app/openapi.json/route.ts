@@ -123,6 +123,16 @@ export function GET() {
                           'False when the measurement finished but the store would not accept it. The scorecard is complete and /r/{id} will stop resolving at the next deploy',
                       },
                       warning: { type: 'string', description: 'Present with saved: false, in the words the page uses' },
+                      challengedAt: {
+                        type: 'object',
+                        description:
+                          "Present when the vendor's own edge answered a request with a browser challenge rather than a rate limit. It costs no points: the checks that could not be read are unmeasurable rather than failed. A rate limit anywhere else, ours or the registry's, never appears here",
+                        properties: {
+                          hosts: { type: 'array', items: { type: 'string' } },
+                          challenged: { type: 'integer', description: 'How many of the refusals carried a challenge marker' },
+                          refused: { type: 'integer', description: 'How many requests those hosts refused in total, challenged or not' },
+                        },
+                      },
                       truncation: {
                         type: 'object',
                         description:

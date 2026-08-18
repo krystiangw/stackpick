@@ -8,7 +8,18 @@ import { registrableDomain } from './scan/http'
  * answer, and the one thing this project keeps relearning is that a concept computed in several
  * places drifts exactly where it hurts.
  */
-export type EdgeLimits = { onSite: number; challenges: number; hosts: string[] }
+export type EdgeLimits = {
+  /** Every refusal at the vendor's own edge, whatever host it came from. */
+  onSite: number
+  challenges: number
+  hosts: string[]
+  /**
+   * Refusals from the hosts that challenged us, which is the only denominator a sentence naming
+   * those hosts may use. Counting every refusal on the registrable domain made `app.vendor.com`
+   * answer for a limit that `docs.vendor.com` sent.
+   */
+  refusedWhereChallenged: number
+}
 
 /**
  * The registry refuses us constantly and that is a fact about our traffic to npm rather than about
@@ -46,10 +57,12 @@ export function limitsAtTheirEdge(
     }
   })
   const challenged = theirs.filter((one) => one.challenge)
+  const hosts = [...new Set(challenged.map((one) => new URL(one.url).hostname))]
   return {
     onSite: theirs.length,
     challenges: challenged.length,
-    hosts: [...new Set(challenged.map((one) => new URL(one.url).hostname))],
+    hosts,
+    refusedWhereChallenged: theirs.filter((one) => hosts.includes(new URL(one.url).hostname)).length,
   }
 }
 
@@ -91,7 +104,10 @@ export function challengeSentence(limits: EdgeLimits): string {
   // The denominator is what we were refused, not what we asked. `limitsMet` holds refusals only,
   // so "13 of our 13 requests" would claim every request was refused on a scan that read the site
   // fine and met two limits at the end of it.
-  const refusals = limits.onSite === 1 ? 'the one request it refused' : `${limits.challenges} of the ${limits.onSite} requests it refused`
+  const refusals =
+    limits.refusedWhereChallenged === 1
+      ? 'the one request it refused'
+      : `${limits.challenges} of the ${limits.refusedWhereChallenged} requests it refused`
   // Written to be appended after a clause that already says what we could not do, so it reads as
   // the reason rather than as a second sentence bolted on: "..., because X answered ...".
   return `${where} answered ${refusals} with a browser challenge rather than a limit, which is not a burst that passes`

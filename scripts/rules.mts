@@ -1673,6 +1673,14 @@ check('adres tez, bo tak wola checki', limitsAtTheirEdge(theirEdge, 'https://spl
 check('takze z www', limitsAtTheirEdge(theirEdge, 'https://www.split.io').onSite, 2)
 check('i marker wyzwania jest policzony osobno', limitsAtTheirEdge(theirEdge, 'split.io').challenges, 2)
 check('z nazwa hosta, ktory wyzwal', limitsAtTheirEdge(theirEdge, 'split.io').hosts.join(), 'docs.split.io')
+// Mianownik zdania musi dotyczyc hostow, ktore w nim nazywamy: limit z innej poddomeny nie moze
+// obciazac tej, o ktorej mowimy.
+const dwaHosty = met([
+  ['https://docs.split.io/reference', true],
+  ['https://app.split.io/login', false],
+])
+check('limit z innej poddomeny nie liczy sie do zdania', limitsAtTheirEdge(dwaHosty, 'split.io').refusedWhereChallenged, 1)
+check('choc nadal jest limitem na ich brzegu', limitsAtTheirEdge(dwaHosty, 'split.io').onSite, 2)
 check('wiersz bez limitow nie wymysla ich', limitsAtTheirEdge(undefined, 'split.io').onSite, 0)
 
 // Odczekanie po 429. Regula projektu mowi, ze 429 to nasze obciazenie, a nie odpowiedz o

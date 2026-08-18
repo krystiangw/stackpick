@@ -1495,7 +1495,18 @@ const FAR_MORE_INSTALLED = 3
 /** Past this, a package is not one the vendor is still shipping and its name proves little. */
 const STILL_SHIPPING_MONTHS = 12
 
-/** One request each, so this is the cost of the whole ranking. */
+/**
+ * How far down the shape ranking usage is allowed to speak, at one request each. It is the cost of
+ * the whole ranking: measured 2026-08-18, these counts are sixteen of a scan's twenty-odd requests
+ * to npm and 89 of 177 scans meet a limit there, so halving the list looks like the obvious saving.
+ *
+ * It was tried at eight and measured on the whole corpus before shipping, and the corpus said no:
+ * three rows changed package and two of them for the worse. agora.io moved from agora-rtc-sdk-ng,
+ * the SDK a developer installs, to agora-token, a token builder, and commercetools.com from
+ * @commercetools/platform-sdk to @commercetools/sdk-client, which last shipped fifteen months
+ * earlier. The counts down the list are not decoration: they are what stops a well-named sibling
+ * from winning. Sixteen stays until something cheaper than a lookup can tell those two apart.
+ */
 const MOST_DOWNLOAD_LOOKUPS = 16
 
 function saysItIsAboutTheVendor(what: { description: string; keywords: string[] }, vendor: Vendor): boolean {
