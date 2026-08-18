@@ -7029,3 +7029,74 @@ pomiaru falszywych oskarzen. Pomiar +25pp/+31pp dla `oauth_dcr` **zostaje wazny*
 agenty zachowuja sie dzis. **Do decyzji rano:** czy sledzic przejscie DCR -> CIMD jako osobny pomiar
 (nie check) na korpusie. Rekomendacja agenta SEO mowi, ze to lepszy naglowek produktu niz sam
 `oauth_dcr`, i ma racje w tym, ze inaczej budujemy naglowek na mechanizmie z data waznosci.
+
+## AUDYT SZESCIU ZRODEL: SURFER, DATAFORSEO, SENTRY, POSTHOG, INDIG (2026-08-18, noc)
+
+Trzy subagenty na szesc adresow. Wyniki przefiltrowane przeze mnie, bo dwie rekomendacje nie
+przetrwaly zderzenia z naszym kodem.
+
+**CO ODRZUCONE OD RAZU.** Surfer AI Tracker: skrobie piec silnikow i sprzedaje Visibility Score
+0-100 bez wzoru, Average Position z dokladnoscia do dziesiatych przy nieujawnionym n. To jest
+dokladnie ta liczba, ktorej nasza metodologia zakazuje. Sentry i PostHog: mierza wnetrze petli
+agenta, ktorego klient sam uruchamia, przez SDK w jego kodzie. **Zaden z nich nie przesuwa sie w
+nasza strone** i nie ma stamtad gotowej metryki do wziecia.
+
+**REKOMENDACJA SUBAGENTA, KTORA JEST NIEPRAWDZIWA:** „dolozyc status Unknown osobno od FAIL, wzorem
+Sentry Uptime, 1 dzien". **Mamy to od dawna**: `inconclusive` w `ScoredCheck`, trzy stany werdyktu
+i sekcja „Three verdict states" na `/methodology`. Subagent nie mial dostepu do kodu i zgadl.
+
+**CO WARTE WZIECIA, w kolejnosci:**
+
+1. **Cena niewidoczna dla zwyklego pobrania. Zmierzone dzis, na zapisanym korpusie, bez skanowania:**
+
+| stan strony cennika | wierszy |
+|---|---|
+| cena widoczna dla zwyklego pobrania | **133 z 177** |
+| strona cennika jest, ceny nie widac | **25 z 177** |
+| zadnej strony cennika nie znalezlismy | 19 z 177 |
+| strona cennika ponizej 1200 znakow tekstu | 12 z 177 |
+
+`scripts/price-without-js.mts`. **Skaner mierzy `pricesVisibleWithoutJs` od dawna i nic tego nie
+scoruje.** To jest jedyny kandydat na check z tej calej nocy, ktory ma zmierzona powierzchnie
+(14 procent korpusu) i nie wymaga ani jednego nowego zapytania. **Przed checkiem nalezy sie przebieg
+adwersaryjny**: 12 cienkich stron moze byc nawigacja z guzikiem, a nie cennikiem renderowanym w JS,
+a to sa dwa rozne zarzuty. Check oznacza tez podbicie formuly, wiec dopiero po sprostowaniu directusa.
+
+2. **Slownik porazek z PostHoga, odwrocony na strone produktu.** Ich lista opisuje wine agenta
+(„picked the wrong tool", „retrieval pulled bad context"), nasza wersja opisuje wine produktu
+(nie ujawnia narzedzi: brak OpenAPI, MCP, llms.txt; dokumentacja renderowana klientowo). Do platnego
+raportu z audytu, okolo dnia roboczej.
+
+3. **„Mention Gap" przelozony na nasz korpus**, czyli twoj werdykt obok werdyktow konkurentow z tej
+samej kategorii. Dane juz mamy, zadnego nowego zapytania, 1-2 dni.
+
+4. **Dwie kolejne porazki, zanim zmienimy werdykt** (wzorem progu Sentry Uptime: trzy porazki, 10 s
+timeout). U nas monitoring jest miesieczny, wiec jeden nieudany skan przesuwa werdykt od razu.
+0,5 dnia i chroni przed „vendor zepsul MCP", gdy to byl ich chwilowy 502.
+
+**DO DECYZJI KRYSTIANA: DataForSEO LLM Mentions.** To jedyne zrodlo zmiennej **wynikowej**, ktorej
+nie mamy: ile razy vendor jest realnie cytowany w odpowiedziach AI. Target Metrics to zwykly request
+HTTP, przelot calego korpusu rzedu 20-30 USD. Pozwolilby pokazac zwiazek naszych checkow z
+cytowalnoscia, czyli dowod, ze 16 checkow mierzy cos o konsekwencjach. **Dwa blokery, oba nie
+techniczne:** prawo do redystrybucji (nasz `corpus.json` jest publiczny, warunki republikacji nie sa
+opisane na stronie produktu) oraz zalozenie konta, ktorego agent nie zaklada sam. Gdyby weszlo, to
+**wylacznie jako osobna kolumna nie-deterministyczna**, nigdy do werdyktu i nigdy do alertu.
+
+**LICZBY INDIGA, warte cytowania z zastrzezeniem.** Proba: 100 produktow B2B, 3 zadania zakupowe,
+5 przebiegow kazde, czyli 1500 przebiegow. Zadanie „cennik" wypada najgorzej z trzech: 79 procent
+odpowiedzi z pierwszej reki wobec 93 przy integracjach i 92 przy compliance. Bez jawnej ceny
+45 procent przebiegow cytowalo zrodlo trzecie, przy jawnej nadal 18. Bledy dostepu wystapily w
+7 procentach przebiegow i podbijaly fallback na zrodla trzecie do 77 wobec 17 procent. **Uwaga: oba
+linki to jedno badanie**, tekst w Search Engine Land jest syndykacja Growth Memo, wiec to nie sa dwa
+niezalezne potwierdzenia. Skala 0-100 autora jest prywatna i bez rubryki wag, wiec **jej nie
+cytujemy**. Zadne z tych zrodel nie wspomina llms.txt, MCP, OAuth, CAPTCHY ani provisioningu, czyli
+**dziewiec z naszych szesnastu checkow nie dostaje stamtad zadnego wsparcia** i stoi wylacznie na
+naszych wlasnych przebiegach agentowych.
+
+**PRZY OKAZJI: baza dla przejscia DCR -> CIMD**, `scripts/registration-mechanisms.mts`, czytane
+z zapisanego korpusu: **94 ze 177** publikuje metadane serwera autoryzacji, **77** ma
+`registration_endpoint` (RFC 7591, dzis MAY i deprecated), a **8** serwuje
+`/.well-known/oauth-protected-resource` (RFC 9728, MUST dla serwerow MCP) i wszystkie osiem ma tez
+DCR. RFC 9728 pytamy tylko na hoscie witryny, wiec ta osemka to **dolna granica**. Wniosek na dzis:
+mechanizm wycofywany jest wciaz tym, co realnie stoi w sieci (77 kontra 8), wiec `oauth_dcr` zostaje
+jako check, a zmienilismy tylko zdanie, ktore obiecywalo wiecej niz specyfikacja.
