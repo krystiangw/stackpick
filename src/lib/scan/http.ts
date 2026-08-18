@@ -149,6 +149,11 @@ type ScanState = {
    */
   timeouts: Map<string, number>
   slots: Map<string, HostSlots>
+  /**
+   * How many times we have already waited out a 429 on a site, so a host that answers 429 to
+   * everything cannot spend the scan's budget on politeness. pandadoc.com is that host.
+   */
+  backedOff: Map<string, number>
   /** One scan asks for the same URL up to four times, from phases that cannot see each other. */
   responses: Map<string, Promise<Fetched>>
   /** How much evidence the phase now running lost to the deadline. */
@@ -165,6 +170,7 @@ export function withScanBudget<T>(budgetMs: number, run: () => Promise<T>): Prom
       hostHealth: new Map(),
       timeouts: new Map(),
       slots: new Map(),
+      backedOff: new Map(),
       responses: new Map(),
       lost: { count: 0 },
     },
@@ -335,7 +341,7 @@ export async function fetchUrl(url: string, options: FetchOptions = {}): Promise
   const state = scanState.getStore()
   if (!state) return runFetch(url, options, null)
   if (Date.now() >= state.deadlineAt) return countIfLost(state, empty(url, outOfTimeBefore))
-  if (options.fresh) return countIfLost(state, await runFetch(url, options, state))
+  if (options.fresh) return countIfLost(state, await askedUntilAnswered(url, options, state))
 
   const acrossScans = registryKey(url, options)
   if (acrossScans) {
@@ -357,7 +363,9 @@ export async function fetchUrl(url: string, options: FetchOptions = {}): Promise
   const key = cacheKey(url, options)
   const held = state.responses.get(key)
   if (held) return countIfLost(state, await held)
-  const started = runFetch(url, options, state)
+  // The waiting is inside what gets memoised, so the three later phases asking for the same page
+  // wait for the same second attempt rather than being handed the refusal it was about to replace.
+  const started = askedUntilAnswered(url, options, state)
   state.responses.set(key, started)
   const answer = await countIfLost(state, await started)
   // 404 is an answer about a package that does not exist and is worth keeping; a 429 is a fact
@@ -371,6 +379,71 @@ export async function fetchUrl(url: string, options: FetchOptions = {}): Promise
     }
   }
   return answer
+}
+
+/**
+ * Waits out a 429 and asks once more, or returns null when it was not ours to wait out.
+ *
+ * This project's own published rule is that a 429 is our load rather than an answer about the
+ * vendor, and every check already refuses to score one. Refusing to score it is only half of the
+ * rule: the row still goes out thinner, and thinner reads as worse. Measured on 2026-08-18, one
+ * scan of split.io read four documentation pages and the next, ninety seconds later, read one and
+ * met three 429s, which took `programmatic_provisioning` from two points to unmeasured. Nothing
+ * about split.io changed in those ninety seconds. Three rows of the 9.40 sweep moved for exactly
+ * this reason and were reported as verdicts that got worse.
+ *
+ * Bounded on all three sides, because backing off is not free: twice per site, only while the
+ * deadline can still afford the wait and the request after it, and never longer than three
+ * seconds even when the site asks for more.
+ */
+async function askedUntilAnswered(url: string, options: FetchOptions, state: ScanState): Promise<Fetched> {
+  const first = await runFetch(url, options, state)
+  const site = registrableDomain(new URL(first.url || url).hostname)
+  const already = state.backedOff.get(site) ?? 0
+  const waitMs = backoffFor(first, already, timeLeftMs())
+  if (waitMs === null) return first
+  state.backedOff.set(site, already + 1)
+  await new Promise((done) => setTimeout(done, waitMs))
+  const second = await runFetch(url, options, state)
+  // Only an answer replaces the refusal. A 404 is one: this module already treats it as evidence
+  // worth caching across scans, and keeping the 429 over it would leave measured absence unmeasured.
+  // A second 429, or a request the deadline ate on the way back, is not evidence the first lacked.
+  return second.ok || second.status === 404 ? second : first
+}
+
+/**
+ * Retry-After in either form the standard allows. The date form is not exotic: it is what a
+ * cache-fronted origin sends, and read as a number it comes back NaN, which silently became the
+ * default wait and a second refusal.
+ */
+function askedToWaitMs(header: string | undefined, now = Date.now()): number | null {
+  if (!header) return null
+  const seconds = Number(header.trim())
+  if (Number.isFinite(seconds)) return seconds > 0 ? seconds * 1_000 : null
+  const at = Date.parse(header)
+  if (Number.isNaN(at)) return null
+  return at > now ? at - now : null
+}
+
+const MAX_BACKOFFS_PER_SITE = 2
+const DEFAULT_BACKOFF_MS = 1_200
+const MAX_BACKOFF_MS = 3_000
+/** The wait is only worth taking when what follows it has room to answer. */
+const MIN_TIME_FOR_RETRY_MS = 6_000
+
+/**
+ * How long to wait before asking a refused request again, or null for the ones not worth waiting
+ * out. Separated from the request itself so the rule can be stated without a network.
+ */
+export function backoffFor(answer: Fetched, alreadyBackedOff: number, timeLeft: number): number | null {
+  // A 429 carrying a challenge marker is the vendor's wall rather than our load, and waiting
+  // politely in front of a wall only spends the budget.
+  if (answer.status !== 429 || isBotChallenge(answer)) return null
+  if (alreadyBackedOff >= MAX_BACKOFFS_PER_SITE) return null
+  const waitMs = Math.min(askedToWaitMs(answer.headers['retry-after']) ?? DEFAULT_BACKOFF_MS, MAX_BACKOFF_MS)
+  // The wait plus a request that can actually finish. Waiting into the deadline turns a 429 into
+  // an out-of-time, which is a worse sentence about the same nothing.
+  return timeLeft < waitMs + MIN_TIME_FOR_RETRY_MS ? null : waitMs
 }
 
 async function runFetch(url: string, options: FetchOptions, state: ScanState | null): Promise<Fetched> {

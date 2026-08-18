@@ -21,7 +21,7 @@ import { arithmeticExplained, scoreSection } from '../src/lib/report-numbers'
 import { categoryOfWatch } from '../src/lib/watch'
 import { readWithGuest } from '../src/lib/guest-cell'
 import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR } from '../src/lib/scan-gate'
-import { DEFAULT_SCAN_BUDGET_MS } from '../src/lib/scan/http'
+import { DEFAULT_SCAN_BUDGET_MS, backoffFor } from '../src/lib/scan/http'
 import { forStorage } from '../src/lib/store'
 import { REMEDIES } from '../src/lib/fixfirst'
 import { ERRATA, erratumFor } from '../src/lib/errata'
@@ -1603,6 +1603,24 @@ const counted = readWithGuest(answers, 'buttondown.com', ['postmarkapp.com'], 'B
 check('gosc jest policzony, gdy pada w odpowiedzi', counted.named.get('buttondown.com'), 1)
 check('i reszta jest przeliczona obok niego', counted.named.get('postmarkapp.com'), 2)
 check('a pierwszenstwo liczy sie z nim w liscie', counted.first.get('buttondown.com'), 1)
+
+// Odczekanie po 429. Regula projektu mowi, ze 429 to nasze obciazenie, a nie odpowiedz o
+// vendorze - wiec odpowiedzia jest odczekac i zapytac jeszcze raz, w granicach budzetu skanu.
+console.log('\nodczekanie po 429')
+const limited = (status: number, headers: Record<string, string> = {}) =>
+  ({ url: 'https://split.io/docs/keys', status, ok: false, body: '', headers, truncated: false }) as const
+check('429 bez naglowka czeka domyslne 1,2 s', backoffFor(limited(429), 0, 27_000), 1_200)
+check('a gdy prosi o 10 s, czekamy najwyzej 3', backoffFor(limited(429, { 'retry-after': '10' }), 0, 27_000), 3_000)
+check('sciana vendora nie jest naszym obciazeniem', backoffFor(limited(429, { 'x-vercel-mitigated': 'challenge' }), 0, 27_000), null)
+check('403 to odpowiedz, nie limit', backoffFor(limited(403), 0, 27_000), null)
+check('trzeci raz na tej samej stronie juz nie', backoffFor(limited(429), 2, 27_000), null)
+check('nie czekamy w deadline', backoffFor(limited(429), 0, 5_000), null)
+check('ale czekamy, gdy czas jeszcze jest', backoffFor(limited(429), 0, 7_500), 1_200)
+// Retry-After w formie daty: odczytane przez Number() daje NaN, czyli po cichu domyslne 1,2 s.
+const zaDziesiecSekund = new Date(Date.now() + 10_000).toUTCString()
+check('data w Retry-After tez jest prosba, wiec obcinamy do 3 s', backoffFor(limited(429, { 'retry-after': zaDziesiecSekund }), 0, 27_000), 3_000)
+check('data, ktora juz minela, wraca do domyslnego czekania', backoffFor(limited(429, { 'retry-after': 'Wed, 01 Jan 2020 00:00:00 GMT' }), 0, 27_000), 1_200)
+check('bzdura w naglowku tez', backoffFor(limited(429, { 'retry-after': 'zaraz' }), 0, 27_000), 1_200)
 
 // Ranking ksztaltu nazwy. Awans paczki `@vendor/sdk` do rangi golej nazwy zostal ZMIERZONY I
 // WYCOFANY (#47): naprawial directus, sanity i configcat, a psul netlify.com. Straznik pilnuje

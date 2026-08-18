@@ -6119,3 +6119,43 @@ Dwa wiersze na 177 to za malo, zeby zbudowac na tym check: nie da sie na tym zmi
 falszywych oskarzen, a kazdy nowy check kosztuje zadania na skanie i miejsce na stronie wyniku.
 **Zbieranie dowodow zostaje** (nic nie kosztuje, siedzi w findings), decyzja o punktowaniu wraca,
 jesli liczba urosnie - i to jest teraz liczba, ktora `after-reseed.mts` wypisuje po kazdym przemiecie.
+
+## PIEC „GORSZYCH WERDYKTOW" PO PRZEMIECIE: TO BYLY NASZE WLASNE 429 (2026-08-18, wyjasnione)
+
+Przeskanowalem pojedynczo cala trojke, ktora przemiat wskazal, i porownalem wiersze:
+
+| domena | co sie zmienilo | dlaczego |
+|---|---|---|
+| split.io | `programmatic_provisioning` +2 -> niezmierzone | 3 strony dokumentacji odpowiedzialy `429` |
+| postmarkapp.com | to samo, +1 -> niezmierzone | 1 strona `429` |
+| calendly.com | `machine_readable_api` 0 -> +1 | poprawa, nie regres |
+
+**Zaden z nich nie jest regresem vendora.** Wiersze roznily sie o to, ile stron udalo nam sie
+przeczytac, a nie o to, co vendor opublikowal. Skany split.io oddalone o **90 sekund** dawaly
+`4 strony / 10 punktow` i `1 strona / 8 punktow`, przy niezmienionej dokumentacji.
+
+**Naprawa (`backoffFor` w `src/lib/scan/http.ts`):** 429 jest wedlug naszej wlasnej opublikowanej
+reguly *naszym* obciazeniem, wiec odpowiedzia ma byc odczekanie i ponowne pytanie, a nie dziura w
+wierszu. Ograniczone z trzech stron: **dwa razy na witryne**, tylko dopoki budzet skanu uniesie
+odczekanie **i** zapytanie po nim, i **najwyzej 3 sekundy** nawet gdy strona prosi o wiecej.
+Poprawia odpowiedz tylko wtedy, gdy druga proba faktycznie sie udala. Regula jest czysta funkcja,
+wiec siedem straznikow w `rules.mts` sprawdza ja bez sieci.
+
+## SPLIT.IO NIE ODMAWIA NAM Z PRZECIAZENIA, TYLKO NAS WYZWANIA (2026-08-18, do zmierzenia)
+
+Przy diagnozie powyzej wyszlo cos wiekszego. Zalogowalem kazde 429 w skanie split.io: **wszystkie
+niosa marker challenge** (`cf-mitigated` / `x-vercel-challenge-token`), a `docs.split.io` publikuje
+przy tym wlasny limit (`x-ratelimit-limit: 100`). To znaczy, ze ich brzeg **wyzywa zwykle zadanie**,
+a nie dusi nas z przeciazenia - czyli jest to fakt o nich, dokladnie taki, jakie ta karta mierzy.
+
+**Skaner zna juz to rozroznienie i stosuje je w polowie miejsc.** Test drzwi pyta
+`status !== 429 || isBotChallenge(a)`, a `isEdgeRefusal` odrzuca **kazde** 429 bez patrzenia w
+naglowki. Efekt: vendor, ktorego Cloudflare odpowiada wyzwaniem, dostaje u nas **niezmierzone
+checki** (co wyglada jak nasza slepota) zamiast zmierzonej odmowy (co jest ustaleniem o nim).
+
+**Dlaczego NIE zmieniam tego dzis w nocy:** to przesunelo by werdykty na calym korpusie w strone
+**oskarzen**, a regula domu mowi, ze punkt moze stac na slabym dowodzie, ale oskarzenie nie moze.
+Zmierzenie tego wymaga przemiatu z zapisem naglowkow, ktorego nie da sie zrobic przed rankiem.
+**Zadanie na tablicy, z ta notatka jako materialem.** Do rozstrzygniecia rowniez: czy wyzwanie
+wywolane naszym tempem (Cloudflare potrafi odpowiadac na limit „managed challenge") liczy sie tak
+samo jak wyzwanie stale - bo jesli nie, to rozroznienie wymaga drugiego zadania po odczekaniu.
