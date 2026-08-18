@@ -171,6 +171,7 @@ const card = report.scorecard
 const measurable = card.measurable ?? card.max
 const failed = card.checks.filter((check) => !check.inconclusive && !check.notApplicable && check.points < check.max)
 const unmeasured = card.checks.filter((check) => check.inconclusive)
+const notApplicable = card.checks.filter((check) => check.notApplicable)
 
 const mine = cell?.rows.find((row) => row.domain === domain)
 
@@ -332,6 +333,18 @@ if (unmeasured.length > 0) {
     lines.push('')
     lines.push(`During this scan ${conditions.join(', and ')}. Where that is why a check is unmeasured, the line below says so.`)
   }
+}
+// The other half of the same duty, and the half that was missing. tiptap.dev was told "9 of 16
+// measurable points" above a table whose column adds up to 17, and the paragraph before it only
+// covers checks we could not measure. Their missing point is a check that does not apply to them
+// at all, so nothing explained it and a buyer adding up the column finds a point that is not there.
+if (notApplicable.length > 0) {
+  lines.push('')
+  lines.push(
+    `${notApplicable.length} of the ${card.checks.length} checks ${plural(notApplicable.length, 'does', 'do')} not apply to you, which is why the table below counts ${card.max} points on paper and your score is out of ${measurable}:`,
+  )
+  lines.push('')
+  for (const check of notApplicable) lines.push(`- **${check.label}**: ${check.detail}`)
 }
 lines.push('')
 lines.push('| Stage | Points |')

@@ -5588,3 +5588,24 @@ dziesieciu domen i tylko rozmowa.
 **Nic nie trzeba zmieniac na stronie:** FAQ na `/pricing` juz odpowiada na to pytanie (Agency pack
 10 domen, dalej rozmowa, a raport pod cudza marka „work we would rather quote than pretend is
 automatic").
+
+## PLATNY RAPORT KAZAL KLIENTOWI SZUKAC PUNKTU, KTOREGO NIE MA (2026-08-18, naprawione)
+
+Znalezione tak, jak zawsze: **wygenerowaniem raportu i przeczytaniem go jak klient**
+(`npx tsx scripts/client-report.mts tiptap.dev`). Naglowek mowil „**9 of 16 measurable points**", a
+tabela etapow pod nim sumowala sie do **17**. Roznicy nie tlumaczylo nic, bo akapit obok obsluguje
+tylko checki **niemierzalne**, a brakujacy punkt tiptapa to check, ktory ich **nie dotyczy**
+(`robots_paths_resolve`: robots.txt nie wskazuje zadnej konkretnej sciezki, wiec nie ma czego
+sprawdzac). Kupujacy, ktory dodaje kolumne, szukal punktu, ktorego nie ma.
+
+Teraz raport wypisuje, ile checkow nie dotyczy klienta, z powodem, i mowi wprost, dlaczego tabela
+liczy 17 na papierze, a wynik jest z 16.
+
+**To znowu to samo pojecie liczone dwa razy po swojemu** (patrz zasada 0 na gorze pliku): mianownik
+raz `measurable`, raz suma `stage.max`. **Za kazdym razem, gdy dokument stawia liczbe obok tabeli,
+sprawdz, czy tabela sumuje sie do tej liczby.**
+
+**Znana luka:** nie ma na to straznika, bo logika raportu siedzi w skrypcie, a nie w bibliotece, i
+`audit-delivery.mts` swiadomie nie chodzi do bazy. Zeby to zabezpieczyc, trzeba by wyciagnac liczbowa
+czesc raportu do `src/lib`. Nie robie tego w nocy; wolne strony (`/v`, `/r`) tej wady nie maja, bo
+wypisuja kazdy check z werdyktem, a miesieczny mail nie drukuje tabeli punktow.

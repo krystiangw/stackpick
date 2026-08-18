@@ -13,3 +13,6 @@ next-env.d.ts
 
 # Generated per-run copies. The scaffold and the brief are committed; the runs are not.
 harness/runs/  # legacy: runs now live at ~/.stackpick-runs
+
+# Wygenerowane raporty dla klientow: wynik skryptu, nie zrodlo.
+report-*.md
