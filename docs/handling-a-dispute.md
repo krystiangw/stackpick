@@ -107,6 +107,30 @@ A rule change touches all 177 rows, so it is never justified by the one vendor w
   caught this way in one night, both invisible to review.
 - Never during a sweep. The scanner and the measurement ask the same services the same questions.
 
+### The three checks whose sentence can be re-asked
+
+Three of the failing sentences name what we asked, which makes them falsifiable without a rescan.
+Run the matching script before answering a dispute about one of them, and quote the result:
+
+| The vendor disputes | Run | What it proves |
+|---|---|---|
+| "you say nothing answers at our agent paths" | `npx tsx scripts/audit-entry.mts 177` | asks every path on both hosts, with the scanner's own Accept header and a control per namespace |
+| "you say we publish no OAuth metadata" | `npx tsx scripts/audit-oauth.mts 177` | asks every origin the row names, all three documents, following protected-resource pointers |
+| "you say our MCP server is not there" | `npx tsx scripts/audit-mcp.mts 177` | sends a JSON-RPC initialize to every address the row names |
+
+Each one takes 20 to 45 minutes on the full corpus and a domain count can be passed to shorten it.
+Measured 2026-08-18 on all three at once: 5851 requests to addresses we had published, and not one
+sentence turned out to be false. That number is the reason to answer a dispute with a rerun rather
+than with an apology, and the reason to believe the rerun when it disagrees.
+
+Two rules they were written under, both learned by getting them wrong first:
+
+- **Ask exactly as wide as the sentence claims.** An audit narrower than the check confirms its own
+  premise: the first OAuth pass asked six of thirteen hosts and two of three documents, and the
+  first entry pass skipped the documentation host the sentence names.
+- **Import the scanner's predicates, never rewrite them.** A second opinion about what counts as a
+  published file finds different things than the check does, and then neither number means anything.
+
 ## 5. What we do not do
 
 - **We do not remove a row because somebody asked.** The corpus is published in full and a gap in it

@@ -6507,3 +6507,33 @@ vendora: X z Y wierszy z zapisem, w tym Z z markerem wyzwania"), bo do dzis zade
 tego pola. Spodziewac sie okolo **13 wierszy z limitem i 11 z markerem** - tyle dal pomiar lokalny
 na 177 domenach. Duza roznica w dol znaczy, ze odczekanie po 429 dziala lepiej, niz zakladalem;
 duza w gore, ze przemiat bije mocniej niz pojedyncze skany.
+
+## CO JESZCZE NIE BYLO SPRAWDZONE ADWERSARYJNIE (2026-08-18, mapa powierzchni)
+
+Pelny rachunek werdyktow na 192 wierszach (177 korpusu plus goscie), zeby bylo widac, gdzie stoi
+najwiecej oskarzen i ktore z nich ktos juz probowal obalic:
+
+| check | oblanych | zaliczonych | niezmierzonych | nd | przebieg |
+|---|---|---|---|---|---|
+| `agent_entry_point` | **129** | 48 | 15 | 0 | **35 (dzis)** |
+| `oauth_dcr` | **102** | 80 | 2 | 8 | **33 (dzis)** |
+| `signup_reachable` | **96** | 48 | 38 | 10 | **brak** |
+| `price_in_snippet` | 92 | 70 | 11 | 8 | 30-31 |
+| `mcp_present` | **90** | 98 | 4 | 0 | **34 (dzis)** |
+| `programmatic_provisioning` | 66 | 66 | **60** | 0 | 30 |
+| `machine_readable_api` | 50 | 132 | 10 | 0 | **brak** |
+| `llms_txt` | 37 | 154 | 1 | 0 | **brak** |
+| `signup_no_captcha` | 32 | 25 | **125** | 10 | **brak** |
+| `self_serve` | 21 | 136 | 27 | 8 | **brak** |
+| `typed_package` | 6 | 159 | 27 | 0 | 32 |
+| reszta (6 checkow) | 15 razem | - | - | - | - |
+
+**Nastepny w kolejce: `signup_reachable`, 96 oskarzen i ani jednego przebiegu.** Jego zdanie nazywa
+adres rejestracji i mowi, czego przy nim brakuje („is reachable, but its form needs JavaScript"),
+wiec jest falsyfikowalne dokladnie tak samo: wziac adres z wiersza, pobrac go i sprawdzic, czy
+formularz jest w serwowanym HTML. **Wymaga sieci, wiec nie w trakcie przemiatu.**
+
+**Osobna obserwacja, nie o oskarzeniach tylko o zasiegu:** `signup_no_captcha` jest niezmierzony na
+**125 wierszach** ze 192, a `programmatic_provisioning` na 60. To nie sa falszywe zdania, tylko
+polowa karty, ktorej nie umiemy zmierzyc - i to jest inna robota niz przebieg adwersaryjny: nie
+„czy nie oskarzamy niesprawiedliwie", ale „czy w ogole mamy co powiedziec".
