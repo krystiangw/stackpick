@@ -14,7 +14,7 @@ import type { ScanFindings } from './scan'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.37'
+export const FORMULA_VERSION = '9.40'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -1289,8 +1289,39 @@ export const CHECKS: Check[] = [
         f.discovered.npmSource !== 'registry-search'
           ? ''
           : ', matched from the registry by who publishes it rather than by a link on your site'
-      if (!f.npm.found) return yes(0, `Package ${f.npm.package} not found on the registry${basis}`)
-      if (!f.npm.bundledTypes) return yes(0, `${f.npm.package} ships without bundled types${basis}`)
+      // The gate, and only on the branches that accuse. A point can rest on a package we found by
+      // who publishes it: "this package is typed" is a sentence about an artefact and stays true
+      // whichever artefact it is. "The package your users install has no types" is a sentence about
+      // the vendor, and it carries a premise the search does not establish. Measured 2026-08-18 by
+      // reading all ten failing rows against the registry: four were the real package and six were
+      // not, including namecheap.com scored on a HashiCorp Vault client and godaddy.com on their own
+      // deployment tooling. Dropping all ten would have destroyed four true findings, so the rule
+      // asks what the identification rests on instead of how it was made.
+      const guessedIt = f.discovered.npmSource === 'registry-search'
+      const standsUp =
+        !guessedIt ||
+        (f.discovered.npmOwnership === 'proved' && f.discovered.npmSaysWhose === true && (f.discovered.npmRivals ?? 0) === 0)
+      const cannotStand = (what: string): CheckResult => ({
+        points: 0,
+        detail: `Unmeasurable: ${what}, and we matched it by who publishes it rather than by a link on your site${
+          (f.discovered.npmRivals ?? 0) > 0 ? `, with ${f.discovered.npmRivals} other package of the same shape on the same account` : ''
+        }, so we may be describing something your users never install`,
+        inconclusive: true,
+        unblock:
+          'Name the package a developer installs in your docs or link it from your repository. We measure the one you point at, and this stops being a guess.',
+      })
+      // A name that came out of the registry cannot then be missing from it. If that ever happens
+      // the sentence is false rather than harsh, so it is never published as a failure.
+      if (!f.npm.found) {
+        return standsUp && !guessedIt
+          ? yes(0, `Package ${f.npm.package} not found on the registry${basis}`)
+          : cannotStand(`${f.npm.package} did not answer on the registry`)
+      }
+      if (!f.npm.bundledTypes) {
+        return standsUp
+          ? yes(0, `${f.npm.package} ships without bundled types${basis}`)
+          : cannotStand(`${f.npm.package} ships without bundled types`)
+      }
       const stale = f.npm.staleMonths
       if (stale !== undefined && stale >= 24) {
         // What we measure is the registry record's Last-Modified, which any metadata write moves,

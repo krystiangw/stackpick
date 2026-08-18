@@ -105,6 +105,13 @@ export type ScanFindings = {
     npmPackage: string | null
     npmSource: 'site' | 'docs' | 'llms' | 'registry-search' | null
     npmConfidence: 'strong' | 'weak' | null
+    /**
+     * What a searched name rests on. Absent on a report stored before 2026-08-18, which is why the
+     * rule that reads them treats missing as "not established": an old row cannot prove anything.
+     */
+    npmOwnership?: 'proved' | 'suggested' | null
+    npmSaysWhose?: boolean | null
+    npmRivals?: number | null
     npmEntryShape: boolean | null
     githubRepo: string | null
     linkSources: { docs: string | null; pricing: string | null; signup: string | null }
@@ -858,6 +865,9 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
       npmPackage: found.npmPackage,
       npmSource: found.npmSource,
       npmConfidence: found.npmConfidence,
+      npmOwnership: found.npmOwnership,
+      npmSaysWhose: found.npmSaysWhose,
+      npmRivals: found.npmRivals,
       npmEntryShape: found.npmEntryShape,
       githubRepo: found.githubRepo,
       linkSources: found.linkSources,
@@ -896,6 +906,12 @@ async function resolvePackage(domain: string, found: Discovered): Promise<NpmFin
   found.npmPackage = searched.name
   found.npmSource = 'registry-search'
   found.npmConfidence = searched.confidence
+  // The second search replaces the package, so it has to replace what we know about it too. Without
+  // this the verdict would read the first search's facts about a different package, which is worse
+  // than having none: it is a gate answering about something else.
+  found.npmOwnership = searched.ownership === 'none' ? null : searched.ownership
+  found.npmSaysWhose = searched.saysWhose
+  found.npmRivals = searched.rivals
   return retried
 }
 

@@ -108,10 +108,13 @@ export const ERRATA: Erratum[] = [
   // tego samego wydawcy, ktora jest SDK, a w trzech przypadkach ma typy. Wiersz nadal sie publikuje,
   // bo reguly nie da sie poprawic bez przebudowy dopasowania (plan w STATE.md), ale nie moze stac
   // bez sprostowania: to zdanie o cudzym produkcie.
+  // Ten jeden NIE wygasa na 9.40: bramka go nie lapie, bo problem jest wyzej, w rankingu ksztaltu
+  // nazwy (`directus` wygrywa z `@directus/sdk`, ktore ma siedem razy wiecej pobran i nazywa sie
+  // wprost SDK). Zadanie #47. Sprostowanie ma stac, dopoki wiersz jest bledny.
   {
     domain: 'directus.com',
     checkId: 'typed_package',
-    fixedIn: '9.40',
+    fixedIn: '9.41',
     wrongWhen: /^directus ships without bundled types/,
     says: 'This row is scored on `directus`, the server, matched by publisher. The package a developer installs to use them is `@directus/sdk`, described on the registry as the Directus JavaScript SDK, and it ships types. The row is about the wrong artefact.',
     example: 'directus ships without bundled types, matched from the registry by who publishes it rather than by a link on your site',

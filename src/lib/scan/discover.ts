@@ -36,6 +36,13 @@ export type Discovered = {
    * was not clearly theirs.
    */
   npmConfidence: 'strong' | null
+  /**
+   * What a searched name rests on, kept so a verdict can ask before it accuses. Null when we did
+   * not search: a package the vendor named on their own page needs none of this.
+   */
+  npmOwnership: 'proved' | 'suggested' | null
+  npmSaysWhose: boolean | null
+  npmRivals: number | null
   /** Whether the matched package looks like the one a developer installs. */
   npmEntryShape: boolean | null
   githubRepo: string | null
@@ -1051,8 +1058,25 @@ function orgIsVendor(org: string, vendor: Vendor): boolean {
   return vendor.aliases.some((alias) => /^(labs|hq|inc|team|official|tech)$/.test(flat.slice(alias.length)) && flat.startsWith(alias))
 }
 
-/** Whether a searched name can carry a point. Anything we cannot attribute is not returned at all. */
-export type NpmMatch = { name: string; confidence: 'strong' }
+/**
+ * Whether a searched name can carry a point, and how much weight the name itself can take.
+ *
+ * `confidence` has always had one possible value, which made it a field that looked like a gate and
+ * was not one. What a verdict actually needs is beside it: a point can rest on a package we found
+ * by who publishes it, and an accusation cannot, because "the package your users install has no
+ * types" carries a premise the search does not establish. These three say whether that premise
+ * holds, and they are read only on the failing branch.
+ */
+export type NpmMatch = {
+  name: string
+  confidence: 'strong'
+  /** Provably the vendor's account or repository, rather than circumstance pointing that way. */
+  ownership: Ownership
+  /** The package says whose it is, in its own description, keywords or links. */
+  saysWhose: boolean
+  /** How many other packages of the same shape sat on the same shelf. More than none is contested. */
+  rivals: number
+}
 
 /**
  * A registry answer we never got, told apart from an answer of nothing. Attribution fires up to
@@ -1525,7 +1549,19 @@ export async function searchNpmForDomain(
     )
     .slice(0, 3)
     .map((entry) => entry.candidate.name)
-  return { name: await preferUmbrella(contenders, vendor), confidence: 'strong' }
+  const name = await preferUmbrella(contenders, vendor)
+  // Facts about the package we are actually returning, which is not always the one that ranked
+  // first: preferUmbrella can pick a different contender. Rivals are counted by shape and download
+  // weight alone, never by whether they have types, because looking for a better package only when
+  // the answer would be an accusation is shopping for the verdict.
+  const chosen = byName.get(name) ?? winner.candidate
+  return {
+    name,
+    confidence: 'strong',
+    ownership: ownershipOf(chosen, vendor, siteRepos),
+    saysWhose: saysItIsAboutTheVendor(chosen, vendor) || linksToVendorSite(chosen, vendor),
+    rivals: Math.max(contenders.length - 1, 0),
+  }
 }
 
 /**
@@ -1634,6 +1670,9 @@ type Attribution = {
   npmPackage: string | null
   npmSource: NpmSource | null
   npmConfidence: 'strong' | null
+  npmOwnership: 'proved' | 'suggested' | null
+  npmSaysWhose: boolean | null
+  npmRivals: number | null
   githubRepo: string | null
 }
 
@@ -1665,6 +1704,15 @@ export async function attributePackage(
   }
 
   let npmConfidence: 'strong' | null = null
+  let npmOwnership: 'proved' | 'suggested' | null = null
+  let npmSaysWhose: boolean | null = null
+  let npmRivals: number | null = null
+  // Only ever set from a search, and set together: three facts about one package are one fact.
+  const keep = (searched: NpmMatch) => {
+    npmOwnership = searched.ownership === 'none' ? null : searched.ownership
+    npmSaysWhose = searched.saysWhose
+    npmRivals = searched.rivals
+  }
 
   // A scraped name goes wrong two ways. It can belong to somebody else - a dependency the docs
   // told you to install alongside theirs - which the registry answers by naming who publishes
@@ -1693,6 +1741,7 @@ export async function attributePackage(
         npmPackage = searched.name
         npmSource = 'registry-search'
         npmConfidence = 'strong'
+        keep(searched)
       }
     }
   }
@@ -1703,10 +1752,11 @@ export async function attributePackage(
       npmPackage = searched.name
       npmSource = 'registry-search'
       npmConfidence = searched.confidence
+      keep(searched)
     }
   }
 
-  return { npmPackage, npmSource, npmConfidence, githubRepo: siteRepos[0] ?? null }
+  return { npmPackage, npmSource, npmConfidence, npmOwnership, npmSaysWhose, npmRivals, githubRepo: siteRepos[0] ?? null }
 }
 
 export async function discover(domain: string): Promise<Discovered> {
@@ -1857,6 +1907,9 @@ export async function discover(domain: string): Promise<Discovered> {
     npmPackage: npm.npmPackage,
     npmSource: npm.npmSource,
     npmConfidence: npm.npmConfidence,
+    npmOwnership: npm.npmOwnership,
+    npmSaysWhose: npm.npmSaysWhose,
+    npmRivals: npm.npmRivals,
     npmEntryShape: npm.npmPackage ? looksLikeEntryPackage(npm.npmPackage, domain) : null,
     githubRepo: npm.githubRepo,
     linkSources,

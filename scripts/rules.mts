@@ -1159,6 +1159,26 @@ const staleRow = (npmSource: string) =>
     npm: { package: '@june-so/analytics-node', found: true, bundledTypes: true, staleMonths: 28, version: '1.0.0' },
     discovered: { npmSource },
   } as never)
+// 9.40: oskarzenie o brak typow przechodzi tylko wtedy, gdy identyfikacja stoi. Zmierzone recznie
+// na dziesieciu oblanych wierszach: cztery byly prawdziwe, szesc dotyczylo zlego artefaktu, wiec
+// plaskie wylaczenie zniszczyloby prawdziwe znaleziska.
+const untyped = (discovered: Record<string, unknown>) =>
+  typedCheck.evaluate({
+    npm: { package: 'node-vault-client', found: true, bundledTypes: false, version: '1.0.0' },
+    discovered,
+  } as never)
+const solid = { npmSource: 'registry-search', npmOwnership: 'proved', npmSaysWhose: true, npmRivals: 0 }
+check('wlasnosc udowodniona, paczka mowi o nich, brak rywali: oskarzenie stoi', untyped(solid).points, 0)
+check('i nie jest niemierzalne', untyped(solid).inconclusive ?? false, false)
+check('rywal o tym samym ksztalcie: niemierzalne', untyped({ ...solid, npmRivals: 1 }).inconclusive, true)
+check('i zdanie mowi, ilu ich bylo', untyped({ ...solid, npmRivals: 1 }).detail.includes('1 other package of the same shape'), true)
+check('paczka milczy o vendorze: niemierzalne', untyped({ ...solid, npmSaysWhose: false }).inconclusive, true)
+check('wlasnosc tylko sugerowana: niemierzalne', untyped({ ...solid, npmOwnership: 'suggested' }).inconclusive, true)
+// Wiersz zapisany przed 2026-08-18 nie ma tych pol. Rescore nie moze wtedy udawac, ze cos ustalil.
+check('stary raport bez tych faktow: niemierzalne', untyped({ npmSource: 'registry-search' }).inconclusive, true)
+// Paczka wskazana przez nich nie potrzebuje zadnej z tych bramek.
+check('paczka z ich strony: oskarzenie stoi bez pytania', untyped({ npmSource: 'site' }).points, 0)
+check('i tam tez nie jest niemierzalne', untyped({ npmSource: 'site' }).inconclusive ?? false, false)
 check('stara paczka, ktora sami znalezlismy: niemierzalne', staleRow('registry-search').inconclusive, true)
 check('i nie jest to oskarzenie o brak typow', staleRow('registry-search').detail.includes('is typed but'), true)
 check('ta sama paczka wskazana przez nich: nadal oblewa', staleRow('site-link').inconclusive ?? false, false)
