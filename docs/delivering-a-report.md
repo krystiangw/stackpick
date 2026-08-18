@@ -9,7 +9,7 @@ in three months will not remember what the pricing page promised today.
 | Product | Price | What we owe |
 |---|---|---|
 | One agent report | $49, once | One buying question put to an agent **ten times across two tools**, how many named them, who was picked instead, every transcript |
-| Monitoring | $79 a month a domain | The 15 checks rerun weekly with an email only when a verdict moves, plus one cell a month. Packs: three $179, Agency ten $499. Year for the price of ten months. Extra buying question $29 a month |
+| Monitoring | $79 a month a domain | The 16 checks rerun weekly with an email only when a verdict moves, plus one cell a month. Packs: three $179, Agency ten $499. Year for the price of ten months. Extra buying question $29 a month |
 | Audit and fixes | Four figures | Build runs against a real application, transcripts and artefacts, the argument about what it means |
 
 ## Before taking money
@@ -32,6 +32,19 @@ in three months will not remember what the pricing page promised today.
    The document says in its own words that they were placed into the category after the runs, and
    that every provider's count was recomputed alongside them rather than copied from the published
    table. Do not delete that paragraph: it is what makes the number defensible.
+
+   **For a monitoring customer, store the decision instead of retyping it.** A watch carries its own
+   placement since 2026-08-18, so the monthly mail and the paid report read one customer the same
+   way and neither needs a flag:
+
+   ```bash
+   MONGODB_URI=... npx tsx scripts/assign-watch.mts their.com them@their.com --category transactional-email
+   MONGODB_URI=... npx tsx scripts/cell-email.mts their.com   # read what they will receive
+   ```
+
+   The placement covers every watch on that domain, because which category a product belongs to is a
+   fact about the product rather than about whoever subscribed. `npm run watch-coverage` lists the
+   watches still waiting for one.
 
 1. **Is the domain in a category we measure?** `npx tsx -e "import('./src/lib/categories').then(m => console.log(m.categoryFor('their.com')?.label ?? 'BRAK'))"`
    or just run the report generator, which refuses and says so. The page promises we say this
@@ -78,6 +91,11 @@ operator instructions describe an agent there, `codex` reads none of them.
 
 ## What we cannot do yet
 
-**There is no payment path other than emailing an invoice by hand.** Stripe against Paddle is
-undecided and it is the single blocker between the pricing page and revenue. At $49 it decides
+**There is still no payment path other than emailing an invoice by hand**, and at $49 that decides
 whether the tier exists at all: nobody fills in an invoice request for a fifty dollar report.
+
+What changed on 2026-08-18 is that the question is no longer open. **Paddle**, as a merchant of
+record, and the whole switch-on is written down in `docs/turning-billing-on.md`: the products to
+create with their prices, the webhook and the two events we act on, the one variable that turns it
+on, and the checkout **that does not exist yet** and blocks everything after it. What is left is a
+person's: the legal name and address of the seller, and a Paddle account.

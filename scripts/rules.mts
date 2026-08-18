@@ -1603,6 +1603,14 @@ check('gosc jest policzony, gdy pada w odpowiedzi', counted.named.get('buttondow
 check('i reszta jest przeliczona obok niego', counted.named.get('postmarkapp.com'), 2)
 check('a pierwszenstwo liczy sie z nim w liscie', counted.first.get('buttondown.com'), 1)
 
+// Runbook dostawy mowi platnikowi, co dostaje za 79 USD miesiecznie. Liczba checkow byla tam
+// wpisana z reki i zostala na 15, gdy checkow bylo juz 16.
+check(
+  'runbook dostawy zna prawdziwa liczbe checkow',
+  readFileSync('docs/delivering-a-report.md', 'utf8').includes(`The ${CHECKS.length} checks rerun weekly`),
+  true,
+)
+
 // Klucz IndexNow: plik musi zawierac wlasna nazwe, bo inaczej silnik traktuje kazde zgloszenie jako
 // cudze i NIC nie mowi. Cicha porazka z definicji, wiec pilnowana tutaj, a nie odkrywana po tygodniu.
 console.log('\nklucz IndexNow zgadza sie z wlasna nazwa pliku')
