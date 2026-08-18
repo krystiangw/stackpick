@@ -25,6 +25,7 @@ import { normalizeDomain } from '../src/lib/scan/discover'
 import { SITE_URL } from '../src/lib/site'
 import { buildFixPlan } from '../src/lib/fixfirst'
 import { scoreSection } from '../src/lib/report-numbers'
+import type { ReportModel } from '../src/lib/client-report-model'
 
 const plural = (count: number, one: string, many: string) => (count === 1 ? one : many)
 
@@ -36,6 +37,9 @@ if (!given) {
 // A buyer writes the domain the way they say it out loud. Without this, `www.stripe.com` was told
 // it belongs to none of the categories we measure, about a domain sitting in the corpus.
 const domain = normalizeDomain(given)
+// One timestamp for both renderings. Two `new Date()` calls either side of midnight put a different
+// date on the document and on the page that serves it.
+const preparedAt = new Date().toISOString()
 const outAt = rest.indexOf('--out')
 const named = outAt === -1 ? undefined : rest[outAt + 1]
 if (outAt !== -1 && !named) {
@@ -219,10 +223,15 @@ const level = rivals.filter((other) => namedAcross(other) - namedAll === 1)
 
 const saidAbout = (text: string) => quotedAbout(text, domain, withGuest)
 
+// Filled as the markdown is written, from the same variables, so the page and the document cannot
+// disagree about a number. Anything the page needs and the markdown does not say is still read off
+// the same computation rather than repeated.
+const forModel: Pick<ReportModel, 'runs' | 'quotes'> = { runs: [], quotes: [] }
+
 const lines: string[] = []
 lines.push(`# ${domain}: what an AI agent does with you`)
 lines.push('')
-lines.push(`Prepared ${new Date().toISOString().slice(0, 10)} by Let Agents In. Category: ${category.label}.`)
+lines.push(`Prepared ${preparedAt.slice(0, 10)} by Let Agents In. Category: ${category.label}.`)
 lines.push('')
 lines.push('## 1. Whether an agent names you at all')
 lines.push('')
@@ -249,16 +258,22 @@ if (!cell) {
     lines.push('')
   }
   lines.push(`**You were named in ${namedAll} of ${runsAll} runs, and named first in ${firstAll}.**`)
-  if (held.length > 1) {
-    lines.push('')
-    for (const one of held) {
-      // Per tool, and read the same way as the total above: a guest has no committed row, so the
-      // split would have printed "0 of 5" beside a headline saying they were named nine times.
-      const there = live
-        ? one.answers.filter((answer) => certain(mentionsIn(answer.text, withGuest)).some((mention) => mention.domain === domain)).length
-        : (one.rows.find((row) => row.domain === domain)?.named ?? 0)
+  // The model gets every tool, always. The markdown prints the split only when there is more than
+  // one, because "codex: 0 of 5" under a headline that already said 0 of 5 is noise on paper; the
+  // page has a table with a column for it, and an empty table there is a report that cannot say
+  // which tool it ran.
+  if (held.length > 1) lines.push('')
+  for (const one of held) {
+    // Read the same way as the total above: a guest has no committed row, so the split would have
+    // printed "0 of 5" beside a headline saying they were named nine times.
+    const there = live
+      ? one.answers.filter((answer) => certain(mentionsIn(answer.text, withGuest)).some((mention) => mention.domain === domain)).length
+      : (one.rows.find((row) => row.domain === domain)?.named ?? 0)
+    if (held.length > 1) {
       lines.push(`- ${one.tool.split(' ')[0]}: ${there} of ${one.runs}${one.operatorContext.length === 0 ? ', a tool that read none of our instructions' : ''}`)
     }
+    const [toolName, ...toolVersion] = one.tool.split(' ')
+    forModel.runs.push({ tool: toolName, version: toolVersion.join(' '), model: one.model, ran: one.ranAt, count: one.runs, named: there, blind: one.operatorContext.length === 0 })
   }
   lines.push('')
   const standing = (other: string) => `- ${other}: ${namedAcross(other)}/${runsAll}, named first in ${firstAcross(other)}`
@@ -280,6 +295,7 @@ if (!cell) {
     .flatMap((one) => one.answers.map((answer) => ({ tool: one.tool.split(' ')[0], ...answer })))
     .map((answer) => ({ run: answer.run, tool: answer.tool, said: saidAbout(answer.text) }))
     .filter((entry) => entry.said !== null)
+  for (const quote of quotes) forModel.quotes.push({ tool: quote.tool, run: quote.run, said: quote.said as string, about: 'you', who: domain })
   if (quotes.length > 0) {
     lines.push('What the runs said about you, quoted:')
     lines.push('')
@@ -297,6 +313,20 @@ if (!cell) {
   } else {
     lines.push('No run wrote a sentence about you. That is the finding: not a bad review, an absence.')
   }
+  // What we ran, in a table, because "we asked an agent" is a claim and this is the evidence for
+  // it. A buyer taking this into a meeting is asked which model and which tool, and a report that
+  // cannot answer that is a report about nothing in particular.
+  lines.push('')
+  lines.push('What we ran:')
+  lines.push('')
+  lines.push('| Tool | Model | Runs | Date |')
+  lines.push('|---|---|---|---|')
+  for (const one of held) {
+    const [name, ...version] = one.tool.split(' ')
+    lines.push(`| ${name}${version.length > 0 ? ` ${version.join(' ')}` : ''} | ${one.model} | ${one.runs} | ${one.ranAt} |`)
+  }
+  lines.push('')
+
   // Which provider was picked instead is sold as its own line on /pricing, so it cannot live in
   // the branch that only fires when nothing was said about the buyer. Being named and still losing
   // to somebody is the common case, and it was the one case this never printed.
@@ -314,6 +344,38 @@ if (!cell) {
   if (wentFirst) {
     lines.push('')
     lines.push(wentFirst)
+  }
+  // The sentence the winner earned, in the run's own words. A buyer who reads "you were named in
+  // 0 of 10" learns that they lost; this is the only part of the document that says what winning
+  // sounded like, and it is the wording their own docs have to answer. Read with the same matcher
+  // and the same certainty rule as everything else, so it cannot say more than the count does.
+  const chosen = (winners as string[])
+    .map((who) => ({ who, first: firstAcross(who) }))
+    .sort((a, b) => b.first - a.first)[0]
+  if (chosen) {
+    // Only the runs that actually opened with them. A provider mentioned in passing further down an
+    // answer is not what being chosen sounded like, and the heading would say it was.
+    const won = held
+      .flatMap((one) => one.answers.map((answer) => ({ tool: one.tool.split(' ')[0], ...answer })))
+      .filter((answer) => wentFirstIn(answer) === chosen.who)
+      .map((answer) => ({ run: answer.run, tool: answer.tool, said: quotedAbout(answer.text, chosen.who, withGuest) }))
+      .filter((entry) => entry.said !== null)
+      .slice(0, 3)
+    if (won.length > 0) {
+      lines.push('')
+      lines.push(`What being chosen sounded like, in the runs' own words about ${chosen.who}:`)
+      lines.push('')
+      for (const quote of won) {
+        lines.push(`- **${quote.tool} run ${quote.run}**: \u201C${quote.said}\u201D`)
+        forModel.quotes.push({ tool: quote.tool, run: quote.run, said: quote.said as string, about: 'winner', who: chosen.who })
+      }
+      lines.push('')
+      lines.push(
+        namedAll === 0
+          ? `That is the wording your own pages have to answer. It is not a review of you: no run compared you with ${chosen.who}, because no run reached you.`
+          : `That is the wording your own pages have to answer. You were named in ${namedAll} of these runs and ${chosen.who} was the one opened with, so the comparison is between what each of you gave the run to say.`,
+      )
+    }
   }
   lines.push('')
   lines.push(`${runsAll} runs separate a wall from silence and nothing finer: two vendors a run apart are not ranked by this.`)
@@ -402,11 +464,45 @@ console.log(`${out} zapisany, ${lines.length} linii`)
 // for free, so it is never indexed and never listed.
 if (rest.includes('--publish')) {
   const id = randomBytes(9).toString('base64url')
+  const model: ReportModel = {
+    domain,
+    category: category.label,
+    preparedAt,
+    formulaVersion: card.formulaVersion,
+    formulaNow: card.formulaVersion === FORMULA_VERSION ? null : FORMULA_VERSION,
+    scannedAt: report.scannedAt,
+    guest,
+    score: { total: card.total, measurable, max: card.max },
+    stages: card.stages.map((stage) => ({
+      title: stage.title,
+      question: stage.question,
+      points: stage.points,
+      measurable: stage.measurable ?? stage.max,
+    })),
+    question: cell?.question ?? null,
+    runsUrl: cell ? `${SITE_URL}/c/${category.id}/runs` : null,
+    runs: forModel.runs,
+    named: { named: namedAll, first: firstAll, of: runsAll },
+    // Both lists in one, with the gap that decides whether we call it clear: a run apart is inside
+    // what this many runs can separate, and the document says so in words as well.
+    rivals: [
+      ...ahead.map((other) => ({ domain: other, named: namedAcross(other), first: firstAcross(other), clear: true })),
+      ...level.map((other) => ({ domain: other, named: namedAcross(other), first: firstAcross(other), clear: false })),
+    ],
+    quotes: forModel.quotes,
+    failing: failed.map((check) => ({ label: check.label, points: check.points, max: check.max, detail: check.detail, unblock: check.unblock ?? null })),
+    unmeasured: unmeasured.map((check) => ({ label: check.label, detail: check.detail })),
+    notApplicable: card.checks.filter((check) => check.notApplicable).map((check) => ({ label: check.label, detail: check.detail })),
+    fixes: (plan?.steps ?? []).map((step) => ({ label: step.label, gain: step.gain, effort: step.effort, how: step.how })),
+    fixClaim: plan?.claim ?? null,
+    behindUnmeasured: plan?.unmeasured ?? 0,
+  }
   await getStore().saveDelivery({
     id,
     domain,
     markdown,
-    preparedAt: new Date().toISOString(),
+    model,
+    preparedAt: model.preparedAt,
     formulaVersion: card.formulaVersion,
     ...(rest.includes('--sample') ? { sample: true } : {}),
   })

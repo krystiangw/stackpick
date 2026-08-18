@@ -1934,7 +1934,7 @@ check('a sonda widzi sprostowanie, ktore juz wygaslo', isOlderThan(FORMULA_VERSI
 console.log('\nportal renderuje kazda konstrukcje, ktora generator wypisuje')
 const generator = readFileSync('scripts/client-report.mts', 'utf8')
 // Akapit moze zaczynac sie od pogrubienia albo kursywy, wiec sa tu razem z blokami.
-const RENDERED = /^(#{1,3} |> |\| |- |\d+\. |\*\*|\*[^*]|$)/
+const RENDERED = /^(#{1,3} |> |\||- |\d+\. |\*\*|\*[^*]|$)/
 const emitted = [...generator.matchAll(/lines\.push\(\s*(`|')([^`']*)/g)]
   .map((match) => match[2])
   .filter((line) => line.length > 0 && !line.startsWith('${'))
@@ -1993,6 +1993,17 @@ for (const file of ['src/lib/scan/http.ts', 'src/lib/scan/funnel.ts', 'src/lib/s
   const source = readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ')
   check(`${file}: bez kwadratowego zdejmowania tagow`, source.includes('/<[^>]+>/g'), false)
 }
+
+// Strona raportu jest ladniejsza od markdownu i dlatego jest niebezpieczna: zastrzezenia, ktore
+// dokument niesie, moga z niej po cichu wypasc. Kazde z tych trzech juz raz wypadlo.
+console.log('\nladniejsza wersja raportu niesie te same zastrzezenia')
+const view = readFileSync('src/app/d/[id]/report-view.tsx', 'utf8')
+check('mowi, gdy vendor nie byl na liscie przy biegach', view.includes('model.guest'), true)
+check('mowi, gdy bieg mogl czytac instrukcje operatora', view.includes('!run.blind'), true)
+check('tlumaczy, czemu mianownik jest mniejszy', view.includes('model.notApplicable'), true)
+check('odroznia przewage od jednego wymienienia roznicy', view.includes('row.clear'), true)
+// Kontrolka: sonda ma widziec brak pola, ktorego tam nie ma.
+check('a sonda widzi pole, ktorego nie uzywamy', view.includes('model.nieistniejace'), false)
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

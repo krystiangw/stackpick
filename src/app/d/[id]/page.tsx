@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ReportMarkdown } from '@/components/report-markdown'
+import { ReportView } from './report-view'
 import { getStore } from '@/lib/store'
 
 export const dynamic = 'force-dynamic'
@@ -29,14 +30,16 @@ export default async function DeliveredReportPage({ params }: { params: Promise<
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-14">
-      <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-rule pb-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-rule pb-4 print:pb-2">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">
           {delivery.sample ? 'Sample report' : 'Your report'} · formula v{delivery.formulaVersion}
         </p>
         <p className="font-mono text-xs text-ink-faint">Prepared {delivery.preparedAt.slice(0, 10)}</p>
       </div>
 
-      <ReportMarkdown markdown={delivery.markdown} />
+      {/* The model when we have one, the markdown when the delivery predates it. Never both: two
+          renderings of one report in one page is how a reader ends up quoting the wrong number. */}
+      {delivery.model ? <ReportView model={delivery.model} /> : <ReportMarkdown markdown={delivery.markdown} />}
 
       <section className="mt-14 border-t border-rule pt-8">
         <p className="max-w-2xl leading-relaxed text-ink-soft">
@@ -44,7 +47,7 @@ export default async function DeliveredReportPage({ params }: { params: Promise<
           quoted from answers you can read in full. If a sentence here is wrong about your product, tell us
           and we will recheck it by hand.
         </p>
-        <p className="mt-4 font-mono text-sm">
+        <p className="mt-4 font-mono text-sm print:hidden">
           <a href="mailto:hello@letagentsin.com" className="text-brass underline underline-offset-4">
             hello@letagentsin.com
           </a>
