@@ -59,7 +59,7 @@ Paddle (JDG czy spolka) - bez tego checkout nie istnieje; czy 79 USD zostaje prz
 kiedy monitoring przestaje byc darmowy i co powiedziec trzem obecnym obserwatorom; dolna granica
 ceny audytu („from X"); `CORPUS_LICENCE_PUBLISHED`; usuniecie SKU na 10 domen; opublikowanie „platnosc
 nie zmienia werdyktu"; potwierdzenie, ze **79 USD to monitoring miesieczny za domene**, a nie
-```
+rozszerzony raport (audyt poprawil mnie w tym fakcie).
 
 **PUNKT ODNIESIENIA po reseedzie 9.33 (2026-08-18 00:00):** 177 wierszy, `programmatic_provisioning`
 **63 zaliczone** (bylo 80 przed 9.32), `oauth_dcr` **91 oblanych, 74 z adresami**, `mcp_present`
