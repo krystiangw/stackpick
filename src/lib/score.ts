@@ -633,7 +633,11 @@ export const CHECKS: Check[] = [
     id: 'oauth_dcr',
     stage: 'entry',
     label: 'OAuth dynamic client registration',
-    why: 'RFC 7591 is the only standard path by which an agent can register itself without a human.',
+    // Was "the only standard path" until the MCP specification of 2026-07-28 made that false: it
+    // marks Dynamic Client Registration MAY and deprecated, and asks for Client ID Metadata
+    // Documents instead. The check keeps measuring DCR, because that is what authorization servers
+    // publish today and what the runs relate to, but the sentence may not claim more than the spec.
+    why: 'RFC 7591 lets an agent register itself without a human. MCP 2026-07-28 deprecates it in favour of Client ID Metadata Documents, so it is the compatibility path rather than the only one.',
     max: 1,
     evaluate: (f) => {
       const oauth = f.funnel.oauth

@@ -291,6 +291,62 @@ export default async function MethodologyPage() {
         </p>
       </section>
 
+      {/* A monitored customer cannot check any of this themselves: they see one email or no email,
+          and the only thing that makes the series worth paying for is knowing which movements we
+          refuse to attribute to them. Written from watch.ts rather than about it. */}
+      <section id="series" className="scroll-mt-8 border-b border-rule py-12">
+        <h2 className="text-lg font-semibold tracking-tight">What makes two scans comparable, and what breaks it</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          A series is only worth something if a movement in it means something changed at your end. Four
+          things break that. Three are ours outright and we carry the cost of them without writing to you.
+          The fourth, a host refusing us, is treated as ours until it turns out to be your own edge turning a
+          non-browser away, and that single exception is most of what monitoring is for.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          <strong className="font-semibold text-ink">A changed formula is never compared raw.</strong> Two
+          scorecards go side by side only when both were measured under the same formula version. When the
+          formula has moved, your last measurement is rescored under today&apos;s rules first, so both sides
+          speak the same formula and the mail says that is what happened. If that rescore cannot be done,
+          nothing is sent at all, because the alternative is a subject line telling somebody their site lost
+          ground on the morning we tightened a rule.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          <strong className="font-semibold text-ink">Where a rescore cannot be honest, the check is
+          dropped.</strong> Rescoring works where today&apos;s rule reads a stored measurement. Where the rule
+          does its own reading during the scan, matching phrases across documentation pages or probing
+          addresses, the stored report keeps what matched rather than the pages it matched in, so a rescore
+          faithfully reproduces the old reading and the difference is our rule rather than your site. So every
+          release that touched the scoring of a check is recorded against that check by hand, and those checks
+          are removed from your list rather than explained in a paragraph under a subject line that already
+          said you lost ground. When 9.32 asked a provisioning phrase to carry its evidence beside it, that
+          list is what stood between nineteen vendors and an email about a point nobody had taken from them.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          <strong className="font-semibold text-ink">A check we could not measure is never called
+          worse.</strong> Unmeasured is not ranked against pass or fail, and on its own it does not earn an
+          email. We put a number on why: between two passes of one sweep, 21 of the 22 verdicts that moved
+          went from unmeasured to pass, sixteen of them because the first pass asked the npm registry with a
+          cold cache and the second found the answer already there. A watcher active that hour would have been
+          told their typed SDK now passes, about a change that happened entirely inside our scanner.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          <strong className="font-semibold text-ink">Our own 429 is our problem.</strong> When a host refuses
+          us because we asked too fast, we wait and ask again, and if it still refuses, the row says we could
+          not measure it and names the host rather than reporting an absence. The one exception is the whole
+          point of the product: if the refusal came from your own edge, with a browser challenge rather than a
+          rate limit, and we never got past it, you are told. Nothing a person sees in a browser changes when
+          that happens, and every check that needed those pages falls silent, which is exactly the failure
+          this site exists to catch. A challenge we did get through is not a wall and does not write to you.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          What is left after those four is the floor: {NOISE_FLOOR_PERCENT.toFixed(2)} percent of verdicts move
+          between two clean measurements of an unchanged internet. That is a rate across a corpus and not a
+          reason to ignore your own row: one verdict moving between two states we can both measure does write
+          to you, because that is the thing you subscribed to. It is a reason to rescan before you act on a
+          single row, and the reason the series rather than any one scan in it is what is worth having.
+        </p>
+      </section>
+
       {/* The category pages link here under "how every number here is measured" and, until an
           audit on 2026-08-17 followed that link, this page described only the scanner. A link that
           does not answer the question it promises is worse than no link. */}

@@ -6975,3 +6975,57 @@ zostaje wobec 29, kiedy monitoring przestaje byc darmowy i co z trzema obecnymi 
 granica ceny audytu, `CORPUS_LICENCE_PUBLISHED` ze swiadomoscia, ze Ora i Lightsage moga zassac
 korpus, zdjecie pakietu 10 domen (499/mc kontra 99/mc za 25 u agentable) i zgoda na opublikowane
 zdanie **„zaplata nie zmienia werdyktu"** przed pierwsza transakcja, nie po pierwszym telefonie.
+
+## POLITYKA SERII, KONTRA NA BRAMKE W CI I JEDNO NIEPRAWDZIWE ZDANIE O RFC 7591 (2026-08-18, noc)
+
+Trzy rzeczy z kolumny „moge zrobic sam" audytu pozycjonowania, plus jedna poprawka, ktora przyszla
+z rekomendacji agenta SEO i okazala sie wazniejsza od calej reszty.
+
+**1. Polityka serii, `/methodology#series`.** Cztery rzeczy, ktore psuja porownywalnosc, i wszystkie
+sa nasze, nie klienta: zmiana formuly (stary pomiar jest **przeliczany** dzisiejsza regula, a gdy sie
+nie da, mail nie idzie wcale), zmiana reguly checku (wyrzucany z listy, bo rescore odtwarza stare
+czytanie tam, gdzie regula czyta w trakcie skanu), wiersz niemierzalny (nigdy nie jest „gorszy",
+sam z siebie nie jest powodem maila) i **nasz wlasny 429** (czekamy i pytamy jeszcze raz, a jesli
+nadal odmawia, wiersz nazywa hosta zamiast raportowac nieobecnosc).
+
+**Pisalem to z kodu, nie o kodzie, i pierwsza wersja i tak byla nieprawdziwa.** Napisalem „przy innej
+formule totale w ogole nie ida obok siebie", a cron robi cos innego i lepszego: przelicza stary
+pomiar (`scoreFindings(previous.findings)`) i dopiero wtedy porownuje. Zdanie poprawione przed
+wdrozeniem.
+
+**2. Kontra na bramke w CI, `/pricing`.** Cztery rzeczy, ktorych check w pipelinie nie widzi:
+brzeg to konfiguracja produkcji (16 domen ze 177 odmowilo nam na wlasnym brzegu w jednym przemiecie,
+12 wyzwaniem przegladarkowym), polowa karty lezy na cudzych hostach (rejestr paczek, rejestr
+narzedzi, opis w wyszukiwarce), prog nie powie, ze **agent wybral konkurenta**, a bramka na wyniku
+oblewa buildy na szumie (nasza podloga: 0,59 proc.). Zakonczone tym, ze **oba maja sens obok siebie**,
+bo inaczej to jest sprzedaz przez strach.
+
+**Codex zlapal sprzecznosc, ktorej sam bym nie zobaczyl:** napisalem „jeden wiersz to nie nowina",
+a `worthTelling` wysyla maila wlasnie przy jednej zmianie miedzy dwoma mierzalnymi werdyktami.
+Podloga szumu jest **rzedem na korpusie**, a nie polityka alertu dla pojedynczej domeny. Zdanie
+przepisane tak, zeby mowilo obie te rzeczy naraz.
+
+**3. `oauth_dcr` opieral sie na zdaniu, ktore przestalo byc prawda.** Rekomendacja z
+`~/projects/seo-agent/rekomendacja-monitoring-agent-seo.md` (dopisek z 2026-08-18) mowi, ze MCP
+wycofuje rejestracje dynamiczna. **Sprawdzone bezposrednio w specyfikacji, nie na slowo**
+(`modelcontextprotocol.io/specification/2026-07-28/basic/authorization`, sekcja Overview):
+
+| mechanizm | status w 2026-07-28 |
+|---|---|
+| Protected Resource Metadata (RFC 9728) | **MUST** dla serwerow MCP |
+| Client ID Metadata Documents | **SHOULD** |
+| Dynamic Client Registration (RFC 7591) | **MAY**, wprost „is deprecated" |
+
+Nasze zdanie brzmialo *„RFC 7591 is the only standard path by which an agent can register itself
+without a human"* i szlo do **platnego raportu jako uzasadnienie oskarzenia vendora**. Bylo prawda,
+gdy je pisalismy, i przestalo nia byc bez zadnej zmiany u nas. Poprawione w czterech miejscach:
+`score.ts` (why), `fixfirst.ts` (obie galezie recepty), `/findings` i `/report`. **Straznik w
+`rules.mts` nie pozwala mu wrocic**: zadna strona ani `score.ts`/`fixfirst.ts` nie moze nazwac
+rejestracji „jedyna standardowa", z kontrolka, ktora to zdanie rozpoznaje.
+
+**Czego swiadomie NIE zrobilem:** nie dolozylem `cimd` ani `rfc9728` jako checkow. To zmiana
+punktacji, wiec podbicie formuly (wygasza sprostowanie directusa) i nowa powierzchnia oskarzen bez
+pomiaru falszywych oskarzen. Pomiar +25pp/+31pp dla `oauth_dcr` **zostaje wazny**, bo mowi, jak
+agenty zachowuja sie dzis. **Do decyzji rano:** czy sledzic przejscie DCR -> CIMD jako osobny pomiar
+(nie check) na korpusie. Rekomendacja agenta SEO mowi, ze to lepszy naglowek produktu niz sam
+`oauth_dcr`, i ma racje w tym, ze inaczej budujemy naglowek na mechanizmie z data waznosci.

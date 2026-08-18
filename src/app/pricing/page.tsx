@@ -6,6 +6,7 @@ import { priceOf, skuById } from '@/lib/billing/catalog'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
 import { SITE_URL } from '@/lib/site'
+import { NOISE_FLOOR_PERCENT } from '@/lib/published'
 
 export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/pricing` },
@@ -204,6 +205,52 @@ export default async function PricingPage() {
           published matcher decide who was named, and where a brand is also an ordinary English word the hit is
           quoted for a human instead of counted. A model grading another model is the measurement this whole
           site exists to be an alternative to.
+        </p>
+      </section>
+
+      {/* The buyer who is going to say no says it because a check already runs in their pipeline.
+          Written about pipelines rather than about a competitor: what we have measured is what our
+          own scans see, and we have not independently measured anyone else's product. */}
+      <section className="border-b border-rule py-12">
+        <h2 className="text-lg font-semibold tracking-tight">What a check in your own pipeline cannot see</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          A readiness check that runs in CI is a good idea and you should have one. It reads your repository
+          before you ship it, which is the cheapest moment to fix a missing file. Four of the things that
+          decide whether an agent gets in are not in your repository at all, and no check that runs there can
+          see them.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          <strong className="font-semibold text-ink">Your edge is production configuration, not
+          code.</strong> Sweeping all 177 domains in our corpus on 18 August 2026, 16 of them refused our
+          requests at their own edge and 12 of those answered with a browser challenge rather than a rate
+          limit. One vendor&apos;s documentation host challenged thirteen of the thirteen requests we made to
+          it, which read as three checks going silent while nothing in their repository had changed; asked
+          again on its own an hour later, the same host answered and all three came back. A bot rule added in
+          a dashboard by somebody who never opens the pipeline is the most common way this fails, and it is
+          invisible to your build and to any single scan alike.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          <strong className="font-semibold text-ink">Half the card is on somebody else&apos;s
+          domain.</strong> Whether the package registry has your types under the name an agent would guess,
+          whether a tool registry lists you, and what a search engine says about your pricing in the two lines
+          an agent reads before deciding not to open the page: all of that is measured against hosts you do
+          not deploy to. Your build passing says nothing about any of it.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          <strong className="font-semibold text-ink">A threshold cannot tell you an agent chose somebody
+          else.</strong> That takes running an agent on a developer&apos;s problem and reading the sentence it
+          used to reject you, which is the one thing no static check produces, and the thing our own published
+          audits exist to produce.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          <strong className="font-semibold text-ink">A gate on a score fails builds on noise.</strong> We
+          measure {NOISE_FLOOR_PERCENT.toFixed(2)} percent of verdicts moving between two clean scans with
+          nothing changed. Any threshold that a normal week can cross gets muted within a month, and a muted
+          gate is worse than no gate, because it is evidence somebody already looked.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          Both belong in the same stack. Keep the check in CI for the files you control, and treat the series
+          here as the part that watches everything you cannot fail a build on.
         </p>
       </section>
 

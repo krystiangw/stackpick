@@ -1870,5 +1870,38 @@ check(
   true,
 )
 
+// Polityka serii na /methodology opisuje, co robi cron: przelicza stary pomiar dzisiejsza formula
+// i wyrzuca checki, ktorych regula sie ruszyla. Zdanie na stronie jest prawda tylko dopoki obie te
+// rzeczy sa w kodzie, a strona nie ma jak zauwazyc, ze ktos je stamtad wyjal.
+console.log('\npolityka serii opisuje to, co cron naprawde robi')
+const cronWatch = readFileSync('src/app/api/cron/watch/route.ts', 'utf8')
+check('cron porownuje karty tej samej formuly', cronWatch.includes('comparableScorecards(previous.scorecard, report.scorecard)'), true)
+check('a przy innej przelicza stary pomiar', cronWatch.includes('scoreFindings(previous!.findings)'), true)
+check('i wyrzuca checki, ktorych regule ruszylismy', cronWatch.includes('all.filter((change) => !ourDoing.has(change.checkId))'), true)
+check(
+  'podloga szumu na cenniku idzie ze stalej',
+  readFileSync('src/app/pricing/page.tsx', 'utf8').includes('NOISE_FLOOR_PERCENT.toFixed(2)'),
+  true,
+)
+// Kontrolka: sonda musi umiec powiedziec „nie" o pliku, ktorego tam nie ma.
+check('a sonda widzi brak takiego zdania', cronWatch.includes('rulesChangedBetween(FORMULA_VERSION)'), false)
+
+// MCP 2026-07-28 przenosi rejestracje dynamiczna do MAY i pisze o niej "deprecated", stawiajac
+// Client ID Metadata Documents jako SHOULD. Zdanie "jedyna standardowa droga" bylo prawda, gdy je
+// pisalismy, i przestalo nia byc bez zadnej zmiany u nas. Idzie do platnego raportu jako
+// uzasadnienie oskarzenia, wiec nie ma prawa wrocic przy najblizszym przepisywaniu kopii.
+console.log('\nnie nazywamy RFC 7591 jedyna standardowa droga')
+for (const page of [...pagesUnder('src/app'), 'src/lib/score.ts', 'src/lib/fixfirst.ts']) {
+  const told = readFileSync(page, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ')
+  const claim = /\b(only|one)\s+standard\b[^.]{0,80}(register|registration)/i.exec(told)?.[0] ?? ''
+  check(`${page}: bez "jedynej standardowej" rejestracji`, claim, '')
+}
+// Kontrolka: sonda musi znalezc to zdanie, gdy naprawde tam jest.
+check(
+  'a sonda rozpoznaje takie zdanie',
+  /\b(only|one)\s+standard\b[^.]{0,80}(register|registration)/i.test('RFC 7591 is the only standard way an agent registers itself'),
+  true,
+)
+
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)
