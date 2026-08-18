@@ -6738,3 +6738,29 @@ nazwa. `scripts/audit-llms-links.mts` sprawdza je jednym zapytaniem na wiersz.
 
 **Zmienilo sie nie to, czy oskarzamy slusznie, tylko czy da sie nas sprawdzic.** Cztery zdania na
 karcie mowily prawde, ktorej vendor nie mogl powtorzyc - dzis kazde nazywa adres, host albo strone.
+
+## 39. PRZEBIEG: `price_in_snippet` NA ZYWYCH OPISACH (2026-08-18)
+
+Najwieksza powierzchnia, ktorej przebieg byl **sprzed** zmian 9.36-9.40: 92 oskarzenia, kazde
+cytujace dokladny string, ktory przeczytalismy. To jednoczesnie najlatwiejszy werdykt do sprawdzenia
+i najlatwiejszy do pomylki, bo ten string to jeden meta tag, ktory marketing zmienia co tydzien.
+
+**Metoda inna niz w poprzednich przebiegach, bo powtorzenie wlasnego predykatu tylko zgodziloby sie
+samo ze soba.** `scripts/audit-snippet-live.mts` czyta **zywy** tag scannerowym `readSnippet`, a
+potem zadaje **luzniejsze** pytanie: czy niedbaly czytelnik widzi tam kwote (`[$€£]\s?\d`, `per
+month`, `usd`) albo warunek wejscia (`free`, `trial`, `no credit card`, `starts at`), ktorego regula
+nie skredytowala. W takich opisach chowaloby sie falszywe oskarzenie.
+
+**Wynik: 91 opisow przeczytanych na zywo (zaden cennik nie odmowil), zero do przejrzenia.** Do tego dwie liczby, ktorych
+nie oczekiwalem i ktore mowia cos o stabilnosci pomiaru: **zaden** wiersz nie przeszedlby dzis (czyli
+zaden vendor nie poprawil opisu od naszego skanu) i **zaden** nie cytuje stringu, ktorego juz tam nie
+ma. Cytaty w korpusie sa aktualne co do znaku.
+
+**Poprawka z codex review, warta zapamietania przy kazdym takim skrypcie:** licznik rosl **przed**
+sprawdzeniem, czy strona w ogole odpowiedziala, wiec „nic do czytania" moglo byc zdaniem o
+nieudanych zadaniach zamiast o opisach. Po poprawce liczba wyszla ta sama (zaden cennik nie odmowil),
+czyli naglowek byl prawdziwy przez przypadek, a teraz jest prawdziwy z konstrukcji.
+
+**Ograniczenie, zapisane swiadomie:** luzny czytelnik to moj wlasny regex, wiec falszywe oskarzenie
+moze sie chowac w sformulowaniu, ktorego nie widzi ani regula, ani on. Dlatego to **uzupelnienie**
+przebiegow 30-31, gdzie 80 opisow przeczytano recznie po kolei, a nie ich zastapienie.
