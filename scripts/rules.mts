@@ -1756,6 +1756,16 @@ check('kazdy wpis ma adres na naszej domenie', katalog.entries.every((e) => e.ur
 check('kazdy identyfikator zakotwiczony w domenie', katalog.entries.every((e) => e.identifier.startsWith('urn:air:letagentsin.com:')), true)
 check('robots.txt wskazuje katalog', readFileSync('public/robots.txt', 'utf8').includes('AI-Catalog: https://letagentsin.com/.well-known/ai-catalog.json'), true)
 
+// Dowod wlasnosci domeny dla rejestru MCP. Zly format nie objawia sie niczym poza odmowa
+// logowania w momencie publikacji, wiec claim, ktory sami wystawiamy pod adresem, sprawdzamy tutaj.
+console.log('\ndowod domeny dla rejestru MCP')
+const DOWOD_MCP = /^v=MCPv1; k=ed25519; p=[A-Za-z0-9+/]{43}=$/
+check('plik ma format v=MCPv1', DOWOD_MCP.test(readFileSync('public/.well-known/mcp-registry-auth', 'utf8').trim()), true)
+check('kontrola: sam klucz bez naglowka odpada', DOWOD_MCP.test('p=dxvT0jHk9iEnguAEfhDL+/7vu0EEHeJ6A0Y1MBktzag='), false)
+const serwerMcp = JSON.parse(readFileSync('server.json', 'utf8')) as { name: string; remotes: { url: string }[] }
+check('przestrzen nazw zgodna z domena', serwerMcp.name.startsWith('com.letagentsin/'), true)
+check('wpis wskazuje nasz wlasny endpoint', serwerMcp.remotes.every((r) => r.url.startsWith('https://letagentsin.com/')), true)
+
 // Karta A2A jest deskryptorem, wiec liczy sie jak mcp.json: punkt za istnienie, nie dwa za
 // procedure. Standard AgentReady stawia ja jako MUST, a my mowilismy tigrisdata.com, ze nie ma
 // zadnego wejscia dla agenta, gdy serwuje dokladnie ten plik.
