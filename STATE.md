@@ -7791,5 +7791,25 @@ wymagal, zeby `fixedIn` bylo PONIZSZE od biezacej formuly. `erratumFor` porownuj
 nie przeliczone trzymaja sprostowanie, przeliczone je traca razem z bledem. Zle jest tylko `fixedIn`
 starsze niz biezaca formula.
 
+## PUBLIKOWALISMY WIERSZ O GANDI.NET NA PACZCE INNEJ FIRMY (2026-08-19, w 9.42)
+
+Znalezione **przy okazji**, przez przejrzenie wynikow replayu zamiast samego diffu: osiem wierszy ma
+paczke starsza niz rok, a jeden z nich to `gandi.net` → `@gandi-ide/gandi-ui`, 23 miesiace.
+
+Sprawdzone w danych, nie z pamieci: opis tej paczki to **„gandi 组件库"** (chinskie „biblioteka
+komponentow gandi"), wydawca to prywatny adres `286469838@qq.com`, a linkow **nie ma zadnych** poza
+samym rejestrem. To Gandi IDE, srodowisko w stylu Scratcha, czyli **inna firma**. Z francuskim
+rejestratorem domen laczy je wylacznie to, ze `gandiide` **zaczyna sie** od `gandi`.
+
+Regula: **scope, ktory tylko zaczyna sie od nazwy vendora, na paczce bez ani jednego linku poza
+rejestrem, nie wystarczy**. Oba sygnaly sa slabe i zaden nie jest sprawdzalny, wiec razem sa nadal
+slabe: wszystko, co ta paczka o sobie mowi, mowi wewnatrz rejestru. Swiadomie **nie** zakazalem
+samego prefiksu: `@axiomhq` tez jest prefiksem, jest naprawde Axioma i ma repozytorium, stronę i
+tracker na wlasnej organizacji. Kontrolki pilnuja obu stron.
+
+**Zmierzone na tej samej migawce i tym samym cache: jedna zmiana na 177 domen.** `gandi.net` traci
+paczke i dostaje uczciwe „nie znalezlismy zadnej", ktore ma juz 15 innych domen. Lepsze niz wiersz o
+cudzym artefakcie.
+
 **Zostaje do zrobienia: przemiat korpusu na 9.42.** Do tego czasu produkcja stoi na 9.41 i to jest
 poprawny stan, a nie niedokonczony.

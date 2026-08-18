@@ -1499,6 +1499,20 @@ function ownershipOf(
   const proof = maintainerOwnership(candidate, vendor)
   if (proof === 'proved' || inVendorRepo) return 'proved'
 
+  // A scope that merely STARTS with the vendor's name, on a package that links to nothing outside
+  // the registry, is not enough to publish a row about that vendor.
+  //
+  // gandi.net was published on `@gandi-ide/gandi-ui`, whose description is "gandi 组件库", whose
+  // publisher is a personal address and which has no repository and no homepage at all. It belongs
+  // to Gandi IDE, a different company; the only thing tying it to a French domain registrar is that
+  // `gandiide` starts with `gandi`. Both halves are weak and neither is checkable, so together they
+  // are still weak: everything the package says about itself, it says inside the registry.
+  //
+  // Deliberately not a rule against a prefix scope on its own. `@axiomhq` is genuinely Axiom's and
+  // is a prefix too; it also has a repository, a homepage and an issue tracker on their own org.
+  const scopeIsExactly = scope !== null && isVendorName(scope, vendor)
+  if (ownScope && !scopeIsExactly && candidate.links.length === 0) return 'none'
+
   // The org a page links to first is whatever the page links to first: honeybadger.io's docs
   // link github.com/org/repo and betterstack.com links Algolia's DocSearch. It is the weakest
   // thing we have, so it only counts for a package that already reads like the vendor's own.
@@ -1762,6 +1776,14 @@ const CALLS_ITSELF_A_LIBRARY = /\b(sdk|client|client library|library|bindings?)\
  * argued with without a live registry. Until #47 the only testable half of this ranking was the
  * shape of the name, which is exactly the half that was wrong.
  */
+/**
+ * Ownership as a rule can ask it: a name, what the package says about itself, and what it links to
+ * outside the registry. Exported for the same reason as `shapeRankOf` - the case that forced the
+ * last change here was a package with no links at all, and there was no way to state that in a test.
+ */
+export const readsAsOwnedBy = (name: string, description: string, links: string[], domain: string): string =>
+  ownershipOf({ name, description, links, keywords: [], maintainers: [] }, vendorOf(domain), [])
+
 export const readsAsTheirLibrary = (name: string, description: string, domain: string): boolean =>
   describesItselfAsTheLibrary({ name, description, keywords: [] } as unknown as Candidate, vendorOf(domain))
 

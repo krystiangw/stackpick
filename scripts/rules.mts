@@ -14,7 +14,7 @@ import { stayOutAfter } from '../src/lib/stayout'
 import { crawlerName } from '../src/lib/visits'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
-import { looksLikeEntryPackage, readBulkDownloads, readsAsTheirLibrary, shapeRankOf } from '../src/lib/scan/discover'
+import { looksLikeEntryPackage, readBulkDownloads, readsAsOwnedBy, readsAsTheirLibrary, shapeRankOf } from '../src/lib/scan/discover'
 import { changesBetween, comparableScorecards, rulesChangedBetween, turnedAwayAtTheEdge, worthTelling } from '../src/lib/watch'
 import { withoutTags } from '../src/lib/scan/http'
 import { isOlderThan } from '../src/lib/formula'
@@ -1963,6 +1963,28 @@ check('wrapper Angulara nie jest biblioteka', readsAsTheirLibrary('onesignal-ngx
 // Kontrolka, ktora ma najwieksze znaczenie: samo slowo „client" bez nazwy vendora nie znaczy nic o
 // TYM vendorze, bo inaczej kazda cudza paczka z tym slowem awansowalaby na jego biblioteke.
 check('kontrola: slowo bez nazwy vendora nie wystarcza', readsAsTheirLibrary('some-client', 'A tiny HTTP client library', 'directus.com'), false)
+
+// gandi.net byl publikowany na `@gandi-ide/gandi-ui`: opis „gandi 组件库", wydawca z prywatnego
+// adresu, ZERO linkow poza rejestrem. To Gandi IDE, inna firma; z francuskim rejestratorem domen
+// laczy je tylko to, ze `gandiide` zaczyna sie od `gandi`. Dwa slabe sygnaly razem sa nadal slabe.
+console.log('\nwlasnosc paczki: scope, ktory tylko zaczyna sie od nazwy')
+check(
+  'scope-prefiks bez zadnego linku to nie ich paczka',
+  readsAsOwnedBy('@gandi-ide/gandi-ui', 'gandi 组件库', [], 'gandi.net'),
+  'none',
+)
+// Kontrolka, ktora chroni prawdziwy przypadek: @axiomhq tez jest prefiksem, ale pokazuje repozytorium.
+check(
+  'ten sam prefiks z repozytorium juz tak',
+  readsAsOwnedBy('@axiomhq/js', 'The official javascript bindings for the Axiom API', ['https://github.com/axiomhq/axiom-js'], 'axiom.co') !== 'none',
+  true,
+)
+// I kontrolka od drugiej strony: scope, ktory JEST nazwa vendora, nie potrzebuje linku.
+check(
+  'scope rowny nazwie vendora nie potrzebuje linku',
+  readsAsOwnedBy('@directus/sdk', 'Directus JavaScript SDK', [], 'directus.com') !== 'none',
+  true,
+)
 
 // Runbook dostawy mowi platnikowi, co dostaje za 79 USD miesiecznie. Liczba checkow byla tam
 // wpisana z reki i zostala na 15, gdy checkow bylo juz 16.
