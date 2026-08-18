@@ -122,7 +122,14 @@ export function turnedAwayAtTheEdge(
    */
   domain?: string | null,
 ): boolean {
-  const challenged = domain ? challengedUs(findings as never, domain) !== null : false
+  // Only a challenge we never got past. Today the scanner does not retry in front of a marker, so
+  // `recovered` is always false here and this reads the same either way. It is written out because
+  // the tryb audytowy proposed in #48 would retry exactly these, and then a wall we walked through
+  // would start mailing customers that their door is shut.
+  const challenged = domain
+    ? (findings.limitsMet ?? []).some((limit) => limit.challenge && !limit.recovered) &&
+      challengedUs(findings as never, domain) !== null
+    : false
   return Boolean(findings.blocksPlainRequests || findings.robots?.unreadable || challenged)
 }
 

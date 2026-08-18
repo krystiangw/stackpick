@@ -1702,6 +1702,10 @@ check('wyzwanie to odwrocenie od drzwi', turnedAwayAtTheEdge(zWyzwaniem, 'v.test
 check('samo 429 to nasze obciazenie, nie ich sciana', turnedAwayAtTheEdge(zLimitem, 'v.test'), false)
 check('wyzwanie u strony trzeciej to nie ich brzeg', turnedAwayAtTheEdge(cudzeDrzwi, 'v.test'), false)
 check('bez podanej domeny nie zgadujemy', turnedAwayAtTheEdge(zWyzwaniem), false)
+// Sciana, przez ktora przeszlismy, nie jest sciana. Dzis nieosiagalne, bo przed markerem nie
+// ponawiamy, ale tryb audytowy z #48 wlasnie takie ponawia.
+const przeszlismy = { limitsMet: [{ url: 'https://docs.v.test/x', challenge: true, recovered: true }] }
+check('odzyskane wyzwanie nie jest odwroceniem', turnedAwayAtTheEdge(przeszlismy, 'v.test'), false)
 const spadek = [{ checkId: 'docs_without_js', label: 'x', from: 'pass', to: 'unmeasured', detail: '', worse: false }] as never
 check('spadek w cisze przy wyzwaniu jest wart maila', worthTelling(spadek, turnedAwayAtTheEdge(zWyzwaniem, 'v.test')), true)
 check('a przy naszym limicie nie jest', worthTelling(spadek, turnedAwayAtTheEdge(zLimitem, 'v.test')), false)
