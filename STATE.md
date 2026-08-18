@@ -5682,3 +5682,12 @@ straznik w `rules.mts` porownuje wszystkie trzy pliki ze stalymi `PER_DOMAIN_PER
 **Wzorzec z calej nocy, juz trzeci raz:** liczba wpisana z reki do pliku statycznego nie ma jak sie
 sama poprawic, a pliki statyczne to wlasnie te, ktore czytaja maszyny. `public/llms.txt` dostal ten
 sam straznik (liczba checkow).
+
+**Przy okazji drugi rozjazd w tym samym pliku:** czas skanu. JSON mowil „Takes 15-30s", proza
+„about ten seconds". **Zmierzone dzis na produkcji: linear.app 7,3 s, val.town 12,4 s** (height.app
+1,1 s, bo nie odpowiada i to jest poprawna odmowa, a nie szybki skan). Pierwsza proba poprawki
+obiecywala „nigdy pozniej niz 27 s" i **codex slusznie ja obalil**: 27 s to budzet POBIERANIA,
+punktowanie i zapis ida po nim, wiec to nie jest gwarancja czasu odpowiedzi. Teraz plik mowi, czym
+ta liczba jest, i radzi dac minute timeoutu. Straznik porownuje ja z **domyslna** stala
+`DEFAULT_SCAN_BUDGET_MS`, a nie ze skonfigurowana, bo `SCAN_BUDGET_MS` wolno nadpisac srodowiskiem,
+a straznik chodzi w buildzie.

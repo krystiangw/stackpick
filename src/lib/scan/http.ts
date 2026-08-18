@@ -87,7 +87,9 @@ const MAX_BYTES = 400_000
  * package we had found an hour earlier. Scoring and serialising a report takes tens of
  * milliseconds, so the remaining five seconds are ample.
  */
-export const SCAN_BUDGET_MS = Number(process.env.SCAN_BUDGET_MS ?? 27_000)
+/** The shipped budget, named because it is the number we publish to agents in agent-access.json. */
+export const DEFAULT_SCAN_BUDGET_MS = 27_000
+export const SCAN_BUDGET_MS = Number(process.env.SCAN_BUDGET_MS ?? DEFAULT_SCAN_BUDGET_MS)
 
 /**
  * The error prefix that means "we never found out", as opposed to a site answering us. A

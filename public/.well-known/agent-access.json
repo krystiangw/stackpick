@@ -21,7 +21,7 @@
         "domain": "example.com"
       },
       "response": "{ id, domain, scorecard }",
-      "notes": "Takes 15-30s. Signup probes run three times because bot gates answer inconsistently."
+      "notes": "Answers only when the scan is finished, usually in about 10 seconds. Fetching is capped at a 27 second budget, with scoring and storage after it, so allow a minute before timing out. Signup probes run three times because bot gates answer inconsistently."
     },
     {
       "name": "scan_streaming",

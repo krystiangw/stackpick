@@ -17,6 +17,7 @@ import { buildFixPlan } from '../src/lib/fixfirst'
 import { changeEmail } from '../src/lib/watch-email'
 import { CHECKS } from '../src/lib/score'
 import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR } from '../src/lib/scan-gate'
+import { DEFAULT_SCAN_BUDGET_MS } from '../src/lib/scan/http'
 import { forStorage } from '../src/lib/store'
 import { REMEDIES } from '../src/lib/fixfirst'
 import { ERRATA, erratumFor } from '../src/lib/errata'
@@ -1394,6 +1395,16 @@ const agentAccess = JSON.parse(readFileSync('public/.well-known/agent-access.jso
 const promised = (scope: string) => agentAccess.rate_limit.limits.find((one) => one.scope.includes(scope))?.requests
 check('agent-access.json obiecuje prawdziwy limit na domene', promised('domain'), PER_DOMAIN_PER_HOUR)
 check('i prawdziwy limit na adres', promised('source address'), PER_CALLER_PER_HOUR)
+// Ten sam plik obiecywal „Takes 15-30s", a zmierzone skany to 7,3 s i 12,4 s. Liczba idzie ze
+// stalej, ale opisuje to, czym ta stala jest: budzet POBIERANIA, a nie gwarancja czasu odpowiedzi.
+// Punktowanie i zapis ida po nim, wiec obietnica „nigdy pozniej niz 27 s" bylaby nieprawdziwa.
+// Porownanie idzie do DOMYSLNEJ stalej, a nie do skonfigurowanej: SCAN_BUDGET_MS wolno nadpisac
+// zmienna srodowiskowa, a straznik chodzi w buildzie i zablokowalby taka konfiguracje.
+check(
+  'agent-access.json podaje prawdziwy budzet skanu',
+  JSON.stringify(agentAccess).includes(`${DEFAULT_SCAN_BUDGET_MS / 1000} second budget`),
+  true,
+)
 // Te same liczby w prozie dla agentow, cyframi zamiast slowem wlasnie po to, zeby dalo sie ich
 // pilnowac. Plikow jest dwa i oba obiecuja co innego czytelnikowi niz kod robi.
 for (const file of ['public/agents.md', 'public/agent-signup.md']) {
