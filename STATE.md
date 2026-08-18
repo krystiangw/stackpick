@@ -24,6 +24,10 @@ ktorego 9.41 nie dotyka. **Podbijajac formule, sprawdz ten wpis.**
 - **Licznik odwiedzin nazywa crawlery** (13 robotow), wiec pierwszy raz zobaczymy, ktory indeks nas
   faktycznie czyta. Brave jest wyjatkiem: nie ma crawlera, wiec brak wiersza nie znaczy nic.
 - **IndexNow: 67 adresow, 200 OK.** Sitemapa ma 244 adresy.
+- **Poprawka w skillu `agent-discoverability`** (nie w produkcie): jego kontrola rejestru MCP pytala
+  o **marke**, a wyszukiwarka rejestru nie dopasowuje wieloczlonowej nazwy. Mowila opublikowanemu
+  serwerowi, ze go nie ma. Teraz pyta o przestrzen nazw z profilu. Sprawdzone w obie strony:
+  nasz wpis daje PASS, zmyslony profil nadal FAIL.
 
 **ZASADA, KTORA WYSZLA Z TEJ NOCY:** kazde miejsce, gdzie **„nie wiem" ma wartosc domyslna**, jest
 tym samym bledem, i trzeba go szukac **na kazdej warstwie osobno**. Nieczytelny robots.txt czytal sie
