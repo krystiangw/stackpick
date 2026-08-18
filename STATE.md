@@ -6281,3 +6281,47 @@ straznicy (z markerem i bez).
 
 **Stan: wdrozone i zweryfikowane** (v520). Zdanie pojawi sie w wierszach dopiero z dowodem, czyli od
 najblizszego przemiatu: starych wierszy nie ma za co poprawiac wstecz, bo nie niosa `limitsMet`.
+
+## 49: TO REJESTR NPM ODMAWIA NAM NAJCZESCIEJ, NIE VENDORZY (2026-08-18)
+
+Pomiar z tej samej nocy pokazal, ze **89 ze 177 skanow spotyka limit w `api.npmjs.org`**, czyli
+liczbowo wiecej niz wszystkie sciany vendorow razem (#48). Policzone dokladnie, jednym skanem:
+
+| co | ile zadan |
+|---|---|
+| zadan do npm na jeden skan | **20 do 25** |
+| z tego endpoint pobran (`/downloads/point/last-week/`) | **16** |
+| odmowionych na cloudinary.com | **10 z 16** |
+
+To znaczy, ze **paczka vendora zalezy od endpointu, ktory odmawia nam najczesciej**, a odmowa konczy
+sie zdaniem o CUDZYM wierszu: „we could not identify the package a developer installs to use you".
+Zimne przejscie po korpusie kosztowalo kiedys 28 domen ich paczke, i to jest ta sama przyczyna.
+
+**Dwie naprawy, obie o obciazeniu, zadna o atrybucji:**
+1. **Pytamy zbiorczo.** `api.npmjs.org/downloads/point/last-week/a,b,c` odpowiada mapa dla nazw bez
+   scope'u. Zmierzone: mapbox.com wysylal 16 zapytan, teraz siedem nazw jedzie w jednym. Nazwy ze
+   scope'em musza isc pojedynczo, bo **jedna taka odrzuca cala partie** („scoped packages are not
+   currently supported in bulk lookups"), wiec jeden `@vendor/sdk` w liscie kosztowalby wszystkie
+   pozostale ich liczby. Adresy sa **sortowane**, bo URL jest kluczem cache'u na 48 godzin: ta sama
+   domena pytajaca o te same nazwy w innej kolejnosci placilaby rejestrowi drugi raz.
+2. **Rejestr dostaje wiecej prob niz cudzy brzeg** (6 zamiast 2 na skan). Uprzejmosc wobec npm nie
+   kosztuje nikogo poza nami, a odmowa kosztuje vendora paczke.
+
+**Czego NIE zrobilem, choc zaczalem:** ograniczenia liczby wycenianych kandydatow (dzis 16). Wyglada
+na oczywista oszczednosc i nie jest: ta sciezka ma strażnika, ktory **odmawia odpowiedzi**, gdy
+kandydat bez wyceny stoi w rankingu na rowni ze zwyciezca albo wyzej (lekcja z mapbox.com). Kandydat,
+o ktorego nikt nie zapytal, jest tam **nie do odroznienia** od tego, ktoremu rejestr odmowil, wiec
+zmiana wywracalaby ten straznik na kazdym skanie. **Ciecie tej listy jest zmiana atrybucji i wymaga
+pomiaru na calym korpusie**, tak jak #47, a nie doklejenia do zmiany o obciazeniu. Zostaje w #49.
+
+**Zmierzone przed wdrozeniem, jak przy #47:** `audit-attribution.mts` na calym korpusie po zmianie:
+**137 wierszy, 115 bez zmiany, ZERO zmienionych paczek.** Zbiorcze pytanie nie rusza atrybucji, bo
+zwraca dokladnie te same liczby, tylko w jednej odpowiedzi. **22 wiersze milczaly** (rejestr odmowil
+dwa razy pod rzad) i to jest liczba o nas, nie o zmianie: poprzedni przebieg tej samej nocy mial ich
+dziewiec, a miedzy nimi zrobilismy z tej maszyny ~350 skanow lokalnych. Milczenie nie jest zmiana
+paczki - zaden wiersz nie wskazuje dzis czego innego niz wczoraj.
+
+**Znalezisko z codex review, warte zapamietania poza tym projektem:** `constructor`, `toString` i
+`valueOf` **sa prawdziwymi paczkami na npm**, wiec `name in parsed` na odpowiedzi rejestru znajduje
+je na prototypie i zamienia „rejestr o tej nie odpowiedzial" w „nikt jej nie instaluje". Teraz
+`Object.hasOwn`, ze straznikiem na dokladnie ta nazwe.

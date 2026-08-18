@@ -10,7 +10,7 @@ import { FRESH_QUESTIONS, HELD_OUT_2, HELD_OUT_3, HELD_OUT_4, HELD_OUT_5, HELD_O
 import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
-import { looksLikeEntryPackage, shapeRankOf } from '../src/lib/scan/discover'
+import { looksLikeEntryPackage, readBulkDownloads, shapeRankOf } from '../src/lib/scan/discover'
 import { changesBetween, comparableScorecards, rulesChangedBetween, turnedAwayAtTheEdge, worthTelling } from '../src/lib/watch'
 import { isOlderThan } from '../src/lib/formula'
 import { buildFixPlan } from '../src/lib/fixfirst'
@@ -1685,6 +1685,27 @@ check('a gdy prosi o 10 s, czekamy najwyzej 3', backoffFor(limited(429, { 'retry
 check('sciana vendora nie jest naszym obciazeniem', backoffFor(limited(429, { 'x-vercel-mitigated': 'challenge' }), 0, 27_000), null)
 check('403 to odpowiedz, nie limit', backoffFor(limited(403), 0, 27_000), null)
 check('trzeci raz na tej samej stronie juz nie', backoffFor(limited(429), 2, 27_000), null)
+// Odpowiedz zbiorcza rejestru: null to paczka bez pobran, brak klucza to brak odpowiedzi.
+console.log('\nzbiorcze pobrania z rejestru')
+const bulk = readBulkDownloads('{"react":{"downloads":115},"nikt-tego-nie-ma":null}', [
+  'react',
+  'nikt-tego-nie-ma',
+  'o-ktora-nie-pytano',
+  'constructor',
+])
+check('policzona paczka ma swoja liczbe', bulk.get('react'), 115)
+check('null to paczka bez pobran', bulk.get('nikt-tego-nie-ma'), 0)
+check('brak klucza to brak odpowiedzi, nie zero', bulk.get('o-ktora-nie-pytano'), null)
+// constructor to prawdziwa paczka na npm, a `in` znalazlby ja na prototypie.
+check('nazwa z prototypu tez jest brakiem odpowiedzi', bulk.get('constructor'), null)
+check('zepsuta odpowiedz to brak odpowiedzi dla wszystkich', readBulkDownloads('nie-json', ['a', 'b']).get('a'), null)
+
+// Rejestr dostaje wiecej prob niz cudzy brzeg: jego odmowa konczy sie zdaniem o CUDZYM wierszu
+// ('nie umiemy wskazac paczki'), a nasza uprzejmosc wobec npm nie kosztuje nikogo poza nami.
+const registry = (status: number) =>
+  ({ url: 'https://api.npmjs.org/downloads/point/last-week/react', status, ok: false, headers: {}, body: '', truncated: false }) as const
+check('rejestr ponawiamy takze za trzecim razem', backoffFor(registry(429), 2, 27_000), 1_200)
+check('ale nie w nieskonczonosc', backoffFor(registry(429), 6, 27_000), null)
 check('nie czekamy w deadline', backoffFor(limited(429), 0, 5_000), null)
 check('ale czekamy, gdy czas jeszcze jest', backoffFor(limited(429), 0, 7_500), 1_200)
 // Retry-After w formie daty: odczytane przez Number() daje NaN, czyli po cichu domyslne 1,2 s.

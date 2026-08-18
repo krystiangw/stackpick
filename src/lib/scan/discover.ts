@@ -868,10 +868,12 @@ async function pickNamedPackage(names: string[], vendor: Vendor): Promise<string
   // Coarser than the registry path on purpose. Both `supabase` and `@supabase/supabase-js` are
   // named in Supabase's docs and both read like an entry package; only usage says the first is
   // their command line tool. A description would say so too, at a registry request per name.
-  const ranked = await inParallel(names.slice(0, 6), async (name) => ({
+  const shortlist = names.slice(0, 6)
+  const counts = await weeklyDownloadsFor(shortlist)
+  const ranked = shortlist.map((name) => ({
     name,
     rank: Math.max(shapeRank(name, vendor) - 2, 0),
-    downloads: await weeklyDownloads(name),
+    downloads: counts.get(name) ?? null,
   }))
   // Usage only decides when every name was priced. With one lookup refused, the counts in hand
   // are not comparable with the ones missing, so shape alone settles it and the page's own order
@@ -879,6 +881,77 @@ async function pickNamedPackage(names: string[], vendor: Vendor): Promise<string
   const priced = ranked.every((entry) => entry.downloads !== null)
   ranked.sort((a, b) => a.rank - b.rank || (priced ? (b.downloads ?? 0) - (a.downloads ?? 0) : 0))
   return ranked[0].name
+}
+
+/**
+ * Weekly downloads for several packages, in as few requests as the registry allows.
+ *
+ * Measured 2026-08-18: one scan makes 20 to 25 requests to npm and **16 of them are this endpoint**,
+ * which is also the one that refuses us: on cloudinary.com ten of sixteen came back 429. Across the
+ * corpus 89 of 177 scans meet a limit at the registry, and `typed_package` and the whole of package
+ * attribution stand on what these answers say. The counts are read in two batches of candidates, so
+ * they can be asked for in two requests rather than in sixteen.
+ *
+ * Not scoped names: the registry answers a bulk lookup containing one with "scoped packages are not
+ * currently supported in bulk lookups" and refuses the whole batch, so one `@vendor/sdk` in the list
+ * would cost every other name its count.
+ */
+const NAMES_PER_BULK = 48
+
+export function readBulkDownloads(body: string, names: readonly string[]): Map<string, number | null> {
+  const answer = new Map<string, number | null>()
+  let parsed: Record<string, { downloads?: number } | null>
+  try {
+    parsed = JSON.parse(body) as Record<string, { downloads?: number } | null>
+  } catch {
+    for (const name of names) answer.set(name, null)
+    return answer
+  }
+  for (const name of names) {
+    // A name the registry answered `null` about is a package with no downloads recorded, which is
+    // the same answer a 404 gives on the single lookup. A name it did not mention at all is not an
+    // answer, and calling it zero would price a package we were never told about.
+    // Own property only: `constructor`, `toString` and `valueOf` are all published npm packages,
+    // and `in` would find them on Object.prototype in a response that never mentioned them, which
+    // turns "the registry did not answer about this one" into "nobody installs it".
+    answer.set(name, Object.hasOwn(parsed, name) ? (parsed[name]?.downloads ?? 0) : null)
+  }
+  return answer
+}
+
+async function weeklyDownloadsFor(names: readonly string[]): Promise<Map<string, number | null>> {
+  const answer = new Map<string, number | null>()
+  const wanted = [...new Set(names)]
+  const scoped = wanted.filter((name) => name.startsWith('@'))
+  // Sorted, because the URL is the key this answer is cached under for 48 hours and across dynos:
+  // the same domain asking for the same names in a different order would miss the warm answer and
+  // pay the registry for it again, which is the load this whole function exists to cut.
+  const plain = wanted.filter((name) => !name.startsWith('@')).sort()
+  const batches: string[][] = []
+  for (let at = 0; at < plain.length; at += NAMES_PER_BULK) batches.push(plain.slice(at, at + NAMES_PER_BULK))
+
+  await Promise.all([
+    ...scoped.map(async (name) => {
+      answer.set(name, await weeklyDownloads(name))
+    }),
+    ...batches.map(async (batch) => {
+      // One name is the single lookup: the bulk endpoint answers it with the bare object rather
+      // than with a map, and reading one shape as the other is how a real count becomes null.
+      if (batch.length === 1) {
+        answer.set(batch[0], await weeklyDownloads(batch[0]))
+        return
+      }
+      const got = await askRegistry(
+        `https://api.npmjs.org/downloads/point/last-week/${batch.map((name) => encodeURIComponent(name)).join(',')}`,
+      )
+      if (got === null || !got.ok) {
+        for (const name of batch) answer.set(name, null)
+        return
+      }
+      for (const [name, count] of readBulkDownloads(got.body, batch)) answer.set(name, count)
+    }),
+  ])
+  return answer
 }
 
 /** Null when the registry refused the lookup. A 404 here is a package with no downloads recorded. */
@@ -1541,10 +1614,13 @@ export async function searchNpmForDomain(
     .sort((a, b) => cheapRank(a) - cheapRank(b) || a.name.length - b.name.length || compareNames(a.name, b.name))
     .slice(0, MOST_DOWNLOAD_LOOKUPS)
 
-  const ranked = await inParallel(shortlist, async (candidate) => ({
-    candidate,
-    downloads: await weeklyDownloads(candidate.name),
-  }))
+  // Every one of them is priced, and skipping the ones that look unlikely is not the saving it
+  // seems: the guard below refuses to answer at all when a candidate we could not price ranks at
+  // or above the winner, and a candidate nobody asked about is indistinguishable there from one
+  // the registry refused. Cutting this list is an attribution change and belongs with the
+  // measurement that #47 needed, not with a change about load.
+  const counts = await weeklyDownloadsFor(shortlist.map((candidate) => candidate.name))
+  const ranked = shortlist.map((candidate) => ({ candidate, downloads: counts.get(candidate.name) ?? null }))
 
   const priced = ranked.filter(
     (entry): entry is { candidate: Candidate; downloads: number } => entry.downloads !== null,

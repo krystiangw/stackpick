@@ -455,6 +455,23 @@ export const limitsSeen = (): { url: string; challenge: boolean; recovered: bool
   scanState.getStore()?.limits ?? []
 
 const MAX_BACKOFFS_PER_SITE = 2
+/**
+ * The registry gets more tries than a stranger's edge, because a refusal there costs a vendor
+ * something and a refusal here costs us nothing. A 429 from npm is not a fact about anybody: it
+ * ends with "we could not identify the package a developer installs to use you" on somebody
+ * else's row, and a cold pass over the corpus once lost 28 domains their package that way.
+ * Measured 2026-08-18: 89 of 177 scans meet a limit at the registry, and sixteen of a scan's
+ * twenty-odd registry requests are the download counts.
+ */
+const MAX_BACKOFFS_AT_REGISTRY = 6
+
+function backoffsAllowedFor(url: string): number {
+  try {
+    return REGISTRY_HOSTS.has(new URL(url).hostname) ? MAX_BACKOFFS_AT_REGISTRY : MAX_BACKOFFS_PER_SITE
+  } catch {
+    return MAX_BACKOFFS_PER_SITE
+  }
+}
 const DEFAULT_BACKOFF_MS = 1_200
 const MAX_BACKOFF_MS = 3_000
 /** The wait is only worth taking when what follows it has room to answer. */
@@ -468,7 +485,7 @@ export function backoffFor(answer: Fetched, alreadyBackedOff: number, timeLeft: 
   // A 429 carrying a challenge marker is the vendor's wall rather than our load, and waiting
   // politely in front of a wall only spends the budget.
   if (answer.status !== 429 || isBotChallenge(answer)) return null
-  if (alreadyBackedOff >= MAX_BACKOFFS_PER_SITE) return null
+  if (alreadyBackedOff >= backoffsAllowedFor(answer.url)) return null
   const waitMs = Math.min(askedToWaitMs(answer.headers['retry-after']) ?? DEFAULT_BACKOFF_MS, MAX_BACKOFF_MS)
   // The wait plus a request that can actually finish. Waiting into the deadline turns a 429 into
   // an out-of-time, which is a worse sentence about the same nothing.

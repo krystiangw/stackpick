@@ -199,7 +199,7 @@ console.log(
 console.log(
   throttled === 0
     ? 'zaden wiersz nie niesie naszego 429'
-    : `429 od nas: ${throttled} wierszy jest chudszych, niz strona na to zasluguje (${throttledSample.join(', ')}${throttled > throttledSample.length ? ', ...' : ''})`,
+    : `429 gdziekolwiek: ${throttled} wierszy jest chudszych, niz strona na to zasluguje (${throttledSample.join(', ')}${throttled > throttledSample.length ? ', ...' : ''}). Ile z tego jest NASZE, mowi linijka nizej: reszta to brzeg vendora`,
 )
 console.log(
   rowsWithLimitField === 0
