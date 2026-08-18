@@ -14,6 +14,7 @@
  *   the scan     deterministic, reproducible, the published formula, no model involved
  *   the cell     what an agent actually answered, quoted, with the spread across runs visible
  */
+import { randomBytes } from 'node:crypto'
 import { writeFileSync } from 'node:fs'
 import cells from '../src/data/cells.json'
 import { CATEGORIES, CURATED_DOMAINS, categoryFor } from '../src/lib/categories'
@@ -392,8 +393,25 @@ lines.push(
 lines.push('')
 lines.push(`Let Agents In · ${SITE_URL}/methodology`)
 
-writeFileSync(out, `${lines.join('\n')}\n`)
+const markdown = `${lines.join('\n')}\n`
+writeFileSync(out, markdown)
 console.log(`${out} zapisany, ${lines.length} linii`)
+
+// The same document behind a link, because a buyer forwards a URL and archives an attachment. The
+// id is the only key: the report names a vendor's failures in more detail than anything we publish
+// for free, so it is never indexed and never listed.
+if (rest.includes('--publish')) {
+  const id = randomBytes(9).toString('base64url')
+  await getStore().saveDelivery({
+    id,
+    domain,
+    markdown,
+    preparedAt: new Date().toISOString(),
+    formulaVersion: card.formulaVersion,
+    ...(rest.includes('--sample') ? { sample: true } : {}),
+  })
+  console.log(`${SITE_URL}/d/${id}`)
+}
 // Te same liczby, ktore trafily do dokumentu. Linia konsoli brala je z pierwszej celi i z
 // opublikowanych wierszy, wiec dla goscia pisala „0/5" nad raportem mowiacym „0 of 10": operator
 // decyduje o wyslaniu wlasnie po tej linii.

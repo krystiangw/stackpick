@@ -5,6 +5,7 @@ import { MongoStore } from './store-mongo'
 import type { ScanFindings } from './scan'
 import type { Scorecard } from './score'
 import type { Watch } from './watch'
+import type { Delivery } from './delivery'
 
 export type Report = {
   id: string
@@ -68,6 +69,13 @@ export interface Store {
    */
   hasPaymentRef(paymentRef: string): Promise<boolean>
   listLeads(limit: number): Promise<Lead[]>
+  /**
+   * A produced report, kept so a buyer gets a link rather than an attachment. Written once by the
+   * generator and never edited: a delivered document that changes under the person who paid for it
+   * is worse than no link at all.
+   */
+  saveDelivery(delivery: Delivery): Promise<void>
+  getDelivery(id: string): Promise<Delivery | null>
   saveWatch(watch: Watch): Promise<void>
   getWatch(id: string): Promise<Watch | null>
   /** Every watch that is confirmed and not stopped, oldest check first. */
@@ -217,6 +225,20 @@ class FileStore implements Store {
       held.set(watch.id, watch)
     }
     return [...held.values()]
+  }
+
+  async saveDelivery(delivery: Delivery) {
+    const dir = await this.dir('deliveries')
+    await writeFile(path.join(dir, `${delivery.id}.json`), JSON.stringify(delivery, null, 2))
+  }
+
+  async getDelivery(id: string) {
+    try {
+      const dir = await this.dir('deliveries')
+      return JSON.parse(await readFile(path.join(dir, `${id}.json`), 'utf8')) as Delivery
+    } catch {
+      return null
+    }
   }
 
   async saveWatch(watch: Watch) {

@@ -1927,5 +1927,30 @@ check('sprostowanie directusa przezywa biezaca formule', isOlderThan(FORMULA_VER
 // Kontrolka: sonda musi umiec powiedziec „nie" o wersji, ktora juz minela.
 check('a sonda widzi sprostowanie, ktore juz wygaslo', isOlderThan(FORMULA_VERSION, '9.1'), false)
 
+// Renderer platnego raportu w portalu nie jest parserem markdowna: zna dokladnie te konstrukcje,
+// ktore wypisuje generator. Ta reguła jest cala podstawa, zeby taki renderer byl uczciwy - gdy
+// generator nauczy sie nowej konstrukcji, a renderer nie, buduje sie tu blad, a nie na produkcji.
+console.log('\nportal renderuje kazda konstrukcje, ktora generator wypisuje')
+const generator = readFileSync('scripts/client-report.mts', 'utf8')
+// Akapit moze zaczynac sie od pogrubienia albo kursywy, wiec sa tu razem z blokami.
+const RENDERED = /^(#{1,3} |> |\| |- |\d+\. |\*\*|\*[^*]|$)/
+const emitted = [...generator.matchAll(/lines\.push\(\s*(`|')([^`']*)/g)]
+  .map((match) => match[2])
+  .filter((line) => line.length > 0 && !line.startsWith('${'))
+const unknown = emitted.filter((line) => !RENDERED.test(line) && /^[^A-Za-z0-9"„(]/.test(line))
+check('generator nie wypisuje konstrukcji, ktorej portal nie zna', unknown.join(' | '), '')
+const renderer = readFileSync('src/components/report-markdown.tsx', 'utf8')
+for (const construct of ["startsWith('# ')", "startsWith('## ')", "startsWith('### ')", "startsWith('> ')", 'isTableRow', "startsWith('- ')", '<em ']) {
+  check(`renderer zna ${construct}`, renderer.includes(construct), true)
+}
+// Dostarczony raport nie moze trafic do indeksu ani na liste: nalezy do tego, kto za niego zaplacil.
+const deliveryPage = readFileSync('src/app/d/[id]/page.tsx', 'utf8')
+check('strona raportu jest poza indeksem', deliveryPage.includes('robots: { index: false, follow: false }'), true)
+// Kontrolka: sonda musi umiec zobaczyc konstrukcje, ktorej renderer nie zna.
+check('a sonda rozpoznaje nieznana konstrukcje', RENDERED.test('~~~ blok kodu'), false)
+// Rozdzielacz tabeli idzie bez spacji po kresce, wiec regula pytajaca o „| " konczyla tabele na
+// naglowku i kazdy wiersz punktacji renderowala jako osobna tabele bez danych.
+check('renderer widzi rozdzielacz tabeli', renderer.includes("line.startsWith('|') && line.trimEnd().endsWith('|')"), true)
+
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

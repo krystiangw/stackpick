@@ -3,6 +3,7 @@ import { REGISTRY_TTL_MS, installSharedCache, type SharedCache } from './scan/ht
 import { installMcpRegistryMirror, type McpRegistryMirror } from './scan/funnel'
 import type { Fetched } from './scan/http'
 import type { Watch } from './watch'
+import type { Delivery } from './delivery'
 import { forStorage, type Lead, type Report, type Store } from './store'
 
 type ReportDoc = Report & { _id: string }
@@ -75,6 +76,7 @@ async function collections(): Promise<{
   answers: Collection<CachedAnswer>
   visits: Collection<{ day: string; path: string; count: number }>
   watches: Collection<Watch>
+  deliveries: Collection<Delivery>
   mcpRegistry: Collection<McpRegistryDoc>
 }> {
   const database = await db()
@@ -83,6 +85,7 @@ async function collections(): Promise<{
   const answers = database.collection<CachedAnswer>('registryAnswers')
   const visits = database.collection<{ day: string; path: string; count: number }>('visits')
   const watches = database.collection<Watch>('watches')
+  const deliveries = database.collection<Delivery>('deliveries')
   const mcpRegistry = database.collection<McpRegistryDoc>('mcpRegistry')
 
   // Before the batch, not after it. createIndex does not change the expiry of an index that already
@@ -120,7 +123,7 @@ async function collections(): Promise<{
     })
   await indexesReady
 
-  return { reports, leads, answers, visits, watches, mcpRegistry }
+  return { reports, leads, answers, visits, watches, deliveries, mcpRegistry }
 }
 
 const registryAnswers: SharedCache = {
@@ -322,6 +325,16 @@ export class MongoStore implements Store {
       if ((error as { code?: number }).code === 11000 && lead.paymentRef) return
       throw error
     }
+  }
+
+  async saveDelivery(delivery: Delivery) {
+    const { deliveries } = await collections()
+    await deliveries.replaceOne({ id: delivery.id }, delivery, { upsert: true })
+  }
+
+  async getDelivery(id: string) {
+    const { deliveries } = await collections()
+    return (await deliveries.findOne({ id }, withoutId)) as Delivery | null
   }
 
   async saveWatch(watch: Watch) {
