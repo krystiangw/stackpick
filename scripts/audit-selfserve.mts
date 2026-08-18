@@ -45,16 +45,22 @@ for (const domain of CURATED_DOMAINS) {
     }
     const text = visible(await answer.text())
     checked += 1
-    const windows: string[] = []
+    // Every occurrence of every pattern, not the first of each: a page whose navigation says "Try
+    // for free" and whose plan table says "Free tier, no card" would have shown only the button,
+    // and the button against the statement is the distinction this whole check is about.
+    const windows = new Set<string>()
     for (const pattern of SELF_SERVE_PATTERNS) {
-      const hit = text.match(pattern)
-      if (hit?.index === undefined) continue
-      windows.push(text.slice(Math.max(0, hit.index - 60), hit.index + 80).trim())
-      if (windows.length >= 3) break
+      for (const hit of text.matchAll(new RegExp(pattern.source, `${pattern.flags.replace('g', '')}g`))) {
+        if (hit.index === undefined) continue
+        windows.add(text.slice(Math.max(0, hit.index - 60), hit.index + 80).trim())
+      }
     }
-    console.log(`\n${domain}  ${windows.length === 0 ? 'nic nie pasuje' : `${windows.length} dopasowan`}`)
+    const shown = [...windows]
+    console.log(`\n${domain}  ${shown.length === 0 ? 'nic nie pasuje' : `${shown.length} miejsc`}`)
     console.log(`   wiersz mowi: ${check.detail.slice(0, 110)}`)
-    for (const one of windows) console.log(`   ...${one}...`)
+    // Nothing is dropped silently: a page with more is said to have more, with the count.
+    for (const one of shown.slice(0, 12)) console.log(`   ...${one}...`)
+    if (shown.length > 12) console.log(`   (i ${shown.length - 12} dalszych miejsc - przeczytaj recznie)`)
   } catch {
     unread.push(`${domain} (brak odpowiedzi)`)
   }

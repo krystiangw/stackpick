@@ -6767,11 +6767,18 @@ przebiegow 30-31, gdzie 80 opisow przeczytano recznie po kolei, a nie ich zastap
 
 ## 40. PRZEBIEG: `self_serve`, OSTATNIA POWIERZCHNIA Z ROZMIAREM (2026-08-18)
 
-19 cennikow przeczytanych na zywo, kazde dopasowanie `SELF_SERVE_PATTERNS` obejrzane po kolei z oknem
-slow wokol niego. **Zadne zdanie nie okazalo sie falszywe**, a te, ktore sa najbardziej szczegolowe,
+19 cennikow przeczytanych na zywo, **kazde wystapienie kazdego wzorca** `SELF_SERVE_PATTERNS`
+obejrzane z oknem slow wokol niego. **Zadne zdanie nie okazalo sie falszywe**, a te, ktore sa najbardziej szczegolowe,
 trafiaja w punkt: `savvycal.com` („Do you offer a free trial?") i `xata.io` („Is there a free tier?")
 to **pytania z FAQ**, dokladnie jak mowi wiersz; `here.com` ma „Get started for free" jako **link**;
 `replicate.com` ma „Try for free" w **nawigacji**, ktora wisi na kazdej podstronie.
+
+**Poprawka z codex review, ktora podwazala wniosek:** pierwsza wersja brala **pierwsze** trafienie
+kazdego wzorca i ucinala liste na trzech oknach. Strona, ktorej nawigacja mowi „Try for free", a
+tabela planow „Free tier, no card", pokazalaby tylko przycisk - czyli dokladnie to rozroznienie,
+o ktore ten check pyta, znikaloby w pomiarze. Po wyliczeniu wszystkiego wniosek sie utrzymal:
+`sinch.com` ma „Try for free" **trzy razy** (naglowek, menu mobilne, stopka), `replicate.com` dwa
+razy w nawigacji, `june.so` raz jako przycisk w liscie funkcji. Same chrome, zadnej oferty.
 
 **Jedna obserwacja o wzorcu, warta zapisania, choc nie o oskarzeniu:** na `name.com` wzorzec
 `/\$0(?:\.00)?(?![.,\d])/` trafil w **pozycje cennika** „Advanced Security: $0.00". Opublikowany
