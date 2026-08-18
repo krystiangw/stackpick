@@ -1,18 +1,30 @@
-# Let Agents In: stan na 2026-08-18 (formula 9.40 na produkcji, reseed zamowiony)
+# Let Agents In: stan na 2026-08-18 (formula 9.40, przemiat w locie od 12:20)
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te trzydziesci linijek, potem reszte)
 
-**WERSJE (stan 04:10): produkcja i repo na 9.40, korpus na 9.33.**
-Od wieczora doszly cztery wersje: **9.34** (szesnasty check, cena albo warunek wejscia w snippecie
-z cennika), **9.35** (probka dokumentacji rozproszona po rodzinach wskazowek), **9.36** (cztery
-poprawki `price_in_snippet` z 31. przebiegu adwersaryjnego) i **9.37** (stara paczka, ktora sami
-wybralismy z rejestru, przestaje byc oskarzeniem - w checku i w naglowku raportu). Korpus dostanie je
-wszystkie przy najblizszym reseedzie.
+**WERSJE (stan 12:20): produkcja, repo i korpus na 9.40.** Formula nie ruszyla sie przez cala noc i
+**nie ma jej podbijac bez potrzeby**: podbicie wygasi sprostowanie directusa, ktorego naprawa nie
+jest napisana (patrz sekcja o #47).
 
-**W LOCIE JEST JEDNO: petla czekajaca na karencje, log `/tmp/reseed-935.log`.** Karencja liczy sie od
-**mediany wieku korpusu**, ostatni przemiat skonczyl sie 2026-08-17 o 23:50, wiec reseed ruszy
-**najwczesniej okolo 05:50**. Petla ponawia co 20 minut, 24 razy. **`tail -3 /tmp/reseed-935.log`
-zanim cokolwiek zrobisz.** Gdyby przepadla, komenda jest w sekcji o 9.35 nizej.
+**W LOCIE JEST JEDNO: przemiat, log `/tmp/reseed-940b.log`**, ruszyl 12:20, dwa przejscia, konczy sie
+zwykle po okolo godzinie. **`tail -3 /tmp/reseed-940b.log` zanim cokolwiek zrobisz.**
+W trakcie: **nie wdrazac** (dyno restartuje sie w polowie zbioru) i **nie uruchamiac audytow**
+(`audit-oauth`, `audit-mcp`, `audit-entry`, `audit-signup`, `audit-attribution`) - pytaja te same
+hosty, co skaner.
+
+**CO TA NOC ZMIENILA W SKANERZE** (wszystko wdrozone i zweryfikowane, czeka tylko na wiersze):
+- **Odczekanie po 429**: 429 to nasze obciazenie, wiec czekamy i pytamy jeszcze raz. Dwa razy na
+  witryne, szesc razy u rejestru npm, najwyzej 3 s, tylko w budzecie skanu.
+- **Zapis limitow** (`limitsMet`): wiersz niesie, czym nas odmowiono i czy niosl marker wyzwania.
+- **Sciana na brzegu**: przy niezmierzonym checku wiersz nazywa host, ktory nas wyzwal, a nie mowi
+  „nic po twojej stronie, przeczekamy". Panel na `/v/<domena>`, pole `challengedAt` w API.
+- **Rejestr npm**: pobrania pytane zbiorczo dla nazw bez scope'u.
+- **`mcp_present`**: „nothing spoke MCP at", bo „nothing answered" bylo nieprawda o 32 adresach.
+
+**TRZY POWIERZCHNIE OSKARZEN SPRAWDZONE, CZWARTA MA GOTOWE NARZEDZIE** (przebiegi 33-35):
+`agent_entry_point` (122 wiersze, 2304 sciezki), `oauth_dcr` (74+17, 2987 zapytan), `mcp_present`
+(80, 560 adresow) - **5851 zapytan, zero falszywych zdan**. `scripts/audit-signup.mts` jest gotowy i
+**nieuruchomiony** na `signup_reachable` (96 oskarzen): to pierwsza rzecz do zrobienia po przemiecie.
 
 **PULAPKA:** kazdy skan domeny Z KORPUSU, takze zrobiony do weryfikacji poprawki, odmladza mediane i
 **przesuwa karencje**. Do weryfikacji uzywaj domen spoza korpusu.
