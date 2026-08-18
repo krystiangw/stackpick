@@ -5691,3 +5691,24 @@ punktowanie i zapis ida po nim, wiec to nie jest gwarancja czasu odpowiedzi. Ter
 ta liczba jest, i radzi dac minute timeoutu. Straznik porownuje ja z **domyslna** stala
 `DEFAULT_SCAN_BUDGET_MS`, a nie ze skonfigurowana, bo `SCAN_BUDGET_MS` wolno nadpisac srodowiskiem,
 a straznik chodzi w buildzie.
+
+## NASZ WLASNY OPENAPI NIE OPISYWAL TEGO, CO API ZWRACA (2026-08-18, naprawione)
+
+`/llms.txt` mowi agentom, ze spec jest „generated from the same check definitions the scanner runs".
+Prawda dla identyfikatorow checkow, nieprawda dla calej reszty: spec jest pisany reka obok route'u.
+Brakowalo w nim **`scorecard.stages`** i **`check.why`**, obecnych w kazdej odpowiedzi. Klient
+wygenerowany ze specu po prostu gubi to, czego spec nie wymienia.
+
+**Nowy skrypt: `npm run audit-our-api`.** Skanuje **nas samych** przez produkcje, pobiera nasz spec i
+wypisuje kazde pole odpowiedzi, ktorego spec nie opisuje. Kontrolka zadzialala od razu: uruchomiony
+przed wdrozeniem poprawki wskazal dokladnie te dwa pola, ktore znalazlem recznie.
+
+**I od razu zlapal moj wlasny blad.** Dopisujac `stages` do specu **zgadlem** ich ksztalt
+(`id`, `title`, `points`, `max`) zamiast go przeczytac; naprawde jest `stage`, `letter`, `title`,
+`question`, `points`, `max`, `measurable`. Wytknal to codex, ale wystarczylo uruchomic nowy audyt po
+poprawce - i to jest wniosek: **skrypt, ktory sprawdza dokument, ma sie uruchamiac PO zmianie
+dokumentu, a nie tylko przed nia.**
+
+Przy okazji: opis bledu 429 w specu bral liczby z reki („five per hour... thirty per hour"), teraz
+idzie z `PER_DOMAIN_PER_HOUR` i `PER_CALLER_PER_HOUR`. Sprawdzone tez, ze publikowane kody bledow sa
+prawdziwe: 400 dla zlej domeny i formatu spoza enum, 422 dla domeny, ktora nie odpowiada.
