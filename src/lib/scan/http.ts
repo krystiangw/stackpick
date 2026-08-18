@@ -693,10 +693,48 @@ export function stripCodeBlocks(html: string): string {
   return out
 }
 
+/**
+ * Tags removed by walking the string rather than by `replace(/<[^>]+>/g, ' ')`.
+ *
+ * Measured on the shapes a hostile page can take, at the 400 kB we cap bodies at: 400 000 `<`
+ * characters took 53 seconds and 200 000 `</` took 27, because `[^>]+` scans to the end of the
+ * document for every unmatched `<`. The whole scan budget is 27 seconds, so one page could spend
+ * all of it and every check that needed another page would publish as unmeasured: a page of
+ * punctuation turning into sentences about a vendor we never managed to read.
+ *
+ * Same output as the pattern it replaces, including the two cases that look like details and are
+ * not: `<` with no `>` after it is not a tag and stays, and `<>` has nothing between the brackets
+ * so it is not a tag either. `scripts/audit-redos.mts` measures the time, `scripts/rules.mts`
+ * checks the equivalence against the old pattern on random input.
+ */
+export function withoutTags(html: string): string {
+  let out = ''
+  let at = 0
+  while (at < html.length) {
+    const opensAt = html.indexOf('<', at)
+    if (opensAt === -1) {
+      out += html.slice(at)
+      break
+    }
+    out += html.slice(at, opensAt)
+    const closesAt = html.indexOf('>', opensAt + 1)
+    if (closesAt === -1) {
+      out += html.slice(opensAt)
+      break
+    }
+    if (closesAt === opensAt + 1) {
+      out += '<>'
+      at = closesAt + 1
+      continue
+    }
+    out += ' '
+    at = closesAt + 1
+  }
+  return out
+}
+
 export function visibleTextLength(html: string): number {
-  const withoutScripts = stripCodeBlocks(html)
-  return withoutScripts
-    .replace(/<[^>]+>/g, ' ')
+  return withoutTags(stripCodeBlocks(html))
     .replace(/\s+/g, ' ')
     .trim().length
 }

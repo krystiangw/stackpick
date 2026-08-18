@@ -15,7 +15,7 @@
  * The control runs the wider net over pages we credited, because a probe that can only return
  * "nothing here" proves nothing.
  */
-import { fetchUrl, stripCodeBlocks } from '../src/lib/scan/http'
+import { fetchUrl, stripCodeBlocks, withoutTags } from '../src/lib/scan/http'
 
 const ACCUSED = [
   'https://bunny.net/pricing', 'https://filestack.com/pricing', 'https://auth0.com/pricing/',
@@ -50,7 +50,7 @@ const stillOnPricing = (url: string): boolean => {
   }
 }
 
-const visibleOf = (body: string) => stripCodeBlocks(body).replace(/<[^>]+>/g, ' ').toLowerCase()
+const visibleOf = (body: string) => withoutTags(stripCodeBlocks(body)).toLowerCase()
 const hits = (text: string, patterns: RegExp[]) =>
   patterns.flatMap((pattern) => [...text.matchAll(pattern)].map((match) => match[0])).slice(0, 4)
 

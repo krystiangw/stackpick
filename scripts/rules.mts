@@ -12,6 +12,7 @@ import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
 import { looksLikeEntryPackage, readBulkDownloads, shapeRankOf } from '../src/lib/scan/discover'
 import { changesBetween, comparableScorecards, rulesChangedBetween, turnedAwayAtTheEdge, worthTelling } from '../src/lib/watch'
+import { withoutTags } from '../src/lib/scan/http'
 import { isOlderThan } from '../src/lib/formula'
 import { buildFixPlan } from '../src/lib/fixfirst'
 import { changeEmail } from '../src/lib/watch-email'
@@ -1974,6 +1975,24 @@ check('poswiadczenie jest sprzatane po biegu', !sandbox.includes('exec env -i') 
 const SECRET_ENV = /(_KEY|_TOKEN|_SECRET|PASSWORD|_URI|_DSN|CREDENTIAL|_PAT$|^AWS_|^HEROKU_|^GH_|^GITHUB_TOKEN)/i
 check('wzorzec sekretu widzi nowa nazwe', SECRET_ENV.test('PADDLE_WEBHOOK_SECRET'), true)
 check('i nie krzyczy na zwykla zmienna', SECRET_ENV.test('TERM'), false)
+
+// Zdejmowanie tagow bylo kwadratowe: 400 000 znakow "<" liczylo sie 53 sekundy przy budzecie skanu
+// 27 sekund, wiec strona z samych nawiasow zabierala caly budzet, a checki, ktore nie zdazyly,
+// publikowaly sie jako niemierzalne. Nowa wersja musi dawac DOKLADNIE ten sam wynik, bo inaczej
+// przesuwa werdykty; rownowaznosc sprawdzana tu, a czas w scripts/audit-redos.mts.
+console.log('\nzdejmowanie tagow jest liniowe i daje ten sam wynik')
+const byPattern = (html: string) => html.replace(/<[^>]+>/g, ' ')
+const shapes = ['<a href="x">tekst</a>', 'a < b', '<>', '<<<', '</', 'a<b>c', '', '<div\n class="x">tresc</div>', '<!-- komentarz -->x', '<a<b>c']
+for (const shape of shapes) check(`ten sam wynik dla ${JSON.stringify(shape)}`, withoutTags(shape), byPattern(shape))
+// Kontrolka: sonda musi umiec zobaczyc rozjazd, gdy naprawde jest.
+check('a sonda widzi rozjazd', withoutTags('<a>') === byPattern('<a>x'), false)
+// Nie mierzymy tu czasu: `rules.mts` chodzi w buildzie, a prog na zegarze oblewalby poprawny build
+// na obcazonej maszynie. Deterministyczny odpowiednik to nieobecnosc kwadratowego wzorca na
+// sciezce skanu; czas mierzy scripts/audit-redos.mts.
+for (const file of ['src/lib/scan/http.ts', 'src/lib/scan/funnel.ts', 'src/lib/scan/discover.ts']) {
+  const source = readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ')
+  check(`${file}: bez kwadratowego zdejmowania tagow`, source.includes('/<[^>]+>/g'), false)
+}
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)

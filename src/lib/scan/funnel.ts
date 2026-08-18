@@ -1,4 +1,4 @@
-import { AGENT_UA, BROWSER_UA, fetchUrl, registrableDomain, isBotChallenge, isEdgeRefusal, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, timeLeftMs, visibleTextLength, wasNeverAsked, type Fetched } from './http'
+import { AGENT_UA, BROWSER_UA, fetchUrl, registrableDomain, isBotChallenge, isEdgeRefusal, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, timeLeftMs, visibleTextLength, wasNeverAsked, withoutTags, type Fetched } from './http'
 
 export const AGENT_ENTRY_PATH_COUNT = 10
 
@@ -1129,9 +1129,7 @@ export function readSnippet(html: string): NonNullable<FunnelFindings['pricingSn
 
 /** The same reduction `matching` uses, exposed so a caller can look at the words in context. */
 function visibleText(html: string): string {
-  return stripCodeBlocks(html)
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
+  return withoutTags(stripCodeBlocks(html)).replace(/\s+/g, ' ')
 }
 
 /**
@@ -1166,9 +1164,7 @@ const BLOCK_BOUNDARY = /<\/?(?:li|td|th|tr|option|dt|dd|nav|menu)\b[^>]*>/gi
  * stops into that would be changing a different measurement to fix this one.
  */
 function visibleProse(html: string): string {
-  return stripCodeBlocks(html)
-    .replace(BLOCK_BOUNDARY, '. ')
-    .replace(/<[^>]+>/g, ' ')
+  return withoutTags(stripCodeBlocks(html).replace(BLOCK_BOUNDARY, '. '))
     .replace(/\s+/g, ' ')
     .replace(/(?:\.\s+){2,}/g, '. ')
 }

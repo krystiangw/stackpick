@@ -7240,3 +7240,39 @@ i klucz prywatny w `~/.ssh`**. Szesc rzeczy, o ktore wroga paczka moze poprosic 
 **osobne konto systemowe dla biegow** (bez nowych narzedzi, jednorazowo admin, pelna separacja
 katalogu domowego). Do tego czasu: **nie uruchamiac biegu budujacego na maszynie z kluczami
 produkcyjnymi**.
+
+## POPRAWKA DO MOJEGO WLASNEGO ZDANIA I ZNALEZISKO, KTORE Z NIEJ WYSZLO (2026-08-18)
+
+**Napisalem Krystianowi, ze DNS rebinding jest u nas otwarty. To nieprawda.** `src/lib/scan/dispatcher.ts`
+instaluje globalny dispatcher undici z wlasnym `lookup`, ktory sprawdza adresy **wewnatrz tego
+lookupu, ktorego uzywa polaczenie**, wiec miedzy sprawdzeniem a polaczeniem nie ma juz drugiego
+rozwiazania nazwy. Rekord z TTL 0 przelaczajacy sie miedzy adresem publicznym a 127.0.0.1 nie
+przechodzi. Sprawdzone w kodzie, nie z pamieci, i wpis w poprzedniej sekcji jest tu prostowany.
+
+**Za to druga dziura, ktora wymienilem obok, okazala sie duzo powazniejsza, niz brzmiala.**
+`scripts/audit-redos.mts` przepuszcza ksztalty, jakie moze przybrac wroga strona, w rozmiarze,
+ktory naprawde czytamy (400 kB), przez prawdziwe czytelniki. Wynik pierwszego przebiegu:
+
+| ksztalt | `visibleTextLength` |
+|---|---|
+| 400 000 znakow `<` | **53 792 ms** |
+| 200 000 razy `</` | **26 844 ms** |
+
+**Budzet calego skanu to 27 sekund.** Strona zlozona z samych nawiasow zabierala go w calosci, a
+kazdy check, ktory nie zdazyl, publikowal sie jako **niemierzalny**: zdania o vendorze wyprodukowane
+przez nasz wlasny stall, nie przez jego witryne. Przyczyna to `replace(/<[^>]+>/g, ' ')`, gdzie
+`[^>]+` przy kazdym niedomknietym `<` skanuje do konca dokumentu.
+
+**Naprawa: `withoutTags`**, przejscie po ciagu zamiast wzorca. **Musi dawac dokladnie ten sam wynik**,
+bo inaczej przesuwa werdykty w calym korpusie, wiec rownowaznosc jest sprawdzona dwa razy:
+**200 000 losowych ciagow** z alfabetu nawiasow i ukosnikow (zero rozjazdow) plus dziesiec ksztaltow
+brzegowych w `rules.mts`, razem z dwoma, ktore wygladaja na detal i nie sa (`<` bez `>` nie jest
+tagiem i zostaje, `<>` nie ma nic miedzy nawiasami, wiec tez nie jest tagiem). Po poprawce
+**kazdy ksztalt schodzi ponizej 200 ms**, czyli z 53 sekund na mniej niz pol.
+
+Ten sam kwadratowy wzorzec byl jeszcze w `funnel.ts` (dwa miejsca) i `discover.ts` (waga cenowa),
+wszystkie przepiete. Straznik pilnuje, ze **na sciezce skanu nie ma juz `/<[^>]+>/g`**.
+
+**Codex zdjal moj wlasny prog czasowy z `rules.mts`** i mial racje: `rules.mts` chodzi w buildzie,
+wiec prog na zegarze oblewalby poprawny build na obcazonej maszynie. Deterministyczny odpowiednik
+to nieobecnosc wzorca w zrodle; czas mierzy osobny skrypt.
