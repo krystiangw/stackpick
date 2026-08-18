@@ -7403,3 +7403,34 @@ przemiatu.
 (`/findings` mowi 36 serwerow MCP bez udokumentowanego klucza, dane mowia 35). To jest **korpus w
 locie**, nie blad publikacji: czesc wierszy jest juz na 9.41, czesc na 9.40. Liczby sprawdzic
 **po** przemiecie i dopiero wtedy poprawiac, inaczej goni sie ruchomy cel.
+
+## POLOWA AUDYTOWA: BRIEF GOTOWY, JEDEN WARUNEK WSTEPNY NIESPELNIONY (2026-08-19)
+
+`harness/briefs/directed-build.md`. Wszystkie dotychczasowe briefy sa **otwarte** („wybierz
+dostawce") i mierza, kogo agent wybral. Krystian pyta o cos innego i tego nam brakuje: **skoro
+decyzja juz zapadla, czy agent w ogole wejdzie**. Cztery fakty na bieg: dokumentacja (czy pierwszy
+przyklad kodu zadzialal), rejestracja (czy formularz da sie ukonczyc bez czlowieka), cennik (czy z
+przeczytanych stron wynika, ile to kosztuje i czy trzeba karty), klucz (czy bieg konczy sie z
+poswiadczeniem i po ilu krokach).
+
+**Bieg zatrzymany na scianie nie jest biegiem nieudanym, tylko wynikiem**, a zdanie, ktore agent
+wtedy napisal, jest najcenniejsza linijka raportu.
+
+**Granica, ktorej operator nie przekracza:** bieg moze wypelnic formularz i uzyc prawdziwej skrzynki,
+ale **nie wolno przeprowadzic go przez sciane**. Nikt nie przepisuje CAPTCHY, nie klika linku
+weryfikacyjnego i nie wkleja klucza, ktorego bieg sam nie zdobyl. W momencie, gdy czlowiek to robi,
+bieg przestaje mierzyc i raport ma to powiedziec. Dwoch rzeczy nie robimy nigdy: **nie podajemy
+danych platniczych i nie zakladamy konta na planie, ktory nalicza**. Vendor, u ktorego jedyna droga
+do klucza prowadzi przez karte, jest opisany dokladnie tak i to jest wynik, nie przeszkoda.
+
+**WARUNEK WSTEPNY, KTORY BLOKUJE PIERWSZY BIEG:** skrzynka `agentaudit@agentmail.to` **odbiera**, ale
+**klucza API do jej odczytu nie ma na tej maszynie** (sprawdzone ponownie 2026-08-19: brak w
+srodowisku, brak pliku gdziekolwiek pod `~/projects`). Bez klucza bieg dojdzie do formularza i **nie
+domknie rejestracji**, co zapisaloby sie jako sciana vendora, podczas gdy jest nasza. **Najpierw
+klucz z `console.agentmail.to`, potem biegi.** Pomiar, ktorego tryb awarii jest nie do odroznienia
+od mierzonej rzeczy, nie jest pomiarem.
+
+**Do decyzji Krystiana przy okazji:** dzis mamy claude i codex. Cursor na darmowym planie nie
+pozwala przypiac modelu (`auto`, bez zapisu, ktory model odpowiadal), a gemini wyczerpuje darmowy
+limit przed koncem biegu. Bez platnych subskrypcji os „rozne narzedzia" jest **niemierzalna, a nie
+tania**.
