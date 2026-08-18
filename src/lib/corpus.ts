@@ -122,6 +122,39 @@ export type Corpus = {
  * than a rule about agents" with `rateLimited: false` beside it, so anybody who took our own
  * advice and filtered on the field kept exactly the rows it was meant to remove.
  */
+/**
+ * The limits this row met at the vendor's own edge, and how many of them said "challenge".
+ *
+ * `sawRateLimit` answers a different question and answers it about us: whether the row is thin
+ * because we asked too often. This one separates whose door it was, because the registry refuses
+ * us constantly and that is a fact about our traffic to npm rather than about the vendor. Ten of
+ * bunny.net's limits were api.npmjs.org and none of them was bunny.net.
+ *
+ * A marker means the edge chose to challenge rather than to throttle, which is a wall a browser
+ * passes invisibly and an HTTP client cannot pass at all - the exact difference this card is about.
+ * Counted here and scored nowhere, until the count on a full sweep says what a rule would do (#48).
+ */
+export function limitsAtTheirEdge(
+  findings: ScanFindings | undefined,
+  domain: string,
+): { onSite: number; challenges: number; hosts: string[] } {
+  const met = findings?.limitsMet ?? []
+  const site = registrableDomain(domain)
+  const theirs = met.filter((one) => {
+    try {
+      return registrableDomain(new URL(one.url).hostname) === site
+    } catch {
+      return false
+    }
+  })
+  const challenged = theirs.filter((one) => one.challenge)
+  return {
+    onSite: theirs.length,
+    challenges: challenged.length,
+    hosts: [...new Set(challenged.map((one) => new URL(one.url).hostname))],
+  }
+}
+
 export function sawRateLimit(findings: ScanFindings | undefined): boolean {
   if (!findings) return false
   if (findings.rateLimitedUs) return true

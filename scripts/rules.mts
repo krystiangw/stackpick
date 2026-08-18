@@ -26,7 +26,7 @@ import { forStorage } from '../src/lib/store'
 import { REMEDIES } from '../src/lib/fixfirst'
 import { ERRATA, erratumFor } from '../src/lib/errata'
 import { FLEX_QUOTA_MB, quotaEmail, verdictFor } from '../src/lib/quota'
-import { sawRateLimit, otherDomainsNamed } from '../src/lib/corpus'
+import { limitsAtTheirEdge, sawRateLimit, otherDomainsNamed } from '../src/lib/corpus'
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
 import { wasNeverAsked } from '../src/lib/scan/http'
 import { brandTaken, certain, mentionsIn, nameGuest, quotedAbout, whoWentFirst, wordsCarried } from '../src/lib/vendors'
@@ -1603,6 +1603,23 @@ const counted = readWithGuest(answers, 'buttondown.com', ['postmarkapp.com'], 'B
 check('gosc jest policzony, gdy pada w odpowiedzi', counted.named.get('buttondown.com'), 1)
 check('i reszta jest przeliczona obok niego', counted.named.get('postmarkapp.com'), 2)
 check('a pierwszenstwo liczy sie z nim w liscie', counted.first.get('buttondown.com'), 1)
+
+// Czyje to byly drzwi. Limit z rejestru npm jest faktem o naszym ruchu, limit z markerem wyzwania
+// na brzegu vendora jest ustaleniem o nim - i te dwa nosza ten sam kod statusu.
+console.log('\nlimity na brzegu vendora')
+const met = (urls: [string, boolean][]) =>
+  ({ limitsMet: urls.map(([url, challenge]) => ({ url, challenge, recovered: false })) }) as never
+const npmOnly = met([['https://api.npmjs.org/downloads/point/last-week/bunny', false]])
+const theirEdge = met([
+  ['https://docs.split.io/reference', true],
+  ['https://docs.split.io/sitemap.xml', true],
+  ['https://api.npmjs.org/downloads/point/last-week/splitio', false],
+])
+check('rejestr npm nie liczy sie jako ich brzeg', limitsAtTheirEdge(npmOnly, 'bunny.net').onSite, 0)
+check('poddomena vendora tak', limitsAtTheirEdge(theirEdge, 'split.io').onSite, 2)
+check('i marker wyzwania jest policzony osobno', limitsAtTheirEdge(theirEdge, 'split.io').challenges, 2)
+check('z nazwa hosta, ktory wyzwal', limitsAtTheirEdge(theirEdge, 'split.io').hosts.join(), 'docs.split.io')
+check('wiersz bez limitow nie wymysla ich', limitsAtTheirEdge(undefined, 'split.io').onSite, 0)
 
 // Odczekanie po 429. Regula projektu mowi, ze 429 to nasze obciazenie, a nie odpowiedz o
 // vendorze - wiec odpowiedzia jest odczekac i zapytac jeszcze raz, w granicach budzetu skanu.

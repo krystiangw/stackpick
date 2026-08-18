@@ -17,6 +17,7 @@ import {
   isBotChallenge,
   isEdgeRefusal,
   isRealTextFile,
+  limitsSeen,
   looksLikeHtml,
   NAMED_CRAWLERS,
   ranOutOfTime,
@@ -78,6 +79,15 @@ export type ScanFindings = {
   readAnything: boolean
   /** 429 is us asking too often, not the site refusing agents. Never a finding about them. */
   rateLimitedUs: boolean
+  /**
+   * Every limit this scan met, and whether it carried a challenge marker. Recorded, not scored.
+   * `rateLimitedUs` and `botChallenge` are both about the door test, so nothing until now told us
+   * how a vendor's edge answers the other nineteen requests. split.io answers every documentation
+   * request with a challenge-carrying 429 and its row said nothing about it, while three of its
+   * checks read as our own blind spots. Counting these across a sweep is what has to happen
+   * before that becomes a verdict (#48).
+   */
+  limitsMet: { url: string; challenge: boolean; recovered: boolean }[]
   /**
    * The edge answered with a JavaScript challenge rather than a limit. This is the opposite of
    * rateLimitedUs and has to be scored, not excused: a challenge a browser solves invisibly is
@@ -854,6 +864,7 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
       Boolean(found.pricingPage?.ok) ||
       Boolean(funnel.signup.url),
     rateLimitedUs,
+    limitsMet: limitsSeen(),
     botChallenge,
     challengeAdmits,
     resolvedElsewhere: found.resolvedElsewhere,

@@ -13,7 +13,7 @@ import { getStore } from '../src/lib/store'
 import { FORMULA_VERSION } from '../src/lib/score'
 import { ERRATA, erratumFor } from '../src/lib/errata'
 import { mcpRegistryMirrorState, MIRROR_TTL_MS } from '../src/lib/store-mongo'
-import { sawRateLimit } from '../src/lib/corpus'
+import { limitsAtTheirEdge, sawRateLimit } from '../src/lib/corpus'
 
 const store = getStore()
 
@@ -36,6 +36,9 @@ let licenceGateRows = 0
 let typedGuessed = 0
 let typedSearched = 0
 let throttled = 0
+let limitedAtEdge = 0
+let challengedAtEdge = 0
+const challengeSample: string[] = []
 const throttledSample: string[] = []
 let typedBlind = 0
 let typedFails = 0
@@ -112,6 +115,18 @@ for (const domain of CURATED_DOMAINS) {
     if (throttledSample.length < 6) throttledSample.push(domain)
   }
 
+  // Czyje to byly drzwi. Rejestr npm odmawia nam stale i to fakt o nas; brzeg vendora, ktory
+  // odpowiada wyzwaniem, jest ustaleniem o nim - i dopoki tego nie policzymy na pelnym przemiecie,
+  // nie zmieniamy z tego zadnego werdyktu (#48).
+  const edge = limitsAtTheirEdge(report.findings, domain)
+  if (edge.onSite > 0) {
+    limitedAtEdge += 1
+    if (edge.challenges > 0) {
+      challengedAtEdge += 1
+      if (challengeSample.length < 8) challengeSample.push(`${domain} (${edge.challenges}/${edge.onSite}, ${edge.hosts.join(', ')})`)
+    }
+  }
+
   const typed = check('typed_package')
   if (typed && !typed.notApplicable && !typed.inconclusive) {
     const guessed = typed.detail.includes('by who publishes it')
@@ -181,6 +196,12 @@ console.log(
     ? 'zaden wiersz nie niesie naszego 429'
     : `429 od nas: ${throttled} wierszy jest chudszych, niz strona na to zasluguje (${throttledSample.join(', ')}${throttled > throttledSample.length ? ', ...' : ''})`,
 )
+console.log(
+  limitedAtEdge === 0
+    ? 'zaden vendor nie odmowil nam limitem na swoim wlasnym brzegu'
+    : `limit na brzegu vendora: ${limitedAtEdge} wierszy, w tym ${challengedAtEdge} z markerem wyzwania (to sciana, nie nasze tempo - #48)`,
+)
+for (const one of challengeSample) console.log(`  ${one}`)
 console.log(`klucz licencyjny (tylko dowody, bez punktow): ${licenceGateRows} wierszy ma zdanie o wymogu klucza`)
 for (const one of licenceGateSample) console.log(`  ${one}`)
 console.log('')

@@ -154,6 +154,15 @@ type ScanState = {
    * everything cannot spend the scan's budget on politeness. pandadoc.com is that host.
    */
   backedOff: Map<string, number>
+  /**
+   * Every limit we met and whether it carried a challenge marker, because those are two different
+   * facts wearing one status code and the scanner currently keeps neither. A 429 is our own load
+   * and never a finding about a vendor; a 429 that says `cf-mitigated: challenge` is the vendor's
+   * wall, which is what the whole card measures. Recorded rather than scored: turning it into a
+   * verdict moves rows towards accusations, and an accusation may not stand on evidence we have
+   * not yet counted on the corpus.
+   */
+  limits: { url: string; challenge: boolean; recovered: boolean }[]
   /** One scan asks for the same URL up to four times, from phases that cannot see each other. */
   responses: Map<string, Promise<Fetched>>
   /** How much evidence the phase now running lost to the deadline. */
@@ -171,6 +180,7 @@ export function withScanBudget<T>(budgetMs: number, run: () => Promise<T>): Prom
       timeouts: new Map(),
       slots: new Map(),
       backedOff: new Map(),
+      limits: [],
       responses: new Map(),
       lost: { count: 0 },
     },
@@ -401,10 +411,14 @@ async function askedUntilAnswered(url: string, options: FetchOptions, state: Sca
   const site = registrableDomain(new URL(first.url || url).hostname)
   const already = state.backedOff.get(site) ?? 0
   const waitMs = backoffFor(first, already, timeLeftMs())
-  if (waitMs === null) return first
+  if (waitMs === null) return noteLimit(state, first, false)
   state.backedOff.set(site, already + 1)
   await new Promise((done) => setTimeout(done, waitMs))
   const second = await runFetch(url, options, state)
+  // One entry for one address: the same page refused twice is one limit, not two, and counting it
+  // twice would make a site that never answers look like the site that refuses most. The marker
+  // comes from either try, because an edge can throttle first and challenge second.
+  noteLimit(state, first, second.ok || second.status === 404, isBotChallenge(second))
   // Only an answer replaces the refusal. A 404 is one: this module already treats it as evidence
   // worth caching across scans, and keeping the 429 over it would leave measured absence unmeasured.
   // A second 429, or a request the deadline ate on the way back, is not evidence the first lacked.
@@ -424,6 +438,21 @@ function askedToWaitMs(header: string | undefined, now = Date.now()): number | n
   if (Number.isNaN(at)) return null
   return at > now ? at - now : null
 }
+
+/** Bounded: one scan of a site that limits everything would otherwise carry a list of its sitemap. */
+const MOST_LIMITS_KEPT = 20
+
+function noteLimit(state: ScanState, answer: Fetched, recovered: boolean, alsoChallenged = false): Fetched {
+  if (answer.status !== 429) return answer
+  if (state.limits.length < MOST_LIMITS_KEPT) {
+    state.limits.push({ url: answer.url, challenge: isBotChallenge(answer) || alsoChallenged, recovered })
+  }
+  return answer
+}
+
+/** What this scan was refused with, for the report to carry rather than for a check to score. */
+export const limitsSeen = (): { url: string; challenge: boolean; recovered: boolean }[] =>
+  scanState.getStore()?.limits ?? []
 
 const MAX_BACKOFFS_PER_SITE = 2
 const DEFAULT_BACKOFF_MS = 1_200
