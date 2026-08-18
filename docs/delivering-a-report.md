@@ -108,3 +108,12 @@ record, and the whole switch-on is written down in `docs/turning-billing-on.md`:
 create with their prices, the webhook and the two events we act on, the one variable that turns it
 on, and the checkout **that does not exist yet** and blocks everything after it. What is left is a
 person's: the legal name and address of the seller, and a Paddle account.
+
+**The monthly half of monitoring has no schedule behind it.** Three crons run on this app - the MCP
+registry mirror, the quota check and the watch sweep - and none of them refreshes the agent runs or
+sends the monthly mail. The weekly checks are automatic; the five runs a month that `/pricing`
+promises a monitoring customer are `scripts/cell-email.mts` printing a draft for a person to read and
+send. With four free watches that is a chore. **On the day somebody pays, it is the obligation**, and
+whoever turns billing on should decide whether it becomes a cron or stays a calendar reminder with a
+name against it. Written here rather than remembered, because a promise kept by memory is the one
+that lapses in month three.

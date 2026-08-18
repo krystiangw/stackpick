@@ -520,6 +520,12 @@ check('po dacie przestaje byc', monitoringIsFree(new Date('2026-11-01'), '2026-1
 const runbookBillingu = readFileSync('docs/turning-billing-on.md', 'utf8')
 check('runbook billingu zna kohorte sprzed ceny', runbookBillingu.includes('FREE_MONITORING_ENDS_ON'), true)
 check('i mowi, ze trzeba do nich napisac', runbookBillingu.includes('Write to everyone already subscribed'), true)
+// Miesieczna polowa monitoringu nie ma za soba zadnego harmonogramu: trzy crony na tej aplikacji to
+// mirror rejestru MCP, kontrola limitow i przemiat watchow. Runbook ma to mowic wprost, bo obietnica
+// trzymana pamiecia jest ta, ktora wygasa w trzecim miesiacu.
+check('runbook dostawy mowi, ze miesieczny mail jest reczny', runbookDostawy.includes('no schedule behind it'), true)
+const crony = readdirSync('src/app/api/cron')
+check('cronow jest tyle, ile runbook zaklada', crony.length, 3)
 check('smiec nie wysadza czytania', signatures.read('{'), null)
 // Paddle wysyla customer_id, nie adres, wiec adres wozimy we wlasnym custom_data. Bez tego kazde
 // prawdziwe zdarzenie odpadaloby jako niekompletne. Znalezione przez codex review.
