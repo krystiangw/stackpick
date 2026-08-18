@@ -74,6 +74,30 @@ for (const watch of watches) {
 console.log(
   `\n${unservable} z ${watches.length} obserwacji nie da sie dzis obsluzyc biegiem rozpoznawczym, a strona obiecuje go co miesiac`,
 )
+
+// Druga polowa tej samej obietnicy. Skan robi `watch.yml` codziennie o 04:17, a endpoint uznaje
+// pomiar za stary dopiero po szesciu dniach, wiec obserwacja miedzy 144 h a nastepnym przebiegiem
+// czeka NORMALNIE, nie z awarii. Prog jest ten sam, ktorego pilnuje alarm w `quota.yml`, i LICZONY
+// TAK SAMO: endpoint podaje dni zaokraglone, a workflow pada dopiero powyzej osmiu, wiec naprawde
+// chodzi o 8,5 dnia. Liczac to inaczej, ten skrypt krzyczalby przez pol dnia, w ktorym alarm jest
+// zdrowy, i przy pierwszej awarii nikt by nie wiedzial, ktoremu wierzyc.
+const waited = watches.map((watch) => ({
+  domain: watch.domain,
+  hours: watch.checkedAt === null ? Infinity : (Date.now() - Date.parse(watch.checkedAt)) / 3600_000,
+}))
+const isLate = (hours: number) => Math.round(hours / 24) > 8
+const late = waited.filter((one) => isLate(one.hours))
+const oldest = waited.reduce((worst, one) => (one.hours > worst.hours ? one : worst), { domain: 'brak', hours: 0 })
+console.log(
+  `\nkadencja skanow: najstarszy pomiar to ${oldest.hours === Infinity ? 'obserwacja bez ani jednego skanu' : `${oldest.hours.toFixed(0)} h (${oldest.domain})`}, alarm pada powyzej 8 zaokraglonych dni, a skan nalezy sie po 144 h`,
+)
+if (late.length > 0) {
+  console.log(`${late.length} obserwacji CZEKA ZA DLUGO, dluzej niz obiecana kadencja z zapasem, wiec workflow Rescan watched domains albo nie chodzi, albo nie nadaza:`)
+  for (const one of late) console.log(`  ${one.domain}: ${one.hours === Infinity ? 'nigdy nie skanowana' : `${one.hours.toFixed(0)} h`}`)
+  console.log('  Sprawdz przebiegi workflow `Rescan watched domains` w GitHub Actions.')
+} else {
+  console.log('zadna obserwacja nie czeka dluzej, niz obiecujemy')
+}
 const owed = [...new Set(due)]
 if (owed.length > 0) {
   console.log(`\n${owed.length} kategorii ma cele starsza niz ${CELL_DUE_DAYS} dni. Do uruchomienia:`)

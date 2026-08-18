@@ -5771,3 +5771,22 @@ one nadal mowia stare; instrukcja co wpisac stoi przy samej fladze w `seller.ts`
 **Codex zlapal tu blad, ktory bylby realnym bledem prawnym:** moja lista wymogow atrybucji stawiala
 „zachowaj wersje formuly" jako czwarty warunek licencji, a **CC BY nie pozwala dokladac warunkow**.
 Teraz sa trzy wymogi licencji i osobno prosba, ktora niczego nie warunkuje.
+
+## KADENCJA MONITORINGU: SPRAWDZONA, ZDROWA, WIDOCZNA (2026-08-18)
+
+Poszedlem sprawdzic, czy cotygodniowy skan obserwowanych domen w ogole chodzi, bo dwie obserwacje
+mialy **125 godzin** od ostatniego pomiaru. Odpowiedz: **chodzi**. `GET /api/cron/watch` z tokenem
+mowi `{"watches":3,"due":0,"longestWaitDays":5}`, a harmonogram to **GitHub Actions**, nie Heroku
+Scheduler: `.github/workflows/watch.yml` codziennie o 04:17 w petli, `health.yml` co godzine,
+`quota.yml` tygodniowo z alarmem kadencji.
+
+**Wniosek o mnie, wart wiecej niz sam wynik:** przez kilkanascie minut szukalem harmonogramu w
+Heroku, bo tam byl zainstalowany dodatek Scheduler, i prawie zapisalem „monitoring nie ma
+harmonogramu". **Odpowiedz lezala w repo.** Zanim zglosisz, ze czegos nie ma, przeszukaj repozytorium,
+a nie tylko panel.
+
+`npm run watch-coverage` pokazuje teraz kadencje obok pokrycia: najstarszy pomiar, kiedy nalezy sie
+skan (144 h) i kiedy pada alarm. Prog jest **liczony tak samo jak w `quota.yml`** (dni zaokraglone,
+alarm powyzej osmiu, czyli faktycznie 8,5 dnia) - codex wytknal, ze moja pierwsza wersja krzyczalaby
+przez pol dnia, w ktorym produkcyjny alarm jest zdrowy, i przy prawdziwej awarii nie wiadomo byloby,
+ktoremu wierzyc.
