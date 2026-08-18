@@ -7914,3 +7914,22 @@ Log pisze tylko przemiat i tylko wtedy, gdy naprawde ruszyl.
 
 Przy okazji wyszlo, ze **chodzily dwa czekacze naraz**, wiec przemiat mogl wystartowac podwojnie -
 dokladnie to obciazenie, przed ktorym chroni karencja. Jeden ubity, zostal jeden.
+
+## CO POWINIEN ZROBIC PRZEMIAT NA 9.42, ZAPISANE PRZED NIM (2026-08-19, 01:05)
+
+Przewidywanie spisane **zanim** przemiat ruszyl, zeby kontrola po nim byla sprawdzeniem, a nie
+opowiadaniem. Bierze sie z replayu atrybucji na migawce 177 witryn, nie z przeczucia.
+
+**Cztery wiersze maja zmienic paczke i zaden inny:**
+| domena | bylo | ma byc | skutek dla punktow |
+|---|---|---|---|
+| directus.com | `directus` (bez typow) | `@directus/sdk` (z typami) | **+1**, i sprostowanie znika |
+| onesignal.com | `onesignal-ngx` | `@onesignal/node-onesignal` | bez zmiany, oba z typami |
+| axiom.co | `axiom` | `@axiomhq/js` | bez zmiany, oba z typami |
+| gandi.net | `@gandi-ide/gandi-ui` | **zadnej** | `typed_package` staje sie niemierzalny, mianownik o 1 mniejszy |
+
+**Czego NIE powinno byc:** zmiany paczki na mux.com (celowo zablokowana) ani nigdzie indziej. Ruch
+poza tymi czterema wierszami, wiekszy niz szum 0,59 %, jest znaleziskiem, a nie tlem.
+
+**Po przemiecie sprawdzam w tej kolejnosci:** `after-reseed.mts` (czy sprostowanie directusa wygaslo
+i czy wszystkie wiersze sa na 9.42), `npm run audit`, potem reszta kompletu z bloku startowego.
