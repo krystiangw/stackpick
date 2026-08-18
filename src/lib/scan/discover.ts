@@ -1555,6 +1555,11 @@ const FAR_MORE_INSTALLED = 3
  * What it takes to unseat a front-runner that is alive, recent and installed. Higher than the
  * margin against an unsettled one because the front-runner's name is doing real work here: it is
  * the shape a developer types, and only a difference nobody can call noise should overrule it.
+ *
+ * Honest about its own standing: no vendor in the corpus falls between this and the ordinary
+ * margin, so nothing measured today would change if it were 3. It is kept because a settled
+ * front-runner could not be challenged AT ALL before this release, and of the two ways to loosen
+ * that, the smaller one is the one to pick while no case has argued for the larger.
  */
 const FAR_MORE_INSTALLED_THAN_A_SETTLED_ONE = 5
 

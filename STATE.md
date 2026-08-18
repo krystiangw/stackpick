@@ -7811,6 +7811,14 @@ tracker na wlasnej organizacji. Kontrolki pilnuja obu stron.
 paczke i dostaje uczciwe „nie znalezlismy zadnej", ktore ma juz 15 innych domen. Lepsze niz wiersz o
 cudzym artefakcie.
 
+**Prog, ktory chcialem usunac, i dlaczego zostaje.** Osobna, wyzsza granica pobran dla lidera
+zasiedzialego (5x zamiast 3x) **nie zmienia niczego na 177 domenach** - zmierzone, nie zgadniete.
+Chcialem ja wyrzucic, bo liczba, ktorej nie da sie pokazac przy pracy, jest liczba, ktora ktos
+pozniej zacytuje jako regule. **Codex sie nie zgodzil i ma racje w jednym punkcie, ktory przewazyl:**
+przed tym wydaniem lider zasiedzialy nie podlegal wyzwaniu **wcale**, wiec punktem odniesienia nie
+jest 3x, tylko brak wyzwania. Z dwoch sposobow poluzowania biore mniejszy, dopoki zaden przypadek
+nie przemawia za wiekszym. Komentarz przy stalej mowi wprost, ze dzis nie robi nic.
+
 **Zostaje do zrobienia: przemiat korpusu na 9.42.** Do tego czasu produkcja stoi na 9.41 i to jest
 poprawny stan, a nie niedokonczony.
 
