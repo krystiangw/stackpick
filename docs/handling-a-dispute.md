@@ -40,6 +40,21 @@ Three outcomes, and they are different problems:
   `/methodology` and say what would make it pass. Most disputes end here and end well.
 - **It still fails and the sentence is not true of them.** This is the one that matters. Go to 2.
 
+A fourth outcome hides inside the first three and answers a whole family of disputes: **their edge
+turned us away.** Every scan now records what refused it, so ask the row rather than guessing:
+
+```bash
+MONGODB_URI=... npx tsx scripts/audit-limits.mts 1 --from <index in CURATED_DOMAINS>
+```
+
+or read `findings.limitsMet` on the stored row. A limit at `api.npmjs.org` is our own traffic to
+the registry and says nothing about them. A limit at their own host carrying a challenge marker is
+their edge choosing to challenge rather than to throttle, which is a wall a browser passes
+invisibly and an HTTP client cannot pass at all. Measured 2026-08-18 across 92 domains: five met a
+limit at their own edge and **four of the five carried a marker on every single one**. When that is
+what happened, the honest answer to the vendor is that we could not read the pages, not that the
+pages lack something, and the checks that depend on reading stay unmeasured.
+
 ## 2. Decide which kind of wrong it is
 
 | What is wrong | What to do |
