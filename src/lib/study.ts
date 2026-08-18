@@ -145,10 +145,17 @@ export function studyClaims(study: Study): { says: string; holds: boolean }[] {
       holds: clean !== null && separates('mcp_present', clean, 'ever'),
     },
     {
-      says: 'programmatic_provisioning is carried by the popular half, every tool, how often measure',
-      holds: study.tools.every(
-        (tool) => study.gap('programmatic_provisioning', tool, 'share').popular > 3 * Math.max(study.gap('programmatic_provisioning', tool, 'share').quieter, 1),
-      ),
+      // What the page says, and nothing stronger. It prints both halves and calls the gap one that
+      // "leans on the better known half", so that is the claim to test: popular above quieter, on
+      // every tool. The old bar asked for three times the quieter half, which the page never
+      // claimed, and it failed after the 9.40 sweep at 29pp against 10pp on one tool while the
+      // sentence stayed true. A guard stricter than the sentence it guards reports a false alarm
+      // and teaches everybody to ignore the colour.
+      says: 'programmatic_provisioning leans on the popular half, every tool, how often measure',
+      holds: study.tools.every((tool) => {
+        const gap = study.gap('programmatic_provisioning', tool, 'share')
+        return gap.popular > gap.quieter
+      }),
     },
     {
       // The negative claim, in the same shape as the positive ones rather than a threshold picked

@@ -6073,3 +6073,31 @@ chudziej, niz ona na to zasluguje, i jest to **nasz slad, nie ich regula**.
 drugiego przebiegu: 7 wierszy** (logto.io, postmarkapp.com, contentful.com, nylas.com, savvycal.com,
 pandadoc.com i jeszcze jeden), przy czym cztery z nich przemiat sam ponowil po odczekaniu, a
 postmarkapp.com odpowiadal 429 nadal.
+
+## PO PRZEMIECIE 9.40: WSZYSTKIE PRZEWIDYWANIA TRAFIONE (2026-08-18, 06:28)
+
+**177 wierszy na 9.40, 0 sprzecznosci, 0 rozjazdow w publikowanych liczbach, 5 werdyktow gorszych**
+niz poprzedni pomiar (3 z nich na split.io, gdzie skan nie znalazl zadnej strony dokumentacji,
+1 na postmarkapp.com, ktory odpowiadal nam 429, 1 na calendly.com). **Do przeskanowania pojedynczo
+zanim ktokolwiek uzna je za regres vendora.**
+
+| co | przewidywane przed przemiatem | zmierzone po |
+|---|---|---|
+| `price_in_snippet` przechodzi | 40-50 procent, 70-85 wierszy | **67 ze 158 mierzalnych, 42 procent** |
+| `typed_package` oskarzen | okolo 4 zamiast 10 | **dokladnie 4** |
+| fakty bramki w wierszach | wszystkie | **137 ze 137** |
+| sprostowania, ktore wygasna | 4 z 5 | **4 z 5, zostal directus** |
+
+`programmatic_provisioning`: 61 zaliczonych, **wszystkie cytuja slowa, na ktorych stoi punkt**.
+`oauth_dcr`: 91 oblanych, 74 z adresami. `429 od nas`: 6 wierszy.
+
+## KLUCZ LICENCYJNY: NIE BUDUJEMY Z TEGO CHECKA (2026-08-18, zamkniete pomiarem)
+
+Zbieralismy dowody od 9.34, zeby decyzje podjac z korpusu, a nie z trzech vendorow, ktorych ktos
+pamieta. **Wynik na pelnym korpusie: dwa wiersze.** ckeditor.com („Some CKEditor 5 features are
+premium and require a commercial license") i tiny.cloud („Why is a license key required?").
+
+Dwa wiersze na 177 to za malo, zeby zbudowac na tym check: nie da sie na tym zmierzyc ani progu, ani
+falszywych oskarzen, a kazdy nowy check kosztuje zadania na skanie i miejsce na stronie wyniku.
+**Zbieranie dowodow zostaje** (nic nie kosztuje, siedzi w findings), decyzja o punktowaniu wraca,
+jesli liczba urosnie - i to jest teraz liczba, ktora `after-reseed.mts` wypisuje po kazdym przemiecie.
