@@ -6061,3 +6061,15 @@ tylko o werdykt.
 `VERBOSE` nie pokazuje werdyktow, a zdanie „rescan poprawia opublikowany wiersz" bylo **nieprawda**
 dla komendy, ktora podalem. Operator moglby napisac vendorowi, ze poprawione, podczas gdy publiczna
 strona sie nie zmienila.
+
+## PO PRZEMIECIE WIDAC TERAZ, ILE WIERSZY NIESIE NASZ WLASNY 429 (2026-08-18)
+
+`sawRateLimit` istnialo od dawna i jest przemyslane (429 przy drzwiach, przy rejestracji albo na
+stronie dokumentacji zostawia wiersz tak samo chudy), ale **po przemiecie nikt nie widzial liczby**.
+A to pierwsza liczba mowiaca, czy przemiat byl za ostry: wiersz z naszym limitem opisuje strone
+chudziej, niz ona na to zasluguje, i jest to **nasz slad, nie ich regula**.
+
+`after-reseed.mts` wypisuje teraz „429 od nas: N wierszy" z probka domen. **Zmierzone w trakcie
+drugiego przebiegu: 7 wierszy** (logto.io, postmarkapp.com, contentful.com, nylas.com, savvycal.com,
+pandadoc.com i jeszcze jeden), przy czym cztery z nich przemiat sam ponowil po odczekaniu, a
+postmarkapp.com odpowiadal 429 nadal.

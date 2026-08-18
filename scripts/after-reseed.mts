@@ -13,6 +13,7 @@ import { getStore } from '../src/lib/store'
 import { FORMULA_VERSION } from '../src/lib/score'
 import { ERRATA, erratumFor } from '../src/lib/errata'
 import { mcpRegistryMirrorState, MIRROR_TTL_MS } from '../src/lib/store-mongo'
+import { sawRateLimit } from '../src/lib/corpus'
 
 const store = getStore()
 
@@ -34,6 +35,8 @@ let snippetNotApplicable = 0
 let licenceGateRows = 0
 let typedGuessed = 0
 let typedSearched = 0
+let throttled = 0
+const throttledSample: string[] = []
 let typedBlind = 0
 let typedFails = 0
 let typedGuessedFails = 0
@@ -101,6 +104,14 @@ for (const domain of CURATED_DOMAINS) {
     }
   }
 
+  // Wiersz, w ktorym gdziekolwiek padlo 429, jest chudszy niz strona, ktora opisuje, i to jest NASZ
+  // slad, nie ich regula. Po przemiecie nikt tego nie widzial, a to pierwsza liczba mowiaca, czy
+  // przemiat byl za ostry.
+  if (sawRateLimit(report.findings)) {
+    throttled += 1
+    if (throttledSample.length < 6) throttledSample.push(domain)
+  }
+
   const typed = check('typed_package')
   if (typed && !typed.notApplicable && !typed.inconclusive) {
     const guessed = typed.detail.includes('by who publishes it')
@@ -164,6 +175,11 @@ console.log(
     : typedBlind === 0
       ? `bramka atrybucji widzi swoje fakty we wszystkich ${typedSearched} wierszach z wyszukiwarki na ${FORMULA_VERSION}`
       : `UWAGA: ${typedBlind} z ${typedSearched} wierszy na ${FORMULA_VERSION} NIE MA zapisanych faktow bramki, wiec bramka blokuje tam kazde oskarzenie po cichu`,
+)
+console.log(
+  throttled === 0
+    ? 'zaden wiersz nie niesie naszego 429'
+    : `429 od nas: ${throttled} wierszy jest chudszych, niz strona na to zasluguje (${throttledSample.join(', ')}${throttled > throttledSample.length ? ', ...' : ''})`,
 )
 console.log(`klucz licencyjny (tylko dowody, bez punktow): ${licenceGateRows} wierszy ma zdanie o wymogu klucza`)
 for (const one of licenceGateSample) console.log(`  ${one}`)
