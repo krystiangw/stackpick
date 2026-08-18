@@ -375,6 +375,11 @@ check('model niesie te liczbe', generatorSource.includes('missedByWord,'), true)
 check('strona raportu tez ja pokazuje', readFileSync('src/app/d/[id]/report-view.tsx', 'utf8').includes('model.missedByWord > 0'), true)
 // Kontrolka: to nie jest tylko komunikat dla operatora.
 check('kontrola: nie zostalo samo stderr', generatorSource.includes('UWAGA: ${missedByWord}'), true)
+// Runbook dostawy opisuje kazda odmowe, ktora operator moze zobaczyc. Odmowa, ktorej nie ma w
+// runbooku, wyglada dla niego jak awaria narzedzia i konczy sie obejsciem.
+const runbookDostawy = readFileSync('docs/delivering-a-report.md', 'utf8')
+check('runbook zna odmowe dla przekierowania do korpusu', runbookDostawy.includes('redirect into the corpus'), true)
+check('i mowi, ze kupujacy widzi niepoliczone wystapienia', runbookDostawy.includes('the buyer sees it'), true)
 // Gosc, ktorego adres przekierowuje do korpusu, nie jest gosciem, tylko vendorem, ktorego juz
 // publikujemy pod adresem, z ktorego sie wyprowadzil. Skaner juz to wie: poszedl za 301 i zapisal,
 // gdzie wyladowal. Odmowa kosztuje nic przed platnoscia i jest zwrotem po niej.

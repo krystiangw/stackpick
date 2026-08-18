@@ -27,7 +27,10 @@ in three months will not remember what the pricing page promised today.
    postmark.com would hand them postmarkapp.com's mentions and "email" for email.com every sentence
    about email. And **a name already belonging to somebody we publish is refused**, not resolved.
    When the runs contain their brand and you did not pass it, the tool says how many answers you
-   are leaving uncounted, so the decision is yours and visible.
+   are leaving uncounted, so the decision is yours and visible. **Since 2026-08-19 the buyer sees it
+   too**: the report carries a sentence saying how many answers used their name without naming their
+   domain and why we did not count them. A zero that a known ambiguity could overturn has to carry
+   the ambiguity with it, so do not be surprised to find that paragraph in what you send.
 
    The document says in its own words that they were placed into the category after the runs, and
    that every provider's count was recomputed alongside them rather than copied from the published
@@ -45,6 +48,12 @@ in three months will not remember what the pricing page promised today.
    The placement covers every watch on that domain, because which category a product belongs to is a
    fact about the product rather than about whoever subscribed. `npm run watch-coverage` lists the
    watches still waiting for one.
+
+0b. **Does their address redirect into the corpus?** The generator refuses when it does, and names
+   the domain to run instead. `railway.app` answers 301 to `railway.com`, which we publish: the
+   agents' mentions are attached to the address they landed on, so a report for the old one would
+   have said "named in 0 of 11 runs" about a company that was named in ten of them. Run it for the
+   address we publish and tell the buyer why, rather than overriding it.
 
 1. **Is the domain in a category we measure?** `npx tsx -e "import('./src/lib/categories').then(m => console.log(m.categoryFor('their.com')?.label ?? 'BRAK'))"`
    or just run the report generator, which refuses and says so. The page promises we say this
