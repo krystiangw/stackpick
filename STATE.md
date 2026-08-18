@@ -6271,3 +6271,13 @@ atrybucja paczek. Liczbowo to powazniejszy problem z danymi niz cale #48 i dotyc
 5. Zmiana publicznej obietnicy na `/methodology`: bylo „A 429 is never a finding about you", jest
    „nigdy nie zabiera punktu, ale limit z markerem wyzwania raportujemy". **To juz wdrozone**, bo
    inaczej strona obiecywalaby cos, czego kod od dzis nie robi.
+
+**Weryfikacja na produkcji zlapala jeszcze jedno.** Pierwszy skan pandadoc.com po wdrozeniu pokazal
+nowe zdanie przy `docs_without_js` i `programmatic_provisioning`, a **trzy linijki nizej**, w tym
+samym wierszu, `machine_readable_api` mowilo dalej „a 429 is our own burst rather than an answer
+about you". Jedno pojecie liczone w trzecim miejscu po swojemu, czyli **dokladnie ta zasada z calego
+dnia**, tylko w nowym miejscu. Trzeci check idzie teraz przez ten sam helper i pilnuja tego dwa
+straznicy (z markerem i bez).
+
+**Stan: wdrozone i zweryfikowane** (v520). Zdanie pojawi sie w wierszach dopiero z dowodem, czyli od
+najblizszego przemiatu: starych wierszy nie ma za co poprawiac wstecz, bo nie niosa `limitsMet`.
