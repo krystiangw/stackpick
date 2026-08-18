@@ -7,7 +7,7 @@ import { spreadAcrossHints } from '../src/lib/scan'
 import { aboutTheirOwnCode, categoryForJob } from '../src/lib/lookup'
 import { pickHeadline } from '../src/lib/headline'
 import { FRESH_QUESTIONS, HELD_OUT_2, HELD_OUT_3, HELD_OUT_4, HELD_OUT_5, HELD_OUT_6, HELD_OUT_7 } from './routing-questions'
-import { asksUsToStayOut, crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
+import { asksUsToStayOut, crawlDelayForAgents, parseRobots, stanceFrom } from '../src/lib/scan/robots'
 import { stayOutAfter } from '../src/lib/stayout'
 import { crawlerName } from '../src/lib/visits'
 import { thinnerForAgents } from '../src/lib/scan'
@@ -2090,7 +2090,7 @@ check('reseed zapisuje prosbe', readFileSync('src/lib/scan-run.ts', 'utf8').incl
 // adnotacje i zostawial na stronie stary pomiar bez ostrzezenia, czyli dokladnie ten stan, przed
 // ktorym ta adnotacja ma chronic.
 const scanRunSource = readFileSync('src/lib/scan-run.ts', 'utf8')
-check('i czysci ja dopiero po zapisanym raporcie', scanRunSource.includes('if (seeded && kept) {'), true)
+check('i czysci ja dopiero po zapisanym raporcie', scanRunSource.includes('kept &&'), true)
 check('kontrola: nie czysci jej przed skanem', scanRunSource.indexOf('.clearStayOut(gate.domain)') > scanRunSource.indexOf('await scanDomain(gate.domain)'), true)
 // Reseed i cron moga zobaczyc te sama domene naraz, wiec zapis musi byc jedna operacja: odczyt i
 // podmiana pozwalaly pozniejszemu odczytowi wygrac starsza data, a przy pierwszej obserwacji dwa
@@ -2103,6 +2103,43 @@ check('jedno odczytanie zegara na zapis', mongoSource.includes('$set: { lastSeen
 // drukowac liczby „bez nich".
 const raportSource = readFileSync('src/app/report/page.tsx', 'utf8')
 check('raport ma osobna galaz dla wszystkich zamrozonych', raportSource.includes('report.frozen.median === null'), true)
+
+// Nieczytelny robots.txt to trzecia odpowiedz, nie „nie prosza". Wciagniety w falsz odmrazalby
+// wiersz na jednej zlej minucie na ich brzegu i wznawial automatyczne pobieranie domeny, ktora
+// niczego nie wycofala. Brak dowodu nie jest dowodem braku, a tu kosztuje kogos innego.
+console.log('\ntrzy odpowiedzi robots.txt, nie dwie')
+const odpowiedz = (status: number, body: string, contentType = 'text/plain') =>
+  ({ ok: status >= 200 && status < 300, status, body, headers: { 'content-type': contentType }, url: 'https://x.test/robots.txt' }) as never
+check('grupa nazywajaca nas to prosba', stanceFrom(odpowiedz(200, 'User-agent: LetAgentsIn\nDisallow: /')), 'out')
+check('przeczytany plik bez naszej grupy to brak prosby', stanceFrom(odpowiedz(200, 'User-agent: *\nDisallow: /admin')), 'in')
+// 404 to jedyny status, ktory JEST odpowiedzia: nie ma pliku, wiec nie ma w nim prosby.
+check('404 to brak prosby', stanceFrom(odpowiedz(404, 'not found')), 'in')
+check('500 to nie wiadomo', stanceFrom(odpowiedz(500, 'oops')), 'unknown')
+check('wyzwanie HTML zamiast pliku to nie wiadomo', stanceFrom(odpowiedz(200, '<!doctype html><html>...', 'text/html')), 'unknown')
+// Kontrolka: gdyby „nie wiadomo" bylo tym samym co „nie prosza", ten check przechodzilby na 'in'.
+check('kontrola: nieczytelne nie jest tym samym co brak prosby', stanceFrom(odpowiedz(503, '')) === stanceFrom(odpowiedz(404, '')), false)
+// Odmrozenie ma wisiec na przeczytanym pliku, nie na samym udanym skanie.
+check('reseed odmraza tylko przy stance in', scanRunSource.includes("if (seeded && kept && stance === 'in' && freeze !== 'clear') {"), true)
+check('cron odmraza tylko przy stance in', cronSource.includes("if (stance === 'in' && freeze !== 'clear') {"), true)
+// Nieudany odczyt bazy tez jest trzecim stanem: wciagniety w „nie ma prosby" wznawialby pobieranie
+// zamrozonej domeny przy zaciecu bazy, czyli to samo o warstwe nizej.
+check('nieudany odczyt nie znaczy brak prosby', scanRunSource.includes(".catch(() => 'unknown')"), true)
+check('cron tak samo', cronSource.includes(".catch(() => 'unknown')"), true)
+check('kontrola: nie wraca do null przy bledzie odczytu', scanRunSource.includes('.stayOutFor(gate.domain).catch(() => null)'), false)
+// Ten sam wzorzec na warstwie widoku: nieudany odczyt nie moze renderowac sie jak „nic nie jest
+// zamrozone", bo wtedy zamrozony wiersz stoi w rankingu jako zwykly, biezacy wynik.
+const listaSource = readFileSync('src/app/v/page.tsx', 'utf8')
+check('lista mowi, gdy nie umie sprawdzic', listaSource.includes('stayOuts === null'), true)
+check('kontrola: nie zamienia bledu na pusty zbior', listaSource.includes('.stayOuts().catch(() => [])'), false)
+const vendorSource = readFileSync('src/app/v/[domain]/page.tsx', 'utf8')
+check('strona vendora tez to mowi', vendorSource.includes("frozen === 'unknown'"), true)
+// Decyzja, ktora dwa razy podniosl codex i ktora odrzucamy swiadomie: przy `stance === 'in'`
+// skanujemy nawet wtedy, gdy odczyt zamrozenia sie nie udal. Przeczytalismy wlasnie ich robots.txt
+// i on o nic nie prosi; ich wlasny biezacy plik jest autorytetem, a nasz zapis o tym, o co prosili
+// kiedys, nie moze go przebijac. Nieznany stan bazy liczy sie tylko wtedy, gdy robots.txt tez jest
+// nieczytelny, czyli gdy zgadujemy obie polowy naraz.
+check('przy przeczytanym robots.txt bez prosby skanujemy', scanRunSource.includes("stance === 'unknown' && freeze !== 'clear'"), true)
+check('kontrola: nie blokujemy skanu samym nieznanym stanem bazy', scanRunSource.includes("freeze === 'unknown' ||"), false)
 check('cron monitoringu zapisuje prosbe', cronSource.includes('.recordStayOut(watch.domain)'), true)
 check('i czysci ja przy udanym pomiarze', cronSource.includes('.clearStayOut(watch.domain)'), true)
 

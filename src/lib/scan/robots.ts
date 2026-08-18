@@ -1,4 +1,4 @@
-import { fetchUrl, inParallel, looksLikeHtml } from './http'
+import { fetchUrl, inParallel, looksLikeHtml, type Fetched } from './http'
 
 export type CrawlerClass = 'training' | 'search' | 'user'
 export type CrawlerVerdict = 'blocked' | 'allowed_explicit' | 'unspecified'
@@ -164,10 +164,26 @@ function directiveValue(body: string, name: string): string | null {
  * crawler and a user-triggered fetcher, and it is the honest one: robots.txt speaks to automation
  * deciding for itself, not to somebody asking a question about their own domain.
  */
-export async function asksUsToStayOutOf(site: string): Promise<boolean> {
-  const robots = await fetchUrl(`${site}/robots.txt`, { accept: 'text/plain' })
-  if (!robots.ok || looksLikeHtml(robots)) return false
-  return asksUsToStayOut(parseRobots(robots.body))
+/**
+ * Three answers, not two, because the third one decides whether a frozen row thaws.
+ *
+ * `unknown` is a robots.txt we could not read: a 500, a challenge, an HTML error page. Folded into
+ * "they are not asking", it would have unfrozen a row on one bad minute at their edge and resumed
+ * automated fetching of a domain that never withdrew anything. Absence of evidence is not evidence
+ * of absence, and this is the place where that costs somebody else something.
+ *
+ * A 404 is the one status that is an answer: there is no robots.txt, so there is no request in it.
+ */
+export type StanceTowardsUs = 'out' | 'in' | 'unknown'
+
+export function stanceFrom(robots: Fetched): StanceTowardsUs {
+  if (robots.status === 404) return 'in'
+  if (!robots.ok || looksLikeHtml(robots)) return 'unknown'
+  return asksUsToStayOut(parseRobots(robots.body)) ? 'out' : 'in'
+}
+
+export async function stanceTowardsUs(site: string): Promise<StanceTowardsUs> {
+  return stanceFrom(await fetchUrl(`${site}/robots.txt`, { accept: 'text/plain' }))
 }
 
 export async function scanRobots(site: string): Promise<RobotsFindings> {

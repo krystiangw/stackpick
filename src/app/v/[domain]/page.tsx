@@ -134,8 +134,13 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
   // there is no frozen row to annotate, so the question would be about nothing.
   // A database blip must cost the annotation, not the page: this row renders from a report we
   // already hold, and 500ing it because one extra read failed would be a worse answer than a
-  // missing notice.
-  const frozen = category ? await getStore().stayOutFor(name).catch(() => null) : null
+  // missing notice. It must not cost the reader the truth either, so a failed read says so rather
+  // than rendering as "not frozen".
+  const frozen = category
+    ? await getStore()
+        .stayOutFor(name)
+        .catch(() => 'unknown' as const)
+    : null
 
   return (
     <main className="mx-auto flex max-w-3xl flex-col px-6 py-16">
@@ -144,7 +149,14 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
       </p>
       <h1 className="mt-3 text-2xl font-semibold wrap-anywhere sm:text-3xl">{name}</h1>
 
-      {frozen && (
+      {frozen === 'unknown' && (
+        <p className="mt-6 max-w-2xl text-sm text-ink-soft">
+          We could not check whether this row is frozen at its owner&rsquo;s request just now. If it is, the
+          measurement below is the last one we took rather than a current one.
+        </p>
+      )}
+
+      {frozen && frozen !== 'unknown' && (
         <div className="mt-6 border-l-2 border-warn bg-surface p-6">
           <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">Frozen at their request</h2>
           <p className="mt-3 max-w-2xl leading-relaxed">

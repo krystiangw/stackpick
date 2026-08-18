@@ -4,7 +4,7 @@ import { scoreFindings } from '@/lib/score'
 import { getStore, reportId, type Report } from '@/lib/store'
 import { sendEmail } from '@/lib/email'
 import { changesBetween, comparableScorecards, measurableOf, rulesChangedBetween, turnedAwayAtTheEdge, worthTelling } from '@/lib/watch'
-import { asksUsToStayOutOf } from '@/lib/scan/robots'
+import { stanceTowardsUs } from '@/lib/scan/robots'
 import { changeEmail } from '@/lib/watch-email'
 
 export const maxDuration = 60
@@ -93,14 +93,25 @@ export async function POST(request: Request) {
   for (const watch of due.slice(0, MOST_PER_CALL)) {
     // The same rule the reseed follows: a group naming us in robots.txt stops the automated pass.
     // A watch is not a person asking; it runs on a schedule and nobody is at the keyboard.
-    if (await asksUsToStayOutOf(`https://${watch.domain}`)) {
+    const stance = await stanceTowardsUs(`https://${watch.domain}`)
+    // A frozen row stays frozen while robots.txt is unreadable: a 500 at their edge is not a
+    // withdrawal, and treating it as one resumes fetching a domain that never asked us back. A
+    // failed lookup is a third state for the same reason: it is not "no request on file".
+    const freeze = await store
+      .stayOutFor(watch.domain)
+      .then((found) => (found ? 'frozen' : 'clear'))
+      .catch(() => 'unknown')
+    if (stance === 'out' || (stance === 'unknown' && freeze !== 'clear')) {
       console.log(`watch ${watch.domain}: prosza w robots.txt, zebysmy nie skanowali, pomijam`)
       skipped.push(watch.domain)
       // The monitoring pass is seeded, so it writes the same annotation the reseed does. Whichever
-      // pass sees the request first is the date the vendor page prints.
-      await store
-        .recordStayOut(watch.domain)
-        .catch((error) => console.error('stay-out request not recorded, watch still skipped', error))
+      // pass sees the request first is the date the vendor page prints. Only when we read the
+      // request: `lastSeenAt` means we saw it, and on an unreadable file we saw nothing.
+      if (stance === 'out') {
+        await store
+          .recordStayOut(watch.domain)
+          .catch((error) => console.error('stay-out request not recorded, watch still skipped', error))
+      }
       // Moved to the back of the queue rather than left where it is. The queue is oldest first and
       // this call takes one watch, so a domain that opts out would otherwise be picked and skipped
       // for ever and every watch behind it would starve. Not stopped either: the subscriber paid
@@ -120,9 +131,13 @@ export async function POST(request: Request) {
       seeded: true,
     }
     await store.saveReport(report)
-    await store
-      .clearStayOut(watch.domain)
-      .catch((error) => console.error('stay-out record not cleared, watch continues', error))
+    // Only a robots.txt we read and found not to name us thaws the row, and only after the fresh
+    // measurement is stored.
+    if (stance === 'in' && freeze !== 'clear') {
+      await store
+        .clearStayOut(watch.domain)
+        .catch((error) => console.error('stay-out record not cleared, watch continues', error))
+    }
 
     const previous = watch.lastReportId ? await store.getReport(watch.lastReportId) : null
     // Two scorecards from two formula versions are not a before and an after. We reseed the

@@ -1,5 +1,5 @@
 import { scanDomain, UnreachableDomainError } from './scan'
-import { asksUsToStayOutOf } from './scan/robots'
+import { stanceTowardsUs } from './scan/robots'
 import { scoreFindings } from './score'
 import { gateScan } from './scan-gate'
 import { getStore, reportId, type Report , holdUnsaved } from './store'
@@ -40,12 +40,33 @@ export async function runScan(request: Request, domain: string): Promise<ScanRun
   // An automated pass honours a robots.txt group that names us; a scan somebody asked for on our
   // own site always runs, because they asked. The corpus reseed comes through here with the
   // console token, which is what `seeded` means, so this is the line between the two.
-  if (seeded && (await asksUsToStayOutOf(`https://${gate.domain}`))) {
+  const stance = seeded ? await stanceTowardsUs(`https://${gate.domain}`) : 'in'
+  // A row we already froze stays frozen while robots.txt is unreadable. Reading a 500 as consent to
+  // resume would hand the domain back to the crawler on one bad minute at their edge.
+  //
+  // Three states here too, for the same reason: a failed lookup is not "no request on file". Folded
+  // into `clear` it would resume fetching a frozen domain on a database blip, which is the exact
+  // behaviour the unreadable-robots case above exists to prevent, one layer down.
+  const freeze = seeded
+    ? await getStore()
+        .stayOutFor(gate.domain)
+        .then((found) => (found ? 'frozen' : 'clear'))
+        .catch(() => 'unknown')
+    : 'clear'
+  // `stance === 'in'` runs even when the freeze lookup failed, and that is deliberate rather than an
+  // oversight: it means we just read their robots.txt and it does not ask us to stay out. Their own
+  // current file is the authority on what they are asking, and a record of what they asked in the
+  // past cannot outrank it. The unknown freeze state matters only when robots.txt is unreadable too,
+  // which is the case below and the only one where we are guessing about both halves.
+  if (stance === 'out' || (stance === 'unknown' && freeze !== 'clear')) {
     // Recorded, not only obeyed. The skip used to leave no trace, so the row we publish went on
     // looking like a current measurement of a company that had asked us to stop measuring it.
-    await getStore()
-      .recordStayOut(gate.domain)
-      .catch((error) => console.error('stay-out request not recorded, pass still skipped', error))
+    // Only on `out`: `lastSeenAt` means we saw the request, and on `unknown` we saw nothing.
+    if (stance === 'out') {
+      await getStore()
+        .recordStayOut(gate.domain)
+        .catch((error) => console.error('stay-out request not recorded, pass still skipped', error))
+    }
     return {
       kind: 'error',
       error: `${gate.domain} asks us to stay out in robots.txt, so this pass skipped it. Their published row keeps its last measurement and its date.`,
@@ -85,7 +106,9 @@ export async function runScan(request: Request, domain: string): Promise<ScanRun
     // After the report is stored, never before. Clearing it up front meant a rescan that then died
     // on DNS or a timeout removed the notice while leaving the old measurement on the page, which
     // is the one state this whole annotation exists to prevent.
-    if (seeded && kept) {
+    // And only on a robots.txt we actually read: `stance` is `in` when the file was absent or read
+    // and found not to name us, never when it could not be fetched.
+    if (seeded && kept && stance === 'in' && freeze !== 'clear') {
       await getStore()
         .clearStayOut(gate.domain)
         .catch((error) => console.error('stay-out record not cleared, scan still saved', error))

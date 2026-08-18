@@ -7519,6 +7519,37 @@ zegara**, bo przy dwoch pierwszy zapis dawal `since` o dwie milisekundy **poznie
 zamrozonych mediana „bez nich" nie istnieje, a kod podstawial tam mediane wyjsciowa, wiec strona
 twierdzilaby, ze usuniecie wszystkiego daje liczbe. Teraz to `null` i osobne zdanie.
 
+**Trzeci przebieg codeksa zlapal P1, ktory jest wprost naruszeniem naszej wlasnej zasady.**
+`asksUsToStayOutOf` zwracalo `false` takze wtedy, gdy robots.txt byl **nieczytelny**: 500, wyzwanie
+przegladarkowe, strona HTML zamiast pliku. Udany skan po takiej odpowiedzi **odmrazal wiersz**,
+czyli jedna zla minuta na ich brzegu wystarczala, zeby wznowic automatyczne pobieranie domeny,
+ktora niczego nie wycofala. Brak dowodu nie jest dowodem braku, a tutaj kosztuje kogos innego.
+
+Teraz sa **trzy odpowiedzi, nie dwie**: `out` (przeczytana grupa nazywajaca nas), `in` (przeczytany
+plik bez naszej grupy **albo 404**, bo brak pliku to jedyny status, ktory jest odpowiedzia) i
+`unknown`. Zamrozony wiersz **zostaje zamrozony przy `unknown`**, a `lastSeenAt` sie wtedy nie
+rusza, bo znaczy „widzielismy prosbe", a przy nieczytelnym pliku nie widzielismy nic. Odmrozenie
+wisi na `frozen && stance === 'in'` i dopiero po zapisanym raporcie. Logika wyszla do czystej
+funkcji `stanceFrom(Fetched)`, wiec regula sprawdza ja na piciu odpowiedziach zamiast czytac zrodlo.
+
+**Czwarty przebieg codeksa znalazl ten sam blad o warstwe nizej** i to jest lekcja warta wiecej niz
+sama poprawka: odczyt zamrozenia mial `.catch(() => null)`, wiec **nieudany odczyt bazy wygladal
+identycznie jak brak prosby**. Przy nieczytelnym robots.txt jedno zaciecie bazy wznawialoby
+pobieranie zamrozonej domeny, czyli dokladnie to, przed czym poprawke wlasnie napisalem. Teraz stan
+zamrozenia tez ma trzy wartosci (`frozen`, `clear`, `unknown`), a skan idzie dalej wylacznie przy
+`clear`. **Wzorzec do zapamietania: kazde miejsce, gdzie „nie wiem" ma domyslna wartosc, jest
+kandydatem na ten sam blad, i trzeba go szukac na kazdej warstwie osobno, bo poprawka na jednej nie
+naprawia drugiej.**
+
+**Piaty i szosty przebieg: jedno przyjete, jedno odrzucone z uzasadnieniem.** Przyjete: lista `/v`
+zamieniala nieudany odczyt na pusty zbior, wiec kazdy zamrozony wiersz stalby w rankingu jako zwykly,
+biezacy wynik; teraz strona pisze, ze nie umiala sprawdzic. **Odrzucone:** codex chcial, zeby nieznany
+stan bazy blokowal skan takze przy `stance === 'in'`. Nie, i to jest decyzja, nie przeoczenie:
+`in` znaczy, ze **wlasnie przeczytalismy ich robots.txt i on o nic nie prosi**. Ich wlasny biezacy
+plik jest autorytetem, a nasz zapis o tym, o co prosili kiedys, nie moze go przebijac. Nieznany stan
+bazy liczy sie tylko wtedy, gdy robots.txt tez jest nieczytelny, czyli gdy zgadujemy obie polowy
+naraz. Powod jest w komentarzu przy warunku i w regule, zeby nastepny przeglad go nie podnosil trzeci raz.
+
 **Sprawdzone na zywej bazie, nie tylko w typach:** sonda na domenie spoza korpusu przeszla pelny
 cykl zapis - drugi przebieg - lista - wyczyszczenie i posprzatala po sobie. `since` stoi, `lastSeenAt`
 sie rusza, po wyczyszczeniu nie ma wiersza.
@@ -7529,8 +7560,11 @@ zalezy, stoi obok tej, ktorej broni. Dzis zamrozonych jest **0 ze 177** i strona
 Gdy obie mediany kiedys sie rozjada, rozjazd jest nasza historia do opublikowania, a nie czyims
 znaleziskiem.
 
-**Czego nadal nie ma:** oznaczenia zamrozonych wierszy na liscie `/v` (jest tylko na stronie
-pojedynczego vendora) i zadnego zamrozonego wiersza w danych, wiec **cala ta sciezka nie byla
+Lista `/v` tez oznacza zamrozone wiersze, jednym odczytem na cala strone: wynik zamrozony stojacy
+bez oznaczenia w rankingu to dokladnie to samo nieaktualne twierdzenie, ktorego strona vendora juz
+nie stawia, tylko wydrukowane 177 razy.
+
+**Czego nadal nie ma:** zadnego zamrozonego wiersza w danych, wiec **cala ta sciezka nie byla
 jeszcze przejechana na zywym przypadku**. Pierwszy vendor, ktory nas o to poprosi, jest zarazem
 pierwszym testem.
 

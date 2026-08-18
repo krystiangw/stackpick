@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { CATEGORIES, CURATED_DOMAINS } from '@/lib/categories'
 import { publishedCorpus } from '@/lib/published'
+import { getStore } from '@/lib/store'
 import { SITE_URL } from '@/lib/site'
 
 /**
@@ -22,6 +23,17 @@ export const metadata: Metadata = {
 export default async function VendorIndex() {
   const { reports, formulaVersion } = await publishedCorpus()
   const scores = new Map(reports.map((report) => [report.domain, report.scorecard]))
+  // One read for the whole list, not one per row. A frozen score sitting unmarked in a ranked list
+  // is the same stale claim the vendor page now refuses to make, printed 177 times.
+  //
+  // A failed read is not "nothing is frozen". Swallowed into an empty set it would print every
+  // frozen row as an ordinary ranked result, so the page says it could not check instead: the
+  // ranking is still worth reading, the claim that all of it is current is not ours to make.
+  const stayOuts = await getStore()
+    .stayOuts()
+    .then((all) => all.map((one) => one.domain))
+    .catch(() => null)
+  const frozen = new Set(stayOuts ?? [])
 
   return (
     <main className="mx-auto flex max-w-3xl flex-col px-6 py-16">
@@ -30,6 +42,13 @@ export default async function VendorIndex() {
         {scores.size} companies under formula {formulaVersion}, grouped by the job they do. The number is points
         won out of points we could measure, so a small denominator means a site we could not fully read rather
         than a vendor doing badly.
+      </p>
+      <p className="mt-4 max-w-2xl leading-relaxed">
+        {stayOuts === null
+          ? 'We could not check which of these rows are frozen at their owner\u2019s request just now, so none is marked. A row can be frozen and look current on this page until the check comes back.'
+          : stayOuts.length === 0
+            ? 'None of these rows is frozen: every one is still being refreshed.'
+            : `${stayOuts.length} of these rows are frozen at their owner\u2019s request and marked as such: they keep their last measurement and are no longer refreshed.`}
       </p>
       {/* Two formula versions are never comparable, so we publish whichever covers the most domains
           and the rest wait for their next scan. A reseed converts them one at a time, and one that
@@ -59,9 +78,14 @@ export default async function VendorIndex() {
                     <span className="font-mono text-xs text-ink-soft">
                       {card.total}/{measurable}
                     </span>
-                    <Link href={`/v/${domain}`} className="text-sm text-brass underline underline-offset-4">
-                      {domain}
-                    </Link>
+                    <span className="text-sm">
+                      <Link href={`/v/${domain}`} className="text-brass underline underline-offset-4">
+                        {domain}
+                      </Link>
+                      {frozen.has(domain) && (
+                        <span className="ml-2 font-mono text-xs text-warn">frozen at their request</span>
+                      )}
+                    </span>
                   </li>
                 )
               })}
