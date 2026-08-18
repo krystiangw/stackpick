@@ -1182,6 +1182,18 @@ function shapeRank(name: string, vendor: Vendor, description = ''): number {
   if (/\b(cli|command[- ]line)\b/i.test(description)) return 5
   const rest = afterVendorName(part, vendor)
   if (rest === '') return 0
+  // A package in the vendor's own scope whose name is nothing but the words an SDK is called ranks
+  // with the bare vendor name rather than below it, so the download counts decide between them.
+  // Measured 2026-08-18: `directus` (the server, 19k weekly, no types) outranked `@directus/sdk`
+  // ("Directus JavaScript SDK", 135k weekly, typed) purely on the shape of the name, and the row
+  // published about them was about the wrong artefact. The scope has to be theirs: `@acme/sdk`
+  // under somebody else's account says nothing about this vendor.
+  // The scope has to BE their name, not merely start with it. `isVendorScope` accepts a prefix,
+  // which is right for deciding ownership and wrong here: it promoted `@bunny-agent/sdk`, published
+  // by another company entirely, over bunny.net's own `@bunny.net/storage-sdk`. Caught by measuring
+  // the change against the corpus before it shipped, on the sixth domain.
+  const scope = name.startsWith('@') ? name.slice(1).split('/')[0] : null
+  if (scope !== null && isVendorName(scope, vendor) && onlySdkWords(part)) return 0
   // launchdarkly-js-client-sdk is what LaunchDarkly ships; launchdarkly-eventsource is what it
   // depends on, at 3.1M weekly against 2.8M, and both carry the brand and publish from the
   // same account. Nothing but the shape of the name separates them.
@@ -1190,6 +1202,13 @@ function shapeRank(name: string, vendor: Vendor, description = ''): number {
   if (SDK_SHAPE.test(part)) return 3
   return 4
 }
+
+/**
+ * The ranking itself, exposed so it can be argued with directly. Until 2026-08-18 the only way to
+ * test it was through a live registry search, which is why a promotion that handed one vendor
+ * another company's package was found by measuring the corpus rather than by a rule.
+ */
+export const shapeRankOf = (name: string, domain: string): number => shapeRank(name, vendorOf(domain))
 
 /** Is this the package a developer installs, or just something the vendor happens to publish? */
 export function looksLikeEntryPackage(name: string, domain: string): boolean {

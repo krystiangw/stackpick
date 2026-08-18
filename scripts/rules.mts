@@ -10,6 +10,7 @@ import { FRESH_QUESTIONS, HELD_OUT_2, HELD_OUT_3, HELD_OUT_4, HELD_OUT_5, HELD_O
 import { crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
+import { looksLikeEntryPackage, shapeRankOf } from '../src/lib/scan/discover'
 import { changesBetween, comparableScorecards, rulesChangedBetween, turnedAwayAtTheEdge, worthTelling } from '../src/lib/watch'
 import { isOlderThan } from '../src/lib/formula'
 import { buildFixPlan } from '../src/lib/fixfirst'
@@ -1602,6 +1603,17 @@ const counted = readWithGuest(answers, 'buttondown.com', ['postmarkapp.com'], 'B
 check('gosc jest policzony, gdy pada w odpowiedzi', counted.named.get('buttondown.com'), 1)
 check('i reszta jest przeliczona obok niego', counted.named.get('postmarkapp.com'), 2)
 check('a pierwszenstwo liczy sie z nim w liscie', counted.first.get('buttondown.com'), 1)
+
+// Ranking ksztaltu nazwy: paczka w SCOPE vendora nazwana samymi slowami SDK stoi rowno z gola
+// nazwa vendora, wiec o wyborze decyduja pobrania. Scope musi BYC ich nazwa, a nie zaczynac sie od
+// niej: luzniejsze dopasowanie wpuscilo `@bunny-agent/sdk` (inna firma) przed `@bunny.net/storage-sdk`.
+console.log('\nranking nazw paczek')
+check('SDK w scope vendora stoi rowno z gola nazwa', shapeRankOf('@directus/sdk', 'directus.com'), 0)
+check('gola nazwa vendora nadal na zero', shapeRankOf('directus', 'directus.com'), 0)
+// Scope musi BYC ich nazwa. `bunny-agent` zaczyna sie od „bunny" i nalezy do innej firmy: przy
+// luzniejszym dopasowaniu awansowal na zero i wygrywal z paczka bunny.net mimo kary za zalazek.
+check('podobny cudzy scope nie awansuje', shapeRankOf('@bunny-agent/sdk', 'bunny.net') === 0, false)
+check('a paczka wejsciowa to nadal paczka wejsciowa', looksLikeEntryPackage('@directus/sdk', 'directus.com'), true)
 
 // Runbook dostawy mowi platnikowi, co dostaje za 79 USD miesiecznie. Liczba checkow byla tam
 // wpisana z reki i zostala na 15, gdy checkow bylo juz 16.
