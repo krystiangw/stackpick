@@ -80,6 +80,28 @@ function refusedUs(f: ScanFindings): number | null {
   return status >= 400 ? status : null
 }
 
+/**
+ * Whether a site answers every namespace with something that reads like a real file, which makes
+ * any hit at a well-known address prove nothing about that address.
+ */
+function everyNamespaceFakesFor(f: ScanFindings): boolean {
+  const catchAll = f.funnel.catchAll
+  return catchAll ? catchAll.markdown && catchAll.json && (catchAll.entryText ?? catchAll.text) : f.funnel.servesCatchAll
+}
+
+/**
+ * The entry files a scan may be believed about, which is not the same list as the one it found.
+ *
+ * Exported because /standard counts how many vendors serve an agent card, and counting the raw
+ * findings there published app shells as agent cards. One concept computed in two places drifts
+ * exactly where it hurts, and this project has the scars to prove it.
+ */
+export function usableEntryPoints(f: ScanFindings): string[] {
+  const found = f.funnel.entryPointsFound
+  if (!everyNamespaceFakesFor(f)) return found
+  return found.filter((entry) => entry.startsWith('http') && !entry.startsWith(f.site))
+}
+
 export const CHECKS: Check[] = [
   {
     id: 'answers_plain_request',
@@ -544,10 +566,7 @@ export const CHECKS: Check[] = [
       // Per namespace, not globally. sentry.io answers any .md path with an app shell, and the
       // whole check bailed on that: its /.well-known/mcp.json is 106 bytes of real JSON against
       // a 20,402 byte control, and the same scan read that file to find their MCP server.
-      const catchAll = f.funnel.catchAll
-      const everyNamespaceFakes = catchAll
-        ? catchAll.markdown && catchAll.json && (catchAll.entryText ?? catchAll.text)
-        : f.funnel.servesCatchAll
+      const everyNamespaceFakes = everyNamespaceFakesFor(f)
       // This describes the site's OWN namespaces, and since 9.19 the probe also asks the
       // documentation origin, which has its own control. A site that answers everything while its
       // docs host serves a real file is measurable through the docs host, so a hit there outranks
@@ -557,7 +576,7 @@ export const CHECKS: Check[] = [
       // one shell would have been published as four entry files worth two points.
       const found = f.funnel.entryPointsFound
       const elsewhere = found.filter((entry) => entry.startsWith('http') && !entry.startsWith(f.site))
-      const usable = everyNamespaceFakes ? elsewhere : found
+      const usable = usableEntryPoints(f)
       if (everyNamespaceFakes && elsewhere.length === 0) {
         return {
           points: 0,

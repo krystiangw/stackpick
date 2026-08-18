@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { headers } from 'next/headers'
-import { CHECKS } from '@/lib/score'
+import { CHECKS, usableEntryPoints } from '@/lib/score'
 import { publishedCorpus } from '@/lib/published'
 import { recordVisit } from '@/lib/visits'
 import { SITE_URL } from '@/lib/site'
@@ -92,12 +92,16 @@ const NO_EQUIVALENT = [
 
 export default async function StandardPage() {
   const corpus = await publishedCorpus()
-  // Read off the published sentences rather than rescanning: the entry check names the file it
-  // found, so this is the same number a reader can count in corpus.json themselves.
+  // Counted from what the scan found at each address, not from the sentence it wrote. Reading the
+  // published detail instead gave 2, because a domain serving several of these files is described
+  // by whichever one the sentence names first: a number about our prose rather than about them.
+  // Through the same filter the check uses, not the raw findings: a site that answers every path
+  // with its app shell has an apparent hit at every address, and counting those would publish app
+  // shells as agent cards.
   const withCard = corpus.reports.filter((report) =>
-    report.scorecard.checks.some(
-      (check) => check.id === 'agent_entry_point' && check.points > 0 && check.detail.includes('agent-card.json'),
-    ),
+    // The address AR-CAPA-04 names and no other. `/.well-known/agent.json` is an older, separate
+    // file we also probe, and counting it here would inflate a statistic about this requirement.
+    usableEntryPoints(report.findings).some((path) => path.includes('agent-card.json')),
   ).length
   const labelOf = (id: string) => CHECKS.find((check) => check.id === id)?.label ?? id
   recordVisit('/standard', (await headers()).get('user-agent'))

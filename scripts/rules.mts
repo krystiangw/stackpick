@@ -2034,7 +2034,17 @@ console.log('\nstrona o standardzie nie wpisuje liczb recznie')
 const standard = readFileSync('src/app/standard/page.tsx', 'utf8')
 check('liczba checkow idzie ze stalej', standard.includes('CHECKS.length'), true)
 check('liczba wierszy idzie z korpusu', standard.includes('corpus.reports.length'), true)
-check('liczba kart A2A jest liczona, nie wpisana', standard.includes("check.detail.includes('agent-card.json')"), true)
+// Liczona z tego, co skan zastal pod adresem, nie ze zdania, ktore o tym napisal: zdanie nazywa
+// jeden plik, wiec domena serwujaca kilka bylaby policzona raz albo wcale.
+check('liczba kart A2A idzie ze znalezisk, nie ze zdania', standard.includes('usableEntryPoints'), true)
+check('i nie czyta opublikowanego zdania', standard.includes('check.detail.includes'), false)
+// Witryna odpowiadajaca kazdej sciezce swoja powloka ma pozorne trafienie pod kazdym adresem;
+// check to odrzuca, wiec liczenie samych sciezek publikowaloby te powloki jako karty agenta.
+check('strona filtruje tak samo jak check', standard.includes('usableEntryPoints(report.findings)'), true)
+check('a nie powtarza jego reguly u siebie', standard.includes('servesCatchAll'), false)
+// AR-CAPA-04 nazywa jeden adres. `/.well-known/agent.json` to starszy, osobny plik, ktory tez
+// badamy, i wliczanie go zawyzaloby statystyke o tym konkretnym wymaganiu.
+check('liczymy tylko adres z AR-CAPA-04', standard.includes("path.includes('agent.json')"), false)
 // Siedem MUST-ow przeczytanych z agentready.org 2026-08-19. Gdy tabela urosnie albo sie skurczy
 // bez zmiany zdania we wstepie, strona zacznie klamac o standardzie, ktorego nie kontrolujemy.
 const musts = (standard.match(/id: 'AR-[A-Z]+-\d+'/g) ?? []).length
