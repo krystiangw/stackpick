@@ -20,10 +20,12 @@ zanim cokolwiek zrobisz.** Gdyby przepadla, komenda jest w sekcji o 9.35 nizej.
 **PO RESEEDZIE (9.40), w tej kolejnosci:**
 1. `MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/after-reseed.mts`
 2. `npm run audit`, `npx tsx scripts/audit-study.mts`, `npm run audit-delivery`
-3. **Nowy check `price_in_snippet`: policz, ilu vendorow go oblewa.** Zmierzona przed reseedem
-   probka **34 domen z korpusu**: 13 przechodzi, 19 oblewa, 2 bez odpowiedzi, czyli okolo **40
-   procent przechodzi**. Jesli po reseedzie wyjdzie duzo mniej, czytaj opisy, zanim uznasz to za
-   wynik: pomiar probki byl na `readSnippet` z 9.36, a reseed idzie na tym samym kodzie.
+3. **Nowy check `price_in_snippet`: policz, ilu vendorow go oblewa.** Zmierzone przed reseedem na
+   **dwoch rozlacznych probkach po 34 domeny z korpusu**: 13/19/2 oraz 14/14/6
+   (przechodzi/oblewa/bez odpowiedzi). Razem **27 z 60 mierzalnych, czyli okolo 45 procent
+   przechodzi**. Spodziewaj sie **70-85 zaliczonych wierszy** na pelnym korpusie. Jesli wyjdzie
+   duzo mniej, czytaj opisy, zanim uznasz to za wynik. Oba komplety oblanych opisow przeczytane po
+   kolei: **zero falszywych oskarzen na 80 domenach**.
 4. **9.35 zmienila probke dokumentacji**, wiec `programmatic_provisioning` moze sie ruszyc w obie
    strony. `regressions.mts` pokaze te ruchy w osobnej sekcji "nasza zmiana reguly", bo wpis w
    `CHECK_RULE_CHANGED` juz jest. **Nie skanuj ich pojedynczo jako podejrzanych.**
