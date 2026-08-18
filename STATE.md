@@ -5626,3 +5626,15 @@ produkcie w dokumencie, za ktory ktos placi.
 Teraz liczba idzie z biegow, ktore postawily kogos innego na pierwszym miejscu, i zdanie mowi to
 wprost: „In the N runs that put somebody else first". Straznik na przypadek „biegow wiecej niz
 zwyciezcow" jest w `rules.mts`.
+
+## MAIL O ZMIANIE STAWIAL „NIE UMIELISMY ZMIERZYC" POD SLOWEM „GAINED" (2026-08-18, naprawione)
+
+Znalezione przez wyrenderowanie maila i przeczytanie go jak adresat. Zmiany dzielily sie na dwie
+grupy: `worse` i cala reszta pod naglowkiem **„Gained or moved"**. Przejscie `pass -> unmeasured`
+nie jest ani zyskiem, ani ruchem w bok, a bywa **najwazniejszym zdaniem, jakie mozemy wyslac**:
+„llms.txt published: pass to unmeasured, the host refused ordinary requests" znaczy, ze ich brzeg
+zaczal odsylac agenta, czego czlowiek w przegladarce nie zauwazy. Czytalo sie jak dobra wiadomosc.
+
+Teraz sa trzy grupy, a pod trzecia stoi zdanie, ze to nie werdykt o nich, ze nic z tej grupy nie
+liczy sie przeciwko wynikowi i ze **czasem to nasz zasieg, a nie ich brzeg**. Straznik w
+`rules.mts` sprawdza obie strony: ze naglowek istnieje i ze `unmeasured` nie stoi pod „Gained".

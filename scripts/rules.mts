@@ -590,6 +590,19 @@ check('i nie mowi tego, gdy nie byla', mailFor(false).text.includes('recomputed 
 check('i przyznaje, ze to mogla byc nasza regula', mailFor(true).text.includes('because we tightened a rule'), true)
 // A check going unmeasured is news, but it is usually about our reach and never called a loss.
 check('przejscie w niemierzalne to nie oskarzenie', moved([verdict(1, 1)], [verdict(0, 1, { inconclusive: true })])[0]?.worse, false)
+// ...i tym bardziej nie jest zyskiem. Do 2026-08-18 „pass -> unmeasured" ladowalo w mailu pod
+// naglowkiem ze slowem „Gained", czyli najwazniejsze zdanie, jakie mozemy wyslac vendorowi (ich
+// brzeg odsyla agenta, choc czlowiek w przegladarce niczego nie zauwazy), czytalo sie jak dobra
+// wiadomosc.
+const fellOut = changeEmail(
+  { domain: 'v.test', id: 'w1', email: 'a@v.test', lastTotal: 5, lastMeasurable: 10 } as never,
+  { id: 'r1', scorecard: { total: 4, max: 12, checks: [] } } as never,
+  moved([verdict(1, 1)], [verdict(0, 1, { inconclusive: true })]),
+  false,
+).text
+check('niemierzalne ma wlasny naglowek', fellOut.includes('We could not measure it this time (1):'), true)
+check('i nie stoi pod slowem "Gained"', /Gained or moved \(\d+\):[\s\S]*unmeasured/.test(fellOut), false)
+check('i mowi, ze nie liczy sie przeciwko nim', fellOut.includes('nothing in this last group counts against your score'), true)
 // A check the earlier scan never had must not be reported as a change from nothing.
 check('nowy check nie jest zmiana', moved([], [verdict(1, 1)]).length, 0)
 

@@ -50,7 +50,12 @@ export function changeEmail(
   rescoredBaseline = false,
 ): { subject: string; text: string } {
   const worse = changes.filter((change) => change.worse)
-  const better = changes.filter((change) => !change.worse)
+  // A check falling out of measurement is not a gain, and it was being listed under a heading with
+  // the word "gained" in it. "llms.txt published: pass to unmeasured, the host refused ordinary
+  // requests" is the single most important line we can send a vendor, because their edge turning
+  // agents away changes nothing a person sees in a browser, and it read as good news.
+  const unreadable = changes.filter((change) => !change.worse && change.to === 'unmeasured')
+  const better = changes.filter((change) => !change.worse && change.to !== 'unmeasured')
   const measurable = measurableOf(report)
   const headline = worse.length > 0 ? worse[0] : changes[0]
 
@@ -73,6 +78,13 @@ export function changeEmail(
       '',
       ...section(`Lost ground (${worse.length}):`, worse),
       ...section(`Gained or moved (${better.length}):`, better),
+      ...section(`We could not measure it this time (${unreadable.length}):`, unreadable),
+      ...(unreadable.length > 0
+        ? [
+            'That is not a verdict about you, and nothing in this last group counts against your score. Sometimes it is your edge turning a non-browser away, which is worth knowing because it changes nothing a person sees in a browser, and sometimes it is our own reach. The reason we have is on the line itself.',
+            '',
+          ]
+        : []),
       ...(rescoredBaseline
         ? [
             'Our checks changed since your last measurement, so the before above was recomputed from the evidence we still hold rather than taken from the older score. That recompute is honest for a check whose rule reads a stored measurement, and it is not the whole story for a check whose reading was made during the scan itself: we keep what those rules matched, not the pages they matched it in, so the older reading stands and a line can move because we tightened a rule rather than because anything changed on your side. Where you think that is what happened, say so and we will rescan and correct it.',
