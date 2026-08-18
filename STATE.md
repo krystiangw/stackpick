@@ -5693,6 +5693,12 @@ straznik w `rules.mts` porownuje wszystkie trzy pliki ze stalymi `PER_DOMAIN_PER
 sama poprawic, a pliki statyczne to wlasnie te, ktore czytaja maszyny. `public/llms.txt` dostal ten
 sam straznik (liczba checkow).
 
+**I natychmiastowa kara za polowiczna zmiane:** przepisanie liczb ze slow na cyfry zepsulo **inny**
+straznik, `audit-corpus.mts`, ktory czytal je slownikiem `five -> 5`. Wynik byl komiczny i dlatego
+czytelny: „says 5 per domain, code says 5". Teraz czyta oba zapisy. Wniosek: **zmieniajac format
+liczby, poszukaj wszystkich, ktorzy ja czytaja** - to ta sama zasada, co „jedno pojecie liczone w
+dwoch miejscach", tylko od strony czytelnika.
+
 **Przy okazji drugi rozjazd w tym samym pliku:** czas skanu. JSON mowil „Takes 15-30s", proza
 „about ten seconds". **Zmierzone dzis na produkcji: linear.app 7,3 s, val.town 12,4 s** (height.app
 1,1 s, bo nie odpowiada i to jest poprawna odmowa, a nie szybki skan). Pierwsza proba poprawki
