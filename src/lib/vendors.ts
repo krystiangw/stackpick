@@ -279,12 +279,14 @@ export const certain = (mentions: Mention[]) => mentions.filter((mention) => men
  * paid report and the monthly mail printed it, each from its own copy of the line, which is how
  * one of them could have been fixed and the other left alone.
  */
-export function whoWentFirst(winners: readonly string[], yourFirsts: number, runs: number): string | null {
+export function whoWentFirst(winners: readonly string[], yourFirsts: number, othersFirst: number): string | null {
   if (winners.length === 0) return null
   const named = winners.join(', ')
   if (yourFirsts === 0) return `Picked ahead of you, the provider a run named before any other: ${named}.`
-  const others = runs - yourFirsts
-  return `In the ${others} ${others === 1 ? 'run' : 'runs'} that did not put you first, the ${
+  // Runs that put somebody else first, not every run that failed to put you first. A run can name
+  // nobody first, and counting those in made the sentence claim the listed provider led a run in
+  // which no provider led at all.
+  return `In the ${othersFirst} ${othersFirst === 1 ? 'run' : 'runs'} that put somebody else first, the ${
     winners.length === 1 ? 'provider named first was' : 'providers named first were'
   } ${named}.`
 }

@@ -432,10 +432,13 @@ check('zwykla etykieta nadal idzie z malej', entryPlan?.claim.includes('agent en
 // dla stripe.com, ktory prowadzil w polowie biegow i dostawal to samo zdanie. Jedna definicja na
 // oba dokumenty, bo byly dwie kopie tej linii.
 check('nikt nas nie postawil pierwszym: zdanie o wyprzedzeniu', whoWentFirst(['paddle.com'], 0, 10), 'Picked ahead of you, the provider a run named before any other: paddle.com.')
-check('prowadzimy w czesci biegow: zdanie o reszcie', whoWentFirst(['paddle.com'], 5, 10), 'In the 5 runs that did not put you first, the provider named first was paddle.com.')
-check('jeden taki bieg mowi w liczbie pojedynczej', whoWentFirst(['paddle.com'], 9, 10), 'In the 1 run that did not put you first, the provider named first was paddle.com.')
-check('dwoch zwyciezcow to liczba mnoga', whoWentFirst(['paddle.com', 'stripe.com'], 5, 10), 'In the 5 runs that did not put you first, the providers named first were paddle.com, stripe.com.')
-check('nikt inny nie byl pierwszy: brak zdania', whoWentFirst([], 10, 10), null)
+check('prowadzimy w czesci biegow: zdanie o reszcie', whoWentFirst(['paddle.com'], 5, 5), 'In the 5 runs that put somebody else first, the provider named first was paddle.com.')
+check('jeden taki bieg mowi w liczbie pojedynczej', whoWentFirst(['paddle.com'], 9, 1), 'In the 1 run that put somebody else first, the provider named first was paddle.com.')
+check('dwoch zwyciezcow to liczba mnoga', whoWentFirst(['paddle.com', 'stripe.com'], 5, 5), 'In the 5 runs that put somebody else first, the providers named first were paddle.com, stripe.com.')
+check('nikt inny nie byl pierwszy: brak zdania', whoWentFirst([], 10, 0), null)
+// Bieg, ktory nie wymienil nikogo, nie jest biegiem wygranym przez kogos. Liczba w zdaniu idzie z
+// biegow, w ktorych ktos naprawde padl pierwszy, a nie z odejmowania od wszystkich.
+check('bieg bez zadnego pierwszego nie liczy sie do cudzej przewagi', whoWentFirst(['paddle.com'], 5, 3), 'In the 3 runs that put somebody else first, the provider named first was paddle.com.')
 
 // Gosc, czyli domena spoza korpusu, ktora wskazano recznie do kategorii. Domyslnie liczy sie tylko
 // jej adres: zgadniete "postmark" dla postmark.com przejeloby wzmianki postmarkapp.com, a "email"

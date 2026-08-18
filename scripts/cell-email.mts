@@ -91,7 +91,10 @@ for (const watch of wanted) {
   } else {
     lines.push('No run wrote a sentence about you. That is an absence rather than a bad review, and it is', 'the thing worth acting on.', '')
   }
-  const wentFirst = whoWentFirst(winners as string[], first, runs)
+  const othersFirst = held
+    .flatMap((one) => one.answers)
+    .filter((answer) => answer.first && answer.first !== watch.domain).length
+  const wentFirst = whoWentFirst(winners as string[], first, othersFirst)
   if (wentFirst) {
     lines.push(wentFirst, '')
   }

@@ -285,7 +285,11 @@ if (!cell) {
   const wentFirstIn = (answer: { text: string; first: string | null }) =>
     live ? (certain(mentionsIn(answer.text, withGuest))[0]?.domain ?? null) : answer.first
   const winners = [...new Set(held.flatMap((one) => one.answers).map(wentFirstIn).filter((who) => who && who !== domain))]
-  const wentFirst = whoWentFirst(winners as string[], firstAll, runsAll)
+  const othersFirst = held.flatMap((one) => one.answers).filter((answer) => {
+    const who = wentFirstIn(answer)
+    return who && who !== domain
+  }).length
+  const wentFirst = whoWentFirst(winners as string[], firstAll, othersFirst)
   if (wentFirst) {
     lines.push('')
     lines.push(wentFirst)

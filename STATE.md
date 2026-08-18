@@ -5609,3 +5609,20 @@ sprawdz, czy tabela sumuje sie do tej liczby.**
 `audit-delivery.mts` swiadomie nie chodzi do bazy. Zeby to zabezpieczyc, trzeba by wyciagnac liczbowa
 czesc raportu do `src/lib`. Nie robie tego w nocy; wolne strony (`/v`, `/r`) tej wady nie maja, bo
 wypisuja kazdy check z werdyktem, a miesieczny mail nie drukuje tabeli punktow.
+
+## ZDANIE O CUDZEJ PRZEWADZE LICZYLO BIEGI, W KTORYCH NIKT NIE WYGRAL (2026-08-18, naprawione)
+
+Znalezione przez przeczytanie miesiecznego maila i platnego raportu jak odbiorca. Zdanie brzmialo
+„In the 10 runs that did not put you first, the provider named first was render.com", a liczba
+brala sie z **odejmowania** (wszystkie biegi minus twoje pierwsze miejsca), podczas gdy lista
+zwyciezcow powstawala tylko z biegow, w ktorych **ktos naprawde padl pierwszy**. Bieg, ktory nie
+wymienia nikogo, trafial do licznika, ale nie do listy, wiec zdanie przypisywaloby konkurentowi
+prowadzenie w biegu, w ktorym nikt nie prowadzil.
+
+Dzis w danych to nie strzelilo (app-hosting 10x render.com, payments 5x paddle.com,
+rich-text-editors 2x prosemirror.net - w kazdym biegu ktos byl pierwszy), ale to zdanie o **cudzym**
+produkcie w dokumencie, za ktory ktos placi.
+
+Teraz liczba idzie z biegow, ktore postawily kogos innego na pierwszym miejscu, i zdanie mowi to
+wprost: „In the N runs that put somebody else first". Straznik na przypadek „biegow wiecej niz
+zwyciezcow" jest w `rules.mts`.
