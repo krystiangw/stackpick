@@ -99,12 +99,19 @@ export default async function BotPage() {
           worst results have the strongest reason to ask, and a median of whoever did not object is not a median.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          If you fix something and want the entry updated, scan your own domain from our home page or write to{' '}
+          While it is frozen, the page says so: it prints the date the request first appeared, the date of the
+          measurement it is still showing, and the date we last confirmed the request is still there. Removing the two
+          lines unfreezes it, because the next automated pass measures the domain again and takes the notice with it.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          A scan you run from our home page always runs, robots.txt or not, because you asked for it. It will not
+          update the published entry: nothing a visitor scans joins the corpus we publish, and that rule is what stops
+          an anonymous request rewriting what this site says about a company. If you have fixed something and want the
+          entry refreshed sooner than the next pass, write to{' '}
           <a href="mailto:hello@letagentsin.com" className="text-brass underline underline-offset-4">
             hello@letagentsin.com
           </a>
-          . A scan you ask for yourself always runs, robots.txt or not, because you asked for it. That is the same line
-          Google draws between a crawler and a fetch a person triggered.
+          . The distinction between a crawler and a fetch a person triggered is the same one Google draws.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           A site-wide <span className="font-mono text-ink">User-agent: *</span> with{' '}

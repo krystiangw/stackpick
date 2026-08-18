@@ -1,6 +1,6 @@
 import { publishedCorpus } from './published'
 import { CHECKS, refusesAgentsAtSignup, signupNeedsJavaScript, STAGES, type Stage } from './score'
-import type { Report } from './store'
+import { getStore, type Report } from './store'
 
 /**
  * The industry picture, computed from the store at request time. Hardcoding the numbers
@@ -26,6 +26,16 @@ export type IndustryReport = {
   max: number
   median: number
   mean: number
+  /**
+   * Rows we stopped refreshing because the vendor's robots.txt names our scanner, and what the
+   * median is once they are taken out.
+   *
+   * We keep a frozen row rather than deleting it, on the argument that a median of whoever did not
+   * object is not a median. That argument is only honest if the reader can check it, so the number
+   * it depends on is published next to the one it defends: if the two medians ever separate, the
+   * separation is the story and it is ours to print rather than somebody else's to discover.
+   */
+  frozen: { count: number; median: number | null }
   scannedFrom: string
   scannedTo: string
   stages: {
@@ -87,6 +97,12 @@ export type UsableLeg = 'a door a machine can use' | 'a signup an agent can reac
 
 const MINIMUM_SAMPLE = 20
 
+/** One definition, because the report prints two medians and they have to be the same measurement. */
+function medianOf(sorted: number[]): number {
+  const middle = Math.floor(sorted.length / 2)
+  return sorted.length % 2 === 0 ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle]
+}
+
 export async function buildIndustryReport(): Promise<IndustryReport | null> {
   const all = (await publishedCorpus()).reports
   if (all.length === 0) return null
@@ -103,9 +119,20 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
 
   const totals = reports.map((report) => report.scorecard.total).sort((a, b) => a - b)
   const measurableOf = (report: Report) => report.scorecard.measurable ?? report.scorecard.max
-  const middle = Math.floor(totals.length / 2)
-  const median = totals.length % 2 === 0 ? (totals[middle - 1] + totals[middle]) / 2 : totals[middle]
+  const median = medianOf(totals)
   const mean = totals.reduce((sum, total) => sum + total, 0) / totals.length
+
+  const frozenDomains = new Set((await getStore().stayOuts()).map((one) => one.domain))
+  const stillRefreshed = reports
+    .filter((report) => !frozenDomains.has(report.domain))
+    .map((report) => report.scorecard.total)
+    .sort((a, b) => a - b)
+  // Null rather than a fallback when nothing is left: the median of an empty set is undefined, and
+  // printing the original number as the median "without" every row would be a false comparison.
+  const frozen = {
+    count: reports.length - stillRefreshed.length,
+    median: stillRefreshed.length > 0 ? medianOf(stillRefreshed) : null,
+  }
 
   // Denominator is the points we could measure. Folding our own blind spots into the
   // market's failures would make the funnel collapse look worse than we can prove it is,
@@ -296,6 +323,7 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
     // Every report in the slice shares a formula version, so they share a maximum.
     max: Math.max(...reports.map((report) => report.scorecard.max)),
     median,
+    frozen,
     mean,
     scannedFrom: scanTimes[0],
     scannedTo: scanTimes[scanTimes.length - 1],

@@ -1,11 +1,12 @@
 import { randomBytes } from 'node:crypto'
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { MongoStore } from './store-mongo'
 import type { ScanFindings } from './scan'
 import type { Scorecard } from './score'
 import type { Watch } from './watch'
 import type { Delivery } from './delivery'
+import { stayOutAfter, type StayOut } from './stayout'
 
 export type Report = {
   id: string
@@ -76,6 +77,15 @@ export interface Store {
    */
   saveDelivery(delivery: Delivery): Promise<void>
   getDelivery(id: string): Promise<Delivery | null>
+  /**
+   * A vendor that asked us to stay out. Written by the automated passes and cleared by the first
+   * pass that finds the request gone, so the published annotation is a fact about the last time we
+   * looked rather than about the day somebody typed it.
+   */
+  recordStayOut(domain: string): Promise<void>
+  clearStayOut(domain: string): Promise<void>
+  stayOutFor(domain: string): Promise<StayOut | null>
+  stayOuts(): Promise<StayOut[]>
   saveWatch(watch: Watch): Promise<void>
   getWatch(id: string): Promise<Watch | null>
   /** Every watch that is confirmed and not stopped, oldest check first. */
@@ -239,6 +249,38 @@ class FileStore implements Store {
     } catch {
       return null
     }
+  }
+
+  async recordStayOut(domain: string) {
+    const dir = await this.dir('stayouts')
+    const file = path.join(dir, `${domain}.json`)
+    const existing = await readFile(file, 'utf8')
+      .then((raw) => JSON.parse(raw) as StayOut)
+      .catch(() => null)
+    await writeFile(file, JSON.stringify(stayOutAfter(existing, domain, new Date().toISOString()), null, 2))
+  }
+
+  async clearStayOut(domain: string) {
+    const dir = await this.dir('stayouts')
+    await rm(path.join(dir, `${domain}.json`), { force: true })
+  }
+
+  async stayOutFor(domain: string) {
+    const dir = await this.dir('stayouts')
+    return readFile(path.join(dir, `${domain}.json`), 'utf8')
+      .then((raw) => JSON.parse(raw) as StayOut)
+      .catch(() => null)
+  }
+
+  async stayOuts() {
+    const dir = await this.dir('stayouts')
+    const names = await readdir(dir).catch(() => [] as string[])
+    const all = await Promise.all(
+      names
+        .filter((name) => name.endsWith('.json'))
+        .map((name) => readFile(path.join(dir, name), 'utf8').then((raw) => JSON.parse(raw) as StayOut)),
+    )
+    return all
   }
 
   async saveWatch(watch: Watch) {

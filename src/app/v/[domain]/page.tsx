@@ -130,6 +130,12 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
   // twilio.com, and asking about sendgrid.com would drop every limit twilio.com's edge answered
   // with, on a row whose own sentences say they were measured there.
   const challenged = unmeasured > 0 ? challengedUs(findings, findings.resolvedElsewhere?.finalDomain ?? name) : null
+  // Asked only for a domain we publish. Outside the corpus the page shows a visitor's own scan and
+  // there is no frozen row to annotate, so the question would be about nothing.
+  // A database blip must cost the annotation, not the page: this row renders from a report we
+  // already hold, and 500ing it because one extra read failed would be a worse answer than a
+  // missing notice.
+  const frozen = category ? await getStore().stayOutFor(name).catch(() => null) : null
 
   return (
     <main className="mx-auto flex max-w-3xl flex-col px-6 py-16">
@@ -137,6 +143,27 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
         Agent readiness{category ? ` · ${category.label}` : ''}
       </p>
       <h1 className="mt-3 text-2xl font-semibold wrap-anywhere sm:text-3xl">{name}</h1>
+
+      {frozen && (
+        <div className="mt-6 border-l-2 border-warn bg-surface p-6">
+          <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">Frozen at their request</h2>
+          <p className="mt-3 max-w-2xl leading-relaxed">
+            Since {frozen.since.slice(0, 10)} the robots.txt at {name} has carried a group naming our scanner, so our
+            automated passes stopped fetching it. Everything below is the measurement of {scannedOn} and it has not
+            been refreshed since. We last confirmed the request on {frozen.lastSeenAt.slice(0, 10)}.
+          </p>
+          <p className="mt-3 max-w-2xl leading-relaxed">
+            The row stays rather than being deleted, because deleting on request would leave a median of whoever did
+            not object. Removing the two lines is enough to unfreeze it: the next automated pass measures the domain
+            again and this notice goes with it. A scan run from our own home page will not do it, because a scan a
+            visitor runs never joins the published corpus.{' '}
+            <Link href="/bot" className="text-brass underline underline-offset-4">
+              What our scanner does
+            </Link>
+            .
+          </p>
+        </div>
+      )}
 
       {scorecard.formulaVersion !== FORMULA_VERSION && (
         <div className="mt-6 border-l-2 border-warn bg-surface p-6">

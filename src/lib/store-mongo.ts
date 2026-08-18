@@ -4,6 +4,7 @@ import { installMcpRegistryMirror, type McpRegistryMirror } from './scan/funnel'
 import type { Fetched } from './scan/http'
 import type { Watch } from './watch'
 import type { Delivery } from './delivery'
+import type { StayOut } from './stayout'
 import { forStorage, type Lead, type Report, type Store } from './store'
 
 type ReportDoc = Report & { _id: string }
@@ -78,6 +79,7 @@ async function collections(): Promise<{
   watches: Collection<Watch>
   deliveries: Collection<Delivery>
   mcpRegistry: Collection<McpRegistryDoc>
+  stayOuts: Collection<StayOut>
 }> {
   const database = await db()
   const reports = database.collection<ReportDoc>('reports')
@@ -87,6 +89,7 @@ async function collections(): Promise<{
   const watches = database.collection<Watch>('watches')
   const deliveries = database.collection<Delivery>('deliveries')
   const mcpRegistry = database.collection<McpRegistryDoc>('mcpRegistry')
+  const stayOuts = database.collection<StayOut>('stayOuts')
 
   // Before the batch, not after it. createIndex does not change the expiry of an index that already
   // exists: it raises IndexOptionsConflict, which rejects the Promise.all below and skips every
@@ -107,6 +110,8 @@ async function collections(): Promise<{
     watches.createIndex({ email: 1, domain: 1 }, { unique: true }),
     watches.createIndex({ checkedAt: 1 }),
     mcpRegistry.createIndex({ under: 1 }),
+    // One row per domain: the freeze is a fact about the domain, not a log of every pass.
+    stayOuts.createIndex({ domain: 1 }, { unique: true }),
     // Mongo expires them, so nothing here has to remember to.
         answers.createIndex({ at: 1 }, { expireAfterSeconds: REGISTRY_TTL_MS / 1000 }),
       ]),
@@ -123,7 +128,7 @@ async function collections(): Promise<{
     })
   await indexesReady
 
-  return { reports, leads, answers, visits, watches, deliveries, mcpRegistry }
+  return { reports, leads, answers, visits, watches, deliveries, mcpRegistry, stayOuts }
 }
 
 const registryAnswers: SharedCache = {
@@ -335,6 +340,37 @@ export class MongoStore implements Store {
   async getDelivery(id: string) {
     const { deliveries } = await collections()
     return (await deliveries.findOne({ id }, withoutId)) as Delivery | null
+  }
+
+  async recordStayOut(domain: string) {
+    const { stayOuts } = await collections()
+    // The same rule `stayOutAfter` states for the file store, expressed as one atomic update
+    // because two writers really do meet here: the reseed and the monitoring cron can observe the
+    // same domain at once. Read-then-replace let the later read win with the older timestamp, and
+    // on a first observation two upserts raced the unique index into a duplicate-key error.
+    // One clock reading, not two: called twice, the first insert wrote a `since` a few
+    // milliseconds after the `lastSeenAt` it is supposed to precede, and both dates are printed.
+    const now = new Date().toISOString()
+    await stayOuts.updateOne(
+      { domain },
+      { $set: { lastSeenAt: now }, $setOnInsert: { domain, since: now } },
+      { upsert: true },
+    )
+  }
+
+  async clearStayOut(domain: string) {
+    const { stayOuts } = await collections()
+    await stayOuts.deleteOne({ domain })
+  }
+
+  async stayOutFor(domain: string) {
+    const { stayOuts } = await collections()
+    return (await stayOuts.findOne({ domain }, withoutId)) as StayOut | null
+  }
+
+  async stayOuts() {
+    const { stayOuts } = await collections()
+    return (await stayOuts.find({}, withoutId).toArray()) as StayOut[]
   }
 
   async saveWatch(watch: Watch) {

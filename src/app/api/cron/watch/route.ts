@@ -96,6 +96,11 @@ export async function POST(request: Request) {
     if (await asksUsToStayOutOf(`https://${watch.domain}`)) {
       console.log(`watch ${watch.domain}: prosza w robots.txt, zebysmy nie skanowali, pomijam`)
       skipped.push(watch.domain)
+      // The monitoring pass is seeded, so it writes the same annotation the reseed does. Whichever
+      // pass sees the request first is the date the vendor page prints.
+      await store
+        .recordStayOut(watch.domain)
+        .catch((error) => console.error('stay-out request not recorded, watch still skipped', error))
       // Moved to the back of the queue rather than left where it is. The queue is oldest first and
       // this call takes one watch, so a domain that opts out would otherwise be picked and skipped
       // for ever and every watch behind it would starve. Not stopped either: the subscriber paid
@@ -115,6 +120,9 @@ export async function POST(request: Request) {
       seeded: true,
     }
     await store.saveReport(report)
+    await store
+      .clearStayOut(watch.domain)
+      .catch((error) => console.error('stay-out record not cleared, watch continues', error))
 
     const previous = watch.lastReportId ? await store.getReport(watch.lastReportId) : null
     // Two scorecards from two formula versions are not a before and an after. We reseed the

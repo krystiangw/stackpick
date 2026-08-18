@@ -7480,3 +7480,77 @@ mocnym dowodem nieobecnosci.
 **Profil skilla:** `~/.claude/skills/agent-discoverability/profiles/letagentsin.json`. Kanaly B i C.
 Kanalu A praktycznie nie mamy: repo jest prywatne, na npm nie ma nic, wiec dla agenta kodujacego
 istniejemy tylko przez dokumentacje i serwer MCP.
+
+## ZAMROZONY WIERSZ MOWI, ZE JEST ZAMROZONY, I JEDNO ZDANIE NA `/bot` BYLO NIEPRAWDA (2026-08-19)
+
+Audyt subagenta, ktory ustalil, ze na imienna prosbe w robots.txt **zamrazamy** wiersz zamiast go
+usuwac, sam nazwal swoj warunek konieczny: **ta sciezka musi dzialac i byc widoczna, inaczej
+wracamy do usuwania**. Zadna z tych dwoch polowek nie istniala.
+
+**Polowa pierwsza: nie bylo widac.** Pominiecie dzialo sie w srodku przebiegu i nie zostawialo
+sladu nigdzie, gdzie czytelnik moglby go zobaczyc. Opublikowany wiersz dalej wygladal na biezacy
+pomiar firmy, ktora poprosila nas, zebysmy przestali ja mierzyc. Teraz kazdy przebieg automatyczny
+(reseed i cron monitoringu) **zapisuje prosbe**, a strona vendora ma nad wynikiem ramke: od kiedy
+prosza, z kiedy jest pomiar, ktory nadal pokazujemy, i kiedy ostatnio potwierdzilismy, ze prosba
+wciaz tam jest. `since` nie rusza sie nigdy, `lastSeenAt` rusza sie przy kazdym przebiegu, bo to
+druga wielkosc: pierwsza to data, ktora drukujemy, druga to dowod, ze nie cytujemy pamieci.
+
+**Polowa druga: `/bot` opisywal droge powrotna, ktorej nie ma.** Strona mowila „jesli cos naprawiles
+i chcesz zaktualizowac wpis, przeskanuj swoja domene z naszej strony glownej". Sprawdzone w kodzie,
+nie z pamieci: `loadCorpus` bierze `latestPerDomain(1000, true)`, czyli **wylacznie skany z naszej
+konsoli**. Skan, ktory vendor odpali u nas, nigdy nie rusza jego opublikowanego wiersza, i tak ma
+byc, bo inaczej anonimowe zadanie przepisuje to, co witryna mowi o firmie. Zdanie bylo nieprawdziwe
+przez dobe. Teraz `/bot` mowi, jak jest: **usuniecie dwoch linijek odmraza wiersz**, bo nastepny
+przebieg automatyczny mierzy domene od nowa i zabiera adnotacje ze soba; skan goscia zawsze sie
+wykonuje, ale nie aktualizuje wpisu; szybciej niz nastepny przebieg tylko mailem.
+
+**Codex zlapal P2 w tej samej mechanice, i to takie, ktore trafia dokladnie w cel adnotacji:**
+czyscilem prosbe **przed** skanem, wiec rescan, ktory potem umarl na DNS albo timeoucie, zdejmowal
+ostrzezenie i zostawial na stronie stary pomiar **bez** informacji, ze jest stary. Teraz czyszczenie
+stoi za zapisanym raportem (`seeded && kept`), a regula pilnuje kolejnosci, nie tylko obecnosci
+wywolania.
+
+**Drugi przebieg codeksa zlapal dwie rzeczy, ktorych sam nie widzialem.** Zapis prosby byl odczytem
+i podmiana, a reseed i cron moga zobaczyc te sama domene naraz: pozniejszy odczyt wygrywal starsza
+data, a przy pierwszej obserwacji dwa upserty wchodzily na unikalny indeks bledem duplikatu. Teraz
+jest to jedna operacja (`$set` na `lastSeenAt`, `$setOnInsert` na `since`) i **jedno odczytanie
+zegara**, bo przy dwoch pierwszy zapis dawal `since` o dwie milisekundy **pozniejsze** niz
+`lastSeenAt`, ktore ma poprzedzac, a obie daty ida na strone. Druga rzecz: przy wszystkich wierszach
+zamrozonych mediana „bez nich" nie istnieje, a kod podstawial tam mediane wyjsciowa, wiec strona
+twierdzilaby, ze usuniecie wszystkiego daje liczbe. Teraz to `null` i osobne zdanie.
+
+**Sprawdzone na zywej bazie, nie tylko w typach:** sonda na domenie spoza korpusu przeszla pelny
+cykl zapis - drugi przebieg - lista - wyczyszczenie i posprzatala po sobie. `since` stoi, `lastSeenAt`
+sie rusza, po wyczyszczeniu nie ma wiersza.
+
+**Raport branzowy drukuje mediane w dwie strony.** Argument „mediana tych, ktorzy nie protestowali,
+nie jest mediana" jest uczciwy tylko wtedy, gdy czytelnik moze go sprawdzic, wiec liczba, od ktorej
+zalezy, stoi obok tej, ktorej broni. Dzis zamrozonych jest **0 ze 177** i strona pisze to wprost.
+Gdy obie mediany kiedys sie rozjada, rozjazd jest nasza historia do opublikowania, a nie czyims
+znaleziskiem.
+
+**Czego nadal nie ma:** oznaczenia zamrozonych wierszy na liscie `/v` (jest tylko na stronie
+pojedynczego vendora) i zadnego zamrozonego wiersza w danych, wiec **cala ta sciezka nie byla
+jeszcze przejechana na zywym przypadku**. Pierwszy vendor, ktory nas o to poprosi, jest zarazem
+pierwszym testem.
+
+## LICZNIK ODWIEDZIN NAZYWA CRAWLERY, BO INACZEJ NIE WIEMY, KTO NAS CZYTA (2026-08-19)
+
+`presence.py` ze skilla `agent-discoverability` zwraca trzy pola „nie do sprawdzenia bez konta":
+Bing, Search Console i Brave. Mielismy wlasny licznik, ktory zapisywal wylacznie `agent` albo
+`browser`, wiec nie odrozniał `OAI-SearchBot` od `curl`.
+
+Teraz zapisuje **nazwe** dla zamknietej listy trzynastu robotow (OpenAI, Anthropic, Perplexity,
+Google, Bing, Apple, Meta), a konsola pokazuje je osobno. Kolejnosc na liscie ma znaczenie:
+`Claude-SearchBot` musi stac przed `ClaudeBot`, bo drugi wzorzec zjadlby pierwszy.
+
+**Czym ten pomiar jest, a czym nie:** przeczolganie to nie indeks, wiec obecnosc wizyty jest
+dowodem slabym. W druga strone jest mocny: crawler, ktory nigdy nie przyszedl, nie mogl niczego
+zaindeksowac. **Wyjatek wart zapamietania: Brave.** Claude gruntuje sie na Brave, a Brave buduje
+indeks czesciowo z tego, co ludzie przegladaja, a nie tylko wlasnym crawlerem, wiec **brak wiersza
+Brave nie jest dowodem niczego**.
+
+**Strona prywatnosci musiala sie zmienic razem z tym**, bo mowila „data, sciezka i czy zapytanie
+wygladalo na przegladarke albo agenta". Zdanie o tym, co zbieramy, jest obietnica prawna, wiec
+regula wiaze teraz jedno z drugim: gdy licznik nazywa crawlery, prywatnosc musi o tym mowic, i
+kontrola oblewa, gdy wroci stare zdanie.

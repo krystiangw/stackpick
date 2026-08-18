@@ -29,10 +29,49 @@ export function recordVisit(path: string, userAgent?: string | null): void {
   if (userAgent && OURS.test(userAgent)) return
   const day = new Date().toISOString().slice(0, 10)
   // An agent and a browser are different visitors and the difference is the product's subject.
-  const kind = looksLikeAgent(userAgent) ? 'agent' : 'browser'
+  // A crawler we can name is a third thing: it says which index has a chance of holding us.
+  const kind = crawlerName(userAgent) ?? (looksLikeAgent(userAgent) ? 'agent' : 'browser')
   void getStore()
     .recordVisit({ day, path: `${path} ${kind}` })
     .catch((error) => console.error('visit counter failed, page unaffected', error))
+}
+
+/**
+ * The crawlers whose visit answers a question we otherwise cannot answer about ourselves.
+ *
+ * Four different indexes ground the four assistants, three of them will not tell us whether we are
+ * in them without an account, and one of them has no submission mechanism at all. A named fetch is
+ * weaker evidence than an index entry, because being crawled is not being indexed, but it is strong
+ * in the other direction: a crawler that has never come cannot have indexed anything.
+ *
+ * Brave is the exception worth stating, because Claude grounds on it: Brave builds its index partly
+ * from what people browse rather than only from a crawler of its own, so an absent Brave row here is
+ * evidence of nothing. Every other name on this list is a real crawler that either arrives or does not.
+ *
+ * Ordered, first match wins: `ChatGPT-User` and `OAI-SearchBot` are different questions (a fetch a
+ * person triggered against the crawler that builds OpenAI's index) and both contain neither the
+ * other's name nor a shared prefix, but Claude's three do overlap.
+ */
+const NAMED_CRAWLERS: [name: string, marker: RegExp][] = [
+  ['oai-searchbot', /OAI-SearchBot/i],
+  ['chatgpt-user', /ChatGPT-User/i],
+  ['gptbot', /GPTBot/i],
+  ['claude-searchbot', /Claude-SearchBot/i],
+  ['claude-user', /Claude-User/i],
+  ['claudebot', /ClaudeBot/i],
+  ['perplexity-user', /Perplexity-User/i],
+  ['perplexitybot', /PerplexityBot/i],
+  ['googlebot', /Googlebot/i],
+  ['google-extended', /Google-Extended/i],
+  ['bingbot', /bingbot/i],
+  ['applebot', /Applebot/i],
+  ['meta-externalagent', /meta-externalagent/i],
+]
+
+/** The name we file the visit under, or null when it is not one of the crawlers we are watching. */
+export function crawlerName(userAgent?: string | null): string | null {
+  if (!userAgent) return null
+  return NAMED_CRAWLERS.find(([, marker]) => marker.test(userAgent))?.[0] ?? null
 }
 
 const AGENT_MARKERS =

@@ -8,6 +8,8 @@ import { aboutTheirOwnCode, categoryForJob } from '../src/lib/lookup'
 import { pickHeadline } from '../src/lib/headline'
 import { FRESH_QUESTIONS, HELD_OUT_2, HELD_OUT_3, HELD_OUT_4, HELD_OUT_5, HELD_OUT_6, HELD_OUT_7 } from './routing-questions'
 import { asksUsToStayOut, crawlDelayForAgents, parseRobots } from '../src/lib/scan/robots'
+import { stayOutAfter } from '../src/lib/stayout'
+import { crawlerName } from '../src/lib/visits'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
 import { looksLikeEntryPackage, readBulkDownloads, shapeRankOf } from '../src/lib/scan/discover'
@@ -2071,6 +2073,60 @@ check('prosba w drugiej grupie tez sie liczy', asksUsToStayOut(parseRobots('User
 const cronSource = readFileSync('src/app/api/cron/watch/route.ts', 'utf8')
 check('pominiety watch idzie na koniec kolejki', cronSource.includes('watch.checkedAt = new Date().toISOString()\n      await store.saveWatch(watch)'), true)
 check('i nie jest po cichu zatrzymywany', cronSource.includes('watch.stoppedAt = ') , false)
+
+// Zamrozony wiersz musi MOWIC, ze jest zamrozony, i musi podawac droge powrotna, ktora dziala.
+// Audyt, ktory ustalil polityke zamrazania zamiast usuwania, sam nazwal to warunkiem koniecznym,
+// a zadna z tych dwoch polowek nie istniala: pominiecie dzialo sie wewnatrz przebiegu i nie
+// zostawialo sladu nigdzie, gdzie czytelnik moglby go zobaczyc.
+console.log('\nzamrozony wiersz mowi, ze jest zamrozony')
+check('pierwsza data nie rusza sie przy kolejnym przebiegu', stayOutAfter({ domain: 'x.test', since: '2026-01-01T00:00:00.000Z', lastSeenAt: '2026-01-01T00:00:00.000Z' }, 'x.test', '2026-08-19T00:00:00.000Z').since, '2026-01-01T00:00:00.000Z')
+check('a data ostatniego potwierdzenia rusza sie', stayOutAfter({ domain: 'x.test', since: '2026-01-01T00:00:00.000Z', lastSeenAt: '2026-01-01T00:00:00.000Z' }, 'x.test', '2026-08-19T00:00:00.000Z').lastSeenAt, '2026-08-19T00:00:00.000Z')
+// Kontrolka: pierwsza obserwacja ustawia obie daty na te sama.
+check('pierwsza obserwacja ustawia obie daty', stayOutAfter(null, 'x.test', '2026-08-19T00:00:00.000Z').since, '2026-08-19T00:00:00.000Z')
+// Oba przebiegi automatyczne zapisuja prosbe i oba czyszcza ja po udanym pomiarze, bo odmrozenie
+// idzie wylacznie ta droga.
+check('reseed zapisuje prosbe', readFileSync('src/lib/scan-run.ts', 'utf8').includes('.recordStayOut(gate.domain)'), true)
+// Czyszczenie MUSI stac po zapisie raportu: skasowane wczesniej, nieudany rescan zdejmowal
+// adnotacje i zostawial na stronie stary pomiar bez ostrzezenia, czyli dokladnie ten stan, przed
+// ktorym ta adnotacja ma chronic.
+const scanRunSource = readFileSync('src/lib/scan-run.ts', 'utf8')
+check('i czysci ja dopiero po zapisanym raporcie', scanRunSource.includes('if (seeded && kept) {'), true)
+check('kontrola: nie czysci jej przed skanem', scanRunSource.indexOf('.clearStayOut(gate.domain)') > scanRunSource.indexOf('await scanDomain(gate.domain)'), true)
+// Reseed i cron moga zobaczyc te sama domene naraz, wiec zapis musi byc jedna operacja: odczyt i
+// podmiana pozwalaly pozniejszemu odczytowi wygrac starsza data, a przy pierwszej obserwacji dwa
+// upserty wchodzily na unikalny indeks bledem duplikatu.
+const mongoSource = readFileSync('src/lib/store-mongo.ts', 'utf8')
+check('zapis prosby jest jedna operacja', mongoSource.includes('$setOnInsert: { domain, since'), true)
+check('kontrola: nie wraca do odczytu i podmiany', mongoSource.includes('stayOuts.replaceOne'), false)
+check('jedno odczytanie zegara na zapis', mongoSource.includes('$set: { lastSeenAt: now }, $setOnInsert: { domain, since: now }'), true)
+// Mediana pustego zbioru nie istnieje, wiec przy wszystkich wierszach zamrozonych raport nie moze
+// drukowac liczby „bez nich".
+const raportSource = readFileSync('src/app/report/page.tsx', 'utf8')
+check('raport ma osobna galaz dla wszystkich zamrozonych', raportSource.includes('report.frozen.median === null'), true)
+check('cron monitoringu zapisuje prosbe', cronSource.includes('.recordStayOut(watch.domain)'), true)
+check('i czysci ja przy udanym pomiarze', cronSource.includes('.clearStayOut(watch.domain)'), true)
+
+// Zdanie na /bot, ze skan wlasnej domeny NIE aktualizuje opublikowanego wiersza, jest prawdziwe
+// tylko dopoki korpus bierze wylacznie skany z konsoli. Przez dobe strona twierdzila odwrotnie.
+check('korpus bierze tylko skany zasiane', readFileSync('src/lib/published.ts', 'utf8').includes('latestPerDomain(1000, true)'), true)
+// Bialy znak znormalizowany, bo inaczej regula oblewa przy samym przelamaniu wiersza w JSX, czyli
+// alarmuje o czyms, co nie jest zmiana obietnicy.
+const botProse = readFileSync('src/app/bot/page.tsx', 'utf8').replace(/\s+/g, ' ')
+check('/bot mowi, ze skan goscia nie rusza wiersza', botProse.includes('will not update the published entry'), true)
+check('kontrola: zdania, ktorego tam nie ma, nie znajduje', botProse.includes('will update the published entry immediately'), false)
+
+// Licznik odwiedzin zapisuje teraz nazwe crawlera, wiec strona prywatnosci nie moze dalej mowic,
+// ze zapisujemy wylacznie „browser albo agent". Zdanie o tym, co zbieramy, jest obietnica prawna.
+console.log('\nlicznik nazywa crawlery, a prywatnosc o tym mowi')
+check('OAI-SearchBot rozpoznany', crawlerName('Mozilla/5.0 (compatible; OAI-SearchBot/1.0; +https://openai.com/searchbot)'), 'oai-searchbot')
+check('Claude-SearchBot przed ClaudeBot', crawlerName('Mozilla/5.0 (compatible; Claude-SearchBot/1.0)'), 'claude-searchbot')
+check('ClaudeBot to nadal ClaudeBot', crawlerName('Mozilla/5.0 (compatible; ClaudeBot/1.0)'), 'claudebot')
+// Kontrolka: zwykla przegladarka i nasz wlasny skaner nie sa crawlerem z listy.
+check('przegladarka nie jest nazwanym crawlerem', crawlerName('Mozilla/5.0 (Macintosh) Safari/605'), null)
+check('nasz wlasny UA tez nie', crawlerName('LetAgentsIn/1.0 (+https://letagentsin.com/bot)'), null)
+const prywatnosc = readFileSync('src/app/privacy/page.tsx', 'utf8').replace(/\s+/g, ' ')
+check('prywatnosc mowi o nazwie crawlera', prywatnosc.includes('The crawler name is the only thing kept from the user-agent'), true)
+check('i nie twierdzi juz, ze to tylko browser albo agent', prywatnosc.includes('whether the request looked like a browser or an agent'), false)
 
 // Strona o cudzym standardzie publikuje werdykt o czyms, czego nie kontrolujemy, wiec liczby na
 // niej musza byc liczone, a nie wpisane. Liczba MUST-ow i lista checkow bez odpowiednika to jedyne

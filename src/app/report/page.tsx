@@ -271,6 +271,28 @@ export default async function IndustryReportPage() {
             Scanned between {window[0]} and {window[1]}. Sites change, and so does this page: it recomputes
             from the store on every request rather than quoting a frozen number.
           </li>
+          <li>
+            {report.frozen.count === 0 ? (
+              <>
+                Not filtered by anybody who objected. No row in this sample is frozen: a vendor whose robots.txt
+                names our scanner keeps its last measurement instead of being deleted, and none currently does, so
+                the median above is the median of everyone we measured.
+              </>
+            ) : report.frozen.median === null ? (
+              <>
+                Every one of these {report.sampleSize} rows is frozen, because every vendor in the sample asks our
+                scanner to stay out. There is no median without them to compare against, and the number above is the
+                median of measurements we are no longer refreshing.
+              </>
+            ) : (
+              <>
+                {report.frozen.count} of these {report.sampleSize} rows are frozen, because those vendors ask our
+                scanner to stay out and we keep the last measurement rather than deleting the row. Without them the
+                median is {report.frozen.median} instead of {report.median}. Deleting on request would have made
+                this a median of whoever did not object, which is why the number is printed both ways.
+              </>
+            )}
+          </li>
         </ul>
         <div className="mt-10 border border-rule p-6">
           <h3 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Take the data</h3>

@@ -41,6 +41,11 @@ export async function runScan(request: Request, domain: string): Promise<ScanRun
   // own site always runs, because they asked. The corpus reseed comes through here with the
   // console token, which is what `seeded` means, so this is the line between the two.
   if (seeded && (await asksUsToStayOutOf(`https://${gate.domain}`))) {
+    // Recorded, not only obeyed. The skip used to leave no trace, so the row we publish went on
+    // looking like a current measurement of a company that had asked us to stop measuring it.
+    await getStore()
+      .recordStayOut(gate.domain)
+      .catch((error) => console.error('stay-out request not recorded, pass still skipped', error))
     return {
       kind: 'error',
       error: `${gate.domain} asks us to stay out in robots.txt, so this pass skipped it. Their published row keeps its last measurement and its date.`,
@@ -73,6 +78,18 @@ export async function runScan(request: Request, domain: string): Promise<ScanRun
         holdUnsaved(report)
         return false
       })
+    // The way back in, and the only one that works: an automated pass that no longer finds the
+    // request re-measures the domain and the annotation goes with it. A scan the vendor runs on our
+    // site is not seeded, so it never touches their published row, whatever it says about their fix.
+    //
+    // After the report is stored, never before. Clearing it up front meant a rescan that then died
+    // on DNS or a timeout removed the notice while leaving the old measurement on the page, which
+    // is the one state this whole annotation exists to prevent.
+    if (seeded && kept) {
+      await getStore()
+        .clearStayOut(gate.domain)
+        .catch((error) => console.error('stay-out record not cleared, scan still saved', error))
+    }
     return { kind: 'ok', report, reused: false, kept }
   } catch (error) {
     if (error instanceof UnreachableDomainError) return { kind: 'error', error: error.message, status: 422 }
