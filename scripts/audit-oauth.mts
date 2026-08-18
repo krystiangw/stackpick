@@ -1,171 +1,169 @@
 /**
- * Twenty-second adversarial pass: `oauth_dcr`, 94 published accusations against 68 credits, and no
- * documented pass over it until now.
+ * Is the sentence we publish about OAuth true today?
  *
- * The sentence we publish is "No OAuth metadata on any of the N hosts probed, including the usual
- * auth and api subdomains". The scanner reaches those hosts by guessing subdomains from a list of
- * six, plus the site, plus the origin of the signup URL, plus the origin of any MCP endpoint it
- * found. That is a good list and it is still a guess, so this asks the two questions a guess
- * invites:
+ *   MONGODB_URI=... npx tsx scripts/audit-oauth.mts [ile]
  *
- *   1. Is the authorization server on a host nobody would guess? A vendor on Auth0, WorkOS, Clerk
- *      or Kinde issues tokens from the identity provider's domain, and no amount of guessing
- *      <prefix>.<vendor>.com reaches tenant.auth0.com. The way to find it is not to guess at all:
- *      follow the login link and see where the browser is actually sent.
- *   2. Is it on a subdomain outside the six? identity, sso, signin, account, token and idp are all
- *      in use, and each one we do not ask becomes a sentence saying they publish nothing.
+ * `oauth_dcr` is the largest accusation surface in the corpus: 91 rows fail it, and the sentence
+ * names the hosts we asked. That makes it the one failing check a vendor can rerun, and it makes it
+ * falsifiable from here: if a host we named is serving authorization-server metadata, the row is
+ * wrong and we published it under their name.
  *
- * The control runs the same probe over the rows we credit. If it cannot re-find the metadata we
- * awarded a point for, the probe is broken and nothing it says about the accused counts. That
- * order is deliberate: on the entry-point pass the control caught two defects in the probe itself
- * before a single accusation was read.
+ * Two failing branches wear the same zero and they mean opposite things. "No OAuth metadata on any
+ * of the N hosts probed" is the accusation, and finding metadata on one of those hosts falsifies it.
+ * "OAuth metadata published at X, but no registration_endpoint in it" already says metadata is
+ * there, so finding it confirms the row rather than breaking it - and NOT finding it is the failure
+ * worth reporting for that branch. Filtering on points alone mixes them, and mixing them once
+ * turned eight correct rows into eight false alarms here.
  *
- *   npx tsx scripts/audit-oauth.mts credited   # must find what we credit
- *   npx tsx scripts/audit-oauth.mts accused    # a hit is a false accusation of ours
+ * Asks only what the row already claims to have asked, on the two canonical paths, and writes
+ * nothing. Slowly, and never during a sweep: these are the same hosts the scanner is talking to.
  */
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 
-const UA = 'LetAgentsIn/1.0 (+https://letagentsin.com/methodology)'
+/**
+ * The same three documents the scanner asks for, not the two obvious ones. A protected-resource
+ * document names the authorization server rather than being one, and the scanner follows it, so an
+ * audit that skips it can call an accusation sound while the scanner would now find metadata one
+ * hop away. chargebee.com and logto.io are both discovered that way.
+ */
 const PATHS = [
   '/.well-known/oauth-authorization-server',
-  '/.well-known/oauth-protected-resource',
   '/.well-known/openid-configuration',
+  '/.well-known/oauth-protected-resource',
 ]
-/**
- * The scanner's own six and one, then twelve more.
- *
- * The first version listed only the twelve, on the reasoning that the scanner already covers the
- * rest. The control refused it immediately: 43 of the 68 rows we credit could not be reproduced,
- * because their metadata lives on exactly the hosts I had left out. A probe that audits a
- * measurement has to be able to make that measurement first, and only then reach further.
- */
-const SCANNER_GUESSES = ['auth', 'login', 'accounts', 'id', 'oauth', 'api', 'mcp']
-const WIDER = ['identity', 'sso', 'signin', 'account', 'token', 'idp', 'authn', 'secure', 'my', 'console', 'app', 'dashboard']
-/** Hosts that are somebody else's authorization server, so a redirect landing here is the answer. */
-const IDENTITY_PROVIDERS =
-  /\.(auth0\.com|okta\.com|oktapreview\.com|workos\.com|clerk\.accounts\.dev|kinde\.com|descope\.com|stytch\.com|logto\.app|fusionauth\.io|onelogin\.com|pingidentity\.com|frontegg\.com|authkit\.app|supertokens\.io)$/i
+const PAUSE_MS = 400
 
-type Hit = { url: string; registration: boolean }
+const store = getStore()
+const most = Number(process.argv[2] ?? 30)
 
-async function metadataAt(url: string): Promise<Hit | null> {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 9000)
+type Hit = { domain: string; url: string; issuer?: string; registration?: string }
+const hits: Hit[] = []
+const confirmed: string[] = []
+const vanished: string[] = []
+/** Rows from before the sentence carried its address, which cannot be checked this way at all. */
+const unnamed: string[] = []
+let checked = 0
+let origins = 0
+
+/** The servers a protected-resource document points at, which is a pointer and not an answer. */
+function authorizationServersIn(body: string): string[] {
   try {
-    const response = await fetch(url, {
-      signal: controller.signal,
-      redirect: 'follow',
-      headers: { 'user-agent': UA, accept: 'application/json' },
-    })
-    if (!response.ok) return null
-    const body = (await response.text()).slice(0, 20000)
-    const parsed = JSON.parse(body) as Record<string, unknown>
-    // The document has to be the document. A site that answers every .json path with its shell
-    // parses as nothing, and one that answers with an unrelated object has no issuer in it.
-    if (typeof parsed.issuer !== 'string' && typeof parsed.authorization_servers === 'undefined') return null
-    return { url, registration: typeof parsed.registration_endpoint === 'string' }
+    const parsed = JSON.parse(body) as { authorization_servers?: unknown }
+    return Array.isArray(parsed.authorization_servers)
+      ? parsed.authorization_servers.filter((one): one is string => typeof one === 'string').slice(0, 2)
+      : []
+  } catch {
+    return []
+  }
+}
+
+async function metadataAt(url: string) {
+  try {
+    const answer = await fetch(url, { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(8000) })
+    return answer.ok ? readsAsMetadata(await answer.text()) : null
   } catch {
     return null
-  } finally {
-    clearTimeout(timer)
   }
 }
 
-async function metadataOn(origin: string): Promise<Hit[]> {
-  const found: Hit[] = []
-  for (const path of PATHS) {
-    const hit = await metadataAt(`${origin}${path}`)
-    if (hit) found.push(hit)
-  }
-  return found
+/** One address, asked exactly as written. Returns false when it is not there or not metadata. */
+async function readsMetadataAt(url: string): Promise<boolean> {
+  return (await metadataAt(url)) !== null
 }
 
-/**
- * Where a browser ends up when it starts to log in. This is the half the scanner cannot guess:
- * the redirect chain names the authorization server itself, whoever operates it.
- */
-async function loginLandsOn(candidates: string[]): Promise<string[]> {
-  const origins = new Set<string>()
-  for (const candidate of candidates) {
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 9000)
-    try {
-      const response = await fetch(candidate, {
-        signal: controller.signal,
-        redirect: 'follow',
-        headers: { 'user-agent': UA, accept: 'text/html' },
-      })
-      const landed = new URL(response.url).origin
-      if (landed) origins.add(landed)
-      // An SPA does the redirect in JavaScript, so the identity provider is often only named in
-      // the HTML: a script src, a form action, or an authorize URL in the bootstrap config.
-      const body = (await response.text()).slice(0, 200000)
-      for (const match of body.matchAll(/https:\/\/[a-z0-9.-]+\.[a-z]{2,}(?=[/"'\s])/gi)) {
-        const host = new URL(match[0]).hostname
-        if (IDENTITY_PROVIDERS.test(host)) origins.add(`https://${host}`)
+const readsAsMetadata = (body: string) => {
+  try {
+    const parsed = JSON.parse(body) as { issuer?: string; authorization_endpoint?: string; registration_endpoint?: string }
+    return parsed.issuer || parsed.authorization_endpoint ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+for (const domain of [...CURATED_DOMAINS].slice(0, most)) {
+  const report = await store.latestForDomain(domain, true)
+  const check = report?.scorecard.checks.find((one) => one.id === 'oauth_dcr')
+  if (!check || check.inconclusive || check.notApplicable || check.points > 0) continue
+  // The accusation branch is the one worth falsifying. The other zero says metadata is published
+  // and is checked in the opposite direction: at the address the row itself names, because a grid
+  // of guessed origins is not that address. Nine rows read as unconfirmed against the grid and all
+  // nine were right, at auth2., clerk., sso., account., signin., a /oidc/ prefix and a different
+  // apex entirely - every one of them a place the grid had no reason to ask.
+  const saysNothingIsThere = check.detail.startsWith('No OAuth metadata')
+  if (!saysNothingIsThere) {
+    const named = check.detail.match(/published at (\S+?),/)?.[1]
+    if (!named) {
+      unnamed.push(domain)
+      continue
+    }
+    origins += 1
+    await new Promise((done) => setTimeout(done, PAUSE_MS))
+    const found = await readsMetadataAt(named)
+    if (found) confirmed.push(domain)
+    else vanished.push(`${domain} (${named})`)
+    continue
+  }
+  const probed = (report?.findings as unknown as { funnel?: { oauth?: { probedOrigins?: string[] } } })?.funnel?.oauth
+    ?.probedOrigins
+  if (!probed || probed.length === 0) continue
+  checked += 1
+  // Every origin the row says we asked. Sampling the likeliest of them was cheaper and answered a
+  // narrower question than the sentence makes: "no metadata on any of the N hosts probed" is only
+  // falsified or upheld by asking all N.
+  for (const origin of probed) {
+    for (const path of PATHS) {
+      origins += 1
+      await new Promise((done) => setTimeout(done, PAUSE_MS))
+      try {
+        const answer = await fetch(`${origin}${path}`, { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(8000) })
+        if (!answer.ok) continue
+        const body = await answer.text()
+        // A protected-resource document is a pointer, so it is followed rather than read as an
+        // answer: what it names is where the metadata would be, and that is what the scanner does.
+        for (const named of authorizationServersIn(body)) {
+          await new Promise((done) => setTimeout(done, PAUSE_MS))
+          origins += 1
+          const pointed = await metadataAt(`${named.replace(/\/$/, '')}/.well-known/oauth-authorization-server`)
+          if (pointed) {
+            hits.push({
+              domain,
+              url: `${named} (wskazany przez ${origin}${path})`,
+              issuer: pointed.issuer,
+              registration: pointed.registration_endpoint,
+            })
+          }
+        }
+        const metadata = readsAsMetadata(body)
+        if (!metadata) continue
+        if (saysNothingIsThere) {
+          hits.push({ domain, url: `${origin}${path}`, issuer: metadata.issuer, registration: metadata.registration_endpoint })
+        }
+      } catch {
+        continue
       }
-    } catch {
-      /* a login page we cannot reach is not evidence either way */
-    } finally {
-      clearTimeout(timer)
     }
   }
-  return [...origins]
+  console.log(`${checked} wierszy sprawdzonych, ${hits.length} trafien`)
 }
 
-const mode = process.argv[2] === 'credited' ? 'credited' : 'accused'
-const store = getStore()
-
-type Target = { domain: string; site: string; signup: string | null; probedHosts: number }
-const targets: Target[] = []
-for (const domain of CURATED_DOMAINS) {
-  const report = await store.latestForDomain(domain)
-  const check = report?.scorecard.checks.find((candidate) => candidate.id === 'oauth_dcr')
-  if (!check || check.inconclusive || check.notApplicable) continue
-  const wanted = mode === 'credited' ? check.points > 0 : check.points === 0
-  if (!wanted) continue
-  const findings = report!.findings as unknown as {
-    site: string
-    discovered?: { signup?: string | null }
-    funnel: { oauth: { probedHosts: number } }
-  }
-  targets.push({
-    domain,
-    site: findings.site,
-    signup: findings.discovered?.signup ?? null,
-    probedHosts: findings.funnel.oauth.probedHosts,
-  })
+console.log(`\n${checked} oblanych wierszy, ${origins} zapytan do hostow, ktore sami wymienilismy`)
+console.log(
+  hits.length === 0
+    ? 'ZDANIE "nie ma metadanych" trzyma sie wszedzie: na zadnym z wymienionych hostow nic dzis nie ma'
+    : `${hits.length} MIEJSC, gdzie metadane JEDNAK sa, mimo ze wiersz mowi, ze ich nie ma - to sa falszywe zdania:`,
+)
+for (const hit of hits) {
+  console.log(`  ${hit.domain}: ${hit.url}`)
+  console.log(`     issuer=${hit.issuer ?? 'brak'} registration_endpoint=${hit.registration ?? 'BRAK'}`)
 }
-
-console.log(`${mode}: ${targets.length} domen\n`)
-
-let disagree = 0
-let withRegistration = 0
-for (const { domain, site, signup, probedHosts } of targets) {
-  const bare = domain.replace(/^www\./, '')
-  const guessed = [...SCANNER_GUESSES, ...WIDER].map((prefix) => `https://${prefix}.${bare}`)
-  const followed = await loginLandsOn(
-    [signup, `${site}/login`, `${site}/signin`, `${site}/sign-in`].filter((url): url is string => Boolean(url)),
-  )
-  const origins = [...new Set([site, ...followed, ...guessed])]
-  const hits = (await Promise.all(origins.map(metadataOn))).flat()
-  const hit = hits.length > 0
-  const expected = mode === 'credited' ? hit : !hit
-  if (expected) continue
-  disagree += 1
-  if (hits.some((found) => found.registration)) withRegistration += 1
-  const shown = hits
-    .map((found) => `${found.url}${found.registration ? ' [registration_endpoint]' : ''}`)
-    .slice(0, 3)
-    .join(' | ')
-  console.log(`NIEZGODA ${domain.padEnd(20)} sondowalismy ${probedHosts} hostow  ${shown || 'nie znalazlem metadanych, ktore zaliczamy'}`)
-}
-
-console.log(`\n${targets.length} sprawdzonych, ${disagree} niezgodnych`)
-if (mode === 'accused') {
-  console.log(`z tego z registration_endpoint (czyli punkt, ktorego nie przyznalismy): ${withRegistration}`)
-  console.log('oskarzenia: niezgoda znaczy, ze metadane jednak sa, a my opublikowalismy ich brak')
-} else {
-  console.log('kontrolka: niezgoda znaczy, ze sonda nie widzi metadanych, za ktore dajemy punkt')
+console.log(`\nwiersze mowiace "metadane sa, brakuje registration_endpoint": ${confirmed.length + vanished.length + unnamed.length}`)
+console.log(
+  vanished.length === 0
+    ? `  wszystkie ${confirmed.length} potwierdzone pod adresem, ktory sami podajemy`
+    : `  ${vanished.length} NIE POTWIERDZONYCH, czyli mowimy o dokumencie, ktorego pod tym adresem dzis nie ma: ${vanished.join(', ')}`,
+)
+if (unnamed.length > 0) {
+  console.log(`  ${unnamed.length} wierszy sprzed 9.28 nie podaje adresu, wiec nie da sie ich tak sprawdzic: ${unnamed.join(', ')}`)
 }
 process.exit(0)

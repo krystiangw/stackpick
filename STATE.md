@@ -6365,3 +6365,42 @@ nigdzie jednego zdania tlumaczacego chudosc calego wiersza. Doszly dwa miejsca:
 w nim nazywamy**. `hosts` zawieral tylko hosty z wyzwaniem, a `onSite` liczyl wszystkie odmowy na
 domenie, wiec zdanie kazalo `app.vendor.com` odpowiadac za limit, ktory przyslal `docs.vendor.com`.
 Stad `refusedWhereChallenged` i dwa straznicy.
+
+## 33. PRZEBIEG ADWERSARYJNY: `oauth_dcr`, NAJWIEKSZA POWIERZCHNIA OSKARZEN (2026-08-18)
+
+91 wierszy oblewa ten check, wiecej niz jakikolwiek inny, a jego zdanie **wymienia hosty, ktore
+pytalismy**. To czyni je jedynym oblanym werdyktem, ktory vendor moze powtorzyc, i jedynym, ktory da
+sie **sfalsyfikowac stad**: jesli host, ktory nazywamy, serwuje dzis metadane, wiersz jest zly.
+
+**Metoda, po dwoch poprawkach (druga z codex review):** pytamy **kazdy** origin, ktory wiersz
+wymienia, o **trzy** dokumenty, ktorych szuka skaner (`oauth-authorization-server`,
+`openid-configuration`, `oauth-protected-resource`), i **podazamy za wskazaniem**: dokument
+protected-resource nie jest metadanymi, tylko nazywa serwer, ktory je ma. Pierwsza wersja pytala
+dwie sciezki na szesciu „najbardziej prawdopodobnych" hostach, czyli **wezej niz szuka skaner**, a
+audyt wezszy niz sprawdzana rzecz potwierdza wlasna teze zamiast ja falsyfikowac.
+
+**Wynik na calym korpusie: zdanie trzyma sie wszedzie.** 91 oblanych wierszy dzieli sie na dwie
+galezie i obie sa sprawdzone, kazda w swoja strone:
+
+| galaz | wierszy | jak sprawdzone | wynik |
+|---|---|---|---|
+| „No OAuth metadata on any of the N hosts probed" | **74** | **2987 zapytan** do kazdego wymienionego origins, trzy dokumenty, ze sciganiem wskazan | **zero trafien** |
+| „OAuth metadata published at X, but no registration_endpoint" | **17** | jedno zapytanie pod dokladnie ten adres | **17 z 17 potwierdzonych** |
+
+Nigdzie, gdzie mowimy „pytalismy i nic tam nie ma", dzis nic nie ma. I wszedzie, gdzie mowimy „jest
+tam dokument", ten dokument jest.
+
+**Blad, ktory sam popelnilem przy pierwszym przebiegu, wart zapisania:** filtr bral wiersze po
+`points === 0`, a **obie galezie maja zero i znacza rzeczy przeciwne**. Osiem poprawnych wierszy
+wygladalo przez to jak osiem falszywych oskarzen, zdazylem je przeskanowac przez produkcje, zanim
+zauwazylem, ze wiersz od poczatku mowil „metadata published". Skrypt rozroznia teraz galezie po
+tresci zdania, a nie po punktach.
+
+**Druga slepa plamka, tez wart zapisania:** pierwsza wersja sprawdzala galaz „metadane sa" siatka
+zgadywanych origins i zglosila dziewiec **nie potwierdzonych**. Wszystkie dziewiec bylo poprawnych:
+siedzialy na `auth2.`, `clerk.`, `sso.`, `account.`, `signin.`, pod prefiksem `/oidc/` i na zupelnie
+innym apeksie (`cockroachlabs.cloud`). **Siatka zgadywanych adresow nie jest sprawdzeniem adresu,
+ktory sami podalismy** - skrypt pyta teraz dokladnie o niego.
+
+Narzedzie zostaje: `MONGODB_URI=... npx tsx scripts/audit-oauth.mts [ile]`, do powtorzenia po
+kazdym przemiecie albo przy sporze.
