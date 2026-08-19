@@ -1,13 +1,37 @@
-# Let Agents In: stan na 2026-08-19 (kod 9.45, korpus 9.44, przemiat czeka na karencje)
+# Let Agents In: stan na 2026-08-19 (kod 9.45, korpus 9.44, przemiat startuje lada chwila)
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te czterdziesci linijek, potem reszte)
 
-**WERSJE: produkcja i repo na 9.45, korpus na 9.44.** Przemiat na 9.44 skonczony 09:57 i **caly
-zielony**: 177 wierszy, 0 sprzecznosci, `audit-entry-credited` na calym korpusie daje **zero plikow
-nieodroznialnych od kontrolki**, adresy publikowane jako dowod: **1 martwy zamiast 3** i to znany
-falszywy alarm. Potem wyszlo **9.45** i czeka na wlasny przemiat: waiter `/tmp/reseed-945.sh`,
-karencja mediany otwiera sie okolo **16:00**, log `/tmp/reseed-945.log`, **nie deployowac po jego
-starcie**. Co ma pokazac: koniec sekcji **„9.45"**.
+**WERSJE: produkcja i repo na 9.45, korpus na 9.44** (jeden wiersz, `growthbook.io`, juz na 9.45 po
+skanie weryfikacyjnym - dlatego `/report` mowi „176 domains" i „1 further domain is left out").
+Przemiat na 9.44 skonczony 09:57 i **caly zielony**. Drzewo czyste, wszystko wdrozone.
+
+**CO SIE DZIEJE TERAZ:** waiter `/tmp/reseed-945.sh` (PID w `pgrep -f reseed-945`) czeka na mediane
+wieku korpusu 6 h - o 15:17 bylo 5.80 h, wiec **przemiat na 9.45 rusza okolo 15:30**. Log:
+`/tmp/reseed-945.log`. **NIE DEPLOYOWAC po jego starcie** (sprawdz `tail -3 /tmp/reseed-945.log` i
+czy proces zyje).
+
+**CO ZROBIC PO PRZEMIECIE, po kolei:**
+1. `npm run audit` - ma dac **177 rows on formula 9.45, 0 contradictions**.
+2. `npx tsx scripts/po-przemiacie-9-45.mts` - **cztery grupy predykcji** zapisane PRZED przemiatem.
+   Skrypt sam pomija wiersze jeszcze nieprzemieciene i odmawia uspokajajacego zdania, dopoki nie
+   przeczyta polowy. Predykcja i jej uzasadnienie: sekcja „PREDYKCJA DLA PRZEMIATU 9.45".
+3. `npx tsx scripts/audit-entry-credited.mts 200` - ma dac **zero plikow nieodroznialnych**.
+4. `npx tsx scripts/after-reseed.mts` - liczby po przemiecie, w tym niemierzalne z 9.43.
+5. `npm run audit-published-urls` - przed przemiatem: 1 martwy na wierszu zaliczonym (cal.com,
+   dokumentowany jako POST, wiec od dzis **nie jest pytany**), 3 na niemierzalnych.
+6. `npm run audit-fix-arithmetic` - arytmetyka naprawy w platnym raporcie, ma byc **177/177**.
+
+**CZEGO SAM NIE ODBLOKUJE (pelna lista z uzasadnieniami na Musterze):** dane sprzedawcy do Paddle ·
+zgoda na imie i nazwisko jako administratora na `/privacy` · klucz do `agentaudit@agentmail.to` ·
+platne subskrypcje cursora i gemini · **szesc decyzji cenowych** · czy publikujemy porownanie
+nazywajace konkurenta (liczby przeweryfikowane 2026-08-19 o 09:00) · **push naprawy workflow do
+`origin`** (`git push origin main` + `gh workflow run mcp-registry.yml`) · formularz katalogu
+konektorow w claude.ai (reszta pakietu gotowa w `docs/submitting-the-connector.md`).
+
+**JEDNA DECYZJA CZEKA NA CIEBIE, MALA:** Lighthouse daje SEO 92, bo nie zna dyrektyw
+`Content-Signal:` i `AI-Catalog:` w `robots.txt`. RFC 9309 kaze ignorowac nieznane linie, wiec to
+blad narzedzia. Rekomendacja: **zostawiamy**, ale to material na `/methodology`.
 
 **ZADANIA IDA NA MUSTER: https://musterboard.dev/r/r_kyvged60vn4c2mvj** (projekt `p_w8vtpkcae5`, token
 w `~/.muster/tokens.json`, handle agenta `ai-audytor`). **Tablica wygasa 2026-08-25, dopoki Krystian
