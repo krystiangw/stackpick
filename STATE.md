@@ -8230,6 +8230,27 @@ wlasne „nie dalo sie zmierzyc", wiec **dwa milczenia byly publikowane jako jed
 serwera"**. Scalanie jest teraz jedna funkcja `mcpAcrossWaves` z wlasnymi straznikami (mutacja
 sprawdzona: bez laczenia list `rules.mts` oblewa).
 
+**Przeszedlem potem cala sonde MCP w poszukiwaniu tego samego ksztaltu i znalazlem jeszcze dwa
+(`ad080ab`):**
+- **405.** `methodRefusalIsRouted` konczylo sie na `frontPageStatus !== got.status`, co jest prawda,
+  gdy strona glowna **nie odpowiedziala**. Wiec 405 na zwyklej stronie stawal sie „routowany
+  endpoint", gdy tylko kontrolka milczala. Codex dolozyl do tego P1, ktory sam bym przegapil:
+  `fetchUrl` nie zwraca `undefined`, tylko obiekt ze **statusem 0 albo 429**, a te tez roznia sie od
+  405. Sam status nie wystarczy - trzeba go podac dopiero wtedy, gdy kontrolka cos powiedziala.
+- **browser-only.** Odmowa „ta sciezka wymaga przegladarki" byla odrzucana tylko `if (control && ...)`,
+  wiec brak kontrolki oznaczal **zaliczenie**.
+
+Ksztalt jest zawsze ten sam i wart nazwania raz: **porownanie z czyms, czego nie ma, zwraca „rozni
+sie"**. `x !== brak` to prawda, `x === brak` to falsz, i obie odpowiedzi ida w strone vendora na
+minus albo na plus, ale nigdy w strone „nie wiem". Kazde takie porownanie potrzebuje zdania
+„kontrolka sie odezwala" **przed** soba.
+
+**Sprawdzilem tez trzecia droge i tam naprawa NIE jest potrzebna**, co warto zapisac, zeby nikt jej
+nie robil drugi raz: zapytanie zabite przez deadline skanu (`Out of time ... in flight`) **nie**
+udaje odpowiedzi, bo kazda sciezka `fetchUrl` przechodzi przez `countIfLost`, a faza, ktora
+cokolwiek stracila, oznacza **wszystkie swoje checki jako niemierzalne** (`truncationOf`). Raport
+mowi to wprost. Zmiana semantyki `unasked` byloby wiec przeliczeniem korpusu bez powodu.
+
 **Straznik na sprostowanie directusa zdjety**, bo jego zadanie sie skonczylo: naprawa weszla w 9.42,
 przemiat przeliczyl korpus, `after-reseed` potwierdzil wygasniecie. Regula pilnujaca terminu jednego
 wpisu jest z natury tymczasowa, a trzymana po naprawie **oblewa build za to, ze naprawa doszla**.
