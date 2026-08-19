@@ -27,7 +27,7 @@ import { CORPUS_LICENCE, CORPUS_LICENCE_IS_PUBLISHED } from '../src/lib/seller'
 import { arithmeticExplained, scoreSection } from '../src/lib/report-numbers'
 import { categoryOfWatch } from '../src/lib/watch'
 import { readWithGuest } from '../src/lib/guest-cell'
-import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR } from '../src/lib/scan-gate'
+import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR, REUSE_WINDOW_MS } from '../src/lib/scan-gate'
 import { DEFAULT_SCAN_BUDGET_MS, MAX_PER_SITE, backoffFor } from '../src/lib/scan/http'
 import { forStorage } from '../src/lib/store'
 import { REMEDIES } from '../src/lib/fixfirst'
@@ -1389,6 +1389,28 @@ check('data sprawdzenia cudzych narzedzi jest datą', Number.isFinite(dniOdSpraw
 check('nie z przyszlosci', dniOdSprawdzenia >= -1, true)
 check('i nie starsza niz 60 dni - odpal je ponownie', dniOdSprawdzenia <= 60, true)
 check('i widzi ja czytelnik', stronaFindings.includes('Read on {RIVALS_CHECKED_ON}'), true)
+
+// Trzy pliki, ktore agent czyta ZAMIAST pytac czlowieka, podaja nasze limity - i wszystkie trzy sa
+// statyczne, wiec nie moga wziac liczby ze stalej. Zgadzaly sie dzis co do jednego (5 i 30, plus
+// okno 15 minut w llms.txt), ale zgodnosc bez straznika jest przypadkiem: to ta sama rodzina, co
+// katalog ARD publikujacy formule sprzed dziewieciu wydan. Straznik pilnuje LICZB, nie zdan.
+const limityWPlikach: [string, string[]][] = [
+  ['public/agent-signup.md', [`${PER_DOMAIN_PER_HOUR} scans per hour`, `${PER_CALLER_PER_HOUR} per hour per source address`]],
+  ['public/agents.md', [`${PER_DOMAIN_PER_HOUR} scans per hour`, `${PER_CALLER_PER_HOUR} per hour per address`]],
+  ['public/llms.txt', [`${PER_CALLER_PER_HOUR} scans per source address`, `${PER_DOMAIN_PER_HOUR} per domain`]],
+]
+for (const [plik, fragmenty] of limityWPlikach) {
+  const tresc = readFileSync(plik, 'utf8')
+  for (const fragment of fragmenty) {
+    check(`${plik} podaje limit tak, jak go egzekwujemy: „${fragment}"`, tresc.includes(fragment), true)
+  }
+}
+// Okno ponownego uzycia tez jest liczba, ktora obiecujemy agentowi.
+check(
+  'llms.txt nazywa okno ponownego uzycia w minutach ze stalej',
+  readFileSync('public/llms.txt', 'utf8').includes(`inside ${REUSE_WINDOW_MS / 60_000} minutes`),
+  true,
+)
 
 // Sufit bajtow jest CYTOWANY w dwoch werdyktach („larger than the 400,000 bytes we read"), a metodyka
 // go nie znala - vendor szedl po wyjasnienie tam, gdzie go nie bylo. Liczba idzie ze stalej, wiec nie
