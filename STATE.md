@@ -11,6 +11,78 @@
 
 
 
+## SIEDZIMY NA CUDZYM KLASTRZE: POTWIERDZONE, ALE NIE Z TEGO POWODU, CO SIE WYDAWALO (22:45)
+
+Krystian: „nasza baza jest chyba na klastrze MongoFlex razem z innym projektem, potwierdz - i chyba
+ogranicza nam to maksymalny storage; zmigrujmy na osobny, ale **nie ruszaj danych innych projektow**".
+
+**POTWIERDZONE, i to doslownie: nasz URI wskazuje na klaster o nazwie `equity-analyst-flex`**
+(`...dgiima2.mongodb.net`), czyli klaster zalozony dla innego projektu. Jestesmy tam gosciem. Mongo
+8.0.29, Atlas **Flex**, sufit **5 GB twardy**.
+
+**PRZESLANKA O CIASNOCIE JEST FALSZYWA, i to w nasza korzysc** (`npm run cluster-space`, nowy skrypt):
+```
+ROZLICZANE (to jest sufit): 2987 MB z 5120 MB (58,3 %)
+  equity-analyst   2856 MB
+  stackpick         131 MB   <- MY
+NA DYSKU (nie liczy sie do sufitu):
+  equity-analyst   1628 MB
+  stackpick        1470 MB
+```
+Sufit Flex liczy **`dataSize + indexSize`**, nie miejsce na dysku. Nasze 1470 MB pliku to 131 MB
+danych i 1422 MB slacku po nadpisaniach, ktory **nikomu miejsca nie zabiera**. Czyli: nie mamy
+problemu pojemnosciowego, a 96 % zuzytej kwoty to sasiad.
+
+**DWA MOJE WLASNE BLEDY PRZY OKAZJI.** (1) Notatka z 18:10 mowila, ze to MY jestesmy wiekszym
+zjadaczem - mierzyla `storageSize`, choc `src/lib/quota.ts` **w tym samym repo** od awarii z 13
+sierpnia mowi wprost, ktora liczba jest ta wlasciwa. (2) Pierwsza wersja `cluster-space.mts`
+powtorzyla dokladnie ten sam blad; zlapal to codex. Sprostowane w sekcji z 18:10.
+
+**DLACZEGO MIMO TO MIGRUJEMY** (audyt decyzji subagentem, opus, do potwierdzenia rano). Argument nie
+jest o pojemnosci, tylko o **izolacji i kontroli**, i odwraca troske Krystiana o cudze dane:
+- **Restore ze snapshotu Flex jest operacja na CALYM klastrze, nie na jednej bazie.** Dopoki siedzimy
+  razem, jedyna droga odzyskania NASZYCH danych z backupu **cofnelaby rowniez `equity-analyst`**.
+  Czyli to **pozostanie** jest scenariuszem, w ktorym realnie zagrazamy drugiemu projektowi.
+- Wlasciciel tamtego projektu moze klaster **skasowac, spauzowac albo podniesc**, a nasza baza jedzie
+  razem z nim i na jego rachunku.
+- 13 sierpnia zapisy byly juz odrzucane przez godzine i pierwszym sygnalem byl skan padajacy gosciowi.
+
+**REKOMENDACJA (subagent, zweryfikowana u zrodla tam, gdzie sie dalo): wlasny klaster Flex w OSOBNYM
+projekcie Atlas, region eu.** ~8 USD/mies. (cap 30), 5 GB przy naszym tempie to lata, a upgrade
+Flex→M10 jest **w miejscu**, wiec ta decyzja nie kosztuje drugiej migracji. Odrzucone: M0 (512 MB,
+zero backupow, sufit za ~5 miesiecy), M10 (~57 USD za PITR, ktorego dzis nie potrzebujemy),
+„zostac i zrobic `compact`" (**nie istnieje** - nieobslugiwany na Flex).
+Zmieniamy zdanie, gdy: dane przekrocza ~3 GB, rachunek Flex dobije do capa 30 USD, throttling 500
+ops/sec zacznie wydluzac przemiat, albo po wlaczeniu platnosci utrata do 24 h przestanie byc do
+przyjecia (wtedy M10 z PITR).
+
+**CZEGO NIE MOGE ZROBIC SAM:** nie ma tu `atlas` CLI, `mongosh`, `mongodump` ani kluczy Atlas Admin
+API. **Zalozenie klastra to akcja Krystiana** (UI Atlasa albo klucze API dla mnie). Reszta jest
+gotowa.
+
+**NARZEDZIA GOTOWE (`9c85888`):**
+- `npm run cluster-space` - rozliczane kontra dysk, per baza i per kolekcja. Read-only, nie czyta
+  ANI JEDNEGO dokumentu z cudzej bazy (`listDatabases` zwraca rozmiary, nie tresc).
+- `npm run migrate-cluster` - kopia sterownikiem (bez `mongodump`, ktorego tu nie ma), z `--go` do
+  zapisu. **Otwiera wylacznie baze `stackpick`**, nie kasuje niczego i nie dotyka klastra jako
+  calosci. Odmawia, gdy: cel to ten sam klaster, trwa przemiat, cel ma juz dane, albo aplikacja
+  przyjmuje ruch (`heroku maintenance` musi byc `on`). Weryfikacja liczy dokumenty i indeksy
+  **czytajac z celu**, i oblewa zamiast powiedziec „kompletne". Trzy odmowy sprawdzone na zywo.
+
+**RUNBOOK (gdy klaster bedzie istnial), okno okolo 5 minut:**
+1. Krystian zaklada projekt + klaster Flex (eu), usera i allowliste (dyno Heroku nie ma stalego IP).
+2. `MONGODB_URI_TARGET=... npm run migrate-cluster` - proba, bez zapisu, pokazuje co pojdzie.
+3. `heroku maintenance:on -a stackpick` (zatrzymuje takze crony) i **nie odpalac przemiatu**.
+4. `MONGODB_URI_TARGET=... npm run migrate-cluster -- --go` - kopia z zachowaniem `_id` (historyczne
+   `/r/<id>` musza dzialac) i odtworzeniem indeksow, potem weryfikacja z celu.
+5. `heroku config:set MONGODB_URI="<cel>" -a stackpick`, `heroku maintenance:off`, smoke test: dwa
+   stare `/r/<id>`, jeden nowy skan, `npm run cluster-space` na nowym URI.
+6. **Stara baza zostaje nietknieta** jako rollback (rollback = stary URI z powrotem). Sprzatanie
+   dopiero po tygodniu i **wylacznie baza `stackpick`**, nigdy klaster i nigdy `equity-analyst`.
+
+Sprawdzone przy okazji: `.env.local` **nie** zawiera `MONGODB_URI`, wiec jedynym miejscem do
+przelaczenia jest zmienna na Heroku (plus to, co sie eksportuje recznie w terminalu).
+
 ## CENNIK PRZECZYTANY JAKO KUPUJACY: JEDNA LICZBA WPISANA RECZNIE, RESZTA CZYSTA (22:35)
 
 Przejscie `/pricing` zdanie po zdaniu i skonfrontowanie **kazdej liczby** z kodem: 16 checkow, 18
@@ -342,9 +414,13 @@ czego 1423 MB to wolne miejsce w srodku**. To nie jest wyciek: WiredTiger **uzyw
 ponownie** przy kolejnych zapisach, wiec mamy 1,4 GB wlasnego zapasu, zanim baza w ogole zacznie
 rosnac na dysku - plus 2 GB zapasu na klastrze.
 
-**Wniosek: nie ma czego robic i swiadomie NIE uruchamiam `compact`.** Odzyskalby ~1,4 GB do klastra,
-ale jest operacja utrzymaniowa na zywej kolekcji, a zapasu i tak nie brakuje. To jest jedyny powod,
-dla ktorego by warto - a nie jest to powod dzis.
+**SPROSTOWANIE (2026-08-19, 22:45): ta sekcja mierzyla NIE TE LICZBE.** Powyzsze to `storageSize`, a
+sufit Flex liczy `dataSize + indexSize` - mowi to wprost nasz wlasny `src/lib/quota.ts`, napisany po
+awarii z 13 sierpnia, i przeoczylem go. Prawdziwy podzial jest **odwrotny**: `equity-analyst` **2856
+MB**, my **131 MB**, razem 2987 z 5120 (58 %). Nie jestesmy wiekszym zjadaczem, jestesmy 2,5 %
+klastra. I `compact` nie byl decyzja, ktora podjalem: Atlas **nie obsluguje go na Flex** w ogole
+(sprawdzone u zrodla 2026-08-19, `docs.atlas/unsupported-commands`), a nawet gdyby - zwalnia dysk,
+ktory do sufitu sie nie liczy. Aktualny obraz daje `npm run cluster-space`.
 
 **Co z tego zostaje dla Krystiana:** pozycja „equity-analyst" schodzi z listy rzeczy do decyzji.
 Do obserwacji zostaje jedna liczba: **`reports` rosnie o ~6900 dokumentow na 12 dni** (kazdy skan to

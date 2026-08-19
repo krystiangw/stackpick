@@ -9,7 +9,8 @@
  * nothing here reads a document out of a database that is not ours - `listDatabases` returns sizes,
  * not contents.
  *
- * The number that matters is not the file size. `reports` keeps every scan as its own document
+ * The number that matters is not the file size, and `compact` is not a lever we have: Atlas does not
+ * support it on Flex at all. `reports` keeps every scan as its own document
  * because `/r/<id>` are permanent links, so the file grows with rewrites and WiredTiger reuses the
  * blocks inside it. Data and file are printed apart for exactly that reason.
  */
@@ -74,7 +75,8 @@ for (const one of (await db.listCollections().toArray()).sort((a, b) => a.name.l
   )
 }
 console.log('\nPlik wiekszy od danych to nie wyciek: te bloki wracaja do uzytku przy kolejnych zapisach,')
-console.log('i NIE licza sie do sufitu Flex. `compact` odzyskalby je dla dysku, nie dla limitu.')
+console.log('i NIE licza sie do sufitu Flex. `compact` i tak jest na Flex nieobslugiwany (sprawdzone')
+console.log('2026-08-19 w docs.atlas/unsupported-commands), wiec nie ma tu zadnej decyzji do podjecia.')
 
 await client.close()
 process.exit(0)
