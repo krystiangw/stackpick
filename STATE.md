@@ -859,7 +859,12 @@ zgoda na imie i nazwisko jako administratora na `/privacy` · klucz do `agentaud
 platne subskrypcje cursora i gemini · **szesc decyzji cenowych** · czy publikujemy porownanie
 nazywajace konkurenta (liczby przeweryfikowane 2026-08-19 o 09:00) · **push naprawy workflow do
 `origin`** (`git push origin main` + `gh workflow run mcp-registry.yml`) · formularz katalogu
-konektorow w claude.ai (reszta pakietu gotowa w `docs/submitting-the-connector.md`).
+konektorow w claude.ai (reszta pakietu gotowa w `docs/submitting-the-connector.md`) · **wlasny
+klaster Atlas** (my siedzimy na `equity-analyst-flex`, cudzym; rekomendacja: wlasny Flex w OSOBNYM
+projekcie, ~8 USD/mies. - narzedzia i runbook gotowe, brakuje tylko UI Atlasa albo kluczy Admin API
+dla mnie) · **tozsamosc prawna sprzedawcy**, bez ktorej `/terms` i `/refunds` **swiadomie oddaja
+404** (strony sa napisane i czekaja na `SELLER_LEGAL_NAME` + adres; stopka slusznie ich nie linkuje,
+wiec nie ma zepsutego linku - jest brak dokumentu, ktorego produkt ze sprzedaza potrzebuje).
 
 **MALA DECYZJA, ZAMKNIETA I ZMIERZONA (2026-08-19, 15:42):** Lighthouse 13.4.1 daje nam SEO **92**,
 i **cale** odjecie to JEDNA linia `robots.txt`. Moja wczesniejsza notatka mowila, ze narzedzie
