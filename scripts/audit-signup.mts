@@ -21,7 +21,7 @@ import { refuseIfNothingMeasured } from './nothing-measured'
 
 const PAUSE_MS = 400
 const store = getStore()
-const most = howManyRows(40)
+const most = howManyRows(40, CURATED_DOMAINS.size)
 
 type Wrong = { domain: string; url: string; why: string }
 const wrong: Wrong[] = []

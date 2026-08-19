@@ -1,4 +1,5 @@
 import { readFileSync, readdirSync } from 'node:fs'
+import { coverageLine } from './how-many'
 import { createHmac } from 'node:crypto'
 import { paddle } from '../src/lib/billing/provider'
 import { CATEGORIES, CURATED_DOMAINS } from '../src/lib/categories'
@@ -2100,6 +2101,14 @@ check('adres bez kontrolki daje niemierzalne', zBrakiemKontrolki(['https://mcp.x
 check('i zdanie nazywa ten adres', zBrakiemKontrolki(['https://mcp.x.test/mcp']).detail.includes('https://mcp.x.test/mcp'), true)
 // Kontrolka: bez takich adresow check idzie swoja zwykla droga i NIE jest niemierzalny z tego powodu.
 check('bez takich adresow to nie ta galaz', zBrakiemKontrolki([]).detail.includes('never came back'), false)
+// Na tej liscie leza teraz trzy ksztalty czytane przez DWIE rozne kontrolki: sciezke, ktorej nikt
+// nie zarejestrowal (401/403/202) i strone glowna (405). Zdanie musi nazwac obie, bo vendor ma je
+// powtorzyc, a nie zgadnac, o co zapytalismy.
+check(
+  'zdanie nazywa obie kontrolki',
+  zBrakiemKontrolki(['https://mcp.x.test/mcp']).detail.includes('a path nobody registered on that origin, or your front page'),
+  true,
+)
 check('straznik widzi warunek w kodzie', readFileSync('src/lib/scan/funnel.ts', 'utf8').includes('unmeasuredForWantOfAControl.push'), true)
 
 // Druga fala pyta o adresy, ktore wskazala ICH strona dokumentacji. Gdy zadna fala nie znalazla
@@ -2549,6 +2558,34 @@ check(
 // Straznik na sam ten plik. `process.exit` na koncu robi z kazdego `check` ponizej martwy kod,
 // ktory drukuje sie na zielono i nigdy nie oblewa - dopisalem tak jedna regule 2026-08-19 i przez
 // chwile nie robila nic. Podsumowanie musi byc ostatnie.
+// Kazdy audyt, ktory czyta ograniczona liczbe wierszy, ma powiedziec ile ich pominal. Dziesiec z
+// nich zatrzymywalo sie po 25-40 domenach ze 177 i drukowalo wniosek, ktory czytalo sie jak caly
+// korpus. `audit-agent-card` jest wyjatkiem nazwanym z imienia, bo jego liczba to krok probkowania,
+// a nie sufit.
+console.log('\naudyt mowi, ilu wierszy nie przeczytal')
+// Sufit da sie ogloszic na dwa sposoby, bo tnie dwie rozne rzeczy. Gdy kroi liste wprost, liczbe
+// zna `howManyRows`. Gdy liczy wiersze PASUJACE, a petla i tak idzie przez cala liste, wie to
+// dopiero koniec petli - i wtedy `howManyRows(30, size)` oglaszalby pominiecie, ktorego nie bylo.
+// Ta polowa jest codeksa, na pierwszej wersji tego straznika.
+const bezOgloszenia = readdirSync('scripts')
+  // `rules.mts` odpada, bo trafia sam w siebie: kontrolki ponizej zawieraja ten napis jako tekst.
+  // To trzeci raz tej nocy, kiedy sonda znajduje wlasny literal, i dlatego jest tu wypisane.
+  .filter((name) => name.endsWith('.mts') && name !== 'audit-agent-card.mts' && name !== 'rules.mts')
+  .filter((name) => {
+    const source = readFileSync(`scripts/${name}`, 'utf8')
+    return /howManyRows\((\d+|\w+\.length)\)/.test(source) && !source.includes('reportCap(')
+  })
+check('zaden audyt nie ma niemego sufitu', bezOgloszenia.join(', '), '')
+// Kontrolka: sonda umie znalezc wywolanie, ktore niczego nie oglasza.
+const niemy = (source: string) => /howManyRows\((\d+|\w+\.length)\)/.test(source) && !source.includes('reportCap(')
+check('sonda widzi sufit bez ogloszenia', niemy('const most = howManyRows(30)'), true)
+check('populacja w wywolaniu wystarcza', niemy('const most = howManyRows(30, CURATED_DOMAINS.size)'), false)
+check('raport na koncu petli tez wystarcza', niemy('const most = howManyRows(30)\nreportCap(visited, 177, checked)'), false)
+// Sufit trafiony na OSTATNIEJ domenie to nie obciecie, a `matched >= cap` nie umie ich rozroznic.
+check('pelne przejscie nie zglasza pominiecia', coverageLine(177, 177, 30).includes('NIE przeczytana'), false)
+check('a przerwane w polowie zglasza', coverageLine(88, 177, 30).includes('NIE przeczytana'), true)
+check('pelne przejscie mowi, ile wierszy pasowalo', coverageLine(177, 177, 49).includes('49 z nich pasowalo'), true)
+
 console.log('\nzadna regula nie stoi za wyjsciem ze skryptu')
 const rulesSource = readFileSync('scripts/rules.mts', 'utf8')
 // Ostatnie wystapienie, bo dwa pierwsze to te literaly tutaj: sonda szukajaca samej siebie

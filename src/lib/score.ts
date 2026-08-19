@@ -803,15 +803,19 @@ export const CHECKS: Check[] = [
       // data centre with 202 and an empty body, including one to a path nobody registered, while
       // the same address answers 401 from a laptop. "Nothing answered at six addresses" reads as
       // a finding about their product when it is a finding about their edge and our network.
-      // The same shape one layer along: an address refused us with 401, 403 or 202, and the probe
-      // that would have told us whether the whole origin refuses everything that way never came
-      // back. Publishing "no MCP surface" there is a claim about their product built on a request
-      // we did not make.
+      // The same shape one layer along: an address refused us - with 401, 403, 202, a 405, or a
+      // page saying the path needs a browser - and the probe that would have told us whether the
+      // whole origin refuses everything that way never came back. Publishing "no MCP surface"
+      // there is a claim about their product built on a request we did not make.
+      //
+      // Two different controls sit behind these shapes: a path nobody registered for the
+      // credential ones, the front page for the 405. The sentence names both rather than the one
+      // that happens to be commonest, because a vendor reproducing it has to know what we asked.
       const withoutAControl = f.funnel.mcpUnmeasuredForWantOfAControl ?? []
       if (withoutAControl.length > 0) {
         return {
           points: 0,
-          detail: `Unmeasurable: ${withoutAControl.join(', ')} refused our handshake, and the same request to a path nobody registered on that origin never came back, so we cannot tell a server behind credentials from an edge that refuses everything`,
+          detail: `Unmeasurable: ${withoutAControl.join(', ')} refused our handshake, and the request we read that refusal against - a path nobody registered on that origin, or your front page - never came back, so we cannot tell a server behind credentials from an edge that refuses everything`,
           inconclusive: true,
           unblock: 'Nothing for you to do if your server answers other networks. The address becomes measurable on a run where the control probe is not lost to our own time budget.',
         }

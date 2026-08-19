@@ -20,7 +20,7 @@ import { refuseIfNothingMeasured } from './nothing-measured'
 
 const PAUSE_MS = 400
 const store = getStore()
-const most = howManyRows(30)
+const most = howManyRows(30, CURATED_DOMAINS.size)
 
 const HANDSHAKE = JSON.stringify({
   jsonrpc: '2.0',

@@ -15,7 +15,7 @@
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { readSnippet } from '../src/lib/scan/funnel'
-import { howManyRows } from './how-many'
+import { howManyRows, reportCap } from './how-many'
 
 const PAUSE_MS = 350
 const store = getStore()
@@ -32,10 +32,13 @@ const moved: string[] = []
 /** Only snippets we actually read. A page that would not answer is not a snippet we inspected, and
  * counting it made "nothing to read" a sentence about requests rather than about descriptions. */
 let checked = 0
+/** Domen, przez ktore petla naprawde przeszla. Sufit trafiony na ostatniej z nich to nie obciecie. */
+let visited = 0
 const unread: string[] = []
 
 for (const domain of CURATED_DOMAINS) {
   if (checked >= most) break
+  visited += 1
   const report = await store.latestForDomain(domain, true)
   const check = report?.scorecard.checks.find((one) => one.id === 'price_in_snippet')
   if (!check || check.inconclusive || check.notApplicable || check.points > 0) continue
@@ -67,6 +70,8 @@ for (const domain of CURATED_DOMAINS) {
   }
   console.log(`${checked} opisow przeczytanych, ${found.length} do przejrzenia`)
 }
+
+reportCap(visited, CURATED_DOMAINS.size, checked)
 
 console.log(`\n${checked} opisow przeczytanych na zywo${unread.length > 0 ? `, ${unread.length} cennikow nie odpowiedzialo: ${unread.join(', ')}` : ''}`)
 console.log(

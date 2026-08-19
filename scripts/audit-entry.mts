@@ -30,7 +30,7 @@ import { refuseIfNothingMeasured } from './nothing-measured'
 const PAUSE_MS = 250
 const CONTROL = '/letagentsin-audit-probe-8f3a1c'
 const store = getStore()
-const most = howManyRows(40)
+const most = howManyRows(40, CURATED_DOMAINS.size)
 
 const get = async (url: string, accept: string) => {
   await new Promise((done) => setTimeout(done, PAUSE_MS))

@@ -15,7 +15,7 @@
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { provisioningMatches } from '../src/lib/scan/funnel'
-import { howManyRows } from './how-many'
+import { howManyRows, reportCap } from './how-many'
 
 const PAUSE_MS = 300
 const store = getStore()
@@ -25,6 +25,8 @@ const most = howManyRows(30)
 const LOOSE = /(creat|generat|issu|mint)\w*\s+(a\s+|an\s+|your\s+|new\s+)?(api[\s-]?key|token|credential|secret|service account)/i
 
 let checked = 0
+/** Domen, przez ktore petla naprawde przeszla. Sufit trafiony na ostatniej z nich to nie obciecie. */
+let visited = 0
 let pagesRead = 0
 const toRead: { domain: string; url: string; window: string }[] = []
 
@@ -33,6 +35,7 @@ const visible = (html: string) =>
 
 for (const domain of CURATED_DOMAINS) {
   if (checked >= most) break
+  visited += 1
   const report = await store.latestForDomain(domain, true)
   const check = report?.scorecard.checks.find((one) => one.id === 'programmatic_provisioning')
   if (!check || check.inconclusive || check.notApplicable || check.points > 0) continue
@@ -62,6 +65,8 @@ for (const domain of CURATED_DOMAINS) {
   }
   console.log(`${checked} wierszy, ${pagesRead} stron, ${toRead.length} do przeczytania`)
 }
+
+reportCap(visited, CURATED_DOMAINS.size, checked)
 
 console.log(`\n${checked} oblanych wierszy, ${pagesRead} stron przeczytanych`)
 console.log(

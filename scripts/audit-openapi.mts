@@ -15,7 +15,7 @@ import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { OPENAPI_PATHS, declaredSpecs } from '../src/lib/scan/machine'
 import { isRealTextFile } from '../src/lib/scan/http'
-import { howManyRows } from './how-many'
+import { howManyRows, reportCap } from './how-many'
 import { refuseIfNothingMeasured } from './nothing-measured'
 
 const PAUSE_MS = 300
@@ -42,12 +42,15 @@ const readsAsSpec = (body: string) => /"(openapi|swagger)"\s*:|^\s*(openapi|swag
 type Hit = { domain: string; what: string; where: string }
 const hits: Hit[] = []
 let checked = 0
+/** Domen, przez ktore petla naprawde przeszla. Sufit trafiony na ostatniej z nich to nie obciecie. */
+let visited = 0
 let asked = 0
 
 for (const domain of CURATED_DOMAINS) {
   // The limit counts rows actually audited, not domains looked at: slicing the corpus first made
   // `50` mean "the first fifty domains, of which some fail" rather than "fifty failing rows".
   if (checked >= most) break
+  visited += 1
   const report = await store.latestForDomain(domain, true)
   const check = report?.scorecard.checks.find((one) => one.id === 'machine_readable_api')
   if (!check || check.inconclusive || check.notApplicable || check.points > 0) continue
@@ -101,6 +104,8 @@ for (const domain of CURATED_DOMAINS) {
   }
   console.log(`${checked} wierszy sprawdzonych, ${hits.length} trafien`)
 }
+
+reportCap(visited, CURATED_DOMAINS.size, checked)
 
 refuseIfNothingMeasured(checked, 'oblanych wierszy')
 console.log(`\n${checked} oblanych wierszy, ${asked} zapytan`)

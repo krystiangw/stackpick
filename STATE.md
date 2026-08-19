@@ -8262,6 +8262,20 @@ zaliczony. Sprawdzenie: `npm run audit-entry-credited` ma pokazac zero plikow ni
 Dla MCP nie ma predykcji z gory, bo lista niemierzalnych adresow powstaje dopiero w skanie: po
 przemiecie sprawdzic, ile wierszy ma `mcp_present` niemierzalny i czy kazdy z nich nazywa adres.
 
+**Pomiar bazowy przed przemiatem, 2026-08-19 06:15, pelne 43 zaliczone wiersze** (wczesniejszy
+przebieg czytal tylko 12, bo `howManyRows` ma domyslne 60 **domen**, nie zaliczonych wierszy - przy
+177 wierszach trzeba podac liczbe recznie: `npx tsx scripts/audit-entry-credited.mts 200`):
+
+| wiersz | co dzis widac |
+|---|---|
+| calendly.com | `developer.calendly.com/skill.md` **nadal nieodroznialny** od kontrolki (ten sam HTML) |
+| sentry.io | kontrolka **nie odpowiedziala w tym przebiegu**, wiec audyt o tym wierszu nic nie mowi - i to jest dokladnie ten stan, ktory 9.43 ma publikowac jako niemierzalny |
+| bigcommerce.com | **juz nie wychodzi** jako nieodroznialny; ponowny skan dawal 0/2, wiec przemiat ma to tylko utrwalic |
+
+Razem: **45 plikow zapytanych, 44 porownanych, 1 nieodroznialny, 1 bez porownania**. Po przemiecie
+ten sam przebieg ma dac **zero nieodroznialnych**, a wiersz bez porownania ma miec `agent_entry_point`
+niemierzalny zamiast zaliczonego.
+
 ## CENNIK PRZYZNAJE SIE DO TEGO, DO CZEGO PRZYZNAWAL SIE TYLKO RUNBOOK (2026-08-19)
 
 `docs/delivering-a-report.md` od dawna mowi, ze **miesieczna polowa monitoringu nie ma za soba
@@ -8289,3 +8303,34 @@ nowa regule na **koniec pliku**, a plik konczy sie `process.exit`. Regula drukow
 `check(` nie moze stac za `process.exit`. Sonda szuka **ostatniego** wystapienia tego napisu, bo
 pierwsze dwa to jej wlasne literaly, czyli ten sam ksztalt „porownanie z samym soba" w trzecim
 przebraniu tej nocy.
+
+## DZIESIEC AUDYTOW CZYTALO CWIERC KORPUSU I NIE MOWILO O TYM (2026-08-19)
+
+Znalezione przypadkiem, przez wlasna pomylke: przeczytalem „43 zaliczone wiersze, zero
+nieodroznialnych" i dopiero drugi przebieg pokazal, ze **pierwszy przeczytal 12**. `howManyRows` ma
+domyslna liczbe **domen**, nie wierszy, wiec `audit-entry-credited` bral 60 ze 177 - a `audit-mcp`,
+`audit-oauth`, `audit-openapi`, `audit-provisioning`, `audit-selfserve`, `audit-signup`,
+`audit-signup-discovery`, `audit-snippet-live`, `audit-llms-links` i `audit-entry` bralo od 25 do 40.
+Kazdy z nich konczyl zdaniem, ktore czyta sie jak wypowiedz o calym korpusie.
+
+To ten sam blad, co reszta tej nocy, tylko o pietro wyzej: **nie fałszywy pomiar, tylko prawdziwy
+pomiar czegos mniejszego, niz sugeruje zdanie pod nim.**
+
+`howManyRows(fallback, population)` drukuje teraz **„czytam N z M; reszta POMINIETA"**, gdy sufit jest
+nizszy od populacji, a straznik w `rules.mts` szuka w `scripts/` kazdego wywolania z jednym
+argumentem i oblewa build.
+
+**Codex zdjal z tego dwie warstwy, obie moje wlasne, obie tego samego rodzaju co reszta nocy:**
+1. Sufit tnie **dwie rozne rzeczy**. W polowie audytow kroi liste wprost (`slice(0, most)`), ale w
+   drugiej polowie liczy wiersze **pasujace**, a petla i tak idzie przez cala liste. Tam ogloszenie
+   „czytam 30 ze 177" **zglaszalo pominiecie, ktorego nie bylo**. Te audyty raportuja teraz na koncu
+   petli, a nie na starcie.
+2. Ale `matched >= cap` na koncu **tez nie znaczy obciecia**: ostatni pasujacy wiersz moze byc
+   ostatnia domena na liscie. Liczy sie wiec `visited`, czyli domeny, przez ktore petla naprawde
+   przeszla. Znowu licznik udajacy rzecz, ktora tylko **zwykle** implikuje.
+
+Pierwszy pelny przebieg czegos, co dotad chodzilo po 30 wierszach: `audit-openapi` na calym korpusie
+to **49 oblanych wierszy i 508 zapytan**, i zdanie trzyma sie wszedzie. `audit-selfserve` na calym
+korpusie: **18 dopasowan**, `audit-provisioning`: **25 adresow potwierdzonych jako martwe**. Wyjatki nazwane z imienia: `audit-agent-card` (jego liczba to **krok
+probkowania**, nie sufit) i sam `rules.mts`, bo trafialby we wlasne literaly w kontrolkach - trzeci
+raz tej nocy, kiedy sonda znajduje sama siebie.

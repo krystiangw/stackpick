@@ -37,7 +37,7 @@ const PATHS = [
 const PAUSE_MS = 400
 
 const store = getStore()
-const most = howManyRows(30)
+const most = howManyRows(30, CURATED_DOMAINS.size)
 
 type Hit = { domain: string; url: string; issuer?: string; registration?: string }
 const hits: Hit[] = []

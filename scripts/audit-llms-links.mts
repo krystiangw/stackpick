@@ -10,7 +10,7 @@
  */
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
-import { howManyRows } from './how-many'
+import { howManyRows, reportCap } from './how-many'
 
 const PAUSE_MS = 400
 const store = getStore()
@@ -19,9 +19,12 @@ const most = howManyRows(40)
 const alive: { domain: string; url: string; status: number }[] = []
 const dead: string[] = []
 let checked = 0
+/** Domen, przez ktore petla naprawde przeszla. Sufit trafiony na ostatniej z nich to nie obciecie. */
+let visited = 0
 
 for (const domain of CURATED_DOMAINS) {
   if (checked >= most) break
+  visited += 1
   const report = await store.latestForDomain(domain, true)
   const check = report?.scorecard.checks.find((one) => one.id === 'llms_txt')
   const named = check?.detail.match(/(?:starting with|One is gone:) (https?:\/\/\S+)/)?.[1]
@@ -39,6 +42,8 @@ for (const domain of CURATED_DOMAINS) {
   }
   console.log(`${checked} wierszy sprawdzonych, ${alive.length} adresow odpowiada`)
 }
+
+reportCap(visited, CURATED_DOMAINS.size, checked)
 
 console.log(`\n${checked} wierszy ze zdaniem o martwym linku`)
 console.log(

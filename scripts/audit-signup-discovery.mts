@@ -21,7 +21,7 @@ import { howManyRows } from './how-many'
 
 const PAUSE_MS = 400
 const store = getStore()
-const most = howManyRows(25)
+const most = howManyRows(25, CURATED_DOMAINS.size)
 
 /** Deliberately looser than the rule: this is a search for what the rule does not see. */
 const LOOKS_LIKE_A_WAY_IN = /sign[_ -]?up|register|create[_ -]?account|get[_ -]?started|start[_ -]?free|try[_ -]?(it|free)|free[_ -]?trial|join|new[_ -]?account/i

@@ -18,7 +18,7 @@ import { searchNpmForDomain } from '../src/lib/scan/discover'
 import { howManyRows } from './how-many'
 
 const wszystkie = [...CURATED_DOMAINS]
-const most = howManyRows(wszystkie.length)
+const most = howManyRows(wszystkie.length, wszystkie.length)
 const store = getStore()
 
 let compared = 0
