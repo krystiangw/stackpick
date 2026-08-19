@@ -8993,3 +8993,24 @@ wiersze sprzed 2026-08-19 maja tylko liste stron, wiec dla nich zostaje sama lic
 **To jest ta sama luka, ktora naprawialem tej nocy w audytach, tylko po stronie danych:** publikujemy
 zdanie o dowodach, ktorych sami nie przechowujemy w calosci. Audyt pytal innym naglowkiem niz skaner,
 a wiersz pamietal, ILE dokumentow przeczytal, ale nie KTORE.
+
+## LEKARSTWEM JEST „NAPRAW TE LINKI", A NAZYWALISMY JEDEN Z DWOCH (2026-08-19, 14:35)
+
+Ta sama rodzina co poprzednia sekcja, tym razem w zdaniu, ktore vendor **czyta jako instrukcje**.
+Check `llms_txt` oblewa wiersz zdaniem „2 of the 12 links we sampled are gone, **starting with**
+<adres>" - i na tym koniec. Drugi martwy adres **mielismy**, w tej samej tablicy, i wyrzucalismy go
+po policzeniu. Vendor mial wiec odtworzyc nasza probke (dwanascie adresow rozlozonych rownomiernie
+po pliku), zeby dowiedziec sie, co jeszcze naprawic - przy checku, ktorego cala tresc to „napraw te
+linki".
+
+Zdanie nazywa teraz **do czterech** adresow i liczy reszte, a wiersze sprzed dzisiaj nadal nazywaja
+ten jeden, ktory zachowaly. Kontrolki w `rules.mts` sprawdzaja obie sciezki i to, ze zdanie nie
+rosnie bez konca.
+
+**Przy okazji dwa potwierdzenia, ktore przyszly same:**
+- Skan weryfikacyjny `growthbook.io` przestawil ten wiersz na **9.45** i punkt za provisioning
+  **przetrwal**, z nowa etykieta „service account, in a sentence that creates one" - dokladnie tak,
+  jak zapisalem w predykcji dla grupy trzech wierszy.
+- `/report` pokazuje przez to **„176 domains"** i zdanie **„1 further domain is left out of every
+  number above"** - czyli mechanizm, ktory dopisalem dzis rano, zadzialal na pierwszym prawdziwym
+  przypadku, w liczbie pojedynczej.
