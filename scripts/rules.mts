@@ -539,6 +539,30 @@ const czytaSurowo = audyty.filter((name) =>
 check('zaden audyt nie czyta argumentu bez sprawdzenia', czytaSurowo.join(','), '')
 // Kontrolka: sonda musi umiec zobaczyc ten wzorzec, gdy naprawde jest.
 check('kontrola: sonda widzi wzorzec, gdy jest', 'const most = Number(process.argv[2] ?? 30)'.includes('Number(process.argv[2]'), true)
+
+// Runbook jest kodem, ktory wykonuje czlowiek albo agent, i starzeje sie jak kod, tylko nikt go nie
+// kompiluje. Sprawdzamy WYLACZNIE `docs/`, bo to sa instrukcje do wykonania; STATE.md jest dziennikiem
+// i ma prawo wspominac narzedzia, ktorych juz nie ma.
+console.log('\nrunbooki nie odsylaja do komend, ktorych nie ma')
+const wKatalogu = new Set(readdirSync('scripts'))
+const npmSkrypty = new Set(Object.keys(JSON.parse(readFileSync('package.json', 'utf8')).scripts as Record<string, string>))
+const martwe: string[] = []
+for (const plik of readdirSync('docs').filter((name) => name.endsWith('.md'))) {
+  const tresc = readFileSync(`docs/${plik}`, 'utf8')
+  // Kazde rozszerzenie, nie tylko `.mts`: w tym repo sa `.ts` i `.sh`, wiec regula zawezona do
+  // jednego rozszerzenia przepuszczalaby dokladnie te wywolania, ktore najlatwiej zgnic.
+  for (const trafienie of tresc.matchAll(/scripts\/([\w.\-]+\.(?:mts|ts|sh|mjs|js))/g)) {
+    if (!wKatalogu.has(trafienie[1])) martwe.push(`${plik}: scripts/${trafienie[1]}`)
+  }
+  for (const trafienie of tresc.matchAll(/\bnpm run ([\w:\-]+)/g)) {
+    if (!npmSkrypty.has(trafienie[1])) martwe.push(`${plik}: npm run ${trafienie[1]}`)
+  }
+}
+check('kazda komenda z runbooka istnieje', martwe.join(' | '), '')
+// Kontrolka: sonda musi umiec zobaczyc komende, ktorej nie ma.
+check('kontrola: sonda widzi martwa komende', npmSkrypty.has('audit-signup'), false)
+// Kontrolka na samo rozszerzenie: gdyby regula lapala tylko `.mts`, ten plik bylby dla niej niewidzialny.
+check('kontrola: regula widzi tez skrypty powloki', wKatalogu.has('reseed.sh'), true)
 check('smiec nie wysadza czytania', signatures.read('{'), null)
 // Paddle wysyla customer_id, nie adres, wiec adres wozimy we wlasnym custom_data. Bez tego kazde
 // prawdziwe zdarzenie odpadaloby jako niekompletne. Znalezione przez codex review.

@@ -608,7 +608,7 @@ a to sprawdza produkt.
 
 ## 29. PRZEBIEG: `signup_reachable` NA 9.30, ZERO OBALONYCH I OSIEM ZDAN, KTORE MYLA
 
-`npm run audit-signup credited|accused` na korpusie 9.30. **Kontrolka: 40 z 42**, czyli dokladnie
+`npx tsx scripts/audit-signup.mts <ile>` na korpusie 9.30 (ta linijka mowila `npm run audit-signup credited|accused`; ani takiego skryptu npm, ani takich trybow nigdy nie bylo). **Kontrolka: 40 z 42**, czyli dokladnie
 w udokumentowanym progu tej sondy (`docuseal.com` i `deepl.com` to jej znane pudla, opisane w
 naglowku skryptu). **Strona oskarzen: 85 wierszy, zero obalonych** - nigdzie nie ma formularza,
 ktorego byśmy nie widzieli.
@@ -8044,3 +8044,10 @@ po wszystkich 133 oblanych wierszach chodzi w tle (`/tmp/audit-entry-all.log`).
 **Lekcja szersza niz ten blad:** instrukcja zapisana w STATE.md jest kodem, ktory wykonuje czlowiek
 albo agent, i **starzeje sie tak samo jak kod**, tylko nikt jej nie kompiluje. Ta konkretna byla
 nieprawdziwa od dawna i przez caly ten czas dawala zielona odpowiedz.
+
+**Wiec przeszukalem wszystkie instrukcje** i znalazlem jeszcze jedna martwa: `npm run audit-signup
+credited|accused` (ani takiego skryptu npm, ani takich trybow nigdy nie bylo). Poprawione, a straznik
+sprawdza teraz, ze **kazda komenda wymieniona w `docs/` istnieje** - i celowo **tylko `docs/`**, bo to
+sa instrukcje do wykonania, a STATE.md jest dziennikiem i ma prawo wspominac narzedzia, ktorych juz
+nie ma. Codex slusznie zauwazyl, ze pierwsza wersja regula lapala wylacznie `.mts`, wiec przepuszczala
+`reseed.sh` i `scan-cli.ts`, czyli akurat te wywolania, ktore najlatwiej zgnic.
