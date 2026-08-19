@@ -1,12 +1,12 @@
-# Let Agents In: stan na 2026-08-19 (kod 9.44, korpus 9.42, przemiat czeka na karencje)
+# Let Agents In: stan na 2026-08-19 (wszystko na 9.44, przemiat zamkniety)
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te czterdziesci linijek, potem reszte)
 
-**WERSJE: produkcja i repo na 9.44, korpus nadal na 9.42.** Przemiat **nie startowal** - czeka na
-mediane wieku korpusu 6 h, o 06:58 bylo 4.29 h, wiec okolo **08:45**. Czeka `/tmp/reseed-943.sh`
-(nazwa z czasow 9.43, wersje bierze z kodu), log `/tmp/reseed-943.log`. **Nie edytowac tego skryptu w
-trakcie** i **nie deployowac po jego starcie**. Co ma pokazac przemiat: sekcja **„CO MA POKAZAC
-PRZEMIAT NA 9.44"** na koncu tego pliku, osiem punktow z komendami.
+**WERSJE: produkcja, repo i korpus na 9.44.** Przemiat skonczony 09:57, komplet kontroli po nim
+**zielony**: 177 wierszy, 0 sprzecznosci, `audit-entry-credited` na calym korpusie daje **zero plikow
+nieodroznialnych od kontrolki**, adresy publikowane jako dowod: **1 martwy zamiast 3** i to znany
+falszywy alarm. Nic nie chodzi w tle, drzewo czyste, wszystko wdrozone. Pelne wyniki: sekcja
+**„PRZEMIAT NA 9.44 ZAMKNIETY"** na koncu pliku.
 
 **ZADANIA IDA NA MUSTER: https://musterboard.dev/r/r_kyvged60vn4c2mvj** (projekt `p_w8vtpkcae5`, token
 w `~/.muster/tokens.json`, handle agenta `ai-audytor`). **Tablica wygasa 2026-08-25, dopoki Krystian
