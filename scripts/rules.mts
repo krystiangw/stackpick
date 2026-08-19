@@ -2694,6 +2694,11 @@ const mail = readFileSync('scripts/cell-email.mts', 'utf8')
 check('mail tez znakuje jezyk cytatu', mail.includes('in Polish, and we quote rather than translate'), true)
 // Branie pierwszego cytatu jest arbitralne, wiec mail ma powiedziec, ilu zdan nie pokazuje.
 check('mail mowi, ze to jedno z wielu zdan', mail.includes('One of the ${said.length} sentences the runs wrote about you'), true)
+// Trzecie miejsce z tym samym cytatem: HTML raportu, czyli to, w co kupujacy klika. Markdown i
+// portal renderuja jeden dokument, wiec znacznik musi byc w obu albo drugi klamie przez milczenie.
+const widokRaportu = readFileSync('src/app/d/[id]/report-view.tsx', 'utf8')
+check('portal tez znakuje jezyk cytatu', widokRaportu.includes("readsAsPolish(quote.said) ? ' · in Polish' : ''"), true)
+check('i niesie to samo wyjasnienie', widokRaportu.includes('a translated quote is our'), true)
 check(
   'i cytat z sondy nie niesie polowy adresu',
   provisioningQuotes('<p>Create a new service account under [IAM &amp; Admin](https://console.cloud.google.com/iam-admin/serviceaccounts/very/long/path/that/runs/past/the/window/edge)</p>')

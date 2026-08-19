@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { ReportModel } from '@/lib/client-report-model'
+import { readsAsPolish } from '@/lib/vendors'
 
 /**
  * The delivered report as a page somebody can take into a meeting.
@@ -161,6 +162,7 @@ export function ReportView({ model }: { model: ReportModel }) {
                 </p>
                 <p className="mt-1 font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">
                   {quote.tool} · run {quote.run}
+                  {readsAsPolish(quote.said) ? ' · in Polish' : ''}
                 </p>
               </li>
             ))}
@@ -179,10 +181,22 @@ export function ReportView({ model }: { model: ReportModel }) {
                 </p>
                 <p className="mt-1 font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">
                   {quote.tool} · run {quote.run}
+                  {readsAsPolish(quote.said) ? ' · in Polish' : ''}
                 </p>
               </li>
             ))}
           </ul>
+          {/* The same sentence the markdown carries. Two renderings of one document, and only one of
+              them saying the quote is in another language, is the drift this codebase keeps finding
+              in its own scoring: one fact, two places, and the second one silently wrong. */}
+          {yourQuotes.filter((quote) => readsAsPolish(quote.said)).length > 0 && (
+            <p className="mt-5 max-w-2xl text-sm leading-relaxed text-ink-soft">
+              {yourQuotes.filter((quote) => readsAsPolish(quote.said)).length} of the quotes above are in Polish, because
+              that run happened on a machine whose operator instructions ask for it, which is the same contamination the
+              caveat below names. We print what the run wrote rather than a translation: a translated quote is our
+              sentence, not the agent&apos;s.
+            </p>
+          )}
           {/* Fewer quotes than runs that named you is a difference a reader counts, and without the
               reason the page looks as if answers went missing. */}
           {named.named - yourQuotes.length > 0 && (
