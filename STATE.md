@@ -178,6 +178,30 @@ za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). 
 wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
 Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
 
+## SERWER MCP PRZECZYTANY JAKO AGENT, KTORY GO WOLA (01:30, v687)
+
+Nasz `/mcp` jest powierzchnia dla **naszego docelowego uzytkownika**, a nie przeczytalem go tej nocy
+ani razu. Wywolane naprawde, nie przeczytane w kodzie: `tools/list`, potem `tools/call`.
+
+**Zdrowe i warto to zapisac:** dwa narzedzia, adnotacje **uczciwe** - `scan_domain` ma
+`readOnlyHint: false` i `openWorldHint: true` (bo strzela zadaniami w cudze serwery i zapisuje
+raport), `find_providers` jest read-only i idempotentne. To jest dokladnie ta uczciwosc, o ktora
+prosi skill `agent-discoverability`: klienci auto-zatwierdzaja narzedzia read-only. Odpowiedz
+`find_providers` na „send transactional email" niesie nazwy, **bariery po kolei**, date i link do
+dowodu per vendor.
+
+**Znalezione:** wywolanie z blednym kluczem (`{"problem": ...}` zamiast `{"job": ...}`) dostawalo
+`isError: true` - czyli protokolarnie dobrze - ale ze zdaniem „Describe the problem, for example
+...", ktore **nie mowi, ze argument nazywa sie `job`**. Agent moze powtorzyc ten sam bledny call w
+kolko. Uwaga: najpierw uznalem to za blad grozniejszy (ze serwer przyjmuje bledny call jako sukces),
+bo drukujac odpowiedz **zgubilem flage `isError`** - sprawdzenie surowego JSON-a to wyprostowalo,
+zanim cokolwiek napisalem.
+
+Teraz sa **trzy rozne zdania na trzy rozne pomylki**, i to jest poprawka po codeksie: jedno zdanie
+dla wszystkich mowiloby „ta call carried „job" instead" takze temu, kto podal `job` **pusty albo
+liczba** - czyli nazywaloby zly argument tam, gdzie argument byl dobry, a zla byla wartosc.
+Zweryfikowane na produkcji na czterech wywolaniach (zly klucz, pusty, zly typ, poprawne).
+
 ## NASZ WLASNY WIERSZ NA 9.51 I LIMITY, KTORE OBIECUJEMY AGENTOM (01:00)
 
 **Przeskanowalismy sami siebie biezacym skanerem: `letagentsin.com` 12/18 na 9.51.** Nic tu nie jest
