@@ -5,6 +5,29 @@
 
 
 
+
+## DWA PLIKI DLA AGENTOW PODAWALY ROZNE LIMITY, A JEDEN Z NICH BYL NASZ WLASNY llms.txt (19:15)
+
+Ta sama metoda, trzeci raz tej doby, i tym razem na pliku, ktory **kazemy publikowac vendorom**.
+
+**`llms.txt` mowil: „Rate limited to 10 scans per hour per address".** Bramka egzekwuje **30 na
+adres** i **5 na skanowana domene**. Dziesiatka to domyslna wartosc generycznego licznika, ktorej
+sciezka dzwoniacego **nigdy nie uzywa**. `agent-access.json` mial to od poczatku dobrze - czyli dwa
+pliki, ktore serwujemy agentom, podawaly **rozne liczby dla tego samego limitu**.
+
+Obie polowki kosztuja agenta: dławil sie do **jednej trzeciej** tego, co wolno, i **nie wiedzial nic
+o limicie na domene**, czyli o tym, ktory naprawde spotka przy przeskanowaniu jednego wiersza.
+Brakowalo tez **okna 15 minut**, w ktorym powtorka jest oddawana z poprzedniego skanu, a nie liczona.
+
+**Przy okazji, w tym samym pliku:** „`POST /api/scan` i narzedzie MCP **oba** biora `format: json`".
+REST bierze `json|sarif|agent`, MCP bierze `summary|agent|sarif` i **odrzuca `json`**. Serwer MCP
+tlumaczy to w tresci bledu („here it is summary and the two are the same thing"), wiec kod wiedzial,
+a plik nie mowil nic - agent idacy za nasza instrukcja tracil pierwsze wywolanie.
+
+**Oba pliki sa teraz zwiazane ze stalymi w kodzie** (`PER_CALLER_PER_HOUR`, `PER_DOMAIN_PER_HOUR`,
+`FORMATS`, enum narzedzia MCP). Zmiana stalej z 30 na 25 **oblewa piec regul**, dopoki pliki nie
+pojda za nia. To jest jedyny sposob, jaki dziala na plikach serwowanych doslownie tak, jak napisane.
+
 ## KARTA MCP GUBILA ADNOTACJE, CZYLI POLOWE BEZPIECZENSTWA (2026-08-19, 18:45)
 
 Serwer `/mcp` odpowiada na `tools/list` **uczciwie**: `scan_domain` ma `readOnlyHint: false` i
