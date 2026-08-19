@@ -54,8 +54,11 @@ jej nie odbierze tym linkiem** - odbior zdejmuje wygasniecie i podnosi limity.
 1. Kazde miejsce, gdzie **„nie wiem" ma wartosc domyslna**, jest tym samym bledem, i trzeba go szukac
    **na kazdej warstwie osobno** (`clad-kb show domyslna-wartosc-dla-nie-wiem-powtarza-sie-na-kazdej-warstwi`).
 2. Zdanie o tym, co przechowujemy, ma isc **z typu**, nie z pamieci (`WATCH_FIELDS_DISCLOSED`).
-3. **Sonda nie moze znajdowac samej siebie**: bramka „nie deployuj w trakcie przemiatu" oparta na
-   `pgrep -f "scripts/reseed.sh"` lapala wlasna petle czekajaca. Wlasciwy predykat to log.
+3. **Sonda nie moze znajdowac samej siebie**, i wyszlo to **trzy razy**: bramka „nie deployuj w
+   trakcie przemiatu" oparta na `pgrep -f "scripts/reseed.sh"` lapala wlasna petle czekajaca;
+   straznik szukajacy `process.exit` w `rules.mts` trafial we wlasny literal w kontrolce; straznik
+   szukajacy wywolan `howManyRows` znajdowal wlasne przyklady. Lekarstwo za kazdym razem inne
+   (`lastIndexOf`, wykluczenie pliku z listy, inny predykat), ale objaw ten sam.
 
 **CZEGO SAM NIE ODBLOKUJE (pelna lista z uzasadnieniami na Musterze):** dane sprzedawcy do Paddle ·
 zgoda na imie i nazwisko jako administratora na `/privacy` · klucz do `agentaudit@agentmail.to` ·
