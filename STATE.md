@@ -425,26 +425,23 @@ gdy to pisalem. Uruchom je i przeczytaj recznie; nigdy w trakcie przemiatu.
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te czterdziesci linijek, potem reszte)
 
-**NIEAKTUALNE PONIZEJ (blok z 15:30, zostawiony dla sladu): przemiat sie skonczyl, wersje sa w
-sekcji wyzej.** Ostatnie zdanie o przemiecie z tamtej chwili: **WERSJE: produkcja i repo na 9.45, korpus na 9.44** (jeden wiersz, `growthbook.io`, juz na 9.45 po
-skanie weryfikacyjnym - dlatego `/report` mowi „176 domains" i „1 further domain is left out").
-Przemiat na 9.44 skonczony 09:57 i **caly zielony**. Drzewo czyste, wszystko wdrozone.
+**WERSJE (2026-08-19, 22:00): kod i produkcja na 9.49, korpus jeszcze na 9.45** plus ~17 wierszy
+przeskanowanych pojedynczo po zmianach 9.46-9.49. Drzewo czyste, wszystko wdrozone (`a99fbe2`).
 
-**CO SIE DZIEJE TERAZ:** waiter `/tmp/reseed-945.sh` (PID w `pgrep -f reseed-945`) czeka na mediane
-wieku korpusu 6 h - o 15:17 bylo 5.80 h, wiec **przemiat na 9.45 rusza okolo 15:30**. Log:
-`/tmp/reseed-945.log`. **NIE DEPLOYOWAC po jego starcie** (sprawdz `tail -3 /tmp/reseed-945.log` i
-czy proces zyje).
+**CO SIE DZIEJE TERAZ:** waiter `/tmp/reseed-948.sh` (PID 77915, log `/tmp/reseed-948.log`) czeka az
+mediana wieku korpusu przekroczy 6 h - o 21:55 bylo 5.66 h, wiec **przemiat na 9.49 rusza okolo
+22:15**. **NIE DEPLOYOWAC po jego starcie**: sprawdz `tail -3 /tmp/reseed-948.log` i czy proces zyje.
 
-**CO ZROBIC PO PRZEMIECIE, po kolei:**
-1. `npm run audit` - ma dac **177 rows on formula 9.45, 0 contradictions**.
-2. `npx tsx scripts/po-przemiacie-9-45.mts` - **cztery grupy predykcji** zapisane PRZED przemiatem.
-   Skrypt sam pomija wiersze jeszcze nieprzemieciene i odmawia uspokajajacego zdania, dopoki nie
-   przeczyta polowy. Predykcja i jej uzasadnienie: sekcja „PREDYKCJA DLA PRZEMIATU 9.45".
-3. `npx tsx scripts/audit-entry-credited.mts 200` - ma dac **zero plikow nieodroznialnych**.
-4. `npx tsx scripts/after-reseed.mts` - liczby po przemiecie, w tym niemierzalne z 9.43.
-5. `npm run audit-published-urls` - przed przemiatem: 1 martwy na wierszu zaliczonym (cal.com,
-   dokumentowany jako POST, wiec od dzis **nie jest pytany**), 3 na niemierzalnych.
-6. `npm run audit-fix-arithmetic` - arytmetyka naprawy w platnym raporcie, ma byc **177/177**.
+**CO ZROBIC PO PRZEMIECIE:** dokladnie blok „Komplet kontroli po nastepnym przemiecie, jednym
+wklejeniem" nizej w tej sekcji - kolejnosc ma znaczenie, bo **predykcje ida pierwsze** (tylko one
+moga cos obalic; sa zapisane w `scripts/po-przemiacie-9-49.mts`, szesnascie wierszy z werdyktem
+zapisanym PRZED przemiatem, skrypt odmawia wniosku ponizej polowy przeczytanych wierszy). Trzy
+audyty powtarzajace oskarzenia (`audit-docs-js`, `audit-front-door`, `audit-named-crawlers`) pytaja
+cudze serwery, wiec **nigdy w trakcie przemiatu** i **nigdy przez `| tail`** - raz wygladalo to na
+46 minut zawieszenia, a skrypt skonczyl w minute i trzymal tylko uchwyt do Mongo.
+
+**CZEGO NIE BUDUJEMY, bo zmierzone jako nieoplacalne:** ranking linkow po etykiecie (jeden
+dwuznaczny wiersz na szescdziesiat) i punkt 2 z audytu subagenta (zero wierszy w korpusie).
 
 **CZEGO SAM NIE ODBLOKUJE (pelna lista z uzasadnieniami na Musterze):** dane sprzedawcy do Paddle ·
 zgoda na imie i nazwisko jako administratora na `/privacy` · klucz do `agentaudit@agentmail.to` ·
