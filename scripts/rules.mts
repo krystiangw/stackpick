@@ -2261,6 +2261,25 @@ check('sonda widzi audyty z licznikiem', zLicznikiem.length > 5, true)
 // `/bot` obiecuje, ze anonimowe zapytanie nie przepisze tego, co strona mowi o firmie. Strona
 // vendora jest jedyna INDEKSOWALNA, ktora moglaby to zlamac: wiersz korpusu bez zasianego pomiaru
 // spadal na „jakikolwiek", czyli na to, co ostatnio przeskanowal odwiedzajacy.
+// Metodologia jest naszym jedynym produktem, ktory kupujacy moze odtworzyc sam, wiec zdanie
+// opisujace regule, ktorej kod juz nie wykonuje, jest gorsze niz brak zdania. Akapit o kontrolce
+// opisywal wygaszanie CALEJ przestrzeni nazw, ktore zniklo, i nie mowil o galezi „nie da sie
+// zmierzyc" z 9.43. Straznik wiaze tekst z zachowaniem, ktore ma opisywac.
+console.log('\nmetodologia opisuje kontrolke, ktora naprawde mamy')
+const metodologia = readFileSync('src/app/methodology/page.tsx', 'utf8')
+const sondaWejscia = readFileSync('src/lib/scan/funnel.ts', 'utf8')
+check('nie obiecuje wygaszania calej przestrzeni nazw', metodologia.includes('every hit in that namespace is suppressed'), false)
+check('mowi, ze porownanie jest per plik', metodologia.includes('Per file, not per namespace'), true)
+check('i nazywa galaz niemierzalna', metodologia.includes('the check says it could not tell'), true)
+// Kontrolka: kod naprawde tak dziala, wiec zdanie opisuje zachowanie, a nie zyczenie.
+check('kod liczy niepewne pojedynczo', sondaWejscia.includes('const uncertain = present && controlAnswered === false'), true)
+check('kod nie wygasza calej przestrzeni', sondaWejscia.includes('The namespace verdict no longer short-circuits the probe'), true)
+// Zdanie o MCP nie moze byc szersze niz kod: uscisk dloni, JSON i wyzwanie OAuth licza sie BEZ
+// kontrolki, wiec „brak kontrolki czyni check niemierzalnym" bylo za mocne. Codeksa.
+check('mowi, ze uscisk dloni nie potrzebuje kontrolki', metodologia.includes('needs no control and still counts'), true)
+check('i ogranicza niemierzalnosc do ksztaltow zaleznych od kontrolki', metodologia.includes('an answer is one only a control can read') || metodologia.includes('the answer is one only a control can read'), true)
+check('a kod naprawde tak dziala', sondaWejscia.includes('const unreadableCredentialShape ='), true)
+
 console.log('\nstrona korpusowa nie spada na skan odwiedzajacego')
 const stronaVendora = readFileSync('src/app/v/[domain]/page.tsx', 'utf8')
 const stronaBota = readFileSync('src/app/bot/page.tsx', 'utf8')
