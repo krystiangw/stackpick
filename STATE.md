@@ -757,11 +757,21 @@ gdy to pisalem. Uruchom je i przeczytaj recznie; nigdy w trakcie przemiatu.
 wdrozone. Bateria kontroli po przemiecie **przeszla w calosci** - szczegoly w sekcji „PRZEMIAT 9.49
 ZAMKNIETY" nizej, razem z jedynym rozjazdem predykcji i z tym, co z niego wyszlo.
 
-**NIE MA NIC W TOKU.** Nastepny przemiat: gdy mediana wieku korpusu przekroczy 6 h (dzis rusza sie
-o ~0,08 h na 5 minut, wiec doba to za duzo, a szesc godzin od 23:28 wypada rano). Wzorzec waitera:
-`/tmp/reseed-948.sh` - kopiuj go ze zmieniona nazwa logu. **W trakcie przemiatu nie deployujemy** i
-nie odpalamy trzech audytow pytajacych cudze serwery (`audit-docs-js`, `audit-front-door`,
-`audit-named-crawlers`); ich nigdy tez nie puszczamy przez `| tail`, bo wtedy nie widac postepu.
+**W TOKU: waiter przemiatu na 9.50** - `/tmp/reseed-950.sh` (PID 15629, log `/tmp/reseed-950.log`),
+czeka az mediana wieku korpusu przekroczy 6 h. O 23:54 bylo 0,85 h, wiec **przemiat rusza okolo
+05:00**. **W trakcie przemiatu nie deployujemy** i nie odpalamy trzech audytow pytajacych cudze
+serwery (`audit-docs-js`, `audit-front-door`, `audit-named-crawlers`); ich nigdy tez nie puszczamy
+przez `| tail`, bo wtedy nie widac postepu.
+
+**PO TYM PRZEMIECIE PREDYKCJA IDZIE PIERWSZA i jest inna niz zwykle:** `npm run po-przemiacie-9-50`
+sprawdza **zasieg** zmiany selekcji z 9.50. Twierdzenie zapisane PRZED przemiatem: **rusza sie
+wylacznie dziewiec domen**, na ktorych zmierzylem skreslona sciezke (`amplitude.com`,
+`bigcommerce.com`, `bunny.net`, `cal.com`, `filestack.com`, `godaddy.com`, `posthog.com`,
+`tolgee.io`, `vercel.com`). Kazdy inny wiersz, ktory ruszy sie na `docs_without_js`,
+`programmatic_provisioning`, `machine_readable_api` albo `price_in_snippet`, **obala** ten pomiar.
+Porownanie idzie do migawki pelnych werdyktow `src/data/przed-9-50.json` (punkty PLUS „niemierzalne",
+bo przejscie zmierzonego zera w niemierzalne nie rusza punktow, a jest wlasnie tym, co ta zmiana
+potrafi zrobic). Skrypt wychodzi **niezerowo** bez pokrycia, wiec zatrzyma reszte baterii.
 
 **CZEGO NIE BUDUJEMY, bo zmierzone jako nieoplacalne:** ranking linkow po etykiecie (jeden
 dwuznaczny wiersz na szescdziesiat) i punkt 2 z audytu subagenta (zero wierszy w korpusie).
@@ -858,7 +868,7 @@ cache'u rejestru dalo **160 wierszy identycznych, 16 bez paczki po obu stronach 
 najpierw, bo tylko one moga cos obalic):
 ```
 cd ~/projects/stackpick && export MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick)
-npm run po-przemiacie && npx tsx scripts/after-reseed.mts && npm run audit && npx tsx scripts/audit-study.mts   && npm run audit-delivery && npm run regressions && npm run watch-coverage && npm run audit-our-api && npm run audit-sample
+npm run po-przemiacie-9-50 && npm run po-przemiacie && npx tsx scripts/after-reseed.mts && npm run audit && npx tsx scripts/audit-study.mts   && npm run audit-delivery && npm run regressions && npm run watch-coverage && npm run audit-our-api && npm run audit-sample
 ```
 **Potem trzy audyty powtarzajace oskarzenia** (pytaja vendorow, wiec NIGDY w trakcie przemiatu i
 **nie przez `| tail`**, bo wtedy nie widac postepu):
