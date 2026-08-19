@@ -11,6 +11,33 @@
 
 
 
+## MIESIECZNY MAIL NIE ODROZNIAL „NIC SIE NIE RUSZYLO" OD „NIKT NIE ZMIERZYL" (22:00-22:15)
+
+Metoda znowu ta sama: **wygeneruj dokument, ktory dostaje klient, i przeczytaj go jako odbiorca**
+(`npx tsx scripts/cell-email.mts`). Dwie rzeczy, obie u placacego.
+
+**1. Wiek biegow.** Mail sprzedajemy jako **miesieczny bieg agenta**, a biegi odpalamy recznie i
+`/pricing` sam sie przyznaje, ze ta polowa monitoringu **nie ma harmonogramu**. Mail podawal date
+biegow (`dated 2026-08-16 to 2026-08-17`) i nic wiecej, wiec miesiac, w ktorym nikt nie zmierzyl, i
+miesiac, w ktorym nic sie nie ruszylo, wygladaly **identycznie** - a odjecie daty od dzisiaj zostawalo
+czytelnikowi. To ten sam blad, co wszystkie tej nocy: **wartosc domyslna dla „nie wiem"**. Od teraz
+zdanie niesie wiek (`dated 2026-08-16 to 2026-08-17, 2 days ago`), a powyzej 31 dni mail **zmienia
+temat** na „no new agent run this month, and the numbers that stand" i mowi wprost, ze liczby stoja,
+bo **nic ich nie zmierzylo ponownie**, a nie dlatego, ze agent nie zmienil zdania. Wiek liczony od
+**najnowszego** biegu i w **dniach kalendarzowych lokalnie** (data parsuje sie jako polnoc UTC, wiec
+mail pisany o 00:30 w UTC+2 czytalby sie o dzien starszy).
+
+**2. Dwoch wyprzedzajacych, ogloszonych jako jeden.** `whoWentFirst` miala liczbe mnoga **tylko w
+jednej z dwoch galezi**. Vendor, ktorego zaden bieg nie postawil pierwszym, czytal „**the provider** a
+run named before any other: postmarkapp.com, resend.com" - jeden ogloszony, dwoch dostarczonych. Bylo
+to **i w mailu, i w platnym raporcie za 49 USD** (`client-report.mts` uzywa tej samej funkcji). Dzis:
+„the **providers some run** named before any other: ...". Zmierzone na zywym mailu do buttondown.com.
+
+Straznik na kazde z trzech (`rules.mts`), **kazdy zmutowany**: powrot liczby pojedynczej, liczenie
+wieku od najstarszego biegu zamiast najnowszego i usuniecie przyznania sie z tresci - kazda mutacja
+oblewa swoja regule. Codex czysty. **Bez deploya**, i to nie z powodu zamrozenia: `whoWentFirst`
+uzywaja wylacznie skrypty, wiec produkcja nie ma tego tekstu. `c211de7`.
+
 ## TWIERDZENIA O CUDZYCH PRODUKTACH MAJA OD DZIS TERMIN WAZNOSCI (21:00-21:40)
 
 **Zasada, ktora z tego zostaje i da sie przeniesc gdzie indziej:** liczby o cudzym produkcie nie da
