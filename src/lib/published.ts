@@ -42,9 +42,19 @@ export const NOISE_FLOOR_PERCENT = 0.59
  * One formula version, because scores from two versions were never comparable and mixing them
  * moves a vendor's position while nothing about the vendor changes.
  */
-export type PublishedCorpus = { reports: Report[]; formulaVersion: string }
+export type PublishedCorpus = {
+  reports: Report[]
+  formulaVersion: string
+  /**
+   * Rows the version filter left out. Published, because "175 domains" next to a corpus of 177 is
+   * a number with a silent subtraction in it, and the window where that happens - between shipping
+   * a formula and sweeping the corpus onto it - is exactly when somebody is reading the page to
+   * see what changed.
+   */
+  heldBack: number
+}
 
-const EMPTY: PublishedCorpus = { reports: [], formulaVersion: '' }
+const EMPTY: PublishedCorpus = { reports: [], formulaVersion: '', heldBack: 0 }
 
 /**
  * How long a loaded corpus is reused before the database is asked again. The corpus changes when
@@ -95,5 +105,5 @@ async function loadCorpus(): Promise<PublishedCorpus> {
     byVersion.set(version, [...(byVersion.get(version) ?? []), report])
   }
   const [formulaVersion, reports] = [...byVersion.entries()].sort((a, b) => b[1].length - a[1].length)[0]
-  return { reports, formulaVersion }
+  return { reports, formulaVersion, heldBack: seeded.length - reports.length }
 }

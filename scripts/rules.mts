@@ -2699,6 +2699,19 @@ check('mail mowi, ze to jedno z wielu zdan', mail.includes('One of the ${said.le
 const widokRaportu = readFileSync('src/app/d/[id]/report-view.tsx', 'utf8')
 check('portal tez znakuje jezyk cytatu', widokRaportu.includes("readsAsPolish(quote.said) ? ' · in Polish' : ''"), true)
 check('i niesie to samo wyjasnienie', widokRaportu.includes('a translated quote is our'), true)
+
+// „175 domen" obok korpusu, ktory ma 177, to liczba z cichym odejmowaniem w srodku. Okno, w ktorym
+// to sie dzieje - miedzy wdrozeniem formuly a przemiatem - jest dokladnie tym, w ktorym ktos czyta
+// te strone, zeby zobaczyc, co sie zmienilo.
+console.log('\nraport branzowy mowi, ilu wierszy nie liczy')
+const stronaRaportu = readFileSync('src/app/report/page.tsx', 'utf8')
+check('strona nazywa wiersze poza wersja', stronaRaportu.includes('left out of every number'), true)
+check('i bierze liczbe z korpusu, nie z powietrza', stronaRaportu.includes('report.heldBack > 0'), true)
+// Kontrolka: wybor wersji jest liczony w JEDNYM miejscu, nie w dwoch, ktore moga sie rozjechac.
+const korpus = readFileSync('src/lib/published.ts', 'utf8')
+const branza = readFileSync('src/lib/industry.ts', 'utf8')
+check('wersje wybiera korpus', korpus.includes('heldBack: seeded.length - reports.length'), true)
+check('a raport branzowy juz jej nie wybiera drugi raz', branza.includes('byVersion'), false)
 check(
   'i cytat z sondy nie niesie polowy adresu',
   provisioningQuotes('<p>Create a new service account under [IAM &amp; Admin](https://console.cloud.google.com/iam-admin/serviceaccounts/very/long/path/that/runs/past/the/window/edge)</p>')

@@ -23,6 +23,8 @@ export type CheckTally = {
 export type IndustryReport = {
   sampleSize: number
   formulaVersion: string
+  /** Rows on another formula version, left out of every number on this page and said out loud. */
+  heldBack: number
   max: number
   median: number
   mean: number
@@ -104,17 +106,11 @@ function medianOf(sorted: number[]): number {
 }
 
 export async function buildIndustryReport(): Promise<IndustryReport | null> {
-  const all = (await publishedCorpus()).reports
-  if (all.length === 0) return null
-
-  // Mixing formula versions would compare scores that were never comparable, so the report
-  // is always about one formula: whichever version most of the corpus was scored under.
-  const byVersion = new Map<string, Report[]>()
-  for (const report of all) {
-    const version = report.scorecard.formulaVersion
-    byVersion.set(version, [...(byVersion.get(version) ?? []), report])
-  }
-  const [formulaVersion, reports] = [...byVersion.entries()].sort((a, b) => b[1].length - a[1].length)[0]
+  // Mixing formula versions would compare scores that were never comparable, so the report is
+  // always about one formula: whichever version most of the corpus was scored under. That choice
+  // is made once, in `publishedCorpus`, and repeating it here was a second copy of one rule that
+  // could only ever drift from the first.
+  const { reports, formulaVersion, heldBack } = await publishedCorpus()
   if (reports.length < MINIMUM_SAMPLE) return null
 
   const totals = reports.map((report) => report.scorecard.total).sort((a, b) => a - b)
@@ -320,6 +316,7 @@ export async function buildIndustryReport(): Promise<IndustryReport | null> {
     signupNeedsJavaScript: needsJavaScript,
     sampleSize: reports.length,
     formulaVersion,
+    heldBack,
     // Every report in the slice shares a formula version, so they share a maximum.
     max: Math.max(...reports.map((report) => report.scorecard.max)),
     median,

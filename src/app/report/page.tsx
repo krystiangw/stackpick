@@ -266,6 +266,17 @@ export default async function IndustryReportPage() {
           <li>
             Not stable across formula versions. Everything here is scored under v{report.formulaVersion};
             earlier numbers were produced by a formula with known defects, and mixing them would be dishonest.
+            {/* The subtraction, said out loud. Between shipping a formula and sweeping the corpus onto it,
+                this page counts fewer domains than the corpus holds, and a reader comparing the two
+                numbers deserves the reason rather than a discrepancy to work out. */}
+            {report.heldBack > 0 && (
+              <>
+                {' '}
+                {report.heldBack} further {report.heldBack === 1 ? 'domain is' : 'domains are'} left out of every number
+                above for exactly that reason: {report.heldBack === 1 ? 'it was' : 'they were'} rescanned under another
+                version, and the corpus catches up on the next sweep.
+              </>
+            )}
           </li>
           <li>
             Scanned between {window[0]} and {window[1]}. Sites change, and so does this page: it recomputes
