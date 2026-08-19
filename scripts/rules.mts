@@ -1175,6 +1175,17 @@ check('team na hoscie docs przechodzi', readsAsCompanyNews('https://docs.browser
 check('customers w endpointcie przechodzi', readsAsCompanyNews('https://docs.bigcommerce.com/developer/api-reference/rest/admin/management/customers/v3/validate-credentials'), false)
 check('getting-started/about przechodzi', readsAsCompanyNews('https://developers.deepl.com/docs/getting-started/about'), false)
 
+// Dokumentacja SARIF-a ma opisywac to, co eksport naprawde wypisuje. Obiecywala „te same cztery
+// rodzaje wynikow, co u nas", a `results` niesie WYLACZNIE oblane checki - reszta idzie licznikami w
+// `properties`. Zmierzone na produkcji: 16 regul, 4 wyniki, wszystkie `fail`.
+const dokiSarif = readFileSync('src/app/docs/page.tsx', 'utf8')
+const eksportSarif = readFileSync('src/lib/export.ts', 'utf8')
+check('dokumentacja nie obiecuje czterech rodzajow wynikow', dokiSarif.includes('result kinds are the same four'), false)
+check('mowi, ze wynikami sa tylko oblane checki', dokiSarif.includes('Only the failing checks become results'), true)
+check('i nazywa liczniki, w ktorych jest reszta', dokiSarif.includes('counted in the run properties'), true)
+check('a eksport naprawde filtruje do oblanych', /const failing = scorecard\.checks\.filter/.test(eksportSarif), true)
+check('i naprawde publikuje liczniki obok', /passed:/.test(eksportSarif) && /notApplicable:/.test(eksportSarif), true)
+
 check('sonda widzi cudze poswiadczenie po nazwie', namesSomebodyElsesCredential('Create a Firebase ', 'Service Account', 'onesignal.com'), true)
 check('i nie widzi marki, ktorej przy poswiadczeniu nie ma', namesSomebodyElsesCredential('Create a ', 'Service Account', 'browserbase.com'), false)
 check('wlasna marka nie dyskwalifikuje', namesSomebodyElsesCredential('Create a GitHub ', 'personal access token', 'github.com'), false)

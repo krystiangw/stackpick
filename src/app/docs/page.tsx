@@ -125,8 +125,11 @@ data: {"id":"example-com-202608072143","total":9,"max":${MAX_SCORE}}`}</Code>
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           Both surfaces take a <code className="font-mono text-xs">format</code>.{' '}
-          <code className="font-mono text-xs">sarif</code> returns SARIF 2.1.0, whose result kinds are the same four
-          we use, so a scan can run in your pipeline and fail a build when the score drops.{' '}
+          <code className="font-mono text-xs">sarif</code> returns SARIF 2.1.0, so a scan can run in your pipeline
+          and fail a build when the score drops. Only the failing checks become results: a clean domain handing a
+          code-scanning pipeline sixteen alerts, one of them saying there was nothing to check, is worse than
+          useless. The passing, unmeasured and not-applicable ones are counted in the run properties, so a clean
+          sheet is still distinguishable from a scan that could not look.{' '}
           <code className="font-mono text-xs">agent</code> returns markdown tasks instead of a report: one task per
           failing check, each carrying the measurement behind it and a link to the rule, with the unmeasured checks
           listed separately and marked as not failures.
