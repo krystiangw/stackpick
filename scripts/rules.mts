@@ -41,6 +41,7 @@ import { licenceGateQuotes, readSnippet, rendersUsableForm, entersThroughIdentit
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
 import { AGENT_ENTRY_PATHS, AGENT_ENTRY_PATH_COUNT, mcpAcrossWaves } from '../src/lib/scan/funnel'
 import type { McpProbe } from '../src/lib/scan/funnel'
+import { isDocumentationPage } from '../src/lib/scan/index'
 import {
   methodRefusalIsRouted,
   readsAsAMethodRefusal,
@@ -1115,6 +1116,14 @@ check(
   provisioningDemotedQuotes('Create a Firebase Service Account private key', 'onesignal.com').length,
   0,
 )
+
+// Sekcja rodzenstwo na tym samym hoscie dokumentacji liczy sie jako dokumentacja, bo tam wlasnie
+// stoi API. Kontrolki po obu stronach, bo ta regula istnieje po to, zeby NIE wpuszczac marketingu.
+const docsAt = 'https://docs.mixpanel.com/docs/what-is-mixpanel'
+check('ta sama sekcja liczy sie', isDocumentationPage('https://docs.mixpanel.com/docs/quickstart', docsAt), true)
+check('referencja API obok tez', isDocumentationPage('https://docs.mixpanel.com/reference/create-service-account', docsAt), true)
+check('marketing nadal nie', isDocumentationPage('https://docs.mixpanel.com/solutions/content-management', docsAt), false)
+check('blog nadal nie', isDocumentationPage('https://docs.mixpanel.com/blog/rotating-api-keys', docsAt), false)
 
 check('sonda widzi cudze poswiadczenie po nazwie', namesSomebodyElsesCredential('Create a Firebase ', 'Service Account', 'onesignal.com'), true)
 check('i nie widzi marki, ktorej przy poswiadczeniu nie ma', namesSomebodyElsesCredential('Create a ', 'Service Account', 'browserbase.com'), false)

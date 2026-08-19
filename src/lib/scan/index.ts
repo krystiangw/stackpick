@@ -526,7 +526,7 @@ async function readDeeper(
  * both outrank real documentation on the hint alone, and the verdict then calls them "the
  * documentation pages we read".
  */
-function isDocumentationPage(pageUrl: string, docsUrl: string): boolean {
+export function isDocumentationPage(pageUrl: string, docsUrl: string): boolean {
   let page: URL
   let docs: URL
   try {
@@ -538,8 +538,31 @@ function isDocumentationPage(pageUrl: string, docsUrl: string): boolean {
   // Off the host the documentation is on, where the vendor files the page is all we have.
   if (page.origin !== docs.origin) return isFiledAsDocumentation(pageUrl)
   const section = docs.pathname.split('/').filter(Boolean)[0]
-  return !section || page.pathname.split('/').filter(Boolean)[0] === section
+  const here = page.pathname.split('/').filter(Boolean)[0]
+  if (!section || here === section) return true
+  // A vendor is free to file its guides and its API reference in two sections of the same
+  // documentation host, and the API reference is where creating a credential is documented.
+  // mixpanel.com writes guides under /docs and the API under /reference, so the page that answers
+  // the provisioning check was never eligible: the scan read four guides and then said it could
+  // not tell, while /reference/create-service-account documents POST
+  // /organizations/{id}/service-accounts. Only sections that are unambiguously documentation are
+  // admitted, so the reason this rule exists - keeping /solutions and a blog post about rotating
+  // keys out of "the documentation pages we read" - still holds.
+  return here !== undefined && SIBLING_DOCUMENTATION_SECTIONS.has(here)
 }
+
+const SIBLING_DOCUMENTATION_SECTIONS = new Set([
+  'reference',
+  'references',
+  'api',
+  'apis',
+  'api-reference',
+  'api-docs',
+  'apidocs',
+  'rest',
+  'sdk',
+  'sdks',
+])
 
 /**
  * How much of the documentation renders without JavaScript, measured over every documentation
