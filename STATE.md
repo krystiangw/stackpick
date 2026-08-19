@@ -9014,3 +9014,19 @@ rosnie bez konca.
 - `/report` pokazuje przez to **„176 domains"** i zdanie **„1 further domain is left out of every
   number above"** - czyli mechanizm, ktory dopisalem dzis rano, zadzialal na pierwszym prawdziwym
   przypadku, w liczbie pojedynczej.
+
+## TA SAMA POPRAWKA NA CHECKU OBOK (2026-08-19, 15:00)
+
+`robots_paths_resolve` oblewal wiersz zdaniem „3 of the 5 concrete paths your robots.txt allows are
+gone, **starting with** /a" - przy checku, ktorego cale lekarstwo brzmi „te linie Allow nie prowadza
+nigdzie". Adresy mielismy wszystkie, w jednej tablicy. Teraz zdanie nazywa do czterech i liczy
+reszte, dokladnie jak przy `llms_txt`.
+
+**Warto zapisac, ze dwa razy pod rzad znalazlem to samo, szukajac wzorca zamiast bledu:** grep po
+`starting with`, `[0]}` i `and N more` w `score.ts` wskazal oba miejsca w kilkanascie sekund. Gdy raz
+nazwie sie ksztalt bledu, znajdowanie kolejnych wystapien przestaje byc szukaniem, a staje sie
+przegladem listy - i tak wlasnie poszlo dzis z „porownaniem z brakiem" (szesc miejsc), „liczba ze
+slowa zamiast z danych" (trzy) i teraz „nazywamy jeden dowod z kilku, ktore mamy" (dwa).
+
+**FREEZE:** mediana wieku korpusu 5.47 h o 14:57, wiec przemiat na 9.45 startuje okolo **15:30**.
+To byl ostatni deploy przed nim.
