@@ -8516,3 +8516,22 @@ adresu **znika z cytatu**.
 
 Koncowa regula jest jednym zdaniem: **okno skonczone kropka, koncem strony albo spacja niczego nie
 przecielo; wszystko inne przecielo.**
+
+## DRUGI DOKUMENT, KTORY DOSTAJE PLATNIK, PRZECZYTANY TAK SAMO (2026-08-19, 07:35)
+
+Po raporcie przeczytalem **miesieczny mail monitoringu** (`scripts/cell-email.mts`) jako odbiorca.
+`audit-delivery` mowi o nim „zadne zdanie nie kloci sie z danymi" i to prawda - a mimo to dwie rzeczy
+byly do poprawy, bo spojnosc z danymi to nie to samo, co uczciwosc wobec czytajacego:
+
+**1. „What codex run 1 said about you".** Mail bierze **pierwszy** cytat, jaki ma, a naglowek czyta
+sie tak, jakby bieg 1 byl werdyktem. Vendor wymieniony w 10 na 10 biegow moze dostac akurat to
+jedno zdanie, ktore brzmi najgorzej - stripe.com dostawal cytat o tym, ze **Stripe Billing bierze
+0,7% wolumenu i moga dojsc kolejne oplaty**. Zdanie jest prawdziwe i naprawde padlo, ale bylo
+podane jak podsumowanie. Teraz mail mowi **„One of the 10 sentences the runs wrote about you (codex
+run 1)"**, wiec liczba od razu pokazuje, ze reszta jest o jedno klikniecie dalej, a nie ze jej nie ma.
+
+**2. Znacznik jezyka byl tylko w raporcie.** Ten sam cytat z tych samych biegow, drugi dokument, i
+tylko jeden z nich mowil, ze zdanie jest po polsku. Komentarz w kodzie **wiedzial o problemie** i
+rozwiazywal go przez atrybucje („two tools both have a run 1 and one of them answers in Polish"),
+czyli mowil, **ktory bieg**, ale nigdy **jaki jezyk**. Teraz oba dokumenty niosa ten sam znacznik, a
+straznik w `rules.mts` pilnuje obu plikow naraz - inaczej jeden z nich klamie przez przemilczenie.
