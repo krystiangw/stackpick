@@ -13,7 +13,7 @@
  */
 import { getStore } from '../src/lib/store'
 import { CATEGORIES, categoryFor } from '../src/lib/categories'
-import { quotedAbout, whoWentFirst } from '../src/lib/vendors'
+import { quotedAbout, readsAsPolish, whoWentFirst } from '../src/lib/vendors'
 import { categoryOfWatch } from '../src/lib/watch'
 import { readWithGuest } from '../src/lib/guest-cell'
 import cells from '../src/data/cells.json'
@@ -79,7 +79,7 @@ for (const watch of wanted) {
   // Attributed, because two tools both have a run 1 and because one of them answers in Polish:
   // an unattributed foreign-language sentence under "what a run said about you" reads like a
   // mistake rather than like evidence from a named run.
-  const quote = held
+  const said = held
     .flatMap((one) =>
       one.answers.map((answer) => ({
         tool: one.tool.split(' ')[0],
@@ -87,7 +87,8 @@ for (const watch of wanted) {
         said: saidAbout(answer.text, watch.domain, guest ? [...category.domains, watch.domain] : category.domains),
       })),
     )
-    .find((entry) => entry.said !== null)
+    .filter((entry) => entry.said !== null)
+  const quote = said[0]
   // For a guest the stored `first` was decided without their name in the list, so it can name
   // somebody an answer only led because we were not looking for the customer in it.
   const winners = live
@@ -107,7 +108,15 @@ for (const watch of wanted) {
     '',
   ]
   if (quote) {
-    lines.push(`What ${quote.tool} run ${quote.run} said about you:`, `  "${quote.said}"`, '')
+    // How many there are, because taking the first one is arbitrary and "what run 1 said" reads as
+    // if run 1 were the verdict. A vendor named in ten runs can be quoted the one sentence that
+    // reads worst, and the count is what tells them the rest is a click away rather than absent.
+    const oneOf = said.length > 1 ? `One of the ${said.length} sentences the runs wrote about you` : 'The one sentence a run wrote about you'
+    // The same marker the paid report carries, for the same reason: the claude cells run on a
+    // machine whose operator instructions ask for Polish, and an unexplained foreign sentence in a
+    // mail to a vendor reads as a mistake. Attribution alone said which run, never which language.
+    const language = readsAsPolish(quote.said as string) ? ' (in Polish, and we quote rather than translate)' : ''
+    lines.push(`${oneOf} (${quote.tool} run ${quote.run})${language}:`, `  "${quote.said}"`, '')
   } else {
     lines.push('No run wrote a sentence about you. That is an absence rather than a bad review, and it is', 'the thing worth acting on.', '')
   }

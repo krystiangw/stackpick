@@ -2688,6 +2688,12 @@ check('angielskie zdanie o vendorach zostaje czyste', readsAsPolish('I would pic
 const generatorRaportu = readFileSync('scripts/client-report.mts', 'utf8')
 check('raport znakuje cytat', generatorRaportu.includes("' (in Polish)'"), true)
 check('i tlumaczy, dlaczego go nie tlumaczy', generatorRaportu.includes('a translated quote is our sentence'), true)
+// Miesieczny mail to drugi dokument, ktory dostaje platnik, i niesie ten sam cytat z tych samych
+// biegow. Znacznik jezyka musi byc w obu, inaczej jeden z nich klamie przez przemilczenie.
+const mail = readFileSync('scripts/cell-email.mts', 'utf8')
+check('mail tez znakuje jezyk cytatu', mail.includes('in Polish, and we quote rather than translate'), true)
+// Branie pierwszego cytatu jest arbitralne, wiec mail ma powiedziec, ilu zdan nie pokazuje.
+check('mail mowi, ze to jedno z wielu zdan', mail.includes('One of the ${said.length} sentences the runs wrote about you'), true)
 check(
   'i cytat z sondy nie niesie polowy adresu',
   provisioningQuotes('<p>Create a new service account under [IAM &amp; Admin](https://console.cloud.google.com/iam-admin/serviceaccounts/very/long/path/that/runs/past/the/window/edge)</p>')
