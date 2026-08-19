@@ -563,6 +563,13 @@ check('kazda komenda z runbooka istnieje', martwe.join(' | '), '')
 check('kontrola: sonda widzi martwa komende', npmSkrypty.has('audit-signup'), false)
 // Kontrolka na samo rozszerzenie: gdyby regula lapala tylko `.mts`, ten plik bylby dla niej niewidzialny.
 check('kontrola: regula widzi tez skrypty powloki', wKatalogu.has('reseed.sh'), true)
+
+// Audyt, ktory sprawdza nasze oskarzenia, sam potrzebuje kontrolki. `audit-mcp` zglosil szesc
+// adresow „ktore jednak odpowiadaja" u uploadthing.com i imagekit.io, a te hosty odpowiadaja tym
+// samym bledem uwierzytelnienia pod sciezka, ktorej nie ma. Bez kontrolki narzedzie sprawdzajace
+// nasze zdania argumentowalo za przyznaniem punktu za serwer, ktorego nikt nie widzial.
+check('audyt MCP ma sciezke kontrolna', readFileSync('scripts/audit-mcp.mts', 'utf8').includes('CONTROL_PATH'), true)
+check('i audyt wejscia tez ja mial', readFileSync('scripts/audit-entry.mts', 'utf8').includes("const CONTROL = '/letagentsin-audit-probe"), true)
 check('smiec nie wysadza czytania', signatures.read('{'), null)
 // Paddle wysyla customer_id, nie adres, wiec adres wozimy we wlasnym custom_data. Bez tego kazde
 // prawdziwe zdarzenie odpadaloby jako niekompletne. Znalezione przez codex review.

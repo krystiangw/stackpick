@@ -16,6 +16,7 @@ import { getStore } from '../src/lib/store'
 import { OPENAPI_PATHS, declaredSpecs } from '../src/lib/scan/machine'
 import { isRealTextFile } from '../src/lib/scan/http'
 import { howManyRows } from './how-many'
+import { refuseIfNothingMeasured } from './nothing-measured'
 
 const PAUSE_MS = 300
 const store = getStore()
@@ -101,6 +102,7 @@ for (const domain of CURATED_DOMAINS) {
   console.log(`${checked} wierszy sprawdzonych, ${hits.length} trafien`)
 }
 
+refuseIfNothingMeasured(checked, 'oblanych wierszy')
 console.log(`\n${checked} oblanych wierszy, ${asked} zapytan`)
 console.log(
   hits.length === 0

@@ -21,6 +21,7 @@
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { howManyRows } from './how-many'
+import { refuseIfNothingMeasured } from './nothing-measured'
 
 /**
  * The same three documents the scanner asks for, not the two obvious ones. A protected-resource
@@ -148,6 +149,7 @@ for (const domain of [...CURATED_DOMAINS].slice(0, most)) {
   console.log(`${checked} wierszy sprawdzonych, ${hits.length} trafien`)
 }
 
+refuseIfNothingMeasured(checked, 'oblanych wierszy')
 console.log(`\n${checked} oblanych wierszy, ${origins} zapytan do hostow, ktore sami wymienilismy`)
 console.log(
   hits.length === 0

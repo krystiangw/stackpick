@@ -8059,3 +8059,38 @@ nie ma. Codex slusznie zauwazyl, ze pierwsza wersja regula lapala wylacznie `.mt
 domenie, wpis rejestru MCP wskazujacy nasz endpoint) przechodzilyby na **pustej liscie**, nie
 sprawdziwszy niczego. Dolozone dwie reguly, ze te listy nie sa puste. Straznik, ktory przechodzi, bo
 nie mial czego sprawdzic, jest straznikiem, ktorego nie ma.
+
+## NARZEDZIE SPRAWDZAJACE NASZE OSKARZENIA SAMO NIE MIALO KONTROLKI (2026-08-19)
+
+Ciag dalszy poprzedniej sekcji: skoro audyty mogly mierzyc zero, sprawdzilem, co mowia, gdy naprawde
+mierza. `audit-mcp` zglosil **szesc adresow, ktore „jednak odpowiadaja"** przy `uploadthing.com` i
+`imagekit.io`, czyli sugerowal, ze dwa opublikowane wiersze („nothing spoke MCP at ...") sa falszywym
+oskarzeniem.
+
+**Sprawdzilem to sam, wlasnym zapytaniem, ze sciezka kontrolna - i wiersze sa poprawne.**
+`api.uploadthing.com/nonsense-8f3a1c` oddaje **identyczne** `{"error":"Missing API Key"}` 400, a
+`api.imagekit.io/v1/nonsense-8f3a1c` identyczne 401. Te hosty zadaja klucza, **zanim cokolwiek
+zrouteuja**, wiec odpowiedz pod adresem `/mcp` nie mowi nic o MCP. Trzecia para (403 „Invalid CSRF
+Token" na `imagekit.io/mcp`) to zwykla ochrona ich aplikacji webowej przed kazdym POST-em.
+
+**Bez tej kontrolki bylem o krok od zaliczenia dwom vendorom serwera MCP, ktorego nikt nie widzial.**
+Narzedzie, ktorego cala praca polega na sprawdzaniu naszych oskarzen, samo nie mialo tego, czego
+wymagamy od kazdej sondy: kontroli, ktora potrafi znalezc przypadek negatywny. Sprawdzacz wejscia
+(`audit-entry`) ja ma od dawna, ten jej nie mial.
+
+**Wdrozone:** `audit-mcp` pyta teraz o sciezke, ktorej nie ma, na tym samym hoscie i katalogu, i
+rozdziela wynik na dwie listy: adresy, ktore odpowiadaja **inaczej** niz adres nieistniejacy (to jest
+znalezisko), i adresy, pod ktorymi **host odpowiada tak samo wszedzie** (to nie jest dowod na serwer),
+z kontrolka wydrukowana obok kazdego. Po zmianie: „zdanie trzyma sie wszedzie", szesc adresow w
+drugiej liscie.
+
+**Codex znalazl w moim wlasnym straznika dwa bledy, oba w te sama strone - w strone CISZY:**
+1. Pusta odpowiedz kontrolki sprawiala, ze `includes('')` bylo prawda dla wszystkiego o tym samym
+   statusie, wiec **prawdziwy serwer MCP odpowiadajacy 401 z challenge zostalby schowany jako szum**.
+2. Po poprawce porownywalem `challenge:` (naglowek) z trescia odpowiedzi kontrolki, czyli dwie rozne
+   rzeczy, ktore zawsze sa rozne - wiec bramka odpowiadajaca tym samym challenge wszedzie i tak
+   zostawalaby „znaleziskiem".
+
+Obie naprawione przez jedno: **ta sama funkcja liczy „jak odpowiedzial" dla adresu i dla kontrolki**,
+a gdy kontrolka nie powiedziala nic, adres zostaje znaleziskiem. Uciszenie prawdziwego znaleziska to
+jedyny blad, ktorego ta kontrolka miec nie moze.

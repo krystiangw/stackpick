@@ -25,6 +25,7 @@ import {
 } from '../src/lib/scan/funnel'
 import { registrableDomain } from '../src/lib/scan/http'
 import { howManyRows } from './how-many'
+import { refuseIfNothingMeasured } from './nothing-measured'
 
 const PAUSE_MS = 250
 const CONTROL = '/letagentsin-audit-probe-8f3a1c'
@@ -97,6 +98,7 @@ for (const domain of [...CURATED_DOMAINS].slice(0, most)) {
   console.log(`${checked} wierszy sprawdzonych, ${found.length} plikow znalezionych`)
 }
 
+refuseIfNothingMeasured(checked, 'oblanych wierszy')
 console.log(`\n${checked} oblanych wierszy, ${asked} sciezek zapytanych`)
 console.log(
   found.length === 0

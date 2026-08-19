@@ -17,6 +17,7 @@ import { getStore } from '../src/lib/store'
 import { rendersUsableForm, entersThroughIdentityProvider } from '../src/lib/scan/funnel'
 import { AGENT_UA } from '../src/lib/scan/http'
 import { howManyRows } from './how-many'
+import { refuseIfNothingMeasured } from './nothing-measured'
 
 const PAUSE_MS = 400
 const store = getStore()
@@ -61,6 +62,7 @@ for (const domain of [...CURATED_DOMAINS].slice(0, most)) {
   console.log(`${checked} wierszy sprawdzonych, ${wrong.length} zdan do poprawy`)
 }
 
+refuseIfNothingMeasured(checked, 'oblanych wierszy')
 console.log(`\n${checked} oblanych wierszy z adresem w zdaniu`)
 console.log(
   wrong.length === 0
