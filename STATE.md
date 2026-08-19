@@ -8094,3 +8094,22 @@ drugiej liscie.
 Obie naprawione przez jedno: **ta sama funkcja liczy „jak odpowiedzial" dla adresu i dla kontrolki**,
 a gdy kontrolka nie powiedziala nic, adres zostaje znaleziskiem. Uciszenie prawdziwego znaleziska to
 jedyny blad, ktorego ta kontrolka miec nie moze.
+
+**Sprawdzilem potem pozostale osiem sond audytowych i zadna z nich tego nie potrzebuje** - i to nie
+jest przeoczenie, tylko wniosek z jednego rozroznienia. `audit-oauth` uznaje dokument dopiero, gdy ma
+`issuer` albo `authorization_endpoint`; `audit-openapi` gdy ma klucz `openapi` albo `swagger`;
+`audit-agent-card` gdy ma `url`, `skills`, `capabilities` albo `protocolVersion`. **Predykat, ktory
+nazywa dokument, nie da sie nabrac na brame zadajaca klucza.** `audit-mcp` byl jedyny z predykatem
+**bezksztaltnym** (naglowek challenge albo dowolny typ JSON), wiec byl jedyny do nabrania. Kontrolka
+jest potrzebna tam, gdzie sonda pyta „czy cokolwiek odpowiada", a nie tam, gdzie pyta „czy odpowiada
+TO".
+
+**A skaner ma to wszystko od dawna i w mocniejszej wersji**, co sprawdzilem w `probeMcpEndpoints`:
+kontrolka w **wlasnym katalogu kandydata** (nie w korzeniu, bo `njal.la` odpowiada tym samym tekstem
+pod calym `/api/`), osobna kontrolka na **niezarejestrowanym hoscie** dla bram z wildcardem, regula
+dyskredytujaca **tylko przy tym samym statusie**, i tell po **ciele HTML** (interstitial Cloudflare
+kontra 27 bajtow JSON-a od prawdziwego serwera). Czyli opublikowane wiersze byly bezpieczne; slabe
+bylo **narzedzie, ktore je audytuje**. Jego dokumentacja mowi wprost, ze jest **celowo grubsze** niz
+check, zeby nie budowac drugiej opinii o tym, co liczy sie za serwer - i to jest sluszne, ale tej
+nocy pokazalo swoja cene: grubsze bez kontrolki **krzyczy wilk**, a czlowiek po drugiej stronie
+(czyli ja) prawie na ten krzyk zareagowal zmiana punktacji.
