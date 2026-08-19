@@ -29,9 +29,14 @@ nazywajace konkurenta (liczby przeweryfikowane 2026-08-19 o 09:00) · **push nap
 `origin`** (`git push origin main` + `gh workflow run mcp-registry.yml`) · formularz katalogu
 konektorow w claude.ai (reszta pakietu gotowa w `docs/submitting-the-connector.md`).
 
-**JEDNA DECYZJA CZEKA NA CIEBIE, MALA:** Lighthouse daje SEO 92, bo nie zna dyrektyw
-`Content-Signal:` i `AI-Catalog:` w `robots.txt`. RFC 9309 kaze ignorowac nieznane linie, wiec to
-blad narzedzia. Rekomendacja: **zostawiamy**, ale to material na `/methodology`.
+**MALA DECYZJA, ZAMKNIETA I ZMIERZONA (2026-08-19, 15:42):** Lighthouse 13.4.1 daje nam SEO **92**,
+i **cale** odjecie to JEDNA linia `robots.txt`. Moja wczesniejsza notatka mowila, ze narzedzie
+odrzuca obie nietypowe dyrektywy, a przebieg mowi, ze odrzuca **tylko `AI-Catalog:`** - to samo
+`Content-Signal:` przechodzi. RFC 9309 kaze ignorowac nieznane linie, wiec plik jest poprawny, a
+walidator z tylu. **Zostawiamy** (mowimy vendorom, zeby publikowali katalog agentowy, wiec usuniecie
+wlasnego dla zielonej liczby byloby najtansza rada, jaka mozna dac), a od dzis stoi to napisane na
+`/methodology` w sekcji „We are scored by this too", z data. Powtorzenie:
+`npx -y lighthouse https://letagentsin.com --only-categories=seo --output=json --output-path=/tmp/lh-seo.json --quiet --chrome-flags="--headless"`.
 
 **ZADANIA IDA NA MUSTER: https://musterboard.dev/r/r_kyvged60vn4c2mvj** (projekt `p_w8vtpkcae5`, token
 w `~/.muster/tokens.json`, handle agenta `ai-audytor`). **Tablica wygasa 2026-08-25, dopoki Krystian

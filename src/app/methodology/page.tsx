@@ -387,6 +387,23 @@ export default async function MethodologyPage() {
           failing in fact, and we would rather show the failing row than write ourselves an exemption nobody
           else gets. Scan the domain in the box on any page and you will get the same card a vendor gets.
         </p>
+        {/* Measured rather than remembered: our own note said Lighthouse rejected both non-standard
+            lines, and the run says it rejects one. The number carries its date because it is a
+            reading of somebody else's tool on a given day, not a property of this file. */}
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          The same is true of a score we do not control. Lighthouse 13.4.1 rates this site 92 for SEO rather
+          than 100, and the whole deduction is one line of our{' '}
+          <a href="/robots.txt" className="text-brass underline underline-offset-4">
+            robots.txt
+          </a>
+          : it calls <code className="font-mono text-[0.9em]">AI-Catalog:</code> an unknown directive, measured
+          on 19 August 2026. RFC 9309 tells a parser to ignore lines it does not recognise, so the file is
+          valid and the validator is behind it, but the deduction is real and anybody who runs the tool on us
+          will see it. We keep the line, because we tell vendors to publish an agent catalog and deleting ours
+          to turn a number green would be the cheapest kind of advice.{' '}
+          <code className="font-mono text-[0.9em]">Content-Signal:</code>, on the line above it, costs nothing:
+          the same version accepts it.
+        </p>
       </section>
 
       {/* A reader who has found the alternatives will trust us less for not naming them, and the
