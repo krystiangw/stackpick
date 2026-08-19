@@ -8972,3 +8972,24 @@ temporal.io. Te siedem wierszy **zachowa punkt i zostanie na 2**.
 Po przemiecie sprawdzic **te cztery grupy osobno**. Rozjazd w grupie „bez zmiany" znaczylby, ze
 regula robi cos, czego nie przewidzialem; rozjazd w grupie „traci punkt" znaczylby, ze pomiar sprzed
 przemiatu byl inny niz stan stron dzisiaj.
+
+## WIERSZ NIE PAMIETAL, KTORE PLIKI PRZECZYTAL (2026-08-19, 14:05)
+
+Znalezione przez wlasna porazke: probujac przewidziec przemiat 9.45, chcialem odtworzyc odczyt
+skanera i **nie dalo sie** - wiersz zapisuje adresy **stron dokumentacji**, a plikow maszynowych
+tylko **liczbe**. Zdanie w werdykcie brzmi „across the 3 documentation pages and **3
+machine-readable files** we read", wiec vendor w sporze pyta o nie pierwszym pytaniem, a runbook
+kazal odpowiadac ponownym skanem - czyli listą, ktora dzis moze byc inna niz ta, na ktorej
+punktowalismy.
+
+Skaner mial te liste przez caly czas (`machine.llmsUrls`) i **wyrzucal ja po policzeniu**. Teraz
+zapisuje ja obok licznika, a licznik nadal liczy **te sama tablice**, wiec nie moga sie rozjechac.
+Zweryfikowane na produkcji: ponowny skan `growthbook.io` trzyma
+`['https://docs.growthbook.io/llms.txt', 'https://docs.growthbook.io/llms-full.txt']`.
+
+Runbook sporu ma teraz gotowa komende, ktora czyta obie listy **z wiersza**, i uczciwe zastrzezenie:
+wiersze sprzed 2026-08-19 maja tylko liste stron, wiec dla nich zostaje sama liczba w zdaniu.
+
+**To jest ta sama luka, ktora naprawialem tej nocy w audytach, tylko po stronie danych:** publikujemy
+zdanie o dowodach, ktorych sami nie przechowujemy w calosci. Audyt pytal innym naglowkiem niz skaner,
+a wiersz pamietal, ILE dokumentow przeczytal, ale nie KTORE.
