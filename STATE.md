@@ -178,6 +178,25 @@ za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). 
 wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
 Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
 
+## SUFIT BYL CYTOWANY W WERDYKTACH, A METODYKA O NIM NIE WIEDZIALA (00:15)
+
+Dwa checki publikuja dzis zdanie **„larger than the 400,000 bytes we read of any one page"**, a
+`/methodology` - strona, do ktorej platny raport i kazdy mail wprost odsylaja slowami „every check
+and its rule" - **nie wspominala o sufcie ani razu**. Vendor szedl po wyjasnienie tam, gdzie go nie
+bylo. Sprawdzone gruntownie: „400,000", „bytes we read", „cap" - zero trafien.
+
+Dopisany akapit w tej samej liscie zastrzezen, i mowi **oba** skutki sufitu, bo drugi jest cichszy:
+1. **Czytanie**: strona wieksza od sufitu jest ucieta, a checki mowia „nie zmierzylismy" i **nazywaja
+   sufit**, zamiast podawac to, co zdazylismy przeczytac, jako to, co vendor serwuje.
+2. **Wybor strony (9.50)**: ten sam sufit decydowal, ktora strone w ogole czytamy - zgadnieta sciezka
+   ucieta sufitem wygladala jak skorupa aplikacji i byla pomijana, wiec szlismy czytac inna i
+   publikowali **prawdziwe zdanie o niewlasciwej stronie**. Akapit mowi tez, ze przy **milczacej
+   kontrolce pomijamy sciezke tak jak dawniej, zamiast zgadywac**.
+
+Liczba idzie z `MAX_BYTES_PER_RESPONSE`, nie z klawiatury - straznik oblewa build, gdy ktos wpisze
+ja recznie (mutacja sprawdzona) albo gdy zniknie zdanie o milczacej kontrolce. Wdrozone i
+zweryfikowane na produkcji.
+
 ## 9.51: JEDYNY ZIELONY WIERSZ, KTORY OPISUJE SCIANE, MOWI WRESZCIE CO Z TYM ZROBIC (v682)
 
 Przeczytanie `/v/mixpanel.com` **jako vendor, ktorego oceniamy** - to najczesciej ogladana strona
