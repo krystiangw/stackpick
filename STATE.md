@@ -178,6 +178,30 @@ za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). 
 wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
 Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
 
+## DZIESIEC NAZW PLIKOW TO NIE DWADZIESCIA TRZY ZAPYTANIA (01:45, v688)
+
+Wyjscie MCP w formacie `agent` przeczytane obok strony `/r` dla tego samego skanu - i **dwa zdania w
+jednym dokumencie liczyly co innego pod tym samym rzeczownikiem**:
+- naglowek: „None of the **10** known agent entry **paths** answered",
+- wiersz checku: „None of the **23** agent entry **paths** we asked on your site and your
+  documentation host".
+
+Oba prawdziwe (dziesiec NAZW pytanych na dwoch hostach daje dwadziescia trzy ZAPYTANIA), ale vendor
+czyta to jako sprzecznosc - dokladnie ten ksztalt, co „dwie liczby na dwoch skalach w jednym mailu",
+naprawiony wieczorem gdzie indziej. Naglowek mowi teraz: „We asked for 10 entry files **by name** ...
+on your site and your documentation host, and not one of them answered with a file."
+
+**Codex zlapal w tej poprawce blad tej samej rodziny, co naprawiana:** moje nowe zdanie mowilo
+**bezwarunkowo**, ze pytalismy takze host dokumentacji, a domena bez osobnego hosta dokumentacji jest
+pytana tylko na witrynie. Publikowalibysmy zapytanie, ktorego nie bylo - to jest ten sam blad, co
+liczenie niezapytanych hostow w `probedHosts` (naprawione w 9.33). Teraz zdanie idzie z
+`entryDocsProbed`, a wiersze sprzed tej flagi mowia „on your site": **zanizenie, nigdy zawyzenie**.
+Kontrolki na obie galezie plus na stary ksztalt danych.
+
+**Bez podbicia wersji, swiadomie:** `pickHeadline` liczy sie przy renderowaniu z zapisanych findings i
+**nie jest czescia scorecardu**, wiec niezmiennik z `score.ts` (dwa skanery pod jednym numerem) tu nie
+obowiazuje. Zweryfikowane na produkcji na wierszu `svix.com`.
+
 ## SERWER MCP PRZECZYTANY JAKO AGENT, KTORY GO WOLA (01:30, v687)
 
 Nasz `/mcp` jest powierzchnia dla **naszego docelowego uzytkownika**, a nie przeczytalem go tej nocy
