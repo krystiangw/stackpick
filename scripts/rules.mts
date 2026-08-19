@@ -2295,6 +2295,17 @@ check('przy szesciu wypisuje cztery i liczy reszte', zLinkami(6, ['a1', 'a2', 'a
 // Kontrolka: stary wiersz bez listy nadal nazywa ten jeden adres, ktory ma.
 check('stary wiersz nadal nazywa firstDead', zLinkami(2, undefined).includes('https://x.test/a') === false, true)
 
+// Ten sam argument o checku obok: „te linie Allow nie prowadza nigdzie" to cale lekarstwo, a
+// zdanie nazywalo jeden adres z kilku, ktore mamy w tablicy.
+const robotsAllow = CHECKS.find((one) => one.id === 'robots_paths_resolve')!
+const zMartwymi = (dead: string[]) =>
+  robotsAllow.evaluate({
+    robots: { present: true, unreadable: false, allowPaths: { checked: 3, dead, unanswered: [] } },
+  } as never).detail
+check('wypisuje wszystkie martwe sciezki', zMartwymi(['/a', '/b']).includes('/b'), true)
+check('i nie mowi juz "starting with"', zMartwymi(['/a', '/b']).includes('starting with'), false)
+check('jedna martwa nadal brzmi po staremu', zMartwymi(['/a']).includes('/a'), true)
+
 console.log('\nwiersz pamieta, ktore dokumenty przeczytal, a nie tylko ile')
 const skan = readFileSync('src/lib/scan/index.ts', 'utf8')
 check('zapisujemy adresy stron', skan.includes('docsPagesReadUrls: documentsRead'), true)

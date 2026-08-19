@@ -531,11 +531,15 @@ export const CHECKS: Check[] = [
         }
         return yes(1, `the ${allow.checked} concrete path${allow.checked === 1 ? '' : 's'} your robots.txt allows all answer`)
       }
+      // Named, not sampled down to one: the whole remedy is "these Allow lines point at nothing",
+      // and we hold every address. The same argument as the llms.txt links, on the check next door.
+      const goneNamed = allow.dead.slice(0, 4).join(', ')
+      const goneRest = allow.dead.length - Math.min(4, allow.dead.length)
       return yes(
         0,
         allow.checked === 1
           ? `the one concrete path your robots.txt allows is gone: ${allow.dead[0]}`
-          : `${allow.dead.length} of the ${allow.checked} concrete paths your robots.txt allows are gone, starting with ${allow.dead[0]}`,
+          : `${allow.dead.length} of the ${allow.checked} concrete paths your robots.txt allows are gone: ${goneNamed}${goneRest > 0 ? `, and ${goneRest} more` : ''}`,
       )
     },
   },
