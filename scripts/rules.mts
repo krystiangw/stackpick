@@ -2268,6 +2268,17 @@ check('sonda widzi audyty z licznikiem', zLicznikiem.length > 5, true)
 // Sonda drzwiowa pyta trzy razy, ale przerywa, gdy konczy sie budzet skanu - a zdanie w wierszu
 // mialo slowo „three" na sztywno. „across three tries (200, 403)" nazywa zapytanie, ktorego nie
 // wyslalismy, w wierszu publikowanym pod cudza nazwa.
+// Wiersz mowi „across the 3 documentation pages and 3 machine-readable files we read" i zapisywal
+// tylko ADRESY STRON, a plikow juz nie. Pierwsze pytanie vendora w sporze brzmi „ktore dokumenty
+// przeczytaliscie?", i nie dalo sie na nie odpowiedziec z wiersza. Sam sie o to potknalem,
+// probujac odtworzyc wlasny odczyt przed przemiatem na 9.45.
+console.log('\nwiersz pamieta, ktore dokumenty przeczytal, a nie tylko ile')
+const skan = readFileSync('src/lib/scan/index.ts', 'utf8')
+check('zapisujemy adresy stron', skan.includes('docsPagesReadUrls: documentsRead'), true)
+check('i adresy plikow maszynowych', skan.includes('machineFilesReadUrls: machine.llmsUrls'), true)
+// Kontrolka: licznik nadal pochodzi z tej samej listy, wiec nie moga sie rozjechac.
+check('licznik liczy te sama liste', skan.includes('machineFilesRead: machine.llmsUrls.length'), true)
+
 console.log('\nliczba prob w zdaniu pochodzi z listy, nie ze slowa')
 const punktacja = readFileSync('src/lib/score.ts', 'utf8')
 check('zdanie liczy proby z tablicy', punktacja.includes('across ${f.agentStatusesSeen.length} tries'), true)

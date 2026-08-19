@@ -20,6 +20,22 @@ VERBOSE=1 npm run scan their.com      # every check with the sentence it would p
 `VERBOSE` is the point: without it the command prints the score and the stage totals, and the
 argument is never about those.
 
+**"Which documents did you read?" is answered from the row, not from a rerun.** Every scan records
+the documentation pages and the machine-readable files it read, so the provisioning and llms.txt
+arguments start from the same list we scored on rather than from whatever a fresh scan picks today:
+
+```bash
+MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx -e "
+  import { getStore } from './src/lib/store'
+  const r = await getStore().latestForDomain('their.com', true)
+  const f = r?.findings as any
+  console.log(f.docsPagesReadUrls, f.machineFilesReadUrls)
+"
+```
+
+Rows scanned before 2026-08-19 hold the page list but not the file list, so for those the count in
+the sentence is all there is.
+
 Three outcomes, and they are different problems:
 
 - **It no longer fails.** They fixed it, or our reading was transient. Then the correction is a

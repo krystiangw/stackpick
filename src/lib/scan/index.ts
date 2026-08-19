@@ -148,6 +148,13 @@ export type ScanFindings = {
   docsPagesRead: number
   /** llms.txt and llms-full.txt are read for the same words and are not documentation pages. */
   machineFilesRead?: number
+  /**
+   * Which ones, not only how many. The provisioning verdict says "across the 3 documentation pages
+   * and 3 machine-readable files we read" and the pages were recorded while the files were not, so
+   * the one question a vendor asks first - which documents did you read? - could not be answered
+   * from the row. Reproducing our own reading needed the same list and did not have it either.
+   */
+  machineFilesReadUrls?: string[]
   /** Which ones. A verdict about documentation is only reproducible if we name what we read. */
   docsPagesReadUrls: string[]
   /**
@@ -901,6 +908,7 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     docsPagesRead: docPagesRead.length,
     docsPagesReadUrls: documentsRead,
     machineFilesRead: machine.llmsUrls.length,
+    machineFilesReadUrls: machine.llmsUrls,
     docsPagesUnread: deeperDocs.unreadable,
     docsPagesUnreadStatuses: deeperDocs.unreadStatuses,
     robots,
