@@ -7963,3 +7963,30 @@ chroni dane przed tym, zeby vendorzy zaczeli nas blokowac, a dane sa celem tej n
 `typed_package` stoi na paczce dopasowanej po wydawcy - z czego bierze sie wartosc dzisiejszej zmiany:
 to jest najliczniejsza i najslabsza kategoria dowodu, jaka mamy, i wlasnie w niej znalezlismy wiersz
 o cudzej firmie.
+
+## ILE NAS NAPRAWDE KOSZTUJE LIMIT W REJESTRZE NPM (2026-08-19, zamyka otwarte pytanie z #48)
+
+Ostatni komentarz do zadania #48 zostawil pytanie bez liczby: **„89 ze 177 skanow lapie limit w
+rejestrze npm, a na tym stoi `typed_package` i cala atrybucja paczek"**. To jest fakt o zapytaniach.
+Pytanie brzmi, ile z tego widac w opublikowanych wierszach, i dzis dalo sie je zmierzyc, bo mialem
+pod reka **replay z pelnego cache'u rejestru**, czyli przebieg, w ktorym zaden limit nie mogl paść.
+
+**Wynik: 160 wierszy nazywa te sama paczke, 16 nie ma jej po obu stronach, rozni sie JEDEN.**
+`pdfmonkey.io` ma w korpusie „nie umielismy zidentyfikowac paczki", a replay znajduje `pdfmonkey`.
+
+**I ten jeden wiersz najprawdopodobniej nie jest o limicie:** ma `rateLimited: false`, wiec nic w
+skanie nie zapisalo odmowy. Bardziej prawdopodobna przyczyna to **wlasna zmiennosc wyszukiwarki
+rejestru** - ta sama, ktora `REPLAY_SHUFFLE` w harnessie istnieje po to, zeby ujawniac. Uczciwe
+zastrzezenie: replay czyta strony z migawki sprzed kilku godzin, wiec zmiana na samej stronie
+vendora tez tlumaczylaby roznice, a przy jednym wierszu nie da sie tych przyczyn rozdzielic.
+
+**Co z tego wynika:** szkoda z limitow rejestru jest **ponizej naszego wlasnego progu szumu (0,59 %)**,
+czyli w tej samej klasie co roznica miedzy dwoma identycznymi przemiatami. Konstrukcja, ktora to
+absorbuje, juz istnieje i nie trzeba jej dokladac: nieopłacone zapytanie liczy sie jako „nie wiemy",
+a kandydat, ktorego nie dalo sie wycenic, **uniewaznia odpowiedz** zamiast oddawac gorsza. Do tego
+przemiat idzie dwoma przebiegami wlasnie dlatego, ze pierwszy jest zimny.
+
+**Czego ta liczba NIE mowi:** ze `typed_package` jest mocny. **136 ze 177 wierszy stoi na
+`registry-search`**, czyli na najslabszej klasie dowodu, jaka mamy - i to jest powod, dla ktorego
+dzisiejsza zmiana (slowa paczki rozstrzygaja) dotyka wlasnie tej polowy, a bramka z #46 oznacza wiele
+z nich jako niemierzalne zamiast je punktowac.
