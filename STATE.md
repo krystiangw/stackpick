@@ -1,12 +1,13 @@
-# Let Agents In: stan na 2026-08-19 (wszystko na 9.44, przemiat zamkniety)
+# Let Agents In: stan na 2026-08-19 (kod 9.45, korpus 9.44, przemiat czeka na karencje)
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te czterdziesci linijek, potem reszte)
 
-**WERSJE: produkcja, repo i korpus na 9.44.** Przemiat skonczony 09:57, komplet kontroli po nim
-**zielony**: 177 wierszy, 0 sprzecznosci, `audit-entry-credited` na calym korpusie daje **zero plikow
+**WERSJE: produkcja i repo na 9.45, korpus na 9.44.** Przemiat na 9.44 skonczony 09:57 i **caly
+zielony**: 177 wierszy, 0 sprzecznosci, `audit-entry-credited` na calym korpusie daje **zero plikow
 nieodroznialnych od kontrolki**, adresy publikowane jako dowod: **1 martwy zamiast 3** i to znany
-falszywy alarm. Nic nie chodzi w tle, drzewo czyste, wszystko wdrozone. Pelne wyniki: sekcja
-**„PRZEMIAT NA 9.44 ZAMKNIETY"** na koncu pliku.
+falszywy alarm. Potem wyszlo **9.45** i czeka na wlasny przemiat: waiter `/tmp/reseed-945.sh`,
+karencja mediany otwiera sie okolo **16:00**, log `/tmp/reseed-945.log`, **nie deployowac po jego
+starcie**. Co ma pokazac: koniec sekcji **„9.45"**.
 
 **ZADANIA IDA NA MUSTER: https://musterboard.dev/r/r_kyvged60vn4c2mvj** (projekt `p_w8vtpkcae5`, token
 w `~/.muster/tokens.json`, handle agenta `ai-audytor`). **Tablica wygasa 2026-08-25, dopoki Krystian
