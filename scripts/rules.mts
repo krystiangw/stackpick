@@ -2234,6 +2234,20 @@ check('zadna klasa nie nazywa nieistniejacego tokenu', sieroty.join(', '), '')
 check('sonda zna nasze tokeny', tokens.has('brass') && tokens.has('ground'), true)
 check('i widzi uzyte klasy', nasze.length > 5, true)
 
+// Runbook sporu mowi, ze KAZDA strona niesie `mailto:` z tematem, wiec korekta „w koncu dojdzie".
+// Strona, za ktora klient zaplacil, byla jedyna bez tematu - czyli jego mail najtrudniej
+// posortowac ze wszystkich.
+console.log('\nspor da sie zglosic z kazdej strony, ktora niesie werdykt')
+for (const [gdzie, plik] of [
+  ['strona vendora', 'src/app/v/[domain]/page.tsx'],
+  ['platny raport', 'src/app/d/[id]/page.tsx'],
+] as const) {
+  const zrodlo = readFileSync(plik, 'utf8')
+  check(`${gdzie}: adres z tematem`, zrodlo.includes('subject=${encodeURIComponent(`Wrong verdict on'), true)
+}
+// Kontrolka: runbook nadal obiecuje to, czego pilnujemy.
+check('runbook nadal to obiecuje', readFileSync('docs/handling-a-dispute.md', 'utf8').includes('Wrong verdict on'), true)
+
 console.log('\njeden znak, nie dwa rysunki')
 check(
   'logo w public i ikona w app to ten sam plik',

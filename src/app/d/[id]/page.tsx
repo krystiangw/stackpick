@@ -49,7 +49,14 @@ export default async function DeliveredReportPage({ params }: { params: Promise<
           and we will recheck it by hand.
         </p>
         <p className="mt-4 font-mono text-sm print:hidden">
-          <a href="mailto:hello@letagentsin.com" className="text-brass underline underline-offset-4">
+          {/* The subject is prefilled, as it is on the public vendor page. The dispute runbook says
+              every page carries one so a correction "arrives eventually" - and the one page a
+              customer paid for was the page that did not, which makes their mail the hardest of
+              all to triage. */}
+          <a
+            href={`mailto:hello@letagentsin.com?subject=${encodeURIComponent(`Wrong verdict on ${delivery.domain}`)}`}
+            className="text-brass underline underline-offset-4"
+          >
             hello@letagentsin.com
           </a>
           {' · '}
