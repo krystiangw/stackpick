@@ -2272,6 +2272,29 @@ check('sonda widzi audyty z licznikiem', zLicznikiem.length > 5, true)
 // tylko ADRESY STRON, a plikow juz nie. Pierwsze pytanie vendora w sporze brzmi „ktore dokumenty
 // przeczytaliscie?", i nie dalo sie na nie odpowiedziec z wiersza. Sam sie o to potknalem,
 // probujac odtworzyc wlasny odczyt przed przemiatem na 9.45.
+// Lekarstwem na ten check jest „napraw te linki", a zdanie nazywalo JEDEN z dwoch i kazalo vendorowi
+// odtworzyc nasza probke, zeby poznac reszte. Adresy mamy wszystkie, wiec je wypisujemy.
+console.log('\nzdanie o martwych linkach nazywa je wszystkie')
+const checkLlms = CHECKS.find((one) => one.id === 'llms_txt')!
+const zLinkami = (dead: number, deadUrls: string[] | undefined) =>
+  checkLlms.evaluate({
+    machine: {
+      wellKnown: {},
+      hasLlmsTxt: true,
+      llms: { 'llms.txt': { present: true, url: 'https://x.test/llms.txt' } },
+      llmsUrls: ['https://x.test/llms.txt'],
+      llmsLinks: { sampled: 12, dead, firstDead: deadUrls?.[0] ?? null, deadUrls, files: 1 },
+      mcp: { mentions: 0, mentionsTruncated: false },
+    },
+    funnel: { catchAll: {}, servesCatchAll: false },
+  } as never).detail
+check('wypisuje oba martwe adresy', zLinkami(2, ['https://x.test/a', 'https://x.test/b']).includes('https://x.test/b'), true)
+check('i nie mowi juz "starting with"', zLinkami(2, ['https://x.test/a', 'https://x.test/b']).includes('starting with'), false)
+// Kontrolka: przy wielu martwych zdanie nie rosnie bez konca, tylko liczy reszte.
+check('przy szesciu wypisuje cztery i liczy reszte', zLinkami(6, ['a1', 'a2', 'a3', 'a4', 'a5', 'a6'].map((x) => `https://x.test/${x}`)).includes('and 2 more'), true)
+// Kontrolka: stary wiersz bez listy nadal nazywa ten jeden adres, ktory ma.
+check('stary wiersz nadal nazywa firstDead', zLinkami(2, undefined).includes('https://x.test/a') === false, true)
+
 console.log('\nwiersz pamieta, ktore dokumenty przeczytal, a nie tylko ile')
 const skan = readFileSync('src/lib/scan/index.ts', 'utf8')
 check('zapisujemy adresy stron', skan.includes('docsPagesReadUrls: documentsRead'), true)

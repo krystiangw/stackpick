@@ -29,7 +29,7 @@ export type MachineFindings = {
    * a curated map whose entries 404 is worse than none: an agent follows them, gets nothing, and
    * has spent its budget. agent-ready.dev checks this and we did not.
    */
-  llmsLinks?: { sampled: number; dead: number; firstDead: string | null; files: number }
+  llmsLinks?: { sampled: number; dead: number; firstDead: string | null; deadUrls?: string[]; files: number }
   wellKnown: Record<string, boolean>
   openapi: string[]
   /**
@@ -172,6 +172,10 @@ async function sampleLlmsLinks(
     sampled: asked.length,
     dead: dead.length,
     firstDead: dead[0] ?? null,
+    // All of them, not only the first. The remedy for this check is "fix these links", and naming
+    // one of two while charging for the finding hands the vendor half the work back. `firstDead`
+    // stays because rows scored before this hold nothing else.
+    deadUrls: dead,
     files: new Set(asked.map((url) => seen.get(url))).size,
   }
 }

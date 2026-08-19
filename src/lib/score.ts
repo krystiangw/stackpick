@@ -311,9 +311,15 @@ export const CHECKS: Check[] = [
         // entry, dead, would otherwise take the point on the "one in twelve is noise" argument
         // and print "0 of the 1 links we sampled answer" while doing it.
         if (links && (links.dead > TOLERATED_DEAD_LINKS || links.dead * 4 > links.sampled)) {
+          // Every address we found, capped, because the fix is "repair these" and a vendor should
+          // not have to rerun our sample to learn the rest. Older rows carry only `firstDead`, so
+          // the sentence falls back to naming one and saying so.
+          const named = links.deadUrls?.length ? links.deadUrls.slice(0, 4) : [links.firstDead].filter(Boolean)
+          const rest = links.dead - named.length
+          const gone = `${named.join(', ')}${rest > 0 ? `, and ${rest} more` : ''}`
           return yes(
             0,
-            `${files}${at}, but ${links.dead} of the ${links.sampled} links we sampled ${across} are gone, starting with ${links.firstDead}`,
+            `${files}${at}, but ${links.dead} of the ${links.sampled} links we sampled ${across} are gone: ${gone}`,
           )
         }
         if (links && links.dead > 0) {
