@@ -8133,3 +8133,58 @@ ani jednej domeny.
 **Trzy warianty, jedna zasada:** zdanie koncowe narzedzia pomiarowego ma **zalezec od pomiaru**.
 Argument, ktory nie jest liczba (jedenascie skryptow), lista pusta (`[].every`), i podsumowanie
 wpisane z reki (to) - wszystkie trzy daja zielone swiatlo, ktorego nikt nie zapalil.
+
+## AUDYT WIERSZY, KTORE ZALICZYLISMY - I TRZY FALSZYWE PUNKTY, KTORE ZNALAZL (2026-08-19)
+
+Wszystkie dotychczasowe audyty pytaja, czy nasze **oskarzenie** jest nadal prawdziwe. Zaden nie
+pytal o wiersze, ktorym **przyznalismy punkt**, a to tam blad kosztuje wiecej: oskarzenie vendor
+odbije, a niezasluzony punkt zostaje w danych i w raporcie branzowym.
+
+**`npm run audit-published-urls` istnial i byl nieuruchamialny.** Czytal adresy ze stdin w formacie,
+ktorego nie opisywal zaden runbook, zaden skrypt npm i zadna sekcja STATE.md, wiec uruchomiony
+wprost drukowal „0 adresow sprawdzonych, 0 nie odpowiada" - ksztalt narzedzia, ktore nigdy nie
+chodzilo. Dolozony `scripts/published-urls.mts`, ktory wyciaga adresy z zywego korpusu, i jedna
+komenda w `package.json`.
+
+**Cztery poprawki, zanim jego wynik zaczal cokolwiek znaczyc**, i kazda to ten sam ksztalt - alarm
+o czyms, co nie jest bledem:
+- 152 „martwych" adresow to **niezistniejace hosty kandydackie** `oauth_dcr` (`login.<vendor>`,
+  `auth.<vendor>`), czyli dokladnie to, co zdanie twierdzi. Host bez metadanych nie jest martwym
+  dowodem, tylko potwierdzeniem.
+- 3 „martwe" strony dokumentacji, bo skrypt **wysylal POST z uchwytem MCP** pod adres, ktory jest
+  strona, a nie endpointem. `docs.rollbar.com`, `uploadcare.com` i `docs.weaviate.io` oddaja 200
+  na GET. Fallback ograniczony potem do adresow **wygladajacych na strone**, bo inaczej martwy
+  endpoint na hoscie ze stroną-smietnikiem raportowalby sie jako zywy (znalezione przez codeksa).
+- 2 adresy urwane na `>` i na cudzyslowie typograficznym, ktore skrypt brał za czesc adresu.
+- **165 → 3.** Zostaly trzy, wszystkie przeczytane recznie: jeden to sciezka POST cytowana z
+  dokumentacji cal.com (nie twierdzimy, ze odpowiada na GET), jeden to adres urwany juz w cytacie
+  w korpusie, jeden to `uploadcare.com/_mcp/server`, ktorego zdanie mowi, ze tam szukalismy, a ta
+  strona nie istnieje.
+
+**Nowy `npm run audit-entry-credited` pyta o punkt, nie o oskarzenie**, i pyta w jedyny sposob,
+ktory to obnaza: czy plik, za ktory placimy punktem, rozni sie od sciezki, ktora **nie moze
+istniec**, zapytanej na **tym samym hoscie** i z **tym samym rozszerzeniem**. Obie polowy sa
+konieczne, co zmierzylem: `docs.bigcommerce.com/letagentsin-audit-probe-8f3a1c` oddaje 404 i 340 kB
+HTML-a, a ta sama sciezka **z `.md`** oddaje **200 i 374 bajty markdownu „# Page Not Found"**.
+
+**Trzy falszywe punkty, kazdy potwierdzony recznie:**
+| vendor | plik, za ktory zaliczylismy | co jest naprawde |
+|---|---|---|
+| bigcommerce.com | `agent-signup.md`, `skill.md`, `ai.txt` | dwa soft-404 w markdownie (200), trzeci twardy 404 |
+| sentry.io | `/.well-known/mcp.json` | 976 bajtow „You've hit the web UI", bajt w bajt jak kontrolka |
+| calendly.com | `developer.calendly.com/skill.md` | 298 102 bajty HTML-a, bajt w bajt jak kontrolka |
+
+**PRZYCZYNA, i to jest szosty raz tej nocy ten sam ksztalt:** skaner **ma** kontrolke na catch-all i
+ma ja per host, ale gdy **kontrolka nie odpowie** (budzet 27 sekund, a kontrolka calendly to 298 kB),
+`answersWithTheSameTemplate` dostaje `undefined` i zwraca `false`, czyli **„nie wiem" znaczy „vendor
+dostaje punkt"**. Ponowny skan `bigcommerce.com` z konsoli daje dzis **0/2** i zdanie o 23 sciezkach,
+wiec obrona dziala - zawodzi tylko wtedy, gdy sama nie dojdzie.
+
+**NASTEPNA POZYCJA (nie zaczeta, bo wymaga przemiatu do weryfikacji):** kontrolka, ktora nie
+odpowiedziala, ma czynic check **niemierzalnym**, a nie zaliczonym. To zmiana punktacji, wiec formula
+9.43 i przemiat - karencja otwiera sie okolo 09:00. Blast radius zmierzony z gory: 3 wiersze z 43
+zaliczonych.
+
+**I ostatnia ironia, zlapana przez codeksa:** moj wlasny nowy audyt, napisany tej nocy przeciwko
+uspokojeniu bez pomiaru, **uspokajal bez pomiaru**, gdy zapytanie sie nie udalo - liczyl probe jako
+porownanie. Teraz liczy osobno **porownania**, wypisuje pominiete i odmawia werdyktu przy zerze.

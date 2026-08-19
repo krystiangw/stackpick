@@ -34,7 +34,9 @@
     "noise-floor": "tsx scripts/noise-floor.mts",
     "audit-delivery": "tsx scripts/audit-delivery.mts",
     "audit-our-api": "tsx scripts/audit-our-api.mts",
-    "indexnow": "tsx scripts/indexnow.mts"
+    "indexnow": "tsx scripts/indexnow.mts",
+    "audit-published-urls": "tsx scripts/published-urls.mts | tsx scripts/audit-published-urls.mts",
+    "audit-entry-credited": "tsx scripts/audit-entry-credited.mts"
   },
   "dependencies": {
     "mongodb": "^7.5.0",

@@ -29,6 +29,7 @@
  *
  *   npx tsx scripts/audit-published-urls.mts < urls.tsv
  */
+import { refuseIfNothingMeasured } from './nothing-measured'
 const lines = (await new Response(process.stdin as never).text())
   .trim()
   .split('\n')
@@ -53,6 +54,25 @@ async function status(url: string, check: string): Promise<number | string> {
         ...(asMcp ? { 'content-type': 'application/json', accept: 'application/json, text/event-stream' } : {}),
       },
     })
+    // A 404 to the handshake is not "the address is gone" when the address is a documentation page.
+    // The sentence for `mcp_present` names both: the endpoints we probed AND the page we read them
+    // out of ("nor at any address in <url>"). Posting an MCP handshake at a docs page gets a 404
+    // from a host that answers the same page 200 to a GET, and the audit then reported three live
+    // pages as dead evidence: docs.rollbar.com, uploadcare.com and docs.weaviate.io, all 200 today.
+    // Only for an address that is a PAGE, never for one that is an endpoint. A credited endpoint
+    // that has been taken down often sits on a host that still answers a GET with a marketing page,
+    // and falling back there would report the dead endpoint as live - the exact miss this audit
+    // exists to prevent. An endpoint is `mcp.<host>` or a path ending in `/mcp` or `/v1/mcp`.
+    const at = new URL(url)
+    const looksLikeAnEndpoint = at.hostname.startsWith('mcp.') || /\/(v\d+\/)?mcp\/?$/.test(at.pathname)
+    if (asMcp && !looksLikeAnEndpoint && (response.status === 404 || response.status === 410)) {
+      const asReader = await fetch(url, {
+        signal: controller.signal,
+        redirect: 'follow',
+        headers: { 'user-agent': 'letagentsin-audit (+https://letagentsin.com/about-our-user-agent)' },
+      })
+      return asReader.status
+    }
     return response.status
   } catch (error) {
     return (error as Error).name === 'AbortError' ? 'timeout' : 'blad sieci'
@@ -63,20 +83,54 @@ async function status(url: string, check: string): Promise<number | string> {
 
 const BATCH = 12
 let dead = 0
+/** Addresses on rows that SCORED: evidence we hand out and cannot support if it is gone. */
+const credited: string[] = []
+/** Addresses on rows that failed: the sentence says we looked there and found nothing. */
+const accused: string[] = []
 for (let at = 0; at < lines.length; at += BATCH) {
   const slice = lines.slice(at, at + BATCH)
   const results = await Promise.all(
     slice.map(async (line) => {
-      const [domain, check, raw] = line.split('\t')
-      const url = raw.replace(/[.,:;`*)\]]+$/, '')
-      return { domain, check, url, code: await status(url, check) }
+      const [domain, check, raw, points] = line.split('\t')
+      // Also the characters a sentence wraps a URL in: `<schema.org/Article>` and a smart quote
+      // that ended `console.cloud.google.c”` both came back as dead addresses that never existed.
+      const url = raw.replace(/[.,:;`*)\]>"'\u201d\u00bb]+$/, '')
+      return { domain, check, url, credited: Number(points ?? 0) > 0, code: await status(url, check) }
     }),
   )
   for (const r of results) {
     if (typeof r.code === 'number' && r.code !== 404 && r.code !== 410) continue
+    // `oauth_dcr` names the hosts it PROBED, and most of them are candidates we generated:
+    // login.<vendor>, accounts.<vendor>, auth.<vendor>. A candidate that does not resolve is
+    // exactly what the sentence claims - no metadata there - so counting it as a dead address
+    // turned 152 confirmations into "165 nie odpowiada" and buried the five that matter.
+    // The same argument, one step further: `oauth_dcr` names bare origins it generated
+    // (login.<vendor>, auth.<vendor>, accounts.<vendor>), and an origin that does not resolve OR
+    // answers 404 is the sentence being right. What WOULD be a defect is the other branch's
+    // address, the metadata document itself, and that one always carries a path.
+    const bareOrigin = (() => {
+      try {
+        return new URL(r.url).pathname === '/'
+      } catch {
+        return false
+      }
+    })()
+    if (r.check === 'oauth_dcr' && bareOrigin) continue
     dead += 1
-    console.log(`MARTWY ${r.code}\t${r.domain}\t${r.check}\t${r.url}`)
+    if (r.credited) credited.push(`${r.code}\t${r.domain}\t${r.check}\t${r.url}`)
+    else accused.push(`${r.code}\t${r.domain}\t${r.check}\t${r.url}`)
   }
 }
+refuseIfNothingMeasured(lines.length, 'adresow')
 console.log(`\n${lines.length} adresow sprawdzonych, ${dead} nie odpowiada`)
+if (credited.length > 0) {
+  console.log(`\n${credited.length} NA WIERSZACH, KTORE ZALICZYLISMY - to jest dowod, ktorego nie umiemy poprzec:`)
+  for (const one of credited) console.log(`  ${one}`)
+} else {
+  console.log('zaden zaliczony wiersz nie stoi na adresie, ktorego dzis nie ma')
+}
+if (accused.length > 0) {
+  console.log(`\n${accused.length} na wierszach oblanych - zdanie mowi, ze tam szukalismy, a tego adresu nie ma (slabsze, ale do przeczytania):`)
+  for (const one of accused) console.log(`  ${one}`)
+}
 process.exit(0)
