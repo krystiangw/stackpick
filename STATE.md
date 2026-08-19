@@ -614,7 +614,15 @@ npm run audit-docs-js && npm run audit-front-door && npm run audit-named-crawler
 **I dwie rzeczy poza skryptami, w tej kolejnosci:**
 1. **Deploy czeka** (`cbe4fb4` i dalej): commit zamknal sie tuz przed startem przemiatu, wiec
    `/findings` z data przy twierdzeniu o Lighthousie i Cloudflarze stoi tylko w repo.
-2. **Przeczytaj platny raport jako kupujacy** dla wiersza, ktory po przemiecie ma nowa galez 9.49
+2. **ODSWIEZ `/d/sample`** - to witryna sklepu i **stoi na formule 9.44**, czyli sprzed poprawki
+   9.48. Probka jest o `filestack.com` i publikuje dokladnie to falszywe oskarzenie, ktore 9.48
+   naprawilo: **„Only 53 characters render without JS"**, podczas gdy pelne czytanie tej strony daje
+   **12 282 znaki** (sprawdzone ponownie 2026-08-19 o 22:30: 616 581 bajtow, 48 script / 38 style /
+   44 noscript, **wszystkie domkniete** - piecdziesiat trzy znaki produkuje wylacznie **nasz wlasny
+   sufit 400 kB**, bo tekst dokumentacji lezy za cieciem). Kod jest juz dobry, dokument nie:
+   przegeneruj probke, gdy wiersz bedzie na 9.49, i sprawdz, ze mowi „Unmeasurable: ... larger than
+   the 400,000 bytes we read".
+3. **Przeczytaj platny raport jako kupujacy** dla wiersza, ktory po przemiecie ma nowa galez 9.49
    (`Unmeasurable: we found a sentence that creates a credential and nothing in it says a program can
    do it`). Do dzis ta galaz byla czytana tylko na pojedynczym skanie - dopiero przemiat pokazuje, ile
    wierszy ja dostaje i czy zdanie brzmi sensownie **obok pozostalych** w tym samym raporcie.
