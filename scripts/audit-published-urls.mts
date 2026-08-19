@@ -87,15 +87,24 @@ let dead = 0
 const credited: string[] = []
 /** Addresses on rows that failed: the sentence says we looked there and found nothing. */
 const accused: string[] = []
+/** Wiersze, ktorych werdykt sam mowi, ze nie dalo sie tam nic przeczytac. */
+const unmeasured: string[] = []
 for (let at = 0; at < lines.length; at += BATCH) {
   const slice = lines.slice(at, at + BATCH)
   const results = await Promise.all(
     slice.map(async (line) => {
-      const [domain, check, raw, points] = line.split('\t')
+      const [domain, check, raw, verdict] = line.split('\t')
       // Also the characters a sentence wraps a URL in: `<schema.org/Article>` and a smart quote
       // that ended `console.cloud.google.c”` both came back as dead addresses that never existed.
       const url = raw.replace(/[.,:;`*)\]>"'\u201d\u00bb]+$/, '')
-      return { domain, check, url, credited: Number(points ?? 0) > 0, code: await status(url, check) }
+      return {
+        domain,
+        check,
+        url,
+        credited: verdict === 'pass' || verdict === 'partial',
+        unmeasured: verdict === 'unmeasured' || verdict === 'notApplicable',
+        code: await status(url, check),
+      }
     }),
   )
   for (const r of results) {
@@ -117,8 +126,10 @@ for (let at = 0; at < lines.length; at += BATCH) {
     })()
     if (r.check === 'oauth_dcr' && bareOrigin) continue
     dead += 1
-    if (r.credited) credited.push(`${r.code}\t${r.domain}\t${r.check}\t${r.url}`)
-    else accused.push(`${r.code}\t${r.domain}\t${r.check}\t${r.url}`)
+    const row = `${r.code}\t${r.domain}\t${r.check}\t${r.url}`
+    if (r.credited) credited.push(row)
+    else if (r.unmeasured) unmeasured.push(row)
+    else accused.push(row)
   }
 }
 refuseIfNothingMeasured(lines.length, 'adresow')
@@ -132,5 +143,11 @@ if (credited.length > 0) {
 if (accused.length > 0) {
   console.log(`\n${accused.length} na wierszach oblanych - zdanie mowi, ze tam szukalismy, a tego adresu nie ma (slabsze, ale do przeczytania):`)
   for (const one of accused) console.log(`  ${one}`)
+}
+if (unmeasured.length > 0) {
+  console.log(
+    `\n${unmeasured.length} na wierszach NIEMIERZALNYCH - zdanie zwykle samo mowi, ze ten adres nas nie wpuscil, wiec to najczesciej nasza wlasna deklaracja, a nie znalezisko:`,
+  )
+  for (const one of unmeasured) console.log(`  ${one}`)
 }
 process.exit(0)

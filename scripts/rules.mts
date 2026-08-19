@@ -2726,6 +2726,16 @@ check('audyt wysyla tez From', audytZaliczonych.includes('from: CONTACT'), true)
 check('skaner naprawde go wysyla', readFileSync('src/lib/scan/http.ts', 'utf8').includes('{ from: CONTACT }'), true)
 // Kontrolka: te dwa naglowki naprawde sie roznia, wiec straznik pilnuje roznicy, a nie ozdoby.
 check('naglowki dla .json i .md sa rozne', entryAccept('/x.json') === entryAccept('/x.md'), false)
+
+// Martwy adres znaczy TRZY rozne rzeczy, nie dwie. Na wierszu niemierzalnym zdanie zwykle samo
+// mowi, ze ten adres nas nie wpuscil - namecheap.com pisze „answers 403, 403, 404", a audyt
+// zglaszal wlasnie to 404 jako znalezisko przeciwko nam.
+console.log('\nmartwy adres na wierszu niemierzalnym to nie oskarzenie')
+const wypisywacz = readFileSync('scripts/published-urls.mts', 'utf8')
+const audytAdresow = readFileSync('scripts/audit-published-urls.mts', 'utf8')
+check('wypisywacz oddaje werdykt, nie punkty', wypisywacz.includes("check.verdict ?? "), true)
+check('audyt ma trzeci kubelek', audytAdresow.includes('na wierszach NIEMIERZALNYCH'), true)
+check('i czyta werdykt zamiast liczyc punkty', audytAdresow.includes("verdict === 'unmeasured'"), true)
 check(
   'i cytat z sondy nie niesie polowy adresu',
   provisioningQuotes('<p>Create a new service account under [IAM &amp; Admin](https://console.cloud.google.com/iam-admin/serviceaccounts/very/long/path/that/runs/past/the/window/edge)</p>')
