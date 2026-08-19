@@ -873,7 +873,7 @@ npm run po-przemiacie-9-50 && npm run po-przemiacie && npx tsx scripts/after-res
 **Potem trzy audyty powtarzajace oskarzenia** (pytaja vendorow, wiec NIGDY w trakcie przemiatu i
 **nie przez `| tail`**, bo wtedy nie widac postepu):
 ```
-npm run audit-docs-js && npm run audit-front-door && npm run audit-named-crawlers
+npm run audit-docs-js && npm run audit-front-door && npm run audit-named-crawlers && npm run audit-cap-selection
 ```
 **I dwie rzeczy poza skryptami, w tej kolejnosci:**
 1. **Deploy czeka** (`cbe4fb4` i dalej): commit zamknal sie tuz przed startem przemiatu, wiec
@@ -2071,8 +2071,11 @@ Przeglad z czystym kontekstem znalazl to, co temu umknelo. **Piec naprawione i w
   llms.txt bral brak 404 za dowod zycia; linki, o ktore nie zapytalismy, wypadaja z probki. **Nie**
   policzylem kazdego niewyslanego zadania jako straty fazy, bo to zepsuloby uczciwe negatywy:
   wiekszosc pominietych zadan to zgadywane subdomeny, ktore nie istnieja, a „zapytalismy dziewieciu
-  hostow i zaden nie odpowiedzial" jest prawdziwym zdaniem. **Zostaje `probedHosts` w zdaniu o
-  OAuth, ktory nadal liczy hosty niezapytane.** Kontekst pierwotny: `fetchUrl` zwraca `status: 0` takze wtedy,
+  hostow i zaden nie odpowiedzial" jest prawdziwym zdaniem. ~~**Zostaje `probedHosts` w zdaniu o
+  OAuth, ktory nadal liczy hosty niezapytane.**~~ **zrobione (9.33)**: `asked` w `funnel.ts` odsiewa
+  origins, ktorych zadne zadanie nie wyszlo, i `probedHosts` liczy juz tylko realnie zapytane hosty.
+  Sprawdzone w kodzie 2026-08-20 - ta linijka wisiala nieskreslona i kosztowala mnie ponowne
+  dochodzenie do tego samego wniosku. Kontekst pierwotny: `fetchUrl` zwraca `status: 0` takze wtedy,
   gdy **zadanie nigdy nie wyszlo** (host odmowil polaczenia wczesniej w tym skanie albo przekroczyl
   limit timeoutow). Tylko prefiks `Out of time` zasila licznik `lost`, wiec faza nie trafia do
   `incomplete` i siec bezpieczenstwa `missed` nie dziala. Efekt: mozemy opublikowac „the 12 links
