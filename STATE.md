@@ -8773,3 +8773,29 @@ nieznane linie**, wiec formalnie to blad narzedzia, nie nasz. Moja rekomendacja:
 sami doradzamy vendorom publikowanie ARD, a usuniecie sygnalu, zeby zadowolic linter, byloby
 sprzeczne z wlasna rada. Warte natomiast tekstu na `/methodology`: to konkretny, sprawdzalny
 przyklad narzedzia surowszego niz standard, ktory mierzy.
+
+## SPRAWDZILEM DOSTEPNOSC NA KAZDEJ STRONIE, KTORA WIDZI KLIENT (2026-08-19, 11:25)
+
+Po naprawie kontrastu na stronie glownej puscilem Lighthouse na **wszystkich powierzchniach klienta**,
+bo jedna naprawiona strona nic nie mowi o reszcie:
+
+| strona | accessibility | best practices | SEO |
+|---|---|---|---|
+| `/` | 100 | 100 | 92 |
+| `/pricing` · `/privacy` · `/report` · `/v/<domena>` · `/c/<kat>/runs` | **100** | 100 | 92 |
+| `/methodology` | 100 | 100 | 91 |
+| `/d/<dostawa>` (platny raport) | **100** | 100 | 54 |
+
+**Zadnej zmiany nie trzeba bylo robic** i to tez jest wynik. SEO 54 na dostawie jest **zamierzone**:
+ta strona jest celowo poza indeksem, bo to material sprzedazowy, a nie SEO. Pozostale 92 to
+wylacznie spor o `robots.txt` opisany wyzej.
+
+**Przy okazji zweryfikowalem na produkcji dwie rzeczy, ktore dotad sprawdzilem tylko w markdownie:**
+opublikowalem raport `growthbook.io` pod `/d/qa-jezyk` (bez `--sample`, wiec **nie linkuje sie z
+cennika**; to zwykla dostawa QA, ktora moze tam zostac). W renderze HTML: **5 cytatow niesie
+znacznik `· in Polish`** i zdanie wyjasniajace, a cytat provisioningu **nie konczy sie polowa
+adresu**. Formularz na tej stronie tez przechodzi dostepnosc na 100.
+
+**Jedna obserwacja bez zmiany:** bramka e-mail na stronie dostawy jest **renderowana po stronie
+klienta**, wiec bez JS nie ma tam formularza. Dla dokumentu wysylanego czlowiekowi to w porzadku - ale
+warto pamietac, ze mierzymy vendorow dokladnie za to samo na ICH powierzchniach agentowych.
