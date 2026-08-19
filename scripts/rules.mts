@@ -51,6 +51,7 @@ import {
   provisioningQuotes,
   handsItToSomebodyElse,
   namesSomebodyElsesCredential,
+  provisioningDemotedQuotes,
   withoutAChoppedAddress,
   windowCutMidToken,
   BOT_DEFENCE_RULES,
@@ -1058,9 +1059,9 @@ console.log('\nklucz w cudzej konsoli to nie ich sciezka')
 // Prawdziwe zdanie z dokumentacji growthbooka, z etykieta linku wlacznie: to ona mowi, ze klucz
 // powstaje po tamtej stronie.
 const cudzaKonsola =
-  '<p>Create a new service account under [IAM &amp; Admin -> Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts) to connect BigQuery.</p>'
+  '<p>Create a new service account via the API under [IAM &amp; Admin -> Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts) to connect BigQuery.</p>'
 const wlasnaKonsola =
-  '<p>Create a new service account under [Settings -> Service Accounts](https://growthbook.io/app/settings) to connect BigQuery.</p>'
+  '<p>Create a new service account via the API under [Settings -> Service Accounts](https://growthbook.io/app/settings) to connect BigQuery.</p>'
 check('cudza konsola nie daje punktu', provisioningMatches(cudzaKonsola, 'growthbook.io').length, 0)
 // Kontrolka: to samo zdanie z linkiem do SIEBIE nadal liczy, wiec regula wycina adres, a nie fraze.
 check('ta sama fraza u siebie nadal liczy', provisioningMatches(wlasnaKonsola, 'growthbook.io').length > 0, true)
@@ -1068,9 +1069,9 @@ check('i bez podanej domeny nic sie nie zmienia', provisioningMatches(cudzaKonso
 // Tak wyglada to samo w zwyklym HTML-u, czyli w tym, co skaner naprawde czyta: adres siedzi w
 // atrybucie, ktory `visibleProse` wyrzuca razem z tagiem. Bez tego regula lapala tylko markdown.
 const cudzaKonsolaWHtml =
-  '<p>Create a new service account under <a href="https://console.cloud.google.com/iam-admin/serviceaccounts">IAM &amp; Admin -> Service Accounts</a> to connect BigQuery.</p>'
+  '<p>Create a new service account via the API under <a href="https://console.cloud.google.com/iam-admin/serviceaccounts">IAM &amp; Admin -> Service Accounts</a> to connect BigQuery.</p>'
 const wlasnaKonsolaWHtml =
-  '<p>Create a new service account under <a href="https://growthbook.io/app/settings">Settings -> Service Accounts</a> to connect BigQuery.</p>'
+  '<p>Create a new service account via the API under <a href="https://growthbook.io/app/settings">Settings -> Service Accounts</a> to connect BigQuery.</p>'
 check('cudzy link w HTML tez nie daje punktu', provisioningMatches(cudzaKonsolaWHtml, 'growthbook.io').length, 0)
 check('wlasny link w HTML nadal liczy', provisioningMatches(wlasnaKonsolaWHtml, 'growthbook.io').length > 0, true)
 // Kontrolka, ktora zabija poprzednia wersje tej reguly: obcy adres w tym samym zdaniu, ale NIE
@@ -1085,6 +1086,36 @@ check('obcy link o czyms innym nie liczy sie', handsItToSomebodyElse('[Postman c
 // 9.46: marka stojaca TUZ PRZED rzeczownikiem poswiadczenia mowi, czyj to klucz. Wersja luzniejsza
 // (marka gdziekolwiek w oknie) zostala zmierzona na 55 zaliczonych cytatach i zabierala punkt
 // browserbase.com za wlasne zdanie, wiec kontrolki pilnuja obu stron tej granicy.
+// 9.47: fraza o koncie uslugowym niesie ten sam ciezar, co jej rodzenstwo - zdanie musi mowic, ze
+// moze to zrobic PROGRAM. Cytaty ponizej sa prawdziwe, z korpusu 2026-08-19.
+check(
+  'przewodnik po cudzej konsoli nie jest sciezka dla agenta',
+  provisioningMatches('In your Google Cloud project, go to IAM & Admin > Service Accounts. Create a new service account or select an existing one.', 'crowdin.com').length,
+  0,
+)
+// Dwie, nie jedna: to zdanie pasuje takze do frazy o tworzeniu poswiadczenia obok czegos
+// programowego, i to jest w porzadku - liczy sie, ze przezylo.
+check(
+  'ale konto uslugowe z dostepem programowym owszem',
+  provisioningMatches('Create a Service Account to allow programmatic access to your vault', 'browserbase.com').length,
+  2,
+)
+check(
+  'i zdanie, ktore stracilo punkt, jest cytowane zamiast zera',
+  provisioningDemotedQuotes('Create a new service account or select an existing one.', 'crowdin.com').length,
+  1,
+)
+check(
+  'zdanie programowe nie jest zdegradowane',
+  provisioningDemotedQuotes('Create a Service Account to allow programmatic access to your vault', 'browserbase.com').length,
+  0,
+)
+check(
+  'cudze poswiadczenie to nie jest nasze zdanie do zacytowania',
+  provisioningDemotedQuotes('Create a Firebase Service Account private key', 'onesignal.com').length,
+  0,
+)
+
 check('sonda widzi cudze poswiadczenie po nazwie', namesSomebodyElsesCredential('Create a Firebase ', 'Service Account', 'onesignal.com'), true)
 check('i nie widzi marki, ktorej przy poswiadczeniu nie ma', namesSomebodyElsesCredential('Create a ', 'Service Account', 'browserbase.com'), false)
 check('wlasna marka nie dyskwalifikuje', namesSomebodyElsesCredential('Create a GitHub ', 'personal access token', 'github.com'), false)
@@ -1116,9 +1147,16 @@ check('okruszek nawigacji nie liczy sie', saMowi('Service Accounts | Enterprise 
 check('statystyka z bloga nie liczy sie', saMowi('This year, 59% of AWS IAM users, 55% of Google Cloud service accounts and 40% of Microsoft Entra ID applications had an access key older than a year'), false)
 check('istniejace konto nie liczy sie', saMowi('Check your CAPTCHA solver service account for sufficient balance'), false)
 check('samo dwuslowie nie liczy sie', saMowi('Service account'), false)
-// Kontrolka: zdanie, ktore NAPRAWDE tworzy konto uslugowe, nadal liczy - inaczej regula kasuje check.
-check('tworzenie konta nadal liczy', saMowi('- [Create Service Account](https://docs.mixpanel.com/reference/create-service-account.md)'), true)
-check('i w drugiej kolejnosci slow tez', saMowi('Give Storage role access to the newly created service account'), true)
+// Kontrolka: zdanie, ktore NAPRAWDE tworzy konto uslugowe **programowo**, nadal liczy - inaczej
+// regula kasuje check. Fixture'y zmienily sie przy 9.47 i warto powiedziec, ktore: stalo tu zdanie
+// mixpanela z ich llms.txt i zdanie growthbooka o roli Storage, i oba przestaly liczyc naumyslnie.
+// Pierwsze dlatego, ze indeks linkow nie mowi, czy klucz robi program (ich wlasne API to potwierdza,
+// ale na stronie, ktorej ten skan nie otworzyl), drugie dlatego, ze to konsola Google.
+check('tworzenie konta nadal liczy', saMowi('Create a service account via the Management API'), true)
+check('i w drugiej kolejnosci slow tez', saMowi('A service account is created by the provisioning API'), true)
+// I te dwa zdania, ktore tu wczesniej stały, dzis nie licza sie - to jest cala tresc 9.47.
+check('indeks linkow bez slowa o programie nie liczy', saMowi('- [Create Service Account](https://docs.mixpanel.com/reference/create-service-account.md)'), false)
+check('rola w konsoli nie liczy', saMowi('Give Storage role access to the newly created service account'), false)
 // Odleglosc jest krotka celowo: czasownik 41 znakow dalej dotyczy konta, ktore juz istnieje.
 check('czasownik daleko nie ratuje frazy', saMowi('service account email to impersonate via `iamcredentials:generateIdToken`'), false)
 // Etykieta mowi vendorowi, czego szukamy, wiec musi opisywac nowa regule, a nie stara.
@@ -1126,9 +1164,11 @@ check('czasownik daleko nie ratuje frazy', saMowi('service account email to impe
 check('naglowek "service account provisioning" nie liczy sie', saMowi('Service account provisioning and rotation'), false)
 check('ani "service account generation settings"', saMowi('Service account generation settings'), false)
 // Kontrolka: ten sam czasownik PRZED fraza jest czasownikiem i nadal liczy.
-check('"provisioning a service account" liczy sie', saMowi('This page is about provisioning a service account for the API'), true)
-check('strona bierna po frazie liczy sie', saMowi('A service account is created for every project'), true)
-check('etykieta opisuje nowa regule', PROVISIONING_PATTERN_LABELS.includes('service account, in a sentence that creates one'), true)
+check('"provisioning a service account" liczy sie', saMowi('This endpoint is about provisioning a service account'), true)
+check('strona bierna po frazie liczy sie', saMowi('A service account is created for every project via the API'), true)
+// Kontrolka na sama nowa regule: to samo zdanie bez slowa o programie juz nie liczy.
+check('ta sama strona bierna bez programu nie liczy', saMowi('A service account is created for every project'), false)
+check('etykieta opisuje nowa regule', PROVISIONING_PATTERN_LABELS.includes('service account, in a sentence that creates one by program'), true)
 
 // Zdanie "nor at any address in <strona>" wymienialo strony, o ktore ZAPYTALISMY, a nie te, ktore
 // przeczytalismy. uploadcare.com niosl je z adresem https://uploadcare.com/_mcp/server, ktory jest

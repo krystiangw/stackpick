@@ -211,6 +211,11 @@ const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   // provisioning path. growthbook.io held the point on a sentence about Google Cloud service
   // accounts, and a row that loses it here documented no more and no less than it did before.
   '9.44': ['programmatic_provisioning'],
+  // 9.47 makes the service-account phrase carry the burden its sibling already carried: the
+  // sentence has to say a program can do it. Eleven rows stood on that phrase; six lose it, and
+  // none of the six drops to a zero, because a walkthrough of somebody's console is not silence
+  // about provisioning, it is an answer to a question we never asked them.
+  '9.47': ['programmatic_provisioning'],
   // 9.46 reads whose credential the sentence creates when it names one. onesignal.com held this
   // point on "Create a Firebase Service Account private key": a Google key, made in Google's
   // console, and nothing OneSignal hands an agent. Measured on the 55 credited quotes before it

@@ -137,6 +137,13 @@ const CREATES_ONE = (phrase: string) =>
 
 /** The nouns, kept as a source string so a second rule can require something in front of them. */
 const CREDENTIAL_NOUNS = String.raw`(?:api[-_ ]?keys?|api[-_ ]?tokens?|access[-_ ]?(?:tokens?|keys?)|personal access tokens?|secret[-_ ]?keys?|credentials?|service accounts?|auth tokens?|bearer tokens?)`
+/**
+ * The same burden its sibling already carries, tested on the window we publish rather than on the
+ * text somewhere around it, because the promise since 9.32 is that the quoted sentence carries its
+ * own evidence.
+ */
+const SAYS_A_PROGRAM_CAN = new RegExp(PROGRAMMATIC_MARKER, 'i')
+
 const NAMES_A_CREDENTIAL = new RegExp(String.raw`\b${CREDENTIAL_NOUNS}\b`, 'i')
 
 /**
@@ -429,7 +436,7 @@ export const PROVISIONING_PATTERN_LABELS = [
   // list read as six: a vendor saw "1 of 7 provisioning phrases" followed by six things.
   'create an api key (or api token, access token, personal access token, service account, auth token, secret key, access key, service token, signing key, publishable key, client key, licence key, project token), next to something programmatic',
   'programmatically create, in either word order',
-  'service account, in a sentence that creates one',
+  'service account, in a sentence that creates one by program',
   'a documented path like /v1/api_keys or /v2/access-tokens',
 ]
 
@@ -667,6 +674,8 @@ export type FunnelFindings = {
     programmatic: string[]
     /** The words around each match, so a vendor can see what we read as their provisioning path. */
     programmaticQuotes?: string[]
+    /** Sentences that create a credential for a person to click, so a zero would be the wrong answer. */
+    programmaticDemoted?: string[]
     /**
      * Sentences saying a licence key is needed before anything runs. Collected and published in the
      * findings, scored by nothing yet: the evidence comes first, the rule after somebody has read
@@ -1291,7 +1300,7 @@ function provisioningHit(text: string, pattern: RegExp, index: number, ours: str
     const before = text.slice(Math.max(0, hit.index - 40), hit.index)
     if (ours && (handsItToSomebodyElse(window, ours) || namesSomebodyElsesCredential(before, hit[0], ours))) continue
     if (CREATED_PROVISIONING_INDEXES.has(index)) {
-      if (CREATES_ONE(hit[0]).test(window)) return hit.index
+      if (CREATES_ONE(hit[0]).test(window) && SAYS_A_PROGRAM_CAN.test(window)) return hit.index
       continue
     }
     if (!BARE_PROVISIONING_INDEXES.has(index)) return hit.index
@@ -1450,6 +1459,23 @@ export function provisioningMatches(html: string, ours: string | null = null): s
 }
 
 /**
+ * The sentence we publish for a hit, built once so a demoted match is quoted exactly as a credited
+ * one would have been. The same window the rule read, from a word boundary, because a window cut by
+ * character count starts mid-word and the published sentence then opens with a stray letter.
+ */
+function quoteAt(text: string, at: number, length: number): string {
+  const from = Math.max(text.lastIndexOf('. ', at) + 1, at - 70)
+  const window = windowAround(text, at, length).replace(/\s+/g, ' ').trim()
+  return withoutAChoppedAddress(
+    window
+      .replace(/^[^\s]*\s/, (start) => (from === 0 || /^[A-Z"“]/.test(start) ? start : ''))
+      .replace(/^["“'']+/, '')
+      .trim(),
+    windowCutMidToken(text, at, length),
+  )
+}
+
+/**
  * The vendor's own sentence around each provisioning match, because three of the seven rules are
  * bare substrings and a substring can mean something else entirely. An audit of the sitemap on
  * 2026-08-17 found bird.com writing "Destination Management API" about SMS routing and bunny.net
@@ -1467,21 +1493,42 @@ export function provisioningQuotes(html: string, ours: string | null = null, mos
     if (at === -1) continue
     const hit = new RegExp(pattern.source, pattern.flags).exec(text.slice(at))
     if (!hit) continue
-    const from = Math.max(text.lastIndexOf('. ', at) + 1, at - 70)
-    // The same window the rule read, so the sentence we publish is the evidence rather than a
-    // wider view of the page that might contain something the point was not given for.
-    // From a word boundary, because a window cut by character count starts mid-word and the
-    // published sentence then opens with a stray letter.
-    const window = windowAround(text, at, hit[0].length).replace(/\s+/g, ' ').trim()
-    const quote = withoutAChoppedAddress(
-      window
-        .replace(/^[^\s]*\s/, (start) => (from === 0 || /^[A-Z"“]/.test(start) ? start : ''))
-        .replace(/^["“'']+/, '')
-        .trim(),
-      windowCutMidToken(text, at, hit[0].length),
-    )
+    const quote = quoteAt(text, at, hit[0].length)
     if (quote && !found.includes(quote)) found.push(quote)
     if (found.length >= most) break
+  }
+  return found
+}
+
+/**
+ * Sentences that create a credential and say nothing about a program doing it.
+ *
+ * Since the creation phrases carry the same burden as their sibling, a walkthrough of somebody's
+ * console stops earning the point - and the honest answer for a row whose only evidence was one of
+ * these is not zero. Zero says "you document no path"; what we actually saw is a path for a person.
+ * The four rows that forced this all read the same way: onesignal.com and crowdin.com walking
+ * through the Firebase and Google Cloud consoles, growthbook.io granting a Storage role, zilliz.com
+ * on a page about a GKE service account. The words are the vendor's, the console is not theirs, and
+ * a scan that only read those pages never asked them our question.
+ */
+export function provisioningDemotedQuotes(html: string, ours: string | null = null, most = 2): string[] {
+  const text = visibleProse(ours ? withForeignLinkTargets(html, ours) : html)
+  const found: string[] = []
+  for (const index of CREATED_PROVISIONING_INDEXES) {
+    const pattern = PROVISIONING_PATTERNS[index]
+    if (!pattern) continue
+    const all = new RegExp(pattern.source, `${pattern.flags.replace('g', '')}g`)
+    for (let hit = all.exec(text); hit; hit = all.exec(text)) {
+      const window = windowAround(text, hit.index, hit[0].length)
+      const before = text.slice(Math.max(0, hit.index - 40), hit.index)
+      // Foreign credentials are not demoted evidence, they are somebody else's evidence, and
+      // saying "unmeasurable" over them would invite a vendor to fix a page that is not theirs.
+      if (ours && (handsItToSomebodyElse(window, ours) || namesSomebodyElsesCredential(before, hit[0], ours))) continue
+      if (!CREATES_ONE(hit[0]).test(window) || SAYS_A_PROGRAM_CAN.test(window)) continue
+      const quote = quoteAt(text, hit.index, hit[0].length)
+      if (quote && !found.includes(quote)) found.push(quote)
+      if (found.length >= most) return found
+    }
   }
   return found
 }
@@ -2448,6 +2495,7 @@ export async function scanFunnel({
     provisioning: {
       programmatic: provisioningMatches(await corpus, registrableDomain(domain)),
       programmaticQuotes: provisioningQuotes(await corpus, registrableDomain(domain)),
+      programmaticDemoted: provisioningDemotedQuotes(await corpus, registrableDomain(domain)),
       licenceGateQuotes: licenceGateQuotes(await corpus),
       selfServeSignals: matching(SELF_SERVE_PATTERNS, pricingText),
       selfServeQuotes: quoting(SELF_SERVE_PATTERNS, pricingText),
