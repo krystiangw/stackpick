@@ -15,7 +15,7 @@ import { challengedUs, challengeSentence, CHALLENGE_UNBLOCK } from './limits'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.50'
+export const FORMULA_VERSION = '9.51'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -729,14 +729,26 @@ export const CHECKS: Check[] = [
         // same shaped door and only one of them opens without a human.
         const grants = oauth.grantTypes
         if (!grants || grants.length === 0) return yes(1, 'registration_endpoint published')
-        return yes(
-          1,
-          oauth.unattendedGrant
-            ? `registration_endpoint published, and client_credentials is among the ${grants.length} advertised grants, so an unattended agent has a documented path to a token`
-            : // The parenthetical is capped at three, so with more than that it has to say it is
-              // a sample. "None of the 6 grants (a, b, c)" reads as the whole list and is not.
-              `registration_endpoint published, but none of the ${grants.length} advertised grants (${grants.length > 3 ? 'including ' : ''}${grants.slice(0, 3).join(', ')}) finishes without a person at a browser`,
-        )
+        if (oauth.unattendedGrant) {
+          return yes(
+            1,
+            `registration_endpoint published, and client_credentials is among the ${grants.length} advertised grants, so an unattended agent has a documented path to a token`,
+          )
+        }
+        // The parenthetical is capped at three, so with more than that it has to say it is a
+        // sample. "None of the 6 grants (a, b, c)" reads as the whole list and is not.
+        //
+        // A next step on a PASSING check, which is unusual here and deliberate. Read as a vendor,
+        // this was the one green row whose sentence describes a wall - "published, but nobody
+        // finishes without a person" - and every failing and unmeasurable row on the page carries an
+        // instruction while this one carried none. The point does not move: what moves is whether
+        // the vendor can act on the sentence we already publish.
+        return {
+          points: 1,
+          detail: `registration_endpoint published, but none of the ${grants.length} advertised grants (${grants.length > 3 ? 'including ' : ''}${grants.slice(0, 3).join(', ')}) finishes without a person at a browser`,
+          unblock:
+            'Advertise client_credentials on the same metadata for the clients that should run unattended, and an agent that registered itself can reach a token without a person.',
+        }
       }
       if (oauth.metadataPublished) {
         // Seventeen rows carried this sentence with neither an address nor a next step, so a

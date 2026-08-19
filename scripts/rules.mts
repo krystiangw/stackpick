@@ -951,6 +951,23 @@ check('451 tez', isEdgeRefusal(451), true)
 check('200 nie jest odmowa', isEdgeRefusal(200), false)
 
 console.log('dokumentacja bez JS, czyli gdzie konczy sie skorupa')
+// Zdanie o rejestracji, ktore PRZECHODZI, a opisuje sciane. Kazdy oblany i kazdy niemierzalny wiersz
+// na `/v` niesie instrukcje, a ten jeden - najwazniejszy dla naszej tezy - nie mial zadnej. Punkt sie
+// NIE rusza (to nadal ten sam pomiar), rusza sie tylko to, czy vendor moze z tym cos zrobic.
+const rejestracjaKlienta = CHECKS.find((c) => c.id === 'oauth_dcr')!
+const zGrantami = (grantTypes: string[], unattendedGrant: boolean) =>
+  rejestracjaKlienta.evaluate({
+    funnel: { oauth: { dynamicClientRegistration: true, grantTypes, unattendedGrant, probedHosts: 1, probedOrigins: ['https://v.test'] } },
+  } as never)
+const bezMaszynowego = zGrantami(['authorization_code', 'refresh_token'], false)
+check('sciana mimo rejestracji nadal daje punkt', bezMaszynowego.points, 1)
+check('i mowi, czego brakuje', bezMaszynowego.detail.includes('finishes without a person at a browser'), true)
+check('i od dzis mowi, co z tym zrobic', Boolean(bezMaszynowego.unblock?.includes('client_credentials')), true)
+// Kontrolka: gdy droga maszynowa JEST, nie ma czego odblokowywac i instrukcja bylaby halasem.
+const zMaszynowym = zGrantami(['authorization_code', 'client_credentials'], true)
+check('droga maszynowa nie dostaje instrukcji', zMaszynowym.unblock, undefined)
+check('i mowi to wprost', zMaszynowym.detail.includes('documented path to a token'), true)
+
 const docs = CHECKS.find((c) => c.id === 'docs_without_js')!
 const rendering = (chars: number) =>
   docs.evaluate({

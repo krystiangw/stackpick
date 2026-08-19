@@ -20,7 +20,11 @@ import { getStore } from '../src/lib/store'
 import snapshot from '../src/data/przed-9-50.json'
 import { refuseIfNothingMeasured } from './nothing-measured'
 
-const PRZEMIAT = '9.50'
+// Przemiat pojdzie na 9.51, nie 9.50: doszla instrukcja przy przechodzacym `oauth_dcr`, ktora zmienia
+// publikowany scorecard, wiec zgodnie z niezmiennikiem w `score.ts` wersja musi sie ruszyc. Porownanie
+// jest nadal to samo - migawka 9.49 kontra to, co jest po przemiecie - bo czytamy punkty i flagi, a
+// instrukcja ich nie rusza.
+const PRZEMIAT = '9.51'
 const MOVED = ['docs_without_js', 'programmatic_provisioning', 'machine_readable_api', 'price_in_snippet'] as const
 /** Domeny, na ktorych sufit skreslal zgadnieta sciezke. Zmierzone, nie zgadniete. */
 const SPODZIEWANE = new Set([
