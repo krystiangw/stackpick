@@ -11,6 +11,26 @@
 
 
 
+## TYGODNIOWY MAIL PORONOWYWAL Z LICZBA BEZ DATY (22:10, v677)
+
+Ta sama luka co w mailu miesiecznym, tylko w drugiej polowie monitoringu. Mail o zmianie werdyktu
+otwieral sie zdaniem `v.test is at 6 of 12 measurable points, from 5 of 10.` - **„przedtem" nie mialo
+daty**. Kadencja jest tygodniowa, ale kolejka ma sufit, wiec vendor nie ma jak odroznic tygodnia od
+dwoch miesiecy. Od teraz: `from 5 of 10 measured on 2026-06-30.`
+
+**Zrodlo daty bylo pulapka.** Naturalny odruch to `watch.checkedAt`, ktore jest w tym samym obiekcie
+i ma dobry typ - ale to **„kiedy ostatnio zajrzelismy", nie „kiedy zmierzylismy"**: domena, ktora
+prosi w robots.txt, zeby jej nie skanowac, przesuwa `checkedAt` na kazdym przebiegu **bez** dotykania
+wyniku, wiec dwumiesieczna podstawa datowalaby sie na wczoraj. Data idzie z `scannedAt` **poprzedniego
+raportu**, przekazanego z crona.
+
+**Straznik musial trafic w WYWOLANIE, nie tylko w funkcje.** Podmiana zrodla na `watch.checkedAt`
+przechodzi typecheck (oba to `string | null`) i **nie rusza zadnej reguly**, bo reguly wolaja
+`changeEmail` wprost, z wlasnymi argumentami. Dopiero straznik czytajacy
+`src/app/api/cron/watch/route.ts` ja lapie. **Lekcja ogolna: gdy poprawka polega na tym, KTORY
+argument podajemy, test na funkcji jest zawsze zielony.** Trzy mutacje, kazda oblewa. Codex czysty.
+`42eb519`, produkcja **v677**.
+
 ## MIESIECZNY MAIL NIE ODROZNIAL „NIC SIE NIE RUSZYLO" OD „NIKT NIE ZMIERZYL" (22:00-22:15)
 
 Metoda znowu ta sama: **wygeneruj dokument, ktory dostaje klient, i przeczytaj go jako odbiorca**
