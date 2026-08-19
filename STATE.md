@@ -8261,3 +8261,31 @@ sentry.io, calendly.com), i po przemiecie kazdy z nich ma byc **niemierzalny alb
 zaliczony. Sprawdzenie: `npm run audit-entry-credited` ma pokazac zero plikow nieodroznialnych.
 Dla MCP nie ma predykcji z gory, bo lista niemierzalnych adresow powstaje dopiero w skanie: po
 przemiecie sprawdzic, ile wierszy ma `mcp_present` niemierzalny i czy kazdy z nich nazywa adres.
+
+## CENNIK PRZYZNAJE SIE DO TEGO, DO CZEGO PRZYZNAWAL SIE TYLKO RUNBOOK (2026-08-19)
+
+`docs/delivering-a-report.md` od dawna mowi, ze **miesieczna polowa monitoringu nie ma za soba
+harmonogramu**: trzy crony na tej aplikacji odswiezaja rejestr MCP, limity i checki tygodniowe, a
+piec biegow agentowych miesiecznie uruchamia czlowiek. `/pricing` sprzedawal w tym czasie „Real
+agents every month" i nie mowil o tym ani slowa. Przyznanie sie lezalo w pliku, do ktorego kupujacy
+nie ma dostepu, czyli tam, gdzie nic nie kosztuje.
+
+Cennik ma teraz pytanie **„Is the monthly agent run automatic?"** i odpowiedz, ktora nie owija:
+tygodniowa polowa jest na harmonogramie, miesieczna nie, bieg kosztuje prawdziwe pieniadze na cudzych
+narzedziach, a mail przychodzi w dniu, ktory wybieramy, a nie tego samego kazdego miesiaca.
+
+**Straznik wiaze oba zdania.** Dopoki runbook zawiera „The monthly half of monitoring has no schedule
+behind it", cennik musi zawierac „The five agent runs are started by a person" - inaczej build
+oblewa. Gdy harmonogram wreszcie powstanie, oblewa tak samo i zmusza do przepisania obu miejsc
+zamiast zostawienia na stronie zdania, ktore przestalo byc prawda.
+
+**Sama decyzja - cron czy przypomnienie z nazwiskiem - zostaje na Krystiana razem z billingiem.**
+Dzis nikt nie placi, wiec nic nie zmusza do wyboru mechanizmu dzisiaj; zmusza wylacznie do tego, zeby
+strona nie obiecywala harmonogramu, ktorego nie ma.
+
+**Przy okazji zlapalem wlasnego bubla w `rules.mts`, wart zapisania, bo jest podstepny:** dopisalem
+nowa regule na **koniec pliku**, a plik konczy sie `process.exit`. Regula drukowala sie na zielono i
+**nigdy nie mogla oblac** - martwy kod udajacy pomiar. Jest teraz strażnik na sam ten plik: nic z
+`check(` nie moze stac za `process.exit`. Sonda szuka **ostatniego** wystapienia tego napisu, bo
+pierwsze dwa to jej wlasne literaly, czyli ten sam ksztalt „porownanie z samym soba" w trzecim
+przebraniu tej nocy.
