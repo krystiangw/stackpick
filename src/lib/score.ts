@@ -1267,8 +1267,15 @@ export const CHECKS: Check[] = [
           unblock: 'Link your API key or authentication page from your docs index or from llms.txt and this becomes measurable.',
         }
       }
-      // A sentence that creates a credential for a person to click is not silence, and a zero here
-      // would say something we did not measure. onesignal.com and crowdin.com walk through the
+      // A sentence that creates a credential without saying a program can is not silence, and a zero
+      // here would say something we did not measure.
+      //
+      // It said "creates a credential by hand" until this was read in the paid report, and that
+      // overstates what the rule looked at: the rule tests for the absence of a programmatic
+      // marker, and an absence is not evidence of a person clicking. Four of the five rows behind
+      // it really are console walkthroughs, but mixpanel.com's evidence is the heading "Create
+      // Service Accounts", which says nothing either way - and the buyer reads the quote next to
+      // the claim, so the claim has to be the one the quote supports. onesignal.com and crowdin.com walk through the
       // Firebase and Google Cloud consoles, growthbook.io grants a Storage role, zilliz.com
       // documents a GKE service account: all four say how a HUMAN gets a key, and none of them was
       // ever asked our question. The sentence goes out with the quote, so a vendor can see exactly
@@ -1277,7 +1284,7 @@ export const CHECKS: Check[] = [
       if (demoted.length > 0) {
         return {
           points: 0,
-          detail: `Unmeasurable: what we found creates a credential by hand rather than by program, so how an agent gets one is not something this scan measured: “${demoted[0]}”`,
+          detail: `Unmeasurable: we found a sentence that creates a credential and nothing in it says a program can do it, so how an agent gets one is not something this scan measured: “${demoted[0]}”`,
           inconclusive: true,
           unblock: 'Document a request that creates a key, or point us at the page that does, and this becomes measurable.',
         }

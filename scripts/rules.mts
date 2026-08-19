@@ -1140,6 +1140,19 @@ check(
   provisioningDemotedQuotes('Create a new service account or select an existing one.', 'crowdin.com').length,
   1,
 )
+// Zdanie ma mowic to, co regula zmierzyla: BRAK slowa o programie, a nie obecnosc czlowieka.
+// Przeczytane w platnym raporcie na mixpanelu, gdzie calym dowodem jest naglowek „Create Service
+// Accounts" - ten nie mowi ani ze recznie, ani ze programowo.
+const zdanieZdegradowane = CHECKS.find((one) => one.id === 'programmatic_provisioning')!.evaluate({
+  discovered: { docs: 'https://vendor.test/docs' },
+  docsPagesRead: 3,
+  docsPagesReadUrls: ['https://vendor.test/docs/api-keys'],
+  machineFilesRead: 0,
+  funnel: { provisioning: { programmatic: [], programmaticQuotes: [], programmaticDemoted: ['Create Service Accounts'] } },
+} as never)
+check('zdanie nie twierdzi, ze klucz robi sie recznie', zdanieZdegradowane.detail.includes('by hand'), false)
+check('zdanie mowi o BRAKU slowa o programie', zdanieZdegradowane.detail.includes('nothing in it says a program can do it'), true)
+check('i niesie cytat, na ktorym stoi', zdanieZdegradowane.detail.includes('Create Service Accounts'), true)
 check(
   'zdanie programowe nie jest zdegradowane',
   provisioningDemotedQuotes('Create a Service Account to allow programmatic access to your vault', 'browserbase.com').length,
