@@ -8674,3 +8674,43 @@ nie moze zadawac innego pytania niz badany.**
 
 **CO ZOSTALO OTWARTE:** growthbook.io - punkt za provisioning stoi na zdaniu o koncie uslugowym
 Google **bez linku w oknie**, wiec regula 9.44 go nie widzi. Blast radius: jeden wiersz.
+
+## 9.45: SAME SLOWA „SERVICE ACCOUNT" TO JESZCZE NIE SCIEZKA DO KLUCZA (2026-08-19, 10:20)
+
+Zaczelo sie od jednego otwartego wiersza (growthbook.io), a skonczylo na najwiekszym pojedynczym
+znalezisku tej nocy. Zamiast naprawiac ten wiersz, **policzylem, ile wierszy stoi na tej samej
+frazie**: 22 zaliczone wiersze uzywaja `service account`, a **13 stoi na niej SAMEJ**. Przeczytalem
+ich wlasne cytaty - te, ktore sami publikujemy pod ich nazwiskiem:
+
+| wiersz | co naprawde cytujemy |
+|---|---|
+| cronofy.com | „Service Accounts \| Enterprise Connect \| Cronofy Docs **Menu**" - okruszek nawigacji |
+| datadoghq.com | „**59% of AWS IAM users, 55% of Google Cloud service accounts**…" - statystyka z bloga |
+| zenrows.com | „Check your **CAPTCHA solver** service account for sufficient balance" - cudze konto |
+| nylas.com | „Service account" - dwa slowa, naglowek |
+| crowdin.com | Vertex AI · onesignal.com Firebase · phrase.com Google AutoML · turbopuffer.com GCP · restate.dev Google IAM · zilliz.com GKE |
+| windmill.dev | „every connection uses that single service account" - opis zachowania |
+| mixpanel.com | „[Create Service Account](…/create-service-account.md)" - **jedyny bezspornie wlasciwy** |
+
+**Dziesiec z trzynastu nie mowi ani slowa o tworzeniu czegokolwiek.** To nie jest nowy pomysl na
+regule: **9.32 rozbroil dokladnie tak samo trzy frazy** („management api", „provisioning api",
+„account api") z tego samego powodu, a komentarz przy nich mowi wprost, ze „gola fraza to tylko
+nazwa w menu". `service account` jest **czwarta taka fraza** i uszla, bo nazywa poswiadczenie, a nie
+API.
+
+**Regula 9.45:** fraza liczy sie tylko, gdy zdanie **tworzy** konto uslugowe. Blast radius zmierzony
+przed wdrozeniem: **10 wierszy traci punkt** (1 -> 0), 3 zostaja (mixpanel slusznie, growthbook i
+zilliz to nadal Google, ale ze slowem „create" - nie gonimy tego lista nazw chmur), a do 6 wierszy z
+dwiema frazami moze spasc 2 -> 1. Symulacja puszczona na **prawdziwych 13 cytatach z korpusu**, nie
+na wymyslonych - i te same cytaty stoja jako kontrolki w `rules.mts`.
+
+**Codex zlapal roznice miedzy regula a dopasowaniem rdzenia:** `provision\w*` lapie tez rzeczownik.
+„Service account **provisioning**" i „service account **generation** settings" to naglowki sekcji,
+czyli dokladnie ta klasa falszywego kredytu, ktora ta zmiana usuwa. Dwa kierunki biora wiec rozne
+formy: **przed** fraza gerundium jest czasownikiem („provisioning a service account" tworzy jedno),
+**po** frazie ten sam wyraz jest czlonem rzeczownikowym.
+
+**Stan: kod 9.45, korpus 9.44.** Waiter `/tmp/reseed-945.sh` czeka na karencje mediany (6 h od 09:57,
+czyli okolo **16:00**), log `/tmp/reseed-945.log`. **Nie deployowac po jego starcie.** Po przemiecie:
+sprawdzic, czy dokladnie te 10 wierszy stracilo punkt i czy zadne zdanie nie mowi juz „service
+account" bez slowa o tworzeniu.
