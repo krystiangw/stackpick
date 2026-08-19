@@ -1339,6 +1339,20 @@ check('nie z przyszlosci', dniOdRywali >= -1, true)
 check('i nie starsza niz 60 dni - policz je ponownie', dniOdRywali <= 60, true)
 check('i widzi ja czytelnik, nie tylko komentarz', stronaMetodologii.includes('counted on their own pages on {RIVALS_READ_ON}'), true)
 
+// Trzecie miejsce z twierdzeniem o cudzym produkcie: `/findings` mowilo w czasie terazniejszym, ze
+// Lighthouse i Cloudflare „stop at documentation and protocol files", bez zadnej daty ani zrodla -
+// a kategoria Lighthouse'a czyta tez drzewo dostepnosci i przesuniecia ukladu, wiec zdanie bylo i
+// niedatowane, i nieprecyzyjne. Sprawdzone 2026-08-19 u zrodla: `lighthouse --only-categories=
+// agentic-browsing` na naszej domenie (13.4.1) daje szesc audytow, a lista Cloudflare'a pochodzi z
+// ich wlasnego ogloszenia. Negatywne twierdzenie („nikt nie pyta o konto") niesie teraz swoja liste.
+const stronaFindings = readFileSync('src/app/findings/page.tsx', 'utf8')
+const rywaleSprawdzeniDnia = stronaFindings.match(/const RIVALS_CHECKED_ON = '([^']+)'/)?.[1] ?? ''
+const dniOdSprawdzenia = wiekWDniach(rywaleSprawdzeniDnia)
+check('data sprawdzenia cudzych narzedzi jest datą', Number.isFinite(dniOdSprawdzenia), true)
+check('nie z przyszlosci', dniOdSprawdzenia >= -1, true)
+check('i nie starsza niz 60 dni - odpal je ponownie', dniOdSprawdzenia <= 60, true)
+check('i widzi ja czytelnik', stronaFindings.includes('Read on {RIVALS_CHECKED_ON}'), true)
+
 check('sonda widzi cudze poswiadczenie po nazwie', namesSomebodyElsesCredential('Create a Firebase ', 'Service Account', 'onesignal.com'), true)
 check('i nie widzi marki, ktorej przy poswiadczeniu nie ma', namesSomebodyElsesCredential('Create a ', 'Service Account', 'browserbase.com'), false)
 check('wlasna marka nie dyskwalifikuje', namesSomebodyElsesCredential('Create a GitHub ', 'personal access token', 'github.com'), false)

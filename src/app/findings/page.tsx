@@ -125,6 +125,12 @@ const RESULTS: Result[] = [
  */
 const LATE_CAPTCHA = ['supabase.com', 'contentful.com']
 
+// Twierdzenie o cudzych narzedziach ma date, bo inaczej starzeje sie w ciszy - tak samo jak liczby o
+// konkurencie na /methodology i o cudzym standardzie na /standard. Sprawdzone tego dnia u zrodla:
+// kategoria Lighthouse'a odpalona na naszej wlasnej domenie (13.4.1, szesc audytow wypisanych nizej),
+// lista Cloudflare'a z ich wlasnego ogloszenia. Straznik w rules.mts oblewa build po 60 dniach.
+const RIVALS_CHECKED_ON = '19 August 2026'
+
 /** Small numbers as words, because the heading is prose and "5 studies" reads like a dashboard. */
 function counted(value: number, capital = false): string {
   const words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight']
@@ -436,9 +442,13 @@ export default async function FindingsPage() {
               form is rare: <span className="font-mono">{corpus.signupRefusesAgents}</span> vendors do it while
               serving a browser at the same URL. The wall is quieter than that, and it stops just as much:{' '}
               <span className="font-mono">{corpus.signupNeedsJavaScript}</span> serve a form that renders
-              nothing without JavaScript, which an agent fetching HTML reads as a page with no way in. Google ships an agentic browsing category in Lighthouse and Cloudflare
-              ships a readiness scanner, and both stop at documentation and protocol files. Neither asks whether
-              an unattended client can get an account, which is the step every one of our agent runs died on.
+              nothing without JavaScript, which an agent fetching HTML reads as a page with no way in. Google ships
+              an agentic browsing category in Lighthouse and Cloudflare scores any site for agent readiness.
+              Read on {RIVALS_CHECKED_ON}: the Lighthouse category is six audits, an accessibility tree, three
+              WebMCP ones, layout shift and llms.txt; Cloudflare&rsquo;s list is files and protocols, robots.txt
+              through content signals, an API catalogue, OAuth discovery, an MCP card and WebMCP. Neither of
+              them asks whether an unattended client can get an account, which is the step every one of our
+              agent runs died on.
             </p>
             <p className="mt-4 flex flex-wrap gap-4 font-mono text-sm">
               <Link href="/report" className="text-brass underline underline-offset-4">
