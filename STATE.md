@@ -1,5 +1,38 @@
-# Let Agents In: stan na 2026-08-19 wieczor (kod i produkcja 9.48, korpus 9.45 + 15 wierszy przeskanowanych)
+# Let Agents In: stan na 2026-08-19 wieczor (kod i produkcja 9.49, korpus 9.45 + ~17 wierszy przeskanowanych)
 
+
+
+## TWARDE ZERO DATADOGA STALO NA KOMUNIKACIE PRASOWYM (9.49)
+
+Szukalem czegos innego - punktu 2 z audytu subagenta, czyli „strona, z ktorej dowody odpadly jako
+cudze, nie powinna liczyc sie do `looked`". **Ten punkt okazal sie pusty: zero wierszy.** Za to
+pomiar samej bramki `looked` pokazal cos gorszego.
+
+`datadoghq.com` mial **twarde zero** na prowizjonowaniu, a bramke, ktora ma dowodzic „patrzylismy
+tam, gdzie dowod by byl", przechodzila u niego **dokladnie jedna strona: komunikat prasowy** pod
+tytulem „...amid growing concerns of **credential** theft". Podpowiedz sciezki to test podciagu,
+slug niesie slowo „credential", i werdykt nazywal to potem jedna ze „stron dokumentacji, ktore
+przeczytalismy". **Zdanie samo sie zdradzalo** kazdemu, kto poszedl za linkiem.
+
+Strona weszla przez `llms.txt`, gdzie test na dokumentacje jest **celowo** wylaczony - i to
+poluzowanie ma dobry powod (endpoint provisioningu cloudinary i strona rejestracji meilisearch nie sa
+dokumentacja, a warto je przeczytac). Wiec 9.49 odrzuca **tylko sekcje, w ktorych firma mowi o
+sobie**, i sadzi je tak, jak `isFiledAsDocumentation` sadzi swoja liste: po segmentach **przed**
+pierwszym segmentem dokumentacyjnym.
+
+**Wersja niedbala byla zmierzona PRZED wdrozeniem i odrzucala piec prawdziwych stron, zeby zlapac
+jedna**: `fly.io/docs/about/cost-management`, `developer.paddle.com/api-reference/about/...`,
+`docs.browserbase.com/account/team/sso.md`, endpoint BigCommerce pod `customers` i
+`developers.deepl.com/docs/getting-started/about`. Wewnatrz dokumentacji te slowa sa nazwami sekcji.
+Wszystkie piec sa dzis kontrolkami. **Po zawezeniu: jedna strona na 177 wierszy.**
+
+Datadog czyta dzis **NIEMIERZALNY** („none of the 4 documentation pages we reached is about keys or
+authentication"), co jest prawda - oni maja `POST /api/v2/api_keys`, a my po prostu nie otworzylismy
+strony, ktora to mowi.
+
+**Zasada, ktora z tego zostaje:** bramka, ktora ma chronic przed oskarzeniem, **sama jest
+twierdzeniem** i trzeba ja mierzyc osobno. „Patrzylismy tam, gdzie dowod by byl" bylo prawda o
+LICZBIE stron, a nie o tym, czym te strony byly.
 
 ## PIERWSZY PRZEBIEG NOWEGO AUDYTU ZNALAZL FALSZYWE OSKARZENIE W NASZYM WLASNYM SUFCIE (9.48)
 
@@ -133,9 +166,10 @@ link, ktorego etykieta tworzy poswiadczenie, jest najmocniejszym kandydatem, jak
 powinien isc na poczatek listy zamiast byc oceniany po sciezce.
 
 **CZEGO Z TEGO AUDYTU JESZCZE NIE ZROBILEM, w kolejnosci wartosci:**
-2. **Strona, z ktorej cale dowody odpadly jako cudze, nie powinna liczyc sie do `looked`** w score.ts.
-   Dzis `docs.zilliz.com/docs/byoc/create-gke-service-account` przechodzi bramke „patrzylismy tam,
-   gdzie dowod by byl" **na stronie o poswiadczeniu Google'a**.
+2. ~~Strona, z ktorej cale dowody odpadly jako cudze, nie powinna liczyc sie do `looked`~~
+   **ZMIERZONE: zero wierszy.** Na 62 twardych zerach tylko dwa czytaly cokolwiek o cudzym
+   produkcie, i w obu bramke `looked` spelnialy takze inne strony, wiec wylaczenie tamtych nic by
+   nie zmienilo. Nie zbudowane naumyslnie - to jest wynik, nie zaniechanie.
 
 **Naprawione przy okazji, bo bylo widac na zywej karcie:** cytat konczyl sie **polowa slowa**
 (mixpanel publikowal dowod konczacy sie na „: Crea"). Naprawa cietego adresu nie obejmowala cietego
