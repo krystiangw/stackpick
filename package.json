@@ -40,7 +40,8 @@
     "audit-fix-arithmetic": "tsx scripts/audit-fix-arithmetic.mts",
     "audit-docs-js": "tsx scripts/audit-docs-js.mts",
     "audit-front-door": "tsx scripts/audit-front-door.mts",
-    "audit-named-crawlers": "tsx scripts/audit-named-crawlers.mts"
+    "audit-named-crawlers": "tsx scripts/audit-named-crawlers.mts",
+    "po-przemiacie": "tsx scripts/po-przemiacie-9-49.mts"
   },
   "dependencies": {
     "mongodb": "^7.5.0",

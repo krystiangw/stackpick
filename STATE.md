@@ -478,10 +478,16 @@ cache'u rejestru dalo **160 wierszy identycznych, 16 bez paczki po obu stronach 
 (pdfmonkey.io, juz poprawiony pojedynczym skanem: 9/15 zamiast 8/14). Szkoda ponizej progu szumu
 0,59 %. Zamyka otwarte pytanie z zadania #48.
 
-**Komplet kontroli po nastepnym przemiecie, jednym wklejeniem:**
+**Komplet kontroli po nastepnym przemiecie, jednym wklejeniem** (kolejnosc ma znaczenie: predykcje
+najpierw, bo tylko one moga cos obalic):
 ```
 cd ~/projects/stackpick && export MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick)
-npx tsx scripts/after-reseed.mts && npm run audit && npx tsx scripts/audit-study.mts   && npm run audit-delivery && npm run regressions && npm run watch-coverage && npm run audit-our-api
+npm run po-przemiacie && npx tsx scripts/after-reseed.mts && npm run audit && npx tsx scripts/audit-study.mts   && npm run audit-delivery && npm run regressions && npm run watch-coverage && npm run audit-our-api
+```
+**Potem trzy audyty powtarzajace oskarzenia** (pytaja vendorow, wiec NIGDY w trakcie przemiatu i
+**nie przez `| tail`**, bo wtedy nie widac postepu):
+```
+npm run audit-docs-js && npm run audit-front-door && npm run audit-named-crawlers
 ```
 ## PIEC Z SZESCIU CYTATOW W RAPORCIE ZA 49 USD URYWALO SIE W SRODKU ADRESU (2026-08-17)
 
