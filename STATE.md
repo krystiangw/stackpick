@@ -49,6 +49,23 @@ naumyslnie, a lista marek jest **allowlista, ktorej nigdy sie nie domknie**. Aud
 wymog programatycznosci **opublikowalby szesc nowych zer**, w tym jedno falszywe (mixpanel) - i to
 jest powod, dla ktorego istnieje galaz „niemierzalny".
 
+**PELNA MACIERZ PRZEJSC, POTWIERDZONA NA PRODUKCJI (nie z cache'u), wszystkie 11 wierszy z ta
+fraza** - to zamyka punkt 3 z audytu subagenta:
+- **NIEMIERZALNY (5)**: `onesignal.com`, `crowdin.com`, `mixpanel.com`, `growthbook.io`, `zilliz.com`.
+  Growthbook cytuje dwa kroki konsoli Google („Give Storage `Object Admin` role...", „Under the
+  `actions` menu... click on manage keys"), zilliz dwie linijki nawigacji o GKE.
+- **2p → 1p (1)**: `elastic.co`. Straciła fraze na zdaniach „You create service account tokens for a
+  service account" (bez slowa o programie), a **zachowala punkt** za „create an api key... next to
+  something programmatic". Czyli przestalismy liczyc ten sam fakt dwa razy, nie odebralismy dowodu.
+- **BEZ ZMIANY (5)**: `pinecone.io`, `getunleash.io`, `temporal.io`, `browserbase.com`,
+  `cockroachlabs.com`.
+- **ZERO nowych twardych zer.**
+
+**I jedna lekcja o samym pomiarze:** pomiar na stronach pobranych do cache'u **przeszacowal o jeden**
+(przewidzial `getunleash.io` jako niemierzalny, a wiersz zachowal oba punkty), bo refetch nie oddaje
+tego, co skan przeczytal w swojej chwili. Cache dobrze pokazuje **kierunek i skale**, ale prawda jest
+dopiero pojedynczy przeskan przez konsole.
+
 **CZEGO Z TEGO AUDYTU JESZCZE NIE ZROBILEM, w kolejnosci wartosci:**
 1. **Chodzic czytac wlasciwa strone, zamiast oceniac link do niej.** Link na WLASNEJ domenie, ktorego
    etykieta tworzy poswiadczenie (`- [Create Service Account](.../reference/create-service-account.md)`)
@@ -58,8 +75,6 @@ jest powod, dla ktorego istnieje galaz „niemierzalny".
 2. **Strona, z ktorej cale dowody odpadly jako cudze, nie powinna liczyc sie do `looked`** w score.ts.
    Dzis `docs.zilliz.com/docs/byoc/create-gke-service-account` przechodzi bramke „patrzylismy tam,
    gdzie dowod by byl" **na stronie o poswiadczeniu Google'a**.
-3. **Pelna macierz przejsc na CALYM korpusie**, nie na 11 wierszach: 2→2, 2→1, 1→1, 1→niemierzalny.
-   Wiersze z 2 punktami, gdzie ta fraza jest jedna z dwoch, spadaja do 1 i nikt ich nie przeczytal.
 
 **Naprawione przy okazji, bo bylo widac na zywej karcie:** cytat konczyl sie **polowa slowa**
 (mixpanel publikowal dowod konczacy sie na „: Crea"). Naprawa cietego adresu nie obejmowala cietego
