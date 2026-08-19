@@ -9,6 +9,28 @@
 
 
 
+
+## PRZECZYTANIE PLATNEGO RAPORTU JAKO KUPUJACY ZNALAZLO ZDANIE, KTORE SAM DZIS NAPISALEM (21:00)
+
+Wygenerowalem raport za 49 USD dla `mixpanel.com` i przeczytalem go od gory, bo w tym pliku stoi
+zapisane, ze **kazdy defekt tego dokumentu znalezlismy czytaniem, a zaden audytem**. Audyty byly na
+tym wierszu zielone.
+
+Zdanie, ktore wprowadzilem w 9.47, brzmialo: „what we found creates a credential **by hand** rather
+than by program". Regula testuje **brak** slowa o programie - a brak nie jest dowodem na to, ze ktos
+klika. Cztery z pieciu wierszy za tym zdaniem to naprawde przewodniki po cudzej konsoli, wiec tam
+akurat bylo prawdziwe. Calym dowodem mixpanela jest **naglowek „Create Service Accounts"**, ktory nie
+mowi ani ze recznie, ani ze programowo - a kupujacy czyta cytat **obok** twierdzenia.
+
+Zdanie mowi teraz to, co zmierzone: znalezlismy zdanie tworzace poswiadczenie i **nic w nim nie
+mowi, ze moze to zrobic program**. Straznik trzyma to brzmienie na prawdziwym werdykcie checku
+(nie na tekscie strony), sprawdzony mutacyjnie.
+
+**Reszta raportu przeczytana i bez zarzutu**, w tym rzeczy, ktore latwo zepsuc: naglowek mowi wprost
+„scanned under formula 9.47 (the scanner now runs 9.49)", pieć cytatów po polsku jest oznaczonych i
+wyjasnionych, arytmetyka naprawy sie zamyka (11/13 → 12/13 za jedna zmiane), a punkty za checki
+niemierzalne sa **wylaczone z arytmetyki** i powiedziane osobno.
+
 ## `/bot` OPISYWAL MNIEJSZOSC WLASNEGO RUCHU (2026-08-19, 20:00)
 
 Strona, ktora istnieje po to, zeby vendor **poznal nas w logach i umial nas zatrzymac**, mowila:
