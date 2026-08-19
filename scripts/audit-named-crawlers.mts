@@ -182,3 +182,10 @@ if (NAMED_CRAWLERS.some((crawler) => tellsUsNothing(crawler.name))) {
 }
 console.log(toRead.length === 0 ? '\nnic do przeczytania recznie' : `\n${toRead.length} MIEJSC do przeczytania recznie:`)
 for (const line of toRead) console.log(`  ${line}`)
+
+// Bez wyjscia skrypt konczy prace i wisi: polaczenie do bazy trzyma petle zdarzen otwarta, a audyt,
+// ktory nie wychodzi, jest audytem, ktorego nikt nie uruchamia drugi raz. Ale najpierw spuszczamy
+// wyjscie: przy przekierowaniu na plik `console.log` bywa jeszcze w buforze, a `process.exit`
+// ucina go w pol zdania - czyli zabiera dokladnie te linijki, dla ktorych ten audyt istnieje. Codeksa.
+await new Promise<void>((done) => process.stdout.write('', () => done()))
+process.exit(0)

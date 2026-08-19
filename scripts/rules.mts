@@ -925,6 +925,37 @@ const rendering = (chars: number) =>
 check('pusta skorupa SPA', rendering(126), 0)
 check('krotka, ale kompletna strona', rendering(647), 1)
 check('prosemirror i njal.la przechodza', rendering(1117), 1)
+// Uciete cialo nie jest skorupa: to nasz wlasny sufit bajtow, nie ich strona. Kontrolki na obie
+// strony, bo ta galaz zamienia OSKARZENIE w „nie zmierzylismy", i pomylka w kazda strone kosztuje.
+const truncatedAt = (chars: number, truncated: boolean) =>
+  docs.evaluate({
+    discovered: { docs: 'https://vendor.test/docs' },
+    docsTextChars: chars,
+    docsTextCharsFrom: 'https://vendor.test/docs',
+    docsTextCharsTruncated: truncated,
+    docsThinnerForAgents: null,
+  } as never)
+check('uciete cialo nie jest skorupa', truncatedAt(53, true).inconclusive === true, true)
+check('i zdanie mowi o naszym sufcie', truncatedAt(53, true).detail.includes('bytes we read'), true)
+// Codeksa: zdanie nie ma twierdzic, ze ciecie wypadlo w skrypcie, bo tego nie mierzymy, a rada nie
+// ma wskazywac lustra markdown, ktorego ten check z definicji nie czyta.
+check('zdanie nie zmysla, gdzie wypadlo ciecie', truncatedAt(53, true).detail.includes('mid-script'), false)
+check('rada nie obiecuje lustra markdown', (truncatedAt(53, true).unblock ?? '').includes('markdown'), false)
+// I zdanie ma nazwac te strone, ktora sie urwala, a nie te, z ktorej wzielismy liczbe - inaczej
+// mowimy o stronie przeczytanej w calosci, ze jest wieksza niz nasz sufit. Codeksa, dwa razy.
+const truncatedElsewhere = docs.evaluate({
+  discovered: { docs: 'https://vendor.test/docs' },
+  docsTextChars: 100,
+  docsTextCharsFrom: 'https://vendor.test/docs/small',
+  docsTextCharsTruncated: true,
+  docsTextCharsTruncatedAt: 'https://vendor.test/docs/huge',
+  docsThinnerForAgents: null,
+} as never)
+check('zdanie nazywa strone, ktora sie urwala', truncatedElsewhere.detail.includes('docs/huge'), true)
+check('i nie mowi tego o stronie przeczytanej w calosci', truncatedElsewhere.detail.includes('docs/small is larger'), false)
+check('krotka strona przeczytana w calosci nadal jest skorupa', truncatedAt(53, false).points, 0)
+check('i to nadal jest oskarzenie, nie niewiedza', truncatedAt(53, false).inconclusive === true, false)
+check('dluga strona jest zaliczona mimo uciecia', truncatedAt(9000, true).points, 1)
 
 console.log('challenge na krawedzi, czyli kogo ta krawedz jednak wpuszcza')
 const door = CHECKS.find((c) => c.id === 'answers_plain_request')!

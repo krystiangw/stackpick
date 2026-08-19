@@ -1,5 +1,5 @@
 import { AGENT_ENTRY_PATH_COUNT, AGENT_ENTRY_PATHS, PROVISIONING_PATTERN_COUNT } from './scan/funnel'
-import { AGENT_UA, DOCS_SHELL_FLOOR } from './scan/http'
+import { AGENT_UA, DOCS_SHELL_FLOOR, MAX_BYTES_PER_RESPONSE } from './scan/http'
 import { OPENAPI_PATHS } from './scan/machine'
 import { CREDENTIAL_PATH } from './scan'
 import { AI_CRAWLERS } from './scan/robots'
@@ -15,7 +15,7 @@ import { challengedUs, challengeSentence, CHALLENGE_UNBLOCK } from './limits'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.47'
+export const FORMULA_VERSION = '9.48'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -420,9 +420,34 @@ export const CHECKS: Check[] = [
       // the smallest page we were wrongly failing renders 647. njal.la ships no bundle at all and
       // its whole documentation set tops out at 1,697 characters per page, so no sampling change
       // rescues it and only the threshold does. 500 sits in the gap, five times either way.
-      return f.docsTextChars >= DOCS_SHELL_FLOOR
-        ? yes(1, `${chars} characters of text without JS${where}`)
-        : yes(0, `Only ${chars} characters render without JS${where}, which is a page shell rather than a page`)
+      if (f.docsTextChars >= DOCS_SHELL_FLOOR) return yes(1, `${chars} characters of text without JS${where}`)
+      // The accusation below is manufactured by our own byte cap when the read stopped short. We
+      // stop at 400,000 bytes; filestack.com's page is 616,581 and pandadoc.com's is larger again,
+      // and what survives the cut can lose the rest of the document with it: a page that renders
+      // 12,282 characters to a complete read came back as 53, and we published "a page shell
+      // rather than a page" about it. A number produced by where we stopped reading is not a
+      // measurement of what the vendor serves.
+      //
+      // The sentence says only what the flag records. It named the cut as mid-script in its first
+      // version, which is true of the two rows that forced this and is not something we measure -
+      // codex's, and the same standard the quotes on this card are held to.
+      if (f.docsTextCharsTruncated) {
+        const cap = MAX_BYTES_PER_RESPONSE.toLocaleString('en-US')
+        const stoppedAt = f.docsTextCharsTruncatedAt ?? from ?? entry
+        return {
+          points: 0,
+          detail:
+            stoppedAt === (from ?? entry)
+              ? `Unmeasurable: ${stoppedAt} is larger than the ${cap} bytes we read of any one page, so the ${chars} characters we could count describe where we stopped rather than what you serve`
+              : `Unmeasurable: the most text we could read without JS is ${chars} characters, and ${stoppedAt} stopped at the ${cap} bytes we read of any one page, so we cannot tell a page shell from a page we only half read`,
+          // Not a markdown mirror: this check reads HTML only, by construction, because a markdown
+          // file renders all of itself without JavaScript and would answer a different question.
+          // Advice a vendor can follow and still come back unmeasurable is worse than none.
+          unblock: `Nothing for you to do. A documentation page that fits inside ${MAX_BYTES_PER_RESPONSE.toLocaleString('en-US')} bytes would also make this measurable.`,
+          inconclusive: true,
+        }
+      }
+      return yes(0, `Only ${chars} characters render without JS${where}, which is a page shell rather than a page`)
     },
   },
   {

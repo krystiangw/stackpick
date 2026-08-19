@@ -144,6 +144,15 @@ export type ScanFindings = {
   docsTextChars: number
   /** Which page that number came off, so the claim names a page a vendor can fetch themselves. */
   docsTextCharsFrom: string | null
+  /**
+   * Whether the read behind that number stopped at the byte cap. It matters only below the shell
+   * floor, and there it decides everything: a body cut mid-script leaves an unclosed tag, the
+   * reader drops the rest of the document with it, and a page that renders twelve thousand
+   * characters reads as fifty-three.
+   */
+  docsTextCharsTruncated?: boolean
+  /** Which page stopped at the cap. Not always the page the number came from. */
+  docsTextCharsTruncatedAt?: string | null
   /** How many documents the provisioning grep actually had to read. */
   docsPagesRead: number
   /** llms.txt and llms-full.txt are read for the same words and are not documentation pages. */
@@ -572,17 +581,27 @@ const SIBLING_DOCUMENTATION_SECTIONS = new Set([
  * 8,856 characters off /docs/billing/2.0/site-configuration/api_keys. Publishing the shell as the
  * measurement of the whole site was a claim we held the evidence against.
  */
-function docsWithoutJs(docsUrl: string | null, pages: Fetched[]): { chars: number; from: string | null } {
-  let best: { chars: number; from: string | null } = { chars: 0, from: null }
-  if (!docsUrl) return best
+function docsWithoutJs(docsUrl: string | null, pages: Fetched[]): { chars: number; from: string | null; truncated: boolean; truncatedAt: string | null } {
+  let best: { chars: number; from: string | null; truncated: boolean } = { chars: 0, from: null, truncated: false }
+  if (!docsUrl) return { ...best, truncatedAt: null }
+  // Whether ANY page we could have measured stopped at the cap, not only the one that won. A small
+  // complete page beating a large truncated one on extracted text is exactly how the accusation
+  // this flag exists to prevent comes back: 100 characters from a whole page outranks 53 from a
+  // capped one, the winner is complete, and the shell verdict returns with nothing marking it.
+  // Codex's. It costs nothing to be right here because the flag is only read below the floor.
+  let truncatedAt: string | null = null
   for (const page of pages) {
     // HTML only: a markdown file renders all of itself without JavaScript by construction, and
     // reading one would answer a different question than the one this check asks.
     if (!page.ok || !looksLikeHtml(page) || !isDocumentationPage(page.url, docsUrl)) continue
+    if (page.truncated && !truncatedAt) truncatedAt = page.url
     const chars = visibleTextLength(page.body)
-    if (chars > best.chars) best = { chars, from: page.url }
+    if (chars > best.chars) best = { chars, from: page.url, truncated: page.truncated }
   }
-  return best
+  // The page that stopped at the cap is kept by name, because it is not always the page the number
+  // came from, and a sentence that says "your page is larger than our cap" about a page we read
+  // whole is a new false claim in place of the one this was written to remove. Codex's, twice.
+  return { ...best, truncated: best.truncated || truncatedAt !== null, truncatedAt: best.truncated ? best.from : truncatedAt }
 }
 
 export type ScanProgress = (step: { label: string; done: number; total: number }) => void
@@ -926,6 +945,8 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
     homeTextChars: visibleTextLength(found.home.body),
     docsTextChars: readable.chars,
     docsTextCharsFrom: readable.from,
+    docsTextCharsTruncated: readable.truncated,
+    docsTextCharsTruncatedAt: readable.truncatedAt,
     // The corpus and the count of what it was read from have to be the same thing, or the
     // sentence describes a body of evidence the verdict was not taken from.
     docsPagesRead: docPagesRead.length,

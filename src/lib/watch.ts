@@ -211,6 +211,10 @@ const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   // provisioning path. growthbook.io held the point on a sentence about Google Cloud service
   // accounts, and a row that loses it here documented no more and no less than it did before.
   '9.44': ['programmatic_provisioning'],
+  // 9.48 stops calling a read we cut short a page shell. Two rows carried that accusation and both
+  // were our own byte cap: filestack.com renders 12,282 characters to a complete read and we
+  // published 53.
+  '9.48': ['docs_without_js'],
   // 9.47 makes the service-account phrase carry the burden its sibling already carried: the
   // sentence has to say a program can do it. Eleven rows stood on that phrase; six lose it, and
   // none of the six drops to a zero, because a walkthrough of somebody's console is not silence

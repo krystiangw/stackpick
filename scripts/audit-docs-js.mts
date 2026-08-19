@@ -35,10 +35,17 @@ const store = getStore()
 const most = howManyRows(25)
 
 /** Nasz czytelnik bez jednej roznicy: `noscript` zostaje, bo to jest tresc dla klienta bez JS. */
-const withNoscript = (html: string) =>
-  withoutTags(html.replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, ' '))
+const withNoscript = (html: string) => {
+  // Nie tylko domkniete: cialo uciete na sufcie bajtow zostawia `<script>` bez zamkniecia, a wtedy
+  // to wyrazenie nie usuwa NICZEGO i audyt melduje, ze noscript niesie 400 tysiecy znakow strony.
+  // Tak wlasnie oskarzyl filestack.com i pandadoc.com w swoim pierwszym przebiegu. Nasz wlasny
+  // czytelnik zdejmuje niedomkniety tag razem z reszta dokumentu i tak samo musi robic ten.
+  const closed = html.replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, ' ')
+  const dangling = closed.search(/<(script|style)\b/i)
+  return withoutTags(dangling === -1 ? closed : closed.slice(0, dangling))
     .replace(/\s+/g, ' ')
     .trim().length
+}
 
 type Row = { domain: string; url: string }
 
@@ -206,3 +213,10 @@ if (controlBelow > controlMeasured / 2) {
 }
 console.log(toRead.length === 0 ? '\nnic do przeczytania recznie' : `\n${toRead.length} MIEJSC do przeczytania recznie:`)
 for (const line of toRead) console.log(`  ${line}`)
+
+// Bez wyjscia skrypt konczy prace i wisi: polaczenie do bazy trzyma petle zdarzen otwarta, a audyt,
+// ktory nie wychodzi, jest audytem, ktorego nikt nie uruchamia drugi raz. Ale najpierw spuszczamy
+// wyjscie: przy przekierowaniu na plik `console.log` bywa jeszcze w buforze, a `process.exit`
+// ucina go w pol zdania - czyli zabiera dokladnie te linijki, dla ktorych ten audyt istnieje. Codeksa.
+await new Promise<void>((done) => process.stdout.write('', () => done()))
+process.exit(0)
