@@ -8564,3 +8564,17 @@ reason"**, z liczba pojedyncza i mnoga obsluzona osobno. Przy okazji **wybor wer
 liczony w dwoch miejscach**: `publishedCorpus` juz zwracal jedna wersje, a `buildIndustryReport`
 grupowal po wersji **drugi raz** na danych, ktore z definicji mialy jedna. Martwa kopia reguly, ktora
 mogla sie tylko rozjechac z oryginalem. Straznik pilnuje, ze `industry.ts` nie ma juz `byVersion`.
+
+## SPRAWDZILEM CZWARTE MIEJSCE I OKAZALO SIE, ZE JUZ BYLO UCZCIWE (2026-08-19, 08:30)
+
+Po trzech renderingach cytatu poszedlem na **darmowa, publiczna strone z transkryptami**
+(`/c/<kategoria>/runs`), na ktora **oba platne dokumenty odsylaja** slowami „Every answer, in full
+and unedited". Bylem gotowy dopisac ten sam znacznik. Nie bylo trzeba: strona **od poczatku** mowi
+„…which is also why some answers below are in Polish rather than English: those instructions ask
+for it".
+
+Warto to zapisac, bo wynik jest odwrotny do intuicji i ma z tego morał: **darmowa strona byla
+uczciwsza niz dwa platne dokumenty**. Zastrzezenie napisano tam, gdzie tekst stoi obok siebie po
+polsku i po angielsku i roznica **rzuca sie w oczy autorowi**; w raporcie i w mailu cytat jest
+wyrwany z kontekstu, wiec autor go nie widzi, a **czytelnik owszem**. Nie dopisalem drugiego zdania
+o tym samym - sprawdzenie zakonczylo sie tym, ze **nic nie zmienilem**, i to tez jest wynik.
