@@ -1346,7 +1346,7 @@ function quoting(patterns: RegExp[], html: string, most = 3): string[] {
  * about the vendor and wrong here: a rate limit tells us nothing about what the host serves at an
  * address nobody registered, which is the only question a control asks.
  */
-const informative = (got: Fetched) => got.status > 0 && got.status !== 429 && !isEdgeRefusal(got.status)
+export const informative = (got: Fetched) => got.status > 0 && got.status !== 429 && !isEdgeRefusal(got.status)
 
 async function servesCatchAllText(site: string): Promise<CatchAll> {
   // The same Accept the entry probes send, per suffix. They diverged, and that is how a control
@@ -1818,10 +1818,17 @@ async function probeMcpEndpoints(
       // its own card is not a guess, and sentry.io's card points at another domain entirely.
       if (discreditedByWildcard(got) && !named.includes(candidates[index])) return null
       const control = nonsense.get(controlFor(candidates[index]))
+      const controlSpoke = control !== undefined && informative(control)
+      const differsFromControl = controlSpoke && got.status !== control.status
       // Read after the control, never before it: the same refusal at a name nobody registered is
-      // the namespace talking, not a server.
+      // the namespace talking, not a server. A control that never came back cannot say either
+      // thing, and this sentence used to credit the endpoint whenever it stayed silent.
       if (got.ok && !looksLikeHtml(got) && BROWSER_ONLY_REFUSAL.test(got.body)) {
-        if (control && BROWSER_ONLY_REFUSAL.test(control.body)) return null
+        if (!controlSpoke) {
+          unmeasuredForWantOfAControl.push(got.url)
+          return null
+        }
+        if (BROWSER_ONLY_REFUSAL.test(control.body)) return null
         return { url: got.url, status: got.status, evidence: 'browser-only' as const }
       }
       const authenticating = got.status === 401 && Boolean(got.headers['www-authenticate'])
@@ -1840,9 +1847,14 @@ async function probeMcpEndpoints(
       // handshake on to docs.firecrawl.dev/mcp-server, which answers 405 as JSON and carries no
       // Allow header at all. A server does not forward its own JSON-RPC POST to somebody else's
       // origin, so a probe that ended up on another origin is reading a documentation page.
+      const routedControl = routed.get(routedControlFor(candidates[index]))
+      const routedControlSpoke = routedControl !== undefined && informative(routedControl)
+      // The status is handed over only when the control actually said something. A front page that
+      // timed out comes back as status 0 and one behind a rate limit as 429, and both differ from
+      // 405, so passing the raw status would read a silence as "the front page answers otherwise".
       const wrongMethod =
         !leftTheEndpoint(candidates[index], got.url) &&
-        methodRefusalIsRouted(got, routed.get(routedControlFor(candidates[index]))?.status)
+        methodRefusalIsRouted(got, routedControlSpoke ? routedControl.status : undefined)
       const speaksJson = got.ok && (got.headers['content-type'] ?? '').includes('json')
       // A 401 that an unrouted path on the same origin does not get. contentful.com and
       // datadoghq.com both answer their MCP path with {"error":"invalid_token"} and answer a
@@ -1862,8 +1874,6 @@ async function probeMcpEndpoints(
       //
       // `dedicatedHost` stays exempt because it is evidence in its own right: a host called
       // mcp.<domain> exists because somebody built one.
-      const controlSpoke = control !== undefined && informative(control)
-      const differsFromControl = controlSpoke && got.status !== control.status
       const demandsCredentials =
         (got.status === 401 || got.status === 403) &&
         !looksLikeHtml(got) &&
@@ -1881,13 +1891,19 @@ async function probeMcpEndpoints(
       // Would have counted if only the control had answered. Kept apart from a plain absence so the
       // check can say "we could not tell" instead of "nothing is there", which is a different
       // sentence to publish under somebody's name.
+      // Each shape is read against its own control: the credential shapes against the path nobody
+      // registered, the 405 against the front page. Sharing one flag between them would let a
+      // front page that answered vouch for a question only the other control could settle.
+      const unreadableCredentialShape =
+        !controlSpoke && (got.status === 401 || got.status === 403 || got.status === 202) && !looksLikeHtml(got)
+      const unreadableMethodShape =
+        !routedControlSpoke && !leftTheEndpoint(candidates[index], got.url) && readsAsAMethodRefusal(got)
       if (
-        !controlSpoke &&
         !dedicatedHost &&
         !authenticating &&
         !wrongMethod &&
         !speaksJson &&
-        ((got.status === 401 || got.status === 403 || got.status === 202) && !looksLikeHtml(got))
+        (unreadableCredentialShape || unreadableMethodShape)
       ) {
         unmeasuredForWantOfAControl.push(got.url)
         return null
@@ -1979,11 +1995,22 @@ export function methodRefusalIsRouted(
   got: { status: number; headers: Record<string, string>; body: string },
   frontPageStatus: number | undefined,
 ): boolean {
+  if (!readsAsAMethodRefusal(got)) return false
+  // `frontPageStatus !== got.status` is true when the front page never answered, so silence used
+  // to read as "different from the control", which is how a landing page's 405 became a server.
+  if (frontPageStatus === undefined) return false
+  return frontPageStatus !== got.status
+}
+
+/**
+ * The shape alone, before any control weighs in: a 405 that is not an ordinary page saying it
+ * serves GET. Kept apart so the caller can tell a shape it could not judge from one it judged.
+ */
+export function readsAsAMethodRefusal(got: { status: number; headers: Record<string, string>; body: string }): boolean {
   if (got.status !== 405) return false
   // A page that only serves GET usually says so, and saying so is proof this is an ordinary page.
   if (/\bGET\b/i.test(got.headers['allow'] ?? '')) return false
-  if (looksLikeHtml(got as Fetched)) return false
-  return frontPageStatus !== got.status
+  return !looksLikeHtml(got as Fetched)
 }
 
 export async function scanFunnel({

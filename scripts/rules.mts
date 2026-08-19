@@ -41,6 +41,8 @@ import { AGENT_ENTRY_PATHS, AGENT_ENTRY_PATH_COUNT, mcpAcrossWaves } from '../sr
 import type { McpProbe } from '../src/lib/scan/funnel'
 import {
   methodRefusalIsRouted,
+  readsAsAMethodRefusal,
+  informative,
   provisioningMatches,
   BOT_DEFENCE_RULES,
   PROVISIONING_RULES,
@@ -1402,6 +1404,21 @@ check('strona glowna odpowiada inaczej, wiec to ta sciezka', methodRefusalIsRout
 check('zwykla strona mowi Allow: GET', methodRefusalIsRouted(refusal({ allow: 'GET, HEAD' }), 404), false)
 check('HTML to strona z bledem, nie serwer', methodRefusalIsRouted(refusal({}, '<!DOCTYPE html><html><body>Nope</body></html>'), 404), false)
 check('inny status niz 405 nie przechodzi ta droga', methodRefusalIsRouted({ ...refusal(), status: 404 }, 200), false)
+// Ta sama dziura co w 9.43: `frontPageStatus !== got.status` jest PRAWDA, gdy strona glowna w
+// ogole nie odpowiedziala, wiec milczenie kontrolki czytalo sie jako "rozni sie od kontrolki".
+check('milczaca strona glowna nie przyznaje serwera', methodRefusalIsRouted(refusal(), undefined), false)
+// Kontrolka, ktora "odpowiedziala" statusem 0 albo 429, to ta sama cisza w innym przebraniu:
+// oba roznia sie od 405, wiec surowy status czytalby sie jako odpowiedz strony glownej.
+check('status 0 to nie odpowiedz', informative({ status: 0 } as never), false)
+check('429 to nie odpowiedz', informative({ status: 429 } as never), false)
+check('404 juz tak', informative({ status: 404 } as never), true)
+check(
+  'sonda oddaje status kontrolki dopiero, gdy ta cos powiedziala',
+  readFileSync('src/lib/scan/funnel.ts', 'utf8').includes('routedControlSpoke ? routedControl.status : undefined'),
+  true,
+)
+check('ale ksztalt sam w sobie nadal jest odmowa metody', readsAsAMethodRefusal(refusal()), true)
+check('a Allow: GET wyklucza go tez tutaj', readsAsAMethodRefusal(refusal({ allow: 'GET, HEAD' })), false)
 
 console.log('errata wygasa sama, gdy wiersz zostanie zmierzony ponownie')
 // The whole design rests on this: nobody has to remember to delete an entry. If the comparison
