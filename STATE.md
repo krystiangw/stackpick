@@ -8113,3 +8113,23 @@ bylo **narzedzie, ktore je audytuje**. Jego dokumentacja mowi wprost, ze jest **
 check, zeby nie budowac drugiej opinii o tym, co liczy sie za serwer - i to jest sluszne, ale tej
 nocy pokazalo swoja cene: grubsze bez kontrolki **krzyczy wilk**, a czlowiek po drugiej stronie
 (czyli ja) prawie na ten krzyk zareagowal zmiana punktacji.
+
+## PODSUMOWANIE, KTORE NIE ZALEZALO OD POMIARU (2026-08-19)
+
+Trzeci wariant tej samej rodziny w ciagu jednej nocy, tym razem znaleziony przez uruchomienie
+audytow, ktorych nie ma w standardowym komplecie po przemiecie.
+
+`audit-remedies` konczyl sie zdaniem **„Mocny sygnal znalazl DZIS 2 prawdziwe sprzecznosci"** -
+wpisanym z reki, drukowanym **niezaleznie od wyniku przebiegu**. Przeczytalem to jak dzisiejsze
+znalezisko i zaczalem szukac dwoch sprzecznosci, ktorych ten przebieg nie zglosil. Teraz skrypt mowi
+osobno **co znalazl ten przebieg** (dzis: **0 mocnych sygnalow, 5 slabych**) i osobno, co dala
+historia. Rada naprawcza jest wiec dzis czysta.
+
+`audit-markdown` bez argumentow drukowal spokojne „0 sprawdzonych, 0 negocjuje markdown" i konczyl
+sie zerem, choc **jego wlasna dokumentacja mowi**, ze bez kontrolki bieg pustych odpowiedzi nie mowi
+nic i ze wlasnie tak powstalo kiedys dwadziescia falszywych oskarzen. Teraz odmawia, gdy nie dostal
+ani jednej domeny.
+
+**Trzy warianty, jedna zasada:** zdanie koncowe narzedzia pomiarowego ma **zalezec od pomiaru**.
+Argument, ktory nie jest liczba (jedenascie skryptow), lista pusta (`[].every`), i podsumowanie
+wpisane z reki (to) - wszystkie trzy daja zielone swiatlo, ktorego nikt nie zapalil.

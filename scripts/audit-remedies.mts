@@ -57,6 +57,8 @@ for (const domain of CURATED_DOMAINS) {
 console.log(`${read} raportow przeczytanych\n`)
 const order = [...branches.entries()].sort((a, b) => b[1].size - a[1].size)
 let suspect = 0
+let strong = 0
+let weak = 0
 for (const [checkId, shapes] of order) {
   console.log(`\n=== ${checkId} (${shapes.size} ${shapes.size === 1 ? 'galaz' : 'galezie'})`)
   for (const [shape, seen] of [...shapes.entries()].sort((a, b) => b[1].domains.length - a[1].domains.length)) {
@@ -65,12 +67,14 @@ for (const [checkId, shapes] of order) {
     console.log(`  ${shape}`)
     if (seen.points.size > 1) {
       suspect += 1
+      strong += 1
       // The strong signal. It is what four of today's contradictions had in common: a row that
       // scored and a row that scored nothing hearing the same instruction.
       console.log(`  ^^ MOCNY SYGNAL: jedno zdanie dla wierszy o roznej liczbie punktow (${[...seen.points].sort().join(', ')})`)
     }
     if (seen.namesAUrl.size > 1) {
       suspect += 1
+      weak += 1
       // The weak one. Its first hit was benign: filestack.com names two URLs because we measured
       // a different page than usual, and the advice is true for all three rows either way. Kept as
       // a prompt to read, not as a finding.
@@ -79,5 +83,9 @@ for (const [checkId, shapes] of order) {
   }
 }
 console.log(`\n${suspect} zdan obsluguje wiersze o roznych werdyktach; kazde przeczytaj obok jego wierszy.`)
-console.log('Mocny sygnal znalazl dzis 2 prawdziwe sprzecznosci; slaby jak dotad tylko nieszkodliwe roznice.')
+// Co znalazl TEN przebieg, a osobno co znalazly poprzednie. Ta linijka mowila „mocny sygnal znalazl
+// DZIS 2 prawdziwe sprzecznosci" niezaleznie od wyniku, wiec czytajacy (2026-08-19: ja) bral historie
+// za dzisiejsze znalezisko i szukal dwoch sprzecznosci, ktorych ten przebieg nie zglosil.
+console.log(`Ten przebieg: ${strong} mocnych sygnalow, ${weak} slabych.`)
+console.log('Historycznie: mocny sygnal dal 2 prawdziwe sprzecznosci, slaby jak dotad tylko nieszkodliwe roznice.')
 process.exit(0)

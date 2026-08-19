@@ -10,6 +10,7 @@
  *
  *   npx tsx scripts/audit-markdown.mts --control uploadcare.com cloudinary.com
  */
+import { refuseIfNothingMeasured } from './nothing-measured'
 async function asMarkdown(url: string, useAccept: boolean): Promise<string | null> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 9000)
@@ -52,5 +53,6 @@ for (const domain of domains) {
   else if (at) console.log(`NIEZGODA ${domain}: ${at}`)
   if (at) found += 1
 }
+refuseIfNothingMeasured(domains.length, 'domen')
 console.log(`\n${domains.length} sprawdzonych, ${found} negocjuje markdown`)
 process.exit(0)
