@@ -371,3 +371,28 @@ export const quotedAbout = (text: string, domain: string, inCategory: readonly s
   // "what the runs said about you" is a paragraph that says nothing and looks like a bug.
   return wordsCarried(best) === 0 ? null : best
 }
+
+/**
+ * Whether a quote is in Polish, which is the only language other than English our runs produce.
+ *
+ * The claude cells run on a machine whose operator instructions ask for Polish, so five of the nine
+ * quotes in growthbook.io's report were sentences an English-speaking buyer cannot read, printed
+ * with nothing saying why. Translating them is not an option: a translated quote is our sentence,
+ * not the run's, and the whole point of quoting is that the vendor reads what the agent wrote.
+ * So the report says which ones and why, and the caveat about the operator instructions is already
+ * next to it.
+ *
+ * Diacritics only, which is the honest limit: Polish written without them reads as English to this
+ * rule. Every Polish answer our runs have produced carries them, and a rule that guessed from word
+ * shapes would eventually mark an English quote, which is the worse mistake of the two.
+ *
+ * `ó` is in the list even though it is not only Polish, because "który produkt wybrać" carries no
+ * other diacritic and would go unmarked without it. The false positive it risks needs an English
+ * sentence containing `ó` at all, which in these runs means a foreign name - and a quote built
+ * around one is not plain English either. Codex's, and the trade is worth naming rather than
+ * hiding: this rule marks a language, and marking is cheap next to leaving a buyer with sentences
+ * they cannot read and no explanation.
+ */
+export function readsAsPolish(text: string): boolean {
+  return /[\u0105\u0107\u0119\u0142\u0144\u00f3\u015b\u017a\u017c]/i.test(text)
+}

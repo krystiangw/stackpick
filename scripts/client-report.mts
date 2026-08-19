@@ -20,7 +20,7 @@ import cells from '../src/data/cells.json'
 import { CATEGORIES, CURATED_DOMAINS, categoryFor } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { FORMULA_VERSION } from '../src/lib/score'
-import { brandTaken, certain, mentionsIn, nameGuest, quotedAbout, whoWentFirst } from '../src/lib/vendors'
+import { brandTaken, certain, mentionsIn, nameGuest, quotedAbout, readsAsPolish, whoWentFirst } from '../src/lib/vendors'
 import { normalizeDomain } from '../src/lib/scan/discover'
 import { SITE_URL } from '../src/lib/site'
 import { buildFixPlan } from '../src/lib/fixfirst'
@@ -336,7 +336,16 @@ if (!cell) {
   if (quotes.length > 0) {
     lines.push('What the runs said about you, quoted:')
     lines.push('')
-    for (const quote of quotes) lines.push(`- **${quote.tool} run ${quote.run}**: “${quote.said}”`)
+    for (const quote of quotes) {
+      lines.push(`- **${quote.tool} run ${quote.run}**${readsAsPolish(quote.said as string) ? ' (in Polish)' : ''}: “${quote.said}”`)
+    }
+    const polish = quotes.filter((quote) => readsAsPolish(quote.said as string)).length
+    if (polish > 0) {
+      lines.push('')
+      lines.push(
+        `${polish} of the quotes above are in Polish, because that run happened on a machine whose operator instructions ask for it, which is the same contamination the caveat below names. We print what the run wrote rather than a translation: a translated quote is our sentence, not the agent's.`,
+      )
+    }
     // Fewer quotes than runs that named you is a difference a buyer counts, and the reason is
     // worth one line: a run can put a vendor in a table of links and write no sentence about it.
     // Without this the document looks as if we lost some of the answers.

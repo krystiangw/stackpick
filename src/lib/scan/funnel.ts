@@ -1206,11 +1206,37 @@ export function corroboratesBareProvisioning(window: string, phrase: string): bo
  * without the two having anything to do with each other, so the boundary that separates menu items
  * has to bound the evidence too.
  */
+const WINDOW_CHARS = 70
+
 function windowAround(text: string, at: number, length: number): string {
-  const from = Math.max(text.lastIndexOf('. ', at) + 1, at - 70)
+  const from = Math.max(text.lastIndexOf('. ', at) + 1, at - WINDOW_CHARS)
+  return text.slice(from, windowEndsAt(text, at, length))
+}
+
+function windowEndsAt(text: string, at: number, length: number): number {
   const after = at + length
   const stop = text.indexOf('. ', after)
-  return text.slice(from, stop === -1 ? after + 70 : Math.min(stop, after + 70))
+  return stop === -1 ? after + WINDOW_CHARS : Math.min(stop, after + WINDOW_CHARS)
+}
+
+/**
+ * Whether the window stopped in the middle of a word rather than at an ending.
+ *
+ * Three ways to end are all fine: at a full stop, at the end of the page, and exactly at a space.
+ * The third is codex's, on the second version of this - a 70-character boundary can land right
+ * after a complete address, and treating that as a cut deleted the address the quote was for.
+ * Only a boundary with a word character on the far side of it can have halved something.
+ */
+export function windowCutMidToken(text: string, at: number, length: number): boolean {
+  const after = at + length
+  const stop = text.indexOf('. ', after)
+  const cap = after + WINDOW_CHARS
+  if (stop !== -1 && stop <= cap) return false
+  if (cap >= text.length) return false
+  // Whitespace is the only character that is safely outside the token. A closing bracket at the
+  // boundary is left OUT of the window, so the quote keeps an unterminated `[IAM](https://x` and
+  // the cleanup this feeds would wave it through. Codex's, on the third version.
+  return !/\s/.test(text[cap] ?? '')
 }
 
 /**
@@ -1350,14 +1376,36 @@ export function provisioningQuotes(html: string, ours: string | null = null, mos
     // From a word boundary, because a window cut by character count starts mid-word and the
     // published sentence then opens with a stray letter.
     const window = windowAround(text, at, hit[0].length).replace(/\s+/g, ' ').trim()
-    const quote = window
-      .replace(/^[^\s]*\s/, (start) => (from === 0 || /^[A-Z"“]/.test(start) ? start : ''))
-      .replace(/^["“'']+/, '')
-      .trim()
+    const quote = withoutAChoppedAddress(
+      window
+        .replace(/^[^\s]*\s/, (start) => (from === 0 || /^[A-Z"“]/.test(start) ? start : ''))
+        .replace(/^["“'']+/, '')
+        .trim(),
+      windowCutMidToken(text, at, hit[0].length),
+    )
     if (quote && !found.includes(quote)) found.push(quote)
     if (found.length >= most) break
   }
   return found
+}
+
+/**
+ * A window cut at 70 characters can end in the middle of an address, and the buyer then reads
+ * "https://console.cloud.google.c" in a document they paid for. Two of the 79 quotes in the corpus
+ * ended that way. Dropping the half-address is the only honest repair: widening the window to
+ * finish it would quote words the rule never read.
+ *
+ * `cutMidToken` carries the only fact that separates a chopped address from a whole one. Reading
+ * it off the text instead - "no whitespace after the address" - throws away a perfectly good
+ * `Visit https://example.com/x.` at the end of a sentence, which is codex's, on the first version.
+ */
+export function withoutAChoppedAddress(text: string, cutMidToken: boolean): string {
+  if (!cutMidToken) return text
+  const at = text.lastIndexOf('http')
+  if (at === -1) return text
+  // A whole address has somewhere to end inside the window: whitespace or a closing bracket.
+  if (/[\s)\]]/.test(text.slice(at))) return text
+  return text.slice(0, at).replace(/[\s([<-]+$/, '')
 }
 
 function matching(patterns: RegExp[], html: string, labels?: string[]): string[] {

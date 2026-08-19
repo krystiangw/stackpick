@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import { coverageLine } from './how-many'
+import { readsAsPolish } from '../src/lib/vendors'
 import { createHmac } from 'node:crypto'
 import { paddle } from '../src/lib/billing/provider'
 import { CATEGORIES, CURATED_DOMAINS } from '../src/lib/categories'
@@ -45,7 +46,10 @@ import {
   readsAsAMethodRefusal,
   informative,
   provisioningMatches,
+  provisioningQuotes,
   handsItToSomebodyElse,
+  withoutAChoppedAddress,
+  windowCutMidToken,
   BOT_DEFENCE_RULES,
   PROVISIONING_RULES,
   SELF_SERVE_PATTERNS,
@@ -2644,6 +2648,53 @@ check('i nie lapie wzmianki w komentarzu', /^\s*-?\s*(run:\s*)?npm ci\s*$/m.test
 // „caly check nagle niemierzalny", siedem dni po fakcie.
 const poPrzemiacie = readFileSync('scripts/after-reseed.mts', 'utf8')
 check('lustro ma prog ostrzegawczy przed TTL', poPrzemiacie.includes('DWA pominiete przebiegi dziennego jobu'), true)
+
+// Okno ciete na 70 znakach potrafi skonczyc sie w srodku adresu, a kupujacy czyta wtedy
+// "https://console.cloud.google.c" w dokumencie, za ktory zaplacil. Dwa z 79 cytatow w korpusie
+// tak wygladaly. Poszerzenie okna byloby gorsze: cytowaloby slowa, ktorych regula nie czytala.
+console.log('\ncytat nie konczy sie polowa adresu')
+check('ucieta polowa adresu znika', withoutAChoppedAddress('service account under [IAM](https://console.cloud.google.c', true), 'service account under [IAM]')
+// Kontrolka: caly adres zostaje, bo ma po sobie spacje albo nawias.
+check('caly adres zostaje', withoutAChoppedAddress('see https://example.com/x for more', true), 'see https://example.com/x for more')
+check('adres domykany nawiasem zostaje', withoutAChoppedAddress('[IAM](https://example.com/x)', true), '[IAM](https://example.com/x)')
+check('zdanie bez adresu jest nietkniete', withoutAChoppedAddress('create an api key programmatically', true), 'create an api key programmatically')
+// Kontrolka codeksa: zdanie skonczone kropka nie jest ucietym adresem, choc po adresie nie ma spacji.
+check('adres na koncu zdania zostaje', withoutAChoppedAddress('Visit https://example.com/x.', false), 'Visit https://example.com/x.')
+// Trzy sposoby na skonczenie okna, wszystkie w porzadku: kropka, koniec strony i dokladnie spacja.
+// Trzeci jest codeksa: granica 70 znakow potrafi wypasc tuz ZA calym adresem.
+// Trafienie od 0 o dlugosci 5, wiec granica wypada na znaku 75: to on jedyny rozstrzyga.
+check('granica dokladnie na spacji to nie ciecie', windowCutMidToken(`${'x'.repeat(75)} dalej`, 0, 5), false)
+check('granica w srodku slowa to ciecie', windowCutMidToken(`${'x'.repeat(76)} dalej`, 0, 5), true)
+check('koniec tekstu to nie ciecie', windowCutMidToken('x'.repeat(75), 0, 5), false)
+check('kropka przed granica to nie ciecie', windowCutMidToken(`${'x'.repeat(10)}. ${'x'.repeat(80)}`, 0, 5), false)
+// Nawias zamykajacy na granicy zostaje POZA oknem, wiec cytat niesie niedomkniete [IAM](https://x.
+// Tylko bialy znak jest bezpiecznie poza tokenem.
+check('nawias na granicy to ciecie', windowCutMidToken(`${'x'.repeat(75)}) dalej`, 0, 5), true)
+
+// Piec z dziewieciu cytatow w raporcie growthbooka bylo po polsku, bo bieg claude'a chodzi na
+// maszynie, ktorej instrukcje operatora o to prosza. Kupujacy dostawal zdania, ktorych nie czyta,
+// bez slowa wyjasnienia. Tlumaczenie odpada: przetlumaczony cytat to nasze zdanie, nie agenta.
+console.log('\ncytat nie po angielsku mowi, ze nie jest po angielsku')
+check('polskie zdanie jest rozpoznane', readsAsPolish('wybrałbym Statsig albo GrowthBook Cloud, bo mają dobre SDK'), true)
+check('angielskie nie jest', readsAsPolish("I'd use Cloudflare R2 behind a custom domain"), false)
+// Granica reguly, nazwana zamiast przemilczana: polszczyzna bez ogonkow czyta sie tu jak angielski.
+check('polskie bez ogonkow przechodzi niezauwazone', readsAsPolish('wybralbym Statsig albo GrowthBook'), false)
+// Zdanie, ktorego jedynym ogonkiem jest "o z kreska", tez jest polskie.
+check('samo o z kreska wystarcza', readsAsPolish('ktory z nich wybrać'), true)
+check('polskie z samym o z kreska', readsAsPolish('który produkt polecasz'), true)
+// Kontrolka: zwykle angielskie zdanie o vendorach zostaje bez znacznika.
+check('angielskie zdanie o vendorach zostaje czyste', readsAsPolish('I would pick LaunchDarkly over Unleash for the kill switch'), false)
+// Kontrolka na sam raport: znacznik i zdanie wyjasniajace stoja w generatorze, nie w mojej glowie.
+const generatorRaportu = readFileSync('scripts/client-report.mts', 'utf8')
+check('raport znakuje cytat', generatorRaportu.includes("' (in Polish)'"), true)
+check('i tlumaczy, dlaczego go nie tlumaczy', generatorRaportu.includes('a translated quote is our sentence'), true)
+check(
+  'i cytat z sondy nie niesie polowy adresu',
+  provisioningQuotes('<p>Create a new service account under [IAM &amp; Admin](https://console.cloud.google.com/iam-admin/serviceaccounts/very/long/path/that/runs/past/the/window/edge)</p>')
+    .join(' ')
+    .includes('https://console.cloud.google.com/iam-admin/serviceaccounts/very/long/path/that/runs/past/the'),
+  false,
+)
 
 console.log('\nzadna regula nie stoi za wyjsciem ze skryptu')
 const rulesSource = readFileSync('scripts/rules.mts', 'utf8')
