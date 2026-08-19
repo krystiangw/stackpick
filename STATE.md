@@ -8399,5 +8399,11 @@ Do sprawdzenia po nim, po kolei:
    wszedzie dochodza (dobrze), albo ze galaz jest martwa (do sprawdzenia recznie na jednym hoscie).
 7. **`npm run audit-published-urls`** ma dac **mniej niz 3 martwe** (przed: 3, z czego cal.com jest
    falszywym alarmem audytu i ma zostac).
-8. Dopiero potem: **odswiezyc probke** `/d/sample` (dzis niesie „formula v9.41") i **zrobic zrzuty
-   do katalogu konektorow** - zrzut z numerem starej formuly zyje w katalogu latami.
+8. Dopiero potem: **odswiezyc probke** `/d/sample` (dzis niesie „formula v9.41"):
+   `MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/client-report.mts filestack.com --publish --id sample --sample`
+   Bez `--sample` dokument **nie pokaze sie z cennika**, bo link renderuje sie tylko dla dostawy
+   oznaczonej jako probka - i to jest zabezpieczenie, nie usterka.
+9. **Zrzuty do katalogu konektorow**, dopiero po punkcie 8, bo zrzut z numerem starej formuly zyje w
+   katalogu latami. Recepta (sprawdzona, KB `zrzuty-ekranu-1000px-bez-czlowieka`):
+   `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --disable-gpu --hide-scrollbars --screenshot=out.png --window-size=1440,1000 <url>`
+   Strony warte zrzutu: `/d/sample`, `/`, `/methodology`, `/findings`, `/pricing`.
