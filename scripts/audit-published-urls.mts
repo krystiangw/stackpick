@@ -89,25 +89,41 @@ const credited: string[] = []
 const accused: string[] = []
 /** Wiersze, ktorych werdykt sam mowi, ze nie dalo sie tam nic przeczytac. */
 const unmeasured: string[] = []
+/** Adresy dokumentowane jako POST/PUT/DELETE: GET nic o nich nie mowi, a POST-a nie wysylamy. */
+const notAsked: string[] = []
 for (let at = 0; at < lines.length; at += BATCH) {
   const slice = lines.slice(at, at + BATCH)
   const results = await Promise.all(
     slice.map(async (line) => {
-      const [domain, check, raw, verdict] = line.split('\t')
+      const [domain, check, raw, verdict, method] = line.split('\t')
       // Also the characters a sentence wraps a URL in: `<schema.org/Article>` and a smart quote
       // that ended `console.cloud.google.c”` both came back as dead addresses that never existed.
       const url = raw.replace(/[.,:;`*)\]>"'\u201d\u00bb]+$/, '')
+      // An address the vendor documents as POST cannot be judged by a GET, and we do not send the
+      // POST: firing a write at somebody else's API to settle our own audit is not ours to do.
+      //
+      // `mcp_present` is exempt and stays exempt: its addresses are audited with a JSON-RPC
+      // initialize handshake that reads rather than writes, and several of them answer 404 or 406
+      // to a GET. Skipping them here would drop the coverage this whole script was written for.
+      if (check !== 'mcp_present' && method !== undefined && method !== 'GET') {
+        return { domain, check, url, credited: false, unmeasured: false, methodBound: method, code: 0 as number | string }
+      }
       return {
         domain,
         check,
         url,
         credited: verdict === 'pass' || verdict === 'partial',
         unmeasured: verdict === 'unmeasured' || verdict === 'notApplicable',
+        methodBound: null as string | null,
         code: await status(url, check),
       }
     }),
   )
   for (const r of results) {
+    if (r.methodBound) {
+      notAsked.push(`${r.methodBound}\t${r.domain}\t${r.check}\t${r.url}`)
+      continue
+    }
     if (typeof r.code === 'number' && r.code !== 404 && r.code !== 410) continue
     // `oauth_dcr` names the hosts it PROBED, and most of them are candidates we generated:
     // login.<vendor>, accounts.<vendor>, auth.<vendor>. A candidate that does not resolve is
@@ -132,8 +148,11 @@ for (let at = 0; at < lines.length; at += BATCH) {
     else accused.push(row)
   }
 }
-refuseIfNothingMeasured(lines.length, 'adresow')
-console.log(`\n${lines.length} adresow sprawdzonych, ${dead} nie odpowiada`)
+refuseIfNothingMeasured(lines.length - notAsked.length, 'adresow')
+// Pominiete NIE sa sprawdzone. Inaczej wejscie zlozone z samych POST-ow drukuje „N adresow
+// sprawdzonych", nie wysylajac ani jednego zapytania, i mija sie z bramka o zerowym pomiarze -
+// czyli odtwarza dokladnie ten falszywy spokoj, przeciwko ktoremu ten skrypt powstal. Codeksa.
+console.log(`\n${lines.length - notAsked.length} adresow sprawdzonych, ${notAsked.length} pominietych, ${dead} nie odpowiada`)
 if (credited.length > 0) {
   console.log(`\n${credited.length} NA WIERSZACH, KTORE ZALICZYLISMY - to jest dowod, ktorego nie umiemy poprzec:`)
   for (const one of credited) console.log(`  ${one}`)
@@ -143,6 +162,12 @@ if (credited.length > 0) {
 if (accused.length > 0) {
   console.log(`\n${accused.length} na wierszach oblanych - zdanie mowi, ze tam szukalismy, a tego adresu nie ma (slabsze, ale do przeczytania):`)
   for (const one of accused) console.log(`  ${one}`)
+}
+if (notAsked.length > 0) {
+  console.log(
+    `\n${notAsked.length} adresow NIE ZAPYTANYCH, bo vendor dokumentuje je pod innym czasownikiem niz GET - a POST-a pod cudzy adres nie wysylamy, zeby zamknac wlasny audyt:`,
+  )
+  for (const one of notAsked) console.log(`  ${one}`)
 }
 if (unmeasured.length > 0) {
   console.log(

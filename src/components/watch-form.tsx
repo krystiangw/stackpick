@@ -111,7 +111,7 @@ export function WatchForm({
         <button
           type="submit"
           disabled={state === 'sending'}
-          className="shrink-0 whitespace-nowrap border border-brass bg-brass px-6 py-3 font-mono text-sm text-ink-inverse disabled:opacity-60"
+          className="shrink-0 whitespace-nowrap border border-brass bg-brass px-6 py-3 font-mono text-sm text-ground disabled:opacity-60"
         >
           {state === 'sending' ? 'Starting' : 'Watch it'}
         </button>

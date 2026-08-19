@@ -2204,6 +2204,36 @@ check('brak drugiej fali nic nie zmienia', mcpAcrossWaves(pusta, null), pusta)
 // Znak firmowy lezy w dwoch miejscach, bo katalog konektorow chce pliku pod publicznym adresem,
 // a przegladarka chce go z app/. Dwie kopie jednego rysunku rozjezdzaja sie dokladnie wtedy, gdy
 // ktos poprawi jedna.
+// Klasa Tailwinda nazywajaca token, ktorego nie ma, nie robi NIC i nie mowi o tym ani slowa.
+// `text-ink-inverse` siedzialo na przycisku formularza monitoringu i przez to napis dziedziczyl
+// zwykly kolor tekstu: kontrast 1.98 w ciemnym motywie i 2.89 w jasnym, czyli oblane WCAG AA po
+// obu stronach. Znalezione 2026-08-19 przez lokalny Lighthouse, gdy PageSpeed nie chcial ruszyc.
+console.log('\nkazda klasa koloru nazywa token, ktory istnieje')
+const style = readFileSync('src/app/globals.css', 'utf8')
+const tokens = new Set([...style.matchAll(/--color-([\w-]+)\s*:/g)].map((one) => one[1]))
+const uzyte = new Set<string>()
+const przejrzyj = (dir: string) => {
+  for (const name of readdirSync(dir, { withFileTypes: true })) {
+    const path = `${dir}/${name.name}`
+    if (name.isDirectory()) przejrzyj(path)
+    else if (path.endsWith('.tsx')) {
+      for (const found of readFileSync(path, 'utf8').matchAll(/\b(?:text|bg|border|fill|stroke|ring|from|to|via)-([a-z]+(?:-[a-z]+)*)\b/g)) {
+        uzyte.add(found[1])
+      }
+    }
+  }
+}
+przejrzyj('src')
+// Tailwind ma wlasne nazwy, ktorych nie definiujemy: te przepuszczamy z imienia, zeby straznik
+// mowil o naszych tokenach, a nie o calej palecie frameworka.
+const WBUDOWANE = new Set(['transparent', 'current', 'inherit', 'white', 'black', 'none', 'auto', 'left', 'right', 'center', 'top', 'bottom', 'balance', 'pretty', 'wrap', 'nowrap', 'clip', 'ellipsis', 'sm', 'base', 'lg', 'xl', 'xs', 'start', 'end', 'justify'])
+const nasze = [...uzyte].filter((one) => one.startsWith('ink') || one.startsWith('brass') || one.startsWith('ground') || one.startsWith('surface') || one.startsWith('sunken') || one.startsWith('rule') || one.startsWith('pass') || one.startsWith('warn') || one.startsWith('fail'))
+const sieroty = nasze.filter((one) => !tokens.has(one) && !WBUDOWANE.has(one))
+check('zadna klasa nie nazywa nieistniejacego tokenu', sieroty.join(', '), '')
+// Kontrolka: sonda naprawde czyta tokeny i naprawde widzi klasy.
+check('sonda zna nasze tokeny', tokens.has('brass') && tokens.has('ground'), true)
+check('i widzi uzyte klasy', nasze.length > 5, true)
+
 console.log('\njeden znak, nie dwa rysunki')
 check(
   'logo w public i ikona w app to ten sam plik',
@@ -2761,6 +2791,36 @@ const audytAdresow = readFileSync('scripts/audit-published-urls.mts', 'utf8')
 check('wypisywacz oddaje werdykt, nie punkty', wypisywacz.includes("check.verdict ?? "), true)
 check('audyt ma trzeci kubelek', audytAdresow.includes('na wierszach NIEMIERZALNYCH'), true)
 check('i czyta werdykt zamiast liczyc punkty', audytAdresow.includes("verdict === 'unmeasured'"), true)
+// Adres, ktory vendor dokumentuje jako POST, odpowiada 404 na GET - i audyt nazywal to martwym
+// dowodem. cal.com cytuje `curl --request POST --url https://api.cal.com/v2/api-keys/refresh` i
+// wisial na tej liscie od poczatku. POST-a pod cudzy adres nie wysylamy, wiec przestajemy udawac,
+// ze GET cokolwiek udowodnil.
+check('wypisywacz czyta czasownik z cytatu', wypisywacz.includes('(?:--request|-X)'), true)
+check('audyt ma kubelek nie-zapytanych', audytAdresow.includes('NIE ZAPYTANYCH'), true)
+check('i nie strzela POST-em pod cudzy adres', audytAdresow.includes("method !== 'GET'"), true)
+// Trzy poprawki codeksa na tej jednej zmianie, kazda o cos prawdziwego:
+check('MCP zostaje przy swoim handshake', audytAdresow.includes("check !== 'mcp_present' && method !== undefined"), true)
+check('pominiete nie licza sie jako sprawdzone', audytAdresow.includes('lines.length - notAsked.length'), true)
+check('bramka zerowego pomiaru tez ich nie liczy', audytAdresow.includes("refuseIfNothingMeasured(lines.length - notAsked.length"), true)
+check('czasownik wiazany z TYM wystapieniem adresu', wypisywacz.includes('found.index'), true)
+check('i wczesniejszy adres konczy klauzule', wypisywacz.includes('const clause = prior ?'), true)
+// Samo slowo to za malo: „POST requests are documented at <adres>" to proza o stronie, ktora
+// odpowiada na GET, a pominiecie jej ukryloby martwy adres. Czasownik musi byc z konstrukcji.
+const wiazeCzasownik = (klauzula: string) =>
+  (/(?:--request|-X)\s+(POST|PUT|PATCH|DELETE)\b/i.exec(klauzula) ?? /\b(POST|PUT|PATCH|DELETE)\s*[`'"<(]*\s*$/i.exec(klauzula))?.[1]?.toUpperCase() ?? 'GET'
+check('curl --request POST wiaze', wiazeCzasownik('Refresh API Key cURL curl --request POST \\ --url '), 'POST')
+check('-X POST tez wiaze', wiazeCzasownik('curl -X POST '), 'POST')
+check('POST tuz przed adresem wiaze', wiazeCzasownik('POST '), 'POST')
+// Kontrolka: proza o metodzie nie wiaze, wiec strona nadal jest sprawdzana GET-em.
+check('proza o metodzie nie wiaze', wiazeCzasownik('POST requests are documented at '), 'GET')
+check('brak czasownika to GET', wiazeCzasownik('See the guide at '), 'GET')
+// Naglowki curla potrafia stanac miedzy czasownikiem a adresem, wiec okno musi je przepuscic.
+check(
+  'naglowki miedzy czasownikiem a adresem nie gubia go',
+  wiazeCzasownik("curl -X POST --header 'Authorization: Bearer abcdef0123456789' --header 'Content-Type: application/json' --data '{}' "),
+  'POST',
+)
+check('okno w wypisywaczu jest szersze niz 60 znakow', wypisywacz.includes('found.index ?? 0) - 200'), true)
 check(
   'i cytat z sondy nie niesie polowy adresu',
   provisioningQuotes('<p>Create a new service account under [IAM &amp; Admin](https://console.cloud.google.com/iam-admin/serviceaccounts/very/long/path/that/runs/past/the/window/edge)</p>')
