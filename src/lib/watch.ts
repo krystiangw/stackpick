@@ -213,7 +213,7 @@ const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   '9.44': ['programmatic_provisioning'],
   // 9.50 stops our own 400,000-byte cap from striking a page out as an application shell. A body
   // that filled the cap is cut mid-block, `stripCodeBlocks` drops the rest, and the guessed path
-  // reads as dead: measured on the corpus, 885 requests, 114 truncated, and 16 paths across ten
+  // reads as dead: measured on the corpus, 885 requests, 114 truncated, and 16 paths across nine
   // domains struck out that way - vercel.com/plans, posthog.com/docs, cal.com/pricing among them.
   // A truncated candidate now needs a control asking for a path that cannot exist, so a host that
   // really does answer everything with one shell is still refused. Nothing about a vendor changed;

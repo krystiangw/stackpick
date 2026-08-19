@@ -184,7 +184,7 @@ Wieczorem odlozylem to swiadomie, bo zmiana selekcji wymaga pomiaru, a korpus by
 przemiatany. Zmierzone teraz - i **przeslanka „to pewnie puste w korpusie" byla falszywa**.
 
 **POMIAR (`npm run audit-cap-selection`, nowy skrypt, 885 zapytan):** 355 odpowiedzi HTML, **114
-przycietych naszym sufitem**, z czego 98 nadal czytelnych. **16 sciezek na 10 domenach czyta sie
+przycietych naszym sufitem**, z czego 98 nadal czytelnych. **16 sciezek na 9 domenach czyta sie
 ponizej progu wylacznie przez nasze ciecie** i skaner skreslilby je jako skorupe SPA:
 `vercel.com/plans`, `posthog.com/docs`, `cal.com/pricing` i `/documentation` i `/developers`,
 `filestack.com/docs`, `amplitude.com/pricing`, `bigcommerce.com/pricing`, `bunny.net/pricing`,

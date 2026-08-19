@@ -1,0 +1,1559 @@
+[
+  {
+    "domain": "agora.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "0/1 niemierzalne",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "algolia.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "amplitude.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "api.video",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "apify.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "auth0.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "axiom.co",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "baseten.co",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "2/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "betterstack.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "bigcommerce.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "bird.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "bitmovin.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1 niemierzalne"
+    }
+  },
+  {
+    "domain": "browserbase.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "2/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "browserless.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "bugsnag.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "bunny.net",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "calendly.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "chargebee.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "ckeditor.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "clerk.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "cloudflare.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "cloudinary.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "cockroachlabs.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "2/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "commercetools.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "configcat.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "contentful.com",
+    "checks": {
+      "docs_without_js": "0/1 niemierzalne",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1 niemierzalne",
+      "price_in_snippet": "0/1 niemierzalne"
+    }
+  },
+  {
+    "domain": "courier.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "cronofy.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "crowdin.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "daily.co",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "datadoghq.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "deepl.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1 niemierzalne"
+    }
+  },
+  {
+    "domain": "directus.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "dnsimple.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "documenso.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "docuseal.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "dropboxsign.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "dynadot.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "editorjs.io",
+    "checks": {
+      "docs_without_js": "0/1 niemierzalne",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1 nie-dotyczy"
+    }
+  },
+  {
+    "domain": "elastic.co",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "firecrawl.dev",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "fireworks.ai",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "2/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "flagsmith.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "fly.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "froala.com",
+    "checks": {
+      "docs_without_js": "0/1 niemierzalne",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1 niemierzalne",
+      "price_in_snippet": "0/1 niemierzalne"
+    }
+  },
+  {
+    "domain": "gandi.net",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1 nie-dotyczy"
+    }
+  },
+  {
+    "domain": "getunleash.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "2/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "godaddy.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1 niemierzalne"
+    }
+  },
+  {
+    "domain": "grafana.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "groq.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1 niemierzalne"
+    }
+  },
+  {
+    "domain": "growthbook.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "hatchet.run",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "here.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "heroku.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "highlight.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "honeybadger.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "honeycomb.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "2/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "hover.com",
+    "checks": {
+      "docs_without_js": "0/1 niemierzalne",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1 niemierzalne"
+    }
+  },
+  {
+    "domain": "hygraph.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "imagekit.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "inngest.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "inwx.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1 niemierzalne"
+    }
+  },
+  {
+    "domain": "june.so",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "kinde.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "knock.app",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "2/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "koyeb.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "launchdarkly.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "2/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "lemonsqueezy.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "lexical.dev",
+    "checks": {
+      "docs_without_js": "0/1 niemierzalne",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1 nie-dotyczy"
+    }
+  },
+  {
+    "domain": "liveblocks.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "livekit.com",
+    "checks": {
+      "docs_without_js": "0/1 niemierzalne",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "locationiq.com",
+    "checks": {
+      "docs_without_js": "0/1 niemierzalne",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "logto.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "lokalise.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "loops.so",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "magicbell.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "mailgun.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "mapbox.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "maptiler.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "2/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "medusajs.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "meilisearch.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "mixpanel.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "modal.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "mongodb.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1 niemierzalne",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "mux.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "name.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "namecheap.com",
+    "checks": {
+      "docs_without_js": "0/1 niemierzalne",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1 niemierzalne",
+      "price_in_snippet": "0/1 niemierzalne"
+    }
+  },
+  {
+    "domain": "neon.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "netim.com",
+    "checks": {
+      "docs_without_js": "0/1 niemierzalne",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1 niemierzalne"
+    }
+  },
+  {
+    "domain": "netlify.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "newrelic.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "njal.la",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1 niemierzalne",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "novu.co",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "nylas.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "onesignal.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "openrouter.ai",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "oramasearch.com",
+    "checks": {
+      "docs_without_js": "0/1 niemierzalne",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "paddle.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "pandadoc.com",
+    "checks": {
+      "docs_without_js": "0/1 niemierzalne",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1 niemierzalne"
+    }
+  },
+  {
+    "domain": "payloadcms.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1 niemierzalne"
+    }
+  },
+  {
+    "domain": "pdfmonkey.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "phrase.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "pinecone.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "2/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "plaid.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "planetscale.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "plausible.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "plivo.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "polar.sh",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "porkbun.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1 niemierzalne"
+    }
+  },
+  {
+    "domain": "postmarkapp.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "prosemirror.net",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1 nie-dotyczy"
+    }
+  },
+  {
+    "domain": "pusher.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "qdrant.tech",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "quilljs.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1 nie-dotyczy"
+    }
+  },
+  {
+    "domain": "radar.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "railway.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "raygun.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "redis.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "render.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "replicate.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "resend.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "restate.dev",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1 niemierzalne",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "rollbar.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "saleor.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "sanity.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "savvycal.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1 niemierzalne",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "scrapingbee.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "searchkit.co",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1 nie-dotyczy"
+    }
+  },
+  {
+    "domain": "sendgrid.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "sendlayer.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "sentry.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "0/1 niemierzalne",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "shopify.com",
+    "checks": {
+      "docs_without_js": "0/1 niemierzalne",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "sinch.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "slatejs.org",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1 nie-dotyczy"
+    }
+  },
+  {
+    "domain": "split.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1 niemierzalne"
+    }
+  },
+  {
+    "domain": "statsig.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "storyblok.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "strapi.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "stripe.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "stytch.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "supabase.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "supertokens.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "swell.is",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "telnyx.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "temporal.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "2/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "tigrisdata.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "timekit.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "tiny.cloud",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "tiptap.dev",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "together.ai",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "tolgee.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "tomtom.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1 nie-dotyczy"
+    }
+  },
+  {
+    "domain": "transloadit.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "trigger.dev",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "trychroma.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "turbopuffer.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "turso.tech",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "twilio.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "2/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "typesense.org",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "2/2",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "uploadcare.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "uploadthing.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1 nie-dotyczy"
+    }
+  },
+  {
+    "domain": "upstash.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "useanvil.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "usefathom.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "vercel.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "2/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "vonage.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1 niemierzalne"
+    }
+  },
+  {
+    "domain": "weaviate.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "0/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "weglot.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "windmill.dev",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "workos.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "xata.io",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "1/2",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  },
+  {
+    "domain": "zenrows.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "1/1"
+    }
+  },
+  {
+    "domain": "zilliz.com",
+    "checks": {
+      "docs_without_js": "1/1",
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "machine_readable_api": "1/1",
+      "price_in_snippet": "0/1"
+    }
+  }
+]
