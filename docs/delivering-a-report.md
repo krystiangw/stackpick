@@ -63,6 +63,17 @@ in three months will not remember what the pricing page promised today.
 3. **Is our scan of them current?** `npm run scan their.com` and check the formula version matches
    the one the corpus publishes.
 
+   **A scan run against production only joins the published corpus if it carries the console
+   cookie.** `?key=<token>` is not enough: the middleware turns that into a cookie for `/app`, and
+   `/api/scan` reads the cookie alone. The response looks identical either way, which is how a
+   verification scan silently changes nothing:
+
+   ```bash
+   TOKEN=$(heroku config:get STACKPICK_CONSOLE_TOKEN -a stackpick)
+   curl -s -X POST https://letagentsin.com/api/scan -H 'content-type: application/json' \
+     -H "cookie: stackpick_console=$TOKEN" -d '{"domain":"their.com"}'
+   ```
+
 ## Producing it
 
 ```bash

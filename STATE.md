@@ -7986,6 +7986,18 @@ absorbuje, juz istnieje i nie trzeba jej dokladac: nieopłacone zapytanie liczy 
 a kandydat, ktorego nie dalo sie wycenic, **uniewaznia odpowiedz** zamiast oddawac gorsza. Do tego
 przemiat idzie dwoma przebiegami wlasnie dlatego, ze pierwszy jest zimny.
 
+**Ten jeden wiersz jest juz poprawiony, i to potwierdza diagnoze.** Pojedynczy swiezy skan znalazl
+`pdfmonkey@1.0.0` z typami, wiec **9/15 zamiast 8/14**: odpowiedz przemiatu byla przejsciowym pudlem
+wyszukiwarki, dokladnie tak, jak radzi `after-reseed` („przeskanuj pojedynczo, ZANIM uznasz to za
+regres"). Karencji to nie rusza, bo bramka patrzy na **mediane**, a mediana porusza sie dopiero, gdy
+rusza sie wiekszosc korpusu - o to chodzilo w zmianie z `max()` na `median()`.
+
+**PULAPKA OPERACYJNA, KTORA MNIE ZLAPALA I KTOREJ NIE BYLO NIGDZIE ZAPISANEJ:** `/api/scan?key=<token>`
+**NIE zasiewa**. `fromConsole` czyta wylacznie **ciasteczko** `stackpick_console`, a `?key=` obsluguje
+middleware tylko dla `/app`. Pierwszy skan pdfmonkey wygladal w odpowiedzi identycznie - te same 9/15
+- i **nie trafil do korpusu wcale**, bo skan goscia z definicji do niego nie trafia. Poprawna forma:
+`curl -H "cookie: stackpick_console=$TOKEN"`. Zapisane tez w runbooku dostawy i w KB.
+
 **Czego ta liczba NIE mowi:** ze `typed_package` jest mocny. **136 ze 177 wierszy stoi na
 `registry-search`**, czyli na najslabszej klasie dowodu, jaka mamy - i to jest powod, dla ktorego
 dzisiejsza zmiana (slowa paczki rozstrzygaja) dotyka wlasnie tej polowy, a bramka z #46 oznacza wiele
