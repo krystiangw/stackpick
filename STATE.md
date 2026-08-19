@@ -11,6 +11,27 @@
 
 
 
+## TRZECIE MIEJSCE Z TWIERDZENIEM O CUDZYM PRODUKCIE, I TYM RAZEM BYLO TEZ NIEPRECYZYJNE (22:15)
+
+Po `/standard` i `/methodology` zostalo `/findings`: „Google ships an agentic browsing category in
+Lighthouse and Cloudflare ships a readiness scanner, and **both stop at documentation and protocol
+files**. **Neither** asks whether an unattended client can get an account." Czas terazniejszy, dwie
+nazwane firmy, twierdzenie **negatywne** - i **zadnej daty ani w prozie, ani w komentarzu**.
+
+**Odpalenie zdania zamiast czytania go** (ta sama metoda, co przez cala noc):
+`npx lighthouse https://letagentsin.com --only-categories=agentic-browsing` (13.4.1, dzis) daje
+**szesc audytow**: `agent-accessibility-tree`, trzy WebMCP (`form-coverage`, `registered-tools`,
+`schema-validity`), `cumulative-layout-shift` i `llms-txt`. Czyli **drzewo dostepnosci i przesuniecia
+ukladu to ani dokumentacja, ani plik protokolu** - nasze zdanie bylo nieprecyzyjne. Lista Cloudflare'a
+(z ich wlasnego ogloszenia) jest w calosci plikami i protokolami, a najblizej konta stoi u nich
+**odkrycie** OAuth, ktore z zalozenia **przeprowadza czlowieka** przez zgode.
+
+Wniosek sie obronil, ale dopiero z dowodem: **zadne z szesciu i zadne z listy Cloudflare'a nie pyta,
+czy nieobsluzony klient dostanie konto.** Zdanie na `/findings` niesie teraz te liste i date
+(`RIVALS_CHECKED_ON = '19 August 2026'`, widoczna dla czytelnika), a straznik oblewa build po 60
+dniach - **trzeci** licznik na tej samej zasadzie. Dwie mutacje, obie oblewaja. Codex czysty.
+`cbe4fb4`. **Czeka na deploy**: commit zamknal sie tuz przed startem przemiatu.
+
 ## TYGODNIOWY MAIL PORONOWYWAL Z LICZBA BEZ DATY (22:10, v677)
 
 Ta sama luka co w mailu miesiecznym, tylko w drugiej polowie monitoringu. Mail o zmianie werdyktu
