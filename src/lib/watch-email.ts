@@ -3,8 +3,11 @@ import type { Watch, WatchChange } from './watch'
 import { measurableOf } from './watch'
 import { reportUrl } from './email'
 import { remedyFor } from './fixfirst'
+import { SITE_URL } from './site'
 
-const BASE_URL = process.env.STACKPICK_BASE_URL ?? 'http://localhost:3000'
+// Jak w `email.ts`: link potwierdzajacy i link wypisujacy sa jedynym mechanizmem zgody, jaki ten
+// produkt ma, wiec nie moga spasc na localhost.
+const BASE_URL = SITE_URL
 
 export const confirmUrl = (watch: Watch) => `${BASE_URL}/watch/confirm/${watch.id}`
 export const stopUrl = (watch: Watch) => `${BASE_URL}/watch/stop/${watch.id}`

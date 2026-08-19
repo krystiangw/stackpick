@@ -2,6 +2,7 @@ import { buildFixPlan } from './fixfirst'
 import { pickHeadline } from './headline'
 import { buildMark, fillHeight, hasUnmeasured, MARK_PALETTE, scoreTone, UNMEASURED_LEGEND } from './mark'
 import type { Report } from './store'
+import { SITE_URL } from './site'
 
 const FROM = process.env.LETAGENTSIN_FROM ?? 'Let Agents In <onboarding@resend.dev>'
 /**
@@ -12,7 +13,13 @@ const FROM = process.env.LETAGENTSIN_FROM ?? 'Let Agents In <onboarding@resend.d
  * knowing.
  */
 const REPLY_TO = process.env.LETAGENTSIN_REPLY_TO ?? 'hello@letagentsin.com'
-const BASE_URL = process.env.STACKPICK_BASE_URL ?? 'http://localhost:3000'
+// Z `site.ts`, nie z wlasnego odczytu srodowiska. Regula stoi tam napisana od dawna: metadane i
+// sitemapa moga spadac na localhost, bo w developmencie to prawda, ale **cokolwiek czyta obcy
+// czlowiek, spada na produkcje**. Mail jest dokladnie tym, a ten plik czytal env sam i spadal na
+// `http://localhost:3000` - zlapane przy czytaniu maila do svix.com jako jego wlasciciel: „Full
+// scorecard: http://localhost:3000/r/...". Na dynie zmienna jest ustawiona, wiec produkcja byla
+// bezpieczna; kazde wyslanie z laptopa juz nie.
+const BASE_URL = SITE_URL
 
 export type SendResult = { delivered: boolean; detail: string }
 

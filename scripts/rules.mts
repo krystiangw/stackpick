@@ -21,7 +21,7 @@ import { changesBetween, comparableScorecards, rulesChangedBetween, turnedAwayAt
 import { withoutTags } from '../src/lib/scan/http'
 import { isOlderThan } from '../src/lib/formula'
 import { buildFixPlan } from '../src/lib/fixfirst'
-import { changeEmail } from '../src/lib/watch-email'
+import { changeEmail, confirmEmail } from '../src/lib/watch-email'
 import { CHECKS, FORMULA_VERSION } from '../src/lib/score'
 import { CORPUS_LICENCE, CORPUS_LICENCE_IS_PUBLISHED } from '../src/lib/seller'
 import { arithmeticExplained, scoreSection } from '../src/lib/report-numbers'
@@ -862,6 +862,25 @@ check('bez poprzedniego raportu zadnej daty nie ma', mailFor(false).text.include
 // typecheck (oba to `string | null`) i nie rusza zadnej reguly powyzej, bo tamte wolaja mail wprost.
 const cronObserwacji = readFileSync('src/app/api/cron/watch/route.ts', 'utf8')
 check('cron podaje mailowi date z poprzedniego raportu', cronObserwacji.includes('previousCard !== previous.scorecard, previous.scannedAt)'), true)
+// Zaden dokument, ktory czyta OBCY czlowiek, nie moze spasc na localhost. Ten przebieg zwykle idzie
+// BEZ `STACKPICK_BASE_URL`, wiec sprawdza dokladnie te galaz zapasowa, ktora psula maile wysylane z
+// laptopa: „Full scorecard: http://localhost:3000/r/...". Regula byla juz napisana w `site.ts`,
+// tylko dwa moduly mailowe czytaly srodowisko po swojemu.
+const bezLokalnego = (tekst: string) => !tekst.includes('localhost')
+// Ale tylko wtedy, gdy adres pochodzi z GALEZI ZAPASOWEJ. Kto swiadomie ustawi
+// `STACKPICK_BASE_URL=http://localhost:3000` (tak stoi w `.env.example`), dostaje poprawny adres ze
+// swojej konfiguracji i nie ma tu czego lapac - bez tego warunku build padalby lokalnie temu, kto
+// robi wszystko dobrze. Codeksa.
+const adresZKonfiguracji = process.env.STACKPICK_BASE_URL ?? ''
+if (adresZKonfiguracji.includes('localhost')) {
+  console.log('  (pominiete: STACKPICK_BASE_URL wskazuje localhost swiadomie, wiec galezi zapasowej nie widac)')
+} else {
+  check('mail o zmianie werdyktu nie linkuje w localhost', bezLokalnego(mailFor(false).text), true)
+  check('a link wypisujacy tym bardziej', bezLokalnego(confirmEmail({ id: 'w1', domain: 'v.test', email: 'a@v.test' } as never).text), true)
+}
+check('oba moduly mailowe biora adres z jednego zrodla', readFileSync('src/lib/email.ts', 'utf8').includes('const BASE_URL = SITE_URL'), true)
+check('takze mail obserwacji', readFileSync('src/lib/watch-email.ts', 'utf8').includes('const BASE_URL = SITE_URL'), true)
+
 check('mail mowi, ze podstawa byla przeliczona', mailFor(true).text.includes('recomputed from the evidence we still hold'), true)
 check('i nie mowi tego, gdy nie byla', mailFor(false).text.includes('recomputed from the evidence we still hold'), false)
 // The half that makes the sentence honest: a rule we tightened can move a line on its own, and the
