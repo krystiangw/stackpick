@@ -2101,6 +2101,16 @@ check('i to jego endpoint idzie dalej', mcpAcrossWaves(pusta, fala([{ url: 'http
 // Kontrolka: bez drugiej fali wynik pierwszej przechodzi nietkniety.
 check('brak drugiej fali nic nie zmienia', mcpAcrossWaves(pusta, null), pusta)
 
+// Znak firmowy lezy w dwoch miejscach, bo katalog konektorow chce pliku pod publicznym adresem,
+// a przegladarka chce go z app/. Dwie kopie jednego rysunku rozjezdzaja sie dokladnie wtedy, gdy
+// ktos poprawi jedna.
+console.log('\njeden znak, nie dwa rysunki')
+check(
+  'logo w public i ikona w app to ten sam plik',
+  readFileSync('public/logo.svg', 'utf8') === readFileSync('src/app/icon.svg', 'utf8'),
+  true,
+)
+
 check(
   'przy samym deskryptorze zdanie nie wymienia niepewnego pliku',
   zNiepewnym(['/.well-known/mcp.json', '/skill.md'], ['/skill.md'], []).detail.includes('/skill.md'),
