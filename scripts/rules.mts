@@ -42,6 +42,7 @@ import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } fro
 import { AGENT_ENTRY_PATHS, AGENT_ENTRY_PATH_COUNT, mcpAcrossWaves } from '../src/lib/scan/funnel'
 import type { McpProbe } from '../src/lib/scan/funnel'
 import { isDocumentationPage } from '../src/lib/scan/index'
+import { readsAsCompanyNews } from '../src/lib/scan/discover'
 import {
   methodRefusalIsRouted,
   readsAsAMethodRefusal,
@@ -1155,6 +1156,24 @@ check('ta sama sekcja liczy sie', isDocumentationPage('https://docs.mixpanel.com
 check('referencja API obok tez', isDocumentationPage('https://docs.mixpanel.com/reference/create-service-account', docsAt), true)
 check('marketing nadal nie', isDocumentationPage('https://docs.mixpanel.com/solutions/content-management', docsAt), false)
 check('blog nadal nie', isDocumentationPage('https://docs.mixpanel.com/blog/rotating-api-keys', docsAt), false)
+
+// Komunikat prasowy nie jest strona dokumentacji, nawet gdy vendor wymienil go w llms.txt, a slug
+// niesie slowo "credential". Kontrolki po obu stronach: to, dla czego ta furtka istnieje, ma przejsc.
+check(
+  'komunikat prasowy odpada',
+  readsAsCompanyNews('https://www.datadoghq.com/about/latest-news/press-releases/datadogs-2025-report-credential-theft/'),
+  true,
+)
+check('wpis na blogu tez', readsAsCompanyNews('https://vendor.test/blog/rotating-api-keys'), true)
+check('goly endpoint provisioningu przechodzi', readsAsCompanyNews('https://api.cloudinary.com/v1_1/provisioning/accounts'), false)
+check('strona rejestracji przechodzi', readsAsCompanyNews('https://cloud.meilisearch.com/register'), false)
+check('zwykla dokumentacja przechodzi', readsAsCompanyNews('https://docs.vendor.test/docs/api-keys'), false)
+// Piec prawdziwych stron z korpusu, ktore careless wersja tej reguly odrzucala. Wszystkie zostaja.
+check('about wewnatrz docsow przechodzi', readsAsCompanyNews('https://fly.io/docs/about/cost-management/'), false)
+check('about wewnatrz referencji API przechodzi', readsAsCompanyNews('https://developer.paddle.com/api-reference/about/authentication/'), false)
+check('team na hoscie docs przechodzi', readsAsCompanyNews('https://docs.browserbase.com/account/team/sso.md'), false)
+check('customers w endpointcie przechodzi', readsAsCompanyNews('https://docs.bigcommerce.com/developer/api-reference/rest/admin/management/customers/v3/validate-credentials'), false)
+check('getting-started/about przechodzi', readsAsCompanyNews('https://developers.deepl.com/docs/getting-started/about'), false)
 
 check('sonda widzi cudze poswiadczenie po nazwie', namesSomebodyElsesCredential('Create a Firebase ', 'Service Account', 'onesignal.com'), true)
 check('i nie widzi marki, ktorej przy poswiadczeniu nie ma', namesSomebodyElsesCredential('Create a ', 'Service Account', 'browserbase.com'), false)

@@ -292,6 +292,35 @@ const NOT_DOCUMENTATION_SEGMENT =
   /^(blog|news|newsroom|press|events?|webinars?|e-?books?|whitepapers?|case-stud(y|ies)|customers?|testimonials|stories|lp|landing|campaigns?|category|categories|topics?|tags?|author|pricing|plans|about|company|team|careers|jobs|partners?|contact|legal|terms|privacy|solutions|use-?cases|industries|compare|community|forum|login|signin|signup|register)$/i
 
 /**
+ * Sections where a company is talking about itself. A deliberate subset of the list above: a link
+ * in llms.txt is the map the vendor published for agents and may legitimately point at a signup or
+ * a bare API endpoint, so the loosening that lets those through stays. What it must not let through
+ * is a press release. datadoghq.com listed one about credential theft, its slug carries the word
+ * "credential", and the provisioning check published "None of the 7 provisioning phrases appears in
+ * the 4 documentation pages we read, including <that press release>" - a zero on a major vendor
+ * whose own evidence sentence gives it away.
+ */
+const COMPANY_TALKING_ABOUT_ITSELF =
+  /^(blog|news|newsroom|press|press-releases|latest-news|events?|webinars?|e-?books?|whitepapers?|case-stud(y|ies)|customers?|testimonials|stories|about|company|team|careers|jobs|partners?|contact|legal)$/i
+
+/**
+ * Judged the same way as the rule above, and for the same reason: only the segments IN FRONT of the
+ * first documentation segment say what a page is. Measured on the corpus before shipping, the
+ * careless version - any segment anywhere - refused five real pages to catch one press release:
+ * `fly.io/docs/about/cost-management`, `developer.paddle.com/api-reference/about/authentication`,
+ * `docs.browserbase.com/account/team/sso.md`, a BigCommerce endpoint filed under `customers`, and
+ * DeepL's `docs/getting-started/about`. Inside documentation these words are section names.
+ */
+export const readsAsCompanyNews = (url: string): boolean => {
+  // A host the vendor named for its documentation settles it before any segment is read.
+  if (/^(docs?|developers?|api)\./i.test(hostOf(url))) return false
+  const segments = pathSegments(url)
+  const docsAt = segments.findIndex((segment) => DOCS_SEGMENT.test(segment))
+  const before = docsAt === -1 ? segments : segments.slice(0, docsAt)
+  return before.some((segment) => COMPANY_TALKING_ABOUT_ITSELF.test(segment))
+}
+
+/**
  * Whether the URL is filed where documentation lives. Only the segments in front of the first
  * documentation segment are judged: docs.honeybadger.io/resources/mcp is documentation and
  * flagsmith.com/ebooks is not, and nothing but their position says which.

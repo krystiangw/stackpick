@@ -1,6 +1,7 @@
 import {
   discover,
   isFiledAsDocumentation,
+  readsAsCompanyNews,
   normalizeDomain,
   searchNpmForDomain,
   type Discovered,
@@ -408,6 +409,11 @@ async function llmsIndexCandidates(site: string, docsUrl: string): Promise<strin
         continue
       }
       if (!CREDENTIAL_PAGE_HINTS.test(parsed.pathname)) continue
+      // Except a press release. The hint is a substring test, so a company-news slug carrying the
+      // word "credential" walks straight in and is then named in the verdict as a documentation
+      // page we read. Only the self-description sections are refused, so the addresses this
+      // loosening exists for - a bare provisioning endpoint, a register page - still get through.
+      if (readsAsCompanyNews(url)) continue
       // A link in llms.txt is not a guess of ours, it is the map the vendor published for agents,
       // so it does not have to look like a documentation page to be worth reading. The guard that
       // required one was excluding exactly the useful addresses: api.cloudinary.com's provisioning
