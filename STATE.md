@@ -11,6 +11,28 @@
 
 
 
+## NASZ SUFIT MOZE TEZ WYBIERAC STRONY, NIE TYLKO JE OSKARZAC (znalezione 22:40, DO ZMIERZENIA PO PRZEMIECIE)
+
+Po naprawie oskarzenia poszlem tym samym ksztaltem dalej: **gdzie jeszcze czytamy dlugosc tekstu z
+ciala, ktore mogl uciac nasz wlasny sufit 400 kB?** Dwa miejsca oskarzajace sa juz zabezpieczone
+(`docs_without_js` galezia z 9.48, `price_in_snippet` galezia „your pricing page is larger than we
+read") - to sprawdzone, nie zalozone.
+
+Zostaje trzecie, ktore **nie oskarza, tylko WYBIERA**, i dlatego jest cichsze:
+`firstLivePath` w `discover.ts` uznaje sciezke za zywa dopiero przy `visibleTextLength(got.body) >
+200`, zeby odsiac skorupy SPA udajace 404. Strona wieksza niz sufit, ucieta w srodku bloku, czyta sie
+u nas jako **53 znaki** (dowod: `filestack.com/docs/getting-started/quick-start/`, 616 581 bajtow) -
+czyli **nasz wlasny sufit moze skreslic prawdziwa strone jako soft-404** i skan pojdzie czytac inna.
+To ta sama rodzina co selekcja z 9.47/9.49: nie falszywy punkt, tylko **punkt postawiony na innym
+zdaniu**, i pomiar bez korpusu tego nie widzi.
+
+**Poprawka jest jednolinijkowa** (`got.truncated` znaczy „nie doczytalismy", a nie „pusto"), ale
+**celowo jej dzis nie pisze**: zmiana selekcji zmienia werdykty, wiec nalezy jej sie wersja formuly i
+**zmierzony zasieg na calym korpusie** - a korpus jest wlasnie przemiatany i kazdy pomiar teraz
+klamie. Wczorajsza lekcja mowi dokladnie to samo: przy 9.46 napisalem „jeden wiersz traci
+dopasowanie", i to bylo prawda, tylko punkt przeniosl sie na siostrzane zdanie. **Po przemiecie:**
+napisz poprawke, zmierz `npm run regressions` przed i po, dopiero potem wersja i deploy.
+
 ## WITRYNA SKLEPU STALA NA FORMULE SPRZED PIECIU WYDAN, I NIKT NIE PATRZYL (22:30)
 
 Czytanie `/d/sample` jako **prospekt** (jedyny sposob, w jaki ktos widzi platny raport przed
