@@ -42,7 +42,9 @@
     "audit-front-door": "tsx scripts/audit-front-door.mts",
     "audit-named-crawlers": "tsx scripts/audit-named-crawlers.mts",
     "po-przemiacie": "tsx scripts/po-przemiacie-9-49.mts",
-    "audit-sample": "tsx scripts/audit-sample.mts"
+    "audit-sample": "tsx scripts/audit-sample.mts",
+    "cluster-space": "tsx scripts/cluster-space.mts",
+    "migrate-cluster": "tsx scripts/migrate-cluster.mts"
   },
   "dependencies": {
     "mongodb": "^7.5.0",
