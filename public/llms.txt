@@ -40,7 +40,9 @@
 ## Notes for agents
 
 - To scan a domain programmatically: POST /api/scan with {"domain": "example.com"}.
-  Rate limited to 10 scans per hour per address. The response carries a report id; the
+  Two limits, both hourly: 30 scans per source address, and 5 per domain scanned whoever asks. The
+  second is the one you meet first when you rescan one domain, and a scan inside 15 minutes of the
+  last one is served from that scan rather than charged. The response carries a report id; the
   human-readable scorecard is at /r/{id}.
 - Private and loopback addresses are refused on purpose.
 - Contact: hello@letagentsin.com

@@ -1211,6 +1211,17 @@ check('i nie zna json', formatyMcp.includes('json'), false)
 check('llms.txt nie twierdzi, ze obie powierzchnie biora json', /both take `format`: `json`/.test(naszLlms), false)
 check('llms.txt nazywa obie nazwy', naszLlms.includes('`json` on the REST endpoint and `summary` on the MCP tool'), true)
 
+// Dwa pliki dla agentow wpisuja limity RECZNIE, bo sa serwowane tak, jak sa napisane. `llms.txt`
+// mowilo „10 scans per hour per address" - to jest domyslna wartosc generycznego licznika, ktorej
+// bramka dla dzwoniacego nigdy nie uzywa. Agent planowal wiec jedna trzecia tego, co wolno, i nie
+// wiedzial nic o limicie na domene, czyli o tym, ktory naprawde spotka przy przeskanowaniu.
+const dostepDlaAgentow = readFileSync('public/.well-known/agent-access.json', 'utf8')
+check('llms.txt zna limit na adres', naszLlms.includes(`${PER_CALLER_PER_HOUR} scans per source address`), true)
+check('llms.txt zna limit na domene', naszLlms.includes(`${PER_DOMAIN_PER_HOUR} per domain scanned`), true)
+check('llms.txt nie powtarza starej dziesiatki', /10 scans per hour per address/.test(naszLlms), false)
+check('agent-access zna limit na adres', dostepDlaAgentow.includes(`"requests": ${PER_CALLER_PER_HOUR}`), true)
+check('agent-access zna limit na domene', dostepDlaAgentow.includes(`"requests": ${PER_DOMAIN_PER_HOUR}`), true)
+
 check('sonda widzi cudze poswiadczenie po nazwie', namesSomebodyElsesCredential('Create a Firebase ', 'Service Account', 'onesignal.com'), true)
 check('i nie widzi marki, ktorej przy poswiadczeniu nie ma', namesSomebodyElsesCredential('Create a ', 'Service Account', 'browserbase.com'), false)
 check('wlasna marka nie dyskwalifikuje', namesSomebodyElsesCredential('Create a GitHub ', 'personal access token', 'github.com'), false)
