@@ -11,6 +11,18 @@
 
 
 
+## TWIERDZENIA O CUDZYCH PRODUKTACH MAJA OD DZIS TERMIN WAZNOSCI (21:00-21:40)
+
+**Zasada, ktora z tego zostaje i da sie przeniesc gdzie indziej:** liczby o cudzym produkcie nie da
+sie ani wziac z wlasnego kodu, ani pobrac przy budowaniu, wiec **prace wykonuje data** - reguly
+oblewaja build, gdy przekroczy 60 dni. Ciche gnicie zamienia sie w prosbe o ponowna lekture.
+Obie daty ida przez **jedna** funkcje wieku, a nie dwie kopie arytmetyki.
+
+Objete tym dzis: liczby o **AgentReady** na `/standard` i liczby o **agent-ready.dev** na
+`/methodology`. Te drugie **sprawdzone i zgodne** (70 checkow, 23 checki dostepnosci, zero wystapien
+slow signup, provisioning i CAPTCHA), ale ich data siedziala **w komentarzu w kodzie** - czytelnik
+widzial czas terazniejszy bez zadnej daty. Teraz widzi date w tekscie.
+
 ## TWIERDZENIE O CUDZYM STANDARDZIE ZESTARZALO SIE W JEDEN DZIEN (21:00)
 
 `/standard` mowil: „AgentReady ma **28 wymagan**... Read from agentready.org on 18 August 2026".
