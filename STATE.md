@@ -4,6 +4,25 @@
 
 
 
+
+## KARTA MCP GUBILA ADNOTACJE, CZYLI POLOWE BEZPIECZENSTWA (2026-08-19, 18:45)
+
+Serwer `/mcp` odpowiada na `tools/list` **uczciwie**: `scan_domain` ma `readOnlyHint: false` i
+`openWorldHint: true`, bo strzela zapytaniami w **cudze** serwery i zapisuje raport - a to jest
+dokladnie ta rzecz, ktorej klient **nie ma auto-zatwierdzac**. `find_providers` ma `readOnlyHint:
+true`, bo czyta tylko nasz korpus. To jest zrobione dobrze.
+
+**Karta `/.well-known/mcp.json` gubila jedno i drugie**, razem z tytulami. Opisy i schematy byly
+**identyczne** co do znaku, wiec to nie byla sprzecznosc, tylko **podzbior** - i dlatego nic tego nie
+lapalo. Karta jest generowana z definicji serwera, a mapowanie brało po prostu trzy pola z pieciu.
+Komentarz w tym samym pliku opowiada o **poprzednim** rozjezdzie tej karty.
+
+Znaczenie jest praktyczne: `/docs` wskazuje na te karte jako „the card describing it", katalogi
+zaciagaja wlasnie ja, a agent, ktory ja czytal, widzial narzedzie **nieoznaczone**.
+
+**Straznik stoi na samych adnotacjach**, nie na mapowaniu: obleje, jesli `scan_domain` kiedykolwiek
+ogłosi sie tylko-do-odczytu. Sprawdzone mutacyjnie i potwierdzone na produkcji.
+
 ## ZDANIE O SARIF-IE OBIECYWALO COS, CZEGO EKSPORT NIE WYPISUJE (2026-08-19, 18:30)
 
 Metoda ta sama, co przy komunikacie prasowym: wziac zdanie, ktore publikujemy, i je **uruchomic**.
