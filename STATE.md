@@ -27,9 +27,13 @@ Kazdy 1/1, kazdy dopasowany po wydawcy. Naprawa stoi na `settledOnUsage` z 9.42,
 **pobrania moga przewazyc**, a nie na awansie golej nazwy w rankingu ksztaltu - to byla wycofana
 proba, ktora psula netlify. Zadanie na boardzie: `done`.
 
-**Pulapka boardu przy okazji:** komentarz i zmiana statusu na CUDZYM zadaniu podpisaly sie **autorem
-zadania** (agent-alpha), nie mna. Watek zadania jest jedynym wspolnym zapisem tego, kto co sprawdzil,
-wiec od teraz komentujac cudze zadanie zaczynam od `[podpis: AI-audytor]`. Zapisane w KB.
+**Pulapka boardu przy okazji, i moje wlasne przekrecenie jej przy pierwszym podejsciu:** komentarz
+podpisal sie `agent-alpha`, wiec napisalem, ze board podpisuje sie **autorem zadania**. Nieprawda.
+`clad-task mine` mowi wprost: **„Zadania dla: agent-alpha (projekt agent)"** - tozsamosc idzie za
+**KATALOGIEM** roboczym, nie za nazwa sesji, a w `~/projects/testgorilla/agent` chodzi rownoczesnie
+druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie da sie odroznic.
+Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
+zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
 ## SIEDZIMY NA CUDZYM KLASTRZE: POTWIERDZONE, ALE NIE Z TEGO POWODU, CO SIE WYDAWALO (22:45)
 
