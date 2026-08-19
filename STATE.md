@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-19 wieczor (kod i produkcja 9.47, korpus 9.45)
+# Let Agents In: stan na 2026-08-19 wieczor (kod i produkcja 9.47 + selekcja stron, korpus 9.45)
 
 ## PRZEMIAT 9.45 ZAMKNIETY, I CO Z NIEGO WYSZLO (2026-08-19, 15:32-16:32)
 
@@ -66,12 +66,27 @@ fraza** - to zamyka punkt 3 z audytu subagenta:
 tego, co skan przeczytal w swojej chwili. Cache dobrze pokazuje **kierunek i skale**, ale prawda jest
 dopiero pojedynczy przeskan przez konsole.
 
+**ZROBIONE Z AUDYTU (punkt 1): SEKCJA RODZENSTWO NA HOSCIE DOKUMENTACJI TO DOKUMENTACJA.**
+Prawdziwa przyczyna okazala sie wezsza i konkretniejsza, niz mowil audyt: mixpanel pisze poradniki
+pod `/docs`, a API pod `/reference`, a `isDocumentationPage` wymagalo **tego samego pierwszego
+segmentu sciezki**. Strona, ktora odpowiada na ten check, **nie byla wiec w ogole dopuszczalna jako
+kandydat** - skan czytal cztery poradniki i mowil, ze nie umie rozstrzygnac. Wpuszczone sa tylko
+sekcje jednoznacznie dokumentacyjne (`reference`, `api-reference`, `sdk`...), wiec powod istnienia
+tej reguly (trzymanie `/solutions` i wpisu z bloga poza „stronami dokumentacji, ktore przeczytalismy")
+nadal dziala, i obie strony sa opilnowane kontrolkami.
+**Zmierzone na 60 z 177 wierszy (sufit ogloszony): 4 wiersze zyskuja kandydata, a kazdy zyskany adres
+to indeks referencji API.** Po wdrozeniu potwierdzone na produkcji: mixpanel czyta dzis
+`reference/service-accounts`, pinecone `admin/fetch_api_key` i `admin/fetch_service_account`,
+sendlayer i trychroma swoje sekcje referencji. **`npm run regressions` na calych 177 wierszach: zero
+nowych regresow**, a piec spadkow na prowizjonowaniu jest poprawnie przypisane NAM, nie vendorom.
+
+**CO ZOSTAJE PO TEJ ZMIANIE, jedno zdanie:** mixpanel **nadal jest niemierzalny**, bo sekcja jest juz
+osiagalna, ale ranking wybiera z niej indeksy (`reference/service-accounts`), a nie strone
+`create-service-account`, ktora niesie zdanie. Brakujaca polowa to **ranking po ETYKIECIE linku**:
+link, ktorego etykieta tworzy poswiadczenie, jest najmocniejszym kandydatem, jaki istnieje, i
+powinien isc na poczatek listy zamiast byc oceniany po sciezce.
+
 **CZEGO Z TEGO AUDYTU JESZCZE NIE ZROBILEM, w kolejnosci wartosci:**
-1. **Chodzic czytac wlasciwa strone, zamiast oceniac link do niej.** Link na WLASNEJ domenie, ktorego
-   etykieta tworzy poswiadczenie (`- [Create Service Account](.../reference/create-service-account.md)`)
-   to najmocniejszy kandydat na strone, jaki istnieje, a my dzis punktujemy link zamiast otworzyc cel.
-   To jedyna z tych zmian, ktora sprawia, ze check mierzy **wiecej**. Mixpanel jest dokladnie tym
-   przypadkiem i dlatego jest dzis niemierzalny.
 2. **Strona, z ktorej cale dowody odpadly jako cudze, nie powinna liczyc sie do `looked`** w score.ts.
    Dzis `docs.zilliz.com/docs/byoc/create-gke-service-account` przechodzi bramke „patrzylismy tam,
    gdzie dowod by byl" **na stronie o poswiadczeniu Google'a**.
