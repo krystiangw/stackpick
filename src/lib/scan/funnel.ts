@@ -1217,13 +1217,45 @@ function windowAround(text: string, at: number, length: number): string {
  * Every occurrence, not the first. A nav list naming "Management API" usually comes before the
  * page that documents it, so stopping at the first hit judged the menu and ignored the docs.
  */
-function provisioningHit(text: string, pattern: RegExp, index: number): number {
+function provisioningHit(text: string, pattern: RegExp, index: number, ours: string | null): number {
   const all = new RegExp(pattern.source, `${pattern.flags.replace('g', '')}g`)
   for (let hit = all.exec(text); hit; hit = all.exec(text)) {
+    const window = windowAround(text, hit.index, hit[0].length)
+    if (ours && handsItToSomebodyElse(window, ours)) continue
     if (!BARE_PROVISIONING_INDEXES.has(index)) return hit.index
-    if (corroboratesBareProvisioning(windowAround(text, hit.index, hit[0].length), hit[0])) return hit.index
+    if (corroboratesBareProvisioning(window, hit[0])) return hit.index
   }
   return -1
+}
+
+/**
+ * Whether the sentence hands the credential itself to another company.
+ *
+ * growthbook.io held this point on "Create a new service account under [IAM & Admin → Service
+ * Accounts](https://console.cloud.google.com/...)", which is an instruction to create a **Google**
+ * service account while connecting BigQuery. The words are theirs, the credential is not, and this
+ * check asks whether the vendor documents a way to get **its own** key without a person.
+ *
+ * The link has to be the credential's, not merely foreign and nearby. "Create an API key in
+ * Settings and test it with our [Postman collection](https://postman.com/...)" is a vendor
+ * documenting their own key, and a rule that read any outside address in the window as a
+ * disqualification would take the point away for the sentence that proves it. Codex's, on the
+ * first version of 9.44, and the reason this asks what the link is called.
+ *
+ * The same shape as 9.42's package attribution, and read the same way: a link in the evidence
+ * decides whose product the evidence is about. Measured on the corpus before it shipped - 1 of the
+ * 63 credited rows quotes an address outside the vendor's own domain.
+ */
+export function handsItToSomebodyElse(window: string, ours: string): boolean {
+  for (const [, label, url] of window.matchAll(/\[([^\]]{0,80})\]\((https?:\/\/[^)\s]+)/g)) {
+    if (!NAMES_A_CREDENTIAL.test(label)) continue
+    try {
+      if (registrableDomain(new URL(url).hostname) !== ours) return true
+    } catch {
+      // Something that does not parse as an address is not a claim about anybody.
+    }
+  }
+  return false
 }
 
 /**
@@ -1264,10 +1296,33 @@ export function licenceGateQuotes(html: string): string[] {
   return found
 }
 
-export function provisioningMatches(html: string): string[] {
-  const text = visibleProse(html)
+/**
+ * An HTML link rewritten as the markdown one it means, so the rule reads both the same way.
+ *
+ * `visibleProse` throws tags away, so `<a href="https://console.cloud.google.com/...">IAM &
+ * Admin</a>` reaches the rule as four words with no owner - which is how most documentation
+ * renders, and growthbook.io was only caught because their markdown source leaked into the page.
+ * Codex's, on the first version of 9.44.
+ *
+ * Only foreign links are rewritten, and only when we know whose site this is. A vendor's own links
+ * are the common case by far, and putting their addresses into the prose would move the words that
+ * corroborate a phrase out of the window the rule reads, silently rescoring checks this change is
+ * not about.
+ */
+function withForeignLinkTargets(html: string, ours: string): string {
+  return html.replace(/<a\b[^>]*\bhref\s*=\s*["']([^"']+)["'][^>]*>([\s\S]{0,200}?)<\/a>/gi, (tag, href: string, label: string) => {
+    try {
+      return registrableDomain(new URL(href).hostname) === ours ? tag : `[${label}](${href})`
+    } catch {
+      return tag
+    }
+  })
+}
+
+export function provisioningMatches(html: string, ours: string | null = null): string[] {
+  const text = visibleProse(ours ? withForeignLinkTargets(html, ours) : html)
   return PROVISIONING_PATTERNS.map((pattern, index) =>
-    provisioningHit(text, pattern, index) === -1 ? null : PROVISIONING_PATTERN_LABELS[index],
+    provisioningHit(text, pattern, index, ours) === -1 ? null : PROVISIONING_PATTERN_LABELS[index],
   ).filter((label): label is string => label !== null)
 }
 
@@ -1279,13 +1334,13 @@ export function provisioningMatches(html: string): string[] {
  * a provisioning surface, and 43 of the 79 credited rows stand on nothing but those substrings.
  * Storing the words we matched is what makes tightening the rule measurable rather than a guess.
  */
-export function provisioningQuotes(html: string, most = 2): string[] {
-  const text = visibleProse(html)
+export function provisioningQuotes(html: string, ours: string | null = null, most = 2): string[] {
+  const text = visibleProse(ours ? withForeignLinkTargets(html, ours) : html)
   const found: string[] = []
   for (const [index, pattern] of PROVISIONING_PATTERNS.entries()) {
     // The occurrence that earned the point, not the first one on the page. Quoting a different
     // occurrence than the rule accepted would publish a sentence that does not carry its evidence.
-    const at = provisioningHit(text, pattern, index)
+    const at = provisioningHit(text, pattern, index, ours)
     if (at === -1) continue
     const hit = new RegExp(pattern.source, pattern.flags).exec(text.slice(at))
     if (!hit) continue
@@ -1670,9 +1725,13 @@ async function addressesInTheirMcpPages(domain: string, corpus: string): Promise
   const inTheirPages = bodies
     .flatMap((got) => mcpUrls(got.body))
     .filter((url) => readsAsAnEndpoint(url) && readsAsTheirOwnAddress(url, domain))
+  // The pages we READ, not the ones we asked for. The verdict says "nor at any address in <page>",
+  // and uploadcare.com carried that sentence naming https://uploadcare.com/_mcp/server, which is a
+  // 404: we read nothing there, so saying we looked and found nothing is a claim about a page that
+  // does not exist. Found by asking every address our own reports publish.
   return {
     candidates: [...new Set([...inTheirFiles, ...inTheirPages])].slice(0, MOST_MCP_ADDRESSES_FROM_PAGES),
-    followed: pages,
+    followed: pages.filter((_, index) => bodies[index]?.ok),
   }
 }
 
@@ -2242,8 +2301,8 @@ export async function scanFunnel({
     mcpPagesFollowed: deeper.followed,
     signup,
     provisioning: {
-      programmatic: provisioningMatches(await corpus),
-      programmaticQuotes: provisioningQuotes(await corpus),
+      programmatic: provisioningMatches(await corpus, registrableDomain(domain)),
+      programmaticQuotes: provisioningQuotes(await corpus, registrableDomain(domain)),
       licenceGateQuotes: licenceGateQuotes(await corpus),
       selfServeSignals: matching(SELF_SERVE_PATTERNS, pricingText),
       selfServeQuotes: quoting(SELF_SERVE_PATTERNS, pricingText),

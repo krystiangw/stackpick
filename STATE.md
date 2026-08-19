@@ -8334,3 +8334,43 @@ to **49 oblanych wierszy i 508 zapytan**, i zdanie trzyma sie wszedzie. `audit-s
 korpusie: **18 dopasowan**, `audit-provisioning`: **25 adresow potwierdzonych jako martwe**. Wyjatki nazwane z imienia: `audit-agent-card` (jego liczba to **krok
 probkowania**, nie sufit) i sam `rules.mts`, bo trafialby we wlasne literaly w kontrolkach - trzeci
 raz tej nocy, kiedy sonda znajduje sama siebie.
+
+## 9.44: KLUCZ W CUDZEJ KONSOLI TO NIE ICH SCIEZKA (2026-08-19)
+
+Znalezione przez `audit-published-urls`, ktory zapytal **1529 adresow, ktore publikujemy jako dowod**,
+i znalazl **3 martwe**. Dwa z nich siedzialy na wierszach, ktore **zaliczylismy**:
+
+1. **growthbook.io** trzymal punkt za programatyczny provisioning na zdaniu z ICH dokumentacji:
+   „Create a new service account under [IAM & Admin → Service Accounts](https://console.cloud.google.c…)".
+   To instrukcja stworzenia konta uslugowego **Google** przy podlaczaniu BigQuery. Slowa sa ich,
+   **poswiadczenie nie**, a ten check pyta, czy vendor dokumentuje droge do **wlasnego** klucza bez
+   czlowieka. Ten sam ksztalt co 9.42 przy paczkach: **link decyduje, o czyim produkcie jest dowod**.
+2. **cal.com** cytuje `https://api.cal.com/v2/api-keys/refresh`, ktory odpowiada 404 na zapytanie bez
+   klucza. To **falszywy alarm audytu**, nie falszywy punkt: cytat jest z ich dokumentacji, a check
+   pyta o to, co dokumentuja, nie o to, czy my tam wejdziemy bez poswiadczenia. Zostawione.
+3. **uploadcare.com** (wiersz oblany, wiec slabsze): zdanie mowilo „nor at any address in
+   `https://uploadcare.com/_mcp/server`", a ta strona jest **404**. Wymienialismy strony, o ktore
+   **zapytalismy**, a nie te, ktore przeczytalismy - czyli „szukalismy i nie znalezlismy" o stronie,
+   ktorej nie ma. Teraz `followed` zawiera tylko strony, ktore odpowiedzialy.
+
+**Blast radius zmierzony przed zmiana: 1 z 63 zaliczonych wierszy** provisioningu cytuje adres spoza
+domeny vendora. Regula jest wiec o jednym zdaniu dzis, a nie o przeczesaniu checku.
+
+**Codex zdjal z tego dwie warstwy, obie trafione:**
+1. Pierwsza wersja czytala tylko markdown, bo `visibleProse` wyrzuca tagi razem z `href`. Zwykly
+   `<a href="...">` - czyli to, co skaner naprawde dostaje - przechodzil dalej, a growthbook zlapal
+   sie **tylko dlatego, ze ich zrodlo markdown wycieklo na strone**. Obcy link wraca teraz do prozy
+   jako `[etykieta](adres)`, ale **wylacznie obcy**: wpisywanie tam wlasnych adresow vendora
+   wypychaloby slowa potwierdzajace poza okno 70 znakow i po cichu przeliczaloby checki, o ktore w
+   tej zmianie nie chodzi.
+2. **Sam obcy adres w oknie to za malo.** „Create an API key programmatically, then test it with our
+   [Postman collection](https://postman.com/…)" to vendor dokumentujacy **wlasny** klucz, a regula
+   czytajaca kazdy obcy adres jako dyskwalifikacje zabralaby punkt za zdanie, ktore go dowodzi.
+   Decyduje **etykieta linku**: gdy nazywa poswiadczenie („Service Accounts"), klucz powstaje po
+   tamtej stronie; gdy nazywa cos innego („Postman collection"), zdanie nadal jest o vendorze.
+   Kontrolka z tym zdaniem stoi w `rules.mts` i **oblewalaby pierwsza wersje**.
+
+**Trzecia rzecz, moja wlasna, warta zapisania jako pulapka narzedziowa:** przy przepisywaniu tej
+funkcji `str.replace('', X)` w skrypcie pomocniczym wstawilo caly blok **na poczatek pliku**, przed
+importy, i TypeScript zglosil to jako duplikat funkcji. Pusty wzorzec w `replace` nie jest bledem,
+tylko wstawieniem na pozycji zero.

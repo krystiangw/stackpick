@@ -45,6 +45,7 @@ import {
   readsAsAMethodRefusal,
   informative,
   provisioningMatches,
+  handsItToSomebodyElse,
   BOT_DEFENCE_RULES,
   PROVISIONING_RULES,
   SELF_SERVE_PATTERNS,
@@ -1041,6 +1042,49 @@ check('gola fraza z dowodem obok nadal liczy', provisioningMatches(namedBeside).
 // lost every one of them.
 const headingThenBody = '<h2>Create a signing key</h2><p>Send a POST to /system/v1/signing-keys.</p>'
 check('naglowek i jego tresc to jedno', provisioningMatches(headingThenBody).length > 0, true)
+
+// 9.44: zdanie, ktore odsyla po klucz do CUDZEJ konsoli, jest dowodem o tamtym produkcie.
+// growthbook.io trzymal punkt na "Create a new service account under [IAM & Admin -> Service
+// Accounts](https://console.cloud.google.com/...)", czyli na instrukcji tworzenia konta uslugowego
+// GOOGLE przy podlaczaniu BigQuery.
+console.log('\nklucz w cudzej konsoli to nie ich sciezka')
+// Prawdziwe zdanie z dokumentacji growthbooka, z etykieta linku wlacznie: to ona mowi, ze klucz
+// powstaje po tamtej stronie.
+const cudzaKonsola =
+  '<p>Create a new service account under [IAM &amp; Admin -> Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts) to connect BigQuery.</p>'
+const wlasnaKonsola =
+  '<p>Create a new service account under [Settings -> Service Accounts](https://growthbook.io/app/settings) to connect BigQuery.</p>'
+check('cudza konsola nie daje punktu', provisioningMatches(cudzaKonsola, 'growthbook.io').length, 0)
+// Kontrolka: to samo zdanie z linkiem do SIEBIE nadal liczy, wiec regula wycina adres, a nie fraze.
+check('ta sama fraza u siebie nadal liczy', provisioningMatches(wlasnaKonsola, 'growthbook.io').length > 0, true)
+check('i bez podanej domeny nic sie nie zmienia', provisioningMatches(cudzaKonsola).length > 0, true)
+// Tak wyglada to samo w zwyklym HTML-u, czyli w tym, co skaner naprawde czyta: adres siedzi w
+// atrybucie, ktory `visibleProse` wyrzuca razem z tagiem. Bez tego regula lapala tylko markdown.
+const cudzaKonsolaWHtml =
+  '<p>Create a new service account under <a href="https://console.cloud.google.com/iam-admin/serviceaccounts">IAM &amp; Admin -> Service Accounts</a> to connect BigQuery.</p>'
+const wlasnaKonsolaWHtml =
+  '<p>Create a new service account under <a href="https://growthbook.io/app/settings">Settings -> Service Accounts</a> to connect BigQuery.</p>'
+check('cudzy link w HTML tez nie daje punktu', provisioningMatches(cudzaKonsolaWHtml, 'growthbook.io').length, 0)
+check('wlasny link w HTML nadal liczy', provisioningMatches(wlasnaKonsolaWHtml, 'growthbook.io').length > 0, true)
+// Kontrolka, ktora zabija poprzednia wersje tej reguly: obcy adres w tym samym zdaniu, ale NIE
+// ten, przy ktorym powstaje klucz. Zdanie dokumentuje wlasny klucz i ma za nie dostac punkt.
+const wlasnyKluczObcyLink =
+  '<p>You can create an API key programmatically, then test it with our <a href="https://postman.com/collections/x">Postman collection</a>.</p>'
+check('obcy link obok nie zabiera punktu', provisioningMatches(wlasnyKluczObcyLink, 'growthbook.io').length > 0, true)
+check('sonda widzi link po cudzy klucz', handsItToSomebodyElse('[Service Accounts](https://console.cloud.google.com/x)', 'growthbook.io'), true)
+check('i nie widzi wlasnego', handsItToSomebodyElse('[Service Accounts](https://docs.growthbook.io/x)', 'growthbook.io'), false)
+check('obcy link o czyms innym nie liczy sie', handsItToSomebodyElse('[Postman collection](https://postman.com/x)', 'growthbook.io'), false)
+
+// Zdanie "nor at any address in <strona>" wymienialo strony, o ktore ZAPYTALISMY, a nie te, ktore
+// przeczytalismy. uploadcare.com niosl je z adresem https://uploadcare.com/_mcp/server, ktory jest
+// 404: nie przeczytalismy tam nic, wiec "szukalismy i nie znalezlismy" bylo zdaniem o stronie,
+// ktorej nie ma.
+console.log('\nwymieniamy strony przeczytane, nie zapytane')
+check(
+  'sonda filtruje po tym, co odpowiedzialo',
+  readFileSync('src/lib/scan/funnel.ts', 'utf8').includes('followed: pages.filter((_, index) => bodies[index]?.ok)'),
+  true,
+)
 
 console.log('zapis raportu, czyli czego nie trzymamy w bazie')
 // 180 kB of the 185 kB a report occupied were raw probe bodies nothing reads after the scan.

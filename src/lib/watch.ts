@@ -207,6 +207,10 @@ const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   // 9.43 stops paying for an entry file when the control that would have discredited it never
   // answered. A row that loses the point here did not change; our willingness to guess did.
   '9.43': ['agent_entry_point'],
+  // 9.44 stops reading an instruction to create somebody else's credential as the vendor's own
+  // provisioning path. growthbook.io held the point on a sentence about Google Cloud service
+  // accounts, and a row that loses it here documented no more and no less than it did before.
+  '9.44': ['programmatic_provisioning'],
   // 9.40 asks what a searched identification rests on before it accuses, and the facts it asks for
   // are not in a report stored before it, so a rescore reads them as absent and says unmeasured.
   '9.40': ['typed_package'],
