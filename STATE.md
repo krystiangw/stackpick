@@ -8817,3 +8817,33 @@ dokumentacji, ktore mowi „zawsze" albo „kazda", i sprawdzic je na produkcji 
 wyszlo: brak harmonogramu miesiecznego na cenniku, znacznik jezyka w trzech renderingach, martwe
 adresy na wierszach niemierzalnych i teraz temat maila. Za kazdym razem dokumentacja byla uczciwa, a
 produkt zostawal w tyle w jednym miejscu, o ktorym nikt nie pomyslal.
+
+## AUDYTY PYTALY JAKO KTOS INNY NIZ SKANER (2026-08-19, 12:40)
+
+Wzialem kolejne zdanie z wlasnej dokumentacji: `handling-a-dispute.md` mowi **„Import the scanner's
+predicates, never rewrite them"**. Sprawdzilem, czy audyty tego przestrzegaja. Nie przestrzegaly, i
+to na trzy sposoby naraz:
+
+- **szesc** pytalo jako `LetAgentsIn/1.0 (+.../methodology)`, a skaner pyta jako `(+.../bot)`,
+- **dziewiec** nie wysylalo zadnego user-agenta, wiec szly jako **domyslna tozsamosc Undici**,
+- **zadne** nie wysylalo naglowka `From`, ktory skaner dokleja do kazdego zapytania pod swoim UA.
+
+Brzeg vendora moze odpowiedziec kazdemu z tych trzech inaczej - i wlasnie tak powstal dzisiejszy
+**falszywy alarm o sentry.io**. Teraz kazdy skrypt pytajacy cudzy serwer pyta jako skaner, a straznik
+sprawdza to **per obiekt naglowkow**, nie per plik: `headers: warunek ? {...} : {...}` przepuszczalo
+sonde bez tozsamosci przez druga polowe wyrazenia. Siedem wyjatkow jest wypisanych z imienia i z
+powodem - czytaja nasz wlasny korpus albo lustrza rejestr, wiec nie pytaja nikogo o werdykt.
+
+**Osiem audytow konczacych sie licznikiem odmawia teraz werdyktu przy zerze.** Zaczelo sie od tego,
+ze uruchomilem `audit-llms` bez potoku: wydrukowal uspokajajace zdanie, nie zapytawszy o nic.
+
+**I wtedy popelnilem ten sam blad drugi raz tej samej nocy.** Doklejalem bramki na koniec plikow, a
+siedem z osmiu audytow konczy sie `process.exit(0)`. **Siedem martwych bramek, zielony build, zero
+ostrzezen** - dokladnie to samo, co kilka godzin wczesniej w `rules.mts`. Znalazlem to wlasnym
+sprawdzeniem, nie kompilatorem, wiec kompilator dostal je na wlasnosc: **zaden skrypt nie moze miec
+kodu za `process.exit`**.
+
+**Codex przeszedl przez to piec razy** i za kazdym razem zwezal regule o cos prawdziwego: sam UA to
+za malo bez `From`; bramka provisioningu ma stac na **stronach przeczytanych**, a nie na wierszach
+znalezionych; straznik na plik nie widzi galezi wyrazenia warunkowego; audyt bez naglowkow tez pyta
+jako ktos inny, choc nie pisze tego wprost.
