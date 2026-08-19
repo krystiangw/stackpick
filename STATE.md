@@ -8943,3 +8943,32 @@ opisuje wiec zachowanie, a nie ostroznosc na wszelki wypadek.
 **Wzorzec, ktory sie tej nocy powtorzyl trzeci raz:** liczba w zdaniu wzieta ze **stalej w tekscie**
 zamiast z **danych, ktore opisuje**. Wczesniej: „175 domen" obok korpusu na 177 i sufity audytow
 przemilczajace pominiete wiersze. Za kazdym razem kod byl poprawny, a **zdanie o kodzie nie**.
+
+## PREDYKCJA DLA PRZEMIATU 9.45, ZAOSTRZONA I Z NAZWANA GRANICA (2026-08-19, 13:40)
+
+Wczesniej zapisalem, ze **10 wierszy traci punkt**, a przy **9 wierszach z kilkoma frazami** nie
+wiedzialem, czy spadna z 2 na 1. Sprobowalem to policzyc: pobralem strony dokumentacji, ktore te
+wiersze wymieniaja, i puscilem na nich `provisioningMatches` z regula 9.45.
+
+**Reprodukcja jest stratna i trzeba to powiedziec wprost:** skaner sklada korpus z **stron
+dokumentacji ORAZ plikow maszynowych** (llms.txt i reszta), a ja przeczytalem tylko strony, do
+szesciu na wiersz. Liczby frazy jako calosci **nie mozna z tego wnioskowac** - u `browserbase.com`
+wyszlo 0 fraz tam, gdzie wiersz ma 2, co jest wada mojego odczytu, a nie zmiana reguly.
+
+**Ale jeden kierunek wnioskowania jest poprawny: trafienie w podzbiorze jest trafieniem w calosci.**
+Fraza „service account" przeszla przez regule 9.45 na stronach, ktore przeczytalem, u **siedmiu z
+dziewieciu**: cockroachlabs.com, elastic.co, fireworks.ai, getunleash.io, pinecone.io, split.io,
+temporal.io. Te siedem wierszy **zachowa punkt i zostanie na 2**.
+
+**Ostateczna predykcja przed przemiatem:**
+- **10 wierszy traci punkt** (1 -> 0): cronofy, crowdin, datadoghq, nylas, onesignal, phrase,
+  restate, turbopuffer, windmill, zenrows.
+- **3 wiersze zachowuja punkt mimo jednej frazy**: growthbook, mixpanel, zilliz.
+- **7 wierszy bez zmiany na 2 punktach** (lista wyzej).
+- **2 wiersze NIEZNANE**: browserbase.com i browserless.io - moj odczyt nie znalazl u nich tej frazy,
+  ale nie czytalem calego korpusu, wiec to moze byc brak w moim podzbiorze. Jesli fraza u nich
+  odpadnie, a mieli dokladnie dwie, spadna z 2 na 1.
+
+Po przemiecie sprawdzic **te cztery grupy osobno**. Rozjazd w grupie „bez zmiany" znaczylby, ze
+regula robi cos, czego nie przewidzialem; rozjazd w grupie „traci punkt" znaczylby, ze pomiar sprzed
+przemiatu byl inny niz stan stron dzisiaj.
