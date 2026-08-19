@@ -9,6 +9,7 @@
  * 170 rows rather than on the four domains we tried them on.
  */
 import { CURATED_DOMAINS } from '../src/lib/categories'
+import { readFileSync } from 'node:fs'
 import { getStore } from '../src/lib/store'
 import { FORMULA_VERSION } from '../src/lib/score'
 import { ERRATA, erratumFor } from '../src/lib/errata'
@@ -243,6 +244,30 @@ console.log(
       : `limit na brzegu vendora: ${limitedAtEdge} z ${rowsWithLimitField} wierszy z zapisem, w tym ${challengedAtEdge} z markerem wyzwania (to sciana, nie nasze tempo - #48)`,
 )
 for (const one of challengeSample) console.log(`  ${one}`)
+
+// Zdanie na `/pricing` o brzegu vendora jest WPISANE RECZNIE, a stoi na liczbach z przemiatu - czyli
+// starzeje sie dokladnie tutaj i nigdzie indziej nic tego nie zauwazy. Reszta liczb na tej stronie
+// jest generowana (`CHECKS.length`, `CATEGORIES.length`, katalog cen), wiec to jedyne trzy, ktore
+// moga sie rozjechac po cichu.
+const cennikZrodlo = readFileSync('src/app/pricing/page.tsx', 'utf8').replace(/\s+/g, ' ')
+const zdanieOBrzegu = cennikZrodlo.match(
+  /Sweeping all (\d+) domains in our corpus on ([^,]+), (\d+) of them refused our requests at their own edge and (\d+) of those answered with a browser challenge/,
+)
+if (!zdanieOBrzegu) {
+  console.log('UWAGA: nie znalazlem na /pricing zdania o brzegu vendora - albo je przepisano, albo ten straznik czyta nie to')
+} else {
+  const [, napisaneDomeny, napisanaData, napisaneOdmowy, napisaneWyzwania] = zdanieOBrzegu
+  const rozjazd = [
+    Number(napisaneDomeny) === rows ? null : `domeny: cennik mowi ${napisaneDomeny}, korpus ma ${rows}`,
+    Number(napisaneOdmowy) === limitedAtEdge ? null : `odmowy na brzegu: cennik mowi ${napisaneOdmowy}, przemiat dal ${limitedAtEdge}`,
+    Number(napisaneWyzwania) === challengedAtEdge ? null : `wyzwania: cennik mowi ${napisaneWyzwania}, przemiat dal ${challengedAtEdge}`,
+  ].filter((one): one is string => one !== null)
+  console.log(
+    rozjazd.length === 0
+      ? `cennik zgadza sie z korpusem co do brzegu vendora (${napisaneDomeny}/${napisaneOdmowy}/${napisaneWyzwania}, policzone ${napisanaData})`
+      : `UWAGA: zdanie na /pricing rozjechalo sie z korpusem, popraw je RAZEM Z DATA (${napisanaData}): ${rozjazd.join('; ')}`,
+  )
+}
 console.log(`klucz licencyjny (tylko dowody, bez punktow): ${licenceGateRows} wierszy ma zdanie o wymogu klucza`)
 for (const one of licenceGateSample) console.log(`  ${one}`)
 console.log('')
