@@ -1,16 +1,31 @@
-# Let Agents In: stan na 2026-08-19 (formula 9.42, nic nie jest w locie)
+# Let Agents In: stan na 2026-08-19 (kod 9.44, korpus 9.42, przemiat czeka na karencje)
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te czterdziesci linijek, potem reszte)
 
-**WERSJE: produkcja, repo i korpus na 9.42.** Przemiat skonczony o 03:01 (`/tmp/reseed-942.log`),
-komplet kontroli po nim **zielony**: 177 wierszy, 0 sprzecznosci, 0 rozjazdow, `awaitingRescan: 0`,
-**wszystkie sprostowania wygasly**. Nic nie chodzi w tle, drzewo czyste, wszystko wdrozone.
+**WERSJE: produkcja i repo na 9.44, korpus nadal na 9.42.** Przemiat **nie startowal** - czeka na
+mediane wieku korpusu 6 h, o 06:58 bylo 4.29 h, wiec okolo **08:45**. Czeka `/tmp/reseed-943.sh`
+(nazwa z czasow 9.43, wersje bierze z kodu), log `/tmp/reseed-943.log`. **Nie edytowac tego skryptu w
+trakcie** i **nie deployowac po jego starcie**. Co ma pokazac przemiat: sekcja **„CO MA POKAZAC
+PRZEMIAT NA 9.44"** na koncu tego pliku, osiem punktow z komendami.
 
 **ZADANIA IDA NA MUSTER: https://musterboard.dev/r/r_kyvged60vn4c2mvj** (projekt `p_w8vtpkcae5`, token
 w `~/.muster/tokens.json`, handle agenta `ai-audytor`). **Tablica wygasa 2026-08-25, dopoki Krystian
 jej nie odbierze tym linkiem** - odbior zdejmuje wygasniecie i podnosi limity.
 
-**CO TA NOC ZMIENILA, w kolejnosci waznosci:**
+**CO ZMIENILA DRUGA POLOWA NOCY (po 05:30), w kolejnosci waznosci:**
+- **9.43 domkniete w sondzie MCP, trzy miejsca.** Kontrolka, ktora sie nie odezwala, nie przyznaje juz
+  punktu: ani przy 401/403/202, ani przy 405 czytanym wzgledem strony glownej, ani przy odmowie
+  „to wymaga przegladarki". Druga fala sondy nie gubi juz swojego „nie dalo sie zmierzyc".
+- **9.44: klucz w cudzej konsoli to nie ich sciezka.** `growthbook.io` trzymal punkt na instrukcji
+  tworzenia konta uslugowego **Google**. O czyim produkcie jest dowod, rozstrzyga **etykieta linku**.
+- **Dziesiec audytow czytalo cwierc korpusu i nie mowilo o tym.** Sufity sa teraz ogloszone, a piec
+  audytow ma **pierwsze pelne przebiegi** (`audit-openapi`: 508 zapytan, zdanie trzyma sie wszedzie).
+- **Cennik przyznaje sie, ze miesieczna polowa monitoringu nie ma harmonogramu.** Do dzis przyznawal
+  sie tylko runbook, czyli tam, gdzie kupujacy nie zaglada.
+- **Wlasne logo i favicon** zamiast domyslnego pliku Next.js, i **zrzuty ekranu 1000px+ okazaly sie
+  robic bez czlowieka** (headless Chrome) - zostal sam formularz w claude.ai.
+
+**CO ZMIENILA PIERWSZA POLOWA NOCY, w kolejnosci waznosci:**
 - **9.42: opis paczki rozstrzyga, ktory artefakt jest biblioteka vendora** (#47, wisialo od wycofanej
   proby). Zmierzone na calym korpusie **przed** wdrozeniem: trzy zmiany, zero regresji. Po przemiecie
   potwierdzone co do wiersza: `directus.com` → `@directus/sdk` (z typami, sprostowanie wygaslo),
@@ -30,7 +45,12 @@ jej nie odbierze tym linkiem** - odbior zdejmuje wygasniecie i podnosi limity.
 - **Audyt ceny monitoringu** (subagent): 79 USD zostaje, ale **pakiet agencyjny to 49,90 za domene
   przy 3,96 u agentable** i zdanie o kredycie na pierwszy miesiac jest **proza bez mechanizmu**.
 
-**TRZY ZASADY Z TEJ NOCY, WSZYSTKIE ZAPISANE W KB ALBO W KODZIE:**
+**CZTERY ZASADY Z TEJ NOCY, WSZYSTKIE ZAPISANE W KB ALBO W KODZIE:**
+0. **Porownanie z brakiem zawsze zwraca „rozni sie".** Szesc wystapien jednego ksztaltu w ciagu nocy;
+   `x !== kontrolka?.pole` jest prawda, gdy kontrolki nie ma, i obie galezie ida w strone werdyktu,
+   zadna w strone „nie wiem" (`clad-kb show porownanie-z-brakiem-zawsze-zwraca-rozni-sie---szesc-razy-te`).
+   Uwaga na przebranie, ktorego sam bym nie zlapal: fetch zwraca **obiekt** ze statusem 0 albo 429,
+   wiec test na `undefined` nie wystarcza.
 1. Kazde miejsce, gdzie **„nie wiem" ma wartosc domyslna**, jest tym samym bledem, i trzeba go szukac
    **na kazdej warstwie osobno** (`clad-kb show domyslna-wartosc-dla-nie-wiem-powtarza-sie-na-kazdej-warstwi`).
 2. Zdanie o tym, co przechowujemy, ma isc **z typu**, nie z pamieci (`WATCH_FIELDS_DISCLOSED`).
