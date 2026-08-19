@@ -8546,3 +8546,21 @@ teraz we wszystkich trzech renderingach, a straznik czyta wszystkie trzy pliki.
 poprawek, ktorych zaden audyt danych nie mogl zlapac**, bo wszystkie zdania **zgadzaly sie z
 danymi**. Spojnosc z danymi i uczciwosc wobec czytajacego to dwa rozne pomiary, a mamy narzedzia
 tylko do pierwszego.
+
+## „175 DOMEN" OBOK KORPUSU, KTORY MA 177 (2026-08-19, 08:05)
+
+Czytajac `/report` jak obcy: naglowek mowi **„175 domains · formula v9.42"**, a `corpus.json` oddaje
+**177 wierszy**. Roznica to dwa wiersze, ktore ktos przeskanowal na zywo po wdrozeniu 9.43, wiec
+filtr wersji je wyrzucil - **slusznie**, bo mieszanie wersji porownywaloby liczby, ktore nigdy nie
+byly porownywalne. Strona nie mowila o tym **ani slowa**.
+
+To jest ten sam ksztalt, co nieme sufity w audytach kilka godzin wczesniej: **liczba z cichym
+odejmowaniem w srodku**. I okno, w ktorym to widac, jest dokladnie tym, w ktorym ktos czyta te
+strone: **miedzy wdrozeniem formuly a przemiatem**. Po przemiecie `heldBack` wraca do zera i problem
+staje sie niewidzialny az do nastepnej zmiany formuly.
+
+Strona mowi teraz wprost: **„2 further domains are left out of every number above for exactly that
+reason"**, z liczba pojedyncza i mnoga obsluzona osobno. Przy okazji **wybor wersji przestal byc
+liczony w dwoch miejscach**: `publishedCorpus` juz zwracal jedna wersje, a `buildIndustryReport`
+grupowal po wersji **drugi raz** na danych, ktore z definicji mialy jedna. Martwa kopia reguly, ktora
+mogla sie tylko rozjechac z oryginalem. Straznik pilnuje, ze `industry.ts` nie ma juz `byVersion`.
