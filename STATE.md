@@ -11,6 +11,28 @@
 
 
 
+## WITRYNA SKLEPU STALA NA FORMULE SPRZED PIECIU WYDAN, I NIKT NIE PATRZYL (22:30)
+
+Czytanie `/d/sample` jako **prospekt** (jedyny sposob, w jaki ktos widzi platny raport przed
+zaplaceniem) dalo naglowek **„Sample report · formula v 9.44"** przy zywej **9.49** - i w srodku
+dokladnie to zdanie, ktore **9.48 usunelo**: „Only 53 characters render without JS" o stronie
+`filestack.com`, ktora przy pelnym czytaniu daje **12 282 znaki**.
+
+**Powtorzone od zera, bo zdanie musi niesc swoj dowod** (616 581 bajtow, 48 `script` / 38 `style` /
+44 `noscript`, **wszystkie domkniete**): piecdziesiat trzy znaki produkuje **nasz wlasny sufit
+400 kB**. Ciecie ladowalo w srodku bloku, `stripCodeBlocks` slusznie porzuca niedomkniety blok jako
+strone zepsuta - tyle ze tutaj **to my ja zepsulismy nozycami**, a tekst dokumentacji lezy za
+cieciem. Kod jest juz dobry od 9.48 (galaz `Unmeasurable: ... larger than the 400,000 bytes we
+read`), wiec to nie nowy blad w skanerze. **Nowe jest to, ze dokument nie starzeje sie razem z
+regula.**
+
+**`npm run audit-sample`** (nowy): probka musi stac na `FORMULA_VERSION`, ktora dzis serwujemy, a gdy
+nie stoi - wypisuje **przez `rulesChangedBetween`, ktore dokladnie reguly** zmienily sie w tym oknie,
+czyli ile akapitow moze klamac. Na probce z 9.44 wskazal `docs_without_js` i
+`programmatic_provisioning`, czyli **trafil w to zdanie sam z siebie**. Codex zlapal w nim wlasna
+wersje domyslnej wartosci dla „nie wiem": brak probki wychodzil **zerem** (czyli zdrowiem), choc
+`/pricing` do niej linkuje - teraz oblewa. `b42ad7b`, dopisane do baterii po przemiecie.
+
 ## TRZECIE MIEJSCE Z TWIERDZENIEM O CUDZYM PRODUKCIE, I TYM RAZEM BYLO TEZ NIEPRECYZYJNE (22:15)
 
 Po `/standard` i `/methodology` zostalo `/findings`: „Google ships an agentic browsing category in
@@ -604,7 +626,7 @@ cache'u rejestru dalo **160 wierszy identycznych, 16 bez paczki po obu stronach 
 najpierw, bo tylko one moga cos obalic):
 ```
 cd ~/projects/stackpick && export MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick)
-npm run po-przemiacie && npx tsx scripts/after-reseed.mts && npm run audit && npx tsx scripts/audit-study.mts   && npm run audit-delivery && npm run regressions && npm run watch-coverage && npm run audit-our-api
+npm run po-przemiacie && npx tsx scripts/after-reseed.mts && npm run audit && npx tsx scripts/audit-study.mts   && npm run audit-delivery && npm run regressions && npm run watch-coverage && npm run audit-our-api && npm run audit-sample
 ```
 **Potem trzy audyty powtarzajace oskarzenia** (pytaja vendorow, wiec NIGDY w trakcie przemiatu i
 **nie przez `| tail`**, bo wtedy nie widac postepu):
