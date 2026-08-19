@@ -8,6 +8,26 @@
 
 
 
+
+## `/bot` OPISYWAL MNIEJSZOSC WLASNEGO RUCHU (2026-08-19, 20:00)
+
+Strona, ktora istnieje po to, zeby vendor **poznal nas w logach i umial nas zatrzymac**, mowila:
+„**Every request** carries `From: hello@letagentsin.com`". Naglowek jedzie wylacznie tam, gdzie
+`ua === AGENT_UA`. Test drzwi pyta jako my, a **cala reszta skanu leci pod user-agentem
+przegladarki** - `/methodology` mowi to wprost od dawna, `/bot` nie mowil tego wcale.
+
+Czyli vendor widzi w logu **kilka** zapytan jako `LetAgentsIn/1.0` i **okolo dwudziestu**
+wygladajacych na przegladarke, z tego samego adresu, w tej samej minucie, **bez naglowka `From`, pod
+ktory moglby napisac**. Strona opisywala mniejszosc naszego ruchu.
+
+**Nie naprawilem tego wysylaniem `From` wszedzie**, choc to byla kuszaca wersja: sonda przegladarkowa
+mierzy to, co strona podaje **przegladarce**, a naglowek, ktory nas nazywa, pozwala brzegowi
+potraktowac ja inaczej. To jest **ten sam powod**, dla ktorego sondy nazwanych agentow nie nios nic
+naszego - i strona podaje teraz ten powod dla obu.
+
+Przy okazji: „6 requests at once" **sie zgadza** (`MAX_PER_SITE = 6`) i jest teraz zwiazane ze stala,
+tak samo jak 27 s i 400 kB.
+
 ## PIEC POWIERZCHNI DLA AGENTOW, PRZEJRZANYCH PO KOLEI: WYNIK (2026-08-19 wieczor)
 
 Nie bylo to zaplanowane jako badanie, ale wyszlo z niego zdanie, ktore warto miec:
