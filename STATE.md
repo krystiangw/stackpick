@@ -611,6 +611,13 @@ npm run po-przemiacie && npx tsx scripts/after-reseed.mts && npm run audit && np
 ```
 npm run audit-docs-js && npm run audit-front-door && npm run audit-named-crawlers
 ```
+**I dwie rzeczy poza skryptami, w tej kolejnosci:**
+1. **Deploy czeka** (`cbe4fb4` i dalej): commit zamknal sie tuz przed startem przemiatu, wiec
+   `/findings` z data przy twierdzeniu o Lighthousie i Cloudflarze stoi tylko w repo.
+2. **Przeczytaj platny raport jako kupujacy** dla wiersza, ktory po przemiecie ma nowa galez 9.49
+   (`Unmeasurable: we found a sentence that creates a credential and nothing in it says a program can
+   do it`). Do dzis ta galaz byla czytana tylko na pojedynczym skanie - dopiero przemiat pokazuje, ile
+   wierszy ja dostaje i czy zdanie brzmi sensownie **obok pozostalych** w tym samym raporcie.
 ## PIEC Z SZESCIU CYTATOW W RAPORCIE ZA 49 USD URYWALO SIE W SRODKU ADRESU (2026-08-17)
 
 Znalezione nie przez audyt, tylko przez **wygenerowanie raportu i przeczytanie go jak klient**.
