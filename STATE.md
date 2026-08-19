@@ -178,6 +178,29 @@ za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). 
 wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
 Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
 
+## NASZ WLASNY WIERSZ NA 9.51 I LIMITY, KTORE OBIECUJEMY AGENTOM (01:00)
+
+**Przeskanowalismy sami siebie biezacym skanerem: `letagentsin.com` 12/18 na 9.51.** Nic tu nie jest
+do naprawy i to jest wynik, nie wymowka: `oauth_dcr` oblewa, bo **nie mamy kont** (decyzja zamknieta
+osobna sekcja nizej), dwa checki rejestracji sa **niemierzalne z tego samego powodu**,
+`typed_package` niemierzalny, bo nie wydajemy paczki, a `programmatic_provisioning` niemierzalny, bo
+nie wydajemy kluczy. Przechodzi wszystko, co da sie o nas zmierzyc, w tym `agent_entry_point` **2/2 na
+dwoch plikach** (`/agent-signup.md` i `/agents.md`). Przeczytalem tez nasz `/agent-signup.md` **jako
+vendor, ktoremu kazemy go skopiowac** - trzyma sie, i jego najlepsze zdanie („wzorzec wart skopiowania
+to nie plik, tylko decyzja: sprawdz, czy twoja rejestracja czegos strzeze, a jesli nie - skasuj ja")
+nadal jest prawda o nas.
+
+**A przy okazji znalazlem, czego NIE pilnowalismy.** Trzy pliki, ktore agent czyta zamiast pytac
+czlowieka - `agent-signup.md`, `agents.md`, `llms.txt` - podaja nasze limity (5 skanow/godz. na
+domene, 30 na adres, 15-minutowe okno ponownego uzycia). Zgadzaly sie dzis **co do jednego** ze
+stalymi w `scan-gate.ts`, ale zgodnosc bez straznika jest przypadkiem - to ta sama rodzina, co katalog
+ARD publikujacy formule sprzed dziewieciu wydan. `llms.txt` i `agent-access.json` mialy juz swoje
+reguly; **`agent-signup.md` i `agents.md` nie mialy zadnej**. Teraz maja, na LICZBACH, nie na zdaniach:
+mutacja `5 -> 8` oblewa osiem regul, `15 -> 20 minut` oblewa swoja.
+
+Codex zlapal w tym duplikat importu, ktory przechodzil przez `tsx`, a wywracal `tsc` - czyli zlapal
+go **przed** moim buildem.
+
 ## MAIL DO KLIENTA POTRAFIL WYSLAC LINK W LOCALHOST (00:40, v685)
 
 Przeczytanie raportu `/r/<id>` **jako wlasciciel domeny** (skan `svix.com` zrobiony jak zwykly gosc,
