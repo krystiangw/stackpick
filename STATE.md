@@ -7933,3 +7933,34 @@ poza tymi czterema wierszami, wiekszy niz szum 0,59 %, jest znaleziskiem, a nie 
 
 **Po przemiecie sprawdzam w tej kolejnosci:** `after-reseed.mts` (czy sprostowanie directusa wygaslo
 i czy wszystkie wiersze sa na 9.42), `npm run audit`, potem reszta kompletu z bloku startowego.
+
+## PRZEMIAT NA 9.42 ZAMKNIETY, PRZEWIDYWANIE TRAFILO CO DO WIERSZA (2026-08-19, 03:05)
+
+Przemiat ruszyl sam o 01:59, gdy mediana wieku korpusu osiagnela karencje, i skonczyl sie o 03:01.
+Dwa przebiegi, `/tmp/reseed-942.log`. **Nie forsowalem karencji**, choc bramka na to pozwala: to ona
+chroni dane przed tym, zeby vendorzy zaczeli nas blokowac, a dane sa celem tej nocy.
+
+**Wszystkie cztery przewidziane zmiany weszly i zadna piata:**
+| domena | jest | co to znaczy |
+|---|---|---|
+| directus.com | `@directus/sdk@25.0.0`, z typami | **8/17**, sprostowanie wygaslo |
+| onesignal.com | `@onesignal/node-onesignal@5.13.2` | 13/16 |
+| axiom.co | `@axiomhq/js@2.0.0` | 13/17 |
+| gandi.net | **zadnej paczki** | 4/9, mianownik mniejszy o 1, cudzy artefakt zniknal z wiersza |
+| mux.com | `@mux/mux-node@15.0.0` | 11/16, **celowo bez zmiany** |
+
+**Komplet kontroli po przemiecie, wszystko zielone:**
+- 177 wierszy na 9.42, **0 sprzecznosci**, 21 liczb i 5 twierdzen o nazwanych vendorach **bez
+  rozjazdu**, `awaitingRescan: 0`.
+- **`errata`: wszystkie wpisy wygasly**, czyli przemiat poprawil kazdy wiersz, o ktorym wiedzielismy,
+  ze klamie. To jest ta jedna linijka, dla ktorej sprostowanie directusa czekalo od 9.40.
+- Szoste badanie na `/findings` nadal prawdziwe wobec danych, dostawa bez sprzecznosci, kadencja
+  monitoringu zdrowa (najdluzsze czekanie 149 h przy alarmie od 8 dni), OpenAPI opisuje kazde pole.
+- **Jeden werdykt gorszy: `kinde.com`, `mcp_present` 1 → 0**, i to nie jest regres z tej zmiany:
+  „kazdy POST JSON-RPC wrocil pustym 2xx, takze pod sciezka, ktorej nikt nie publikuje". To ten sam
+  uczciwie niemierzalny przypadek, ktory stal tam poprzedniej nocy.
+
+**Bramka atrybucji widzi swoje fakty we wszystkich 136 wierszach z wyszukiwarki**, a 130 werdyktow
+`typed_package` stoi na paczce dopasowanej po wydawcy - z czego bierze sie wartosc dzisiejszej zmiany:
+to jest najliczniejsza i najslabsza kategoria dowodu, jaka mamy, i wlasnie w niej znalezlismy wiersz
+o cudzej firmie.
