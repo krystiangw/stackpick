@@ -73,7 +73,8 @@ export const AGENT_UA = `LetAgentsIn/1.0 (+${SITE_URL}/bot)`
  * bolted onto them would let a vendor wave us through while everybody else is still turned away,
  * which turns the measurement into a description of our own allowlist.
  */
-const CONTACT = 'hello@letagentsin.com' 
+/** Sent with every request under our own user agent, so an audit reproducing one has to send it too. */
+export const CONTACT = 'hello@letagentsin.com'
 
 /**
  * Under undici's own 10 s connect timeout, so a host that resolves and then accepts nothing -

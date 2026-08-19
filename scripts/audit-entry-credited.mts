@@ -16,6 +16,8 @@
  *   MONGODB_URI=... npx tsx scripts/audit-entry-credited.mts [ile]
  */
 import { CURATED_DOMAINS } from '../src/lib/categories'
+import { entryAccept } from '../src/lib/scan/funnel'
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 import { getStore } from '../src/lib/store'
 import { howManyRows } from './how-many'
 import { refuseIfNothingMeasured } from './nothing-measured'
@@ -25,11 +27,19 @@ const CONTROL = 'letagentsin-audit-probe-8f3a1c'
 const store = getStore()
 const most = howManyRows(60, CURATED_DOMAINS.size)
 
+// The scanner's own Accept, per suffix, and not one of our own invention. sentry.io answers
+// /.well-known/mcp.json with a real 106 byte descriptor to `application/json;q=1` and with a 976
+// byte markdown catch-all to the header this file used to send, so the audit compared two
+// responses the scanner never saw and reported a false credit that was not one. An audit that
+// asks a different question than the thing it audits can only produce alarms about itself.
+//
+// `From` for the same reason, and it is codex's: the scanner sends it with every request under its
+// own user agent, and a bot filter that reads it would answer the audit differently.
 const get = async (url: string) => {
   await new Promise((done) => setTimeout(done, PAUSE_MS))
   try {
     const answer = await fetch(url, {
-      headers: { accept: 'text/markdown, text/plain, application/json;q=0.9, */*;q=0.8' },
+      headers: { accept: entryAccept(new URL(url).pathname), 'user-agent': AGENT_UA, from: CONTACT },
       signal: AbortSignal.timeout(12000),
     })
     const body = await answer.text()

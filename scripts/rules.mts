@@ -45,6 +45,7 @@ import {
   methodRefusalIsRouted,
   readsAsAMethodRefusal,
   informative,
+  entryAccept,
   provisioningMatches,
   provisioningQuotes,
   handsItToSomebodyElse,
@@ -2712,6 +2713,19 @@ const korpus = readFileSync('src/lib/published.ts', 'utf8')
 const branza = readFileSync('src/lib/industry.ts', 'utf8')
 check('wersje wybiera korpus', korpus.includes('heldBack: seeded.length - reports.length'), true)
 check('a raport branzowy juz jej nie wybiera drugi raz', branza.includes('byVersion'), false)
+
+// Audyt, ktory pyta INNYM naglowkiem niz skaner, zglasza alarmy o sobie, a nie o skanerze.
+// sentry.io oddaje pod /.well-known/mcp.json prawdziwy deskryptor na 106 bajtow przy
+// `application/json;q=1` i catch-all na 976 bajtow przy naglowku, ktorego uzywal audyt.
+console.log('\naudyt pyta tym samym naglowkiem, co skaner')
+const audytZaliczonych = readFileSync('scripts/audit-entry-credited.mts', 'utf8')
+check('audyt bierze naglowek ze skanera', audytZaliczonych.includes('entryAccept(new URL(url).pathname)'), true)
+check('i nie ma juz wlasnego', audytZaliczonych.includes("'text/markdown, text/plain, application/json;q=0.9, */*;q=0.8'"), false)
+// Naglowek `From` idzie z kazdym zapytaniem pod naszym user-agentem, wiec audyt musi go wyslac tez.
+check('audyt wysyla tez From', audytZaliczonych.includes('from: CONTACT'), true)
+check('skaner naprawde go wysyla', readFileSync('src/lib/scan/http.ts', 'utf8').includes('{ from: CONTACT }'), true)
+// Kontrolka: te dwa naglowki naprawde sie roznia, wiec straznik pilnuje roznicy, a nie ozdoby.
+check('naglowki dla .json i .md sa rozne', entryAccept('/x.json') === entryAccept('/x.md'), false)
 check(
   'i cytat z sondy nie niesie polowy adresu',
   provisioningQuotes('<p>Create a new service account under [IAM &amp; Admin](https://console.cloud.google.com/iam-admin/serviceaccounts/very/long/path/that/runs/past/the/window/edge)</p>')
