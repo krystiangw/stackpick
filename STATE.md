@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-20 noc (kod i produkcja 9.50, korpus 9.49, czeka przemiat)
+# Let Agents In: stan na 2026-08-20 noc (kod i produkcja 9.51, korpus 9.49, czeka przemiat)
 
 
 
@@ -177,6 +177,35 @@ DATA"**, bo data i liczba to jedno twierdzenie). Sprawdzone mutacja: 16→19 daj
 za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). Dopoki platnosci sa
 wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
 Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
+
+## 9.51: JEDYNY ZIELONY WIERSZ, KTORY OPISUJE SCIANE, MOWI WRESZCIE CO Z TYM ZROBIC (v682)
+
+Przeczytanie `/v/mixpanel.com` **jako vendor, ktorego oceniamy** - to najczesciej ogladana strona
+produktu, a nie czytalem jej tej nocy ani razu. Strona broni sie dobrze (baner o starszej formule
+tlumaczy sam z siebie, dlaczego liczba nie jest porownywalna z korpusem, i mowi „przeskanuj, a
+strona nadgoni"), ale jedna rzecz zgrzytnela:
+
+**`PASS` z opisem sciany i BEZ instrukcji.** „OAuth dynamic client registration - registration_endpoint
+published, **but none of the 2 advertised grants (authorization_code, refresh_token) finishes without
+a person at a browser**". Kazdy wiersz oblany i kazdy niemierzalny na tej stronie niesie zdanie „co
+zrobic", a ten jeden - **najwazniejszy dla naszej tezy**, bo mowi wprost, ze agent i tak nie wejdzie -
+nie mial zadnego. Vendor widzi zielona plakietke i nie ma co z nia zrobic.
+
+Od teraz niesie: „Advertise client_credentials on the same metadata for the clients that should run
+unattended...". **Punkt sie NIE rusza** - to nadal ten sam pomiar; rusza sie tylko to, czy da sie z
+tym cos zrobic. Kontrolka w druga strone: gdy droga maszynowa **jest**, instrukcji nie ma, bo byla by
+halasem. Obie mutacje oblewaja.
+
+**Codex kazal podbic wersje i mial racje wbrew mojemu pierwszemu odruchowi.** Uznalem, ze skoro zaden
+werdykt sie nie rusza, wersja moze zostac. Niezmiennik w `score.ts` mowi jednak o czym innym: **dwa
+skanery pod jednym numerem wersji** to dokladnie to, czemu ta stala ma zapobiegac, a `unblock` jest
+czescia publikowanego scorecardu. Stad **9.51**. Do `CHECK_RULE_CHANGED` **swiadomie NIE dopisuje**
+`oauth_dcr`: ta zmiana nie moze pogorszyc zadnego werdyktu, a wpis kosztowalby prawdziwy sygnal dla
+watcherow po obu stronach granicy wersji.
+
+Zweryfikowane na produkcji na `neon.tech` (domena spoza korpusu i spoza migawki - ta ostroznosc to
+lekcja z 9.50, gdzie weryfikacja na wierszach korpusu wypchnela je z opublikowanej agregacji).
+Predykcja przemiatu przestawiona na `9.51`; porownanie nadal to samo, bo czyta punkty i flagi.
 
 ## 9.50: NASZ SUFIT PRZESTAJE SKRESLAC CUDZE STRONY JAKO MARTWE (v680)
 
