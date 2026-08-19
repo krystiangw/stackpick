@@ -37,7 +37,8 @@ import { wasNeverAsked } from '../src/lib/scan/http'
 import { brandTaken, certain, mentionsIn, nameGuest, quotedAbout, whoWentFirst, wordsCarried } from '../src/lib/vendors'
 import { licenceGateQuotes, readSnippet, rendersUsableForm, entersThroughIdentityProvider, mcpCandidates, looksLikeADocsPageTwin, answersWithTheSameTemplate, readsAsAnEndpoint, readsAsTheirOwnAddress } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
-import { AGENT_ENTRY_PATHS, AGENT_ENTRY_PATH_COUNT } from '../src/lib/scan/funnel'
+import { AGENT_ENTRY_PATHS, AGENT_ENTRY_PATH_COUNT, mcpAcrossWaves } from '../src/lib/scan/funnel'
+import type { McpProbe } from '../src/lib/scan/funnel'
 import {
   methodRefusalIsRouted,
   provisioningMatches,
@@ -2058,6 +2059,47 @@ check('403 nie jest', isEdgeRefusal(403), true)
 check('a 429 wypada z isEdgeRefusal, wiec musi byc nazwany osobno', isEdgeRefusal(429), false)
 const funnelSource = readFileSync('src/lib/scan/funnel.ts', 'utf8')
 check('i jest nazwany', funnelSource.includes("got.status !== 429 && !isEdgeRefusal(got.status)"), true)
+
+// Ta sama regula o warstwe dalej: przy MCP `got.status !== control?.status` jest PRAWDA, gdy
+// kontrolka w ogole nie odpowiedziala (status 0), wiec host odmawiajacy 401 pod kazdym adresem
+// dostawal punkt za serwer na podstawie zapytania, ktore sie nie odbylo.
+console.log('\nmilczaca kontrolka nie przyznaje serwera MCP')
+const mcp = CHECKS.find((one) => one.id === 'mcp_present')!
+const zBrakiemKontrolki = (adresy: string[]) =>
+  mcp.evaluate({
+    site: 'https://x.test',
+    funnel: {
+      mcpEndpoints: [],
+      mcpProbed: true,
+      mcpCardNamed: [],
+      mcpPagesFollowed: [],
+      mcpPostsSwallowed: false,
+      mcpUnmeasuredForWantOfAControl: adresy,
+      mcpMentions: 0,
+    },
+    machine: { wellKnown: {}, mcp: { mentions: 0, mentionsTruncated: false } },
+  } as never)
+check('adres bez kontrolki daje niemierzalne', zBrakiemKontrolki(['https://mcp.x.test/mcp']).inconclusive, true)
+check('i zdanie nazywa ten adres', zBrakiemKontrolki(['https://mcp.x.test/mcp']).detail.includes('https://mcp.x.test/mcp'), true)
+// Kontrolka: bez takich adresow check idzie swoja zwykla droga i NIE jest niemierzalny z tego powodu.
+check('bez takich adresow to nie ta galaz', zBrakiemKontrolki([]).detail.includes('never came back'), false)
+check('straznik widzi warunek w kodzie', readFileSync('src/lib/scan/funnel.ts', 'utf8').includes('unmeasuredForWantOfAControl.push'), true)
+
+// Druga fala pyta o adresy, ktore wskazala ICH strona dokumentacji. Gdy zadna fala nie znalazla
+// serwera, jej "nie dalo sie zmierzyc" bylo wyrzucane razem z reszta jej wyniku, wiec check
+// publikowal pewne "nie maja serwera" na podstawie pytania, na ktore nie dostalismy odpowiedzi.
+console.log('\ndruga fala oddaje to, czego nie zmierzyla')
+const fala = (endpoints: { url: string }[], niezmierzone: string[]): McpProbe =>
+  ({ endpoints, answered: true, registryAnswered: true, cardNamed: [], swallowsPosts: false, unmeasuredForWantOfAControl: niezmierzone }) as unknown as McpProbe
+const pusta = fala([], ['https://a.test/mcp'])
+check('niezmierzony adres drugiej fali przezywa', mcpAcrossWaves(pusta, fala([], ['https://b.test/mcp'])).unmeasuredForWantOfAControl.includes('https://b.test/mcp'), true)
+check('i pierwsza fala go nie traci', mcpAcrossWaves(pusta, fala([], ['https://b.test/mcp'])).unmeasuredForWantOfAControl.includes('https://a.test/mcp'), true)
+check('ten sam adres liczy sie raz', mcpAcrossWaves(pusta, fala([], ['https://a.test/mcp'])).unmeasuredForWantOfAControl.length, 1)
+// Kontrolka: gdy druga fala ZNALAZLA serwer, pytanie jest rozstrzygniete i nie ma czego zglaszac.
+check('znaleziony serwer konczy temat', mcpAcrossWaves(pusta, fala([{ url: 'https://b.test/mcp' }], ['https://b.test/mcp'])).unmeasuredForWantOfAControl, pusta.unmeasuredForWantOfAControl)
+check('i to jego endpoint idzie dalej', mcpAcrossWaves(pusta, fala([{ url: 'https://b.test/mcp' }], [])).endpoints.length, 1)
+// Kontrolka: bez drugiej fali wynik pierwszej przechodzi nietkniety.
+check('brak drugiej fali nic nie zmienia', mcpAcrossWaves(pusta, null), pusta)
 
 check(
   'przy samym deskryptorze zdanie nie wymienia niepewnego pliku',

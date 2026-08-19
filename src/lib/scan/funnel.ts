@@ -616,6 +616,11 @@ export type FunnelFindings = {
   mcpCardNamed: string[]
   /** True when every POST we sent came back an empty 2xx, control included, so we measured nothing. */
   mcpPostsSwallowed: boolean
+  /**
+   * Addresses that answered in a shape only a control can read, on an origin whose control never
+   * answered. Absent on rows scanned before 9.43, so every reader treats undefined as empty.
+   */
+  mcpUnmeasuredForWantOfAControl?: string[]
   /** Their own MCP pages, opened only when nothing answered anywhere else. Named so it is checkable. */
   mcpPagesFollowed: string[]
   signup: SignupFindings
@@ -1441,7 +1446,7 @@ async function cardEndpoints(site: string): Promise<string[]> {
  * on eleven of the twelve rows that published that excuse the probe had already settled it: the
  * host does not resolve, or it answers a path nobody registered exactly the same way.
  */
-type McpProbe = {
+export type McpProbe = {
   endpoints: McpEndpoint[]
   answered: boolean
   /** Whether the MCP registry answered us at all, as opposed to having nothing about this vendor. */
@@ -1450,6 +1455,32 @@ type McpProbe = {
   cardNamed: string[]
   /** Their edge answered every POST, including to a path nobody registered, with an empty 2xx. */
   swallowsPosts: boolean
+  /**
+   * Addresses that refused us in a shape that only a control can read - 401, 403, 202 - on an
+   * origin where the control itself never answered. Neither a server nor an absence: a question we
+   * did not get to ask.
+   */
+  unmeasuredForWantOfAControl: string[]
+}
+
+/**
+ * Only the endpoints are taken from the second wave. Everything else the probe reports is about
+ * the first one: whether any host answered, what their card named, whether the edge swallowed our
+ * posts. A second wave that finds nothing must not overwrite those with its own emptiness.
+ *
+ * The one exception is an address a documentation page named which refused us with no control to
+ * read it against. That is not an absence either, and dropping it publishes two silences as one
+ * confident negative.
+ */
+export function mcpAcrossWaves(first: McpProbe, second: McpProbe | null): McpProbe {
+  if (!second) return first
+  if (second.endpoints.length > 0) return { ...first, endpoints: second.endpoints }
+  return {
+    ...first,
+    unmeasuredForWantOfAControl: [
+      ...new Set([...first.unmeasuredForWantOfAControl, ...second.unmeasuredForWantOfAControl]),
+    ],
+  }
 }
 
 /** Whether the handshake was forwarded to another origin, which no MCP server does to its own POST. */
@@ -1776,6 +1807,8 @@ async function probeMcpEndpoints(
   const nonsense = new Map(needsControl.map((url, index) => [url, controls[index]]))
   const routed = new Map(needsRoutedControl.map((url, index) => [url, routedControls[index]]))
 
+  /** Adresy, ktore odpadly wylacznie dlatego, ze kontrolka milczala. */
+  const unmeasuredForWantOfAControl: string[] = []
   const endpoints = results
     .map((got, index) => {
       if (completesHandshake(got.body)) {
@@ -1822,10 +1855,19 @@ async function probeMcpEndpoints(
       // header, and we published them as having no server while our own OAuth check was reading
       // metadata off that very host.
       const dedicatedHost = dedicatedHostChallenge(got, candidates[index])
+      // The control has to have said something. `got.status !== control?.status` is true when the
+      // control never answered at all, and then a host that refuses every path with 401 is credited
+      // with a server on the strength of a probe that did not happen. The same shape cost three
+      // vendors a false entry-file point in 9.43; this is the check next door.
+      //
+      // `dedicatedHost` stays exempt because it is evidence in its own right: a host called
+      // mcp.<domain> exists because somebody built one.
+      const controlSpoke = control !== undefined && informative(control)
+      const differsFromControl = controlSpoke && got.status !== control.status
       const demandsCredentials =
         (got.status === 401 || got.status === 403) &&
         !looksLikeHtml(got) &&
-        (dedicatedHost || got.status !== control?.status)
+        (dedicatedHost || differsFromControl)
       // 202 Accepted to a JSON-RPC POST, which is Streamable HTTP taking the message and answering
       // on a stream rather than in the response body. It reads as silence to every rule above,
       // because it is neither an auth challenge nor JSON nor the wrong method.
@@ -1835,7 +1877,21 @@ async function probeMcpEndpoints(
       // body, including one to a path nobody registered, while the same address answers 401 from
       // a laptop. That is their edge swallowing our request, not their server accepting it, and
       // the flag below reports it as unmeasurable rather than as a verdict either way.
-      const acceptsHandshake = got.status === 202 && !looksLikeHtml(got) && got.status !== control?.status
+      const acceptsHandshake = got.status === 202 && !looksLikeHtml(got) && differsFromControl
+      // Would have counted if only the control had answered. Kept apart from a plain absence so the
+      // check can say "we could not tell" instead of "nothing is there", which is a different
+      // sentence to publish under somebody's name.
+      if (
+        !controlSpoke &&
+        !dedicatedHost &&
+        !authenticating &&
+        !wrongMethod &&
+        !speaksJson &&
+        ((got.status === 401 || got.status === 403 || got.status === 202) && !looksLikeHtml(got))
+      ) {
+        unmeasuredForWantOfAControl.push(got.url)
+        return null
+      }
       if (!authenticating && !wrongMethod && !speaksJson && !demandsCredentials && !acceptsHandshake) return null
       return {
         // The address that answered, not the one we asked. pinecone.io/mcp is a redirect stub
@@ -1883,6 +1939,7 @@ async function probeMcpEndpoints(
     registryAnswered: fromRegistry.answered,
     cardNamed: fromCard,
     swallowsPosts: routedFirst.length === 0 && swallowed.length > 0,
+    unmeasuredForWantOfAControl: routedFirst.length === 0 ? unmeasuredForWantOfAControl : [],
   }
 }
 
@@ -2077,14 +2134,11 @@ export async function scanFunnel({
   // challenge while we published that they run no server at all.
   const deeper =
     firstWave.endpoints.length === 0 ? await addressesInTheirMcpPages(domain, await corpus) : { candidates: [], followed: [] }
-  // Only the endpoints are taken from the second wave. Everything else the probe reports is about
-  // the first one: whether any host answered, what their card named, whether the edge swallowed
-  // our posts. A second wave that finds nothing must not overwrite those with its own emptiness.
   const secondWave =
     deeper.candidates.length > 0
       ? await probeMcpEndpoints(domain, site, { documented: deeper.candidates, onlyDocumented: true })
       : null
-  const mcp = secondWave && secondWave.endpoints.length > 0 ? { ...firstWave, endpoints: secondWave.endpoints } : firstWave
+  const mcp = mcpAcrossWaves(firstWave, secondWave)
   const mcpEndpoints = mcp.endpoints
   const mcpOrigins = [...new Set(mcpEndpoints.map((endpoint) => new URL(endpoint.url).origin))]
   const alreadyProbed = new Set((await oauthKnownPending).origins)
@@ -2157,6 +2211,7 @@ export async function scanFunnel({
     mcpRegistryAnswered: firstWave.registryAnswered,
     mcpCardNamed: mcp.cardNamed,
     mcpPostsSwallowed: mcp.swallowsPosts,
+    mcpUnmeasuredForWantOfAControl: mcp.unmeasuredForWantOfAControl,
     mcpPagesFollowed: deeper.followed,
     signup,
     provisioning: {

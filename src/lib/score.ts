@@ -803,6 +803,19 @@ export const CHECKS: Check[] = [
       // data centre with 202 and an empty body, including one to a path nobody registered, while
       // the same address answers 401 from a laptop. "Nothing answered at six addresses" reads as
       // a finding about their product when it is a finding about their edge and our network.
+      // The same shape one layer along: an address refused us with 401, 403 or 202, and the probe
+      // that would have told us whether the whole origin refuses everything that way never came
+      // back. Publishing "no MCP surface" there is a claim about their product built on a request
+      // we did not make.
+      const withoutAControl = f.funnel.mcpUnmeasuredForWantOfAControl ?? []
+      if (withoutAControl.length > 0) {
+        return {
+          points: 0,
+          detail: `Unmeasurable: ${withoutAControl.join(', ')} refused our handshake, and the same request to a path nobody registered on that origin never came back, so we cannot tell a server behind credentials from an edge that refuses everything`,
+          inconclusive: true,
+          unblock: 'Nothing for you to do if your server answers other networks. The address becomes measurable on a run where the control probe is not lost to our own time budget.',
+        }
+      }
       if (f.funnel.mcpPostsSwallowed) {
         return {
           points: 0,
