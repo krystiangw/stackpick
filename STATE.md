@@ -1,8 +1,102 @@
-# Let Agents In: stan na 2026-08-19 (kod 9.45, korpus 9.44, przemiat startuje lada chwila)
+# Let Agents In: stan na 2026-08-19 wieczor (kod i produkcja 9.47, korpus 9.45)
+
+## PRZEMIAT 9.45 ZAMKNIETY, I CO Z NIEGO WYSZLO (2026-08-19, 15:32-16:32)
+
+**Przemiat: 177 ok, 0 failed.** Cala szesciokrokowa checklista zielona: `npm run audit` = **177
+wierszy na 9.45, 0 sprzecznosci** i 21 liczb + 5 twierdzen o vendorach bez rozjazdu ·
+`audit-entry-credited 200` = 41 wierszy, 43 pliki, **0 nieodroznialnych od kontrolki** ·
+`after-reseed` = 55/55 zaliczonych wierszy prowizjonowania cytuje slowa, na ktorych stoi punkt, i
+**cala errata wygasla** · `audit-published-urls` = 1525 adresow, **zero zaliczonych wierszy na
+martwym adresie** (bylo 1) · `audit-fix-arithmetic` = 176/176.
+
+**Predykcje zapisane PRZED przemiatem zarobily na siebie.** Siedem rozjazdow na 22 wiersze, i jeden z
+nich byl prawdziwym znaleziskiem: `onesignal.com` trzymal punkt za **"Create a Firebase Service
+Account private key"** - klucz Google'a, w konsoli Google'a. Reszta rozjazdow to nie bledy: cztery
+wiersze przewidziane na 0 wyszly **niemierzalne**, czyli uczciwiej, niz przewidzialem.
+
+## 9.46 I 9.47: CZYJE JEST TO POSWIADCZENIE, I CZY ROBI JE PROGRAM
+
+**9.46** (wdrozone v645): marka stojaca przy rzeczowniku poswiadczenia mowi, czyj to klucz. 9.44
+zamykalo polowe, w ktorej zdanie **linkuje** do cudzej konsoli; to zamyka polowe, w ktorej **nazywa**
+ja w samej frazie. Zmierzone przed wdrozeniem na 55 zaliczonych cytatach przez `provisioningMatches`
+(nie przez kopie reguly): **dokladnie jeden wiersz**.
+
+**I tu jest lekcja warta wiecej niz sama regula: weryfikacja na produkcji pokazala co innego niz
+pomiar.** Regula usunela dopasowanie o Firebase, a punkt **przeszedl na zdanie obok** z tego samego
+przewodnika. Pomiar mowil prawde („jeden wiersz traci **dopasowanie**"), tylko nie to samo, co
+„jeden wiersz traci **punkt**". Wiersz moze znalezc inne dopasowanie i znajduje.
+
+**Przeczytanie wszystkich 11 wierszy stojacych na tej frazie zmienilo skale problemu.** Piec stoi na
+niej **samotnie**, i **cztery z nich to cudza konsola**: onesignal → Firebase, growthbook → rola
+Storage w IAM Google Cloud, zilliz → GKE, crowdin → „In your Google Cloud project, go to IAM & Admin
+> Service Accounts". Piaty, mixpanel, jest **prawdziwy**: `POST /organizations/{id}/service-accounts`.
+
+**9.47** (wdrozone v646): fraza o koncie uslugowym niesie **ten sam ciezar, co jej rodzenstwo** -
+zdanie musi mowic, ze moze to zrobic program. Rodzenstwo ma ten wymog od 9.32 i **my to publikujemy**
+na `/methodology`. **I degradacja NIE spada do zera**: zdanie, ktore tworzy poswiadczenie recznie,
+nie jest milczeniem o prowizjonowaniu, tylko odpowiedzia na pytanie, ktorego im nie zadalismy.
+Wiersz mowi **NIEMIERZALNY**, cytuje wlasne zdanie vendora i mowi, co by to zmierzylo.
+
+**Zmierzone na stronach, ktore kazdy z 11 skanow naprawde przeczytal** (pobrane RAZ do `/tmp/p5cache`
+i odtworzone z regula i bez niej, zeby diff byl regula, a nie siecia): **szesc wierszy traci fraze i
+kazdy z nich lada na niemierzalnym, cztery zachowuja punkt z innych fraz. Zero nowych zer.**
+Potwierdzone na produkcji na onesignal, crowdin i mixpanel.
+
+**DECYZJA POCHODZI Z AUDYTU SUBAGENTA (opus) - DO POTWIERDZENIA Z KRYSTIANEM.** Audyt **odrzucil**
+kuszacy wariant „poszerzmy promien szukania cudzej marki": tekst korpusu **nie ma granic dokumentow**
+(strony sa sklejone), szersze okno **skleja z powrotem punkty listy**, ktore `BLOCK_BOUNDARY` rozdziela
+naumyslnie, a lista marek jest **allowlista, ktorej nigdy sie nie domknie**. Audyt zlapal tez, ze sam
+wymog programatycznosci **opublikowalby szesc nowych zer**, w tym jedno falszywe (mixpanel) - i to
+jest powod, dla ktorego istnieje galaz „niemierzalny".
+
+**CZEGO Z TEGO AUDYTU JESZCZE NIE ZROBILEM, w kolejnosci wartosci:**
+1. **Chodzic czytac wlasciwa strone, zamiast oceniac link do niej.** Link na WLASNEJ domenie, ktorego
+   etykieta tworzy poswiadczenie (`- [Create Service Account](.../reference/create-service-account.md)`)
+   to najmocniejszy kandydat na strone, jaki istnieje, a my dzis punktujemy link zamiast otworzyc cel.
+   To jedyna z tych zmian, ktora sprawia, ze check mierzy **wiecej**. Mixpanel jest dokladnie tym
+   przypadkiem i dlatego jest dzis niemierzalny.
+2. **Strona, z ktorej cale dowody odpadly jako cudze, nie powinna liczyc sie do `looked`** w score.ts.
+   Dzis `docs.zilliz.com/docs/byoc/create-gke-service-account` przechodzi bramke „patrzylismy tam,
+   gdzie dowod by byl" **na stronie o poswiadczeniu Google'a**.
+3. **Pelna macierz przejsc na CALYM korpusie**, nie na 11 wierszach: 2→2, 2→1, 1→1, 1→niemierzalny.
+   Wiersze z 2 punktami, gdzie ta fraza jest jedna z dwoch, spadaja do 1 i nikt ich nie przeczytal.
+
+**Naprawione przy okazji, bo bylo widac na zywej karcie:** cytat konczyl sie **polowa slowa**
+(mixpanel publikowal dowod konczacy sie na „: Crea"). Naprawa cietego adresu nie obejmowala cietego
+slowa. Zmierzone na cytatach 11 wierszy: **7 z 27 sie zmienia, kazda zmiana zdejmuje polslowo, zadna
+nie gubi calego slowa** (v647).
+
+## TRZY NOWE AUDYTY POWTARZAJACE NASZE OSKARZENIA (2026-08-19)
+
+Trzy najostrzejsze zdania na karcie nie mialy do dzis zadnego niezaleznego powtorzenia:
+- `npm run audit-docs-js` - „Only N characters render without JS" i „serves X percent less text to an
+  agent than to Chrome". Trzej czytelnicy na tych samych bajtach, w tym **luzniejszy, ktory zostawia
+  `<noscript>`**, bo to jest dokladnie to, co widzi klient bez JavaScriptu.
+- `npm run audit-front-door` - „Answered 403 to nam, and 200 to Chrome" oraz „an agent does not get
+  past". Pyta **tym samym sposobem, co skaner** (trzy proby).
+- `npm run audit-named-crawlers` - „your edge answered ChatGPT-User 403". Ten mierzy tez pytanie,
+  ktorego karta dzis nie dopuszcza: listy „verified bots" wpuszczaja ChatGPT-User **tylko z adresow
+  OpenAI**, a my wysylamy ten user-agent z wlasnej sieci. Kontrolka rozstrzyga to **per nazwa**.
+
+**Kontrolka w kazdym z nich jest nosna, nie ozdobna** (gdyby to nasza siec byla zablokowana, KAZDE
+oskarzenie potwierdziloby sie samo) i **liczy zapytania, ktore odpowiedzialy, a nie wybrane**.
+**Zadnego z nich nie widzialem jeszcze w calosci** - pierwszy przebieg `audit-docs-js` szedl w tle,
+gdy to pisalem. Uruchom je i przeczytaj recznie; nigdy w trakcie przemiatu.
+
+## DROBIAZGI ZAMKNIETE TEJ DOBY
+
+- **SEO 92 zmierzone, nie zapamietane** (Lighthouse 13.4.1): cale odjecie to **jedna** linia,
+  `AI-Catalog:`, a `Content-Signal:` przechodzi - moja wczesniejsza notatka mowila, ze odrzuca obie.
+  Stoi to teraz na `/methodology` z data i komenda do powtorzenia. Zostawiamy te linie.
+- **#47 zamkniete**: naprawa siedzi w `settledOnUsage` od 9.42, a komentarz w `shapeRank` nadal
+  mowil „Left as #47", czyli wskazywal otwarte zadanie na cos zamknietego funkcje nizej.
+- **Stopka i sitemapa**: sprawdzone na produkcji, `/terms` i `/refunds` daja 404 i **nie ma do nich
+  linku nigdzie**, czyli zero martwych adresow u nas samych.
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te czterdziesci linijek, potem reszte)
 
-**WERSJE: produkcja i repo na 9.45, korpus na 9.44** (jeden wiersz, `growthbook.io`, juz na 9.45 po
+**NIEAKTUALNE PONIZEJ (blok z 15:30, zostawiony dla sladu): przemiat sie skonczyl, wersje sa w
+sekcji wyzej.** Ostatnie zdanie o przemiecie z tamtej chwili: **WERSJE: produkcja i repo na 9.45, korpus na 9.44** (jeden wiersz, `growthbook.io`, juz na 9.45 po
 skanie weryfikacyjnym - dlatego `/report` mowi „176 domains" i „1 further domain is left out").
 Przemiat na 9.44 skonczony 09:57 i **caly zielony**. Drzewo czyste, wszystko wdrozone.
 
