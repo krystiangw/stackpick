@@ -8535,3 +8535,14 @@ tylko jeden z nich mowil, ze zdanie jest po polsku. Komentarz w kodzie **wiedzia
 rozwiazywal go przez atrybucje („two tools both have a run 1 and one of them answers in Polish"),
 czyli mowil, **ktory bieg**, ale nigdy **jaki jezyk**. Teraz oba dokumenty niosa ten sam znacznik, a
 straznik w `rules.mts` pilnuje obu plikow naraz - inaczej jeden z nich klamie przez przemilczenie.
+
+**A potem znalazlem trzecie miejsce z tym samym cytatem:** `src/app/d/[id]/report-view.tsx`, czyli
+**strona, w ktora kupujacy klika**. Markdown mowil „(in Polish)", portal nie mowil nic. To dokladnie
+ten ksztalt, ktory ten kod znajduje u siebie w punktacji od trzech dni - **jeden fakt, dwa miejsca,
+drugie po cichu nieprawdziwe** - tyle ze w warstwie prezentacji. Znacznik i zdanie wyjasniajace sa
+teraz we wszystkich trzech renderingach, a straznik czyta wszystkie trzy pliki.
+
+**Zamykajac ten watek: przeczytanie wlasnego produktu jako odbiorca dalo w jedna godzine piec
+poprawek, ktorych zaden audyt danych nie mogl zlapac**, bo wszystkie zdania **zgadzaly sie z
+danymi**. Spojnosc z danymi i uczciwosc wobec czytajacego to dwa rozne pomiary, a mamy narzedzia
+tylko do pierwszego.
