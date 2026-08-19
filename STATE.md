@@ -8217,6 +8217,19 @@ warte tych piatek:
    nie sciana vendora. To jest sluszne w werdykcie o vendorze i **bledne w kontrolce**, bo limit nie
    mowi nic o tym, co host serwuje pod adresem, ktorego nikt nie rejestrowal. Nazwany osobno.
 
+**Ta sama dziura o warstwe dalej, w MCP (`da74f96`).** `mcp_present` czytal 401/403/202 przez
+`got.status !== control?.status`, ktore jest **prawda, gdy kontrolka w ogole nie odpowiedziala**
+(status 0), wiec host odmawiajacy pod kazdym adresem dostawal punkt za serwer na podstawie pytania,
+ktore sie nie odbylo. Teraz adres bez wiarygodnej kontrolki idzie na liste
+`unmeasuredForWantOfAControl` i check jest **niemierzalny**, nie zaliczony i nie oblany.
+
+Codex znalazl przy tym drugie dno, ktorego sam nie widzialem: sonda MCP ma **dwie fale** (zgadywane
+hosty, potem adresy z ICH stron dokumentacji), a scalanie brało z drugiej fali **tylko endpointy** -
+slusznie, bo druga fala nie wie nic o karcie ani o brzegu. Skutkiem ubocznym gubila jednak swoje
+wlasne „nie dalo sie zmierzyc", wiec **dwa milczenia byly publikowane jako jedno pewne „nie maja
+serwera"**. Scalanie jest teraz jedna funkcja `mcpAcrossWaves` z wlasnymi straznikami (mutacja
+sprawdzona: bez laczenia list `rules.mts` oblewa).
+
 **Straznik na sprostowanie directusa zdjety**, bo jego zadanie sie skonczylo: naprawa weszla w 9.42,
 przemiat przeliczyl korpus, `after-reseed` potwierdzil wygasniecie. Regula pilnujaca terminu jednego
 wpisu jest z natury tymczasowa, a trzymana po naprawie **oblewa build za to, ze naprawa doszla**.
@@ -8225,3 +8238,5 @@ wpisu jest z natury tymczasowa, a trzymana po naprawie **oblewa build za to, ze 
 sie **okolo 09:00**. Blast radius zmierzony z gory: **3 wiersze z 43 zaliczonych** (bigcommerce.com,
 sentry.io, calendly.com), i po przemiecie kazdy z nich ma byc **niemierzalny albo oblany**, nie
 zaliczony. Sprawdzenie: `npm run audit-entry-credited` ma pokazac zero plikow nieodroznialnych.
+Dla MCP nie ma predykcji z gory, bo lista niemierzalnych adresow powstaje dopiero w skanie: po
+przemiecie sprawdzic, ile wierszy ma `mcp_present` niemierzalny i czy kazdy z nich nazywa adres.
