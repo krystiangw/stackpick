@@ -8897,3 +8897,29 @@ reszta jest przypadkiem, w ktorym ktos moglby sie poczuc opisany bez pytania.
 
 Straznik pilnuje teraz calego lancucha naraz: zdania na `/bot`, odczytu tylko zasianego wiersza,
 braku zapasowego odczytu i tego, ze strony spoza korpusu sa `noindex`.
+
+## OPUBLIKOWANA METODOLOGIA OPISYWALA REGULE, KTOREJ SKANER JUZ NIE WYKONUJE (2026-08-19, 13:15)
+
+Najpowazniejsze znalezisko z przegladania **publicznych** zdan, bo dotyka jedynej rzeczy, ktora
+naprawde sprzedajemy: **„formula jest opublikowana i mozesz ja odtworzyc"**.
+
+Akapit o kontrolce na `/methodology` mowil, ze gdy strona odpowiada na sciezke-nonsens prawdziwym
+dokumentem, **„every hit in that namespace is suppressed"**. To zachowanie **zostalo usuniete** kilka
+wersji temu i sam kod nosi komentarz „The namespace verdict no longer short-circuits the probe" -
+usuniete wlasnie dlatego, ze sentry.io odpowiada na kazda sciezke `.md` tym samym plikiem i **mimo to
+publikuje prawdziwy deskryptor na 106 bajtow**, ktory wygaszanie calej przestrzeni by wyrzucilo.
+Akapit nie mowil tez ani slowa o galezi dodanej w 9.43: **kontrolka, ktora nie odpowiedziala, czyni
+trafienie niemierzalnym, a nie darmowym**.
+
+Vendor odtwarzajacy nasz pomiar z tego akapitu **dostalby inna liczbe niz my** - a to jest dokladnie
+ta obietnica, na ktorej stoi caly produkt. Zdanie opisujace nieistniejaca regule jest gorsze niz brak
+zdania.
+
+**Codex zlapal, ze moja poprawka przestrzelila w druga strone:** napisalem, ze brak kontrolki czyni
+check MCP niemierzalnym, a to prawda tylko dla ksztaltow, ktore **bez kontrolki nic nie znacza**
+(odmowa, puste 202, gole 405). Uscisk dloni, cialo JSON i wyzwanie OAuth licza sie **bez zadnej
+kontrolki** i tak zostalo napisane.
+
+Straznik wiaze teraz tekst z kodem w obie strony: metodologia nie moze obiecywac wygaszania
+przestrzeni nazw, musi mowic o porownaniu per plik i o galezi niemierzalnej - **a kod musi naprawde
+tak dzialac**, co sprawdzane jest osobno na `funnel.ts`.
