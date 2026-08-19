@@ -15,10 +15,11 @@
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { readSnippet } from '../src/lib/scan/funnel'
+import { howManyRows } from './how-many'
 
 const PAUSE_MS = 350
 const store = getStore()
-const most = Number(process.argv[2] ?? 40)
+const most = howManyRows(40)
 
 /** Deliberately careless, because its job is to find what a careful rule refuses to credit. */
 const LOOSE_MONEY = /[$€£]\s?\d|\b\d+(?:[.,]\d+)?\s?(?:usd|eur|gbp|pln)\b|\bper (?:month|user|seat|request)\b/i

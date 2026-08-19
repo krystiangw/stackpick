@@ -10,10 +10,11 @@
  */
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
+import { howManyRows } from './how-many'
 
 const PAUSE_MS = 400
 const store = getStore()
-const most = Number(process.argv[2] ?? 40)
+const most = howManyRows(40)
 
 const alive: { domain: string; url: string; status: number }[] = []
 const dead: string[] = []

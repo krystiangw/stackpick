@@ -20,6 +20,7 @@
  */
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
+import { howManyRows } from './how-many'
 
 /**
  * The same three documents the scanner asks for, not the two obvious ones. A protected-resource
@@ -35,7 +36,7 @@ const PATHS = [
 const PAUSE_MS = 400
 
 const store = getStore()
-const most = Number(process.argv[2] ?? 30)
+const most = howManyRows(30)
 
 type Hit = { domain: string; url: string; issuer?: string; registration?: string }
 const hits: Hit[] = []

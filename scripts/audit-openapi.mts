@@ -15,10 +15,11 @@ import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { OPENAPI_PATHS, declaredSpecs } from '../src/lib/scan/machine'
 import { isRealTextFile } from '../src/lib/scan/http'
+import { howManyRows } from './how-many'
 
 const PAUSE_MS = 300
 const store = getStore()
-const most = Number(process.argv[2] ?? 30)
+const most = howManyRows(30)
 
 
 const get = async (url: string, accept: string) => {

@@ -15,10 +15,11 @@
  */
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
+import { howManyRows } from './how-many'
 
 const PAUSE_MS = 400
 const store = getStore()
-const most = Number(process.argv[2] ?? 30)
+const most = howManyRows(30)
 
 const HANDSHAKE = JSON.stringify({
   jsonrpc: '2.0',

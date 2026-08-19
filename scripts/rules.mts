@@ -526,6 +526,19 @@ check('i mowi, ze trzeba do nich napisac', runbookBillingu.includes('Write to ev
 check('runbook dostawy mowi, ze miesieczny mail jest reczny', runbookDostawy.includes('no schedule behind it'), true)
 const crony = readdirSync('src/app/api/cron')
 check('cronow jest tyle, ile runbook zaklada', crony.length, 3)
+
+// Jedenascie skryptow audytowych czytalo `Number(process.argv[2] ?? N)`. `Number('accused')` to NaN,
+// `slice(0, NaN)` jest puste, a skrypt drukuje potem, ze nasze zdanie sie trzyma, nie zapytawszy o
+// nic. To sa skrypty, ktorych cala praca polega na FALSYFIKOWANIU wlasnych zdan, wiec bieg o zerowym
+// pokryciu, ktory konczy sie uspokojeniem, jest najgorsza odpowiedzia, jaka moga dac.
+console.log('\naudyty odmawiaja argumentu, ktory nie jest liczba')
+const audyty = readdirSync('scripts').filter((name) => name.startsWith('audit-') && name.endsWith('.mts'))
+const czytaSurowo = audyty.filter((name) =>
+  readFileSync(`scripts/${name}`, 'utf8').includes('Number(process.argv[2]'),
+)
+check('zaden audyt nie czyta argumentu bez sprawdzenia', czytaSurowo.join(','), '')
+// Kontrolka: sonda musi umiec zobaczyc ten wzorzec, gdy naprawde jest.
+check('kontrola: sonda widzi wzorzec, gdy jest', 'const most = Number(process.argv[2] ?? 30)'.includes('Number(process.argv[2]'), true)
 check('smiec nie wysadza czytania', signatures.read('{'), null)
 // Paddle wysyla customer_id, nie adres, wiec adres wozimy we wlasnym custom_data. Bez tego kazde
 // prawdziwe zdarzenie odpadaloby jako niekompletne. Znalezione przez codex review.

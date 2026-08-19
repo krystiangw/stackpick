@@ -17,10 +17,11 @@
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { SIGNUP_HINTS } from '../src/lib/scan/discover'
+import { howManyRows } from './how-many'
 
 const PAUSE_MS = 400
 const store = getStore()
-const most = Number(process.argv[2] ?? 25)
+const most = howManyRows(25)
 
 /** Deliberately looser than the rule: this is a search for what the rule does not see. */
 const LOOKS_LIKE_A_WAY_IN = /sign[_ -]?up|register|create[_ -]?account|get[_ -]?started|start[_ -]?free|try[_ -]?(it|free)|free[_ -]?trial|join|new[_ -]?account/i

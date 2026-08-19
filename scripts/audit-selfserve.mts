@@ -15,10 +15,11 @@
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { SELF_SERVE_PATTERNS } from '../src/lib/scan/funnel'
+import { howManyRows } from './how-many'
 
 const PAUSE_MS = 350
 const store = getStore()
-const most = Number(process.argv[2] ?? 30)
+const most = howManyRows(30)
 
 let checked = 0
 const unread: string[] = []

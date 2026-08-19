@@ -15,10 +15,11 @@
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { provisioningMatches } from '../src/lib/scan/funnel'
+import { howManyRows } from './how-many'
 
 const PAUSE_MS = 300
 const store = getStore()
-const most = Number(process.argv[2] ?? 30)
+const most = howManyRows(30)
 
 /** Careless on purpose: its job is to find what a careful rule will not credit. */
 const LOOSE = /(creat|generat|issu|mint)\w*\s+(a\s+|an\s+|your\s+|new\s+)?(api[\s-]?key|token|credential|secret|service account)/i

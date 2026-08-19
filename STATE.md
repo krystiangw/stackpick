@@ -1464,8 +1464,10 @@ Zabezpieczenia, kazde sprawdzone na prawdziwych plikach **przed** wdrozeniem:
 - **Zdanie podaje liczbe faktycznie zadanych sciezek** (18 przy dwoch hostach). „Z 9" po zapytaniu
   osiemnastu to liczba nie do odtworzenia przez vendora. Adresy sa teraz bezwzgledne.
 
-Skrypt: `npx tsx scripts/audit-entry.mts credited|accused`. **Do zrobienia po reseedzie:** powtorzyc
-strone oskarzajaca i sprawdzic, czy 21 niezgodnosci zeszlo do zera.
+Skrypt: `npx tsx scripts/audit-entry.mts [ile wierszy]`. **Ta linijka mowila `credited|accused`, czyli
+tryby, ktorych skrypt nigdy nie mial** - i to wyszlo dopiero 2026-08-19, gdy ja wykonalem. Szczegoly
+w sekcji o jedenastu audytach ponizej. **Zrobione po przemiecie na 9.42:** 27 wierszy, 455 sciezek,
+**zero plikow**, wiec 21 niezgodnosci zeszlo do zera.
 
 ## 429 Z MARKEREM WYZWANIA TO SCIANA, NIE NASZ NAWAL (9.18, wdrozone)
 
@@ -3021,8 +3023,10 @@ agenta:
      audytowany), a nie na `mcp_present`, ktory mial juz przebieg 14. **Nic nie obalone.**
   4. ~~**24. przebieg: `mcp_present`**~~ **zrobione (9.22)**: piec falszywych oskarzen, naprawione
      przez zapytanie rejestru MCP. Patrz sekcja u gory.
-  5. **Do zrobienia po najblizszym reseedzie:** `npx tsx scripts/audit-entry.mts accused` (czy 21
-     niezgodnosci zeszlo do zera) oraz `npm run noise-floor 9.22`.
+  5. ~~**Do zrobienia po najblizszym reseedzie:** `audit-entry.mts` (czy 21 niezgodnosci zeszlo do
+     zera)~~ **zrobione po przemiecie na 9.42: zero plikow na 455 sciezkach.** `npm run noise-floor`
+     nadal czeka, bo wymaga dwoch przemiatow tej samej formuly w odstepie szesciu godzin, a my
+     zmieniamy reguly czesciej.
   6. ~~**25. przebieg:** `machine_readable_api`~~ **zrobione**: 0 znalezisk, ale zrodlo mialo
      pokrycie 2 na 47, wiec wynik jest pusty, a nie uspokajajacy. Patrz sekcja u gory.
   7. **26. przebieg:** zanim wybierzesz check, **zmierz najpierw pokrycie zrodla prawdy** na
@@ -8013,3 +8017,30 @@ middleware tylko dla `/app`. Pierwszy skan pdfmonkey wygladal w odpowiedzi ident
 `registry-search`**, czyli na najslabszej klasie dowodu, jaka mamy - i to jest powod, dla ktorego
 dzisiejsza zmiana (slowa paczki rozstrzygaja) dotyka wlasnie tej polowy, a bramka z #46 oznacza wiele
 z nich jako niemierzalne zamiast je punktowac.
+
+## JEDENASCIE AUDYTOW MOGLO POWIEDZIEC „TRZYMA SIE WSZEDZIE" NIE ZAPYTAWSZY O NIC (2026-08-19)
+
+Znalezione przez **wykonanie instrukcji, ktora sama w sobie byla bledna**. STATE.md kazal po
+przemiecie uruchomic `npx tsx scripts/audit-entry.mts accused`. Skrypt nigdy nie mial trybu
+`accused`: bierze **liczbe wierszy**. `Number('accused')` to `NaN`, `slice(0, NaN)` jest puste, wiec
+audyt sprawdzil **zero wierszy, zapytal o zero sciezek** i wydrukowal:
+
+> `0 oblanych wierszy, 0 sciezek zapytanych`
+> `zdanie trzyma sie wszedzie: pod zadna z wymienionych sciezek nie ma dzis pliku`
+
+**To sa skrypty, ktorych cala praca polega na falsyfikowaniu naszych wlasnych zdan.** Bieg o zerowym
+pokryciu konczacy sie uspokojeniem jest najgorsza odpowiedzia, jaka moga dac, i **jedenascie z nich
+mialo dokladnie ten sam ksztalt** (`Number(process.argv[2] ?? N)`): agent-card, attribution,
+llms-links, mcp, oauth, openapi, provisioning, selfserve, signup, signup-discovery, snippet-live.
+
+Jeden wspolny `scripts/how-many.ts` odmawia teraz argumentu, ktory nie jest **dodatnia** liczba
+(zero tez, bo zero to prosba o niemierzenie niczego). Straznik w `rules.mts` pilnuje, ze zaden audyt
+nie wrocil do surowego `Number(process.argv[2]`, z kontrolka, ze sonda ten wzorzec w ogole widzi.
+
+**Uruchomiony poprawnie, audyt wejscia potwierdzil zdanie:** 27 wierszy, **455 sciezek zapytanych,
+zero plikow znalezionych**. Kolejka 21 niezgodnosci z poprzednich rund zeszla do zera. Pelny przebieg
+po wszystkich 133 oblanych wierszach chodzi w tle (`/tmp/audit-entry-all.log`).
+
+**Lekcja szersza niz ten blad:** instrukcja zapisana w STATE.md jest kodem, ktory wykonuje czlowiek
+albo agent, i **starzeje sie tak samo jak kod**, tylko nikt jej nie kompiluje. Ta konkretna byla
+nieprawdziwa od dawna i przez caly ten czas dawala zielona odpowiedz.

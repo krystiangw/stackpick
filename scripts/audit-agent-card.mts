@@ -14,11 +14,12 @@
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { AGENT_UA } from '../src/lib/scan/http'
 import { answersWithTheSameTemplate } from '../src/lib/scan/funnel'
+import { howManyRows } from './how-many'
 
 /** A path nobody registers, used as each site's own control for what "not found" looks like there. */
 const NONSENSE = 'letagentsin-control-9f2c'
 
-const everyNth = Number(process.argv[2] ?? 3)
+const everyNth = howManyRows(3)
 const all = [...CURATED_DOMAINS]
 const sample = all.filter((_, index) => index % everyNth === 0)
 

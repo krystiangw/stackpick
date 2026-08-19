@@ -16,10 +16,11 @@ import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { rendersUsableForm, entersThroughIdentityProvider } from '../src/lib/scan/funnel'
 import { AGENT_UA } from '../src/lib/scan/http'
+import { howManyRows } from './how-many'
 
 const PAUSE_MS = 400
 const store = getStore()
-const most = Number(process.argv[2] ?? 40)
+const most = howManyRows(40)
 
 type Wrong = { domain: string; url: string; why: string }
 const wrong: Wrong[] = []

@@ -24,11 +24,12 @@ import {
   looksLikeADocsPageTwin,
 } from '../src/lib/scan/funnel'
 import { registrableDomain } from '../src/lib/scan/http'
+import { howManyRows } from './how-many'
 
 const PAUSE_MS = 250
 const CONTROL = '/letagentsin-audit-probe-8f3a1c'
 const store = getStore()
-const most = Number(process.argv[2] ?? 40)
+const most = howManyRows(40)
 
 const get = async (url: string, accept: string) => {
   await new Promise((done) => setTimeout(done, PAUSE_MS))
