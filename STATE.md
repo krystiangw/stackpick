@@ -8578,3 +8578,35 @@ uczciwsza niz dwa platne dokumenty**. Zastrzezenie napisano tam, gdzie tekst sto
 polsku i po angielsku i roznica **rzuca sie w oczy autorowi**; w raporcie i w mailu cytat jest
 wyrwany z kontekstu, wiec autor go nie widzi, a **czytelnik owszem**. Nie dopisalem drugiego zdania
 o tym samym - sprawdzenie zakonczylo sie tym, ze **nic nie zmienilem**, i to tez jest wynik.
+
+## PIERWSZE WYNIKI PRZEMIATU: PREDYKCJA TRAFILA W DWA WIERSZE Z PIECIU (2026-08-19, 09:10)
+
+Piatka z predykcji przeskanowana w pierwszym przejsciu. Wynik jest mieszany i **wart wiecej niz
+gdyby byl czysty**:
+
+| wiersz | predykcja | co wyszlo |
+|---|---|---|
+| uploadcare.com | zdanie przestaje wymieniac stron 404 | **TAK**, zdanie konczy sie na rejestrze MCP |
+| bigcommerce.com | nie zaliczony | **TAK**, oblany |
+| sentry.io | nie zaliczony | **NIE**, nadal zaliczony - i **predykcja byla bledna, nie kod** |
+| calendly.com | nie zaliczony | **NIE**, zaliczony na innym pliku - do wyjasnienia po przemiecie |
+| growthbook.io | traci punkt za provisioning | **NIE**, punkt przetrwal na innym zdaniu o Google |
+
+**SENTRY: to ja sie mylilem, nie skaner.** `/.well-known/mcp.json` oddaje **106 bajtow prawdziwego
+deskryptora** przy naglowku, ktorym pyta skaner (`application/json;q=1`), a **976 bajtow catch-alla**
+przy naglowku, ktorym pytal **audyt**. Audyt porownywal wiec dwie odpowiedzi, **ktorych skaner nigdy
+nie widzial**, i zglaszal falszywy alarm o falszywym punkcie. Naprawione (`354a2de`): audyt bierze
+`entryAccept` prosto ze skanera, plus naglowek `From`, ktory skaner wysyla pod swoim user-agentem
+(to codeksa). **Regula ogolna, warta zapamietania: audyt, ktory pyta inaczej niz badany, produkuje
+alarmy o samym sobie.**
+
+**GROWTHBOOK: moja regula z 9.44 zadzialala i nie wystarczyla.** Zdanie z linkiem do konsoli Google
+przestalo liczyc, ale punkt przetrwal na **innym wystapieniu tej samej frazy**, tez o Google:
+„Give Storage `Object Admin` role access to the newly created service…". Regula patrzy na **link w
+oknie**, a to zdanie linku nie ma. Do domkniecia po przemiecie.
+
+**CALENDLY: nie wiem jeszcze.** Punkt przeszedl ze `skill.md` na `agent-signup.md`, obie strony maja
+**298 101 bajtow, dokladnie tyle co kontrolka**, wiec porownanie dlugosci powinno to zlapac. Sprawdzone
+recznie tym samym naglowkiem: plik i kontrolka sa **identyczne**. Czyli albo kontrolka nie doszla w
+tamtym skanie (wtedy werdykt powinien byc **niemierzalny**, a nie zaliczony), albo cos jeszcze.
+**Do zdiagnozowania po przemiecie, na swiezym wierszu z drugiego przejscia.**
