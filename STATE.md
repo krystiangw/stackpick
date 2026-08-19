@@ -8872,3 +8872,28 @@ samo, tu trzeba liczyc inaczej.**
 Runbook mowi teraz o **dwoch** bramkach zamiast jednej, a straznik sprawdza, ze kazda bramka
 wymieniona w runbooku **istnieje w `package.json`** - instrukcja wskazujaca nieistniejacy skrypt to
 instrukcja, ktora cicho nie dziala.
+
+## OBIETNICA Z `/bot` MIALA JEDNA DROGE, KTORA MOGLA PRZESTAC BYC PRAWDZIWA (2026-08-19, 13:05)
+
+Ta sama metoda, tym razem na **publicznych** zdaniach, a nie na runbookach. `/bot` obiecuje dwie
+rzeczy i obie sprawdzilem w kodzie:
+
+1. **„A scan you run from our home page always runs, robots.txt or not"** - PRAWDA i ladnie zrobione:
+   `stance = seeded ? await stanceTowardsUs(...) : 'in'`, wiec skan bez tokenu konsoli zawsze rusza.
+2. **„nothing a visitor scans joins the corpus we publish, and that rule is what stops an anonymous
+   request rewriting what this site says about a company"** - korpus faktycznie czyta tylko wiersze
+   zasiane. Ale **strona vendora** miala zapasowy odczyt: dla domeny z korpusu brala wiersz zasiany,
+   a **gdyby go nie bylo** - jakikolwiek, czyli to, co ostatnio przeskanowal odwiedzajacy. Na
+   stronie, ktora jest **indeksowalna**.
+
+Dzis wszystkie 177 wierszy ma zasiany pomiar (sprawdzone), wiec **nic sie nie zmienia w tym, co widac**
+- znika za to jedyna droga, ktora mogla te obietnice zlamac. Zapasowy odczyt zostaje wylacznie dla
+domen **spoza** korpusu, a te strony sa `noindex`, co tez sprawdzilem na produkcji.
+
+**I dopisalem do obietnicy zdanie, ktorego brakowalo:** firma, ktorej nie publikujemy, nie ma wpisu
+do przepisania, wiec jej strona pokazuje najswiezszy skan dowolnego rodzaju i **jest trzymana poza
+wyszukiwarka**. Poprzednia wersja byla prawdziwa o korpusie i milczala o reszcie - a to wlasnie
+reszta jest przypadkiem, w ktorym ktos moglby sie poczuc opisany bez pytania.
+
+Straznik pilnuje teraz calego lancucha naraz: zdania na `/bot`, odczytu tylko zasianego wiersza,
+braku zapasowego odczytu i tego, ze strony spoza korpusu sa `noindex`.
