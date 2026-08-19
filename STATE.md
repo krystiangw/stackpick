@@ -8715,3 +8715,61 @@ formy: **przed** fraza gerundium jest czasownikiem („provisioning a service ac
 czyli okolo **16:00**), log `/tmp/reseed-945.log`. **Nie deployowac po jego starcie.** Po przemiecie:
 sprawdzic, czy dokladnie te 10 wierszy stracilo punkt i czy zadne zdanie nie mowi juz „service
 account" bez slowa o tworzeniu.
+
+## KAZDY ADRES, NA KTORYM STOI ZALICZONY WIERSZ, DZIS ODPOWIADA (2026-08-19, 11:05)
+
+`audit-published-urls` mowi po raz pierwszy: **„zaden zaliczony wiersz nie stoi na adresie, ktorego
+dzis nie ma"**. 1514 adresow sprawdzonych, 1 pominiety, 3 martwe - i **wszystkie trzy leza na
+wierszach NIEMIERZALNYCH**, czyli takich, ktorych zdanie samo mowi, ze nas tam nie wpuszczono.
+
+Ostatni wisial `cal.com`. Nazywalismy go „znanym falszywym alarmem" **trzy razy** i za kazdym razem
+zostawiali. To bylo lenistwo: przyczyna jest konkretna i naprawialna. Ich cytat brzmi
+`curl --request POST --url https://api.cal.com/v2/api-keys/refresh`, a audyt pytal **GET-em**, wiec
+dostawal 404 z adresu, ktory istnieje i przyjmuje POST-y. **Trzeci raz tej nocy ten sam ksztalt:
+narzedzie badajace zadawalo inne pytanie niz badany.**
+
+Naprawa jest ostrozna z wyboru: **nie wysylamy POST-a**. Strzelanie zapisem w cudze API, zeby
+zamknac wlasny audyt, nie jest nasza rzecza - wiec po prostu przestajemy udawac, ze GET czegokolwiek
+dowiodl. Adres ladzie w czwartym kubelku „nie zapytane" i **nie liczy sie jako sprawdzony**.
+
+**Codex wchodzil w te jedna zmiane cztery razy i za kazdym razem mial racje:**
+1. `mcp_present` musi zostac przy swoim handshake - jego adresy sa badane POST-em, ktory czyta, a
+   nie pisze, i kilka z nich odpowiada 404 na GET. Bez wyjatku stracilibysmy pokrycie, dla ktorego
+   ten skrypt powstal.
+2. Pominiete **nie sa sprawdzone**: inaczej wejscie z samych POST-ow drukuje „N adresow
+   sprawdzonych", nie wysylajac ani jednego zapytania, i mija bramke zerowego pomiaru.
+3. Czasownik trzeba wiazac z **tym** wystapieniem adresu, nie z pierwszym w tekscie, a wczesniejszy
+   adres konczy klauzule - inaczej metoda z jednej komendy przechodzi na nastepna.
+4. **Samo slowo to za malo**: „POST requests are documented at <adres>" to proza o stronie, ktora
+   odpowiada na GET; pominiecie jej ukryloby martwy adres. Czasownik musi pochodzic z konstrukcji
+   (`--request POST`, `-X POST`, albo stac tuz przed adresem). A skoro tak, okno moglo urosnac do
+   200 znakow, bo naglowki curla staja miedzy czasownikiem a adresem.
+
+## PAGESPEED NIE CHCIAL RUSZYC, A ZNALAZLEM PRZEZ TO PRAWDZIWY BLAD (2026-08-19, 11:10)
+
+Krystian nie mogl puscic PageSpeed: „Unable to resolve https://letagentsin.com/". **Strona jest
+zdrowa** - apex rozwiazuje sie na cztery adresy i **kazdy** oddaje 200 z poprawnym TLS, `robots.txt`
+przepuszcza wszystko, DNSSEC nie ma, middleware nie dotyka `/`. Publiczne API PageSpeed odpowiada
+`429 Quota exceeded` dla anonimowego projektu Google, a webowy PSI korzysta z tej samej puli i
+zamienia to na mylacy komunikat o rozwiazywaniu adresu.
+
+Zamiast czekac, puscilem **Lighthouse lokalnie**: performance **100** na obu form factorach, LCP
+1,5 s mobile i 0,4 s desktop, CLS 0.
+
+**I ten objazd znalazl blad, ktorego zaden nasz audyt nie mogl zlapac.** Przycisk formularza
+monitoringu mial klase `text-ink-inverse` - **token, ktorego nigdy nie zdefiniowalismy**. Klasa nie
+robila nic, napis dziedziczyl zwykly kolor tekstu, wiec kontrast wynosil **1,98 w ciemnym motywie i
+2,89 w jasnym**: oblane WCAG AA **po obu stronach**, na glownym CTA strony, ktora zbiera adresy.
+Po zmianie na istniejacy `text-ground`: **7,86 i 5,85**. Accessibility **96 -> 100**, zweryfikowane
+na produkcji.
+
+**Zla nazwa klasy w Tailwindzie nie mowi ani slowa** - to cicha awaria dokladnie tej samej rodziny,
+co reszta tej nocy. Straznik oblewa teraz build, gdy jakakolwiek klasa nazywa kolor spoza
+`globals.css`.
+
+**OTWARTE, DO DECYZJI KRYSTIANA:** Lighthouse daje SEO 92, bo uznaje nasz `robots.txt` za
+nieprawidlowy - nie zna dyrektyw `Content-Signal:` i `AI-Catalog:`. **RFC 9309 kaze ignorowac
+nieznane linie**, wiec formalnie to blad narzedzia, nie nasz. Moja rekomendacja: **zostawiamy** -
+sami doradzamy vendorom publikowanie ARD, a usuniecie sygnalu, zeby zadowolic linter, byloby
+sprzeczne z wlasna rada. Warte natomiast tekstu na `/methodology`: to konkretny, sprawdzalny
+przyklad narzedzia surowszego niz standard, ktory mierzy.
