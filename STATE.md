@@ -8610,3 +8610,57 @@ oknie**, a to zdanie linku nie ma. Do domkniecia po przemiecie.
 recznie tym samym naglowkiem: plik i kontrolka sa **identyczne**. Czyli albo kontrolka nie doszla w
 tamtym skanie (wtedy werdykt powinien byc **niemierzalny**, a nie zaliczony), albo cos jeszcze.
 **Do zdiagnozowania po przemiecie, na swiezym wierszu z drugiego przejscia.**
+
+## PRZEMIAT NA 9.44 ZAMKNIETY, OSIEM PUNKTOW CHECKLISTY ODHACZONE (2026-08-19, 10:10)
+
+Przemiat 08:41-09:57, dwa przejscia, oba czyste. **177 wierszy na 9.44, 0 sprzecznosci**, 21 liczb i
+5 twierdzen o nazwanych vendorach zgodnych z danymi.
+
+**1. Predykcja: trafione 3 z 5, a jedno chybienie bylo bledem MOJEJ predykcji, nie kodu.**
+
+| wiersz | predykcja | wynik |
+|---|---|---|
+| bigcommerce.com | nie zaliczony | **oblany** |
+| calendly.com | nie zaliczony | **oblany** (1 -> 0, wyszedl tez na liscie regresow) |
+| uploadcare.com | zdanie nie wymienia strony 404 | **potwierdzone** |
+| sentry.io | nie zaliczony | **zaliczony i slusznie** - patrz nizej |
+| growthbook.io | traci punkt | **punkt przetrwal** na innym zdaniu o Google, bez linku |
+
+**2. Kluczowy sprawdzian przeszedl: `audit-entry-credited` na calym korpusie daje ZERO plikow
+nieodroznialnych** - 41 zaliczonych wierszy, 43 pliki zapytane, **43 porownane** (poprzednio jedno
+porownanie przepadalo). Kazdy zaliczony plik rozni sie od sciezki, ktorej nie ma.
+
+**3. Galaz 9.43 zyje i widac, gdzie:** `agent_entry_point` jest **niemierzalny na 2 wierszach**
+(getunleash.io, bitmovin.com) dokladnie z powodu milczacej kontrolki. Przed przemiatem takich wierszy
+bylo zero, bo galaz byla nowa. `mcp_present` przez milczaca kontrolke: **zero** - kontrolki MCP
+dochodza wszedzie, wiec galaz jest przygotowana, ale dzis nieuzywana.
+
+**4. Adresy, ktore publikujemy: z 3 martwych zrobilo sie 1**, i to znany falszywy alarm audytu
+(cal.com cytuje wlasna dokumentacje, a check pyta o to, co dokumentuja, nie czy my tam wejdziemy bez
+klucza). `growthbook`owe `console.cloud.google.c` i `uploadcare`owe `_mcp/server` zniknely.
+
+**5. Trzy wiersze mniej w regresach, niz sie balem:** cztery werdykty gorsze niz poprzedni pomiar
+(telnyx, calendly, froala, deepl), z czego **calendly jest zamierzony**, froala to ich 403 wobec nas,
+a telnyx i deepl do przeskanowania pojedynczo, zanim ktos je nazwie regresem vendora.
+
+**6. `inwx.com` nie dal sie zasiac trzy razy z rzedu** i zostal na 9.42, przez co strona liczyla 176
+z 177. Doskanowany recznie z konsoli POST-em, teraz 9.44. Strona pokazuje **177 domains · formula
+v9.44** i zdanie o pominietych wierszach slusznie znikneło.
+
+**7. Probka `/d/sample` przegenerowana na 9.44** (byla 9.41) i **zrzuty do katalogu konektorow
+zrobione** na aktualnych danych: piec plikow 1440x1000 w scratchpadzie sesji.
+
+**8. Dwie poprawki, ktore wyszly Z przemiatu, nie przed nim.** Obie o tym samym: **narzedzie badajace
+nie moze zadawac innego pytania niz badany.**
+- `audit-entry-credited` pytal wlasnym naglowkiem `Accept`, a sentry.io oddaje pod
+  `/.well-known/mcp.json` **106 bajtow prawdziwego deskryptora** na naglowek skanera i **976 bajtow
+  catch-alla** na naglowek audytu. Stad falszywy alarm o falszywym punkcie. Naprawione razem z
+  naglowkiem `From`, ktory skaner wysyla pod swoim user-agentem (to codeksa).
+- `audit-published-urls` mial dwa kubelki, a martwy adres znaczy **trzy** rozne rzeczy. Na wierszu
+  **niemierzalnym** zdanie zwykle samo mowi, ze ten adres nas nie wpuscil - namecheap.com pisze
+  „answers 403, 403, 404" - wiec audyt zglaszal **nasza wlasna deklaracje** jako znalezisko przeciwko
+  nam. Werdykt jedzie teraz z `corpus.json` zamiast byc zgadywany z punktow.
+
+**CO ZOSTALO OTWARTE:** growthbook.io (punkt za provisioning stoi na zdaniu o koncie uslugowym
+Google **bez linku w oknie**, wiec regula 9.44 go nie widzi), oraz telnyx.com i deepl.com do
+pojedynczego przeskanowania.
