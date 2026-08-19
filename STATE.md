@@ -8479,3 +8479,40 @@ dowod** - tyle ze w infrastrukturze.
 recznie `workflow_dispatch`, bo to job manualny. **Do zrobienia rano, dwie komendy:**
 `git push origin main` i `gh workflow run mcp-registry.yml`. Do tego czasu lustro jest swieze recznie
 i ma **siedem dni** zapasu.
+
+## PRZECZYTALEM WYGENEROWANY RAPORT JAK KUPUJACY I ZNALAZLEM DWIE RZECZY (2026-08-19, 07:25)
+
+Wygenerowalem platny raport dla `growthbook.io` nie po to, zeby sprawdzic kod, tylko zeby go
+**przeczytac tak, jak czyta go ktos, kto za niego zaplacil**. Dwie rzeczy widac dopiero stamtad:
+
+**1. Piec z dziewieciu cytatow bylo po polsku.** Dokument jest po angielsku i sprzedawany
+anglojezycznemu vendorowi, a polowa cytowanych odpowiedzi to zdania, ktorych on nie przeczyta.
+Przyczyna jest znana i **juz opisana w metodologii jako kontaminacja**: cele claude chodza na
+maszynie, ktorej instrukcje operatora prosza o polski. Nowe jest to, ze **nikt nie powiedzial o tym
+kupujacemu w miejscu, w ktorym to widzi**.
+
+Kazdy taki cytat ma teraz znacznik **`(in Polish)`**, a pod lista stoi zdanie z liczba, powodem i
+jedna decyzja wprost: **nie tlumaczymy tego, co cytujemy**, bo przetlumaczony cytat jest naszym
+zdaniem, a nie agenta. Regula rozpoznaje polski po znakach diakrytycznych, z `ó` wlacznie (codex:
+„który produkt wybrać" nie ma innego ogonka), a jej granica jest **nazwana w kodzie i w kontrolce**:
+polszczyzna bez ogonkow przechodzi tu jak angielski.
+
+**Lekarstwem nie jest znacznik, tylko czysty przebieg:** przy najblizszym odswiezeniu cel puscic
+claude z **neutralnym CLAUDE.md**, co naprawia jezyk i kontaminacje naraz. Karta na Musterze
+(`produkt:biegi-claude-po-polsku`), bo to wydatek na tokeny, a nie decyzja techniczna.
+
+**2. Cytat konczyl sie polowa adresu:** `„…[IAM & Admin → Service Accounts](https://console.cloud.google.c"`.
+Okno ma 70 znakow i potrafi przeciac adres w pol. Dwa z 79 cytatow w korpusie tak wygladaly.
+Poszerzenie okna byloby gorsze - cytowaloby slowa, ktorych regula nie czytala - wiec ucieta polowa
+adresu **znika z cytatu**.
+
+**Codex wchodzil w to trzy razy i za kazdym razem zwezal regule o jeden prawdziwy przypadek:**
+1. Zdanie skonczone kropka (`Visit https://example.com/x.`) tez nie ma po adresie spacji, wiec
+   pierwsza wersja kasowala **caly poprawny adres**.
+2. Granica 70 znakow potrafi wypasc **dokladnie za** calym adresem, i wtedy tez nie ma po nim spacji
+   **w oknie** - a adres jest caly.
+3. Nawias zamykajacy na granicy zostaje **poza** oknem, wiec cytat niesie niedomkniete
+   `[IAM](https://x`. Tylko **bialy znak** jest bezpiecznie poza tokenem.
+
+Koncowa regula jest jednym zdaniem: **okno skonczone kropka, koncem strony albo spacja niczego nie
+przecielo; wszystko inne przecielo.**
