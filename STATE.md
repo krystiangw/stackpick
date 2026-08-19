@@ -43,8 +43,19 @@ platne subskrypcje cursora i gemini · potwierdzenie polityki robots.txt · **sz
 · czy wolno mierzyc klikniecia w CTA (nie zrobilem tego sam, bo `/privacy` mowi od dzis „no profile,
 no behaviour" i to jest handel wymienny obietnica).
 
-**PULAPKA:** kazdy skan domeny Z KORPUSU, takze do weryfikacji poprawki, odmladza mediane i przesuwa
-karencje przemiatu. Do weryfikacji uzywaj domen spoza korpusu (dzis: neon.tech, tally.so, svix.com).
+**DWIE PULAPKI PRZY WERYFIKACJI:**
+1. **`/api/scan?key=<token>` NIE zasiewa korpusu.** `fromConsole` czyta wylacznie ciasteczko
+   `stackpick_console`, a `?key=` obsluguje middleware tylko dla `/app`. Odpowiedz wyglada
+   identycznie, wiec skan weryfikacyjny cicho nie zmienia nic. Poprawnie:
+   `curl -X POST .../api/scan -H "cookie: stackpick_console=$TOKEN" -d '{"domain":"..."}'`.
+2. Pojedynczy skan domeny z korpusu **jest bezpieczny** dla karencji przemiatu, bo bramka patrzy na
+   **mediane** (to byla swiadoma zmiana z `max()`). Dopiero przemiat rusza mediane. Do prob
+   niezwiazanych z korpusem i tak lepiej brac domeny spoza (dzis: neon.tech, tally.so, svix.com).
+
+**LIMITY REJESTRU NPM SA ZMIERZONE, NIE DOMYSLANE:** porownanie przemiatu z replayem z pelnego
+cache'u rejestru dalo **160 wierszy identycznych, 16 bez paczki po obu stronach i JEDEN rozny**
+(pdfmonkey.io, juz poprawiony pojedynczym skanem: 9/15 zamiast 8/14). Szkoda ponizej progu szumu
+0,59 %. Zamyka otwarte pytanie z zadania #48.
 
 **Komplet kontroli po nastepnym przemiecie, jednym wklejeniem:**
 ```
