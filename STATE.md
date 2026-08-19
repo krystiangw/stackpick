@@ -11,6 +11,27 @@
 
 
 
+## CENNIK PRZECZYTANY JAKO KUPUJACY: JEDNA LICZBA WPISANA RECZNIE, RESZTA CZYSTA (22:35)
+
+Przejscie `/pricing` zdanie po zdaniu i skonfrontowanie **kazdej liczby** z kodem: 16 checkow, 18
+punktow, piec etapow, 26 kategorii, 18 biegow za czterema audytami, „cztery do szesciu biegow na
+komorke", 0,59 % szumu - **wszystko sie zgadza**, i co wazniejsze, wszystko **pochodzi z kodu**
+(`CHECKS.length`, `MAX_SCORE`, `CATEGORIES.length`, `priceOf(skuById(...))`), wiec nie ma jak
+zdryfowac. To dokladnie ten wniosek, co z przegladu pieciu powierzchni agentowych: generowane nie
+dryfuje.
+
+**Jeden wyjatek**: akapit „Your edge is production configuration" ma **wpisane recznie** „177 domains
+... on 18 August 2026, 16 of them refused ... 12 of those answered with a browser challenge". Te trzy
+liczby pochodza z przemiatu, czyli zmieniaja sie dokladnie wtedy, kiedy nikt na nie nie patrzy.
+`after-reseed.mts` porownuje je teraz z korpusem i mowi, ktora sie rozjechala (**„popraw je RAZEM Z
+DATA"**, bo data i liczba to jedno twierdzenie). Sprawdzone mutacja: 16→19 daje UWAGE. Dzis: zgodne
+(177/16/12). Codex czysty. `813f4e1`.
+
+**Znane, nienaprawione, swiadomie:** „Credited against your first month of monitoring" przy raporcie
+za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). Dopoki platnosci sa
+wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
+Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
+
 ## NASZ SUFIT MOZE TEZ WYBIERAC STRONY, NIE TYLKO JE OSKARZAC (znalezione 22:40, DO ZMIERZENIA PO PRZEMIECIE)
 
 Po naprawie oskarzenia poszlem tym samym ksztaltem dalej: **gdzie jeszcze czytamy dlugosc tekstu z
