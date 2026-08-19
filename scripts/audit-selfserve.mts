@@ -16,6 +16,8 @@ import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { SELF_SERVE_PATTERNS } from '../src/lib/scan/funnel'
 import { howManyRows, reportCap } from './how-many'
+import { refuseIfNothingMeasured } from './nothing-measured'
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 
 const PAUSE_MS = 350
 const store = getStore()
@@ -42,7 +44,7 @@ for (const domain of CURATED_DOMAINS) {
   if (!pricing) continue
   await new Promise((done) => setTimeout(done, PAUSE_MS))
   try {
-    const answer = await fetch(pricing, { headers: { accept: 'text/html' }, signal: AbortSignal.timeout(10_000) })
+    const answer = await fetch(pricing, { headers: { 'user-agent': AGENT_UA, from: CONTACT, accept: 'text/html' }, signal: AbortSignal.timeout(10_000) })
     if (!answer.ok) {
       unread.push(`${domain} (${answer.status})`)
       continue
@@ -71,6 +73,10 @@ for (const domain of CURATED_DOMAINS) {
 }
 
 reportCap(visited, CURATED_DOMAINS.size, checked)
+
+// Zero przeczytanych wierszy to nie jest „zdanie sie trzyma", tylko przebieg, ktory o niczym nie
+// mowi. Bez tej bramki audyt uspokaja tym glosniej, im mniej zmierzyl.
+refuseIfNothingMeasured(checked, 'cennikow')
 
 console.log(`\n${checked} cennikow przeczytanych${unread.length > 0 ? `, ${unread.length} nie odpowiedzialo: ${unread.join(', ')}` : ''}`)
 console.log('Kazde dopasowanie przeczytaj: przycisk i pytanie to nie jest oferta, i o to wlasnie ten check pyta.')

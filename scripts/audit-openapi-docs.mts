@@ -20,14 +20,15 @@
  */
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 
-const UA = 'LetAgentsIn/1.0 (+https://letagentsin.com/methodology)'
+const UA = AGENT_UA
 
 async function text(url: string, accept: string): Promise<{ body: string; status: number }> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 15000)
   try {
-    const response = await fetch(url, { signal: controller.signal, redirect: 'follow', headers: { 'user-agent': UA, accept } })
+    const response = await fetch(url, { signal: controller.signal, redirect: 'follow', headers: { 'user-agent': UA, from: CONTACT, accept } })
     return { body: (await response.text()).slice(0, 300_000), status: response.status }
   } catch {
     return { body: '', status: 0 }

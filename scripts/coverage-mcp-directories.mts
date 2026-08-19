@@ -24,10 +24,11 @@
  *     purpose, 50 percent since June 2026, so any number taken from it would be a number about
  *     their sunset schedule.
  */
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 
-const UA = 'LetAgentsIn/1.0 (+https://letagentsin.com/methodology)'
+const UA = AGENT_UA
 const SMITHERY = 'https://registry.smithery.ai/servers'
 /** Enough to catch a vendor's own entry, few enough not to hammer a free registry. */
 const MOST_RESULTS_READ = 6
@@ -38,7 +39,7 @@ async function json(url: string): Promise<unknown | null> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 15000)
   try {
-    const response = await fetch(url, { signal: controller.signal, headers: { 'user-agent': UA, accept: 'application/json' } })
+    const response = await fetch(url, { signal: controller.signal, headers: { 'user-agent': UA, from: CONTACT, accept: 'application/json' } })
     if (!response.ok) return null
     return await response.json()
   } catch {

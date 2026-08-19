@@ -1,5 +1,6 @@
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
+import { refuseIfNothingMeasured } from './nothing-measured'
 
 /**
  * Advice that asks a vendor to publish something the same scan already found.
@@ -70,4 +71,7 @@ for (const domain of CURATED_DOMAINS) {
 
 console.log(`\n${rows} raportow, ${checked} rad proszacych o rzecz, ktora umiemy wykryc`)
 console.log(`${contradictions} rad kaze opublikowac cos, co ten sam skan juz znalazl`)
+// Na `rows`, nie na `checked`: `checked` liczy rady danego ksztaltu, a zero takich rad jest
+// prawdziwym wynikiem. Zero przeczytanych RAPORTOW to przebieg, ktory nie mowi nic.
+refuseIfNothingMeasured(rows, 'raportow')
 process.exit(0)

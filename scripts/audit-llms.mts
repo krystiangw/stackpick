@@ -11,6 +11,8 @@
  *
  *   npx tsx scripts/audit-llms.mts --accused < fails.tsv
  */
+import { refuseIfNothingMeasured } from './nothing-measured'
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 const PATHS = ['/llms.txt', '/llms-full.txt', '/.well-known/llms.txt']
 
 // The documentation URL belongs here because the scanner knows it and looks there: imagekit.io
@@ -45,7 +47,7 @@ async function llmsFileOn(url: string): Promise<string | null> {
     const response = await fetch(url, {
       signal: controller.signal,
       redirect: 'follow',
-      headers: { 'user-agent': 'LetAgentsIn/1.0 (+https://letagentsin.com/methodology)', accept: 'text/plain,*/*' },
+      headers: { 'user-agent': AGENT_UA, from: CONTACT, accept: 'text/plain,*/*' },
     })
     if (!response.ok) return null
     const body = (await response.text()).slice(0, 4000)
@@ -86,6 +88,10 @@ for (const line of lines) {
     console.log(`NIEZGODA ${domain.padEnd(20)} ${at ?? 'nie znalazlem pliku, ktory nasz wiersz zalicza'}`)
   }
 }
+
+// Ten audyt czyta liste z wejscia, wiec pusty potok jest CICHY: bez tej bramki drukuje zdanie
+// uspokajajace, nie zapytawszy o nic.
+refuseIfNothingMeasured(lines.length, 'wierszy z wejscia')
 
 console.log(`\n${lines.length} sprawdzonych: ${agree} zgodnych z naszym wierszem, ${disagree} niezgodnych`)
 console.log(control ? 'kontrolka: niezgoda znaczy, ze sonda nie widzi pliku, ktory zaliczamy' : 'oskarzenia: niezgoda znaczy, ze plik jednak jest')

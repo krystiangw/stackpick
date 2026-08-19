@@ -22,6 +22,7 @@ import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { howManyRows } from './how-many'
 import { refuseIfNothingMeasured } from './nothing-measured'
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 
 /**
  * The same three documents the scanner asks for, not the two obvious ones. A protected-resource
@@ -62,7 +63,7 @@ function authorizationServersIn(body: string): string[] {
 
 async function metadataAt(url: string) {
   try {
-    const answer = await fetch(url, { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(8000) })
+    const answer = await fetch(url, { headers: { 'user-agent': AGENT_UA, from: CONTACT, accept: 'application/json' }, signal: AbortSignal.timeout(8000) })
     return answer.ok ? readsAsMetadata(await answer.text()) : null
   } catch {
     return null
@@ -118,7 +119,7 @@ for (const domain of [...CURATED_DOMAINS].slice(0, most)) {
       origins += 1
       await new Promise((done) => setTimeout(done, PAUSE_MS))
       try {
-        const answer = await fetch(`${origin}${path}`, { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(8000) })
+        const answer = await fetch(`${origin}${path}`, { headers: { 'user-agent': AGENT_UA, from: CONTACT, accept: 'application/json' }, signal: AbortSignal.timeout(8000) })
         if (!answer.ok) continue
         const body = await answer.text()
         // A protected-resource document is a pointer, so it is followed rather than read as an

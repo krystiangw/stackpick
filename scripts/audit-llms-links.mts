@@ -11,6 +11,8 @@
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { howManyRows, reportCap } from './how-many'
+import { refuseIfNothingMeasured } from './nothing-measured'
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 
 const PAUSE_MS = 400
 const store = getStore()
@@ -32,7 +34,7 @@ for (const domain of CURATED_DOMAINS) {
   checked += 1
   await new Promise((done) => setTimeout(done, PAUSE_MS))
   try {
-    const answer = await fetch(named, { headers: { accept: 'text/html,*/*' }, redirect: 'follow', signal: AbortSignal.timeout(10_000) })
+    const answer = await fetch(named, { headers: { 'user-agent': AGENT_UA, from: CONTACT, accept: 'text/html,*/*' }, redirect: 'follow', signal: AbortSignal.timeout(10_000) })
     // The scanner calls a link gone on a 404 and on nothing else, so anything that answers is a
     // sentence to look at rather than proof we were wrong: a 403 to us is not a page that is gone.
     if (answer.status === 404) dead.push(`${domain} (${named})`)
@@ -53,4 +55,8 @@ console.log(
 )
 for (const one of alive) console.log(`  ${one.domain.padEnd(22)} ${one.status} ${one.url}`)
 if (dead.length > 0) console.log(`\n${dead.length} potwierdzonych jako martwe`)
+// Zero przeczytanych wierszy to nie jest „zdanie sie trzyma", tylko przebieg, ktory o niczym nie
+// mowi. Bez tej bramki audyt uspokaja tym glosniej, im mniej zmierzyl.
+refuseIfNothingMeasured(checked, 'wierszy ze zdaniem o martwym linku')
+
 process.exit(0)

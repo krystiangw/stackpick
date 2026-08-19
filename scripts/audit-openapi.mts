@@ -14,7 +14,7 @@
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { OPENAPI_PATHS, declaredSpecs } from '../src/lib/scan/machine'
-import { isRealTextFile } from '../src/lib/scan/http'
+import { isRealTextFile, AGENT_UA, CONTACT } from '../src/lib/scan/http'
 import { howManyRows, reportCap } from './how-many'
 import { refuseIfNothingMeasured } from './nothing-measured'
 
@@ -26,7 +26,7 @@ const most = howManyRows(30)
 const get = async (url: string, accept: string) => {
   await new Promise((done) => setTimeout(done, PAUSE_MS))
   try {
-    const answer = await fetch(url, { headers: { accept }, signal: AbortSignal.timeout(8000) })
+    const answer = await fetch(url, { headers: { 'user-agent': AGENT_UA, from: CONTACT, accept }, signal: AbortSignal.timeout(8000) })
     const body = (await answer.text()).slice(0, 200_000)
     const headers: Record<string, string> = {}
     answer.headers.forEach((value, name) => (headers[name] = value))

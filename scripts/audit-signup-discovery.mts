@@ -18,6 +18,8 @@ import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { SIGNUP_HINTS } from '../src/lib/scan/discover'
 import { howManyRows } from './how-many'
+import { refuseIfNothingMeasured } from './nothing-measured'
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 
 const PAUSE_MS = 400
 const store = getStore()
@@ -44,7 +46,7 @@ const linksOn = (html: string, base: string) => {
 const get = async (url: string) => {
   await new Promise((done) => setTimeout(done, PAUSE_MS))
   try {
-    const answer = await fetch(url, { headers: { accept: 'text/html' }, signal: AbortSignal.timeout(10_000) })
+    const answer = await fetch(url, { headers: { 'user-agent': AGENT_UA, from: CONTACT, accept: 'text/html' }, signal: AbortSignal.timeout(10_000) })
     return answer.ok ? await answer.text() : null
   } catch {
     return null
@@ -78,5 +80,9 @@ for (const domain of [...CURATED_DOMAINS].slice(0, most)) {
   for (const one of missed.slice(0, 6)) console.log(`   "${one.text.slice(0, 40)}" -> ${one.url.slice(0, 100)}`)
   if (missed.length === 0) console.log('   nic, czego regula by nie widziala: link jest gdzie indziej albo strona jest z JS')
 }
+// Zero przeczytanych wierszy to nie jest „zdanie sie trzyma", tylko przebieg, ktory o niczym nie
+// mowi. Bez tej bramki audyt uspokaja tym glosniej, im mniej zmierzyl.
+refuseIfNothingMeasured(checked, 'domen')
+
 console.log(`\n${checked} domen przejrzanych`)
 process.exit(0)

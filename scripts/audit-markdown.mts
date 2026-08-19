@@ -11,6 +11,7 @@
  *   npx tsx scripts/audit-markdown.mts --control uploadcare.com cloudinary.com
  */
 import { refuseIfNothingMeasured } from './nothing-measured'
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 async function asMarkdown(url: string, useAccept: boolean): Promise<string | null> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 9000)
@@ -18,7 +19,9 @@ async function asMarkdown(url: string, useAccept: boolean): Promise<string | nul
     const response = await fetch(url, {
       signal: controller.signal,
       redirect: 'follow',
-      headers: useAccept ? { accept: 'text/markdown' } : { accept: '*/*' },
+      // Tozsamosc w OBU galeziach: sonda sufiksowa pytala bez user-agenta, wiec szla jako domyslna
+      // tozsamosc Undici i mogla dostac inna odpowiedz niz skaner na tym samym adresie. Codeksa.
+      headers: { 'user-agent': AGENT_UA, from: CONTACT, accept: useAccept ? 'text/markdown' : '*/*' },
     })
     if (!response.ok) return null
     const type = response.headers.get('content-type') ?? ''

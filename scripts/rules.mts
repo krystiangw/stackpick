@@ -2237,6 +2237,78 @@ check('i widzi uzyte klasy', nasze.length > 5, true)
 // Runbook sporu mowi, ze KAZDA strona niesie `mailto:` z tematem, wiec korekta „w koncu dojdzie".
 // Strona, za ktora klient zaplacil, byla jedyna bez tematu - czyli jego mail najtrudniej
 // posortowac ze wszystkich.
+// `handling-a-dispute.md` mowi: „Import the scanner's predicates, never rewrite them". Szesc
+// audytow pytalo jako `LetAgentsIn/1.0 (+.../methodology)`, a skaner pyta jako `(+.../bot)` - czyli
+// jako INNY agent niz ten, ktorego zachowanie sprawdzaly, i bez naglowka `From`. To ta sama rodzina
+// bledu, ktora tej nocy dala falszywy alarm o sentry.io.
+// Audyt, ktory konczy licznikiem przeczytanych wierszy, musi odmowic werdyktu przy zerze. Inaczej
+// uspokaja tym glosniej, im mniej zmierzyl - a `audit-llms` czyta liste z WEJSCIA, wiec pusty
+// potok jest zupelnie cichy: sam na to wpadlem, uruchamiajac go bez potoku.
+console.log('\naudyt z licznikiem odmawia werdyktu przy zerze')
+const zLicznikiem = readdirSync('scripts')
+  .filter((name) => name.startsWith('audit-') && name.endsWith('.mts'))
+  .filter((name) => {
+    const source = readFileSync(`scripts/${name}`, 'utf8')
+    return /^let checked = 0$/m.test(source) || /process\.stdin/.test(source)
+  })
+const bezBramki = zLicznikiem.filter((name) => !readFileSync(`scripts/${name}`, 'utf8').includes('refuseIfNothingMeasured'))
+check('zaden audyt z licznikiem nie milczy o zerze', bezBramki.join(', '), '')
+// Kontrolka: sonda naprawde znajduje te audyty, a nie pusta liste.
+check('sonda widzi audyty z licznikiem', zLicznikiem.length > 5, true)
+
+console.log('\naudyt pyta jako ten agent, ktorego sprawdza')
+const wlasnorecznyUa = readdirSync('scripts')
+  .filter((name) => name.endsWith('.mts') && name !== 'rules.mts')
+  .filter((name) => /'LetAgentsIn\/[^']*'/.test(readFileSync(`scripts/${name}`, 'utf8')))
+check('zaden skrypt nie pisze wlasnego UA skanera', wlasnorecznyUa.join(', '), '')
+// Sam UA to za malo: skaner dokłada `From` przy kazdym zapytaniu pod tym user-agentem, wiec audyt
+// bez tego naglowka nadal wysyla INNE zapytanie niz to, ktore sprawdza. Codeksa.
+// I nie tylko ci, ktorzy JUZ ustawiaja user-agenta: audyt bez zadnego naglowka wysyla domyslna
+// tozsamosc Undici, czyli jeszcze innego agenta niz skaner. Regula brzmi wiec: kto pyta obcy
+// serwer, pyta jako skaner. Codeksa, na drugiej wersji tego straznika.
+// Wyjatki wypisane z imienia i z powodem, bo nie pytaja cudzego serwera o werdykt: cztery czytaja
+// NASZ wlasny korpus albo nasze API, jeden zglasza adresy do IndexNow, jeden lustrzy rejestr MCP.
+// Nowy audyt pytajacy vendora nie jest tu wymieniony, wiec straznik go zlapie.
+const NIE_PYTA_VENDORA = new Set([
+  'audit-corpus.mts',
+  'audit-our-api.mts',
+  'diff-corpus.mts',
+  'published-urls.mts',
+  'targets.mts',
+  'indexnow.mts',
+  'mirror-mcp-registry.mts',
+])
+const nieJakSkaner = readdirSync('scripts')
+  .filter((name) => name.endsWith('.mts') && name !== 'rules.mts' && !NIE_PYTA_VENDORA.has(name))
+  .filter((name) => {
+    const source = readFileSync(`scripts/${name}`, 'utf8')
+    if (!/\bfetch\(/.test(source)) return false
+    return !/'user-agent': (AGENT_UA|UA)\b/.test(source) || !source.includes('from: CONTACT')
+  })
+check('kto pyta obcy serwer, pyta jako skaner', nieJakSkaner.join(', '), '')
+// I w KAZDEJ galezi, nie tylko w jednej: `headers: warunek ? {...} : {...}` przepuszczalo sonde
+// bez tozsamosci przez druga polowe wyrazenia. Straznik na plik tego nie widzi, wiec patrzy tu na
+// ksztalt: zaden obiekt naglowkow nie moze zaczynac sie od `accept` bez user-agenta.
+// Tylko obiekty, w ktorych USTAWIAMY `accept`, czyli naglowki zapytania. Adnotacja typu
+// (`const headers: Record<string, string> = {}`) i atrapa odpowiedzi w tescie (`headers:
+// { 'content-type': ... }`) to nie sa zapytania i nie maja czego wysylac.
+const gubiTozsamosc = (source: string) =>
+  [...source.matchAll(/headers:[^\n]*/g)].some((line) =>
+    [...line[0].matchAll(/\{[^{}]*\}/g)].some((object) => object[0].includes('accept') && !object[0].includes('user-agent')),
+  )
+const galazBezTozsamosci = readdirSync('scripts')
+  .filter((name) => name.endsWith('.mts') && name !== 'rules.mts' && !NIE_PYTA_VENDORA.has(name))
+  .filter((name) => gubiTozsamosc(readFileSync(`scripts/${name}`, 'utf8')))
+check('zadna galaz naglowkow nie gubi tozsamosci', galazBezTozsamosci.join(', '), '')
+// Kontrolka: sonda widzi galaz bez tozsamosci i nie myli jej z obiektem, w ktorym accept jest pierwszy.
+check('sonda widzi galaz bez user-agenta', gubiTozsamosc("headers: useAccept ? { 'user-agent': A } : { accept: '*/*' },"), true)
+check('kolejnosc pol nie ma znaczenia', gubiTozsamosc("headers: { accept: 'x', 'user-agent': A, from: C },"), false)
+check('adnotacja typu to nie zapytanie', gubiTozsamosc('const headers: Record<string, string> = {}'), false)
+check('atrapa odpowiedzi to nie zapytanie', gubiTozsamosc("headers: { 'content-type': 'text/html' }"), false)
+// Kontrolka: sonda widzi literal, gdy jest, i nie myli go z importem.
+check('sonda widzi literal', /'LetAgentsIn\/[^']*'/.test("const UA = 'LetAgentsIn/1.0 (+x)'"), true)
+check('i nie lapie importu', /'LetAgentsIn\/[^']*'/.test('const UA = AGENT_UA'), false)
+
 console.log('\nspor da sie zglosic z kazdej strony, ktora niesie werdykt')
 for (const [gdzie, plik] of [
   ['strona vendora', 'src/app/v/[domain]/page.tsx'],
@@ -2849,6 +2921,21 @@ const rulesSource = readFileSync('scripts/rules.mts', 'utf8')
 // znajduje najpierw wlasny tekst, i to jest ten sam blad co reszta tej nocy w innym przebraniu.
 const afterExit = rulesSource.slice(rulesSource.lastIndexOf('process.exit(failures'))
 check('nic nie sprawdza sie po process.exit', afterExit.includes('check('), false)
+
+// I to samo w KAZDYM skrypcie, bo popelnilem ten sam blad drugi raz tej samej nocy: doklejalem
+// bramke „zero pomiarow" na koniec siedmiu audytow, a wszystkie koncza sie `process.exit(0)`.
+// Siedem martwych bramek, zielony build, zero ostrzezen. Znalazlem to wlasnym sprawdzeniem, a nie
+// kompilatorem, wiec kompilator dostaje teraz to sprawdzenie na wlasnosc.
+const zaWyjsciem = readdirSync('scripts')
+  .filter((name) => name.endsWith('.mts') && name !== 'rules.mts')
+  .filter((name) => {
+    const source = readFileSync(`scripts/${name}`, 'utf8')
+    const at = source.lastIndexOf('\nprocess.exit(')
+    if (at === -1) return false
+    const after = source.slice(at + 1).split('\n').slice(1).join('\n')
+    return /^\s*(refuseIfNothingMeasured|console\.log)\(/m.test(after)
+  })
+check('zaden skrypt nie ma kodu za process.exit', zaWyjsciem.join(', '), '')
 // Kontrolka: przed wyjsciem regul jest mnostwo, wiec sonda umie je zobaczyc.
 check('a przed nim regul jest wiele', rulesSource.slice(0, rulesSource.lastIndexOf('process.exit(failures')).includes('check('), true)
 

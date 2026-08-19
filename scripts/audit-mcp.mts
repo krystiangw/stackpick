@@ -17,6 +17,7 @@ import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { howManyRows } from './how-many'
 import { refuseIfNothingMeasured } from './nothing-measured'
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 
 const PAUSE_MS = 400
 const store = getStore()
@@ -74,7 +75,7 @@ for (const domain of [...CURATED_DOMAINS].slice(0, most)) {
     try {
       const answer = await fetch(url, {
         method: 'POST',
-        headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream' },
+        headers: { 'user-agent': AGENT_UA, from: CONTACT, 'content-type': 'application/json', accept: 'application/json, text/event-stream' },
         body: HANDSHAKE,
         signal: AbortSignal.timeout(8000),
       })
@@ -115,7 +116,7 @@ async function answersEverythingTheSameWay(one: Answer): Promise<string | null> 
     try {
       const answer = await fetch(control, {
         method: 'POST',
-        headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream' },
+        headers: { 'user-agent': AGENT_UA, from: CONTACT, 'content-type': 'application/json', accept: 'application/json, text/event-stream' },
         body: HANDSHAKE,
         signal: AbortSignal.timeout(8000),
       })

@@ -12,7 +12,7 @@
  * that refuses to answer is not a host without a card and is not counted either way.
  */
 import { CURATED_DOMAINS } from '../src/lib/categories'
-import { AGENT_UA } from '../src/lib/scan/http'
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 import { answersWithTheSameTemplate } from '../src/lib/scan/funnel'
 import { howManyRows } from './how-many'
 
@@ -45,7 +45,7 @@ const unclear: string[] = []
 for (const domain of sample) {
   try {
     const answer = await fetch(`https://${domain}/.well-known/agent-card.json`, {
-      headers: { 'user-agent': AGENT_UA, from: 'hello@letagentsin.com' },
+      headers: { 'user-agent': AGENT_UA, from: CONTACT },
       signal: AbortSignal.timeout(8000),
     })
     if (answer.status === 404 || answer.status === 410) {
@@ -75,7 +75,7 @@ for (const domain of sample) {
     // identical in shape to that one is the catch-all, and the file is genuinely not there. The
     // scanner does the same thing for the same reason, and this probe is quoted on a public page.
     const control = await fetch(`https://${domain}/.well-known/${NONSENSE}.json`, {
-      headers: { 'user-agent': AGENT_UA, from: 'hello@letagentsin.com' },
+      headers: { 'user-agent': AGENT_UA, from: CONTACT },
       signal: AbortSignal.timeout(8000),
     }).catch(() => null)
     if (!control) {

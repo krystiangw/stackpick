@@ -20,10 +20,11 @@
  *   npx tsx scripts/audit-mcp-registry.mts credited
  *   npx tsx scripts/audit-mcp-registry.mts accused
  */
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 
-const UA = 'LetAgentsIn/1.0 (+https://letagentsin.com/methodology)'
+const UA = AGENT_UA
 const REGISTRY = 'https://registry.modelcontextprotocol.io/v0/servers'
 
 async function speaksMcp(url: string): Promise<string | null> {
@@ -34,7 +35,7 @@ async function speaksMcp(url: string): Promise<string | null> {
       method: 'POST',
       signal: controller.signal,
       redirect: 'follow',
-      headers: { 'user-agent': UA, 'content-type': 'application/json', accept: 'application/json, text/event-stream' },
+      headers: { 'user-agent': UA, from: CONTACT, 'content-type': 'application/json', accept: 'application/json, text/event-stream' },
       body: JSON.stringify({
         jsonrpc: '2.0',
         id: 1,
@@ -64,7 +65,7 @@ async function registryRemotesFor(domain: string): Promise<string[]> {
   try {
     const response = await fetch(`${REGISTRY}?search=${encodeURIComponent(term)}&limit=50`, {
       signal: controller.signal,
-      headers: { 'user-agent': UA, accept: 'application/json' },
+      headers: { 'user-agent': UA, from: CONTACT, accept: 'application/json' },
     })
     if (!response.ok) return []
     const body = (await response.json()) as { servers?: { server?: { remotes?: { url?: string }[] } }[] }

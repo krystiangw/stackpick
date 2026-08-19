@@ -23,7 +23,7 @@ import {
   entryAccept,
   looksLikeADocsPageTwin,
 } from '../src/lib/scan/funnel'
-import { registrableDomain } from '../src/lib/scan/http'
+import { registrableDomain, AGENT_UA, CONTACT } from '../src/lib/scan/http'
 import { howManyRows } from './how-many'
 import { refuseIfNothingMeasured } from './nothing-measured'
 
@@ -35,7 +35,7 @@ const most = howManyRows(40, CURATED_DOMAINS.size)
 const get = async (url: string, accept: string) => {
   await new Promise((done) => setTimeout(done, PAUSE_MS))
   try {
-    const answer = await fetch(url, { headers: { accept }, signal: AbortSignal.timeout(8000) })
+    const answer = await fetch(url, { headers: { 'user-agent': AGENT_UA, from: CONTACT, accept }, signal: AbortSignal.timeout(8000) })
     return { ok: answer.ok, status: answer.status, body: (await answer.text()).slice(0, 4000) }
   } catch {
     return null

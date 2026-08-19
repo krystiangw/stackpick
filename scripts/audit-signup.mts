@@ -15,7 +15,7 @@
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { rendersUsableForm, entersThroughIdentityProvider } from '../src/lib/scan/funnel'
-import { AGENT_UA } from '../src/lib/scan/http'
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 import { howManyRows } from './how-many'
 import { refuseIfNothingMeasured } from './nothing-measured'
 
@@ -38,7 +38,7 @@ for (const domain of [...CURATED_DOMAINS].slice(0, most)) {
   checked += 1
   await new Promise((done) => setTimeout(done, PAUSE_MS))
   try {
-    const answer = await fetch(url, { headers: { accept: 'text/html,*/*', 'user-agent': AGENT_UA }, redirect: 'follow', signal: AbortSignal.timeout(10_000) })
+    const answer = await fetch(url, { headers: { accept: 'text/html,*/*', 'user-agent': AGENT_UA, from: CONTACT }, redirect: 'follow', signal: AbortSignal.timeout(10_000) })
     const body = await answer.text()
     if (!answer.ok) {
       // Not a contradiction: the row already says what the status was, and a status that moved is

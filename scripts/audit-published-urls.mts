@@ -30,6 +30,7 @@
  *   npx tsx scripts/audit-published-urls.mts < urls.tsv
  */
 import { refuseIfNothingMeasured } from './nothing-measured'
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 const lines = (await new Response(process.stdin as never).text())
   .trim()
   .split('\n')
@@ -50,7 +51,8 @@ async function status(url: string, check: string): Promise<number | string> {
       method: asMcp ? 'POST' : 'GET',
       ...(asMcp ? { body: HANDSHAKE } : {}),
       headers: {
-        'user-agent': 'letagentsin-audit (+https://letagentsin.com/about-our-user-agent)',
+        'user-agent': AGENT_UA,
+        from: CONTACT,
         ...(asMcp ? { 'content-type': 'application/json', accept: 'application/json, text/event-stream' } : {}),
       },
     })
@@ -69,7 +71,7 @@ async function status(url: string, check: string): Promise<number | string> {
       const asReader = await fetch(url, {
         signal: controller.signal,
         redirect: 'follow',
-        headers: { 'user-agent': 'letagentsin-audit (+https://letagentsin.com/about-our-user-agent)' },
+        headers: { 'user-agent': AGENT_UA, from: CONTACT },
       })
       return asReader.status
     }

@@ -21,14 +21,16 @@
  */
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
+import { refuseIfNothingMeasured } from './nothing-measured'
 
-const UA = 'LetAgentsIn/1.0 (+https://letagentsin.com/methodology)'
+const UA = AGENT_UA
 
 async function isLiveSpec(url: string): Promise<string | null> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 12000)
   try {
-    const response = await fetch(url, { signal: controller.signal, redirect: 'follow', headers: { 'user-agent': UA, accept: 'application/json, application/yaml, text/plain' } })
+    const response = await fetch(url, { signal: controller.signal, redirect: 'follow', headers: { 'user-agent': UA, from: CONTACT, accept: 'application/json, application/yaml, text/plain' } })
     if (!response.ok) return null
     const body = (await response.text()).slice(0, 6000)
     // JSON or YAML, both are published. The version key is what makes it a description rather
@@ -46,7 +48,7 @@ async function isLiveSpec(url: string): Promise<string | null> {
 type Directory = Record<string, { versions?: Record<string, { swaggerUrl?: string; info?: Record<string, unknown> }> }>
 
 async function loadDirectory(): Promise<Directory> {
-  const response = await fetch('https://api.apis.guru/v2/list.json', { headers: { 'user-agent': UA, accept: 'application/json' } })
+  const response = await fetch('https://api.apis.guru/v2/list.json', { headers: { 'user-agent': UA, from: CONTACT, accept: 'application/json' } })
   if (!response.ok) throw new Error(`apis.guru odpowiedzialo ${response.status}`)
   return (await response.json()) as Directory
 }
@@ -121,6 +123,10 @@ for (const domain of CURATED_DOMAINS) {
 
 console.log(`\n${checked} sprawdzonych, ${disagree} niezgodnych`)
 if (mode === 'accused') console.log(`z tego w katalogu apis.guru: ${inDirectory}`)
+// Zero przeczytanych wierszy to nie jest „zdanie sie trzyma", tylko przebieg, ktory o niczym nie
+// mowi. Bez tej bramki audyt uspokaja tym glosniej, im mniej zmierzyl.
+refuseIfNothingMeasured(checked, 'wierszy')
+
 console.log(
   mode === 'credited'
     ? 'kontrolka: niezgoda znaczy, ze nie potwierdzam specu, ktory sami cytujemy'

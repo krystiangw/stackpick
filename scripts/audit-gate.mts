@@ -16,6 +16,7 @@ import { CURATED_DOMAINS } from '../src/lib/categories'
 import { assertPublicHost, BlockedTargetError } from '../src/lib/scan/guard'
 import { normalizeDomain } from '../src/lib/scan/discover'
 import { getStore } from '../src/lib/store'
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 
 const given = process.argv[2]
 if (!given) {
@@ -28,7 +29,7 @@ const domain = normalizeDomain(given)
 async function ageInDays(of: string): Promise<{ days: number | null; status: string[] }> {
   try {
     const answer = await fetch(`https://rdap.org/domain/${of}`, {
-      headers: { accept: 'application/rdap+json' },
+      headers: { 'user-agent': AGENT_UA, from: CONTACT, accept: 'application/rdap+json' },
       redirect: 'follow',
       signal: AbortSignal.timeout(12_000),
     })

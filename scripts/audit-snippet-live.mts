@@ -16,6 +16,8 @@ import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { readSnippet } from '../src/lib/scan/funnel'
 import { howManyRows, reportCap } from './how-many'
+import { refuseIfNothingMeasured } from './nothing-measured'
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 
 const PAUSE_MS = 350
 const store = getStore()
@@ -46,7 +48,7 @@ for (const domain of CURATED_DOMAINS) {
   if (!pricing) continue
   await new Promise((done) => setTimeout(done, PAUSE_MS))
   try {
-    const answer = await fetch(pricing, { headers: { accept: 'text/html' }, signal: AbortSignal.timeout(10_000) })
+    const answer = await fetch(pricing, { headers: { 'user-agent': AGENT_UA, from: CONTACT, accept: 'text/html' }, signal: AbortSignal.timeout(10_000) })
     if (!answer.ok) {
       unread.push(`${domain} (${answer.status})`)
       continue
@@ -82,4 +84,8 @@ console.log(
 for (const one of found) console.log(`  ${one.domain.padEnd(20)} [${one.kind}] ${one.read.slice(0, 150)}`)
 if (nowPasses.length > 0) console.log(`\n${nowPasses.length} wierszy juz by przeszlo (opis zmieniony po naszym skanie): ${nowPasses.join(', ')}`)
 if (moved.length > 0) console.log(`\n${moved.length} wierszy cytuje string, ktorego juz tam nie ma: ${moved.join(', ')}`)
+// Zero przeczytanych wierszy to nie jest „zdanie sie trzyma", tylko przebieg, ktory o niczym nie
+// mowi. Bez tej bramki audyt uspokaja tym glosniej, im mniej zmierzyl.
+refuseIfNothingMeasured(checked, 'opisow')
+
 process.exit(0)

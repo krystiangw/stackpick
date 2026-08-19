@@ -16,6 +16,8 @@ import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { provisioningMatches } from '../src/lib/scan/funnel'
 import { howManyRows, reportCap } from './how-many'
+import { refuseIfNothingMeasured } from './nothing-measured'
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 
 const PAUSE_MS = 300
 const store = getStore()
@@ -45,7 +47,7 @@ for (const domain of CURATED_DOMAINS) {
   for (const url of pages.slice(0, 5)) {
     await new Promise((done) => setTimeout(done, PAUSE_MS))
     try {
-      const answer = await fetch(url, { headers: { accept: 'text/html,text/markdown,*/*' }, signal: AbortSignal.timeout(10_000) })
+      const answer = await fetch(url, { headers: { 'user-agent': AGENT_UA, from: CONTACT, accept: 'text/html,text/markdown,*/*' }, signal: AbortSignal.timeout(10_000) })
       if (!answer.ok) continue
       const body = (await answer.text()).slice(0, 600_000)
       pagesRead += 1
@@ -67,6 +69,13 @@ for (const domain of CURATED_DOMAINS) {
 }
 
 reportCap(visited, CURATED_DOMAINS.size, checked)
+
+// Zero przeczytanych wierszy to nie jest „zdanie sie trzyma", tylko przebieg, ktory o niczym nie
+// mowi. Bez tej bramki audyt uspokaja tym glosniej, im mniej zmierzyl.
+// Na `pagesRead`, nie na `checked`: wiersze moga sie znalezc, a mimo to zadna strona nie
+// odpowiedziec - i wtedy „nic do czytania" jest zdaniem o naszych zapytaniach, nie o vendorach.
+// Codeksa.
+refuseIfNothingMeasured(pagesRead, 'stron przeczytanych')
 
 console.log(`\n${checked} oblanych wierszy, ${pagesRead} stron przeczytanych`)
 console.log(

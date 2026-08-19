@@ -11,6 +11,7 @@
  *
  *   npx tsx scripts/audit-mcp-denials.mts
  */
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 const INITIALIZE = JSON.stringify({
   jsonrpc: '2.0',
   id: 1,
@@ -35,7 +36,7 @@ async function probe(url: string): Promise<Hit | null> {
   try {
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream' },
+      headers: { 'user-agent': AGENT_UA, from: CONTACT, 'content-type': 'application/json', accept: 'application/json, text/event-stream' },
       body: INITIALIZE,
       signal: controller.signal,
       redirect: 'follow',

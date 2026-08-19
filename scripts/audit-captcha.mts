@@ -21,8 +21,9 @@
  */
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
+import { AGENT_UA, CONTACT } from '../src/lib/scan/http'
 
-const UA = 'LetAgentsIn/1.0 (+https://letagentsin.com/methodology)'
+const UA = AGENT_UA
 const VENDORS: [string, RegExp][] = [
   ['recaptcha', /recaptcha/i],
   ['hcaptcha', /hcaptcha/i],
@@ -41,7 +42,7 @@ async function captchasOn(url: string): Promise<Read> {
       redirect: 'follow',
       // The same agent the scanner uses. A page served differently to a browser is a different
       // measurement, and this pass is about reproducing ours rather than somebody else's.
-      headers: { 'user-agent': UA, accept: 'text/html,application/xhtml+xml' },
+      headers: { 'user-agent': UA, from: CONTACT, accept: 'text/html,application/xhtml+xml' },
     })
     const body = await response.text()
     return {
