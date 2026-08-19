@@ -6,6 +6,28 @@
 
 
 
+
+## KATALOG ARD PUBLIKOWAL FORMULE SPRZED DZIEWIECIU WYDAN (19:30)
+
+`/.well-known/ai-catalog.json` mowil `"version": "9.40"` przy zywej **9.49**. Byl statykiem w
+`public/`, wiec rozjechal sie tam, gdzie statyki sie rozjezdzaja - i to w jedynym deskryptorze, ktory
+publikujemy **dlatego, ze kazemy to robic vendorom**. Liczby obok (16 checkow, 177 domen) akurat
+byly dobre, co jest gorsze niz bezuzyteczne jako pociecha: ich tez nikt nie sprawdzal.
+
+**Generowany z kodu**, tak jak karta MCP, i **statyk usuniety, a nie zostawiony obok** - `public/`
+przeslania trase o tej samej sciezce, wiec kopia znowu by sie rozjechala. Istniejace reguly o
+tresci katalogu (wpisy na naszej domenie, identyfikatory `urn:air:`, niepustosc) czytaja teraz
+**odpowiedz trasy**, a nie plik obok niej.
+
+**`updatedAt` zniknelo, zamiast byc generowane.** Znaczy „kiedy ten wpis ostatnio sie zmienil",
+nigdy tego nie utrzymywalismy, a data stemplowana przy kazdym deployu odpowiada na inne pytanie, niz
+to pole zadaje. Na twierdzeniu, ktorego nie umiemy dotrzymac, uczciwym ruchem jest przestac je
+stawiac - to ta sama zasada, ktora skill `agent-discoverability` stawia wprost.
+
+**Zmierzone przy okazji i BEZ zarzutu:** `/openapi.json` (3.1.0, **16 z 16 checkow**, enum `format`
+zgodny z REST-em i slusznie bez `summary`, obie dodatkowe sciezki zyja). Jedyny artefakt, ktory sie
+nie rozjechal, i jedyny, ktory od poczatku byl **generowany**. To jest cala lekcja tej sekcji.
+
 ## DWA PLIKI DLA AGENTOW PODAWALY ROZNE LIMITY, A JEDEN Z NICH BYL NASZ WLASNY llms.txt (19:15)
 
 Ta sama metoda, trzeci raz tej doby, i tym razem na pliku, ktory **kazemy publikowac vendorom**.
