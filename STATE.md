@@ -2,6 +2,32 @@
 
 
 
+
+## MIEJSCE NA KLASTRZE ZMIERZONE, I NOTATKA O NIM BYLA MYLACA (2026-08-19, 18:10)
+
+W liscie „co czeka na Krystiana" wisialo od tygodnia: „**`equity-analyst` zajmuje 2807 MB z 5120** na
+wspolnym klastrze. To nie nasza baza." Zmierzone dzis, i obraz jest inny w obie strony:
+
+```
+caly klaster  3098 MB / 5120
+  equity-analyst  1628 MB     <- nie 2807
+  stackpick       1470 MB     <- to MY jestesmy wiekszym zjadaczem dysku, niz mowila notatka
+```
+
+**Ale nasze 1470 MB to nie sa dane.** Kolekcja `reports` trzyma **106 MB danych w 1457 MB pliku, z
+czego 1423 MB to wolne miejsce w srodku**. To nie jest wyciek: WiredTiger **uzywa tych blokow
+ponownie** przy kolejnych zapisach, wiec mamy 1,4 GB wlasnego zapasu, zanim baza w ogole zacznie
+rosnac na dysku - plus 2 GB zapasu na klastrze.
+
+**Wniosek: nie ma czego robic i swiadomie NIE uruchamiam `compact`.** Odzyskalby ~1,4 GB do klastra,
+ale jest operacja utrzymaniowa na zywej kolekcji, a zapasu i tak nie brakuje. To jest jedyny powod,
+dla ktorego by warto - a nie jest to powod dzis.
+
+**Co z tego zostaje dla Krystiana:** pozycja „equity-analyst" schodzi z listy rzeczy do decyzji.
+Do obserwacji zostaje jedna liczba: **`reports` rosnie o ~6900 dokumentow na 12 dni** (kazdy skan to
+nowy dokument, bo `/r/<id>` sa historyczne). Przy dzisiejszym tempie dane dobija do 1 GB za okolo
+rok, i **dopiero wtedy** to jest rozmowa o retencji albo o wiekszym klastrze.
+
 ## TWARDE ZERO DATADOGA STALO NA KOMUNIKACIE PRASOWYM (9.49)
 
 Szukalem czegos innego - punktu 2 z audytu subagenta, czyli „strona, z ktorej dowody odpadly jako
