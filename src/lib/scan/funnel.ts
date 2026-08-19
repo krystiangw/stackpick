@@ -1466,7 +1466,7 @@ export function provisioningMatches(html: string, ours: string | null = null): s
 function quoteAt(text: string, at: number, length: number): string {
   const from = Math.max(text.lastIndexOf('. ', at) + 1, at - 70)
   const window = windowAround(text, at, length).replace(/\s+/g, ' ').trim()
-  return withoutAChoppedAddress(
+  return withoutAChoppedEnding(
     window
       .replace(/^[^\s]*\s/, (start) => (from === 0 || /^[A-Z"“]/.test(start) ? start : ''))
       .replace(/^["“'']+/, '')
@@ -1543,13 +1543,15 @@ export function provisioningDemotedQuotes(html: string, ours: string | null = nu
  * it off the text instead - "no whitespace after the address" - throws away a perfectly good
  * `Visit https://example.com/x.` at the end of a sentence, which is codex's, on the first version.
  */
-export function withoutAChoppedAddress(text: string, cutMidToken: boolean): string {
+export function withoutAChoppedEnding(text: string, cutMidToken: boolean): string {
   if (!cutMidToken) return text
   const at = text.lastIndexOf('http')
-  if (at === -1) return text
   // A whole address has somewhere to end inside the window: whitespace or a closing bracket.
-  if (/[\s)\]]/.test(text.slice(at))) return text
-  return text.slice(0, at).replace(/[\s([<-]+$/, '')
+  if (at !== -1 && !/[\s)\]]/.test(text.slice(at))) return text.slice(0, at).replace(/[\s([<-]+$/, '')
+  // Half a word is the same defect as half an address and it reached a live scorecard before this
+  // was written: mixpanel.com's evidence was published ending ": Crea". The window is cut mid-token
+  // by construction here, so the last token is a fragment and dropping it removes nothing whole.
+  return text.replace(/\s+\S+$/, '').replace(/[\s([<:-]+$/, '')
 }
 
 function matching(patterns: RegExp[], html: string, labels?: string[]): string[] {

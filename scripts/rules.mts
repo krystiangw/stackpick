@@ -52,7 +52,7 @@ import {
   handsItToSomebodyElse,
   namesSomebodyElsesCredential,
   provisioningDemotedQuotes,
-  withoutAChoppedAddress,
+  withoutAChoppedEnding,
   windowCutMidToken,
   BOT_DEFENCE_RULES,
   PROVISIONING_RULES,
@@ -2960,13 +2960,16 @@ check('lustro ma prog ostrzegawczy przed TTL', poPrzemiacie.includes('DWA pomini
 // "https://console.cloud.google.c" w dokumencie, za ktory zaplacil. Dwa z 79 cytatow w korpusie
 // tak wygladaly. Poszerzenie okna byloby gorsze: cytowaloby slowa, ktorych regula nie czytala.
 console.log('\ncytat nie konczy sie polowa adresu')
-check('ucieta polowa adresu znika', withoutAChoppedAddress('service account under [IAM](https://console.cloud.google.c', true), 'service account under [IAM]')
+check('ucieta polowa adresu znika', withoutAChoppedEnding('service account under [IAM](https://console.cloud.google.c', true), 'service account under [IAM]')
 // Kontrolka: caly adres zostaje, bo ma po sobie spacje albo nawias.
-check('caly adres zostaje', withoutAChoppedAddress('see https://example.com/x for more', true), 'see https://example.com/x for more')
-check('adres domykany nawiasem zostaje', withoutAChoppedAddress('[IAM](https://example.com/x)', true), '[IAM](https://example.com/x)')
-check('zdanie bez adresu jest nietkniete', withoutAChoppedAddress('create an api key programmatically', true), 'create an api key programmatically')
+// Adres zostaje w calosci; odpada polslowo na koncu, bo `cutMidToken` mowi, ze okno urwalo sie w
+// srodku tokenu. Fixture mial wczesniej cale slowo na koncu, co przeczylo jego wlasnej przeslance.
+check('caly adres zostaje', withoutAChoppedEnding('see https://example.com/x for mo', true), 'see https://example.com/x for')
+check('a cale slowo zostaje, gdy nic nie bylo ucinane', withoutAChoppedEnding('see https://example.com/x for more', false), 'see https://example.com/x for more')
+check('adres domykany nawiasem zostaje', withoutAChoppedEnding('[IAM](https://example.com/x)', true), '[IAM](https://example.com/x)')
+check('zdanie bez adresu traci polslowo', withoutAChoppedEnding('create an api key programmatica', true), 'create an api key')
 // Kontrolka codeksa: zdanie skonczone kropka nie jest ucietym adresem, choc po adresie nie ma spacji.
-check('adres na koncu zdania zostaje', withoutAChoppedAddress('Visit https://example.com/x.', false), 'Visit https://example.com/x.')
+check('adres na koncu zdania zostaje', withoutAChoppedEnding('Visit https://example.com/x.', false), 'Visit https://example.com/x.')
 // Trzy sposoby na skonczenie okna, wszystkie w porzadku: kropka, koniec strony i dokladnie spacja.
 // Trzeci jest codeksa: granica 70 znakow potrafi wypasc tuz ZA calym adresem.
 // Trafienie od 0 o dlugosci 5, wiec granica wypada na znaku 75: to on jedyny rozstrzyga.
