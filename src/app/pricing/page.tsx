@@ -325,6 +325,10 @@ export default async function PricingPage() {
               'No. A discovery run answers a question in an empty directory and touches nothing of yours: no form, no account, no key. Anything that creates something on your side happens only inside a paid audit, with your agreement and with somebody watching it, which is also why that half costs what it costs.',
             ],
             [
+              'Is the monthly agent run automatic?',
+              'The weekly half is: the checks rerun on a schedule and an email goes out when a verdict moves. The monthly half is not. The five agent runs are started by a person and the email is read before it is sent, because a run costs real money on somebody else\u2019s tools and a month with nothing to say is better spent not running it. What that means for you is that the monthly mail arrives on a day we choose rather than on the same date each month.',
+            ],
+            [
               'Five runs a month is not much of a sample.',
               'It is not, and it decides what the number is allowed to say. Five runs catch a wall every run hits, and they cannot separate you from a competitor that finishes close. So monitoring does not sell you a position: it reports how many of the five named you, and the thing worth reacting to is the month that number moves.',
             ],

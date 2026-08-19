@@ -128,3 +128,8 @@ send. With four free watches that is a chore. **On the day somebody pays, it is 
 whoever turns billing on should decide whether it becomes a cron or stays a calendar reminder with a
 name against it. Written here rather than remembered, because a promise kept by memory is the one
 that lapses in month three.
+
+Since 2026-08-19 `/pricing` says this to the buyer as well, under *Is the monthly agent run
+automatic?*, so the admission is not only in this file. A rule in `scripts/rules.mts` keeps the two
+tied together: while this paragraph is here, that sentence has to be on the page, and when the
+schedule finally exists the build fails until somebody rewrites both.

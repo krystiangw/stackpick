@@ -2530,5 +2530,34 @@ check('i link renderuje sie warunkowo', pricingPage.includes('tier.sample && sam
 const reportScript = readFileSync('scripts/client-report.mts', 'utf8')
 check('--id nie bierze innej flagi za wartosc', reportScript.includes("chosen.startsWith('--')"), true)
 
+// Cennik obiecuje piec biegow agentowych miesiecznie, a zaden cron ich nie odswieza: robi to
+// czlowiek. Dopoki dokumentacja dostawy nadal to przyznaje, cennik tez musi - inaczej kupujacy
+// czyta harmonogram tam, gdzie jest kalendarz. Gdy harmonogram powstanie, ten straznik oblewa
+// build i przypomina, ze zdanie na cenniku juz nie jest prawda.
+console.log('\ncennik przyznaje, ze miesieczna polowa nie ma harmonogramu')
+const dostawaMowiOBrakuHarmonogramu = readFileSync('docs/delivering-a-report.md', 'utf8').includes(
+  'The monthly half of monitoring has no schedule behind it',
+)
+const cennikSource = readFileSync('src/app/pricing/page.tsx', 'utf8')
+check('dokumentacja dostawy nadal to przyznaje', dostawaMowiOBrakuHarmonogramu, true)
+check(
+  'i cennik mowi to samo kupujacemu',
+  !dostawaMowiOBrakuHarmonogramu || cennikSource.includes('The five agent runs are started by a person'),
+  true,
+)
+
+// Straznik na sam ten plik. `process.exit` na koncu robi z kazdego `check` ponizej martwy kod,
+// ktory drukuje sie na zielono i nigdy nie oblewa - dopisalem tak jedna regule 2026-08-19 i przez
+// chwile nie robila nic. Podsumowanie musi byc ostatnie.
+console.log('\nzadna regula nie stoi za wyjsciem ze skryptu')
+const rulesSource = readFileSync('scripts/rules.mts', 'utf8')
+// Ostatnie wystapienie, bo dwa pierwsze to te literaly tutaj: sonda szukajaca samej siebie
+// znajduje najpierw wlasny tekst, i to jest ten sam blad co reszta tej nocy w innym przebraniu.
+const afterExit = rulesSource.slice(rulesSource.lastIndexOf('process.exit(failures'))
+check('nic nie sprawdza sie po process.exit', afterExit.includes('check('), false)
+// Kontrolka: przed wyjsciem regul jest mnostwo, wiec sonda umie je zobaczyc.
+check('a przed nim regul jest wiele', rulesSource.slice(0, rulesSource.lastIndexOf('process.exit(failures')).includes('check('), true)
+
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)
+
