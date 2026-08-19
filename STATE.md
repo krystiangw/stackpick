@@ -8407,3 +8407,20 @@ Do sprawdzenia po nim, po kolei:
    katalogu latami. Recepta (sprawdzona, KB `zrzuty-ekranu-1000px-bez-czlowieka`):
    `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --disable-gpu --hide-scrollbars --screenshot=out.png --window-size=1440,1000 <url>`
    Strony warte zrzutu: `/d/sample`, `/`, `/methodology`, `/findings`, `/pricing`.
+
+## PIERWSZE PELNE PRZEBIEGI AUDYTOW, ZAMIAST PROBEK (2026-08-19, 07:00)
+
+Po zdjeciu niemych sufitow (`088c57f`) puscilem cztery audyty na **calym korpusie 177 domen**
+zamiast na 25-40 wierszach. Zadne z nich nie znalazlo sprzecznosci, i to jest wynik, ktorego przedtem
+nie mielismy - poprzednie „zdanie trzyma sie wszedzie" dotyczylo cwiartki:
+
+| audyt | zasieg | wynik |
+|---|---|---|
+| `audit-openapi` | 49 oblanych wierszy, **508 zapytan** | ani specu pod zwyklymi sciezkami, ani deklaracji, ani markdownu w negocjacji |
+| `audit-selfserve` | 18 dopasowan | kazde do przeczytania recznie, zero sprzecznosci |
+| `audit-provisioning` | 25 adresow | wszystkie potwierdzone jako martwe |
+| `audit-snippet-live` | **86 opisow przeczytanych na zywo** | w zadnym nie widac kwoty ani warunku wejscia, ktorego regula by nie skredytowala |
+| `audit-llms-links` | 25 wierszy ze zdaniem o martwym linku | **kazdy adres, o ktorym mowimy, ze go nie ma, odpowiada 404** |
+
+Do tego cztery audyty lokalne (`headlines`, `delivery`, `our-api`, `remedies`): zero mocnych
+sygnalow, piec slabych, wszystkie znane i nieszkodliwe.
