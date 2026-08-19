@@ -1197,6 +1197,20 @@ const kartaMcp = readFileSync('src/app/.well-known/mcp.json/route.ts', 'utf8')
 check('karta przepisuje adnotacje', kartaMcp.includes('annotations: tool.annotations'), true)
 check('karta przepisuje tytul', kartaMcp.includes('title: tool.title'), true)
 
+// `llms.txt` mowilo, ze REST i narzedzie MCP biora te same wartosci `format`. Nie biora: REST zna
+// `json`, MCP zna `summary`, i to jest ta sama rzecz pod dwiema nazwami. Serwer tlumaczy to w
+// bledzie, plik nie tlumaczyl nic - a to jest ten plik, ktory kazemy publikowac vendorom.
+const naszLlms = readFileSync('public/llms.txt', 'utf8')
+const trasaSkanu = readFileSync('src/app/api/scan/route.ts', 'utf8')
+check('REST nadal zna json, a nie summary', /const FORMATS = \['json', 'sarif', 'agent'\]/.test(trasaSkanu), true)
+// Poszerzone do `string[]` naumyslnie: bez tego `.includes('json')` jest bledem TYPU, co samo w
+// sobie dowodzi tezy, ale nie zostawia kontrolki, ktora obleje, gdy ktos doda `json` do enuma.
+const formatyMcp: readonly string[] = TOOL.inputSchema.properties.format.enum
+check('narzedzie MCP nadal zna summary', formatyMcp.includes('summary'), true)
+check('i nie zna json', formatyMcp.includes('json'), false)
+check('llms.txt nie twierdzi, ze obie powierzchnie biora json', /both take `format`: `json`/.test(naszLlms), false)
+check('llms.txt nazywa obie nazwy', naszLlms.includes('`json` on the REST endpoint and `summary` on the MCP tool'), true)
+
 check('sonda widzi cudze poswiadczenie po nazwie', namesSomebodyElsesCredential('Create a Firebase ', 'Service Account', 'onesignal.com'), true)
 check('i nie widzi marki, ktorej przy poswiadczeniu nie ma', namesSomebodyElsesCredential('Create a ', 'Service Account', 'browserbase.com'), false)
 check('wlasna marka nie dyskwalifikuje', namesSomebodyElsesCredential('Create a GitHub ', 'personal access token', 'github.com'), false)

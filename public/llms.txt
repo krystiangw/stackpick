@@ -18,8 +18,10 @@
   domain; `find_providers` takes the problem in your own words and returns the vendors we measured
   in that category, split by where an unattended run stops. Routing a sentence to a category is the
   weakest part and the tool description carries its measured accuracy
-- `POST /api/scan` and the MCP tool both take `format`: `json` (default), `sarif` for SARIF 2.1.0
-  that a code-scanning pipeline can ingest, `agent` for markdown tasks you can act on directly
+- `POST /api/scan` and the MCP tool both take `format`, with `sarif` for SARIF 2.1.0 that a
+  code-scanning pipeline can ingest and `agent` for markdown tasks you can act on directly. The
+  readable default is called `json` on the REST endpoint and `summary` on the MCP tool; they are the
+  same thing and neither surface accepts the other's name for it
 - [/.well-known/mcp.json](/.well-known/mcp.json): the card describing it
 - [/openapi.json](/openapi.json): OpenAPI 3.1 spec, generated from the same check definitions the scanner runs
 - [/corpus.json](/corpus.json) and [/corpus.csv](/corpus.csv): every published scan as data, one entry
