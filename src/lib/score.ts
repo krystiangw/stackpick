@@ -112,7 +112,11 @@ export const CHECKS: Check[] = [
     max: 1,
     evaluate: (f) => {
       const seen = f.agentStatusesSeen?.length && new Set(f.agentStatusesSeen).size > 1
-      const tries = seen ? ` across three tries (${f.agentStatusesSeen.join(', ')})` : ''
+      // The number comes from the list, never from the word "three": the door probe asks three
+      // times but stops early when the scan deadline is close, and a sentence reading "across
+      // three tries (200, 403)" names a request we never sent, in a row published under somebody
+      // else's name.
+      const tries = seen ? ` across ${f.agentStatusesSeen.length} tries (${f.agentStatusesSeen.join(', ')})` : ''
       // A 2xx anywhere in the sequence disproves the sentence below, whatever the last try said.
       // name.com answered (200, 429, 429) and we published "no agent reaches the site at all"
       // about a site that had just served us, because the challenge is read off the final fetch

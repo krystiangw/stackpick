@@ -2265,6 +2265,17 @@ check('sonda widzi audyty z licznikiem', zLicznikiem.length > 5, true)
 // opisujace regule, ktorej kod juz nie wykonuje, jest gorsze niz brak zdania. Akapit o kontrolce
 // opisywal wygaszanie CALEJ przestrzeni nazw, ktore zniklo, i nie mowil o galezi „nie da sie
 // zmierzyc" z 9.43. Straznik wiaze tekst z zachowaniem, ktore ma opisywac.
+// Sonda drzwiowa pyta trzy razy, ale przerywa, gdy konczy sie budzet skanu - a zdanie w wierszu
+// mialo slowo „three" na sztywno. „across three tries (200, 403)" nazywa zapytanie, ktorego nie
+// wyslalismy, w wierszu publikowanym pod cudza nazwa.
+console.log('\nliczba prob w zdaniu pochodzi z listy, nie ze slowa')
+const punktacja = readFileSync('src/lib/score.ts', 'utf8')
+check('zdanie liczy proby z tablicy', punktacja.includes('across ${f.agentStatusesSeen.length} tries'), true)
+check('i nie ma juz sztywnego "three tries"', punktacja.includes('across three tries'), false)
+check('metodologia mowi "up to three"', readFileSync('src/app/methodology/page.tsx', 'utf8').includes('up to three times'), true)
+// Kontrolka: kod naprawde potrafi przerwac wczesniej, wiec zastrzezenie nie jest ozdoba.
+check('sonda umie przerwac przed trzecia proba', readFileSync('src/lib/scan/http.ts', 'utf8').includes('if (timeLeftMs() < 1_500) break'), true)
+
 console.log('\nmetodologia opisuje kontrolke, ktora naprawde mamy')
 const metodologia = readFileSync('src/app/methodology/page.tsx', 'utf8')
 const sondaWejscia = readFileSync('src/lib/scan/funnel.ts', 'utf8')
