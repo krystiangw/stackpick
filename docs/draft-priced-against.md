@@ -28,6 +28,14 @@ Our own catalogue, for the same comparison: monitoring $79/mo per domain, agency
 > that a run picked somebody else and why. Neither can we tell you it will pick you if you fix a row,
 > and we publish which two of our sixteen checks we can show any relationship for.
 
+## Re-verified 2026-08-19, 09:00
+
+Every number and the quote above were read again from `https://agentable.is` with a browser user
+agent, hours after the first reading, because point 2 below says the file is not the source. All
+three still hold, unchanged: **$29/mo per domain**, **$99/mo for up to 25 domains**, and the footer
+still reads "verifies artifacts exist, not live agent success". Re-check them again on the day
+anything goes up; this line records a state, not a fact that stays true.
+
 ## What must be true before it goes up
 
 1. Somebody has to decide we are willing to name a competitor at all. Today we are not.
