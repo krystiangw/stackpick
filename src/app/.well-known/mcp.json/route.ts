@@ -21,10 +21,18 @@ export function GET() {
       version: '1.0.0',
       documentation: `${SITE_URL}/docs`,
       transport: { type: 'http', url: `${SITE_URL}/mcp` },
+      // Every field a client needs to decide, not a subset. The card dropped `annotations` while
+      // the server served them, and those are the safety-relevant half: `scan_domain` carries
+      // readOnlyHint false and openWorldHint true because it fires requests at somebody else's
+      // servers and stores a report, which is precisely what a client must not auto-approve. A
+      // card that omits them publishes the tool as unannotated, and this is the second time this
+      // file has drifted from the server it describes.
       tools: [TOOL, FIND_TOOL].map((tool) => ({
         name: tool.name,
+        title: tool.title,
         description: tool.description,
         inputSchema: tool.inputSchema,
+        annotations: tool.annotations,
       })),
     },
     { headers: { 'cache-control': 'public, max-age=3600' } },

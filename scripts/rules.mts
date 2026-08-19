@@ -42,6 +42,7 @@ import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } fro
 import { AGENT_ENTRY_PATHS, AGENT_ENTRY_PATH_COUNT, mcpAcrossWaves } from '../src/lib/scan/funnel'
 import type { McpProbe } from '../src/lib/scan/funnel'
 import { isDocumentationPage } from '../src/lib/scan/index'
+import { FIND_TOOL, TOOL } from '../src/app/mcp/route'
 import { readsAsCompanyNews } from '../src/lib/scan/discover'
 import {
   methodRefusalIsRouted,
@@ -1185,6 +1186,16 @@ check('mowi, ze wynikami sa tylko oblane checki', dokiSarif.includes('Only the f
 check('i nazywa liczniki, w ktorych jest reszta', dokiSarif.includes('counted in the run properties'), true)
 check('a eksport naprawde filtruje do oblanych', /const failing = scorecard\.checks\.filter/.test(eksportSarif), true)
 check('i naprawde publikuje liczniki obok', /passed:/.test(eksportSarif) && /notApplicable:/.test(eksportSarif), true)
+
+// Karta MCP ma niesc te same pola, co serwer, a nie ich podzbior. Adnotacje sa polowa bezpieczenstwa:
+// `scan_domain` ma readOnlyHint=false, bo strzela zapytaniami w cudze serwery - klient, ktory czyta
+// karte bez adnotacji, widzi narzedzie nieoznaczone i moze je auto-zatwierdzic.
+check('scan_domain nie udaje tylko-do-odczytu', TOOL.annotations.readOnlyHint, false)
+check('i mowi, ze wychodzi na zewnatrz', TOOL.annotations.openWorldHint, true)
+check('find_providers czyta tylko nasz korpus', FIND_TOOL.annotations.readOnlyHint, true)
+const kartaMcp = readFileSync('src/app/.well-known/mcp.json/route.ts', 'utf8')
+check('karta przepisuje adnotacje', kartaMcp.includes('annotations: tool.annotations'), true)
+check('karta przepisuje tytul', kartaMcp.includes('title: tool.title'), true)
 
 check('sonda widzi cudze poswiadczenie po nazwie', namesSomebodyElsesCredential('Create a Firebase ', 'Service Account', 'onesignal.com'), true)
 check('i nie widzi marki, ktorej przy poswiadczeniu nie ma', namesSomebodyElsesCredential('Create a ', 'Service Account', 'browserbase.com'), false)
