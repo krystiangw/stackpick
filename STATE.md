@@ -8847,3 +8847,28 @@ kodu za `process.exit`**.
 za malo bez `From`; bramka provisioningu ma stac na **stronach przeczytanych**, a nie na wierszach
 znalezionych; straznik na plik nie widzi galezi wyrazenia warunkowego; audyt bez naglowkow tez pyta
 jako ktos inny, choc nie pisze tego wprost.
+
+## JEDYNA SUMA, KTORA KUPUJACY LICZY SAM (2026-08-19, 12:50)
+
+Kolejne zdanie z wlasnej dokumentacji: `delivering-a-report.md` mowil, ze bramka dostawy „replays
+**every sentence** both customer documents can print". Sprawdzilem i **nie bylo to prawda**.
+`audit-delivery` zajmuje sie polowa o biegach: liczbami wymienien, cytatami, obietnica dziesieciu
+biegow na dwoch narzedziach. Nikt nie sprawdzal **arytmetyki naprawy**.
+
+A to jest **jedyne zdanie w calym platnym dokumencie, ktore czytelnik weryfikuje nie wychodzac ze
+strony**: „Fix the 2 cheapest items below and 6/12 becomes 9/12", a pod spodem pozycje z wartoscia
+punktowa kazda. Jesli to sie nie zgadza, caly dokument czyta sie jak zgadywanka.
+
+Nowa bramka `npm run audit-fix-arithmetic` przechodzi **177 z 177**: kazde „X staje sie Y" zgadza sie
+z suma pozycji pod nim, zaden mianownik nie rozjezdza sie z drugim, zadna obietnica nie przekracza
+tego, co mierzalne, a zapowiedziana liczba pozycji zgadza sie z policzonymi.
+
+**Jedna decyzja projektowa warta zapisania:** bramka czyta obietnice **z wydrukowanego zdania**,
+regexem po `X/M becomes Y/M`, a nie z obiektu planu. Gdyby liczyla to samo co kod i tak samo, **zgodzi
+sie z nim z definicji** i nie bylaby zadnym drugim zdaniem. Ta sama zasada, ktora tej nocy kazala
+audytom pytac tym samym naglowkiem, co skaner - tylko z drugiej strony: **tam trzeba bylo pytac tak
+samo, tu trzeba liczyc inaczej.**
+
+Runbook mowi teraz o **dwoch** bramkach zamiast jednej, a straznik sprawdza, ze kazda bramka
+wymieniona w runbooku **istnieje w `package.json`** - instrukcja wskazujaca nieistniejacy skrypt to
+instrukcja, ktora cicho nie dziala.
