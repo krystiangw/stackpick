@@ -106,7 +106,8 @@ export default async function BotPage() {
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           A scan you run from our home page always runs, robots.txt or not, because you asked for it. It will not
           update the published entry: nothing a visitor scans joins the corpus we publish, and that rule is what stops
-          an anonymous request rewriting what this site says about a company. If you have fixed something and want the
+          an anonymous request rewriting what this site says about a company. A company we do not publish has no entry
+          to rewrite, so its page shows the most recent scan of any kind and is kept out of search. If you have fixed something and want the
           entry refreshed sooner than the next pass, write to{' '}
           <a href="mailto:hello@letagentsin.com" className="text-brass underline underline-offset-4">
             hello@letagentsin.com

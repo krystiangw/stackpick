@@ -41,7 +41,12 @@ async function publishedRowFor(domain: string) {
   // had moved nine versions: a rule meant to keep the published corpus consistent was aging every
   // page outside it.
   if (!categoryFor(domain)) return store.latestForDomain(domain)
-  return (await store.latestForDomain(domain, true)) ?? store.latestForDomain(domain)
+  // No fallback for a domain we publish. `/bot` promises that an anonymous request cannot rewrite
+  // what this site says about a company, and this page is the only indexable one that could break
+  // it: a corpus domain with no seeded row would render whatever a visitor last scanned, on a page
+  // search engines are invited to. Today every one of the 177 has a seeded row, so this changes
+  // nothing that is rendered - it removes the one path where the promise could stop being true.
+  return store.latestForDomain(domain, true)
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ domain: string }> }): Promise<Metadata> {

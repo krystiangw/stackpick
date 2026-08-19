@@ -2258,6 +2258,20 @@ check('sonda widzi audyty z licznikiem', zLicznikiem.length > 5, true)
 
 // Runbook dostawy kaze puscic bramki przed wyslaniem platnego dokumentu i wymienia je z nazwy.
 // Wymieniona bramka, ktorej nie ma w package.json, to instrukcja, ktora cicho nie dziala.
+// `/bot` obiecuje, ze anonimowe zapytanie nie przepisze tego, co strona mowi o firmie. Strona
+// vendora jest jedyna INDEKSOWALNA, ktora moglaby to zlamac: wiersz korpusu bez zasianego pomiaru
+// spadal na „jakikolwiek", czyli na to, co ostatnio przeskanowal odwiedzajacy.
+console.log('\nstrona korpusowa nie spada na skan odwiedzajacego')
+const stronaVendora = readFileSync('src/app/v/[domain]/page.tsx', 'utf8')
+const stronaBota = readFileSync('src/app/bot/page.tsx', 'utf8')
+check('obietnica nadal stoi na /bot', stronaBota.includes('nothing a visitor scans joins the corpus we publish'), true)
+check('wiersz korpusu czytamy tylko zasiany', stronaVendora.includes('return store.latestForDomain(domain, true)'), true)
+check('i nie ma juz zapasowego odczytu', stronaVendora.includes('?? store.latestForDomain(domain)'), false)
+// Obietnica ma tez powiedziec, co widzi firma SPOZA korpusu, bo tam faktycznie pokazujemy skan
+// odwiedzajacego - tyle ze poza indeksem.
+check('i mowi, co ze stronami spoza korpusu', stronaBota.includes('kept out of search'), true)
+check('a te strony naprawde sa poza indeksem', stronaVendora.includes("if (!categoryFor(name)) return { title: `${name} · Let Agents In`, robots: { index: false }"), true)
+
 console.log('\nbramki wymienione w runbooku dostawy istnieja')
 const runbookBramek = readFileSync('docs/delivering-a-report.md', 'utf8')
 const skryptyNpm = JSON.parse(readFileSync('package.json', 'utf8')).scripts as Record<string, string>
