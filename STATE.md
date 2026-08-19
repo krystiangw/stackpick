@@ -8923,3 +8923,23 @@ kontrolki** i tak zostalo napisane.
 Straznik wiaze teraz tekst z kodem w obie strony: metodologia nie moze obiecywac wygaszania
 przestrzeni nazw, musi mowic o porownaniu per plik i o galezi niemierzalnej - **a kod musi naprawde
 tak dzialac**, co sprawdzane jest osobno na `funnel.ts`.
+
+## „ACROSS THREE TRIES (200, 403)" - LICZBA ZE SLOWA, NIE Z POMIARU (2026-08-19, 13:30)
+
+Po akapicie o kontrolce przejrzalem **liczby** w metodologii i sprawdzilem je w kodzie. Jedna sie nie
+zgadzala, i to w miejscu, gdzie widzi ja vendor.
+
+Sonda drzwiowa pyta trzy razy - ale `fetchWithRetries` **przerywa wczesniej**, gdy do konca budzetu
+skanu zostalo mniej niz 1,5 sekundy. Zdanie w wierszu mialo tymczasem slowo „three" **na sztywno**,
+a liste statusow bralo z tablicy. Wiersz mogl wiec opublikowac **„across three tries (200, 403)"**:
+nazwac trzy proby i wymienic dwie, czyli powolac sie na zapytanie, ktorego nigdy nie wyslalismy - w
+dokumencie firmowanym cudza nazwa.
+
+Liczba pochodzi teraz **z tablicy**, a metodologia mowi **„up to three times"** i od razu dodaje,
+kiedy jest ich mniej. Straznik trzyma trzy rzeczy naraz: zdanie liczy z tablicy, nie ma juz sztywnego
+„across three tries", a `http.ts` **naprawde** potrafi przerwac przed trzecia proba - zastrzezenie
+opisuje wiec zachowanie, a nie ostroznosc na wszelki wypadek.
+
+**Wzorzec, ktory sie tej nocy powtorzyl trzeci raz:** liczba w zdaniu wzieta ze **stalej w tekscie**
+zamiast z **danych, ktore opisuje**. Wczesniej: „175 domen" obok korpusu na 177 i sufity audytow
+przemilczajace pominiete wiersze. Za kazdym razem kod byl poprawny, a **zdanie o kodzie nie**.
