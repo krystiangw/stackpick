@@ -8799,3 +8799,21 @@ adresu**. Formularz na tej stronie tez przechodzi dostepnosc na 100.
 **Jedna obserwacja bez zmiany:** bramka e-mail na stronie dostawy jest **renderowana po stronie
 klienta**, wiec bez JS nie ma tam formularza. Dla dokumentu wysylanego czlowiekowi to w porzadku - ale
 warto pamietac, ze mierzymy vendorow dokladnie za to samo na ICH powierzchniach agentowych.
+
+## KLIENT, KTORY ZAPLACIL, MIAL NAJTRUDNIEJSZA DROGE DO SPROSTOWANIA (2026-08-19, 11:35)
+
+`docs/handling-a-dispute.md` otwiera sie zdaniem, ze **kazda strona niesie `mailto:` z tematem**,
+wiec sprostowanie „w koncu dojdzie". Sprawdzilem to na produkcji zamiast wierzyc: strona vendora
+faktycznie daje `?subject=Wrong verdict on <domena>`, a **platny raport dawal goly adres bez tematu**.
+Czyli jedyna strona, za ktora ktos zaplacil, produkowala maila **najtrudniejszego do posortowania**
+ze wszystkich - i to przy naszym wlasnym zdaniu tuz obok: „If a sentence here is wrong about your
+product, tell us and we will recheck it by hand".
+
+Naprawione i zweryfikowane pod `/d/qa-jezyk`. Straznik sprawdza **obie** strony naraz i dodatkowo, ze
+runbook nadal to obiecuje - inaczej za miesiac jedna z trzech rzeczy po cichu przestanie byc prawda.
+
+**Metoda, ktora dala tej nocy najwiecej i warta powtarzania:** wziac zdanie z NASZEJ wlasnej
+dokumentacji, ktore mowi „zawsze" albo „kazda", i sprawdzic je na produkcji jedno po drugim. Tak
+wyszlo: brak harmonogramu miesiecznego na cenniku, znacznik jezyka w trzech renderingach, martwe
+adresy na wierszach niemierzalnych i teraz temat maila. Za kazdym razem dokumentacja byla uczciwa, a
+produkt zostawal w tyle w jednym miejscu, o ktorym nikt nie pomyslal.
