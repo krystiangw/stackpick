@@ -8051,3 +8051,9 @@ sprawdza teraz, ze **kazda komenda wymieniona w `docs/` istnieje** - i celowo **
 sa instrukcje do wykonania, a STATE.md jest dziennikiem i ma prawo wspominac narzedzia, ktorych juz
 nie ma. Codex slusznie zauwazyl, ze pierwsza wersja regula lapala wylacznie `.mts`, wiec przepuszczala
 `reseed.sh` i `scan-cli.ts`, czyli akurat te wywolania, ktore najlatwiej zgnic.
+
+**Ten sam ksztalt bledu siedzial w samej bramce buildu.** Cztery reguly w `rules.mts` stoja na
+`.every(...)`, a `[].every(...)` jest **prawda**: dwie z nich (kazdy wpis katalogu ARD na naszej
+domenie, wpis rejestru MCP wskazujacy nasz endpoint) przechodzilyby na **pustej liscie**, nie
+sprawdziwszy niczego. Dolozone dwie reguly, ze te listy nie sa puste. Straznik, ktory przechodzi, bo
+nie mial czego sprawdzic, jest straznikiem, ktorego nie ma.

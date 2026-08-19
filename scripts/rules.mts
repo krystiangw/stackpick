@@ -1887,6 +1887,10 @@ const katalog = JSON.parse(readFileSync('public/.well-known/ai-catalog.json', 'u
   entries: { identifier: string; url: string; representativeQueries?: string[] }[]
 }
 check('katalog jest o nas', katalog.host.identifier, 'letagentsin.com')
+// Bez tego dwie reguly ponizej sa `[].every(...)`, czyli przechodza na pustym katalogu. Straznik,
+// ktory przechodzi, bo nie mial czego sprawdzic, jest straznikiem, ktorego nie ma - to ten sam
+// ksztalt bledu, co audyt liczacy zero wierszy i konczacy uspokojeniem.
+check('katalog nie jest pusty', katalog.entries.length > 0, true)
 check('kazdy wpis ma adres na naszej domenie', katalog.entries.every((e) => e.url.startsWith('https://letagentsin.com/')), true)
 // Identyfikator zakotwiczony w domenie to caly sens urn:air - bez tego wpis moze twierdzic, ze jest
 // czyims zasobem.
@@ -1901,6 +1905,8 @@ check('plik ma format v=MCPv1', DOWOD_MCP.test(readFileSync('public/.well-known/
 check('kontrola: sam klucz bez naglowka odpada', DOWOD_MCP.test('p=dxvT0jHk9iEnguAEfhDL+/7vu0EEHeJ6A0Y1MBktzag='), false)
 const serwerMcp = JSON.parse(readFileSync('server.json', 'utf8')) as { name: string; description: string; remotes: { url: string }[] }
 check('przestrzen nazw zgodna z domena', serwerMcp.name.startsWith('com.letagentsin/'), true)
+// Tak samo tutaj: pusta lista `remotes` przepuscilaby regule ponizej bez jednego sprawdzenia.
+check('wpis ma choc jeden adres', serwerMcp.remotes.length > 0, true)
 check('wpis wskazuje nasz wlasny endpoint', serwerMcp.remotes.every((r) => r.url.startsWith('https://letagentsin.com/')), true)
 // Rejestr odrzuca opis dluzszy niz 100 znakow calym 422 i mowi to dopiero przy publikacji, a opis
 // jest dla agenta tym, czym tytul strony dla czlowieka. Pierwsza proba publikacji poszla w kosz
