@@ -629,6 +629,32 @@ const headlineCard = (checks: Record<string, unknown>[], measurable: number) =>
   ({ total: 0, max: 17, measurable, checks }) as never
 const one = (id: string, over: Record<string, unknown> = {}) => ({ id, label: id, stage: 'discovery', why: '', detail: 'x', points: 0, max: 1, ...over })
 
+// Naglowek i wiersz checku licza CO INNEGO: dziesiec NAZW plikow kontra dwadziescia trzy ZAPYTANIA
+// (kazda nazwa pytana na witrynie i na hoscie dokumentacji). Oba zdania stalyc w jednym dokumencie
+// tym samym rzeczownikiem „agent entry paths", wiec czytaly sie jak sprzecznosc. Naglowek mowi teraz
+// o nazwach i o tym, gdzie pytal.
+const bezWejscia = (entryDocsProbed: boolean | undefined) =>
+  pickHeadline(
+    headlineFindings({
+      funnel: {
+        signup: { url: null, reachable: false, status: 0, statusesSeen: [], consistent: true, captcha: [] },
+        entryPointsFound: [],
+        servesCatchAll: false,
+        provisioning: { programmatic: ['management api'] },
+        ...(entryDocsProbed === undefined ? {} : { entryDocsProbed }),
+      },
+    }),
+    headlineCard([one('agent_entry_point', { max: 2 })], 12),
+  )
+const brakWejscia = bezWejscia(true)
+check('naglowek liczy NAZWY plikow, nie zapytania', brakWejscia.evidence.includes(`${AGENT_ENTRY_PATH_COUNT} entry files by name`), true)
+check('i mowi, gdzie o nie pytal', brakWejscia.evidence.includes('on your site and your documentation host'), true)
+// Kontrolka: bez hosta dokumentacji naglowek NIE moze mowic, ze o niego pytal. To samo dotyczy
+// wierszy sprzed tej flagi - wolimy zanizyc niz opisac zapytanie, ktorego nie bylo.
+check('bez hosta dokumentacji mowi tylko o witrynie', bezWejscia(false).evidence.includes('agent-access.json, on your site, and not one'), true)
+check('a stary wiersz bez flagi tez', bezWejscia(undefined).evidence.includes('agent-access.json, on your site, and not one'), true)
+check('i nie mowi juz "paths answered", ktore kolodowalo z wierszem checku', brakWejscia.evidence.includes('agent entry paths answered'), false)
+
 // Unmeasurable signup: the check says so, the headline must not accuse anyway.
 const throttled = pickHeadline(headlineFindings(), headlineCard([one('signup_reachable', { inconclusive: true })], 12))
 check('naglowek nie oskarza o signup, gdy check jest niemierzalny', throttled.claim.includes('signup page answers'), false)

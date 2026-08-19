@@ -150,9 +150,17 @@ export function pickHeadline(findings: ScanFindings, scorecard: Scorecard): Head
       claim: machineReadable
         ? 'You publish files for machines to read, but nothing that tells one how to become a customer.'
         : 'There is no door built for a machine anywhere on your domain.',
-      evidence: `None of the ${AGENT_ENTRY_PATH_COUNT} known agent entry paths answered, including /agent-signup.md and /.well-known/agent-access.json.${
-        machineReadable ? ' Reading is solved on your site; joining is not.' : ''
-      }`,
+      // Nazwy plikow, nie zapytania. Naglowek mowil „None of the 10 known agent entry paths answered",
+      // a wiersz checku w tym samym dokumencie „None of the 23 agent entry paths we asked on your site
+      // and your documentation host": oba prawdziwe (dziesiec NAZW pytanych na kilku hostach daje
+      // dwadziescia trzy ZAPYTANIA), ale tym samym rzeczownikiem, wiec czytaly sie jak sprzecznosc.
+      // Zlapane przy czytaniu wyjscia MCP w formacie `agent` obok strony `/r` dla svix.com.
+      evidence: `We asked for ${AGENT_ENTRY_PATH_COUNT} entry files by name, including /agent-signup.md and /.well-known/agent-access.json, ${
+        // Tylko gdy naprawde pytalismy. Wiersze sprzed tej flagi mowia „on your site" - zaniżenie,
+        // nigdy zawyzenie, bo zdanie o zapytaniu, ktorego nie bylo, jest tym samym bledem, co
+        // liczenie niezapytanych hostow w `probedHosts` (9.33). Codeksa.
+        funnel.entryDocsProbed === true ? 'on your site and your documentation host' : 'on your site'
+      }, and not one of them answered with a file.${machineReadable ? ' Reading is solved on your site; joining is not.' : ''}`,
       severity: 'notable',
     }
   }
