@@ -1275,7 +1275,9 @@ const przeczytaneDnia = stronaStandard.match(/const SPEC_READ_ON = '([^']+)'/)?.
 // UTC, wiec build o 00:30 w strefie UTC+2 widzialby dzisiejsza date jako jutrzejsza i oblewal
 // wlasnie w nocy, czyli wtedy, kiedy to repo buduje najczesciej. Codeksa.
 const oPolnocy = (at: Date) => new Date(at.getFullYear(), at.getMonth(), at.getDate()).getTime()
-const dniOdLektury = Math.round((oPolnocy(new Date()) - oPolnocy(new Date(`${przeczytaneDnia} 00:00`))) / 86_400_000)
+const wiekWDniach = (napisana: string) =>
+  Math.round((oPolnocy(new Date()) - oPolnocy(new Date(`${napisana} 00:00`))) / 86_400_000)
+const dniOdLektury = wiekWDniach(przeczytaneDnia)
 check('data lektury cudzego standardu jest datą', Number.isFinite(dniOdLektury), true)
 // Obustronnie: data z przyszlosci daje ujemny wiek, ktory spelnia „nie starsza niz 60 dni" na
 // zawsze, wiec literowka w roku wylaczalaby ten straznik na rok. Codeksa.
@@ -1289,6 +1291,18 @@ check('i nie z przyszlosci', dniOdLektury >= -1, true)
 check('i nie starsza niz 60 dni - przeczytaj go ponownie', dniOdLektury <= 60, true)
 // Kontrolka: dwie daty na tej stronie to dwa rozne fakty i nie moga byc jedna stala.
 check('lektura specu i nasza sonda to osobne daty', stronaStandard.includes('const PROBED_ON'), true)
+
+// Ta sama zasada dla liczb o KONKURENCIE na `/methodology`. Ich data siedziala tylko w komentarzu w
+// kodzie, wiec czytelnik widzial „70 checks" w czasie terazniejszym bez zadnej daty. Zweryfikowane
+// 2026-08-19 na ich stronach: 70 checkow, 23 checki dostepnosci, zero wystapien slow signup,
+// provisioning i CAPTCHA - wszystko sie zgadza, ale samo z siebie nie zostanie prawda.
+const stronaMetodologii = readFileSync('src/app/methodology/page.tsx', 'utf8')
+const rywaleCzytaneDnia = stronaMetodologii.match(/const RIVALS_READ_ON = '([^']+)'/)?.[1] ?? ''
+const dniOdRywali = wiekWDniach(rywaleCzytaneDnia)
+check('data liczb o konkurencie jest datą', Number.isFinite(dniOdRywali), true)
+check('nie z przyszlosci', dniOdRywali >= -1, true)
+check('i nie starsza niz 60 dni - policz je ponownie', dniOdRywali <= 60, true)
+check('i widzi ja czytelnik, nie tylko komentarz', stronaMetodologii.includes('counted on their own pages on {RIVALS_READ_ON}'), true)
 
 check('sonda widzi cudze poswiadczenie po nazwie', namesSomebodyElsesCredential('Create a Firebase ', 'Service Account', 'onesignal.com'), true)
 check('i nie widzi marki, ktorej przy poswiadczeniu nie ma', namesSomebodyElsesCredential('Create a ', 'Service Account', 'browserbase.com'), false)

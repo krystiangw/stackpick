@@ -11,6 +11,9 @@ import { CHECKS, FORMULA_VERSION, MAX_SCORE, STAGES } from '@/lib/score'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
 
+/** Kiedy policzylismy liczby CUDZEGO skanera. Straznik oblewa build, gdy zrobi sie starsza niz 60 dni. */
+const RIVALS_READ_ON = '19 August 2026'
+
 export const metadata: Metadata = {
   title: 'Methodology: Let Agents In',
   description: 'Every check, its rule and why it costs a vendor money. The formula is published so the score can be reproduced.',
@@ -408,7 +411,12 @@ export default async function MethodologyPage() {
 
       {/* A reader who has found the alternatives will trust us less for not naming them, and the
           comparison is favourable in the only place it matters, so hiding it would cost more than
-          it buys. Their numbers, checked in their own published spec on 10 August 2026. */}
+          it buys.
+
+          The date is in the prose rather than here, because it is a claim about somebody else's
+          product and it decays on their schedule: the neighbouring page said AgentReady had 28
+          requirements and it had 30 a day later. A rule fails the build when this date goes stale,
+          so the numbers get re-read rather than quietly ageing in a comment nobody opens. */}
       <section className="border-b border-rule py-12">
         <h2 className="text-lg font-semibold tracking-tight">What the other scanners measure</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
@@ -416,7 +424,8 @@ export default async function MethodologyPage() {
             agent-ready.dev
           </a>{' '}
           runs 70 checks against the Vercel Agent Readability Spec, llmstxt.org and a dozen protocol
-          manifests, plus 23 accessibility checks. On discovery and parsing it is more thorough than we are
+          manifests, plus 23 accessibility checks, counted on their own pages on {RIVALS_READ_ON}. On
+          discovery and parsing it is more thorough than we are
           and we would send you there for that: if you want to know whether your markdown mirrors, canonical
           tags and structured data are right, they will tell you and we will not.
         </p>
