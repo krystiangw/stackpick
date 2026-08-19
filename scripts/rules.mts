@@ -1371,6 +1371,15 @@ check('nie z przyszlosci', dniOdSprawdzenia >= -1, true)
 check('i nie starsza niz 60 dni - odpal je ponownie', dniOdSprawdzenia <= 60, true)
 check('i widzi ja czytelnik', stronaFindings.includes('Read on {RIVALS_CHECKED_ON}'), true)
 
+// Sufit bajtow jest CYTOWANY w dwoch werdyktach („larger than the 400,000 bytes we read"), a metodyka
+// go nie znala - vendor szedl po wyjasnienie tam, gdzie go nie bylo. Liczba idzie ze stalej, wiec nie
+// da sie jej rozjechac; straznik pilnuje tylko tego, ze strona w ogole o niej mowi i ze mowi takze o
+// drugim skutku sufitu, czyli o WYBORZE strony (9.50).
+const metodykaCap = readFileSync('src/app/methodology/page.tsx', 'utf8')
+check('metodyka nazywa sufit bajtow ze stalej', metodykaCap.includes('${MAX_BYTES_PER_RESPONSE.toLocaleString(\'en-US\')} bytes'), true)
+check('i mowi, ze sufit decydowal takze o wyborze strony', metodykaCap.includes('stopped deciding which of your pages we read'), true)
+check('i ze milczaca kontrolka nie zgaduje', metodykaCap.includes('if the control does not answer, we skip the path'), true)
+
 check('sonda widzi cudze poswiadczenie po nazwie', namesSomebodyElsesCredential('Create a Firebase ', 'Service Account', 'onesignal.com'), true)
 check('i nie widzi marki, ktorej przy poswiadczeniu nie ma', namesSomebodyElsesCredential('Create a ', 'Service Account', 'browserbase.com'), false)
 check('wlasna marka nie dyskwalifikuje', namesSomebodyElsesCredential('Create a GitHub ', 'personal access token', 'github.com'), false)
