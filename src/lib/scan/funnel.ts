@@ -135,8 +135,17 @@ const MAKES_ONE_AFTER = String.raw`(?:creat|generat|provision|issu)(?:e|es|ed)\b
 const CREATES_ONE = (phrase: string) =>
   new RegExp(`${MAKES_ONE_BEFORE}[^.]{0,25}${phrase}|${phrase}[^.]{0,25}${MAKES_ONE_AFTER}`, 'i')
 
-const NAMES_A_CREDENTIAL =
-  /\b(?:api[-_ ]?keys?|api[-_ ]?tokens?|access[-_ ]?(?:tokens?|keys?)|personal access tokens?|secret[-_ ]?keys?|credentials?|service accounts?|auth tokens?|bearer tokens?)\b/i
+/** The nouns, kept as a source string so a second rule can require something in front of them. */
+const CREDENTIAL_NOUNS = String.raw`(?:api[-_ ]?keys?|api[-_ ]?tokens?|access[-_ ]?(?:tokens?|keys?)|personal access tokens?|secret[-_ ]?keys?|credentials?|service accounts?|auth tokens?|bearer tokens?)`
+const NAMES_A_CREDENTIAL = new RegExp(String.raw`\b${CREDENTIAL_NOUNS}\b`, 'i')
+
+/**
+ * Companies that hand out credentials in their own console, so a sentence about creating one of
+ * theirs is not this vendor documenting its own provisioning path.
+ */
+const CREDENTIAL_ISSUERS = String.raw`(?:firebase|google|gcp|aws|amazon|azure|microsoft|apple|okta|onelogin|keycloak|hashicorp|auth0|github|gitlab)`
+/** A brand standing immediately in front of a credential noun, wherever the pair happens to sit. */
+const FOREIGN_CREDENTIAL = new RegExp(String.raw`\b(${CREDENTIAL_ISSUERS})[\s-]+(?:cloud[\s-]+)?${CREDENTIAL_NOUNS}\b`, 'gi')
 
 /** Something is brought into existence, in either word order, rather than administered. */
 const MAKES_SOMETHING =
@@ -1277,7 +1286,10 @@ function provisioningHit(text: string, pattern: RegExp, index: number, ours: str
   const all = new RegExp(pattern.source, `${pattern.flags.replace('g', '')}g`)
   for (let hit = all.exec(text); hit; hit = all.exec(text)) {
     const window = windowAround(text, hit.index, hit[0].length)
-    if (ours && handsItToSomebodyElse(window, ours)) continue
+    // The words up to and including THIS match, not the window: whose credential this is, is
+    // written where the credential is named.
+    const before = text.slice(Math.max(0, hit.index - 40), hit.index)
+    if (ours && (handsItToSomebodyElse(window, ours) || namesSomebodyElsesCredential(before, hit[0], ours))) continue
     if (CREATED_PROVISIONING_INDEXES.has(index)) {
       if (CREATES_ONE(hit[0]).test(window)) return hit.index
       continue
@@ -1306,6 +1318,57 @@ function provisioningHit(text: string, pattern: RegExp, index: number, ours: str
  * decides whose product the evidence is about. Measured on the corpus before it shipped - 1 of the
  * 63 credited rows quotes an address outside the vendor's own domain.
  */
+/**
+ * Whether the credential the sentence creates is named as another company's product.
+ *
+ * 9.44 asked what a link in the window is called, which closes the case where the sentence points
+ * out to somebody else's console. onesignal.com kept this point on "Create a Firebase Service
+ * Account private key", which names the other company inside the phrase itself and links nowhere:
+ * the words are OneSignal's, the key is Google's, and this check asks whether the vendor documents
+ * a way to get ITS OWN key without a person.
+ *
+ * Read off the words immediately in front of THIS match, not off the sentence around it, and that
+ * is the whole rule. Two looser versions were tried and both fail open in a different direction:
+ * any of these names anywhere in the window also takes browserbase.com, whose sentence is "Create
+ * a Service Account to allow programmatic access to your vault" - their own product, a common
+ * noun, nothing qualifying the credential; and a brand merely near the phrase discards "Enter your
+ * GitHub access token, then create an API key in Settings", which is a vendor documenting its own
+ * key beside somebody else's. The second is codex's, and it is the same objection it raised
+ * against the first version of 9.44: foreign and nearby is not the same as foreign and the point.
+ * Measured on the 55 credited quotes through `provisioningMatches` itself: exactly onesignal.com.
+ */
+export function namesSomebodyElsesCredential(before: string, phrase: string, ours: string): boolean {
+  for (const hit of `${before}${phrase}`.matchAll(FOREIGN_CREDENTIAL)) {
+    // It has to TOUCH the phrase we matched. Half the provisioning patterns start at the verb, so
+    // the brand can sit inside the match ("Create a Firebase API key programmatically") as easily
+    // as in front of it ("Create a Firebase " + "Service Account"), and one test covers both when
+    // the foreign pair is allowed to straddle the boundary. What it must not cover is a foreign
+    // credential that merely shares the sentence: "Enter your GitHub access token, then create an
+    // API key in Settings" is a vendor documenting its own key, and that pair ends before the
+    // phrase begins. Both halves are codex's, one round apart.
+    if (hit.index + hit[0].length <= before.length) continue
+    if (!issuerIsTheVendor(hit[1], ours)) return true
+  }
+  return false
+}
+
+/** Where a brand and the domain it is served from are not the same word. */
+const ISSUER_DOMAIN_LABEL: Record<string, string> = { aws: 'amazon', gcp: 'google', firebase: 'google', azure: 'microsoft' }
+
+/**
+ * A vendor is free to name itself: github.com writing "GitHub personal access token" documents its
+ * own credential, so the brand list has to lose to the domain being scanned.
+ *
+ * Against the domain's own label, never a substring of it. `ours.includes(brand)` handed
+ * pineapple.com an "Apple API key" and any domain with `aws` in it an AWS credential, which is the
+ * filter failing open on exactly the rows it exists for. Codex's.
+ */
+function issuerIsTheVendor(brand: string, ours: string): boolean {
+  const label = ours.toLowerCase().split('.')[0] ?? ''
+  const named = brand.toLowerCase()
+  return label === named || label === (ISSUER_DOMAIN_LABEL[named] ?? named)
+}
+
 export function handsItToSomebodyElse(window: string, ours: string): boolean {
   for (const [, label, url] of window.matchAll(/\[([^\]]{0,80})\]\((https?:\/\/[^)\s]+)/g)) {
     if (!NAMES_A_CREDENTIAL.test(label)) continue

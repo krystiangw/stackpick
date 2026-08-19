@@ -211,6 +211,11 @@ const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   // provisioning path. growthbook.io held the point on a sentence about Google Cloud service
   // accounts, and a row that loses it here documented no more and no less than it did before.
   '9.44': ['programmatic_provisioning'],
+  // 9.46 reads whose credential the sentence creates when it names one. onesignal.com held this
+  // point on "Create a Firebase Service Account private key": a Google key, made in Google's
+  // console, and nothing OneSignal hands an agent. Measured on the 55 credited quotes before it
+  // shipped, it takes that row and no other.
+  '9.46': ['programmatic_provisioning'],
   // 9.45 stops reading the words "service account" as a provisioning surface when nothing in the
   // sentence creates one. Ten rows lose the point on a navigation breadcrumb, a statistic in a
   // blog post or somebody else's cloud console, and not one of them documents any less than it

@@ -50,6 +50,7 @@ import {
   PROVISIONING_PATTERN_LABELS,
   provisioningQuotes,
   handsItToSomebodyElse,
+  namesSomebodyElsesCredential,
   withoutAChoppedAddress,
   windowCutMidToken,
   BOT_DEFENCE_RULES,
@@ -1080,6 +1081,30 @@ check('obcy link obok nie zabiera punktu', provisioningMatches(wlasnyKluczObcyLi
 check('sonda widzi link po cudzy klucz', handsItToSomebodyElse('[Service Accounts](https://console.cloud.google.com/x)', 'growthbook.io'), true)
 check('i nie widzi wlasnego', handsItToSomebodyElse('[Service Accounts](https://docs.growthbook.io/x)', 'growthbook.io'), false)
 check('obcy link o czyms innym nie liczy sie', handsItToSomebodyElse('[Postman collection](https://postman.com/x)', 'growthbook.io'), false)
+
+// 9.46: marka stojaca TUZ PRZED rzeczownikiem poswiadczenia mowi, czyj to klucz. Wersja luzniejsza
+// (marka gdziekolwiek w oknie) zostala zmierzona na 55 zaliczonych cytatach i zabierala punkt
+// browserbase.com za wlasne zdanie, wiec kontrolki pilnuja obu stron tej granicy.
+check('sonda widzi cudze poswiadczenie po nazwie', namesSomebodyElsesCredential('Create a Firebase ', 'Service Account', 'onesignal.com'), true)
+check('i nie widzi marki, ktorej przy poswiadczeniu nie ma', namesSomebodyElsesCredential('Create a ', 'Service Account', 'browserbase.com'), false)
+check('wlasna marka nie dyskwalifikuje', namesSomebodyElsesCredential('Create a GitHub ', 'personal access token', 'github.com'), false)
+check('obca chmura z czlonem cloud tez', namesSomebodyElsesCredential('Create a Google Cloud ', 'service account', 'nylas.com'), true)
+check('marka w srodku cudzej nazwy to nie ta marka', namesSomebodyElsesCredential('Create an Apple ', 'api key', 'pineapple.com'), true)
+check('ale prawdziwy wlasciciel nadal swoj', namesSomebodyElsesCredential('Create an Apple ', 'api key', 'apple.com'), false)
+check('marka serwowana z innej domeny tez jest swoja', namesSomebodyElsesCredential('Create an AWS ', 'access key', 'amazon.com'), false)
+check('i to samo dla azure', namesSomebodyElsesCredential('Create an Azure ', 'service account', 'microsoft.com'), false)
+// Codeksa, dwie rundy: marka ukryta W SRODKU dopasowania liczy sie, a cudze poswiadczenie, ktore
+// tylko dzieli zdanie z naszym, nie liczy sie. Jedno i drugie na tej samej granicy.
+check(
+  'marka w srodku dopasowania tez',
+  namesSomebodyElsesCredential('', 'Create a Firebase API key programmatically', 'onesignal.com'),
+  true,
+)
+check(
+  'cudzy klucz obok wlasnego nie zabiera punktu',
+  namesSomebodyElsesCredential('Enter your GitHub access token, then create an ', 'api key', 'vercel.com'),
+  false,
+)
 
 // 9.45: „service account" to czwarta fraza tego samego rodzaju, co trzy rozbrojone w 9.32, i
 // przeoczona, bo nazywa poswiadczenie, a nie API. Wszystkie cytaty ponizej sa PRAWDZIWE, wziete z
