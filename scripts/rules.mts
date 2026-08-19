@@ -1222,6 +1222,11 @@ check('llms.txt zna limit na domene', naszLlms.includes(`${PER_DOMAIN_PER_HOUR} 
 check('llms.txt nie powtarza starej dziesiatki', /10 scans per hour per address/.test(naszLlms), false)
 check('agent-access zna limit na adres', dostepDlaAgentow.includes(`"requests": ${PER_CALLER_PER_HOUR}`), true)
 check('agent-access zna limit na domene', dostepDlaAgentow.includes(`"requests": ${PER_DOMAIN_PER_HOUR}`), true)
+// Reszta liczb w tym samym pliku. Trzymal sie jako jedyny z czterech pisanych recznie, wiec zwiazanie
+// go teraz jest tansze niz znalezienie go rozjechanego pozniej.
+check('agent-access zna budzet pobierania', dostepDlaAgentow.includes(`${DEFAULT_SCAN_BUDGET_MS / 1000} second budget`), true)
+check('agent-access wie, ile razy pytamy o signup', dostepDlaAgentow.includes('run three times'), true)
+check('a sonda signup naprawde pyta trzy razy', /tries = 3,/.test(readFileSync('src/lib/scan/http.ts', 'utf8')), true)
 
 // Katalog ARD byl statykiem i rozjechal sie tam, gdzie statyki sie rozjezdzaja: `version: 9.40`
 // przy zywej formule 9.49. Teraz jest generowany, wiec straznik pilnuje, ze nikt nie wroci do pliku
