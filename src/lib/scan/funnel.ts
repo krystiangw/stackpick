@@ -1,4 +1,4 @@
-import { AGENT_UA, BROWSER_UA, fetchUrl, registrableDomain, isBotChallenge, isEdgeRefusal, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, timeLeftMs, visibleTextLength, wasNeverAsked, withoutTags, type Fetched } from './http'
+import { AGENT_UA, BROWSER_UA, fetchUrl, registrableDomain, informative, isBotChallenge, isEdgeRefusal, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, timeLeftMs, visibleTextLength, wasNeverAsked, withoutTags, type Fetched } from './http'
 
 export const AGENT_ENTRY_PATH_COUNT = 10
 
@@ -1587,15 +1587,8 @@ function quoting(patterns: RegExp[], html: string, most = 3): string[] {
  * login screen, so the .md arm was suppressing a real llms.txt that is served as text/plain.
  * Same for agora.io. Both earned a point and both were told the file proved nothing.
  */
-/**
- * A control worth believing: it came back, and it came back about the path rather than about us.
- *
- * 429 named separately because `isEdgeRefusal` deliberately excludes it - by this project's own
- * published rule a 429 is our own load rather than the vendor's wall. That is right for a verdict
- * about the vendor and wrong here: a rate limit tells us nothing about what the host serves at an
- * address nobody registered, which is the only question a control asks.
- */
-export const informative = (got: Fetched) => got.status > 0 && got.status !== 429 && !isEdgeRefusal(got.status)
+/** Przeniesione do `http.ts`, bo pyta o to samo takze selekcja zgadywanych sciezek. */
+export { informative } from './http'
 
 async function servesCatchAllText(site: string): Promise<CatchAll> {
   // The same Accept the entry probes send, per suffix. They diverged, and that is how a control

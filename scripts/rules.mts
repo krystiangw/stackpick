@@ -37,6 +37,7 @@ import { limitsAtTheirEdge, sawRateLimit, otherDomainsNamed } from '../src/lib/c
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
 import { wasNeverAsked } from '../src/lib/scan/http'
 import { brandTaken, certain, mentionsIn, nameGuest, quotedAbout, whoWentFirst, wordsCarried } from '../src/lib/vendors'
+import { answersEverythingTheSameWay, howAPathAnswered } from '../src/lib/scan/http'
 import { licenceGateQuotes, readSnippet, rendersUsableForm, entersThroughIdentityProvider, mcpCandidates, looksLikeADocsPageTwin, answersWithTheSameTemplate, readsAsAnEndpoint, readsAsTheirOwnAddress } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
 import { AGENT_ENTRY_PATHS, AGENT_ENTRY_PATH_COUNT, mcpAcrossWaves } from '../src/lib/scan/funnel'
@@ -2006,6 +2007,44 @@ check('kropka pod cudzyslowem tez', mentionsIn('"Vercel jest wyborem." Render od
 check('i nawias domykajacy', mentionsIn('(Vercel jest wyborem.) Render odpada.', ['vercel.com'])[0].sentence, '(Vercel jest wyborem.)')
 
 // Prog cytatu w audycie dostawy: nie liczba slow, tylko czy czytelnik wynosi z niego cokolwiek.
+// Zgadnieta sciezka kontra nasz wlasny sufit. Dlugosc widocznego tekstu czytala nasze ciecie jako
+// cudza pustke: cialo, ktore wypelnilo 400 kB, jest ucinane w srodku bloku, `stripCodeBlocks`
+// porzuca reszte dokumentu, i strona dajaca 12 282 znaki w pelnym odczycie czyta sie na 53
+// (filestack.com, zmierzone 2026-08-19). Skorupa SPA jest z definicji mala, wiec odpowiedz, ktora
+// dobila do sufitu, skorupa nie jest - niezaleznie od tego, co mowi widoczny tekst.
+const zgadnietaSciezka = (body: string, extra: Record<string, unknown> = {}) =>
+  ({ ok: true, body, url: 'https://v.test/docs', status: 200, headers: { 'content-type': 'text/html' }, truncated: false, ...extra }) as never
+check('skorupa SPA to nie zywa strona', howAPathAnswered(zgadnietaSciezka('<html><body><div id="root"></div></body></html>')), 'shell')
+check('zwykla strona z tekstem juz tak', howAPathAnswered(zgadnietaSciezka(`<html><body><p>${'slowo '.repeat(80)}</p></body></html>`)), 'page')
+// Ani „strona", ani „skorupa": tego rozstrzyga dopiero kontrolka. Wersja, ktora mowila tu wprost
+// „strona", przyjmowalaby `/docs` na hostzie z wielka skorupa pod kazdym adresem. Codeksa.
+check('cialo uciete sufitem to osobna odpowiedz', howAPathAnswered(zgadnietaSciezka('<html><body><script>x', { truncated: true })), 'cut-short')
+check('ale odpowiedz, ktora nie odpowiedziala, nadal nie jest strona', howAPathAnswered(zgadnietaSciezka('', { ok: false, truncated: true })), 'shell')
+// Kontrolka: adres, ktorego byc nie moze. Catch-all demaskuje TYLKO odpowiedz tego samego rodzaju,
+// czyli tez ucieta naszym sufitem. Krotki soft-404 nie jest tym samym cialem, a przyjmowanie go
+// wyrzucaloby dokladnie te prawdziwa dokumentacje, ktora ta kontrolka ma ratowac. Codeksa, drugie
+// przejscie - pierwsza wersja mowila tu `true` i byla poprawka psujaca wlasny cel.
+check('kontrolka ucieta tak samo demaskuje catch-all', answersEverythingTheSameWay(zgadnietaSciezka('<html><body><script>x', { truncated: true })), true)
+check('krotki soft-404 to nie to samo cialo', answersEverythingTheSameWay(zgadnietaSciezka('<html><body><div id="root"></div></body></html>')), false)
+check('czytelna strona 404 tym bardziej nie', answersEverythingTheSameWay(zgadnietaSciezka(`<html><body><p>${'slowo '.repeat(80)}</p></body></html>`)), false)
+check('a kontrolka, ktora nie odpowiedziala, tez nie', answersEverythingTheSameWay(zgadnietaSciezka('', { ok: false, truncated: true })), false)
+// I straznik na WYWOLANIE: milczaca kontrolka nie ma prawa przyznac sciezki. To ta sama zasada, co
+// 9.43 dla pliku wejsciowego, i bez tej linijki timeout na kontrolce czytalby sie jak dowod.
+const wyborSciezki = readFileSync('src/lib/scan/discover.ts', 'utf8')
+check(
+  'milczaca kontrolka nie przyznaje zgadnietej sciezki',
+  wyborSciezki.includes('if (informative(control) && !answersEverythingTheSameWay(control)) return got.url'),
+  true,
+)
+// Cialo DLUZSZE niz prog, zeby o odrzuceniu decydowal typ tresci, a nie dlugosc. W pierwszej wersji
+// stalo tu `{"a":1}`, ktore przechodzilo testem dlugosci i przy wyrzuconym `looksLikeHtml` reguła
+// nadal swiecila zielono - czyli sprawdzala nie to, co mialo byc sprawdzone.
+check(
+  'ani plik, ktory nie jest HTML-em, choc dlugi',
+  howAPathAnswered(zgadnietaSciezka(`{"opis":"${'tekst '.repeat(60)}"}`, { headers: { 'content-type': 'application/json' } })),
+  'shell',
+)
+
 check('cytat z samego linku nie niesie ani slowa', wordsCarried('[Vercel limits](https://vercel.com/docs/limits) |'), 0)
 check('krotkie zdanie obok linku juz tak', wordsCarried('[Git deployments](https://vercel.com/docs/git) | Best if the API can become functions.') > 0, true)
 check('cztery slowa to nadal cytat', wordsCarried('Neon bylby moim wyborem.') > 0, true)
@@ -2455,8 +2494,9 @@ console.log('\nkontrolka odmowna nie jest kontrolka')
 check('404 jest odpowiedzia', isEdgeRefusal(404), false)
 check('403 nie jest', isEdgeRefusal(403), true)
 check('a 429 wypada z isEdgeRefusal, wiec musi byc nazwany osobno', isEdgeRefusal(429), false)
-const funnelSource = readFileSync('src/lib/scan/funnel.ts', 'utf8')
-check('i jest nazwany', funnelSource.includes("got.status !== 429 && !isEdgeRefusal(got.status)"), true)
+// Definicja przeniesiona do `http.ts`, bo o to samo pyta teraz takze selekcja zgadywanych sciezek.
+const httpSource = readFileSync('src/lib/scan/http.ts', 'utf8')
+check('i jest nazwany', httpSource.includes("got.status !== 429 && !isEdgeRefusal(got.status)"), true)
 
 // Ta sama regula o warstwe dalej: przy MCP `got.status !== control?.status` jest PRAWDA, gdy
 // kontrolka w ogole nie odpowiedziala (status 0), wiec host odmawiajacy 401 pod kazdym adresem

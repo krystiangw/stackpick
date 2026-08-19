@@ -754,6 +754,58 @@ export function visibleTextLength(html: string): number {
     .trim().length
 }
 
+/** Below this a guessed path is an SPA shell served under every address, not a page. */
+const LIVE_PAGE_FLOOR = 200
+
+/**
+ * How a guessed path answered: with a page, with an application shell, or with a body our own cap
+ * cut short before we could tell.
+ *
+ * The length test alone reads our own ceiling as somebody else's emptiness. A body that filled the
+ * 400,000-byte cap is cut mid-block, `stripCodeBlocks` drops the rest of a document it can only
+ * assume is malformed, and everything after the cut stops existing: filestack.com's quickstart
+ * renders 12,282 characters to a complete read and 53 to ours.
+ *
+ * `cut-short` is deliberately not `page`. A shell is usually small, but a site that inlines its
+ * bundle serves a catch-all shell that is enormous - codex's, and it is right: bypassing the text
+ * test on truncation alone would accept `/docs` on a host that answers every unknown path the same
+ * way. Only a control asking for a path that cannot exist separates the two, and the caller does
+ * that, because it costs a request and is worth paying only in this case.
+ *
+ * This decides which page we go on to read, not what we say about a vendor - which is why no audit
+ * caught it: the verdict that follows is a true sentence about the wrong page.
+ */
+export type HowAPathAnswered = 'page' | 'shell' | 'cut-short'
+
+export function howAPathAnswered(fetched: Fetched): HowAPathAnswered {
+  if (!fetched.ok || !looksLikeHtml(fetched)) return 'shell'
+  if (visibleTextLength(fetched.body) > LIVE_PAGE_FLOOR) return 'page'
+  return fetched.truncated ? 'cut-short' : 'shell'
+}
+
+/**
+ * True when the host answers a path that cannot exist with a body of the SAME kind: enormous enough
+ * to hit our cap and unreadable without it. That is what an inlined-bundle shell under a catch-all
+ * route looks like, and it is the only answer that makes a cut-short candidate worthless.
+ *
+ * `cut-short` and nothing weaker. Accepting any short 200 here - a soft-404 that says "not found" in
+ * forty characters - would throw away exactly the genuine documentation page this control exists to
+ * rescue, which is the opposite mistake and the more common one. Codex's, on the second pass.
+ */
+/**
+ * A control worth believing: it came back, and it came back about the path rather than about us.
+ *
+ * 429 named separately because `isEdgeRefusal` deliberately excludes it - by this project's own
+ * published rule a 429 is our own load rather than the vendor's wall. That is right for a verdict
+ * about the vendor and wrong here: a rate limit tells us nothing about what the host serves at an
+ * address nobody registered, which is the only question a control asks.
+ */
+export const informative = (got: Fetched) => got.status > 0 && got.status !== 429 && !isEdgeRefusal(got.status)
+
+export function answersEverythingTheSameWay(control: Fetched): boolean {
+  return howAPathAnswered(control) === 'cut-short'
+}
+
 /**
  * A 429 is our own traffic everywhere else in this scan, and that rule was laundering the most
  * agent-hostile configuration in the corpus. pandadoc.com answers every request with 429,

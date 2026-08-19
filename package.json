@@ -44,7 +44,8 @@
     "po-przemiacie": "tsx scripts/po-przemiacie-9-49.mts",
     "audit-sample": "tsx scripts/audit-sample.mts",
     "cluster-space": "tsx scripts/cluster-space.mts",
-    "migrate-cluster": "tsx scripts/migrate-cluster.mts"
+    "migrate-cluster": "tsx scripts/migrate-cluster.mts",
+    "audit-cap-selection": "tsx scripts/audit-cap-selection.mts"
   },
   "dependencies": {
     "mongodb": "^7.5.0",

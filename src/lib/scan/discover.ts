@@ -1,4 +1,4 @@
-import { fetchUrl, inParallel, isRealTextFile, looksLikeHtml, registrableDomain, visibleTextLength, withoutTags, DOCS_SHELL_FLOOR, type Fetched , stripCodeBlocks } from './http'
+import { answersEverythingTheSameWay, howAPathAnswered, informative, fetchUrl, inParallel, isRealTextFile, looksLikeHtml, registrableDomain, visibleTextLength, withoutTags, DOCS_SHELL_FLOOR, type Fetched , stripCodeBlocks } from './http'
 import { fetchPackageFacts } from './npm'
 import { rendersUsableForm } from './funnel'
 
@@ -568,7 +568,18 @@ async function firstLivePath(site: string, paths: string[]): Promise<string | nu
   const pending = paths.map((path) => fetchUrl(`${site}${path}`))
   for (const request of pending) {
     const got = await request
-    if (got.ok && looksLikeHtml(got) && visibleTextLength(got.body) > 200) return got.url
+    const answered = howAPathAnswered(got)
+    if (answered === 'page') return got.url
+    // Cialo uciete naszym sufitem nie jest dowodem pustki, ale tez nie jest dowodem strony: dopiero
+    // kontrolka na adres, ktorego byc nie moze, odroznia prawdziwe `/docs` od skorupy pod kazdym
+    // adresem. Jedno zapytanie, i tylko w tym rzadkim przypadku.
+    if (answered === 'cut-short') {
+      const control = await fetchUrl(`${site}/letagentsin-control-probe-8f3a1c`)
+      // Kontrolka, ktora sie nie odezwala, niczego nie przyznaje - ta sama zasada, co w 9.43. Timeout,
+      // 429 albo sciana na brzegu nie sa dowodem, ze host NIE serwuje skorupy pod kazdym adresem, wiec
+      // ucieta sciezka zostaje odrzucona tak jak dzis. Codeksa, trzecie przejscie.
+      if (informative(control) && !answersEverythingTheSameWay(control)) return got.url
+    }
   }
   return null
 }
