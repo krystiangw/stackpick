@@ -7,6 +7,32 @@
 
 
 
+
+## PIEC POWIERZCHNI DLA AGENTOW, PRZEJRZANYCH PO KOLEI: WYNIK (2026-08-19 wieczor)
+
+Nie bylo to zaplanowane jako badanie, ale wyszlo z niego zdanie, ktore warto miec:
+
+| plik | pisany | stan przed |
+|---|---|---|
+| `llms.txt` | recznie | **dwa bledy**: limit 10/h zamiast 30, milczenie o 5/domene; `format: json` na MCP, ktore go odrzuca |
+| `/.well-known/mcp.json` | generowany z **podzbioru** pol | **gubil adnotacje** - `scan_domain` szedl w swiat nieoznaczony |
+| `/.well-known/ai-catalog.json` | recznie | **`version: 9.40`** przy zywej 9.49 |
+| `/.well-known/agent-access.json` | recznie | **czysty** - jedyny taki |
+| `/openapi.json` | **generowany w calosci** | **czysty**, 16 z 16 checkow, enum zgodny |
+
+**Cztery pisane recznie, trzy rozjechane. Jeden generowany w calosci, zero.** Karta MCP jest tu
+najciekawsza, bo pokazuje polsrodek: **generowanie z podzbioru pol nie chroni przed rozjazdem**, tylko
+przenosi go z wartosci na *liste pol*.
+
+**Co z tym zrobione:** katalog ARD przepisany na trase, karta MCP niesie komplet pol, a **kazda liczba
+w plikach, ktore MUSZA zostac statyczne** (`llms.txt`, `agent-access.json` - sa serwowane doslownie),
+jest zwiazana ze stala w kodzie. Sprawdzone mutacyjnie: zmiana `PER_CALLER_PER_HOUR` oblewa piec
+regul, zmiana `DEFAULT_SCAN_BUDGET_MS` dwie, wpisanie wersji recznie do katalogu trzy.
+
+**Zasada na przyszlosc:** plik dla agentow albo jest **generowany w calosci z kodu**, albo **kazda
+jego liczba ma straznika**. Trzeciej drogi nie ma - a „przeciez to jest generowane" nie wystarcza,
+dopoki nie sprawdzi sie, ktore pola.
+
 ## KATALOG ARD PUBLIKOWAL FORMULE SPRZED DZIEWIECIU WYDAN (19:30)
 
 `/.well-known/ai-catalog.json` mowil `"version": "9.40"` przy zywej **9.49**. Byl statykiem w
