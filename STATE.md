@@ -8447,3 +8447,35 @@ nie mielismy - poprzednie „zdanie trzyma sie wszedzie" dotyczylo cwiartki:
 
 Do tego cztery audyty lokalne (`headlines`, `delivery`, `our-api`, `remedies`): zero mocnych
 sygnalow, piec slabych, wszystkie znane i nieszkodliwe.
+
+## JOB, KTORY NIGDY NIE ZADZIALAL, I NIKT TEGO NIE ZAUWAZYL (2026-08-19, 07:15)
+
+Wyszlo z liczby, ktora `after-reseed.mts` drukuje po kazdym przemiacie i na ktora nikt nie patrzyl:
+**„lustro rejestru MCP zsynchronizowane 32.6 h temu"**, przy jobie opisanym jako **dzienny**.
+
+`gh run list --workflow=mcp-registry.yml`: **dwa przebiegi, oba oblane, oba w osiem sekund**. Czyli
+job nie zadzialal **ani razu**. Przyczyna trywialna i cala w jednej linii: repo ma `pnpm-lock.yaml`,
+a workflow wola `npm ci`, ktore bez `package-lock.json` odmawia. Trzy pozostale workflow'y zyja, bo
+nie instaluja niczego - tylko strzelaja curlem.
+
+**Dlaczego to jest grozne, a nie kosmetyczne:** lustro jest czytane jeszcze przez **siedem dni**
+(`MIRROR_TTL_MS`), a potem `mcp_present` staje sie **niemierzalny na calym korpusie**. Lustro wypelnil
+recznie czlowiek 2026-08-17, wiec cisza zaczelaby sie **2026-08-24** i w aplikacji nie byloby zadnego
+sladu przyczyny. To jest dokladnie ten ksztalt, ktorego szukamy w werdyktach - **brak dowodu udajacy
+dowod** - tyle ze w infrastrukturze.
+
+**Zrobione teraz:**
+- **Lustro odswiezone recznie**, przed przemiatem, bo przemiat je czyta: 15 stron, 973 zdalne adresy,
+  **346 hostow zaktualizowanych**, `zsynchronizowane 0.0 h temu`, 9513 hostow w sumie.
+- **Workflow poprawiony na `pnpm/action-setup` + `pnpm install --frozen-lockfile`** (wersja 10.33.2 z
+  `packageManager`), plus **straznik w `rules.mts`**: zaden plik w `.github/workflows` nie moze wolac
+  `npm ci`, dopoki repo stoi na pnpm.
+- `after-reseed.mts` liczy teraz takze **niemierzalne z 9.43** - osobno dla `mcp_present` i dla
+  `agent_entry_point` - i wypisuje po piec przykladow z adresem, bo „zero" bez przykladu nie odroznia
+  dzialajacej galezi od martwej.
+
+**CZEGO NIE ZROBILEM I DLACZEGO:** poprawka workflow **nie jest wypchnieta na GitHub**, bo push do
+`origin` to nie deploy i guardrail mowi wprost „nie pushuj, jesli nie poproszono". Nie odpalilem tez
+recznie `workflow_dispatch`, bo to job manualny. **Do zrobienia rano, dwie komendy:**
+`git push origin main` i `gh workflow run mcp-registry.yml`. Do tego czasu lustro jest swieze recznie
+i ma **siedem dni** zapasu.

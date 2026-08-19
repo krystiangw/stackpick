@@ -24,10 +24,19 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+      # pnpm, because that is the lockfile this repo has. `npm ci` refuses without a
+      # package-lock.json, so this job failed in eight seconds on both of the two occasions it ever
+      # ran, and the mirror it fills was last written by hand on 2026-08-17. Nothing shouted: the
+      # mirror is scored as unmeasurable only after seven days, so the corpus would have gone quiet
+      # about MCP on 2026-08-24 with no cause visible in the app.
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm ci
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - name: Fetch the registry and hand it over
         env:
           STACKPICK_CRON_TOKEN: ${{ secrets.STACKPICK_CRON_TOKEN }}

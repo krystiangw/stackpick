@@ -2630,6 +2630,17 @@ check('pelne przejscie nie zglasza pominiecia', coverageLine(177, 177, 30).inclu
 check('a przerwane w polowie zglasza', coverageLine(88, 177, 30).includes('NIE przeczytana'), true)
 check('pelne przejscie mowi, ile wierszy pasowalo', coverageLine(177, 177, 49).includes('49 z nich pasowalo'), true)
 
+// Ten repozytorium ma pnpm-lock.yaml i nie ma package-lock.json, wiec `npm ci` w workflow konczy sie
+// bledem w osiem sekund. Job lustrzacy rejestr MCP tak wlasnie umarl na obu swoich przebiegach i
+// nikt tego nie zauwazyl, bo stare lustro jest czytane jeszcze przez siedem dni.
+console.log('\nworkflow instaluje tym, czym repo ma lockfile')
+const workflowy = readdirSync('.github/workflows').filter((name) => name.endsWith('.yml'))
+const przezNpmCi = workflowy.filter((name) => /^\s*-?\s*(run:\s*)?npm ci\s*$/m.test(readFileSync(`.github/workflows/${name}`, 'utf8')))
+check('zaden workflow nie wola npm ci', przezNpmCi.join(', '), '')
+// Kontrolka: sonda umie znalezc to wywolanie, i nie myli go z komentarzem o nim.
+check('sonda widzi npm ci w kroku', /^\s*-?\s*(run:\s*)?npm ci\s*$/m.test('      - run: npm ci'), true)
+check('i nie lapie wzmianki w komentarzu', /^\s*-?\s*(run:\s*)?npm ci\s*$/m.test('      # npm ci refuses without a lockfile'), false)
+
 console.log('\nzadna regula nie stoi za wyjsciem ze skryptu')
 const rulesSource = readFileSync('scripts/rules.mts', 'utf8')
 // Ostatnie wystapienie, bo dwa pierwsze to te literaly tutaj: sonda szukajaca samej siebie

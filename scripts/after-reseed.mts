@@ -20,6 +20,13 @@ const store = getStore()
 let rows = 0
 const version = new Map<string, number>()
 let mcpUnmeasurable = 0
+/** 9.43: adres, ktory odmowil, przy kontrolce, ktora nie odpowiedziala. Nowa galaz, wiec pusto znaczy
+ * albo ze kontrolki wszedzie dochodza, albo ze galaz jest martwa - i te dwie rzeczy trzeba rozroznic. */
+let mcpWithoutAControl = 0
+const mcpWithoutAControlSample: string[] = []
+/** 9.43 po stronie plikow wejsciowych: plik odpowiedzial, a kontrolka dla tej przestrzeni nazw nie. */
+let entryWithoutAControl = 0
+const entryWithoutAControlSample: string[] = []
 let signupNeedsJs = 0
 let signupIdentityProvider = 0
 let provisioningCredited = 0
@@ -58,6 +65,16 @@ for (const domain of CURATED_DOMAINS) {
 
   const mcp = check('mcp_present')
   if (mcp?.inconclusive && mcp.detail.includes('MCP registry did not answer')) mcpUnmeasurable += 1
+  if (mcp?.inconclusive && mcp.detail.includes('the request we read that refusal against')) {
+    mcpWithoutAControl += 1
+    if (mcpWithoutAControlSample.length < 5) mcpWithoutAControlSample.push(`${domain}: ${mcp.detail.slice(0, 160)}`)
+  }
+
+  const entry = check('agent_entry_point')
+  if (entry?.inconclusive && entry.detail.includes('our control for that namespace did not')) {
+    entryWithoutAControl += 1
+    if (entryWithoutAControlSample.length < 5) entryWithoutAControlSample.push(`${domain}: ${entry.detail.slice(0, 160)}`)
+  }
 
   const signup = check('signup_reachable')
   if (signup?.detail.includes('form needs JavaScript')) signupNeedsJs += 1
@@ -167,6 +184,10 @@ console.log(`skaner chodzi na ${FORMULA_VERSION}${versions[0]?.[0] === FORMULA_V
 console.log('')
 console.log(`signup_reachable: ${signupNeedsJs} razy „formularz potrzebuje JavaScriptu", ${signupIdentityProvider} razy „brak formularza, wejscie przez dostawce tozsamosci"`)
 console.log(`mcp_present: ${mcpUnmeasurable} wierszy niemierzalnych przez milczacy rejestr MCP`)
+console.log(`mcp_present: ${mcpWithoutAControl} wierszy niemierzalnych przez milczaca kontrolke (9.43)`)
+for (const one of mcpWithoutAControlSample) console.log(`  ${one}`)
+console.log(`agent_entry_point: ${entryWithoutAControl} wierszy niemierzalnych przez milczaca kontrolke (9.43)`)
+for (const one of entryWithoutAControlSample) console.log(`  ${one}`)
 
 // The row count above is the symptom; this is the cause, and it is worth one line because the
 // mirror going stale looks exactly like a registry that has nothing about anybody. Read through
