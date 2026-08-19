@@ -3,6 +3,30 @@
 
 
 
+
+## ZDANIE O SARIF-IE OBIECYWALO COS, CZEGO EKSPORT NIE WYPISUJE (2026-08-19, 18:30)
+
+Metoda ta sama, co przy komunikacie prasowym: wziac zdanie, ktore publikujemy, i je **uruchomic**.
+`/docs` mowilo: „`sarif` returns SARIF 2.1.0, **whose result kinds are the same four we use**".
+Odpalone na produkcji (`POST /api/scan`, `format: sarif`, svix.com): **16 regul, 4 wyniki, wszystkie
+`fail`**. Cztery rodzaje istnieja w `verdictOf`, ale do `results` trafiaja **wylacznie oblane
+checki**.
+
+**Kod ma racje, zdanie jej nie mialo.** Filtr jest celowy i ma swoje uzasadnienie zapisane w
+eksporcie: czysta domena podajaca pipeline'owi szesnascie alertow, z ktorych jeden mowi, ze nie bylo
+czego sprawdzac, jest gorsza niz bezuzyteczna. Reszta idzie **licznikami w `properties` runu**
+(`passed`, `unmeasured`, `notApplicable`, `total`, `measurable`, `max`, `scorecardUrl`), wiec czysty
+wynik nadal da sie odroznic od skanu, ktory nie mial jak zajrzec. Zdanie mowi to teraz wprost.
+
+**Zwiazane straznikiem w obie strony** (strona nie moze obiecywac czterech rodzajow i musi nazywac
+liczniki; eksport musi naprawde filtrowac do oblanych i naprawde te liczniki publikowac), sprawdzone
+mutacyjnie: przywrocenie starego brzmienia oblewa dwie reguly.
+
+**Przy okazji sprawdzone i BEZ zarzutu:** `/corpus.csv` (618 kB) i `/corpus.json` (577 kB) odpowiadaja
+200, SARIF jest poprawnym 2.1.0 wobec schematu, **kazda regula ma `helpUri`**, zaden wynik nie
+wskazuje reguly spoza listy. `/corpus.sarif` daje 404 - i tak ma byc, bo nigdzie go nie obiecujemy,
+SARIF jest formatem endpointu, nie plikiem.
+
 ## MIEJSCE NA KLASTRZE ZMIERZONE, I NOTATKA O NIM BYLA MYLACA (2026-08-19, 18:10)
 
 W liscie „co czeka na Krystiana" wisialo od tygodnia: „**`equity-analyst` zajmuje 2807 MB z 5120** na
