@@ -2640,6 +2640,10 @@ check('zaden workflow nie wola npm ci', przezNpmCi.join(', '), '')
 // Kontrolka: sonda umie znalezc to wywolanie, i nie myli go z komentarzem o nim.
 check('sonda widzi npm ci w kroku', /^\s*-?\s*(run:\s*)?npm ci\s*$/m.test('      - run: npm ci'), true)
 check('i nie lapie wzmianki w komentarzu', /^\s*-?\s*(run:\s*)?npm ci\s*$/m.test('      # npm ci refuses without a lockfile'), false)
+// Prog ostrzegawczy przed progiem TTL: inaczej pierwsza wiadomosc o awarii producenta danych brzmi
+// „caly check nagle niemierzalny", siedem dni po fakcie.
+const poPrzemiacie = readFileSync('scripts/after-reseed.mts', 'utf8')
+check('lustro ma prog ostrzegawczy przed TTL', poPrzemiacie.includes('DWA pominiete przebiegi dziennego jobu'), true)
 
 console.log('\nzadna regula nie stoi za wyjsciem ze skryptu')
 const rulesSource = readFileSync('scripts/rules.mts', 'utf8')

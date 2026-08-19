@@ -193,13 +193,26 @@ for (const one of entryWithoutAControlSample) console.log(`  ${one}`)
 // mirror going stale looks exactly like a registry that has nothing about anybody. Read through
 // the app's own connection: an ad-hoc Mongo client without a database name reads a different
 // database and reported this collection empty on 2026-08-17 while it held 9322 hosts.
+/**
+ * Dwa progi, nie jeden. Prog TTL mowi dopiero wtedy, gdy pomiar juz zamilkl - a job wypelniajacy
+ * lustro chodzi codziennie, wiec dwie doby to dwa pominiete przebiegi i jedyny moment, w ktorym
+ * awarie widac przed skutkiem. Job lustrzacy nie zadzialal ani razu i nikt tego nie zauwazyl przez
+ * dwa dni wlasnie dlatego, ze przez caly TTL zepsuty producent wyglada jak dzialajacy.
+ */
+const TWO_MISSED_RUNS_MS = 2 * 24 * 60 * 60 * 1000
+const staleness = (ageMs: number) => {
+  if (ageMs > MIRROR_TTL_MS) return ', czyli POZA oknem i skaner czyta je jak milczenie'
+  if (ageMs > TWO_MISSED_RUNS_MS) return ', czyli DWA pominiete przebiegi dziennego jobu - sprawdz gh run list --workflow=mcp-registry.yml'
+  return ''
+}
+
 const mirror = await mcpRegistryMirrorState()
 const ageMs = mirror.syncedAt === null ? null : Date.now() - Date.parse(mirror.syncedAt)
 console.log(
   `lustro rejestru MCP: ${mirror.hosts} hostow, ${
     ageMs === null
       ? 'NIGDY nie zapelnione, wiec skaner czyta rejestr jak milczacy'
-      : `zsynchronizowane ${(ageMs / 3600_000).toFixed(1)} h temu${ageMs > MIRROR_TTL_MS ? ', czyli POZA oknem i skaner czyta je jak milczenie' : ''}`
+      : `zsynchronizowane ${(ageMs / 3600_000).toFixed(1)} h temu${staleness(ageMs)}`
   }`,
 )
 console.log(`programmatic_provisioning: ${provisioningQuoted} z ${provisioningCredited} zaliczonych wierszy cytuje slowa, na ktorych stoi punkt`)
