@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description:
     // The description is what an agent reads instead of opening the page, which is a check we
     // publish about other people. A stale number here is the failure we sell finding.
-    'The AgentReady standard has 28 requirements and 7 of them are MUST. We measure six of those seven and go further on four. Half of what we check has no equivalent in the spec at all, and we publish which half.',
+    'The AgentReady standard has 30 requirements and 7 of them are MUST. We measure six of those seven and go further on four. Half of what we check has no equivalent in the spec at all, and we publish which half.',
 }
 
 /**
@@ -26,7 +26,14 @@ export const metadata: Metadata = {
  * our own checks are computed, not typed.
  */
 
-const READ_ON = '18 August 2026'
+/**
+ * Kiedy przeczytalismy CUDZY dokument. Osobno od daty naszej wlasnej sondy nizej, bo jedna stala
+ * trzymala oba fakty i podbicie jej przy ponownym czytaniu specu twierdziloby, ze tego samego dnia
+ * odpytalismy 59 domen.
+ */
+const SPEC_READ_ON = '19 August 2026'
+/** Kiedy MY zapytalismy 59 domen o karte agenta. To jest pomiar, nie lektura. */
+const PROBED_ON = '18 August 2026'
 
 /** The seven MUSTs, verbatim identifiers, against the check that measures the same ground. */
 const MUSTS: { id: string; asks: string; ours: string | null; further: string | null }[] = [
@@ -106,10 +113,10 @@ export default async function StandardPage() {
           Somebody wrote a standard. Here is where we stand against it.
         </h1>
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
-          AgentReady has 28 requirements across five sections, and seven of them are MUST. Five of those seven are
+          AgentReady has 30 requirements across five sections, and seven of them are MUST. Five of those seven are
           conditional: they apply only if you expose the surface they are about, so a product with no agent-to-agent
           interface is not failing the agent card requirement, it simply has nothing to publish. Read from
-          agentready.org on {READ_ON}.
+          agentready.org on {SPEC_READ_ON}.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           We measure six of the seven. On four of those we ask a harder question than the spec does. One we do not
@@ -162,7 +169,7 @@ export default async function StandardPage() {
           moment the number grows.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          For the same reason we watch AR-CAPA-04 rather than celebrate it. On {READ_ON} we asked 59 domains spread
+          For the same reason we watch AR-CAPA-04 rather than celebrate it. On {PROBED_ON} we asked 59 domains spread
           across this corpus for a card at the address the standard names. Fifty-two answered and none of them served
           one: most said 404 outright, and where a site answered 200 with something else we checked it against that
           site&apos;s own answer to a path nobody registered. The other seven

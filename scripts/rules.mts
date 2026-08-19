@@ -1264,6 +1264,32 @@ check('/bot nie obiecuje From na kazdym zapytaniu', /Every request carries\{/.te
 check('/bot mowi, ze reszta idzie jako przegladarka', stronaBot.includes('Most of the scan is not sent under that name'), true)
 check('/bot podaje prawdziwy limit rownoleglosci', stronaBot.includes(`${MAX_PER_SITE} requests`) || stronaBot.includes(`{MAX_PER_SITE}`), true)
 
+// Liczby na `/standard` opisuja CUDZY dokument, wiec nie da sie ich wziac z naszego kodu ani
+// pobrac przy budowaniu. Zamiast tego data czytania **wygasa**: gdy zrobi sie starsza niz 60 dni,
+// build oblewa i ktos musi ten dokument przeczytac jeszcze raz. Zmierzone 2026-08-19: strona mowila
+// „28 requirements", a agentready.org mial ich juz 30 (7 MUST bez zmiany, wersja nadal 1.0.0), czyli
+// twierdzenie o kims innym zestarzalo sie w jeden dzien i nic tego nie zglosilo.
+const stronaStandard = readFileSync('src/app/standard/page.tsx', 'utf8')
+const przeczytaneDnia = stronaStandard.match(/const SPEC_READ_ON = '([^']+)'/)?.[1] ?? ''
+// Dni kalendarzowe LOKALNIE, nie odstep miedzy chwilami: `Date.parse('19 August 2026')` to polnoc
+// UTC, wiec build o 00:30 w strefie UTC+2 widzialby dzisiejsza date jako jutrzejsza i oblewal
+// wlasnie w nocy, czyli wtedy, kiedy to repo buduje najczesciej. Codeksa.
+const oPolnocy = (at: Date) => new Date(at.getFullYear(), at.getMonth(), at.getDate()).getTime()
+const dniOdLektury = Math.round((oPolnocy(new Date()) - oPolnocy(new Date(`${przeczytaneDnia} 00:00`))) / 86_400_000)
+check('data lektury cudzego standardu jest datą', Number.isFinite(dniOdLektury), true)
+// Obustronnie: data z przyszlosci daje ujemny wiek, ktory spelnia „nie starsza niz 60 dni" na
+// zawsze, wiec literowka w roku wylaczalaby ten straznik na rok. Codeksa.
+//
+// Z tolerancja jednego dnia, i to jest odrzucenie drugiej rady codeksa z uzasadnieniem: proponowal
+// liczyc obie daty w jednej, ustalonej strefie. Data jest PISANA recznie w Warszawie, a build moze
+// isc gdziekolwiek, wiec ustalona strefa nie usuwa przesuniecia, tylko je przenosi - zawsze zostaje
+// +/- jeden dzien. Dolna granica istnieje po to, zeby zlapac literowke w roku, a nie zeby pilnowac
+// polnocy, wiec dostaje dzien luzu i przestaje byc wrazliwa na strefe w ogole.
+check('i nie z przyszlosci', dniOdLektury >= -1, true)
+check('i nie starsza niz 60 dni - przeczytaj go ponownie', dniOdLektury <= 60, true)
+// Kontrolka: dwie daty na tej stronie to dwa rozne fakty i nie moga byc jedna stala.
+check('lektura specu i nasza sonda to osobne daty', stronaStandard.includes('const PROBED_ON'), true)
+
 check('sonda widzi cudze poswiadczenie po nazwie', namesSomebodyElsesCredential('Create a Firebase ', 'Service Account', 'onesignal.com'), true)
 check('i nie widzi marki, ktorej przy poswiadczeniu nie ma', namesSomebodyElsesCredential('Create a ', 'Service Account', 'browserbase.com'), false)
 check('wlasna marka nie dyskwalifikuje', namesSomebodyElsesCredential('Create a GitHub ', 'personal access token', 'github.com'), false)
