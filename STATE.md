@@ -8037,9 +8037,11 @@ Jeden wspolny `scripts/how-many.ts` odmawia teraz argumentu, ktory nie jest **do
 (zero tez, bo zero to prosba o niemierzenie niczego). Straznik w `rules.mts` pilnuje, ze zaden audyt
 nie wrocil do surowego `Number(process.argv[2]`, z kontrolka, ze sonda ten wzorzec w ogole widzi.
 
-**Uruchomiony poprawnie, audyt wejscia potwierdzil zdanie:** 27 wierszy, **455 sciezek zapytanych,
-zero plikow znalezionych**. Kolejka 21 niezgodnosci z poprzednich rund zeszla do zera. Pelny przebieg
-po wszystkich 133 oblanych wierszach chodzi w tle (`/tmp/audit-entry-all.log`).
+**Uruchomiony poprawnie, audyt wejscia potwierdzil zdanie na pelnym pokryciu: 121 oblanych wierszy,
+2483 sciezki zapytane, ZERO plikow znalezionych.** Kolejka 21 niezgodnosci z poprzednich rund zeszla
+do zera. `agent_entry_point` to najwieksza powierzchnia oskarzen w korpusie (133 oblane wiersze), wiec
+to jest najdrozsze zdanie, jakie publikujemy o cudzych witrynach, i teraz stoi na 2483 zapytaniach,
+a nie na `NaN`.
 
 **Lekcja szersza niz ten blad:** instrukcja zapisana w STATE.md jest kodem, ktory wykonuje czlowiek
 albo agent, i **starzeje sie tak samo jak kod**, tylko nikt jej nie kompiluje. Ta konkretna byla
