@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-19/20 noc (kod, produkcja i korpus na 9.49, przemiat zamkniety)
+# Let Agents In: stan na 2026-08-20 noc (kod i produkcja 9.50, korpus 9.49, czeka przemiat)
 
 
 
@@ -178,7 +178,51 @@ za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). 
 wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
 Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
 
-## NASZ SUFIT MOZE TEZ WYBIERAC STRONY, NIE TYLKO JE OSKARZAC (znalezione 22:40, DO ZMIERZENIA PO PRZEMIECIE)
+## 9.50: NASZ SUFIT PRZESTAJE SKRESLAC CUDZE STRONY JAKO MARTWE (v680)
+
+Wieczorem odlozylem to swiadomie, bo zmiana selekcji wymaga pomiaru, a korpus byl wlasnie
+przemiatany. Zmierzone teraz - i **przeslanka „to pewnie puste w korpusie" byla falszywa**.
+
+**POMIAR (`npm run audit-cap-selection`, nowy skrypt, 885 zapytan):** 355 odpowiedzi HTML, **114
+przycietych naszym sufitem**, z czego 98 nadal czytelnych. **16 sciezek na 10 domenach czyta sie
+ponizej progu wylacznie przez nasze ciecie** i skaner skreslilby je jako skorupe SPA:
+`vercel.com/plans`, `posthog.com/docs`, `cal.com/pricing` i `/documentation` i `/developers`,
+`filestack.com/docs`, `amplitude.com/pricing`, `bigcommerce.com/pricing`, `bunny.net/pricing`,
+`godaddy.com/pricing`, `tolgee.io/pricing`. Kontrolka: 241 sciezek zmiescilo sie pod sufitem, wiec
+sonda widzi tez przypadek normalny.
+
+**CZTERY PRZEJSCIA CODEKSA, kazde odwracalo czesc poprzedniej poprawki** - warto przeczytac, bo to
+najlepszy tej nocy przyklad, jak latwo poprawka psuje wlasny cel:
+1. „Przycieta = zywa strona" - **nieprawda**: host, ktory wklei bundle do HTML, serwuje ogromna
+   skorupe pod KAZDYM adresem, wiec przyjmowalibysmy `/docs`, ktorego nie ma.
+2. Dolozylem kontrolke na adres, ktorego byc nie moze. Codex: kontrolka odrzucajaca **kazda** krotka
+   odpowiedz 200 wyrzuca prawdziwa dokumentacje przy soft-404 - czyli **odwrotny blad i czestszy**.
+   Kontrolka demaskuje catch-all tylko wtedy, gdy sama tez jest **ucieta sufitem**.
+3. Codex: **milczaca kontrolka** (timeout, 429, sciana) przyznawala sciezke. To ta sama zasada, co
+   9.43: kontrolka, ktora sie nie odezwala, nie przyznaje niczego. Uzyte `informative()`, ktore juz
+   w tym repo istnialo - przeniesione z `funnel.ts` do `http.ts`.
+4. Czysto.
+
+Predykat jest trojwartosciowy (`page` / `shell` / `cut-short`), bo „nie wiem" musi miec wlasna
+nazwe. Osiem straznikow, **kazdy zmutowany**, w tym jeden na WYWOLANIE (podmiana `informative(...)`
+przechodzi typecheck i nie rusza zadnego testu funkcji - ta sama lekcja, co przy mailu tygodniowym).
+Po drodze zlapalem tez **straznik, ktory niczego nie sprawdzal**: `{"a":1}` odpadal na dlugosci, wiec
+test typu tresci przechodzil z wyrzuconym `looksLikeHtml`.
+
+**CO JEST ZMIERZONE, A CO NIE.** Zmierzony jest **warunek wyzwalajacy** (16 sciezek) i to, ze kod
+dziala na produkcji: `filestack.com`, `cal.com` i `posthog.com` przeskanowane na v680 chodza czysto.
+**NIE jest jeszcze zmierzone, ile WERDYKTOW sie rusza** - `regressions.mts` porownuje dwa zapisane
+pomiary, wiec da odpowiedz dopiero po nastepnym przemiecie. Do tego czasu chroni watcherow wpis
+`CHECK_RULE_CHANGED['9.50']` (`docs_without_js`, `programmatic_provisioning`, `machine_readable_api`,
+`price_in_snippet`), zeby nikt nie dostal maila „stracil pan pozycje" za nasza zmiane.
+
+**SKUTEK UBOCZNY MOICH WERYFIKACJI, do wiedzy:** pojedyncze przeskanowanie trzech wierszy po podbiciu
+wersji **wypycha je z opublikowanej agregacji** - `/report` mowi teraz „173 domains · formula v 9.49"
+zamiast 176. To dziala tak z zalozenia (jedna agregacja = jedna formula) i naprawia sie samo przy
+przemiecie. Wniosek na przyszlosc: po podbiciu wersji weryfikuj na domenach **spoza** korpusu, chyba
+ze i tak zaraz przemiatasz.
+
+## NASZ SUFIT MOZE TEZ WYBIERAC STRONY, NIE TYLKO JE OSKARZAC (znalezione 22:40, DO ZMIERZENIA PO PRZEMIECIE) [NIEAKTUALNE - zrobione wyzej jako 9.50]
 
 Po naprawie oskarzenia poszlem tym samym ksztaltem dalej: **gdzie jeszcze czytamy dlugosc tekstu z
 ciala, ktore mogl uciac nasz wlasny sufit 400 kB?** Dwa miejsca oskarzajace sa juz zabezpieczone
