@@ -15,7 +15,7 @@ import { challengedUs, challengeSentence, CHALLENGE_UNBLOCK } from './limits'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.42'
+export const FORMULA_VERSION = '9.43'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -598,13 +598,32 @@ export const CHECKS: Check[] = [
       }
       // A .well-known descriptor already scores under MCP; counting it twice sold one file
       // as three points across two stages.
-      const written = usable.filter((entry) => !pathOf(entry).startsWith('/.well-known/'))
+      // Uncertain entries leave the scoring lists one by one, not only when every entry is one.
+      // A vendor with a real /.well-known descriptor (JSON control answered) and a phantom skill.md
+      // (markdown control did not) would otherwise still be paid two points for the phantom.
+      const uncertain = f.funnel.entryPointsUncertain ?? []
+      const certain = usable.filter((entry) => !uncertain.includes(entry))
+      const written = certain.filter((entry) => !pathOf(entry).startsWith('/.well-known/'))
       // Older reports predate the content test, and rescoring them as policy files would be a
       // claim about a body we no longer hold.
       const withProcedure = (f.funnel.entryPointsWithProcedure ?? written).filter(
-        (entry) => !pathOf(entry).startsWith('/.well-known/') && usable.includes(entry),
+        (entry) => !pathOf(entry).startsWith('/.well-known/') && certain.includes(entry),
       )
       const at = (entries: string[]) => entries.map((entry) => (entry.startsWith('http') ? entry : `${f.site}${entry}`)).join(', ')
+      // Every file we can see is a file we could not check. The catch-all control for that
+      // namespace never answered, and without it a host that renders every unknown .md as a page
+      // reads exactly like a vendor who publishes one. Measured on 2026-08-19: bigcommerce.com held
+      // this point for two markdown "Page Not Found" pages and a 340 kB HTML 404, sentry.io for a
+      // 976 byte "You've hit the web UI", calendly.com for 298 kB of docs shell - each byte for
+      // byte with a path that cannot exist. A rescan scores all three at zero, so the control does
+      // its job whenever it answers; the fix is to stop paying when it does not.
+      if (usable.length > 0 && certain.length === 0) {
+        return {
+          points: 0,
+          detail: `Unmeasurable: ${at(usable)} answered, but our control for that namespace did not, so we cannot tell a file you publish from the page your host returns for any address`,
+          inconclusive: true,
+        }
+      }
       if (withProcedure.length > 0) return yes(2, `Found: ${at(withProcedure)}`)
       if (written.length > 0) {
         return yes(
@@ -612,8 +631,10 @@ export const CHECKS: Check[] = [
           `Found ${at(written)}, but it states a policy rather than a procedure: nothing in it names a credential, an endpoint or a way to get an account.`,
         )
       }
-      if (usable.length > 0) {
-        return yes(1, `Only service descriptors: ${at(usable)}. No procedure written for a machine.`)
+      if (certain.length > 0) {
+        // `certain`, not `usable`: the point rests on the descriptor, but naming an uncertain file
+        // beside it would publish as found the very file we just refused to pay for.
+        return yes(1, `Only service descriptors: ${at(certain)}. No procedure written for a machine.`)
       }
       // A refusal is not an absence, the same rule robots.txt already follows. bitmovin.com
       // publishes a real 9.6 kB skill.md and answers 403 to our data centre on most requests,

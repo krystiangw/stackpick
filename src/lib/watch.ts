@@ -204,6 +204,9 @@ const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   // 9.42 lets a package's own description decide which artefact is the vendor's library, so three
   // rows are now scored on a different package than before. Nothing about those vendors changed.
   '9.42': ['typed_package'],
+  // 9.43 stops paying for an entry file when the control that would have discredited it never
+  // answered. A row that loses the point here did not change; our willingness to guess did.
+  '9.43': ['agent_entry_point'],
   // 9.40 asks what a searched identification rests on before it accuses, and the facts it asks for
   // are not in a report stored before it, so a rescore reads them as absent and says unmeasured.
   '9.40': ['typed_package'],

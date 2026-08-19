@@ -2022,6 +2022,49 @@ check('gola nazwa vendora ma najlepsza range', shapeRankOf('directus', 'directus
 check('a SDK w ich scope nie awansuje sam z nazwy', shapeRankOf('@directus/sdk', 'directus.com') === 0, false)
 check('choc nadal jest paczka wejsciowa', looksLikeEntryPackage('@directus/sdk', 'directus.com'), true)
 
+// Kontrolka, ktora NIE ODPOWIEDZIALA, nie moze przyznawac punktu. Zmierzone 2026-08-19: trzy
+// vendorzy trzymali punkt za plik, ktory jest strona 404 ich hosta, bo kontrolka na catch-all nie
+// zdazyla w budzecie 27 sekund, a jej brak czytal sie jako „nie ma catch-alla".
+console.log('\nniepewny plik wejsciowy nie placi')
+const wejscie = CHECKS.find((one) => one.id === 'agent_entry_point')!
+const zNiepewnym = (found: string[], uncertain: string[], procedure: string[] = found) =>
+  wejscie.evaluate({
+    site: 'https://x.test',
+    funnel: {
+      entryPointsFound: found,
+      entryPointsUncertain: uncertain,
+      entryPointsWithProcedure: procedure,
+      entryPaths: {},
+      entryPathsRefused: 0,
+      entryProbesAsked: 9,
+      entrySiteRefused: 0,
+      catchAll: {},
+    },
+  } as never)
+check('jedyny plik niepewny daje niemierzalne', zNiepewnym(['/skill.md'], ['/skill.md']).inconclusive, true)
+check('i nie daje punktow', zNiepewnym(['/skill.md'], ['/skill.md']).points, 0)
+// Kontrolka: ten sam plik z odpowiedziala kontrolka nadal placi.
+check('plik pewny placi dalej', zNiepewnym(['/skill.md'], []).points, 2)
+// I najwazniejsze: niepewny obok pewnego wypada pojedynczo, a nie caly warunek.
+check('niepewny obok pewnego nie placi', zNiepewnym(['/skill.md', '/agents.md'], ['/skill.md'], ['/skill.md', '/agents.md']).detail.includes('/skill.md'), false)
+// Ostatnia sciezka: pewny jest tylko deskryptor, a niepewny plik markdown stoi obok. Punkt nalezy
+// sie za deskryptor, ale zdanie nie moze wymieniac pliku, za ktory wlasnie odmowilismy zaplaty.
+// Kontrolka wiarygodna to taka, ktora odpowiedziala O SCIEZCE, a nie o nas. 429 trzeba nazwac
+// osobno, bo `isEdgeRefusal` celowo go wyklucza: naszą wlasna regula mowi, ze 429 to nasze
+// obciazenie, a nie sciana vendora. To jest sluszne w werdykcie o vendorze i bledne tutaj.
+console.log('\nkontrolka odmowna nie jest kontrolka')
+check('404 jest odpowiedzia', isEdgeRefusal(404), false)
+check('403 nie jest', isEdgeRefusal(403), true)
+check('a 429 wypada z isEdgeRefusal, wiec musi byc nazwany osobno', isEdgeRefusal(429), false)
+const funnelSource = readFileSync('src/lib/scan/funnel.ts', 'utf8')
+check('i jest nazwany', funnelSource.includes("got.status !== 429 && !isEdgeRefusal(got.status)"), true)
+
+check(
+  'przy samym deskryptorze zdanie nie wymienia niepewnego pliku',
+  zNiepewnym(['/.well-known/mcp.json', '/skill.md'], ['/skill.md'], []).detail.includes('/skill.md'),
+  false,
+)
+
 // #47 ROZWIAZANY INACZEJ (2026-08-19): nie przez przesuwanie nazw miedzy rangami, tylko przez
 // dopuszczenie SLOW paczki do glosu. Zmierzone na calym korpusie przez dwa replaye na jednej
 // migawce i jednym cache rejestru: TRZY zmiany, zero regresji.
@@ -2156,16 +2199,11 @@ check('i jest niemierzalne, a nie oskarzeniem', /pricingRedirectedAway[\s\S]{0,4
 // Sciezka zapasowa pyta te same dwa adresy jeszcze raz i bierze, co odpowie, wiec po odrzuceniu
 // oddawala dokladnie te strone, ktora odrzucilismy, tylko pod etykieta „zgadlismy sciezke".
 check('po odrzuceniu nie ma sciezki zapasowej', discoverSource.includes('redirectedAway ? null : await firstLivePath(canonical, PRICING_FALLBACKS)'), true)
-// Sprostowanie, ktorego fixedIn nadchodzi przed naprawa, kasuje sie samo przy zywym bledzie.
-// `erratumFor` porownuje fixedIn z wersja WIERSZA, nie ze stala, wiec rownosc znaczy dokladnie
-// „naprawione w tym wydaniu": wiersze jeszcze nie przeliczone trzymaja sprostowanie, a przeliczone
-// je traca razem z bledem. Zle jest tylko fixedIn STARSZE niz biezaca formula, bo takie
-// sprostowanie zniknelo, zanim naprawa w ogole wyszla.
-const errataSource = readFileSync('src/lib/errata.ts', 'utf8')
-const directusFix = /domain: 'directus\.com'[\s\S]{0,600}?fixedIn: '([^']+)'/.exec(errataSource)?.[1] ?? ''
-check('sprostowanie directusa nie wygaslo przed naprawa', isOlderThan(directusFix, FORMULA_VERSION), false)
-// Kontrolka: sonda musi umiec powiedziec „tak" o wersji, ktora naprawde juz minela.
-check('a sonda widzi sprostowanie, ktore juz wygaslo', isOlderThan('9.1', FORMULA_VERSION), true)
+// Straznik „sprostowanie directusa nie moze wygasnac przed naprawa" ZDJETY w 9.43, bo jego zadanie
+// sie skonczylo: naprawa weszla w 9.42, przemiat przeliczyl korpus i `after-reseed` potwierdzil, ze
+// wszystkie sprostowania wygasly. Wpis w `errata.ts` zostaje jako historia, tak jak te z 9.12,
+// 9.31 i 9.40. Regula pilnujaca terminu jednego konkretnego wpisu jest z natury tymczasowa i
+// trzymanie jej po naprawie oblewa build za to, ze naprawa doszla.
 
 // Renderer platnego raportu w portalu nie jest parserem markdowna: zna dokladnie te konstrukcje,
 // ktore wypisuje generator. Ta reguła jest cala podstawa, zeby taki renderer byl uczciwy - gdy

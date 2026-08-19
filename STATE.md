@@ -8188,3 +8188,40 @@ zaliczonych.
 **I ostatnia ironia, zlapana przez codeksa:** moj wlasny nowy audyt, napisany tej nocy przeciwko
 uspokojeniu bez pomiaru, **uspokajal bez pomiaru**, gdy zapytanie sie nie udalo - liczyl probe jako
 porownanie. Teraz liczy osobno **porownania**, wypisuje pominiete i odmawia werdyktu przy zerze.
+
+## 9.43: KONTROLKA, KTORA NIE ODPOWIEDZIALA, PRZESTAJE PLACIC (2026-08-19)
+
+Naprawa przyczyny trzech falszywych punktow z poprzedniej sekcji. Skaner **ma** kontrolke na
+catch-all, ma ja per host i per rozszerzenie, i ona dziala - zawodzi tylko wtedy, gdy **sama nie
+dojdzie**. Wtedy `answersWithTheSameTemplate` dostawalo `undefined`, zwracalo `false`, i „nie wiem"
+znaczylo „vendor dostaje punkt". Budzet skanu to 27 sekund, a kontrolka calendly.com to 298 kB.
+
+**Zmiana w trzech miejscach, wszystkie w jedna strone - w strone wstrzymania punktu:**
+- `CatchAll` niesie teraz `answered` per przestrzen nazw. Kontrolka **wiarygodna** to taka, ktora
+  wrocila i wrocila **o sciezce, a nie o nas**: `status > 0`, bez odmowy brzegowej i **bez 429**.
+- Plik, ktorego nie da sie porownac, jest oznaczony jako niepewny i **wypada z punktowania
+  pojedynczo**, a nie dopiero gdy wszystkie sa niepewne. Gdy nie zostaje nic pewnego, check jest
+  **niemierzalny**, nie oblany: nie wiemy, czy vendor ma plik, i tak to mowimy.
+- Niepewne trafienie **nie zatrzymuje sondowania**: wczesniej liczylo sie jak znalezisko, wiec
+  przerywalo szukanie wielkich liter i hosta dokumentacji, gdzie moze lezec plik prawdziwy.
+
+**Codex przeszedl przez to piec razy i za kazdym razem mial racje**, co przy zmianie punktacji jest
+warte tych piatek:
+1. `every` zamiast filtrowania pojedynczo: vendor z prawdziwym deskryptorem i fantomowym `skill.md`
+   nadal dostawal dwa punkty za fantom.
+2. Zdanie przy samym deskryptorze wypisywalo `usable`, wiec **wymienialo jako znaleziony ten plik,
+   za ktory wlasnie odmowilismy zaplaty**.
+3. Niepewne trafienie zatrzymywalo sonde przed hostem dokumentacji (opisane wyzej).
+4. Odmowa brzegowa na kontrolce liczyla sie jako odpowiedz.
+5. **429 wypada z `isEdgeRefusal` celowo** - nasza wlasna regula mowi, ze 429 to nasze obciazenie, a
+   nie sciana vendora. To jest sluszne w werdykcie o vendorze i **bledne w kontrolce**, bo limit nie
+   mowi nic o tym, co host serwuje pod adresem, ktorego nikt nie rejestrowal. Nazwany osobno.
+
+**Straznik na sprostowanie directusa zdjety**, bo jego zadanie sie skonczylo: naprawa weszla w 9.42,
+przemiat przeliczyl korpus, `after-reseed` potwierdzil wygasniecie. Regula pilnujaca terminu jednego
+wpisu jest z natury tymczasowa, a trzymana po naprawie **oblewa build za to, ze naprawa doszla**.
+
+**Stan: kod na 9.43, korpus na 9.42.** Przemiat wymaga karencji, ktora po przemiecie z 03:01 otwiera
+sie **okolo 09:00**. Blast radius zmierzony z gory: **3 wiersze z 43 zaliczonych** (bigcommerce.com,
+sentry.io, calendly.com), i po przemiecie kazdy z nich ma byc **niemierzalny albo oblany**, nie
+zaliczony. Sprawdzenie: `npm run audit-entry-credited` ma pokazac zero plikow nieodroznialnych.

@@ -548,11 +548,23 @@ export type CatchAll = {
   bodyLengths?: { markdown: number; json: number; text: number }
   /** And the bodies, so a stub that echoes the path it refuses can still be recognised. */
   bodies?: { markdown: string; json: string; text: string }
+  /**
+   * Whether the control was answered at all, per namespace. Not the same question as "is there a
+   * catch-all": a control that never came back tells us nothing either way, and reading it as "no
+   * catch-all" is how three vendors were credited for a file that is their host's 404 page. The
+   * budget is 27 seconds and calendly.com's control alone is 298 kB.
+   */
+  answered?: { markdown: boolean; json: boolean; text: boolean }
 }
 
 export type FunnelFindings = {
   entryPaths: Record<string, boolean>
   entryPointsFound: string[]
+  /**
+   * Files that look like a file only because the catch-all control never answered. Absent on rows
+   * scanned before 9.43, which is why every reader treats undefined as an empty list.
+   */
+  entryPointsUncertain?: string[]
   /**
    * Of those, the ones that read as a procedure rather than a declaration. inngest.com scored
    * the full two points for a 583 byte ai.txt whose entire content is Allow-AI-Training: yes,
@@ -1321,6 +1333,16 @@ function quoting(patterns: RegExp[], html: string, most = 3): string[] {
  * login screen, so the .md arm was suppressing a real llms.txt that is served as text/plain.
  * Same for agora.io. Both earned a point and both were told the file proved nothing.
  */
+/**
+ * A control worth believing: it came back, and it came back about the path rather than about us.
+ *
+ * 429 named separately because `isEdgeRefusal` deliberately excludes it - by this project's own
+ * published rule a 429 is our own load rather than the vendor's wall. That is right for a verdict
+ * about the vendor and wrong here: a rate limit tells us nothing about what the host serves at an
+ * address nobody registered, which is the only question a control asks.
+ */
+const informative = (got: Fetched) => got.status > 0 && got.status !== 429 && !isEdgeRefusal(got.status)
+
 async function servesCatchAllText(site: string): Promise<CatchAll> {
   // The same Accept the entry probes send, per suffix. They diverged, and that is how a control
   // asking for text/plain saw sentry.io's 20 kB HTML while /ai.txt asking for markdown saw their
@@ -1355,6 +1377,16 @@ async function servesCatchAllText(site: string): Promise<CatchAll> {
     // /agent-signup.md came back 227 bytes, /skill.md 213 and the control something else again,
     // and three copies of one stub were published as three agent entry files.
     bodies: { markdown: markdown.body, json: json.body, text: plainAsEntry.body },
+    // status 0 is every way a request can fail to happen: out of budget, refused connection, too
+    // many timeouts on this host earlier in the scan. An edge refusal counts as unanswered too: a
+    // 403 or a 429 at the control says what the edge does to us, not what the host serves for an
+    // address nobody registered, so believing it would let the same phantom file earn a point.
+    // A 404 IS an answer, and the useful one: this host does not render unknown paths.
+    answered: {
+      markdown: informative(markdown),
+      json: informative(json),
+      text: informative(plainAsEntry),
+    },
   }
 }
 
@@ -1962,11 +1994,20 @@ export async function scanFunnel({
     const sameAsNonsense =
       sameTemplate || (controlLength !== undefined && controlLength > 0 && got.body.length === controlLength)
     const present = !sameAsNonsense && isRealTextFile(got, 30) && !looksLikeADocsPageTwin(got.body)
+    // A file we cannot compare against anything. Everything above assumes the control answered:
+    // without it, a host that renders every unknown .md as a page reads exactly like a vendor who
+    // publishes one. bigcommerce.com, sentry.io and calendly.com all held a point on that.
+    const controlAnswered = path.endsWith('.json')
+      ? catchAll.answered?.json
+      : path.endsWith('.txt')
+        ? catchAll.answered?.text
+        : catchAll.answered?.markdown
+    const uncertain = present && controlAnswered === false
     // The same predicate the rest of the scanner uses. This one counted a 429 as a refusal,
     // which is our own load: name.com answered the door test (200, 200, 429) and was reported as
     // refusing all nine entry paths on the origin whose llms.txt we had just read in full.
     const refused = isEdgeRefusal(got.status)
-    return [`${base}${path}`, present, present && describesAProcedure(got.body), got.body, refused, base] as const
+    return [`${base}${path}`, present, present && describesAProcedure(got.body), got.body, refused, base, uncertain] as const
   })
 
   // The site first, and the documentation host only when the site had nothing. Asking both every
@@ -1980,7 +2021,10 @@ export async function scanFunnel({
   // not answer, that is the finding, and it is reported out of the nine paths we actually asked.
   const probeEntry = (async () => {
     const onSite = await probeOne(site, catchAll)
-    const nothing = (probed: typeof onSite) => !probed.some((entry) => entry[1])
+    // A hit we could not check is not a reason to stop looking. Counting it as "found something
+    // here" skipped the uppercase spellings and the documentation host, so a vendor with a phantom
+    // page on the apex and a real skill.md in their docs came out unmeasurable instead of credited.
+    const nothing = (probed: typeof onSite) => !probed.some((entry) => entry[1] && !entry[6])
     const refusedUs = (probed: typeof onSite) => probed.some((entry) => entry[4])
     if (!nothing(onSite) || refusedUs(onSite)) return onSite
     // The spelling people actually use in a repository, asked only when the lower-case nine found
@@ -2017,9 +2061,11 @@ export async function scanFunnel({
     for (const [, present, , body, , base] of probed) {
       if (present) seenBodies.set(shapeOf(base, body), (seenBodies.get(shapeOf(base, body)) ?? 0) + 1)
     }
-    return probed.map(([path, present, procedure, body, refused, base]) => {
+    return probed.map(([path, present, procedure, body, refused, base, uncertain]) => {
       const shared = present && (seenBodies.get(shapeOf(base, body)) ?? 0) > 1
-      return [path, present && !shared, procedure && !shared, refused] as const
+      // A body served twice on one origin is the shell whatever the control said, so it stops
+      // being uncertain and becomes decided: not a file.
+      return [path, present && !shared, procedure && !shared, refused, uncertain && !shared] as const
     })
   })
 
@@ -2099,6 +2145,7 @@ export async function scanFunnel({
   return {
     entryPaths,
     entryPointsFound: entries.filter(([, hit]) => hit).map(([path]) => path),
+    entryPointsUncertain: entries.filter(([, , , , uncertain]) => uncertain).map(([path]) => path),
     entryPointsWithProcedure: entries.filter(([, , procedure]) => procedure).map(([path]) => path),
     entryPathsRefused,
     entryProbesAsked: entries.length,
