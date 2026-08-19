@@ -47,6 +47,7 @@ import {
   informative,
   entryAccept,
   provisioningMatches,
+  PROVISIONING_PATTERN_LABELS,
   provisioningQuotes,
   handsItToSomebodyElse,
   withoutAChoppedAddress,
@@ -1079,6 +1080,30 @@ check('obcy link obok nie zabiera punktu', provisioningMatches(wlasnyKluczObcyLi
 check('sonda widzi link po cudzy klucz', handsItToSomebodyElse('[Service Accounts](https://console.cloud.google.com/x)', 'growthbook.io'), true)
 check('i nie widzi wlasnego', handsItToSomebodyElse('[Service Accounts](https://docs.growthbook.io/x)', 'growthbook.io'), false)
 check('obcy link o czyms innym nie liczy sie', handsItToSomebodyElse('[Postman collection](https://postman.com/x)', 'growthbook.io'), false)
+
+// 9.45: „service account" to czwarta fraza tego samego rodzaju, co trzy rozbrojone w 9.32, i
+// przeoczona, bo nazywa poswiadczenie, a nie API. Wszystkie cytaty ponizej sa PRAWDZIWE, wziete z
+// korpusu 2026-08-19: 13 wierszy trzymalo punkt na tej frazie samej, a dziesiec z nich cytuje
+// okruszek nawigacji, statystyke z bloga albo cudza konsole.
+console.log('\nsame slowa "service account" to jeszcze nie sciezka do klucza')
+const saMowi = (zdanie: string) => provisioningMatches(`<p>${zdanie}</p>`).some((one) => one.startsWith('service account'))
+check('okruszek nawigacji nie liczy sie', saMowi('Service Accounts | Enterprise Connect | Cronofy Docs Cronofy Docs Menu'), false)
+check('statystyka z bloga nie liczy sie', saMowi('This year, 59% of AWS IAM users, 55% of Google Cloud service accounts and 40% of Microsoft Entra ID applications had an access key older than a year'), false)
+check('istniejace konto nie liczy sie', saMowi('Check your CAPTCHA solver service account for sufficient balance'), false)
+check('samo dwuslowie nie liczy sie', saMowi('Service account'), false)
+// Kontrolka: zdanie, ktore NAPRAWDE tworzy konto uslugowe, nadal liczy - inaczej regula kasuje check.
+check('tworzenie konta nadal liczy', saMowi('- [Create Service Account](https://docs.mixpanel.com/reference/create-service-account.md)'), true)
+check('i w drugiej kolejnosci slow tez', saMowi('Give Storage role access to the newly created service account'), true)
+// Odleglosc jest krotka celowo: czasownik 41 znakow dalej dotyczy konta, ktore juz istnieje.
+check('czasownik daleko nie ratuje frazy', saMowi('service account email to impersonate via `iamcredentials:generateIdToken`'), false)
+// Etykieta mowi vendorowi, czego szukamy, wiec musi opisywac nowa regule, a nie stara.
+// Rzeczownik odczasownikowy PO frazie to naglowek sekcji, a nie tworzenie - to znalazl codex.
+check('naglowek "service account provisioning" nie liczy sie', saMowi('Service account provisioning and rotation'), false)
+check('ani "service account generation settings"', saMowi('Service account generation settings'), false)
+// Kontrolka: ten sam czasownik PRZED fraza jest czasownikiem i nadal liczy.
+check('"provisioning a service account" liczy sie', saMowi('This page is about provisioning a service account for the API'), true)
+check('strona bierna po frazie liczy sie', saMowi('A service account is created for every project'), true)
+check('etykieta opisuje nowa regule', PROVISIONING_PATTERN_LABELS.includes('service account, in a sentence that creates one'), true)
 
 // Zdanie "nor at any address in <strona>" wymienialo strony, o ktore ZAPYTALISMY, a nie te, ktore
 // przeczytalismy. uploadcare.com niosl je z adresem https://uploadcare.com/_mcp/server, ktory jest

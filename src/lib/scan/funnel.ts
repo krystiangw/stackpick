@@ -105,6 +105,36 @@ const CREATES_A_CREDENTIAL = String.raw`creat(?:e|es|ing)(?:\s+(?:and|or)\s+\w+)
  */
 const BARE_PROVISIONING_INDEXES = new Set([0, 1, 2])
 
+/**
+ * "service account" is a fourth phrase of exactly the kind 9.32 already disarmed, and it was
+ * missed because it names a credential rather than an API. Measured across the corpus on
+ * 2026-08-19: 13 rows held this point on that phrase alone, and their own quotes are a navigation
+ * breadcrumb ("Service Accounts | Enterprise Connect | Cronofy Docs Menu"), a statistic in a blog
+ * post ("59% of AWS IAM users, 55% of Google Cloud service accounts..."), somebody else's console
+ * (Vertex AI, Firebase, GCP, Google AutoML) and a sentence about topping up a CAPTCHA solver.
+ *
+ * Ten of the thirteen say nothing about creating one. So this phrase counts only where the
+ * sentence creates a service account, which is what the check claims to have found.
+ */
+const CREATED_PROVISIONING_INDEXES = new Set([5])
+
+/**
+ * The phrase and a creation verb in one sentence, either order, within 25 characters. The gap is
+ * short on purpose: restate.dev's window holds "service account email to impersonate via
+ * `iamcredentials:generateIdToken`", where a verb 41 characters away is about impersonating an
+ * account that already exists rather than making one.
+ *
+ * The two directions take different verb forms, which is codex's and is the difference between a
+ * rule and a stem match. Before the phrase, a gerund is verbal: "provisioning a service account"
+ * creates one. After it, the same word is a noun compound: "service account provisioning" and
+ * "service account generation settings" are section headings, which is the class of false credit
+ * this whole change exists to remove. So the trailing side takes finite and participle forms only.
+ */
+const MAKES_ONE_BEFORE = String.raw`(?:creat(?:e|es|ed|ing)|generat(?:e|es|ed|ing)|provision(?:s|ed|ing)?|issu(?:e|es|ed|ing))\b`
+const MAKES_ONE_AFTER = String.raw`(?:creat|generat|provision|issu)(?:e|es|ed)\b`
+const CREATES_ONE = (phrase: string) =>
+  new RegExp(`${MAKES_ONE_BEFORE}[^.]{0,25}${phrase}|${phrase}[^.]{0,25}${MAKES_ONE_AFTER}`, 'i')
+
 const NAMES_A_CREDENTIAL =
   /\b(?:api[-_ ]?keys?|api[-_ ]?tokens?|access[-_ ]?(?:tokens?|keys?)|personal access tokens?|secret[-_ ]?keys?|credentials?|service accounts?|auth tokens?|bearer tokens?)\b/i
 
@@ -390,7 +420,7 @@ export const PROVISIONING_PATTERN_LABELS = [
   // list read as six: a vendor saw "1 of 7 provisioning phrases" followed by six things.
   'create an api key (or api token, access token, personal access token, service account, auth token, secret key, access key, service token, signing key, publishable key, client key, licence key, project token), next to something programmatic',
   'programmatically create, in either word order',
-  'service account',
+  'service account, in a sentence that creates one',
   'a documented path like /v1/api_keys or /v2/access-tokens',
 ]
 
@@ -1248,6 +1278,10 @@ function provisioningHit(text: string, pattern: RegExp, index: number, ours: str
   for (let hit = all.exec(text); hit; hit = all.exec(text)) {
     const window = windowAround(text, hit.index, hit[0].length)
     if (ours && handsItToSomebodyElse(window, ours)) continue
+    if (CREATED_PROVISIONING_INDEXES.has(index)) {
+      if (CREATES_ONE(hit[0]).test(window)) return hit.index
+      continue
+    }
     if (!BARE_PROVISIONING_INDEXES.has(index)) return hit.index
     if (corroboratesBareProvisioning(window, hit[0])) return hit.index
   }

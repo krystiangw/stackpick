@@ -211,6 +211,11 @@ const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   // provisioning path. growthbook.io held the point on a sentence about Google Cloud service
   // accounts, and a row that loses it here documented no more and no less than it did before.
   '9.44': ['programmatic_provisioning'],
+  // 9.45 stops reading the words "service account" as a provisioning surface when nothing in the
+  // sentence creates one. Ten rows lose the point on a navigation breadcrumb, a statistic in a
+  // blog post or somebody else's cloud console, and not one of them documents any less than it
+  // documented yesterday.
+  '9.45': ['programmatic_provisioning'],
   // 9.40 asks what a searched identification rests on before it accuses, and the facts it asks for
   // are not in a report stored before it, so a rescore reads them as absent and says unmeasured.
   '9.40': ['typed_package'],
