@@ -178,6 +178,36 @@ za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). 
 wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
 Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
 
+## MAIL DO KLIENTA POTRAFIL WYSLAC LINK W LOCALHOST (00:40, v685)
+
+Przeczytanie raportu `/r/<id>` **jako wlasciciel domeny** (skan `svix.com` zrobiony jak zwykly gosc,
+z publicznego endpointu), a potem tego samego raportu **jako maila**, ktorego ten gosc sobie wysyla.
+Sama strona i sam mail broniá sie dobrze - sprawdzilem najlatwiejsze do podwazenia zdanie:
+„2 of the 12 links we sampled are gone, starting with
+`https://docs.svix.com/receiving/verifying-webhooks/how`". Adres **stoi doslownie w ich wlasnym
+llms.txt** (nie jest artefaktem naszego parsera) i **dzis odpowiada 404** - oskarzenie sie odtwarza.
+
+**Ale mail wypisal: „Full scorecard: `http://localhost:3000/r/...`".** `src/lib/email.ts` i
+`src/lib/watch-email.ts` czytaly `STACKPICK_BASE_URL` **po swojemu**, z galezia zapasowa
+`http://localhost:3000`. Regula byla w tym repo napisana od dawna, w `src/lib/site.ts`: *metadane i
+sitemapa moga spadac na localhost, bo w developmencie to prawda, ale **cokolwiek czyta obcy czlowiek,
+spada na produkcje***. Dwa moduly mailowe - czyli dokladnie to, co czyta obcy czlowiek - lamaly ja.
+
+**Na dynie zmienna jest ustawiona, wiec produkcja byla bezpieczna.** Nie byl bezpieczny kazdy wysyl
+**z laptopa**, a tak wlasnie powstaja drafty miesiecznego maila. W mailu obserwacji ten sam blad
+dotykalby **linku potwierdzajacego i wypisujacego**, czyli jedynego mechanizmu zgody, jaki ten produkt
+ma.
+
+Oba moduly biora teraz `SITE_URL`. Straznik jest **behawioralny, nie tekstowy**: `rules.mts` chodzi
+zwykle BEZ `STACKPICK_BASE_URL`, wiec sprawdza dokladnie te galaz zapasowa i oblewa, gdy w tresci
+maila pojawi sie `localhost`. Mutacja (powrot do wlasnego odczytu env) oblewa trzy reguly.
+
+Codex zwrocil uwage, ze kto **swiadomie** ustawi `STACKPICK_BASE_URL=http://localhost:3000` (tak stoi
+w `.env.example`), dostaje poprawny adres i nie ma tu czego lapac - warunek dodany. **Przy okazji
+zmierzone: build i tak juz padal takiemu deweloperowi na DWOCH innych straznikach** (o wlasnej
+domenie w katalogu ARD), wiec lokalny setup z localhostem jest dzis niewspierany niezaleznie od tej
+zmiany. Do wiedzy, nie ruszalem tego w nocy.
+
 ## SUFIT BYL CYTOWANY W WERDYKTACH, A METODYKA O NIM NIE WIEDZIALA (00:15)
 
 Dwa checki publikuja dzis zdanie **„larger than the 400,000 bytes we read of any one page"**, a
