@@ -8661,6 +8661,16 @@ nie moze zadawac innego pytania niz badany.**
   „answers 403, 403, 404" - wiec audyt zglaszal **nasza wlasna deklaracje** jako znalezisko przeciwko
   nam. Werdykt jedzie teraz z `corpus.json` zamiast byc zgadywany z punktow.
 
-**CO ZOSTALO OTWARTE:** growthbook.io (punkt za provisioning stoi na zdaniu o koncie uslugowym
-Google **bez linku w oknie**, wiec regula 9.44 go nie widzi), oraz telnyx.com i deepl.com do
-pojedynczego przeskanowania.
+**9. Regula „przeskanuj pojedynczo, zanim nazwiesz to regresem vendora" wlasnie sie oplacila.**
+- **deepl.com** stracil w przemiecie punkt za provisioning (1 -> 0). Pojedynczy skan oddaje
+  **z powrotem 1**, na frazie „programmatically create". Vendor nie zmienil nic - to nasz przebieg
+  nie zdazyl przeczytac tej strony. Gdybym zaufal liscie regresow, opublikowalbym utrate punktu
+  jako fakt o nich.
+- **telnyx.com** stoi na 1 i po skanie pojedynczym tez 1, wiec spadek 2 -> 1 jest **powtarzalny** i
+  nie jest artefaktem. Ciekawe jest co innego: **zdanie sie zmienilo** miedzy przebiegami (raz
+  `agents.md`, raz trzy deskryptory w `.well-known`), czyli ktory plik znajdujemy pierwszy, potrafi
+  sie wahac. Do obserwacji, nie do naprawy dzisiaj.
+- Oba wiersze doskanowane i zasiane, korpus dalej **177 na 9.44, 0 sprzecznosci**.
+
+**CO ZOSTALO OTWARTE:** growthbook.io - punkt za provisioning stoi na zdaniu o koncie uslugowym
+Google **bez linku w oknie**, wiec regula 9.44 go nie widzi. Blast radius: jeden wiersz.
