@@ -1390,6 +1390,17 @@ check('nie z przyszlosci', dniOdSprawdzenia >= -1, true)
 check('i nie starsza niz 60 dni - odpal je ponownie', dniOdSprawdzenia <= 60, true)
 check('i widzi ja czytelnik', stronaFindings.includes('Read on {RIVALS_CHECKED_ON}'), true)
 
+// Blad z serwera MCP ma nazwac argument, ktorego brakuje. Zmierzone na zywym serwerze: wolanie z
+// `{"problem": "..."}` dostawalo `isError: true` i zdanie „Describe the problem, for example ...",
+// ktore NIE mowi, ze klucz nazywa sie `job` - agent moze powtorzyc ten sam bledny call w kolko.
+check('blad MCP nazywa brakujacy argument', readFileSync('src/app/mcp/route.ts', 'utf8').includes('Pass the problem as \"job\"'), true)
+check('i pokazuje, co przyszlo zamiast niego', readFileSync('src/app/mcp/route.ts', 'utf8').includes('This call carried'), true)
+// I nie myli zlego ARGUMENTU ze zla WARTOSCIA: `{"job": ""}` ma dostac zdanie o pustce, nie o tym,
+// ze przyslano „job" zamiast „job". Kontrolka na obie pozostale galezie.
+check('pusta wartosc ma swoje zdanie', readFileSync('src/app/mcp/route.ts', 'utf8').includes('"job" was empty'), true)
+check('zly typ ma swoje zdanie', readFileSync('src/app/mcp/route.ts', 'utf8').includes('"job" has to be a string'), true)
+check('a lista innych kluczy nie zawiera samego job', readFileSync('src/app/mcp/route.ts', 'utf8').includes("filter((key) => key !== 'job')"), true)
+
 // Trzy pliki, ktore agent czyta ZAMIAST pytac czlowieka, podaja nasze limity - i wszystkie trzy sa
 // statyczne, wiec nie moga wziac liczby ze stalej. Zgadzaly sie dzis co do jednego (5 i 30, plus
 // okno 15 minut w llms.txt), ale zgodnosc bez straznika jest przypadkiem: to ta sama rodzina, co

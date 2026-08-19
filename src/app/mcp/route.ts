@@ -141,9 +141,25 @@ export async function POST(request: Request) {
     const params = message.params ?? {}
 
     if (params.name === FIND_TOOL.name) {
-      const job = (params.arguments as { job?: unknown } | undefined)?.job
+      const given = params.arguments as Record<string, unknown> | undefined
+      const job = given?.job
       if (typeof job !== 'string' || job.length === 0) {
-        return toolFailure(id, 'Describe the problem, for example "let users upload images".')
+        // Nazwij argument, ktorego brakuje. Wolanie z `{"problem": "..."}` dostawalo „Describe the
+        // problem, for example ..." - prawdziwy blad (`isError: true`), ale nie mowiacy, ze klucz
+        // nazywa sie `job`, wiec agent moze powtorzyc dokladnie ten sam bledny call. Wypisujemy tez
+        // to, co przyszlo, bo schemat ma `additionalProperties: false` i to zwykle literowka.
+        // Trzy rozne pomylki, trzy rozne zdania. Jedno zdanie na wszystkie mowilo „ta call carried
+        // \"job\" instead" takze temu, kto podal `job` pusty albo liczba - czyli nazywalo bledny
+        // argument tam, gdzie argument byl dobry, a wartosc zla. Codeksa.
+        const others = Object.keys(given ?? {}).filter((key) => key !== 'job')
+        const example = 'for example {"job": "let users upload images"}'
+        const wrong =
+          job === undefined
+            ? `Pass the problem as "job", ${example}.${others.length > 0 ? ` This call carried ${others.map((key) => `"${key}"`).join(', ')} instead.` : ''}`
+            : typeof job !== 'string'
+              ? `"job" has to be a string, ${example}. This call sent ${typeof job}.`
+              : `"job" was empty, ${example}.`
+        return toolFailure(id, wrong)
       }
       const found = await lookup(job)
       if (!found) {
