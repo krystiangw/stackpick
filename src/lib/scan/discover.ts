@@ -1317,7 +1317,9 @@ function shapeRank(name: string, vendor: Vendor, description = ''): number {
   // `@netlify/api` is "Netlify Node.js API client" at 349k weekly while `@netlify/sdk` is "the
   // toolset for developing Netlify Extensions" at 89k. Promoting by name inverts a case the
   // download counts already had right, so the real fix is to let downloads outweigh a one-step
-  // difference in rank rather than to move names between ranks. Left as #47 with the measurement.
+  // difference in rank rather than to move names between ranks. That is where #47 was closed, one
+  // function down in `settledOnUsage`: the names stay where they are, and a description saying it
+  // is the vendor's library buys a challenger a second step instead of a place in this ranking.
   // launchdarkly-js-client-sdk is what LaunchDarkly ships; launchdarkly-eventsource is what it
   // depends on, at 3.1M weekly against 2.8M, and both carry the brand and publish from the
   // same account. Nothing but the shape of the name separates them.
