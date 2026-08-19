@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-19 wieczor (kod i produkcja 9.49, korpus 9.45 + ~17 wierszy przeskanowanych)
+# Let Agents In: stan na 2026-08-19/20 noc (kod, produkcja i korpus na 9.49, przemiat zamkniety)
 
 
 
@@ -10,6 +10,56 @@
 
 
 
+
+## PRZEMIAT 9.49 ZAMKNIETY (22:20-23:28) I CO Z NIEGO WYSZLO
+
+**176 wierszy na 9.49, 0 sprzecznosci. 21 podanych liczb i 5 twierdzen nazywajacych vendora
+sprawdzonych wobec danych, 0 rozjechanych.** Jeden wiersz zostal na 9.45.
+
+**PREDYKCJE: 16 wierszy, JEDEN ROZJAZD - i to on byl najciekawszy.** `onesignal.com` mial byc
+`niemierzalny` w `programmatic_provisioning`, a dostal **1 punkt**. Sprawdzone co do zdania: punkt
+stoi na **„POST Create API key"**, czyli na wlasnym endpointcie OneSignala, a nie na przewodniku po
+konsoli **Firebase**, ktory 9.46 slusznie odrzucil. Czyli **predykcja obalona, regula obroniona**:
+zapisalem ja, zanim zrozumialem efekt „punkt przenosi sie na siostrzane zdanie", a przemiat pokazal
+go na calym korpusie. To jest dokladnie ten ksztalt, ktory wieczorem zle zmierzylem przy 9.46
+(„jeden wiersz traci dopasowanie" - prawda, ale punkt nie znikal).
+
+**REGRESJE: 4 werdykty gorsze, przeskanowane pojedynczo ZANIM nazwalem je regresem vendora** - i
+trzy z czterech okazaly sie NASZE:
+```
+telnyx.com   agent_entry_point         2->1  ...po przeskanie znowu 2/2   (przejsciowe)
+split.io     machine_readable_api      1->0  ...po przeskanie znowu 1/1   (ich edge: 13/13 wyzwan)
+split.io     programmatic_provisioning 1->0  ...po przeskanie znowu 1/2   (jw.)
+name.com     agent_entry_point         2->1  ...po przeskanie NADAL 1/2   <- prawdziwa zmiana u nich
+```
+`name.com` publikuje `skill.md`, ktory **mowi polityke, nie procedure** (nie nazywa ani poswiadczenia,
+ani adresu). Regula `agent_entry_point` nie zmieniala sie miedzy pomiarami, wiec to zmiana po ich
+stronie, zaraportowana poprawnie.
+
+**TRZY AUDYTY POWTARZAJACE NASZE OSKARZENIA - wszystkie czyste:**
+- `audit-docs-js`: **ZERO oskarzen** (bylo dwa: filestack.com i pandadoc.com). Galaz z 9.48 zamienila
+  je na „niemierzalne", czyli **falszywe oskarzenie zniknelo z korpusu, nie tylko z kodu**. Kontrolka:
+  0 z 5 zaliczonych stron czyta sie dzis ponizej progu.
+- `audit-front-door`: 0 oskarzen o odmowe, **2 o sciane i obie potwierdzone dzis** (contentful.com,
+  pandadoc.com, po trzy 429 z markerem wyzwania). Kontrolka: 0 z 5 nas dzis nie wpuscilo.
+- `audit-named-crawlers`: **4 pary wiersz-crawler, wszystkie 4 potwierdzone dzis** - przegladarka 200,
+  ChatGPT-User 403 na prosemirror.net, lemonsqueezy.com i algolia.com, do tego Claude-User 403 na
+  lemonsqueezy.com.
+
+**WITRYNA SKLEPU NAPRAWIONA NA PRODUKCJI.** `/d/sample` przegenerowana na 9.49 (`--publish --id sample
+--sample`, bez `--publish` skrypt zapisuje sam plik i **nie** dotyka dostawy - to mnie raz zmylilo).
+Falszywe „Only 53 characters render without JS" **zniklo**, jest „larger than the 400,000 bytes we
+read ... describe where we stopped rather than what you serve". `npm run audit-sample` swieci zielono.
+Przy okazji mierzalne spadlo z 12 na 11 punktow, bo check przestal byc mierzalny - i tak ma byc.
+
+**PLATNY RAPORT PRZECZYTANY JAKO KUPUJACY** dla wiersza z nowa galezia 9.49 (`mixpanel.com`, jeden z
+dwoch w korpusie): „Unmeasurable: we found a sentence that creates a credential and nothing in it says
+a program can do it, so how an agent gets one is not something this scan measured: **„Create Service
+Accounts"**". Brzmi uczciwie i **nie twierdzi**, ze konta nie da sie zalozyc programem - tylko ze tego
+nie zmierzylismy. To jest ta poprawka z wieczoru, ktora usunela „by hand", widziana juz w dokumencie.
+
+**Deploy v678** (`eb35640`): `/findings` z data przy twierdzeniu o Lighthousie i Cloudflarze,
+zweryfikowane na produkcji.
 
 ## ZADANIE #47 ZAMKNIETE: PIEC WIERSZY POTWIERDZONYCH NA SWIEZYM KORPUSIE (23:05)
 
@@ -658,21 +708,16 @@ gdy to pisalem. Uruchom je i przeczytaj recznie; nigdy w trakcie przemiatu.
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te czterdziesci linijek, potem reszte)
 
-**WERSJE (2026-08-19, 22:00): kod i produkcja na 9.49, korpus jeszcze na 9.45** plus ~17 wierszy
-przeskanowanych pojedynczo po zmianach 9.46-9.49. Drzewo czyste, wszystko wdrozone (`a99fbe2`).
+**WERSJE (2026-08-19, 23:45): kod, produkcja (v678) i korpus na 9.49.** Przemiat zamkniety 23:28,
+**176 wierszy na 9.49, 0 sprzecznosci**, jeden wiersz zostal na 9.45. Drzewo czyste, wszystko
+wdrozone. Bateria kontroli po przemiecie **przeszla w calosci** - szczegoly w sekcji „PRZEMIAT 9.49
+ZAMKNIETY" nizej, razem z jedynym rozjazdem predykcji i z tym, co z niego wyszlo.
 
-**CO SIE DZIEJE TERAZ:** waiter `/tmp/reseed-948.sh` (PID 77915, log `/tmp/reseed-948.log`) czeka az
-mediana wieku korpusu przekroczy 6 h - o 21:55 bylo 5.66 h, wiec **przemiat na 9.49 rusza okolo
-22:15**. **NIE DEPLOYOWAC po jego starcie**: sprawdz `tail -3 /tmp/reseed-948.log` i czy proces zyje. Log tego waitera napisze **„startuje przemiat na 9.48"** - to stara
-nazwa pliku, nie wersja: `reseed.sh` bierze kod z repo, a ten stoi na **9.49** (`score.ts`).
-
-**CO ZROBIC PO PRZEMIECIE:** dokladnie blok „Komplet kontroli po nastepnym przemiecie, jednym
-wklejeniem" nizej w tej sekcji - kolejnosc ma znaczenie, bo **predykcje ida pierwsze** (tylko one
-moga cos obalic; sa zapisane w `scripts/po-przemiacie-9-49.mts`, szesnascie wierszy z werdyktem
-zapisanym PRZED przemiatem, skrypt odmawia wniosku ponizej polowy przeczytanych wierszy). Trzy
-audyty powtarzajace oskarzenia (`audit-docs-js`, `audit-front-door`, `audit-named-crawlers`) pytaja
-cudze serwery, wiec **nigdy w trakcie przemiatu** i **nigdy przez `| tail`** - raz wygladalo to na
-46 minut zawieszenia, a skrypt skonczyl w minute i trzymal tylko uchwyt do Mongo.
+**NIE MA NIC W TOKU.** Nastepny przemiat: gdy mediana wieku korpusu przekroczy 6 h (dzis rusza sie
+o ~0,08 h na 5 minut, wiec doba to za duzo, a szesc godzin od 23:28 wypada rano). Wzorzec waitera:
+`/tmp/reseed-948.sh` - kopiuj go ze zmieniona nazwa logu. **W trakcie przemiatu nie deployujemy** i
+nie odpalamy trzech audytow pytajacych cudze serwery (`audit-docs-js`, `audit-front-door`,
+`audit-named-crawlers`); ich nigdy tez nie puszczamy przez `| tail`, bo wtedy nie widac postepu.
 
 **CZEGO NIE BUDUJEMY, bo zmierzone jako nieoplacalne:** ranking linkow po etykiecie (jeden
 dwuznaczny wiersz na szescdziesiat) i punkt 2 z audytu subagenta (zero wierszy w korpusie).
