@@ -2256,6 +2256,17 @@ check('zaden audyt z licznikiem nie milczy o zerze', bezBramki.join(', '), '')
 // Kontrolka: sonda naprawde znajduje te audyty, a nie pusta liste.
 check('sonda widzi audyty z licznikiem', zLicznikiem.length > 5, true)
 
+// Runbook dostawy kaze puscic bramki przed wyslaniem platnego dokumentu i wymienia je z nazwy.
+// Wymieniona bramka, ktorej nie ma w package.json, to instrukcja, ktora cicho nie dziala.
+console.log('\nbramki wymienione w runbooku dostawy istnieja')
+const runbookBramek = readFileSync('docs/delivering-a-report.md', 'utf8')
+const skryptyNpm = JSON.parse(readFileSync('package.json', 'utf8')).scripts as Record<string, string>
+const wymienione = [...runbookBramek.matchAll(/npm run (audit-[\w-]+)/g)].map((one) => one[1])
+check('runbook wymienia co najmniej dwie bramki', wymienione.length >= 2, true)
+check('kazda wymieniona bramka istnieje', wymienione.filter((name) => !(name in skryptyNpm)).join(', '), '')
+// Kontrolka: bramka arytmetyki naprawy jest wymieniona, bo to jedyna suma, ktora czyta kupujacy.
+check('arytmetyka naprawy jest wsrod nich', wymienione.includes('audit-fix-arithmetic'), true)
+
 console.log('\naudyt pyta jako ten agent, ktorego sprawdza')
 const wlasnorecznyUa = readdirSync('scripts')
   .filter((name) => name.endsWith('.mts') && name !== 'rules.mts')

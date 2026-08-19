@@ -94,13 +94,19 @@ read being handed advice about OAuth, "oAuth" in the fix plan. The generator is 
 if no run mentioned them it says so in one sentence, and that sentence is the product. What it must
 never do is soften a zero.
 
-Run the delivery guard first, because it replays every sentence both customer documents can print
-against the data underneath them, including whether the category has the ten runs on two tools the
-price promises:
+Run both guards first, because between them they replay every sentence the two customer documents can
+print against the data underneath them: whether the category has the ten runs on two tools the price
+promises, and whether the repair arithmetic closes.
 
 ```bash
 MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npm run audit-delivery
+MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npm run audit-fix-arithmetic
 ```
+
+The second one guards the only sum a buyer does themselves: "Fix the 2 cheapest items below and
+6/12 becomes 9/12", with the items listed underneath carrying a point value each. It reads the
+promise out of the printed sentence rather than off the plan object, because a guard that recomputes
+the number the same way the code did agrees with it by construction.
 
 ## What to send
 
