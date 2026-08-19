@@ -28,7 +28,7 @@ import { arithmeticExplained, scoreSection } from '../src/lib/report-numbers'
 import { categoryOfWatch } from '../src/lib/watch'
 import { readWithGuest } from '../src/lib/guest-cell'
 import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR } from '../src/lib/scan-gate'
-import { DEFAULT_SCAN_BUDGET_MS, backoffFor } from '../src/lib/scan/http'
+import { DEFAULT_SCAN_BUDGET_MS, MAX_PER_SITE, backoffFor } from '../src/lib/scan/http'
 import { forStorage } from '../src/lib/store'
 import { REMEDIES } from '../src/lib/fixfirst'
 import { ERRATA, erratumFor } from '../src/lib/errata'
@@ -1240,6 +1240,16 @@ check('katalog liczy checki z listy', katalogArd.includes('CHECKS.length'), true
 // `updatedAt` znika naumyslnie: nigdy go nie utrzymywalismy, a data stemplowana przy kazdym deployu
 // odpowiada na inne pytanie, niz to pole zadaje.
 check('katalog nie publikuje daty, ktorej nie utrzymujemy', /updatedAt:/.test(katalogArd), false)
+
+// `/bot` mowi vendorom, po czym nas poznaja. Naglowek `From` jedzie WYLACZNIE pod naszym UA, a
+// wiekszosc skanu leci jako przegladarka - strona mowila „every request" i to bylo nieprawda dla
+// wiekszosci ruchu, ktory u nich widac.
+const stronaBot = readFileSync('src/app/bot/page.tsx', 'utf8')
+const klientHttp = readFileSync('src/lib/scan/http.ts', 'utf8')
+check('From jedzie tylko pod naszym UA', klientHttp.includes('...(ua === AGENT_UA ? { from: CONTACT } : {})'), true)
+check('/bot nie obiecuje From na kazdym zapytaniu', /Every request carries\{/.test(stronaBot), false)
+check('/bot mowi, ze reszta idzie jako przegladarka', stronaBot.includes('Most of the scan is not sent under that name'), true)
+check('/bot podaje prawdziwy limit rownoleglosci', stronaBot.includes(`${MAX_PER_SITE} requests`) || stronaBot.includes(`{MAX_PER_SITE}`), true)
 
 check('sonda widzi cudze poswiadczenie po nazwie', namesSomebodyElsesCredential('Create a Firebase ', 'Service Account', 'onesignal.com'), true)
 check('i nie widzi marki, ktorej przy poswiadczeniu nie ma', namesSomebodyElsesCredential('Create a ', 'Service Account', 'browserbase.com'), false)

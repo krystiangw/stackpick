@@ -33,9 +33,19 @@ export default async function BotPage() {
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
           If you found <span className="font-mono text-ink">{AGENT_UA}</span> in your access log, that is us. Somebody
           asked whether an AI agent could find, register with and use your product, and we answered it by fetching
-          your public pages. Every request carries{' '}
+          your public pages. Every request under that name carries{' '}
           <span className="font-mono text-ink">From: hello@letagentsin.com</span>, which is where to write if you would
           rather we did not.
+        </p>
+        {/* The page told vendors "every request", and the From header rides only on the requests we
+            send under our own user-agent. Most of a scan is sent as a browser, on purpose, and that
+            is a thing a vendor reading their logs deserves to be told rather than to work out. */}
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          Most of the scan is not sent under that name. Once the door test has asked as us, the rest of the pages are
+          fetched with an ordinary browser user-agent and carry nothing identifying, for the same reason the
+          named-agent probes below carry nothing: an edge that recognised us could wave us through, and the number we
+          publish would then describe our own allowlist rather than your site. So your log will show a handful of
+          requests as {AGENT_UA} and the rest looking like a browser, from the same address, inside the same minute.
         </p>
       </section>
 
