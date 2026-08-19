@@ -1,4 +1,50 @@
-# Let Agents In: stan na 2026-08-19 wieczor (kod i produkcja 9.47 + selekcja stron, korpus 9.45)
+# Let Agents In: stan na 2026-08-19 wieczor (kod i produkcja 9.48, korpus 9.45 + 15 wierszy przeskanowanych)
+
+
+## PIERWSZY PRZEBIEG NOWEGO AUDYTU ZNALAZL FALSZYWE OSKARZENIE W NASZYM WLASNYM SUFCIE (9.48)
+
+**Oba wiersze oskarzone o „pusta skorupe" byly artefaktem NASZEGO limitu bajtow.** Czytamy 400 000
+bajtow z jednej strony; strona `filestack.com` ma **616 581**. To, co przezyje takie ciecie, potrafi
+zabrac ze soba reszte dokumentu, wiec strona, ktora przy pelnym odczycie renderuje **12 282 znaki**,
+wrocila jako **53** - i publikowalismy o niej „Only 53 characters render without JS, which is a page
+shell rather than a page". `pandadoc.com` tak samo (63 znaki).
+
+**Jak to wyszlo, i to jest cala wartosc pisania audytow:** luzniejszy czytelnik z audytu (ten, ktory
+zostawia `<noscript>`) zameldowal, ze noscript niesie **393 900 znakow**. W noscript jest **75**.
+Czyli audyt mial ten sam blad w lustrzanym odbiciu - niedomkniety `<script>` po ucieciu nie pasuje do
+wyrazenia nieapetycznego, wiec luzny czytelnik **zostawial caly payload JS**, a nasz czytelnik
+**zdejmowal go razem z reszta dokumentu**. Dwie rozne odpowiedzi na te same bajty, obie zle, i
+dopiero porownanie ich pokazalo, ze problem jest w ucieciu, nie w stronie.
+
+**9.48**: uciety odczyt nie jest juz skorupa, tylko **NIEMIERZALNY**, a zdanie nazywa **te strone,
+ktora sie urwala** (nie zawsze te, z ktorej wzielismy liczbe). Potwierdzone na produkcji na obu
+wierszach. Flaga `truncated` istniala od dawna i byla czytana dla cennika i plikow maszynowych -
+tylko nie tu.
+
+**Trzy znaleziska codeksa po drodze, kazde o zdaniu, ktore mielismy opublikowac:** twierdzenie, ze
+ciecie wypadlo w skrypcie (tego nie mierzymy), rada „opublikuj lustro markdown" (ten check z definicji
+czyta **tylko HTML**, wiec vendor moglby ja wykonac i dalej byc niemierzalny), oraz opisanie strony
+przeczytanej w calosci jako wiekszej niz nasz sufit.
+
+## TRZY NOWE AUDYTY PRZEBIEGLY PIERWSZY RAZ, I MAJA WYNIKI
+
+- **`audit-docs-js`**: po naprawie **0 oskarzen o skorupe** (bylo 2, oba falszywe), kontrolka
+  0 z 5 zaliczonych stron ponizej progu, czyli czytelnik potrafi zwrocic duza liczbe.
+- **`audit-front-door`**: **3 z 3 oskarzen o sciane JavaScriptowa potwierdzone** dzis
+  (`vonage.com` 403, `contentful.com` i `pandadoc.com` 429 ze sciana), zero oskarzen o odmowe w
+  korpusie, kontrolka 5 z 5 wpuszcza.
+- **`audit-named-crawlers`**: to jest odpowiedz na watpliwosc metodologiczna, ktora sam postawilem.
+  **Podszycie pod ChatGPT-User i Claude-User leci 0 na 8 odmow** na wierszach, ktorym niczego nie
+  zarzucamy - oba dostaja 200 wszedzie w kontrolce. Czyli odmowy, ktore publikujemy
+  (`prosemirror.net`, `lemonsqueezy.com`, `algolia.com`, 4 pary wiersz-crawler, wszystkie
+  odtworzone dzis przy przegladarce dostajacej 200) **sa regula edge'a o tych nazwach, a nie
+  wykrywaniem podszywania sie z naszego IP**. Kontrolka mogla oblac i nie oblala.
+
+**I jedna rzecz o samych audytach: pierwszy z nich wisial 46 minut.** Prace skonczyl w mniej niz
+minute, a potem trzymal proces otwarty na uchwycie do bazy. Wszystkie trzy **wychodza teraz same** i
+**spuszczaja wyjscie przed wyjsciem** (`process.exit` potrafi uciac bufor przy przekierowaniu na plik,
+czyli zabrac dokladnie te linijki, dla ktorych audyt istnieje). **Nie odpalaj ich przez `| tail`** -
+wtedy nie widac postepu i wolny przebieg jest nie do odroznienia od zawieszonego.
 
 ## PRZEMIAT 9.45 ZAMKNIETY, I CO Z NIEGO WYSZLO (2026-08-19, 15:32-16:32)
 
