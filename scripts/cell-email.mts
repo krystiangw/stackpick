@@ -19,6 +19,11 @@ import { readWithGuest } from '../src/lib/guest-cell'
 import cells from '../src/data/cells.json'
 
 const BASE_URL = process.env.STACKPICK_BASE_URL ?? 'https://letagentsin.com'
+// Calendar days locally, not the gap between two instants: a date parses as midnight UTC, so a mail
+// drafted at 00:30 in UTC+2 would read a day older than it is.
+const atMidnight = (at: Date) => new Date(at.getFullYear(), at.getMonth(), at.getDate()).getTime()
+const daysSince = (day: string) => Math.round((atMidnight(new Date()) - atMidnight(new Date(`${day} 00:00`))) / 86_400_000)
+const A_MONTH = 31
 const only = process.argv[2]
 
 const store = getStore()
@@ -100,9 +105,23 @@ for (const watch of wanted) {
   // the data could not keep: run the script twice in a week and both mails say it.
   const ran = [...new Set(held.map((one) => one.ranAt))].sort()
   const when = ran.length > 1 ? `${ran[0]} to ${ran[ran.length - 1]}` : ran[0]
+  // How old, not only when. This mail is sold as the monthly agent run and the runs happen by hand,
+  // so a month with no run and a month where nothing moved produce the same numbers - and only this
+  // line separates them. A date the reader has to subtract from today is not that line.
+  const age = daysSince(ran[ran.length - 1])
+  const howOld = age === 0 ? 'today' : age === 1 ? 'yesterday' : `${age} days ago`
+  const stale = age > A_MONTH
   const lines = [
-    `${watch.domain} was named in ${named} of ${runs} agent runs, and named first in ${first}. The runs are dated ${when}.`,
+    `${watch.domain} was named in ${named} of ${runs} agent runs, and named first in ${first}. The runs are dated ${when}, ${howOld}.`,
     '',
+    ...(stale
+      ? [
+          'That is older than the month this mail covers. Nobody has put the question to an agent',
+          "since then, so these are not this month's numbers: they are the same ones as last time,",
+          'unchanged because nothing measured them again rather than because no agent moved.',
+          '',
+        ]
+      : []),
     `The question we asked, the one your buyers type:`,
     `  ${held[0].question}`,
     '',
@@ -151,7 +170,11 @@ for (const watch of wanted) {
   }
 
   console.log(`--- ${watch.domain} -> ${watch.email}`)
-  console.log(`TEMAT: ${watch.domain}: named in ${named} of ${runs} agent runs`)
+  console.log(
+    stale
+      ? `TEMAT: ${watch.domain}: no new agent run this month, and the numbers that stand`
+      : `TEMAT: ${watch.domain}: named in ${named} of ${runs} agent runs`,
+  )
   console.log(`\n${lines.join('\n')}\n`)
 }
 process.exit(0)

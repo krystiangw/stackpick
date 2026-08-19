@@ -672,6 +672,22 @@ check('prowadzimy w czesci biegow: zdanie o reszcie', whoWentFirst(['paddle.com'
 check('jeden taki bieg mowi w liczbie pojedynczej', whoWentFirst(['paddle.com'], 9, 1), 'In the 1 run that put somebody else first, the provider named first was paddle.com.')
 check('dwoch zwyciezcow to liczba mnoga', whoWentFirst(['paddle.com', 'stripe.com'], 5, 5), 'In the 5 runs that put somebody else first, the providers named first were paddle.com, stripe.com.')
 check('nikt inny nie byl pierwszy: brak zdania', whoWentFirst([], 10, 0), null)
+// Liczba mnoga byla tylko w JEDNEJ z dwoch galezi, wiec vendor, ktorego nikt nie postawil pierwszym,
+// czytal „the provider a run named before any other: postmarkapp.com, resend.com" - w mailu i w
+// platnym raporcie. Zmierzone na zywym mailu do buttondown.com.
+check(
+  'dwoch wyprzedzajacych to tez liczba mnoga',
+  whoWentFirst(['postmarkapp.com', 'resend.com'], 0, 10),
+  'Picked ahead of you, the providers some run named before any other: postmarkapp.com, resend.com.',
+)
+
+// Mail miesieczny sprzedajemy jako miesieczny bieg agenta, a biegi odpalamy recznie. Miesiac bez
+// biegu i miesiac, w ktorym nic sie nie ruszylo, daja te same liczby - rozroznia je tylko wiek.
+const mailMiesieczny = readFileSync('scripts/cell-email.mts', 'utf8')
+check('mail miesieczny mowi, ile dni maja biegi', mailMiesieczny.includes('The runs are dated ${when}, ${howOld}'), true)
+check('wiek liczy od najnowszego biegu, nie od pierwszego', mailMiesieczny.includes('daysSince(ran[ran.length - 1])'), true)
+check('a gdy w tym miesiacu nikt nie mierzyl, mowi to w temacie', mailMiesieczny.includes('no new agent run this month'), true)
+check('i w tresci, zamiast podac stare liczby jako tegomiesieczne', mailMiesieczny.includes("these are not this month's numbers"), true)
 // Bieg, ktory nie wymienil nikogo, nie jest biegiem wygranym przez kogos. Liczba w zdaniu idzie z
 // biegow, w ktorych ktos naprawde padl pierwszy, a nie z odejmowania od wszystkich.
 check('bieg bez zadnego pierwszego nie liczy sie do cudzej przewagi', whoWentFirst(['paddle.com'], 5, 3), 'In the 3 runs that put somebody else first, the provider named first was paddle.com.')

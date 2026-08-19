@@ -282,7 +282,13 @@ export const certain = (mentions: Mention[]) => mentions.filter((mention) => men
 export function whoWentFirst(winners: readonly string[], yourFirsts: number, othersFirst: number): string | null {
   if (winners.length === 0) return null
   const named = winners.join(', ')
-  if (yourFirsts === 0) return `Picked ahead of you, the provider a run named before any other: ${named}.`
+  // Plural on both branches. The branch below had it and this one did not, so a vendor no run put
+  // first was told "the provider a run named before any other: postmarkapp.com, resend.com" - one
+  // provider announced, two delivered, in the mail and in the paid report alike.
+  if (yourFirsts === 0)
+    return `Picked ahead of you, the ${
+      winners.length === 1 ? 'provider a run named' : 'providers some run named'
+    } before any other: ${named}.`
   // Runs that put somebody else first, not every run that failed to put you first. A run can name
   // nobody first, and counting those in made the sentence claim the listed provider led a run in
   // which no provider led at all.
