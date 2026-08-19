@@ -10,6 +10,28 @@
 
 
 
+
+## TWIERDZENIE O CUDZYM STANDARDZIE ZESTARZALO SIE W JEDEN DZIEN (21:00)
+
+`/standard` mowil: „AgentReady ma **28 wymagan**... Read from agentready.org on 18 August 2026".
+Przeczytane dzis ponownie: **30 wymagan**, te same piec sekcji, te same **siedem MUST-ow** (co do
+identyfikatora), wersja nadal **1.0.0**. Dwa doszly, a wersja tego nie zglosila - czyli twierdzenie o
+kims innym zestarzalo sie w **jeden dzien** i nic nie mialo prawa tego zauwazyc.
+
+**Ta sama strona uzywala jednej stalej do dwoch roznych faktow**: kiedy przeczytalismy ICH spec i
+kiedy MY zapytalismy 59 domen o karte agenta. Podbicie daty przy ponownej lekturze twierdziloby, ze
+tego samego dnia zrobilismy tamta sonde. Rozdzielone na `SPEC_READ_ON` i `PROBED_ON`.
+
+**Liczby o cudzym dokumencie nie da sie ani wziac z naszego kodu, ani pobrac przy budowaniu, wiec
+prace wykonuje data: reguly oblewaja, gdy `SPEC_READ_ON` ma wiecej niz 60 dni.** Ciche gnicie
+zamienia sie w build, ktory prosi, zeby ten dokument przeczytac jeszcze raz. Ograniczone tez **od
+dolu**, bo data z przyszlosci daje ujemny wiek i spelnia „nie starsza niz 60 dni" przez rok.
+
+**Druga rada codeksa odrzucona z uzasadnieniem:** chcial liczyc obie daty w jednej ustalonej strefie.
+Data jest **pisana recznie w Warszawie**, a build moze isc gdziekolwiek - ustalona strefa nie usuwa
+przesuniecia, tylko je przenosi, i zawsze zostaje +/- jeden dzien. Dolna granica ma lapac literowke w
+roku, a nie pilnowac polnocy, wiec dostala dzien luzu i przestala zalezec od strefy.
+
 ## PRZECZYTANIE PLATNEGO RAPORTU JAKO KUPUJACY ZNALAZLO ZDANIE, KTORE SAM DZIS NAPISALEM (21:00)
 
 Wygenerowalem raport za 49 USD dla `mixpanel.com` i przeczytalem go od gory, bo w tym pliku stoi
