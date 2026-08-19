@@ -159,11 +159,15 @@ to indeks referencji API.** Po wdrozeniu potwierdzone na produkcji: mixpanel czy
 sendlayer i trychroma swoje sekcje referencji. **`npm run regressions` na calych 177 wierszach: zero
 nowych regresow**, a piec spadkow na prowizjonowaniu jest poprawnie przypisane NAM, nie vendorom.
 
-**CO ZOSTAJE PO TEJ ZMIANIE, jedno zdanie:** mixpanel **nadal jest niemierzalny**, bo sekcja jest juz
-osiagalna, ale ranking wybiera z niej indeksy (`reference/service-accounts`), a nie strone
-`create-service-account`, ktora niesie zdanie. Brakujaca polowa to **ranking po ETYKIECIE linku**:
-link, ktorego etykieta tworzy poswiadczenie, jest najmocniejszym kandydatem, jaki istnieje, i
-powinien isc na poczatek listy zamiast byc oceniany po sciezce.
+**CO ZOSTAJE PO TEJ ZMIANIE:** mixpanel **nadal jest niemierzalny**, bo sekcja jest juz osiagalna, ale
+ranking wybiera z niej indeksy (`reference/service-accounts`), a nie strone `create-service-account`.
+Audyt proponowal na to **ranking po ETYKIECIE linku**. **ZMIERZYLEM TO I NIE ZBUDOWALEM**, i to jest
+decyzja, nie zaniechanie: na 60 wierszach (sufit ogloszony) tylko **dwa** maja nieprzeczytany link,
+ktorego etykieta tworzy poswiadczenie. Jeden z nich (`launchdarkly.com`) ma juz komplet punktow, a
+drugi (`transloadit.com`, twarde zero) prowadzi do „Create a new Template Credential", czyli do
+poswiadczenia **cudzej uslugi trzymanego u nich** - dokladnie ta klasa, ktora 9.46 odrzuca. Czyli
+zysk to najwyzej jeden niejednoznaczny wiersz na 60, a koszt to zmiana selekcji stron w KAZDYM
+skanie. Do zrobienia, gdy pojawi sie wiecej takich wierszy, nie wczesniej.
 
 **CZEGO Z TEGO AUDYTU JESZCZE NIE ZROBILEM, w kolejnosci wartosci:**
 2. ~~Strona, z ktorej cale dowody odpadly jako cudze, nie powinna liczyc sie do `looked`~~
