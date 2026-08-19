@@ -38,7 +38,8 @@
     "audit-published-urls": "tsx scripts/published-urls.mts | tsx scripts/audit-published-urls.mts",
     "audit-entry-credited": "tsx scripts/audit-entry-credited.mts",
     "audit-fix-arithmetic": "tsx scripts/audit-fix-arithmetic.mts",
-    "audit-docs-js": "tsx scripts/audit-docs-js.mts"
+    "audit-docs-js": "tsx scripts/audit-docs-js.mts",
+    "audit-front-door": "tsx scripts/audit-front-door.mts"
   },
   "dependencies": {
     "mongodb": "^7.5.0",
