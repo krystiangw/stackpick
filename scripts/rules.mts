@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { coverageLine } from './how-many'
 import { readsAsPolish } from '../src/lib/vendors'
 import { createHmac } from 'node:crypto'
@@ -43,6 +43,7 @@ import { AGENT_ENTRY_PATHS, AGENT_ENTRY_PATH_COUNT, mcpAcrossWaves } from '../sr
 import type { McpProbe } from '../src/lib/scan/funnel'
 import { isDocumentationPage } from '../src/lib/scan/index'
 import { FIND_TOOL, TOOL } from '../src/app/mcp/route'
+import { GET as GET_KATALOG } from '../src/app/.well-known/ai-catalog.json/route'
 import { readsAsCompanyNews } from '../src/lib/scan/discover'
 import {
   methodRefusalIsRouted,
@@ -1222,6 +1223,19 @@ check('llms.txt nie powtarza starej dziesiatki', /10 scans per hour per address/
 check('agent-access zna limit na adres', dostepDlaAgentow.includes(`"requests": ${PER_CALLER_PER_HOUR}`), true)
 check('agent-access zna limit na domene', dostepDlaAgentow.includes(`"requests": ${PER_DOMAIN_PER_HOUR}`), true)
 
+// Katalog ARD byl statykiem i rozjechal sie tam, gdzie statyki sie rozjezdzaja: `version: 9.40`
+// przy zywej formule 9.49. Teraz jest generowany, wiec straznik pilnuje, ze nikt nie wroci do pliku
+// w `public/` (ktory i tak przeslonilby trase) i ze wersja nie jest wpisana recznie.
+check('katalog nie stoi juz statykiem w public', existsSync('public/.well-known/ai-catalog.json'), false)
+const katalogArd = readFileSync('src/app/.well-known/ai-catalog.json/route.ts', 'utf8')
+check('katalog bierze wersje formuly z kodu', katalogArd.includes('version: FORMULA_VERSION'), true)
+check('i nie wpisuje zadnej wersji recznie', /version: '9\./.test(katalogArd), false)
+check('katalog liczy domeny z korpusu', katalogArd.includes('CURATED_DOMAINS.size'), true)
+check('katalog liczy checki z listy', katalogArd.includes('CHECKS.length'), true)
+// `updatedAt` znika naumyslnie: nigdy go nie utrzymywalismy, a data stemplowana przy kazdym deployu
+// odpowiada na inne pytanie, niz to pole zadaje.
+check('katalog nie publikuje daty, ktorej nie utrzymujemy', /updatedAt:/.test(katalogArd), false)
+
 check('sonda widzi cudze poswiadczenie po nazwie', namesSomebodyElsesCredential('Create a Firebase ', 'Service Account', 'onesignal.com'), true)
 check('i nie widzi marki, ktorej przy poswiadczeniu nie ma', namesSomebodyElsesCredential('Create a ', 'Service Account', 'browserbase.com'), false)
 check('wlasna marka nie dyskwalifikuje', namesSomebodyElsesCredential('Create a GitHub ', 'personal access token', 'github.com'), false)
@@ -2153,10 +2167,14 @@ check('a przy naszym limicie nie jest', worthTelling(spadek, turnedAwayAtTheEdge
 // Nasz wlasny katalog ARD. Mowimy vendorom, zeby publikowali to, co wystawiaja agentom, wiec
 // najtansza rzecza, o ktora mozna sie potknac, jest niepublikowanie tego samemu.
 console.log('\nnasz katalog ARD')
-const katalog = JSON.parse(readFileSync('public/.well-known/ai-catalog.json', 'utf8')) as {
+// Czytane z trasy, ktora to serwuje, a nie z pliku obok niej: od kiedy katalog jest generowany,
+// plik w `public/` bylby kopia, ktora znowu by sie rozjechala - a to jest dokladnie ten blad, ktory
+// ta zmiana usuwa.
+const katalog = (await (GET_KATALOG() as Response).json()) as {
   host: { identifier: string }
-  entries: { identifier: string; url: string; representativeQueries?: string[] }[]
+  entries: { identifier: string; url: string; version?: string; representativeQueries?: string[] }[]
 }
+check('katalog podaje zywa wersje formuly', katalog.entries.some((e) => e.version === FORMULA_VERSION), true)
 check('katalog jest o nas', katalog.host.identifier, 'letagentsin.com')
 // Bez tego dwie reguly ponizej sa `[].every(...)`, czyli przechodza na pustym katalogu. Straznik,
 // ktory przechodzi, bo nie mial czego sprawdzic, jest straznikiem, ktorego nie ma - to ten sam
