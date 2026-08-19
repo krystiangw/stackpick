@@ -7671,8 +7671,10 @@ domowego i zero NIP-u (art. 13 chce tozsamosci i kanalu kontaktu, a nie siedziby
 wprost, ze **nie ma jeszcze zarejestrowanej spolki** i ze przy jej powstaniu kazdy, czyj adres
 trzymamy, zostanie o tym powiadomiony. `/terms` i `/refunds` zostaja na 404 pod stara flaga, bo
 opisuja sprzedaz, ktorej nie ma, a merchant of record porownuje nazwe znak w znak z KYC. Stopka
-linkuje kazda z trzech osobno, sitemapa tez, a **formularz linkuje polityke przy samym polu**, bo
-tam zaczyna sie obowiazek, a nie trzy strony dalej.
+warunkuje **kazda z trzech osobno**, kazda swoja flaga, wiec dzis linkuje wylacznie `/privacy`;
+sitemapa tak samo. Sprawdzone na produkcji 2026-08-19 o 16:04: `/terms` i `/refunds` daja 404 i
+**nie ma do nich linku ani w stopce, ani w sitemapie**, czyli zero martwych adresow u nas samych.
+`Formularz linkuje polityke przy samym polu`, bo tam zaczyna sie obowiazek, a nie trzy strony dalej.
 
 **Codex zlapal P1 dokladnie w miejscu, w ktorym rozdzielilem role w glowie, a w kodzie je z powrotem
 skleilem:** strona brala tozsamosc administratora z `SELLER_IS_COMPLETE`, wiec przy uzupelnionych
