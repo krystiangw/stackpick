@@ -477,7 +477,8 @@ przeskanowanych pojedynczo po zmianach 9.46-9.49. Drzewo czyste, wszystko wdrozo
 
 **CO SIE DZIEJE TERAZ:** waiter `/tmp/reseed-948.sh` (PID 77915, log `/tmp/reseed-948.log`) czeka az
 mediana wieku korpusu przekroczy 6 h - o 21:55 bylo 5.66 h, wiec **przemiat na 9.49 rusza okolo
-22:15**. **NIE DEPLOYOWAC po jego starcie**: sprawdz `tail -3 /tmp/reseed-948.log` i czy proces zyje.
+22:15**. **NIE DEPLOYOWAC po jego starcie**: sprawdz `tail -3 /tmp/reseed-948.log` i czy proces zyje. Log tego waitera napisze **„startuje przemiat na 9.48"** - to stara
+nazwa pliku, nie wersja: `reseed.sh` bierze kod z repo, a ten stoi na **9.49** (`score.ts`).
 
 **CO ZROBIC PO PRZEMIECIE:** dokladnie blok „Komplet kontroli po nastepnym przemiecie, jednym
 wklejeniem" nizej w tej sekcji - kolejnosc ma znaczenie, bo **predykcje ida pierwsze** (tylko one
