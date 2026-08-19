@@ -49,6 +49,13 @@ export function changeEmail(
    * one sentence and is the difference between a report and a boast.
    */
   rescoredBaseline = false,
+  /**
+   * When the before was measured, read off the previous report rather than off the watch.
+   * `checkedAt` says when we last looked, and looking is not measuring: a domain whose robots.txt
+   * asks us out moves its `checkedAt` on every pass without touching the score, so a baseline two
+   * months old would have been dated to yesterday. Null when we do not hold that report.
+   */
+  measuredBefore: string | null = null,
 ): { subject: string; text: string } {
   const worse = changes.filter((change) => change.worse)
   // A check falling out of measurement is not a gain, and it was being listed under a heading with
@@ -82,7 +89,9 @@ export function changeEmail(
     subject: subject.replace(/[\r\n]+/g, ' '),
     text: [
       `${watch.domain} is at ${report.scorecard.total} of ${measurable} measurable points${
-        watch.lastTotal === null ? '' : `, from ${watch.lastTotal} of ${watch.lastMeasurable}`
+        watch.lastTotal === null
+          ? ''
+          : `, from ${watch.lastTotal} of ${watch.lastMeasurable}${measuredBefore ? ` measured on ${measuredBefore.slice(0, 10)}` : ''}`
       }.`,
       '',
       ...section(`Lost ground (${worse.length}):`, worse),

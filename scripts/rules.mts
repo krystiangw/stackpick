@@ -842,6 +842,25 @@ check('stara baza 9.9 nadal pomija kazda zmieniona regule', [...rulesChangedBetw
 check('9.9 jest starsze niz 9.10', isOlderThan('9.9', '9.10'), true)
 check('9.35 nie jest starsze niz 9.9', isOlderThan('9.35', '9.9'), false)
 
+// Kiedy zmierzylismy „przedtem", a nie kiedy ostatnio zajrzelismy. Kadencja jest tygodniowa, ale
+// kolejka ma sufit, a domena, ktora prosi w robots.txt, zeby jej nie skanowac, przesuwa `checkedAt`
+// na kazdym przebiegu **bez** dotykania wyniku - wiec data z watcha datowalaby dwumiesieczna
+// podstawe na wczoraj. Zrodlem jest `scannedAt` poprzedniego raportu.
+const withBaseline = changeEmail(
+  { domain: 'v.test', id: 'w1', email: 'a@v.test', lastTotal: 5, lastMeasurable: 10, checkedAt: '2026-08-18T09:00:00.000Z' } as never,
+  { id: 'r1', scorecard: { total: 6, max: 12, checks: [] } } as never,
+  moved([verdict(0, 1)], [verdict(1, 1)]),
+  false,
+  '2026-06-30T07:12:00.000Z',
+).text
+check('mail datuje podstawe porownania', withBaseline.includes('from 5 of 10 measured on 2026-06-30.'), true)
+check('i bierze date z pomiaru, nie z ostatniego zajrzenia', withBaseline.includes('2026-08-18'), false)
+// Kontrolka: bez poprzedniego raportu mail nie ma prawa zmyslic daty.
+check('bez poprzedniego raportu zadnej daty nie ma', mailFor(false).text.includes('measured on'), false)
+// Straznik na WYWOLANIE, nie tylko na funkcje: podmiana zrodla daty na `watch.checkedAt` przechodzi
+// typecheck (oba to `string | null`) i nie rusza zadnej reguly powyzej, bo tamte wolaja mail wprost.
+const cronObserwacji = readFileSync('src/app/api/cron/watch/route.ts', 'utf8')
+check('cron podaje mailowi date z poprzedniego raportu', cronObserwacji.includes('previousCard !== previous.scorecard, previous.scannedAt)'), true)
 check('mail mowi, ze podstawa byla przeliczona', mailFor(true).text.includes('recomputed from the evidence we still hold'), true)
 check('i nie mowi tego, gdy nie byla', mailFor(false).text.includes('recomputed from the evidence we still hold'), false)
 // The half that makes the sentence honest: a rule we tightened can move a line on its own, and the
