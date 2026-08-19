@@ -8374,3 +8374,30 @@ domeny vendora. Regula jest wiec o jednym zdaniu dzis, a nie o przeczesaniu chec
 funkcji `str.replace('', X)` w skrypcie pomocniczym wstawilo caly blok **na poczatek pliku**, przed
 importy, i TypeScript zglosil to jako duplikat funkcji. Pusty wzorzec w `replace` nie jest bledem,
 tylko wstawieniem na pozycji zero.
+
+## CO MA POKAZAC PRZEMIAT NA 9.44, ZAPISANE PRZED NIM (2026-08-19, 06:55)
+
+Przemiat startuje sam, gdy **mediana wieku korpusu** dojdzie do 6 h (o 06:48 bylo 4.12 h, wiec okolo
+**08:45**). Czeka `/tmp/reseed-943.sh`, log `/tmp/reseed-943.log`. Nazwa pliku i jeden `echo` w nim
+mowia „9.43", bo powstal przed 9.44 - **nie ruszac go w trakcie**, bash doczytuje skrypt z pliku i
+edycja dzialajacego skryptu potrafi go rozjechac. Wersje bierze `scripts/reseed.sh` z kodu, czyli
+**9.44**.
+
+Do sprawdzenia po nim, po kolei:
+
+1. **`npm run audit`** ma powiedziec `177 rows on formula 9.44, 0 contradictions`.
+2. **`npx tsx scripts/audit-entry-credited.mts 200`** ma dac **zero plikow nieodroznialnych**
+   (przed: 1 nieodroznialny - calendly.com, i 1 bez porownania - sentry.io).
+3. **bigcommerce.com, sentry.io, calendly.com**: `agent_entry_point` ma byc **niemierzalny albo
+   oblany**, nigdy zaliczony.
+4. **growthbook.io**: `programmatic_provisioning` ma **stracic punkt** albo stanac na innej frazie -
+   ale nie na zdaniu o konsoli Google.
+5. **uploadcare.com**: zdanie `mcp_present` **nie ma juz wymieniac** `https://uploadcare.com/_mcp/server`,
+   bo ta strona jest 404.
+6. **`mcp_present` niemierzalny**: policzyc, ile wierszy go tak ma i czy **kazdy nazywa adres**. Przed
+   przemiatem zero, bo to nowa galaz - jesli po przemiacie tez zero, to znaczy albo ze kontrolki
+   wszedzie dochodza (dobrze), albo ze galaz jest martwa (do sprawdzenia recznie na jednym hoscie).
+7. **`npm run audit-published-urls`** ma dac **mniej niz 3 martwe** (przed: 3, z czego cal.com jest
+   falszywym alarmem audytu i ma zostac).
+8. Dopiero potem: **odswiezyc probke** `/d/sample` (dzis niesie „formula v9.41") i **zrobic zrzuty
+   do katalogu konektorow** - zrzut z numerem starej formuly zyje w katalogu latami.
