@@ -11,6 +11,26 @@
 
 
 
+## ZADANIE #47 ZAMKNIETE: PIEC WIERSZY POTWIERDZONYCH NA SWIEZYM KORPUSIE (23:05)
+
+Ostatnia rzecz, na ktora czekalo #47 („gola nazwa wygrywa z lepiej opisanym SDK"), to potwierdzenie
+piec wierszy **co do wiersza** na przemiecionym korpusie. Zrobione na 9.49, w trakcie przemiatu, wiec
+na najswiezszych danych, jakie mamy:
+```
+netlify.com    -> @netlify/api@15.1.2              (regresja z wycofanej proby NIE wraca)
+directus.com   -> @directus/sdk@25.0.0             (przypadek, ktory otworzyl zadanie)
+onesignal.com  -> @onesignal/node-onesignal@5.13.2
+axiom.co       -> @axiomhq/js@2.0.0
+mux.com        -> @mux/mux-node@15.0.0             (celowo bez zmiany)
+```
+Kazdy 1/1, kazdy dopasowany po wydawcy. Naprawa stoi na `settledOnUsage` z 9.42, czyli tam, gdzie
+**pobrania moga przewazyc**, a nie na awansie golej nazwy w rankingu ksztaltu - to byla wycofana
+proba, ktora psula netlify. Zadanie na boardzie: `done`.
+
+**Pulapka boardu przy okazji:** komentarz i zmiana statusu na CUDZYM zadaniu podpisaly sie **autorem
+zadania** (agent-alpha), nie mna. Watek zadania jest jedynym wspolnym zapisem tego, kto co sprawdzil,
+wiec od teraz komentujac cudze zadanie zaczynam od `[podpis: AI-audytor]`. Zapisane w KB.
+
 ## SIEDZIMY NA CUDZYM KLASTRZE: POTWIERDZONE, ALE NIE Z TEGO POWODU, CO SIE WYDAWALO (22:45)
 
 Krystian: „nasza baza jest chyba na klastrze MongoFlex razem z innym projektem, potwierdz - i chyba
