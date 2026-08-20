@@ -15,7 +15,7 @@ import { challengedUs, challengeSentence, CHALLENGE_UNBLOCK } from './limits'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.52'
+export const FORMULA_VERSION = '9.53'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -1028,9 +1028,14 @@ export const CHECKS: Check[] = [
           everywhere.length > 0
             ? `. ${everywhere.join(', ')} is on your front page too, where there is no account to create, so this may be a script the whole site loads rather than a gate on this form. We did not submit it, so which one it is stayed unmeasured`
             : ''
+        // The address, because this is the sharpest sentence on the card: a CAPTCHA is a hard zero
+        // for an agent, and 32 rows carried the accusation without saying WHICH page we read it
+        // out of. The unmeasurable branch four lines down already named it, so the rule was
+        // written for the neighbour and never carried across - the same way `docs_without_js`
+        // failed once before. A vendor can now repeat it with one curl.
         return yes(
           0,
-          `${f.funnel.signup.captcha.join(', ')} appears in the signup page's server HTML${
+          `${f.funnel.signup.captcha.join(', ')} appears in the server HTML of ${f.funnel.signup.url}${
             f.funnel.signup.rendersFormWithoutJs
               ? ''
               : f.funnel.signup.identityProviderOnly

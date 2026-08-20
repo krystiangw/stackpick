@@ -69,6 +69,7 @@ import {
 } from '../src/lib/scan/funnel'
 import { asPublishedToday } from '../src/lib/publishable'
 import { visitKey, pathOf, kindOf } from '../src/lib/visits'
+import { isPublishableRow } from '../src/lib/published'
 
 // Ceny dostawcy przychodza ze srodowiska, a bez nich katalog nie rozpoznaje zadnej ceny i cala
 // sciezka przyznawania uprawnien jest nietestowana. Ustawiane TUTAJ, a nie w skrypcie npm: build
@@ -1563,11 +1564,16 @@ check('/v czyta wylacznie wiersze zasiane', stronaV.includes('await store.latest
 // publikowalo werdykt, ktorego ta sama tresc juz by dzis nie dostala, i kazda roznica szla w te sama
 // strone - zmierzone zero na „nie zmierzylismy". Korpus zostaje z banerem, bo jego wiersze utrzymuje
 // przemiat; poza korpusem nic ich nie odswiezy.
-check(
-  'poza korpusem publikujemy tylko biezaca formule',
-  stronaV.includes('categoryFor(domain) || seeded.scorecard.formulaVersion === FORMULA_VERSION'),
-  true,
-)
+// Regula mieszkala w komponencie strony i byla tu sprawdzana PO TEKSCIE. Gdy przeniosla sie do
+// `published.ts` (bo audyt musial pytac o dokladnie to samo i sie rozjechal), ten straznik oblal - i
+// dobrze, bo o to mu chodzilo. Teraz sprawdza ZACHOWANIE funkcji, ktore przezyje kazde przeniesienie,
+// plus to jedno, czego zachowanie nie powie: ze strona naprawde jej uzywa.
+const wKorpusie = [...CURATED_DOMAINS][0]
+check('strona uzywa wspolnej reguly publikacji', stronaV.includes('isPublishableRow(domain, seeded.scorecard.formulaVersion)'), true)
+check('poza korpusem publikujemy tylko biezaca formule', isPublishableRow('nie-w-korpusie.test', FORMULA_VERSION), true)
+check('a starszej juz nie', isPublishableRow('nie-w-korpusie.test', '7.4'), false)
+// Korpus zostaje mimo starszej formuly, bo przemiat go wyrownuje, a strona niesie o tym baner.
+check('wiersz korpusu na starszej formule zostaje', isPublishableRow(wKorpusie, '7.4'), true)
 check('i nie ma juz galezi bioracej najnowszy wiersz jakikolwiek', stronaV.includes('return store.latestForDomain(domain)\n'), false)
 
 // Blad z serwera MCP ma nazwac argument, ktorego brakuje. Zmierzone na zywym serwerze: wolanie z
@@ -1856,9 +1862,16 @@ const gates = CHECKS.find((c) => c.id === 'signup_no_captcha')!
 check('bramki strony, ktorej nie dostalismy, sa niemierzalne', gates.evaluate({
   funnel: { signup: { url: 'https://v.test/signup', reachable: false, captcha: ['recaptcha'], rendersFormWithoutJs: false } },
 } as never).inconclusive, true)
-check('bramki strony, ktora dostalismy, sa mierzalne', gates.evaluate({
+const zBramka = gates.evaluate({
   funnel: { signup: { url: 'https://v.test/signup', reachable: true, captcha: ['recaptcha'], rendersFormWithoutJs: true } },
-} as never).points, 0)
+} as never)
+check('bramki strony, ktora dostalismy, sa mierzalne', zBramka.points, 0)
+// 9.53. To najostrzejsze zdanie na calej karcie - CAPTCHA to dla agenta twarde zero - i 32 wiersze
+// niosly je bez podania, KTORA strone przeczytalismy. Galaz niemierzalna obok nazywala ten sam
+// adres od poczatku, wiec regula byla napisana dla sasiada i nieprzeniesiona. Vendor ma miec jedno
+// zadanie do powtorzenia.
+check('oskarzenie o captche podaje adres formularza', zBramka.detail.includes('server HTML of https://v.test/signup'), true)
+check('i nie mowi juz bezokolicznie „the signup page"', zBramka.detail.includes("the signup page's server HTML"), false)
 
 const surface = CHECKS.find((c) => c.id === 'mcp_present')!
 // phrase.com, tolgee.io and medusajs.com all register a live endpoint in the MCP registry and all

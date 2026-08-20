@@ -218,6 +218,10 @@ const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   // A truncated candidate now needs a control asking for a path that cannot exist, so a host that
   // really does answer everything with one shell is still refused. Nothing about a vendor changed;
   // which of their pages we went on to read did.
+  // 9.53 names the page a CAPTCHA was read out of. 32 rows carried the sharpest accusation on the
+  // card without saying which page we read, while the unmeasurable branch beside it named the same
+  // address all along. Nothing about a vendor changed; the sentence now says where we looked.
+  '9.53': ['signup_no_captcha'],
   // 9.52 stops charging a vendor for what a document lacks when we cannot say where we read it.
   // 293 stored reports published "OAuth metadata published, but no registration_endpoint in it"
   // with no address at all: the field that carries it was added later, and the branch rendered

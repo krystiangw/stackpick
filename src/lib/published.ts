@@ -1,6 +1,8 @@
 import { CURATED_DOMAINS } from './categories'
 import { getStore, type Report } from './store'
 import { asPublishedToday } from './publishable'
+import { categoryFor } from './categories'
+import { FORMULA_VERSION } from './score'
 
 /**
  * How much the corpus moves between two identical rescans, as a percentage, measured rather than
@@ -115,4 +117,19 @@ async function loadCorpus(): Promise<PublishedCorpus> {
   }
   const [formulaVersion, reports] = [...byVersion.entries()].sort((a, b) => b[1].length - a[1].length)[0]
   return { reports, formulaVersion, heldBack: seeded.length - reports.length }
+}
+
+/**
+ * Czy wiersz, ktory MAMY, wolno dzis pokazac pod `/v/<domena>`.
+ *
+ * Regula mieszkala wylacznie w komponencie strony, wiec audyt pytajacy „co publikujemy" musial ja
+ * przepisac i natychmiast sie rozjechal: policzyl wiersze na formule 7.4 sprzed czterdziestu piaciu
+ * wydan jako publikowane, podczas gdy produkcja odpowiada na nie „not measured". Audyt, ktory mierzy
+ * co innego niz strona, jest gorszy niz brak audytu.
+ *
+ * Korpus zostaje mimo starszej formuly, bo przemiat go wyrownuje i strona niesie o tym baner. Poza
+ * korpusem nic tych wierszy nie odswiezy, wiec pokazujemy je tylko na biezacej formule.
+ */
+export function isPublishableRow(domain: string, formulaVersion: string): boolean {
+  return Boolean(categoryFor(domain)) || formulaVersion === FORMULA_VERSION
 }

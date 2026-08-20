@@ -10,6 +10,7 @@ import { WatchForm } from '@/components/watch-form'
 import { CONTROLLER_IS_NAMED } from '@/lib/seller'
 import { erratumFor } from '@/lib/errata'
 import { challengedUs } from '@/lib/limits'
+import { isPublishableRow } from '@/lib/published'
 
 /**
  * The address for a vendor, as opposed to the address for one scan of it. /r/<id> names a
@@ -60,7 +61,7 @@ async function publishedRowFor(domain: string) {
   // przemiat wyrownuje je co kilka dni, a baner opisuje okno miedzy podbiciem wersji a przemiatem.
   // Poza korpusem nie ma czego czekac - nic tych wierszy nie odswiezy, wiec jedyna uczciwa opcja to
   // przestac je pokazywac, dopoki ktos ich nie przeskanuje.
-  if (!seeded || categoryFor(domain) || seeded.scorecard.formulaVersion === FORMULA_VERSION) return seeded
+  if (!seeded || isPublishableRow(domain, seeded.scorecard.formulaVersion)) return seeded
   return null
 }
 
