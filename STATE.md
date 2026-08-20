@@ -178,6 +178,32 @@ za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). 
 wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
 Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
 
+## CUDZY SKAN GOSCIA STAWAL SIE NASZA PUBLICZNA STRONA O CUDZEJ FIRMIE (02:15, v689)
+
+**Najpowazniejsze znalezisko tej czesci nocy, bo dotyczy cudzych danych i lamalo obietnice, ktora
+sami wydrukowalismy na cenniku.**
+
+`/pricing` mowi: „A scan you run yourself never joins that corpus: it gets a permanent link you can
+forward, **and we do not post it anywhere**". `/bot` mowi, ze anonimowe zadanie nie przepisze tego, co
+ta witryna mowi o firmie. Tymczasem `/v/<domena>` **poza korpusem** bralo **najnowszy wiersz
+jakikolwiek**, wiec skan zrobiony przez obcego goscia stawal sie nasza publiczna strona z pelna lista
+werdyktow o cudzej firmie, pod adresem, ktory kazdy zgadnie (to sama domena).
+
+**Zmierzone, nie zalozone:** zeskanowalem `tally.so` anonimowo z publicznego endpointu i cztery minuty
+pozniej `/v/tally.so` odpowiadalo **200** z kompletem werdyktow. W bazie: `tally.so` i `svix.com`
+mialy **wylacznie wiersz goscia** (`seeded=false`) i **zaden zasiany** - czyli to nie byla teoria.
+`noindex` nie ratuje: strona jest czytelna dla konkurencji vendora, wystarczy wpisac adres.
+
+**Poprawka:** `/v` czyta teraz **wylacznie wiersze zasiane**, dla kazdej domeny, nie tylko dla
+korpusu. Powod, dla ktorego kiedys dodano tam falbackz, byl prawdziwy (branie tylko zasianych
+zamrozilo nasza wlasna strone na formule 9.22) - i **jest dzis rozwiazany czym innym**: strona ma
+baner „measured under an older formula", a nasz wlasny wiersz jest zasiany, wiec zyje dalej. Gosc nie
+traci nic: jego skan zostaje pod `/r/<id>`, czyli tym **niezgadywalnym** linkiem, ktory obiecuje mu
+kopia.
+
+**Zweryfikowane na produkcji:** `tally.so` i `svix.com` mowia teraz „not measured yet",
+`letagentsin.com` (nasz zasiany wiersz) i `mixpanel.com` (korpus) bez zmian.
+
 ## DZIESIEC NAZW PLIKOW TO NIE DWADZIESCIA TRZY ZAPYTANIA (01:45, v688)
 
 Wyjscie MCP w formacie `agent` przeczytane obok strony `/r` dla tego samego skanu - i **dwa zdania w
