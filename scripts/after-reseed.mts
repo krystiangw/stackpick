@@ -54,13 +54,22 @@ let typedFails = 0
 let typedGuessedFails = 0
 const licenceGateSample: string[] = []
 const stillWrong: string[] = []
+/** Wiersze korpusu, ktore nie doszly do biezacej formuly. Zwykle znaczy: ich skan PADA. */
+const behind: string[] = []
 
 for (const domain of CURATED_DOMAINS) {
   const report = await store.latestForDomain(domain, true)
-  if (!report) continue
+  if (!report) {
+    // Gorszy przypadek tej samej slepoty: domena korpusu, ktora nie ma ZADNEGO zasianego wiersza,
+    // wypadala przed sprawdzeniem wersji, wiec alarm milczal akurat wtedy, gdy skan nie udal sie
+    // ani razu. Codeksa.
+    behind.push(`${domain} (BRAK ZASIANEGO WIERSZA)`)
+    continue
+  }
   rows += 1
   const formula = report.scorecard.formulaVersion
   version.set(formula, (version.get(formula) ?? 0) + 1)
+  if (formula !== FORMULA_VERSION) behind.push(`${domain} (${formula}, ${report.scannedAt.slice(0, 10)})`)
 
   const check = (id: string) => report.scorecard.checks.find((candidate) => candidate.id === id)
 
@@ -181,6 +190,17 @@ for (const domain of CURATED_DOMAINS) {
 
 const versions = [...version.entries()].sort((a, b) => b[1] - a[1])
 console.log(`${rows} wierszy zasianych, wersje formuly: ${versions.map(([v, n]) => `${v}: ${n}`).join(', ')}`)
+// „176 z 177" czytalo sie jak zdrowie przez wiele dni, a brakujacym wierszem byl `signoz.io`, ktorego
+// skan PADAL na cudzym placeholderze w adresie MCP - i przez caly ten czas publikowalismy o nim
+// werdykt sprzed szesciu wersji. Wiersz korpusu, ktory po przemiecie nie doszedl do biezacej formuly,
+// prawie nigdy nie jest „starzejacym sie wierszem": to skan, ktory nie konczy sie sukcesem.
+if (behind.length > 0) {
+  console.log(
+    `\nUWAGA: ${behind.length} wierszy korpusu NIE doszlo do ${FORMULA_VERSION} - sprawdz, czy ich skan nie PADA, zanim uznasz to za starzenie sie:`,
+  )
+  for (const one of behind) console.log(`  ${one}`)
+  console.log(`  reprodukcja: curl -X POST ${'${SITE}'}/api/scan -H "cookie: stackpick_console=$TOKEN" -d '{"domain":"..."}' i przeczytaj heroku logs`)
+}
 console.log(`skaner chodzi na ${FORMULA_VERSION}${versions[0]?.[0] === FORMULA_VERSION ? '' : ', czyli korpus NIE jest jeszcze na tej wersji'}`)
 console.log('')
 console.log(`signup_reachable: ${signupNeedsJs} razy „formularz potrzebuje JavaScriptu", ${signupIdentityProvider} razy „brak formularza, wejscie przez dostawce tozsamosci"`)

@@ -2157,6 +2157,13 @@ check('kropka pod cudzyslowem tez', mentionsIn('"Vercel jest wyborem." Render od
 check('i nawias domykajacy', mentionsIn('(Vercel jest wyborem.) Render odpada.', ['vercel.com'])[0].sentence, '(Vercel jest wyborem.)')
 
 // Prog cytatu w audycie dostawy: nie liczba slow, tylko czy czytelnik wynosi z niego cokolwiek.
+// I zeby to samo nie schowalo sie po raz drugi: wiersz korpusu, ktory po przemiecie nie doszedl do
+// biezacej formuly, ma byc UWAGA, a nie linijka statystyki. „176 z 177" czytalo sie jak zdrowie.
+const poPrzemiecie = readFileSync('scripts/after-reseed.mts', 'utf8')
+check('after-reseed alarmuje o wierszu, ktory nie doszedl do formuly', poPrzemiecie.includes('NIE doszlo do'), true)
+check('i mowi, ze to zwykle padajacy skan', poPrzemiecie.includes('czy ich skan nie PADA'), true)
+check('i lapie takze domene bez zadnego wiersza', poPrzemiecie.includes('BRAK ZASIANEGO WIERSZA'), true)
+
 // Cudzy placeholder nie moze zabic naszego skanu. `signoz.io` dokumentuje
 // `https://mcp.<region>.signoz.cloud/mcp`; `new URL` na tym RZUCA, jeden nieoslonięty parse zrobil z
 // tego unhandled rejection i **caly skan padal** - dwa razy na przemiat, przez wiele dni, a wiersz
