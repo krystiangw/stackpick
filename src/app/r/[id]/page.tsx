@@ -31,8 +31,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   const headline = pickHeadline(report.findings, report.scorecard)
   return {
-    // A page that disappears on the next deploy has no business in an index.
-    ...(isHeldOnly(id) ? { robots: { index: false } } : {}),
+    // Nie indeksujemy ZADNEGO z tych adresow, nie tylko tych ulotnych. Strony `/watch/confirm` i
+    // `/watch/stop` maja `noindex` od poczatku, a ta - opisana w cenniku jako link prywatny i
+    // potrafiaca mowic o CUDZEJ firmie, bo skanuje sie dowolna domene - nie miala go wcale.
+    //
+    // `robots.txt` ma `Disallow: /r/`, wiec crawler, ktory go slucha, tej dyrektywy nie zobaczy - i
+    // tak zostaje, bo zdjecie Disallow zaprasza z powrotem pobrania, ktore raz polozyly ten dyno.
+    // To jest wiec warstwa dla tych, ktorzy `robots.txt` nie czytaja, a nie zaklecie na Google.
+    robots: { index: false, follow: false },
     title: `${report.domain}: agent readiness ${report.scorecard.total}/${report.scorecard.measurable ?? report.scorecard.max}`,
     description: headline.claim,
     openGraph: {

@@ -9,6 +9,11 @@ Allow: /corpus.json
 # company is /v/<domain> and it always holds the newest measurement. Meta's crawler read
 # seventy of these in parallel on 2026-08-12 and took the site down, which is a fair thing to
 # have learned about ourselves from the outside.
+# Zostaje mimo `noindex` na tych stronach, i to jest swiadomy wybor: crawler, ktory posluchal tego
+# Disallow, nigdy nie pobierze strony, wiec nie zobaczy tez `noindex` i moze zostawic w indeksie sam
+# adres. Adres jest nieodgadywalny i sam z siebie nie mowi nic, a zdjecie tej linijki zaprasza z
+# powrotem siedemdziesiat rownoleglych pobran, ktore raz juz polozyly ten dyno. `noindex` jest tu dla
+# tych, ktorzy tego pliku nie czytaja (codex).
 Disallow: /r/
 # Personal links from an email. Nothing here is secret and none of it is worth an index entry.
 Disallow: /watch/
