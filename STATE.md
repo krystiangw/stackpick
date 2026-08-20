@@ -85,6 +85,44 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## 9.52: 293 RAPORTY OSKARZALY O BRAK W DOKUMENCIE, KTOREGO NIE UMIALY WSKAZAC (12:40, v717)
+
+**Jak to znalazlem, bo droga jest tu pouczajaca.** Diagnostyka po przemiecie melduje
+`oauth_dcr: 72 z 89 oblanych wierszy wymienia sprawdzone adresy`. Poszedlem sprawdzic te 17 rzekomo
+niemych oskarzen i **zadne nie bylo nieme**: wszystkie 89 zawieraja adres. **Zepsuty byl przyrzad** -
+liczyl fraze `probed: http`, a 17 wierszy ma inny, MOCNIEJSZY ksztalt dowodu
+(`OAuth metadata published at <adres>, but no registration_endpoint in it`). Miara obiecywala fakt,
+a mierzyla ksztalt jednego zdania. Naprawiona: liczy obecnosc adresu i **alarmuje tylko wtedy, gdy
+ktorys wiersz go nie ma** (dzis: „wszystkie 89 wymienia adres").
+
+**Ale falszywy trop wyprowadzil na prawdziwy defekt.** Ta sama galaz ma warunek
+`${oauth.metadataAt ? ` at ${...}` : ''}`, czyli **gdy adresu nie znamy, renderuje pustke** i zdanie
+brzmi „OAuth metadata published, but no registration_endpoint in it". Vendor czyta zarzut o brak
+elementu we **wlasnym** dokumencie i nie wie, o ktory dokument chodzi.
+
+**Skala, policzona w bazie, nie oszacowana:** 7697 raportow, **293 z zapisanym zdaniem bez adresu**,
+najnowsze z **17 sierpnia**. Dowod na to, ze to nasz blad, a nie stan swiata: `/v/koyeb.com` i
+`/r/koyeb-com-20260817...` mowia o **tej samej firmie w tej samej chwili** - swiezy wiersz podaje
+`at https://signin.koyeb.com/.well-known/...`, stara strona nie podaje nic. Pole `metadataAt`
+powstalo dopiero 2026-08-17 (`77dc59a0`), a galaz zamiast odmowic renderowala nic. **To trzeci raz,
+gdy pole dodane pozniej zmienia znaczenie starych rekordow** (wczesniej `docsThinnerForAgents` z
+„NaN percent" i `docsTextCharsTruncated`).
+
+**NAPRAWA (9.52, wdrozona, produkcja zweryfikowana):** zdanie podaje adres; gdy adresu brak, wymienia
+**sondowane originy** (stare raporty maja `probedOrigins`, typowo kilkanascie, wiec dowod ISTNIAL,
+tylko nie trafial do zdania); gdy nie ma ani jednego, ani drugiego, check jest **niemierzalny**
+zamiast oskarzac. Straznik stoi na **wszystkich trzech wyjsciach**, obie mutacje oblewaja (2 i 3
+reguly). `CHECK_RULE_CHANGED['9.52'] = ['oauth_dcr']`, wiec obserwatorzy nie dostana maila o naszej
+wlasnej zmianie reguly. Codex czysty za pierwszym przejsciem.
+
+**Zweryfikowane na produkcji:** `/methodology` pokazuje 9.52, a swiezy skan `koyeb.com` przez API
+wraca z `OAuth metadata published at https://signin.koyeb.com/.well-known/oauth-authorization-server`.
+
+**CO ZOSTAJE OTWARTE:** `/r/<id>` renderuje **zapisany** scorecard, nie przelicza go z findings, wiec
+**te 293 strony beda niosly zarzut bez dowodu dalej**. To decyzja o przepisywaniu tego, co juz
+opublikowalismy, wiec poszla do **audytu decyzji subagentem** (opus): rescore w miejscu kontra
+wycofanie kontra nota o starszej formule. Wynik i rekomendacja dopisane nizej, gdy wroci.
+
 ## ALARM O MIEJSCU MOWIL O KLASTRZE, KTOREGO JUZ NIE MAMY (2026-08-20, 12:05, v716)
 
 Pierwsza rzecz po migracji: co jeszcze opisuje swiat sprzed przeprowadzki. **Automatyka byla czysta**
