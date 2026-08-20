@@ -77,7 +77,17 @@ export async function generateMetadata({ params }: { params: Promise<{ domain: s
   // the same page as /v/stripe.com, and without this they were three addresses with no canonical
   // between them: "Duplicate without user-selected canonical" in Search Console on 2026-08-17.
   const canonical = { alternates: { canonical: `${SITE_URL}/v/${name}` } }
-  if (!report) return { title: `${name}: not measured yet · Let Agents In`, robots: { index: false }, ...canonical }
+  if (!report) {
+    // Tytul i tresc mowia to samo. Zakladka „not measured yet" nad strona „we have nothing current"
+    // to ta sama sprzecznosc, ktora ta zmiana naprawia, tylko w miejscu, ktore cachuje wyszukiwarka
+    // (codex).
+    const seeded = await getStore().latestForDomain(name, true)
+    return {
+      title: `${name}: ${seeded ? 'nothing current' : 'not measured yet'} · Let Agents In`,
+      robots: { index: false },
+      ...canonical,
+    }
+  }
 
   const { scorecard } = report
   const measurable = measurableOf(scorecard)
@@ -100,15 +110,35 @@ export async function generateMetadata({ params }: { params: Promise<{ domain: s
   }
 }
 
-/** Nobody has scanned it yet, which is a thing they can fix in twenty-seven seconds. */
-function NotMeasured({ domain }: { domain: string }) {
+/**
+ * Nobody has scanned it yet, which is a thing they can fix in twenty-seven seconds.
+ *
+ * Albo: przeskanowalismy, tylko regula sie od tamtej pory ruszyla i nie pokazujemy tamtych werdyktow.
+ * „Nobody has run it through the checks yet" bylo wtedy nieprawda, a przy podbiciu formuly co
+ * kilkanascie godzin trafia to KAZDEGO, kto przeskanowal sie wczoraj - w tym nas samych, bo
+ * `/v/letagentsin.com` mowilo tak o wierszu z tej samej nocy.
+ */
+function NotMeasured({ domain, stale }: { domain: string; stale: { scannedOn: string; formulaVersion: string } | null }) {
   return (
     <main className="mx-auto flex max-w-2xl flex-col px-6 py-24">
-      <h1 className="text-2xl font-semibold wrap-anywhere sm:text-3xl">We have not measured {domain}</h1>
+      <h1 className="text-2xl font-semibold wrap-anywhere sm:text-3xl">
+        {stale ? <>We have nothing current for {domain}</> : <>We have not measured {domain}</>}
+      </h1>
       <p className="mt-4 leading-relaxed">
-        Nobody has run it through the checks yet, so there is nothing here to show. The scan takes under
-        half a minute, needs no account and publishes nothing about you: only the curated corpus is
-        published, and a scan you run yourself does not join it.
+        {stale ? (
+          <>
+            We hold a scan of {domain} from {stale.scannedOn}, run under formula {stale.formulaVersion}. The rules
+            have moved since, so we do not show its verdicts: a sentence we would not write today is worse than no
+            sentence. You can run a fresh one in under half a minute and it gives you a private link of your own -
+            it does not overwrite this page, which changes only when we scan the domain ourselves.
+          </>
+        ) : (
+          <>
+            Nobody has run it through the checks yet, so there is nothing here to show. The scan takes under half a
+            minute, needs no account and publishes nothing about you: only the curated corpus is published, and a scan
+            you run yourself does not join it.
+          </>
+        )}
       </p>
       <p className="mt-6 font-mono text-sm">
         <Link href={`/?domain=${encodeURIComponent(domain)}`} className="text-brass underline underline-offset-4">
@@ -142,7 +172,21 @@ export default async function VendorPage({ params }: { params: Promise<{ domain:
   const report = await publishedRowFor(name)
   // A bare 404 here is the wrong answer to the only visitor who matters: somebody typing their
   // own domain, which is exactly the company we want measuring itself. They get the scan instead.
-  if (!report) return <NotMeasured domain={name} />
+  if (!report) {
+    // Tylko wiersz ZASIANY, tak jak wyzej: istnienia skanu goscia nie zdradzamy nawet jednym
+    // zdaniem, bo `/pricing` obiecuje, ze jego skan nie jest nigdzie wywieszony.
+    const seeded = await getStore().latestForDomain(name, true)
+    return (
+      <NotMeasured
+        domain={name}
+        stale={
+          seeded
+            ? { scannedOn: seeded.scannedAt.slice(0, 10), formulaVersion: seeded.scorecard.formulaVersion }
+            : null
+        }
+      />
+    )
+  }
 
   const { scorecard, findings } = report
   const measurable = measurableOf(scorecard)
