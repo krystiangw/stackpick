@@ -178,6 +178,29 @@ za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). 
 wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
 Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
 
+## RECZNE DOLANIE ZASLANIA ZEPSUTY JOB (03:30, bez zmian w kodzie)
+
+Poszedlem sprawdzic, czy nasz wlasny monitoring zyje, i **dowod jest w `gh run list`**: hourly „Is
+production actually working" - 56 przebiegow, wszystkie zielone; „Rescan watched domains" - zielony
+18 i 19 sierpnia; **„Mirror the MCP registry" - NIEUDANY oba razy** (2026-08-18T04:00 i
+2026-08-19T04:01). To potwierdza znany blocker: poprawka jobu istnieje lokalnie i **nigdy nie poszla
+do `origin`**.
+
+**Czego nie zobaczy nasza wlasna bateria.** `after-reseed` ma juz madry straznik z dwoma progami:
+TTL (168 h) i „dwa pominiete przebiegi" (48 h). Ale mierzy **wiek danych**, a lustro dolewam recznie z
+laptopa - ostatnie dolanie 2026-08-19 o 05:08, czyli **godzine po tym, jak job padl o 04:01**. Wiek
+wyszedl 20 h, prog 48 h nie zadzialal, i **zepsuty producent wyglada jak dzialajacy** dokladnie tak,
+jak opisuje to komentarz przy tym strazniku. Reczna interwencja zasłania awarie, ktora ten straznik
+mial pokazac.
+
+**Bez nowego kodu, bo lekarstwo jest jednolinijkowe:** do baterii po przemiecie doszlo
+`gh run list --workflow=mcp-registry.yml --limit 3`. Patrzymy na **producenta**, nie tylko na dane.
+
+**Przy okazji zmierzone:** ostatni push do `origin` to 2026-08-17T19:53Z, a najnowszy przebieg
+godzinowy o 23:41Z przy sprawdzeniu o 01:30Z - jedna godzina wypadla. GitHub potrafi gubic
+harmonogramy i to mieści sie w normie, ale przy 60 dniach bezczynnosci repo **wylacza je calkiem**,
+wiec push i tak ma znaczenie dla monitoringu, nie tylko dla lustra.
+
 ## DWADZIESCIA CZTERY STRONY, KTORYCH ADRES NIE CHRONIL NICZEGO, WYCOFANE (02:40, v691)
 
 Domkniecie poprzedniego. Te 24 raporty bez losowego sufiksu sprawdzone **co do wiersza**: wszystkie
@@ -1122,6 +1145,11 @@ npm run po-przemiacie-9-50 && npm run po-przemiacie && npx tsx scripts/after-res
 **nie przez `| tail`**, bo wtedy nie widac postepu):
 ```
 npm run audit-docs-js && npm run audit-front-door && npm run audit-named-crawlers && npm run audit-cap-selection
+```
+**I jedno spojrzenie na PRODUCENTA, nie tylko na dane** (straznik staleness w `after-reseed` mierzy
+wiek lustra, a reczne dolanie z laptopa ten wiek resetuje, wiec zepsuty job pozostaje niewidoczny):
+```
+gh run list --workflow=mcp-registry.yml --limit 3
 ```
 **I dwie rzeczy poza skryptami, w tej kolejnosci:**
 1. **Deploy czeka** (`cbe4fb4` i dalej): commit zamknal sie tuz przed startem przemiatu, wiec
