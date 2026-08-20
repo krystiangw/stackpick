@@ -85,6 +85,34 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## SZUKALEM DRUGIEGO TAKIEGO ZDANIA I ZNALAZLEM - A STRAZNIK ZLAPAL MNIE NA POPRAWCE (17:15, v739)
+
+Skoro `/standard` twierdzil „prawie nikt", przeszedlem **grepem po calym copy** za kwantyfikatorami
+pisanymi z reki (`almost every`, `most`, `nearly all`, `hardly any`, `nobody`). Wiekszosc trafien to
+opis metody („nobody watching" o naszych przebiegach), ale jedno bylo tym samym bledem:
+`/findings` mowilo o RFC 7591, ze tak agent rejestruje sie bez czlowieka **„at almost every
+authorization server running today"**. To twierdzenie o **calym internecie**, ktorego nie mierzylismy,
+a nasz wlasny korpus mowi **77 na 173**. Liczby obok tego zdania sa policzone; kwantyfikator w srodku
+nie byl.
+
+**I tu straznik zadzialal na mnie.** Napisalem najpierw „the **only standard way** an agent registers
+itself without a human" - i `npm run build` oblal na regule z `rules.mts`: *„nie nazywamy RFC 7591
+jedyna standardowa droga"*. MCP z 2026-07-28 przeniosl rejestracje dynamiczna do MAY i nazwal ja
+deprecated, wiec to zdanie bylo prawda, gdy je pisalismy, i przestalo nia byc bez zadnej zmiany u nas.
+Zamienilbym jedno niezmierzone twierdzenie na drugie, juz raz obalone. Zostalo najkrotsze mozliwe:
+**„which lets an agent register itself without a human"**.
+
+**WLASNY BLAD PROCESU, wart zapisania:** `npm run build 2>&1 | tail -3 && git commit` **przepuscilo
+czerwony build**, bo w potoku liczy sie kod ostatniego czlonu (`tail`), czyli zawsze zero. Commit
+poszedl z oblana regula. Od teraz build idzie do pliku i `echo EXIT=$?` stoi obok. Wpis w KB:
+`clad-kb show npm-run-build-tail-ukrywa-czerwony-build-zsh-bez-pipefail`.
+
+**Przy okazji lista lintera zeszla do zera** (bylo 2 bledy i 4 ostrzezenia). Dwa byly prawdziwie
+martwym kodem, dwa to `_`-owe destrukturyzacje „odetnij pole", ktore dostaly regule zamiast obejscia,
+a `<a>` na stronie bledu ma teraz napisane, **dlaczego** nie jest `<Link>`: strona renderuje sie
+wlasnie dlatego, ze cos w aplikacji padlo, wiec pelne przeladowanie jest jedyna rzecza, ktora nie
+zalezy od tego, co przed chwila zawiodlo.
+
 ## „PRAWIE NIKT NIE PUBLIKUJE TYCH METADANYCH", A PUBLIKUJE POLOWA (17:05, v738)
 
 `/standard`, w sekcji „The one we refuse to add, and why", tlumaczyl, dlaczego nie punktujemy
