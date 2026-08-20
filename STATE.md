@@ -213,6 +213,15 @@ pod ta sama wersja.
 **Lekcja, ktora warto zapamietac szerzej:** licznik „N z M" jest zla miara zdrowia, gdy M jest stale.
 Brakujacy wiersz nie krzyczy, tylko cicho publikuje stara prawde.
 
+**I zeby to samo nie schowalo sie po raz drugi (06:55, `4dc7af9`):** `after-reseed` traktuje teraz
+wiersz korpusu, ktory po przemiecie **nie doszedl do biezacej formuly**, jako **UWAGE z nazwa domeny,
+data i komenda do reprodukcji**, a nie jako linijke statystyki. Codex dolozyl do tego przypadek
+gorszy i przeze mnie pominiety: domena korpusu, ktora **nie ma ZADNEGO zasianego wiersza**, wypadala
+przed sprawdzeniem wersji (`if (!report) continue`), czyli alarm milczalby akurat wtedy, gdy skan nie
+udal sie ani razu. Teraz laduje na liscie z markerem `BRAK ZASIANEGO WIERSZA`. Sprawdzone przez
+podmiane progu: przy nieistniejacej wersji alarm wypisuje wszystkie 177 wierszy, dzis milczy, bo
+korpus jest kompletny.
+
 ## PRZEMIAT 9.51 ZAMKNIETY (05:06-06:13) I PREDYKCJA, KTORA SIE NIE OBRONILA
 
 **176 wierszy na 9.51, 0 sprzecznosci**, 177 zasianych (jeden zostal na 9.45). Bateria przeszla;
