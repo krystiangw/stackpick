@@ -1,4 +1,4 @@
-import { AGENT_UA, BROWSER_UA, fetchUrl, registrableDomain, informative, isBotChallenge, isEdgeRefusal, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, timeLeftMs, visibleTextLength, wasNeverAsked, withoutTags, type Fetched } from './http'
+import { AGENT_UA, BROWSER_UA, askable, fetchUrl, registrableDomain, informative, isBotChallenge, isEdgeRefusal, fetchWithRetries, inParallel, isRealTextFile, looksLikeHtml, stripCodeBlocks, timeLeftMs, visibleTextLength, wasNeverAsked, withoutTags, type Fetched } from './http'
 
 export const AGENT_ENTRY_PATH_COUNT = 10
 
@@ -1947,11 +1947,15 @@ async function probeMcpEndpoints(
           ),
         ]),
       ])
-  const candidates = onlyDocumented
-    ? [...new Set(documented)]
-    : [...new Set([...mcpCandidates(domain, site, fromCard), ...fromRegistry.urls, ...documented])]
+  // Przez `askable` w JEDNYM miejscu, bo dalej ten adres trafia do kilku `new URL` bez try/catch.
+  // Filtr na wejsciu jest tansza gwarancja niz siedem osobnych lapaczy.
+  const candidates = (
+    onlyDocumented
+      ? [...new Set(documented)]
+      : [...new Set([...mcpCandidates(domain, site, fromCard), ...fromRegistry.urls, ...documented])]
+  ).filter(askable)
   /** Addresses the vendor named themselves, in their card or in their documentation. Not guesses. */
-  const named = [...fromCard, ...documented]
+  const named = [...fromCard, ...documented].filter(askable)
   const handshake = {
     accept: 'application/json, text/event-stream',
     method: 'POST' as const,

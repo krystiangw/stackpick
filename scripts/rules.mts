@@ -38,7 +38,7 @@ import { limitsAtTheirEdge, sawRateLimit, otherDomainsNamed } from '../src/lib/c
 import { isEdgeRefusal, hintRank, CREDENTIAL_PAGE_HINTS, confirmedRefusals } from '../src/lib/scan'
 import { wasNeverAsked } from '../src/lib/scan/http'
 import { brandTaken, certain, mentionsIn, nameGuest, quotedAbout, whoWentFirst, wordsCarried } from '../src/lib/vendors'
-import { answersEverythingTheSameWay, howAPathAnswered } from '../src/lib/scan/http'
+import { answersEverythingTheSameWay, askable, howAPathAnswered } from '../src/lib/scan/http'
 import { licenceGateQuotes, readSnippet, rendersUsableForm, entersThroughIdentityProvider, mcpCandidates, looksLikeADocsPageTwin, answersWithTheSameTemplate, readsAsAnEndpoint, readsAsTheirOwnAddress } from '../src/lib/scan/funnel'
 import { SIGNUP_HINTS, NOT_WHERE_ACCOUNTS_ARE_MADE, bestReadable, routeUrl } from '../src/lib/scan/discover'
 import { AGENT_ENTRY_PATHS, AGENT_ENTRY_PATH_COUNT, mcpAcrossWaves } from '../src/lib/scan/funnel'
@@ -2157,6 +2157,25 @@ check('kropka pod cudzyslowem tez', mentionsIn('"Vercel jest wyborem." Render od
 check('i nawias domykajacy', mentionsIn('(Vercel jest wyborem.) Render odpada.', ['vercel.com'])[0].sentence, '(Vercel jest wyborem.)')
 
 // Prog cytatu w audycie dostawy: nie liczba slow, tylko czy czytelnik wynosi z niego cokolwiek.
+// Cudzy placeholder nie moze zabic naszego skanu. `signoz.io` dokumentuje
+// `https://mcp.<region>.signoz.cloud/mcp`; `new URL` na tym RZUCA, jeden nieoslonięty parse zrobil z
+// tego unhandled rejection i **caly skan padal** - dwa razy na przemiat, przez wiele dni, a wiersz
+// stal zamrozony na 9.45, podczas gdy „176 z 177" czytalo sie jak zdrowie.
+check('adres z placeholderem nie jest do zapytania', askable('https://mcp.<region>.signoz.cloud/mcp'), false)
+check('ani z klamrami', askable('https://mcp.{region}.example.com/mcp'), false)
+check('ani z dwukropkowym parametrem', askable('https://api.example.com/:tenant/mcp'), false)
+check('ani ze spacja', askable('https://example.com/a b'), false)
+check('zwykly adres jest', askable('https://mcp.neon.tech/mcp'), true)
+check('adres z portem i zapytaniem tez', askable('https://example.com:8443/mcp?x=1'), true)
+// Kontrolka na protokol: `mailto:` parsuje sie, a zapytac o nie nie mozemy.
+check('a schemat, ktorego nie umiemy zapytac, nie jest', askable('mailto:hello@example.com'), false)
+// I straznik na WYWOLANIE: filtr ma stac na liscie kandydatow, bo dalej ida nieoslonięte `new URL`.
+check(
+  'lista kandydatow MCP jest przefiltrowana',
+  readFileSync('src/lib/scan/funnel.ts', 'utf8').includes(').filter(askable)'),
+  true,
+)
+
 // Zgadnieta sciezka kontra nasz wlasny sufit. Dlugosc widocznego tekstu czytala nasze ciecie jako
 // cudza pustke: cialo, ktore wypelnilo 400 kB, jest ucinane w srodku bloku, `stripCodeBlocks`
 // porzuca reszte dokumentu, i strona dajaca 12 282 znaki w pelnym odczycie czyta sie na 53

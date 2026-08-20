@@ -800,6 +800,25 @@ export function howAPathAnswered(fetched: Fetched): HowAPathAnswered {
  * about the vendor and wrong here: a rate limit tells us nothing about what the host serves at an
  * address nobody registered, which is the only question a control asks.
  */
+/**
+ * Whether an address is one we can even ask for. `new URL` throws on a documented template, and a
+ * throw here is not a small thing: `signoz.io` documents `https://mcp.<region>.signoz.cloud/mcp`,
+ * one unguarded parse turned that into an unhandled rejection, and the **whole scan died** - twice
+ * per sweep, for days, while the published row sat frozen on formula 9.45 and „176 of 177" read as
+ * healthy. One vendor's placeholder must not be able to take our scanner down.
+ *
+ * A template is also not an endpoint even when it parses: nobody routes JSON-RPC at `<region>`.
+ */
+export function askable(url: string): boolean {
+  if (/[<>{}\s]/.test(url) || /(^|[/.]):[a-z_]/i.test(url)) return false
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:'
+  } catch {
+    return false
+  }
+}
+
 export const informative = (got: Fetched) => got.status > 0 && got.status !== 429 && !isEdgeRefusal(got.status)
 
 export function answersEverythingTheSameWay(control: Fetched): boolean {
