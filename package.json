@@ -40,6 +40,8 @@
     "audit-fix-arithmetic": "tsx scripts/audit-fix-arithmetic.mts",
     "audit-docs-js": "tsx scripts/audit-docs-js.mts",
     "audit-gate": "tsx scripts/audit-gate.mts",
+    "audit-empty-slots": "tsx scripts/audit-empty-slots.mts",
+    "audit-withdrawal-reach": "tsx scripts/audit-withdrawal-reach.mts",
     "audit-gate-corpus": "tsx scripts/audit-gate-corpus.mts",
     "audit-front-door": "tsx scripts/audit-front-door.mts",
     "audit-named-crawlers": "tsx scripts/audit-named-crawlers.mts",
