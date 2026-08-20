@@ -178,6 +178,45 @@ za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). 
 wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
 Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
 
+## PRZEMIAT 9.51 ZAMKNIETY (05:06-06:13) I PREDYKCJA, KTORA SIE NIE OBRONILA
+
+**176 wierszy na 9.51, 0 sprzecznosci**, 177 zasianych (jeden zostal na 9.45). Bateria przeszla;
+`audit-sample` slusznie oblal (probka stala na 9.50) i **jest juz odswiezony na 9.51**.
+
+**PREDYKCJA OBALONA, I DOBRZE, ZE BYLA ZAPISANA.** Twierdzilem: „rusza sie wylacznie dziewiec domen,
+na ktorych zmierzylem skreslona sciezke". Przeczytane 173 z 173 wierszy migawki, ruszyly **cztery, i
+zadna z tych dziewieciu**: `calendly.com`, `locationiq.com`, `netim.com`, `split.io`.
+
+**Kazdy z czterech przeczytany osobno, zanim cokolwiek orzeklem** - i zaden nie jest skutkiem 9.50:
+- `netim.com`: „scan ran out of time after 27 seconds" - **nasz timeout**. Po przeskanie wraca do
+  stanu z migawki co do werdyktu.
+- `split.io`: spada trzeci raz z rzedu i **utrzymuje sie po przeskanie** - to ten vendor, ktorego
+  brzeg odbil 13 z 13 zadan. Sciana po ich stronie, nie nasza zmiana.
+- `calendly.com` i `locationiq.com`: **zyski**, nie straty (`machine_readable_api` 0→1,
+  `docs_without_js` niemierzalne→1/1). Sprawdzilem zrodlo wyboru strony: obie maja
+  `linkSources.docs = **site**`, czyli link z ich witryny - **nie `fallback-path`**, ktorego dotyka
+  9.50. Czyli to ruch po ich stronie albo zmiennosc sondy, nie nasz kod. Moja pierwsza hipoteza
+  („to efekt 9.50") byla **zla i sprawdzenie ja obalilo**, zanim trafila do notatki.
+
+**Cztery ruchy na 692 werdyktach to 0,58 %, przy zmierzonej podlodze szumu 0,59 %.** Czyli predykcja
+byla **zle sformulowana**: twierdzenie o zasiegu, ktore nie uwzglednia podlogi szumu, moze zostac
+obalone przez sam szum. Nastepnym razem: „zaden ruch **przypisywalny zmianie** poza tymi domenami",
+weryfikowany przez przeczytanie kazdego ruchu - czyli to, co i tak zrobilem.
+
+**Druga lekcja, o moim wlasnym pomiarze:** `audit-cap-selection` pyta o sciezki **tylko na apeksie**
+(`https://<domena>/docs` i podobne), a skaner probuje takze hostow dokumentacji. „16 sciezek na 9
+domenach" to wiec **dolna granica warunku wyzwalajacego**, a nie zasieg zmiany - i tak trzeba to
+cytowac.
+
+**Regresje: 8 werdyktow gorszych, wszystkie wyjasnione** i zadna nie jest regresem vendora poza
+jednym znanym: `netim.com` x3 (nasz timeout), `split.io` x2 (ich brzeg), `froala.com` (403 dla
+naszego agenta w trzech probach), `kinde.com` (puste 2xx na kazdy JSON-RPC, lacznie z kontrolka -
+czyli kontrolka slusznie nie przyznaje punktu), `name.com` (prawdziwa zmiana u nich, ta sama co
+poprzednio: `skill.md` mowi polityke zamiast procedury).
+
+**Job lustra MCP padl trzeci dzien z rzedu** (2026-08-20T04:01) - nowa linijka w checkliscie
+(`gh run list --workflow=mcp-registry.yml`) zlapala to od razu. Lustro wygasa **2026-08-26**.
+
 ## RECZNE DOLANIE ZASLANIA ZEPSUTY JOB (03:30, bez zmian w kodzie)
 
 Poszedlem sprawdzic, czy nasz wlasny monitoring zyje, i **dowod jest w `gh run list`**: hourly „Is
