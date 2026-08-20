@@ -85,6 +85,33 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## WITRYNA SKLEPU ZNOWU ZOSTALA W TYLE, TYM RAZEM O CZTERY WYDANIA (16:20, v724)
+
+`/d/sample` to dokument, ktory prospekt czyta **przed zakupem**. Stal na **9.51**, skaner na **9.55**:
+**szesc regul ruszylo sie pod nim** (`agent_entry_point`, `no_crawl_delay`, `oauth_dcr`,
+`signup_no_captcha`, `typed_package`, `user_agents_allowed`).
+
+**Straznik na to juz istnial, juz oblewal - i nikt go nie uruchomil.** To jest cala diagnoza. Wpiety
+wiec w `reseed.sh`, bo przemiat jest momentem, w ktorym wszystko inne dochodzi do biezacej wersji.
+**Ostrzezenie, nie blokada:** przemiat nie jest od tego, zeby go zatrzymywac za dokument sprzedazowy.
+To **drugi raz** - sekcja „WITRYNA SKLEPU STALA NA FORMULE SPRZED PIECIU WYDAN" jest nizej w tym
+samym pliku.
+
+**Probka odswiezona** (przeskanowany `filestack.com`, potem wygenerowany raport), audyt przechodzi:
+„skaner tez stoi na 9.55 - kupujacy czyta to, co dzis mierzymy". Zweryfikowane na produkcji.
+
+**PRZY OKAZJI ZAMKNIETA PULAPKA, KTORA KOSZTOWALA MNIE DWIE PIERWSZE PROBY:** `--id` i `--sample`
+**bez `--publish` byly cicho ignorowane**. Skrypt konczyl sie sukcesem, drukowal „zapisany" i
+zostawial stara probke pod adresem - przez chwile szukalem bledu w `saveDelivery`, ktory nadpisuje
+poprawnie. Teraz odmawia, i to **przy parsowaniu argumentow**, a nie tuz przed zapisem: pierwsza
+wersja tego sprawdzenia stala nad publikacja, czyli **po wygenerowaniu calego raportu**, a odmowa po
+zmarnowanej pracy to nadal zmarnowana praca. (Ten sam blad co z bramka oslony, ktora najpierw wpialem
+za operacje, ktora miala strzec.)
+
+**Sprawdzone przy okazji i czyste:** `audit-remedies` - instrukcje naprawy, ktore wydajemy vendorom.
+**0 mocnych sygnalow**, 6 slabych, a jedyny wart uwagi (`no_crawl_delay`: „czesc wierszy nazywa
+przeczytana strone, a czesc nie") to **skutek 9.55** i zniknie po przemiacie.
+
 ## BRAMKA PRZED PRZEMIATEM: DOWOD, ZE PODBICIE FORMULY NIE OBUDZI OBSERWATOROW (19:50, v723)
 
 Przed nami przemiat, ktory przepisze 177 wierszy naraz z 9.52 na 9.55. Wtedy **kazdy wiersz „sie
