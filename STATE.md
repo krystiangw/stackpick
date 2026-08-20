@@ -85,6 +85,51 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## NASZA WLASNA OBIETNICA BEZ POKRYCIA, I OKAZALA SIE GORSZA, NIZ MYSLALEM (17:30, v725)
+
+Cala dobe wycinalem twierdzenia o cudzych firmach, ktorych vendor nie moze powtorzyc. **Ta sama
+zasada nie byla dotad stosowana do NASZYCH obietnic handlowych.** `/pricing` obiecywal przy raporcie
+za 49 USD: „Credited against your first month of monitoring", i **nic tego nie implementowalo** -
+zero w warstwie platnosci, zero w katalogu SKU, zero w bazie.
+
+**AUDYT DECYZJI (subagent, opus) POPRAWIL MOJA DIAGNOZE, i to jest sedno.** To nie byla obietnica
+bez MECHANIZMU, tylko **bez WARTOSCI**: monitoring jest dzis darmowy (`FREE_MONITORING_ENDS_ON =
+null`), wiec strona oferowala **49 USD zniżki od zera** i mowila obie te rzeczy **dwie linijki od
+siebie**. Poprawil mnie tez w drobiazgu: zdanie stalo w zrodle **raz**, nie dwa (moj grep liczyl
+render produkcji). Wskazal wreszcie, ze wzorzec na to **juz w repo jest**: reguła pilnujaca, zeby
+zdanie „Free while we are building it" zylo dokladnie tak dlugo jak flaga w kodzie.
+
+**WYKONANE WEDLUG REKOMENDACJI:** zobowiazanie zdjete, **pozycjonowanie zostaje** („It is a sample of
+monitoring, not a competitor to it." - prawdziwe bez zadnego mechanizmu i robi cala robote
+anty-kanibalizacyjna). Decyzja **zapisana w `docs/turning-billing-on.md`** razem z ksztaltem, ktory
+trzeba wybrac, zanim obietnica wroci: pelne 49 czy czesc, ktore SKU, jedna domena czy pakiet, okno
+waznosci. **Rekomendacja odrzucila budowanie kodu teraz** (rozliczanie kredytu przeciw kwocie 0, bez
+checkoutu i bez klienta) oraz obsluge reczna dzis (nie usuwa sprzecznosci, tylko ja zapisuje).
+
+**DWIE BRAMKI:** zdanie nie moze wrocic **obok darmowego monitoringu**, ani **bez procedury**
+oznaczonej w runbooku markerem `CREDIT PROCEDURE:`.
+
+**CODEX ODBIL TO TRZY RAZY, ZA KAZDYM RAZEM NA TEJ SAMEJ KLASIE BLEDU - SONDA ZNAJDUJACA WLASNY
+TEKST**, ktora repo opisalo dawno („sonda szukajaca samej siebie znajduje najpierw wlasny tekst"):
+1. straznik czytal caly plik cennika, a **moj komentarz cytuje zakazane zdanie doslownie**, wiec
+   oblewal zaraz po naprawie. Zawezony do linii `note:`.
+2. warunek „runbook opisuje kredyt" spelnialo **samo wyjasnienie**, ktore wlasnie dopisalem (slowo
+   „credit" kilkanascie razy). Zamieniony na swiadomy marker.
+3. marker sprawdzany przez `includes` byl spelniony przez **instrukcje, jak go uzyc**. Teraz musi
+   stac w osobnej linii.
+
+**I ZLAPALEM SIEBIE NA FALSZYWYM DOWODZIE:** moj test mutacyjny liczyl, **ile** regul oblalo, a
+oblewala **inna** regula niz badana (ta o darmowym monitoringu, bo mutacja ruszala takze flage).
+Test sprawdza teraz **nazwe** reguly. Liczenie sztuk zamiast czytania nazw dawalo zielone swiatlo
+straznikowi, ktory nie dzialal.
+
+**DO POTWIERDZENIA RANO:** (1) czy kredyt ma w ogole istniec po wlaczeniu platnosci, czy byl tylko
+retorycznym odgraniczeniem raportu od monitoringu; (2) **kiedy konczy sie darmowy monitoring** - bez
+tej daty kredyt nie ma bazy i pytanie o mechanizm jest bezprzedmiotowe; (3) czy tier raportu za
+49 USD w ogole zostaje, bo runbook sam watpi, czy przy tej kwocie i bez checkoutu ktos wypelni prosbe
+o fakture; (4) czy zdanie poszlo w outreachu do konkretnych osob - jesli tak, honorujemy je recznie
+przy pierwszej sprzedazy.
+
 ## WITRYNA SKLEPU ZNOWU ZOSTALA W TYLE, TYM RAZEM O CZTERY WYDANIA (16:20, v724)
 
 `/d/sample` to dokument, ktory prospekt czyta **przed zakupem**. Stal na **9.51**, skaner na **9.55**:
