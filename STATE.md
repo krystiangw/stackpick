@@ -85,6 +85,41 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## CZUJNIK NA CALA KLASE: SLAD, KTORY ZOSTAWIA POLE DODANE POZNIEJ (14:20)
+
+Audyt decyzji zapisal to jako punkt osobny: **czwarty raz tego samego wzorca w jednej dobie znaczy,
+ze waskim gardlem jest proces, nie ludzie.** `docsThinnerForAgents` wypuscil „NaN percent",
+`docsTextCharsTruncated` i `metadataAt` kazaly oskarzac bez dowodu, `measurable` dalby „7/NaN".
+Za kazdym razem znajdowal to czlowiek albo codex, **po fakcie i przypadkiem**.
+
+**`npm run audit-empty-slots` szuka SKUTKU, nie przyczyny.** Przyczyn jest tyle, ile pol; skutek jest
+jeden i policzalny: slad, ktory pusta interpolacja zostawia w zdaniu o cudzej firmie. Przebieg:
+**142 675 zdan z 7921 raportow, w NASZYCH slowach czysto**, zero `NaN`, `undefined`, `null`,
+`[object Object]`.
+
+**„Czysto" znaczy cos tylko dzieki kontrolce.** Sonda, ktora umie zwrocic wylacznie „nic nie
+znalazlem", niczego nie dowodzi - to nasza wlasna regula wobec vendorow, wiec obowiazuje i tu.
+Kontrolka to **piac zdan, ktore NAPRAWDE stalismy na produkcji** (m.in. „serves NaN percent less
+text", „7/NaN"); wszystkie piac zostaje zlapanych, inaczej skrypt konczy sie bledem, zanim
+cokolwiek powie o korpusie.
+
+**GRANICA WYPISANA W WYNIKU, zeby nikt nie przeczytal „czysto" jako „klasa domknieta":** brakujace
+pole, ktore zostawia zdanie **gramatyczne**, jest tu niewidoczne. „OAuth metadata published, but no
+registration_endpoint in it" wyglada poprawnie i bylo oskarzeniem bez dowodu na 294 stronach. Takie
+rzeczy lapie tylko straznik przy checku, ktory WIE, ze pole jest wymagane.
+
+**DWA RAZY SAM SIE ZLAPALEM na tym, o co oskarzam kod:**
+1. Pierwszy przebieg zglosil 44 zdania z „ ," jako nasz artefakt. To **interpunkcja Stripe'a**
+   w cytowanej dokumentacji („such as Vercel , can create"), cytowana wiernie. Audyt oskarzal nas o
+   cudzy tekst.
+2. Poprawka podmieniala cytat na **spacje** i sama produkowala „ ," miedzy dwoma sasiednimi
+   cytatami - **7588 wlasnych artefaktow** zamiast 44 cudzych. Cytat znika teraz jako jeden token.
+
+**Codex dolozyl trzecia strone tej samej monety:** `null` i `undefined` bywaja **legalne w cytacie**
+(vendor pisze „returns null"), ale `"${cytat}"` z pusta wartoscia daje `undefined` WEWNATRZ
+cudzyslowu i jest nasze. Zamiast wyciszac marker, wynik jest **rozdzielony**: co stoi w naszym
+zdaniu (reakcja) i co w cytacie (do przeczytania). Zmierzone: dzis zero jednego i drugiego.
+
 ## MATERIALNOSC WYCOFANIA: 21 FIRM, ZERO WYSLANYCH LINKOW, RESZTA NIEPOZNAWALNA (13:40)
 
 Audyt decyzji postawil sprawe jasno: **bez liczby materialnosci decyzja o powiadamianiu vendorow
