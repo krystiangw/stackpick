@@ -85,6 +85,30 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## PYTANIE Z WCZORAJ ZAMKNIETE POMIAREM, NIE HIPOTEZA (17:10, v721)
+
+Zostawilem wczoraj otwarte: „nie umiem odtworzyc, czemu tamten przebieg przyznal punkt za cudze
+`# Page Not Found`, bo nie zapisujemy odpowiedzi kontrolki per origin". Zamkniete z dwoch stron.
+
+**1. Ile punktow stoi dzis na soft-404: ZERO, i to zmierzone na calym korpusie.** Okazalo sie, ze
+audyt na to pytanie **juz istnial** (`audit-entry-credited`) i w naglowku opisuje dokladnie ten
+mechanizm: „a control that did not answer credited the vendor instead of stopping the credit",
+z `bigcommerce.com` jako przykladem. Zamiast pisac drugi, uruchomilem tamten na pelnym korpusie:
+**42 zaliczone wiersze, 44 pliki zapytane, 44 porownane z kontrolka, zero nieodroznialnych od
+sciezki, ktorej nie ma.** Mechanizm dziala; wczorajszy przypadek byl przejsciowy.
+
+**2. Nastepnym razem bedzie z czego odtworzyc.** Kontrolka hosta dokumentacji byla tworzona w
+miejscu i **gubiona** - zapis mial tylko kontrolke strony glownej. Dlatego przy `calendly.com` nie
+dalo sie nic ustalic: strona ma soft-404 o dlugosci **197 990 B**, a plik pochodzil z
+`developer.calendly.com`, gdzie soft-404 wazy **284 327 B**. Dwie zupelnie rozne liczby, a w bazie
+byla tylko pierwsza. Teraz zapisujemy **obie** (`catchAllDocs`), co zweryfikowalem na produkcji
+swiezym skanem tej samej domeny.
+
+Zmiana nie rusza zadnej reguly, wiec **bez podbicia formuly** - to czysta obserwowalnosc. Straznik
+pilnuje dwoch rzeczy sprawdzalnych bez sieci: ze pole trafia do zapisu i ze sondy hosta dokumentacji
+**nie dostaja kontrolki strony glownej** (mutacja podmieniajaca ja oblewa). Codex czysto za pierwszym
+przejsciem.
+
 ## 9.54: NASZA CISZA NIE JEST ICH BRAKIEM - I SPROSTOWANIE WLASNEJ DIAGNOZY (16:40, v720)
 
 **ZMIANA JEST SLUSZNA, MOJA DIAGNOZA BYLA BLEDNA. Najpierw sprostowanie, bo to wazniejsze.**
