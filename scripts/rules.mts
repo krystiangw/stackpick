@@ -3376,7 +3376,10 @@ check('a sonda widzi brak takiego zdania', cronWatch.includes('rulesChangedBetwe
 console.log('\nnie szacujemy skali slowem tam, gdzie umiemy ja policzyc')
 const NIEMIERZONY_KWANTYFIKATOR =
   /\b((almost|nearly) (every(body|one)?|all|no(body|ne))|hardly any|vast majority|most (vendors|sites|companies|servers|domains|of them))\b/i
-for (const page of pagesUnder('src/app')) {
+// Ta sama lista, co przy RFC 7591: strony PLUS `score.ts` i `fixfirst.ts`, bo zdania stamtad ida do
+// PLATNEGO raportu. Tam wlasnie stalo czwarte takie zdanie („at almost every authorization server
+// today"), czyli klient placil za oszacowanie, ktorego nie zmierzylismy.
+for (const page of [...pagesUnder('src/app'), 'src/lib/score.ts', 'src/lib/fixfirst.ts']) {
   const told = readFileSync(page, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ')
   check(`${page}: bez kwantyfikatora zamiast pomiaru`, NIEMIERZONY_KWANTYFIKATOR.exec(told)?.[0] ?? '', '')
 }

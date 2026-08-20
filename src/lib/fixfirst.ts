@@ -136,7 +136,7 @@ export const REMEDIES: Record<string, Remedy> = {
     how: (f) =>
       f.funnel.oauth.metadataPublished
         ? 'Your OAuth metadata is already published and has no registration_endpoint in it. Adding that one field is the whole change, and it is what authorization servers accept today. MCP 2026-07-28 deprecates RFC 7591 in favour of Client ID Metadata Documents, so treat this as the compatibility path and the newer one as where this is going.'
-        : 'Publish OAuth authorization server metadata with an RFC 7591 registration_endpoint in it, which is how an agent registers itself without a human at almost every authorization server today. MCP 2026-07-28 deprecates that mechanism in favour of Client ID Metadata Documents, so build for both if you are starting now.',
+        : 'Publish OAuth authorization server metadata with an RFC 7591 registration_endpoint in it, which is how an agent registers itself without a human. MCP 2026-07-28 deprecates that mechanism in favour of Client ID Metadata Documents, so build for both if you are starting now.',
   },
   mcp_present: {
     effort: 'a project',
