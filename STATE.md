@@ -85,6 +85,43 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## JEDEN NA TRZY MAILE MONITORINGU BYLBY O NASZEJ SONDZIE, NIE O VENDORZE (19:10)
+
+Czytajac cennik jak kupujacy zatrzymalem sie na zdaniu platnego produktu: *„One email when something
+moves, nothing when nothing does"*. I zapytalem danych, ile z tych „ruchow" to naprawde ruch u
+vendora.
+
+**Pomiar (14 dni do 2026-08-20, 177 domen korpusu, tylko pary na TEJ SAMEJ formule):**
+- 4056 par kolejnych skanow, **382 z ruchem werdyktu (9%)**
+- z 372 ruchow, ktore mialy skan po obu stronach, **136 (37%) odwrocil juz nastepny skan**
+
+Czyli **ponad co trzeci mail** o „werdykt sie ruszyl" bylby o naszej sondzie, ktora trafila na odmowe
+na brzegu, limit albo timeout. Runbook sporu i blok po przemiecie **od dawna kaza czlowiekowi**
+przeskanowac taki wiersz pojedynczo, zanim nazwie go regresem. Cron, ktory pisze do klientow, tego
+nie robil - a to jedyne miejsce, gdzie nikt nie patrzy.
+
+**Od teraz pierwszy ruch CZEKA.** Zapisuje sie na obserwacji razem z wierszem, wobec ktorego zostal
+zmierzony (`pending`), obserwacja wraca do kolejki po **30 minutach** (`recheckAt`), i mail dostaje
+**tylko te werdykty, ktore drugi skan powtorzyl**. Mail mowi o tym wprost: *„measured twice, about
+half an hour apart; a verdict that moved only once is not in this email"*.
+
+**Codex zdjal z tego trzy rzeczy, kazda powazna:**
+1. **Pierwsza wersja robila drugi skan w TYM SAMYM zadaniu** - a jeden skan trwa do 27 s przy limicie
+   30 s na Heroku i `MOST_PER_CALL = 1` istnieje dokladnie z tego powodu. Zadanie zostaloby ubite
+   przed wyslaniem maila. Stad potwierdzenie **odroczone**, ktore przy okazji jest mocniejsze: dwa
+   niezalezne przebiegi zamiast dwoch pod rzad.
+2. **Ruch zobaczony dopiero przez skan potwierdzajacy** zostalby wchloniety przez przesuwajacy sie
+   baseline i nigdy nie zglaszony - teraz zaczyna wlasna runde.
+3. Moja wlasna poprawka do jego wersji: **gdy potwierdzenia nie da sie zrobic, baseline zostaje**,
+   bo niepotwierdzony blip jako punkt odniesienia dalby w przyszlym tygodniu mail o „powrocie do
+   normy", ktorego nikt nie spowodowal.
+
+**Przy okazji kolejka:** wersja z sortowaniem w pamieci ladowala cala kolekcje, a obserwacja czekajaca
+na potwierdzenie ma **swiezy `checkedAt`**, wiec w zwyklym sortowaniu ladowala na koncu. Teraz baza
+robi dwa posortowane, ograniczone zapytania i wiersz do potwierdzenia idzie pierwszy.
+
+**Do wdrozenia po przemiecie** (commit `2248349`), bo w trakcie reseedu nie deployujemy.
+
 ## PLIKI DLA AGENTOW OBIECYWALY „OKOLO DZIESIECIU SEKUND" (18:10, v747)
 
 `agents.md` i `agent-signup.md` to pliki, ktore agent czyta **zamiast pytac czlowieka**, i z ktorych
