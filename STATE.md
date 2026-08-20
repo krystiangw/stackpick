@@ -1158,6 +1158,15 @@ juz `npm run po-przemiacie`**: to predykcje dla 9.49, zamkniete 2026-08-19, a po
 znajduja zero wierszy na 9.49 i `refuseIfNothingMeasured` **konczy sie kodem 2**, czyli zabijaloby
 cala reszte lancucha spietego przez `&&`. Sprawdzone, zanim to sie stalo o 05:30.
 
+**PO PRZEMIECIE, DO WZIECIA (zmierzone 05:01, zanim ruszyl):** korpus to `9.49: 173` plus wiersze,
+ktore juz przeszly (`9.50: 3`, `9.51: 1`) - ale poza nimi siedzi **15 zasianych wierszy na formulach
+7.4, 7.7, 8.1, 9.33, 9.35, 9.40 i 9.45**. To nasze wlasne skany domen spoza korpusu, wiec od
+wczorajszej zmiany `/v` **sa publicznie widoczne** (z banerem „measured under an older formula").
+Werdykt sprzed dwoch tygodni i kilkudziesieciu zmian regul jest uczciwy, ale bezuzyteczny. Do
+decyzji po przemiecie: albo je przeskanowac (jest ich pietnascie, to minuty), albo przestac
+publikowac wiersz starszy niz N wersji. **Migawka predykcji jest za to kompletna: 173 z 173 wierszy
+nadal stoi na 9.49**, wiec przemiat porowna wszystkie.
+
 **I jedno spojrzenie na PRODUCENTA, nie tylko na dane** (straznik staleness w `after-reseed` mierzy
 wiek lustra, a reczne dolanie z laptopa ten wiek resetuje, wiec zepsuty job pozostaje niewidoczny):
 ```
