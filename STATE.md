@@ -85,6 +85,49 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## MATERIALNOSC WYCOFANIA: 21 FIRM, ZERO WYSLANYCH LINKOW, RESZTA NIEPOZNAWALNA (13:40)
+
+Audyt decyzji postawil sprawe jasno: **bez liczby materialnosci decyzja o powiadamianiu vendorow
+jest zgadywaniem**. Policzone (`npm run audit-withdrawal-reach`, nowy):
+
+| pytanie | odpowiedz |
+|---|---|
+| raportow z wycofanym oskarzeniem | **294** |
+| ilu FIRM to dotyczy | **21** (nie 294 - to wiele skanow tych samych domen) |
+| ile podalismy komus sami (lead, obserwacja) | **0** |
+| gdzie byl to JEDYNE oskarzenie na karcie | **10** |
+| ile razy ktos te strony otworzyl PRZED korekta | **niepoznawalne** |
+
+**Najwazniejsza jest ostatnia linijka i to nie jest wykret.** Licznik odwiedzin nie znal ani jednej
+sciezki `/r/`, wiec pierwszy przebieg tego audytu zameldowal „ekspozycja jest teoretyczna" - i
+**mierzyl brak instrumentacji, nie brak odwiedzin**. Uratowala mnie kontrolka, ktora sam sobie
+postawilem: sprawdzenie, czy `visits` w ogole zna takie sciezki. **Zna 15 sciezek o NAS i zero o
+cudzych firmach.** Logi Heroku siegaja do 05:09 dzisiaj i nie zawieraja **ani jednego** zadania do
+`/r/`, drainu nie ma. Historii nie da sie odtworzyc i tyle.
+
+**CO Z TEGO WYNIKA DLA DECYZJI RANO:** nikt nie dostal od nas adresu do strony, ktora oskarzala bez
+dowodu. To nie to samo, co „nikt jej nie widzial", ale to jedyna czesc rozstrzygalna danymi, i
+przemawia za rekomendacja audytu: **bez masowej wysylki**.
+
+**LUKA ZAMKNIETA:** `/r/` liczy od dzis odwiedziny, **pod domena, nie pod id raportu** - jeden wiersz
+na firme zamiast jednego na skan. **`/v/` swiadomie NIE liczy**: `headers()` zamienilby ten route na
+renderowany per zadanie i cofnal `revalidate = 600`, a `publishedRowFor` **nie ma wlasnego cache** -
+sprawdzone, wola baze wprost. 2026-08-12 crawler czytajacy sto takich stron **polozyl dyno**. Licznik
+odwiedzin jest wart mniej niz ten cache.
+
+**CODEX, CZTERY PRZEJSCIA, i trzy razy chodzilo o czujnik, ktory KLAMIE:**
+1. instrumentacja pisala `/r/<domena> <rodzaj>`, a audyt pytal o `/r/<id>` - odslony zawsze zero, a
+   flaga „mierzymy" zapalilaby sie po pierwszej wizycie. Klucz ma **jedno zrodlo** (`visitKey` /
+   `pathOf` / `kindOf`), a straznik pilnuje round-tripu; zmiana separatora oblewa 3 reguly.
+2. `deliveries.id` to identyfikator DOSTAWY (`XKCn43afq7HL`, `sample`, `qa-jezyk`), nie raportu, wiec
+   dopasowanie nie moglo nigdy trafic i cicho zanizalo wynik. Sprawdzone u zrodla: wszystkie piac to
+   nasze wlasne probki. Wyrzucone z liczenia, z uzasadnieniem w kodzie.
+3. odslony zapisane PO wdrozeniu bramy dotycza strony **juz poprawionej**, wiec nie sa ekspozycja na
+   zarzut. Audyt liczy je osobno i mowi wprost, czego nie wie.
+4. **P1, i moja regresja:** `headers()` w `/v` psul cache (wyzej).
+Do tego duplikacja: odslony liczone per raport przy kluczu per domena zawyzalyby firme z kilkoma
+wierszami.
+
 ## BRAMA PUBLIKACYJNA: WYCOFALISMY OSKARZENIE Z 294 STRON, NIE RUSZAJAC ANI JEDNEGO WIERSZA (v718)
 
 Naprawa reguly (9.52) nie dotykala tego, co **juz opublikowane**, bo `/r/<id>` renderuje ZAPISANY
