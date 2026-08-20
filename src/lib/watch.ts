@@ -218,6 +218,11 @@ const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   // A truncated candidate now needs a control asking for a path that cannot exist, so a host that
   // really does answer everything with one shell is still refused. Nothing about a vendor changed;
   // which of their pages we went on to read did.
+  // 9.55 gives the last three accusations that carried no address one: which robots.txt we read the
+  // block and the Crawl-delay out of, and which registry page the package is on. Measured by
+  // `audit-evidence`, which asks our own first house rule of every published accusation. Nothing
+  // about a vendor changed - the sentences now say where to look.
+  '9.55': ['user_agents_allowed', 'no_crawl_delay', 'typed_package'],
   // 9.54 stops reading our own silence as the vendor's absence. A probe that never got an answer
   // (status 0) counted as "this file is not there", and with a dozen paths asked in parallel on two
   // hosts that is usually our timeout. calendly.com scored 1, 0, 1, 0 on four scans of one day while

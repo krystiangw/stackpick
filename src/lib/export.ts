@@ -1,6 +1,6 @@
 import { buildFixPlan } from './fixfirst'
 import { AGENT_UA } from './scan/http'
-import { CHECKS, checkHelpUri, type ScoredCheck } from './score'
+import { CHECKS, checkHelpUri, type ScoredCheck, NPM_REGISTRY_PAGE } from './score'
 import type { Report } from './store'
 
 /**
@@ -48,7 +48,7 @@ function locationFor(check: ScoredCheck, report: Report): string {
   if (check.id === 'programmatic_provisioning') return discovered.docs ?? site
   if (check.id === 'self_serve') return discovered.pricing ?? site
   if (check.id === 'docs_without_js') return discovered.docs ?? site
-  if (check.id === 'typed_package') return discovered.npmPackage ? `https://www.npmjs.com/package/${discovered.npmPackage}` : site
+  if (check.id === 'typed_package') return discovered.npmPackage ? `${NPM_REGISTRY_PAGE}${discovered.npmPackage}` : site
   return site
 }
 

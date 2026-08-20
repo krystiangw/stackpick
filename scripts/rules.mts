@@ -1936,6 +1936,39 @@ check('kontrolka hosta dokumentacji jest zapisywana', funnelSource.includes('cat
 check('i pobierana osobno dla tego hosta', funnelSource.includes('docsCatchAll = await servesCatchAllText(docsOrigin)'), true)
 check('a sondy docs nie dostaja kontrolki strony glownej', funnelSource.includes('probeOne(docsOrigin, catchAll)'), false)
 
+// 9.55. Trzy ostatnie oskarzenia bez adresu z listy `audit-evidence`. Kazde bylo prawdziwe i
+// zarazem nie do powtorzenia: vendor nie wiedzial, KTORY robots.txt przeczytalismy ani KTORA paczke
+// sprawdzilismy - a przy dopasowaniu po wydawcy to jest dokladnie jego pierwsze pytanie.
+const agenci = CHECKS.find((c) => c.id === 'user_agents_allowed')!
+const zablokowany = agenci.evaluate({
+  site: 'https://v.test',
+  robots: { present: true, unreadable: false, blockedByClass: { user: ['ChatGPT-User'] }, crawlers: {}, blanketDisallowAll: false },
+} as never)
+check('blokada nazywa plik, z ktorego ja czytamy', zablokowany.detail.includes('Blocked in https://v.test/robots.txt'), true)
+// Galaz „disallow wszystkiego" wychodzi wczesniej, wiec omijala adres - ta sama luka, ktora ta
+// wersja zamyka gdzie indziej (codex).
+const wszystkoZabronione = agenci.evaluate({
+  site: 'https://v.test',
+  robots: { present: true, unreadable: false, blockedByClass: { user: [] }, crawlers: {}, blanketDisallowAll: true },
+} as never)
+check('disallow wszystkiego tez nazywa plik', wszystkoZabronione.detail.includes('https://v.test/robots.txt disallows everything'), true)
+
+const tempo = CHECKS.find((c) => c.id === 'no_crawl_delay')!
+const wolno = tempo.evaluate({
+  site: 'https://v.test',
+  robots: { present: true, unreadable: false, crawlDelaySeconds: 10, crawlers: {}, blockedByClass: { user: [] } },
+} as never)
+check('Crawl-delay tez nazywa plik', wolno.detail.includes('in https://v.test/robots.txt'), true)
+check('i nadal podaje sekundy', wolno.detail.includes('Crawl-delay: 10s'), true)
+
+const paczka = CHECKS.find((c) => c.id === 'typed_package')!
+const bezTypow = paczka.evaluate({
+  site: 'https://v.test',
+  discovered: { npmPackage: 'vendor-sdk' },
+  npm: { package: 'vendor-sdk', found: true, bundledTypes: false, staleMonths: 1, linkedFromSite: true, publisherMatched: false },
+} as never)
+check('paczka bez typow dostaje adres w rejestrze', bezTypow.detail.includes('https://www.npmjs.com/package/vendor-sdk'), true)
+
 const surface = CHECKS.find((c) => c.id === 'mcp_present')!
 // phrase.com, tolgee.io and medusajs.com all register a live endpoint in the MCP registry and all
 // three were told "No MCP surface" on the sweep where the registry did not answer us in time.

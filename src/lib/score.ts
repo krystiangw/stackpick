@@ -15,7 +15,10 @@ import { challengedUs, challengeSentence, CHALLENGE_UNBLOCK } from './limits'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.54'
+export const FORMULA_VERSION = '9.55'
+
+/** Gdzie vendor obejrzy paczke, o ktorej mowimy. Jedno miejsce, bo `export.ts` sklada ten sam adres. */
+export const NPM_REGISTRY_PAGE = 'https://www.npmjs.com/package/'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -491,8 +494,10 @@ export const CHECKS: Check[] = [
       if (explicitlyAllowed.length > 0 && blocked.length === 0) {
         return yes(1, `Explicitly allowed: ${explicitlyAllowed.map((crawler) => crawler.name).join(', ')}`)
       }
-      if (f.robots.blanketDisallowAll) return yes(0, 'robots.txt disallows everything for every agent')
-      if (blocked.length > 0) return yes(0, `Blocked: ${blocked.join(', ')}`)
+      if (f.robots.blanketDisallowAll) return yes(0, `${f.site}/robots.txt disallows everything for every agent`)
+      // Adres pliku, z ktorego to czytamy. Zdanie „Blocked: ChatGPT-User" jest prawdziwe i zarazem
+      // nie do powtorzenia: vendor nie wie, ktory robots.txt przeczytalismy, a hostow bywa kilka.
+      if (blocked.length > 0) return yes(0, `Blocked in ${f.site}/robots.txt: ${blocked.join(', ')}`)
       // A green tick for reachability on a site that 403s everyone is false comfort.
       if (f.rateLimitedUs) {
         return {
@@ -593,7 +598,7 @@ export const CHECKS: Check[] = [
       if (delay <= 1) return yes(1, `Crawl-delay: ${delay}s, negligible`)
       // It is a wildcard directive on nearly every site that has one, and calling a User-agent: *
       // rule "AI-specific" was us reading intent into a line written years before any of this.
-      return yes(0, `Crawl-delay: ${delay}s applies to the agents we check`)
+      return yes(0, `Crawl-delay: ${delay}s in ${f.site}/robots.txt applies to the agents we check`)
     },
   },
   {
@@ -1571,9 +1576,12 @@ export const CHECKS: Check[] = [
           : cannotStand(`${f.npm.package} did not answer on the registry`)
       }
       if (!f.npm.bundledTypes) {
+        // Adres w rejestrze, bo sama nazwa paczki nie mowi, KTORA z nich sprawdzilismy - a przy
+        // dopasowaniu po wydawcy to jest dokladnie pytanie, ktore vendor zada.
+        const at = ` (${NPM_REGISTRY_PAGE}${f.npm.package})`
         return standsUp
-          ? yes(0, `${f.npm.package} ships without bundled types${basis}`)
-          : cannotStand(`${f.npm.package} ships without bundled types`)
+          ? yes(0, `${f.npm.package} ships without bundled types${at}${basis}`)
+          : cannotStand(`${f.npm.package} ships without bundled types${at}`)
       }
       const stale = f.npm.staleMonths
       if (stale !== undefined && stale >= 24) {
