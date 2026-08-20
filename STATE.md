@@ -970,10 +970,28 @@ gdy to pisalem. Uruchom je i przeczytaj recznie; nigdy w trakcie przemiatu.
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te czterdziesci linijek, potem reszte)
 
-**WERSJE (2026-08-19, 23:45): kod, produkcja (v678) i korpus na 9.49.** Przemiat zamkniety 23:28,
-**176 wierszy na 9.49, 0 sprzecznosci**, jeden wiersz zostal na 9.45. Drzewo czyste, wszystko
-wdrozone. Bateria kontroli po przemiecie **przeszla w calosci** - szczegoly w sekcji „PRZEMIAT 9.49
-ZAMKNIETY" nizej, razem z jedynym rozjazdem predykcji i z tym, co z niego wyszlo.
+**WERSJE (2026-08-20, 03:00): kod i produkcja na 9.51 (v691), korpus na 9.49** - przemiat na 9.51
+czeka na karencje (nizej). Drzewo czyste, wszystko wdrozone. Przemiat na 9.49 zamkniety 23:28:
+**176 wierszy, 0 sprzecznosci**, bateria kontroli przeszla w calosci.
+
+**CO SIE STALO TEJ NOCY, od najwazniejszego (kazde: codex → build → straznik z mutacja → deploy →
+weryfikacja na produkcji, kazde ma wlasna sekcje nizej):**
+1. **Cudzy skan goscia stawal sie nasza publiczna strona o cudzej firmie.** `/v/<domena>` poza
+   korpusem bralo najnowszy wiersz jakikolwiek, wiec anonimowy skan `tally.so` byl po czterech
+   minutach publiczny pod zgadywalnym adresem - wbrew zdaniu z cennika „we do not post it anywhere".
+   Teraz `/v` czyta **wylacznie wiersze zasiane**.
+2. **Adres raportu byl jedyna ochrona i nie byl tego wart**: 16 bitow → **64**, a `/privacy` mowi
+   teraz prawde w czterech miejscach, w ktorych codex kolejno obalal moj wlasny akapit.
+3. **24 strony o adresie „domena i minuta" wycofane** (404, nic nie skasowane) - **to jedyna rzecz,
+   ktora zrobilem sam i ktora warto rano potwierdzic**.
+4. **9.50**: nasz sufit 400 kB przestal skreslac cudze strony jako martwe (zmierzone: 16 sciezek na
+   9 domenach), z kontrolka na skorupe pod kazdym adresem.
+5. **9.51**: jedyny zielony wiersz opisujacy sciane (`oauth_dcr`) ma wreszcie instrukcje.
+6. **Maile klienckie** nie moga juz spasc na `localhost`, miesieczny mowi ile dni maja biegi, a
+   tygodniowy datuje wynik, z ktorym porownuje.
+7. Drobniejsze: metodyka publikuje sufit, ktory cytuja werdykty; blad MCP nazywa argument; naglowek
+   przestal liczyc nazwy plikow tak, jakby liczyl zapytania; limity z trzech plikow dla agentow maja
+   straznika na stalych.
 
 **W TOKU: waiter przemiatu na 9.50** - `/tmp/reseed-950.sh` (PID 15629, log `/tmp/reseed-950.log`),
 czeka az mediana wieku korpusu przekroczy 6 h. O 23:54 bylo 0,85 h, wiec **przemiat rusza okolo
