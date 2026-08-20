@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { CHECKS, MAX_SCORE } from '@/lib/score'
-import { CATEGORIES } from '@/lib/categories'
+import { CATEGORIES, CURATED_DOMAINS } from '@/lib/categories'
 import { priceOf, skuById } from '@/lib/billing/catalog'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
@@ -268,7 +268,9 @@ export default async function PricingPage() {
           code.</strong>{' '}
           {edge && (
             <>
-              Sweeping all {edge.domains} domains in our corpus{' '}
+              {edge.domains === CURATED_DOMAINS.size
+                ? `Sweeping all ${edge.domains} domains in our corpus`
+                : `Sweeping ${edge.domains} of the ${CURATED_DOMAINS.size} domains in our corpus`}{' '}
               {edge.swept?.oneDay
                 ? `on ${asDay(edge.swept.to)}`
                 : edge.swept

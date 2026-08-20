@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-20 noc (kod i produkcja 9.51, korpus 9.49, czeka przemiat)
+# Let Agents In: stan na 2026-08-20 wieczor (kod i produkcja 9.55, korpus 9.52, czeka przemiat)
 
 
 
@@ -84,6 +84,28 @@ podpisal sie `agent-alpha`, wiec napisalem, ze board podpisuje sie **autorem zad
 druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie da sie odroznic.
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
+
+## „WSZYSTKIE 173 DOMENY W NASZYM KORPUSIE", GDY KORPUS MA 177 (18:40, v726)
+
+Liczby o brzegu vendora na `/pricing` sa od dzis **liczone** przy renderze (`edgeRefusalsInCorpus`),
+wiec wczorajszy rozjazd recznie wpisanej liczby juz sie nie powtorzy. Weryfikacja na produkcji
+pokazala jednak **drugi blad, ktory wpisanie liczby recznie tylko maskowalo**: zdanie brzmialo
+„Sweeping **all 173 domains in our corpus**", a korpus ma **177**. `publishedCorpus` zwraca tylko
+kohorte na jednej wersji formuly, wiec `rows.length` to **liczba wierszy, ktore publikujemy**, a nie
+rozmiar korpusu. Slowo „all" zamienialo poprawna liczbe w **falszywe twierdzenie o mianowniku**.
+
+To ten sam ksztalt, co „175 domen obok korpusu, ktory ma 177" z wczoraj, tylko w drugim miejscu: w
+oknie miedzy podbiciem formuly a przemiatem **mianownik cichnie**, a strona mowi „wszystkie".
+`/v` mialo to obsluzone od wczoraj (`CURATED_DOMAINS.size` i zdanie o wierszach czekajacych na skan),
+`/pricing` nie. Teraz zdanie ma dwie galezie: **„all 177"**, gdy kohorta pokrywa caly korpus, i
+**„173 of the 177 domains in our corpus"**, gdy nie. Nic nie jest wpisywane recznie po zadnej stronie.
+
+Przy okazji poprawiony **naglowek STATE.md**, ktory mowil „kod i produkcja 9.51, korpus 9.49", gdy
+kod stoi na 9.55. Naglowek pliku, ktory czyta sie pierwszy po compakcie, jest dokladnie tym miejscem,
+gdzie nieaktualna liczba kosztuje najwiecej.
+
+**Mediana wieku korpusu o 18:30: 3.7 h.** Przemiat na 9.55 (obejmie 9.53, 9.54 i 9.55 naraz) czeka na
+prog 6 h, czyli mniej wiecej po 21:00.
 
 ## NASZA WLASNA OBIETNICA BEZ POKRYCIA, I OKAZALA SIE GORSZA, NIZ MYSLALEM (17:30, v725)
 
