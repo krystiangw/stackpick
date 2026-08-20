@@ -1927,6 +1927,15 @@ check('cisza na hoscie dokumentacji tez nie jest oskarzeniem', ciszaNaDocs.incon
 check('i zdanie nie mowi juz „zaden z tych plikow"', ciszaNaDocs.detail.includes('None of the'), false)
 check('a przyznaje, ze czesci nie zmierzylismy', ciszaNaDocs.detail.includes('never answered us at all'), true)
 
+// Kontrolka soft-404 hosta dokumentacji ma trafiac do zapisu. Bez niej nie dalo sie rozstrzygnac,
+// czemu jeden przebieg uznal cudze „# Page Not Found" za plik: zapis mial tylko kontrolke strony
+// glownej (calendly.com 197 990 B), a plik pochodzil z developer.calendly.com (284 328 B). Straznik
+// jest tekstowy, bo to zachowanie widac dopiero na zywym hoscie - pilnuje wiec dwoch rzeczy, ktore
+// da sie sprawdzic bez sieci: ze pole istnieje i ze NIE jest ta sama kontrolka co dla strony.
+check('kontrolka hosta dokumentacji jest zapisywana', funnelSource.includes('catchAllDocs: docsCatchAll'), true)
+check('i pobierana osobno dla tego hosta', funnelSource.includes('docsCatchAll = await servesCatchAllText(docsOrigin)'), true)
+check('a sondy docs nie dostaja kontrolki strony glownej', funnelSource.includes('probeOne(docsOrigin, catchAll)'), false)
+
 const surface = CHECKS.find((c) => c.id === 'mcp_present')!
 // phrase.com, tolgee.io and medusajs.com all register a live endpoint in the MCP registry and all
 // three were told "No MCP surface" on the sweep where the registry did not answer us in time.

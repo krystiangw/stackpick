@@ -701,6 +701,13 @@ export type FunnelFindings = {
   servesCatchAll: boolean
   /** The same question per namespace, because one does not imply another. */
   catchAll?: CatchAll
+  /**
+   * To samo dla hosta dokumentacji, gdy tam zagladalismy. Osobne pole, nie wspolne: platforma
+   * dokumentacji odpowiada na kazdy nieznany `.md` wyrenderowana strona „not found", wiec kontrolka
+   * strony glownej nie mowi o niej nic. Zapisywane od 2026-08-20, bo bez tego nie dalo sie
+   * rozstrzygnac, czemu jeden przebieg uznal takie 404 za plik.
+   */
+  catchAllDocs?: CatchAll
   pricingFetched: boolean
   /**
    * What an agent reads about your price before it opens anything.
@@ -2318,6 +2325,7 @@ export async function scanFunnel({
   // The entry probes are the one thing that has to wait: on a site that answers every unknown
   // path they prove nothing, and firing them anyway would be nine requests spent to learn that.
   const catchAll = await catchAllPending
+  let docsCatchAll: CatchAll | undefined
   const probeOne = (base: string, control: CatchAll, paths: string[] = [...AGENT_ENTRY_PATHS]) =>
     inParallel(paths, async (path) => {
     const catchAll = control
@@ -2393,7 +2401,12 @@ export async function scanFunnel({
     const upper = await probeOne(site, catchAll, [...UPPERCASE_ENTRY_PATHS])
     if (!nothing(upper)) return [...onSite, ...upper]
     if (!docsOrigin || refusedUs(upper)) return [...onSite, ...upper]
-    return [...onSite, ...upper, ...(await probeOne(docsOrigin, await servesCatchAllText(docsOrigin)))]
+    // Kontrolka hosta dokumentacji byla tworzona w miejscu i gubiona, wiec gdy jeden przebieg
+    // przyznal punkt za cudze „# Page Not Found", nie bylo z czego odtworzyc dlaczego: zapis mial
+    // tylko kontrolke strony glownej (calendly.com 197 990 B), a plik pochodzil z
+    // developer.calendly.com (284 328 B). Trzymamy ja teraz obok tamtej.
+    docsCatchAll = await servesCatchAllText(docsOrigin)
+    return [...onSite, ...upper, ...(await probeOne(docsOrigin, docsCatchAll))]
   })()
 
   /**
@@ -2536,6 +2549,7 @@ export async function scanFunnel({
     },
     servesCatchAll: catchAll.markdown || catchAll.json || catchAll.text,
     catchAll,
+    ...(docsCatchAll ? { catchAllDocs: docsCatchAll } : {}),
     pricingFetched: Boolean(pricingPage?.ok),
     pricingSnippet: snippetAcrossReads(pricingPage, pricingRetry),
     pricesVisibleWithoutJs,
