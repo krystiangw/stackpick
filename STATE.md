@@ -1,4 +1,4 @@
-# Let Agents In: stan na 2026-08-20 wieczor (kod i produkcja 9.55, korpus 9.52, czeka przemiat)
+# Let Agents In: stan na 2026-08-20 wieczor (kod, produkcja i korpus 9.55, przemiat zamkniety 19:35)
 
 
 
@@ -84,6 +84,37 @@ podpisal sie `agent-alpha`, wiec napisalem, ze board podpisuje sie **autorem zad
 druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie da sie odroznic.
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
+
+## PRZEMIAT 9.55 ZAMKNIETY (18:35-19:35): PREDYKCJA 1 OBALONA, PREDYKCJA 2 TRAFIONA CO DO ZERA
+
+**177 wierszy na 9.55, 0 sprzecznosci. 21 podanych liczb i 5 twierdzen nazywajacych vendora
+sprawdzonych wobec danych, 0 rozjechanych.** Korpus zaciagniety w calosci, probka na 9.55, nowy
+`audit-latency` przeszedl w bloku po przemiecie (7772 skany: mediana 5.4 s, p90 11.9 s, 84.2% w 10 s
+- zgadza sie z tym, co publikujemy agentom).
+
+**PREDYKCJA 2 TRAFILA IDEALNIE:** `audit-evidence` przed przemiatem mial **34 nagie oskarzenia**
+(4.7%), po przemiecie **ZERO**. 722 oskarzenia w 178 publikowanych wierszach i **kazde niesie adres,
+cytat albo liczbe sprawdzonych miejsc**. Kontrolka 15/15.
+
+**PREDYKCJA 1 OBALONA - i to ona byla ciekawsza.** Spodziewane ruchy byly dwa (`njal.la`, `swell.is`:
+`0/2` -> `0/2 niemierzalne`, dokladnie to, co robi 9.54). Doszly **trzy inne**, kazdy przeskanowany
+pojedynczo, ZANIM nazwalem go czymkolwiek:
+
+- **`calendly.com agent_entry_point 0/2 -> 1/2`: BLIP.** Reskan daje z powrotem `0/2`. Czyli nie
+  regula, tylko jeden pomiar, ktory trafil inaczej - **ten sam ksztalt, ktory godzine wczesniej
+  zmierzylem na calym korpusie (37% ruchow odwraca sie przy nastepnym skanie)** i przed ktorym
+  wlasnie zaczelismy chronic klientow monitoringu.
+- **`fly.io user_agents_allowed` i `no_crawl_delay` `1/1` -> `0/1 niemierzalne`: POWTARZALNE.** Reskan
+  potwierdza: *„your edge answered our request for robots.txt with a refusal rather than the file"*.
+  Werdykt jest uczciwy - **niemierzalne, nie oskarzenie**.
+
+**I tu wyszlo cos, co warto zapisac:** `fly.io/robots.txt` odpowiada **200 naszemu wlasnemu
+user-agentowi z mojej maszyny**, trzy razy z rzedu. Odmowa dotyczy wiec **adresu, z ktorego pytamy**
+(dyno Heroku albo cala pula), a nie naszej nazwy. Zdanie, ktore publikujemy, mowi doslownie „our
+request ... was refused" i **nie twierdzi**, ze blokuja agenty po nazwie - czyli trzyma sie. Ale to
+znaczy, ze **kazdy vendor blokujacy zakresy chmurowe bedzie u nas czytal sie jako niemierzalny**, i
+to jest ograniczenie NASZEGO punktu obserwacyjnego, nie ich konfiguracji. Do wziecia: policzyc, ile
+wierszy w korpusie stoi na odmowie brzegu (dzis 14 z 173) i ile z nich odpowiada z innego adresu.
 
 ## JEDEN NA TRZY MAILE MONITORINGU BYLBY O NASZEJ SONDZIE, NIE O VENDORZE (19:10)
 
