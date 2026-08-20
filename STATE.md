@@ -1139,13 +1139,19 @@ cache'u rejestru dalo **160 wierszy identycznych, 16 bez paczki po obu stronach 
 najpierw, bo tylko one moga cos obalic):
 ```
 cd ~/projects/stackpick && export MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick)
-npm run po-przemiacie-9-50 && npm run po-przemiacie && npx tsx scripts/after-reseed.mts && npm run audit && npx tsx scripts/audit-study.mts   && npm run audit-delivery && npm run regressions && npm run watch-coverage && npm run audit-our-api && npm run audit-sample
+npm run po-przemiacie-9-50 && npx tsx scripts/after-reseed.mts && npm run audit && npx tsx scripts/audit-study.mts   && npm run audit-delivery && npm run regressions && npm run watch-coverage && npm run audit-our-api && npm run audit-sample
 ```
 **Potem trzy audyty powtarzajace oskarzenia** (pytaja vendorow, wiec NIGDY w trakcie przemiatu i
 **nie przez `| tail`**, bo wtedy nie widac postepu):
 ```
 npm run audit-docs-js && npm run audit-front-door && npm run audit-named-crawlers && npm run audit-cap-selection
 ```
+**Uwaga na dwie rzeczy w tym bloku.** `po-przemiacie-9-50` bada przemiat na **9.51** - nazwa pliku
+pochodzi od zmiany, ktora ten skrypt mierzy (selekcja z 9.50), nie od wersji korpusu. I **nie ma tu
+juz `npm run po-przemiacie`**: to predykcje dla 9.49, zamkniete 2026-08-19, a po przemiecie na 9.51
+znajduja zero wierszy na 9.49 i `refuseIfNothingMeasured` **konczy sie kodem 2**, czyli zabijaloby
+cala reszte lancucha spietego przez `&&`. Sprawdzone, zanim to sie stalo o 05:30.
+
 **I jedno spojrzenie na PRODUCENTA, nie tylko na dane** (straznik staleness w `after-reseed` mierzy
 wiek lustra, a reczne dolanie z laptopa ten wiek resetuje, wiec zepsuty job pozostaje niewidoczny):
 ```

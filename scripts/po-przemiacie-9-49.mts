@@ -11,6 +11,10 @@
  * `NOISE_FLOOR_PERCENT` mowi, ze czesc werdyktow rusza sie miedzy dwoma czystymi pomiarami tego
  * samego internetu. Dlatego skrypt **nazywa** rozjazd i kaze go przeczytac, zamiast go orzekac:
  * jeden rozjazd to podloga szumu, kilka na tym samym checku to nasza regula albo nasz przeskan.
+ *
+ * ZAMKNIETE 2026-08-19: przemiat na 9.49 przeszedl, szesnascie wierszy, jeden rozjazd (onesignal.com,
+ * i to on obronil regule). Ten skrypt nie ma juz czego mierzyc - po nastepnym przemiecie znajdzie
+ * zero wierszy na 9.49 i skonczy kodem 2. Zostaje jako zapis predykcji, nie jako narzedzie.
  */
 import { getStore } from '../src/lib/store'
 import { refuseIfNothingMeasured } from './nothing-measured'
