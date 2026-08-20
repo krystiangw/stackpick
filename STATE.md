@@ -85,6 +85,28 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## KAZDE OSKARZENIE PRZEPYTANE NA ZYWO PO PRZEMIECIE, WSZYSTKIE SIE TRZYMAJA (21:45)
+
+Po przemiecie korpus jest w calosci swiezy, ale „swiezy" nie znaczy „prawdziwy", wiec trzy audyty,
+ktore **powtarzaja nasze wlasne oskarzenia wobec zywych stron**, poszly jeszcze raz:
+
+- **`audit-docs-js`: ZERO oskarzen** o skorupe bez JS (9.48 i 9.49 zamienily je na „niemierzalne", a
+  przemiat wypchnal to na wszystkie wiersze). Kontrolka: 0 z 5 zaliczonych stron czyta sie dzis
+  ponizej progu.
+- **`audit-front-door`: 2 oskarzenia o sciane, oba potwierdzone dzis** (contentful.com, pandadoc.com,
+  po trzy 429 z markerem wyzwania). Zero oskarzen o odmowe. Kontrolka: 0 z 5 witryn, ktore maja nas
+  wpuszczac, dzis nas nie wpuscilo.
+- **`audit-named-crawlers`: 4 pary wiersz-crawler, wszystkie 4 potwierdzone dzis** (prosemirror.net,
+  lemonsqueezy.com, algolia.com; przegladarka 200, nazwany crawler 403). **Kontrolka podszycia: 0/8**
+  na wierszach BEZ zarzutu, wiec 403 nie sypie sie wszedzie.
+
+**Publiczne strony po przemiecie zgadzaja sie co do liczby:** `/v` „177 companies under formula 9.55",
+`/report` i `/findings` po 177 domen.
+
+Warto zauwazyc **pozorna sprzecznosc, ktora nia nie jest**: `pandadoc.com` potwierdza sciane z naszego
+adresu, a `developers.pandadoc.com` odpowiedzial mi 200 z domu. To dwa rozne hosty i dwa rozne
+werdykty - dokladnie dlatego zdania nazywaja adres, ktory pytalismy.
+
 ## PRZESZEDLEM SCIEZKE ZWYKLEGO GOSCIA I ZNALAZLEM JEDNA STRONE BEZ `noindex` (21:20, v753)
 
 Przeskanowalem `plausible.io` **bez konta, jak kazdy odwiedzajacy**, i przeczytalem `/r/<id>` jak
