@@ -371,8 +371,15 @@ export function getStore(): Store {
  * overwrote each other, which the console can do trivially since it skips the reuse cache.
  * Seconds and four random characters make the link a name, not a slot.
  */
+/**
+ * The address of a scan somebody ran themselves is the only thing protecting it, so it has to be
+ * worth that job. Two random bytes were not: the id carries the domain and the second it ran, so
+ * anyone who knew roughly when a domain was scanned had 65,536 addresses to walk. Eight bytes make
+ * that 2^64 and the claim on `/privacy` true. Codex's, and old ids keep working because they are
+ * stored rather than derived.
+ */
 export function reportId(domain: string, scannedAt: string): string {
   const stamp = scannedAt.replace(/[-:TZ.]/g, '').slice(0, 14)
-  const suffix = randomBytes(2).toString('hex')
+  const suffix = randomBytes(8).toString('hex')
   return `${domain.replace(/\./g, '-')}-${stamp}-${suffix}`
 }

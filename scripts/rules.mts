@@ -1421,6 +1421,28 @@ check('i widzi ja czytelnik', stronaFindings.includes('Read on {RIVALS_CHECKED_O
 // we do not post it anywhere", a `/bot`, ze anonimowe zadanie nie przepisze tego, co ta witryna mowi
 // o firmie. Zmierzone 2026-08-20: `tally.so` i `svix.com` mialy wylacznie wiersz goscia i renderowaly
 // sie tutaj w calosci.
+// I to samo rozroznienie musi stac na `/privacy`, bo to tam czytelnik idzie po zdanie o swoich
+// danych. Do 2026-08-20 mowilo tylko „they are published", co przy skanie GOSCIA nie bylo prawda po
+// poprawce i bylo za szerokie przed nia.
+const stronaPrywatnosc = readFileSync('src/app/privacy/page.tsx', 'utf8')
+check('privacy rozroznia nasz skan od skanu goscia', stronaPrywatnosc.includes('stays at its own'), true)
+// I nie obiecuje wiecej, niz adres daje: 64 bity to nie „nie da sie zgadnac na zawsze", tylko tyle,
+// ile naprawde jest, plus zdanie o wierszu, ktorego baza nie przyjela. Codeksa - oba zdania byly
+// moje i oba obiecywaly za duzo.
+check('i mowi, ile ten adres naprawde wart', stronaPrywatnosc.includes('64 random bits'), true)
+// Trzy epoki identyfikatora, nie dwie. Zmierzone 2026-08-20 na 7327 raportach: 24 bez sufiksu (7
+// sierpnia, zanim powstal), 7303 po 16 bitow. Zdanie „przed 20 sierpnia 16 bitow" bylo falszywe dla
+// tych 24 i zanizalo, jak przewidywalne sa. Codeksa, czwarte przejscie po tym samym akapicie.
+check('i nazywa najstarsze adresy bez sufiksu', stronaPrywatnosc.includes('carry none at all'), true)
+check('z data, kiedy je policzylem', stronaPrywatnosc.includes('counted on 20 August 2026'), true)
+// Okno ponownego uzycia: kto pyta o domene przeskanowana w ostatnich 15 minutach, dostaje TAMTEN skan,
+// wiec zdanie „twojego skanu nie ma na /v" bylo nieprawda dokladnie dla tego przypadku. Codeksa,
+// trzecie przejscie po moim wlasnym akapicie.
+check('i przyznaje sie do okna ponownego uzycia', stronaPrywatnosc.includes('already scanned in the last fifteen'), true)
+check('i przyznaje sie do raportu, ktorego baza nie przyjela', stronaPrywatnosc.includes('lives only in memory'), true)
+check('a identyfikator ma te 64 bity naprawde', readFileSync('src/lib/store.ts', 'utf8').includes('randomBytes(8).toString'), true)
+check('i mowi, ze nie ma go ani na /v, ani w korpusie', stronaPrywatnosc.includes('do not include it in') && stronaPrywatnosc.includes('do not show it at'), true)
+
 const stronaV = readFileSync('src/app/v/[domain]/page.tsx', 'utf8')
 check('/v czyta wylacznie wiersze zasiane', stronaV.includes('return store.latestForDomain(domain, true)'), true)
 check('i nie ma juz galezi bioracej najnowszy wiersz jakikolwiek', stronaV.includes('return store.latestForDomain(domain)\n'), false)

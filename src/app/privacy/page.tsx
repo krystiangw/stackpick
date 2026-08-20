@@ -60,8 +60,18 @@ export default async function PrivacyPage() {
           <ul className="mt-4 flex list-disc flex-col gap-2 pl-5">
             <li>
               <strong className="text-ink">Scan results.</strong> Requests to public pages of a domain, and what they
-              answered. These describe companies rather than people, and they are published: every scan has a permanent
-              link and the curated set is downloadable at <code>/corpus.json</code>.
+              answered. These describe companies rather than people. A scan <em>we</em> run is published: it appears at{' '}
+              <code>/v/&lt;domain&gt;</code> and in the downloadable set at <code>/corpus.json</code>. A scan{' '}
+              <em>you</em> run stays at its own <code>/r/&lt;id&gt;</code> address: we do not link it from this site,
+              do not show it at <code>/v/&lt;domain&gt;</code> and do not include it in <code>/corpus.json</code>. Three
+              things are worth knowing about that address. If the domain was already scanned in the last fifteen
+              minutes you are handed that scan instead of a new one, and when it is one of ours it is one of the
+              published ones. The address is the only thing protecting a scan of your own, and it has not always been
+              worth that job: from 20 August 2026 it carries 64 random bits, before that 16, and twenty-four reports
+              made on 7 August 2026 - counted on 20 August 2026 - carry none at all, because the suffix did not exist
+              yet and the address is the domain and the time. Treat it as a link to keep rather than a secret, and
+              write to us if you hold one of those oldest ones and would rather it were gone.
+              And if our database refuses the write, the report lives only in memory and its page says so.
             </li>
             <li>
               <strong className="text-ink">An email address</strong>, when you give one: to send a scan result, to
