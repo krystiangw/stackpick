@@ -85,6 +85,30 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## „NOBODY HAS RUN IT THROUGH THE CHECKS YET" O NASZYM WLASNYM SKANIE (18:40, v746)
+
+Wszedlem na `/v/letagentsin.com` jak obcy i przeczytalem: **„Nobody has run it through the checks
+yet"**. A skan jest - **z tej samej nocy, 12/18 na 9.51**. Wiersz nie jest publikowany, bo poza
+korpusem pokazujemy tylko biezaca formule (slusznie, to poprawka z rana), ale zdanie o tym, ze
+**nikt nigdy** nie skanowal, bylo po prostu nieprawda.
+
+**I to nie jest nasz problem, tylko problem kazdego, kto sie przeskanowal wczoraj.** Formula rusza
+sie u nas **co kilkanascie godzin**, wiec po kazdym podbiciu wszyscy poza korpusem widza „nikt tego
+nie mierzyl". Znalazlem to na sobie, bo jestesmy jedyna domena, ktora sprawdzam z nawyku.
+
+Strona mowi teraz: **kiedy skan byl i na jakiej formule**, i ze nie pokazujemy tamtych werdyktow, bo
+zdanie, ktorego dzis bysmy nie napisali, jest gorsze niz brak zdania.
+
+**Codex zdjal z tego dwie rzeczy, obie o obietnicach:**
+- **„A rescan replaces it" bylo nieprawda.** Skan goscia tworzy wiersz **prywatny**, ktory tej strony
+  nie rusza. Copy mowi teraz, ze dostaja **wlasny link** i ze strona zmieni sie, gdy przeskanujemy
+  domene **my**.
+- **Tytul zakladki nadal mowil „not measured yet"** nad trescia „we have nothing current" - ta sama
+  sprzecznosc w miejscu, ktore **cachuje wyszukiwarka**. Teraz oba zdania sa jednym zdaniem.
+
+**Prywatnosc bez zmian:** czytamy wylacznie wiersz **zasiany**, wiec istnienia skanu goscia nie
+zdradzamy nawet slowem - `/pricing` obiecuje, ze jego skan nie jest nigdzie wywieszony.
+
 ## PREDYKCJA DOSTALA SWOJ SKRYPT, A CODEX ZAOSTRZYL JA TRZY RAZY (18:20)
 
 `npm run po-przemiacie-9-55` porownuje migawke sprzed przemiatu z tym, co przemiat zostawi. Trzy
