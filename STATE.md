@@ -178,6 +178,32 @@ za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). 
 wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
 Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
 
+## ADRES RAPORTU BYL JEDYNA OCHRONA I NIE BYL TEGO WART (02:20, v690)
+
+Ciag dalszy poprzedniego: skoro skan goscia zyje **wylacznie** pod `/r/<id>`, to ten adres jest cala
+ochrona. Poprawilem wiec `/privacy`, zeby mowilo prawde o tym, co jest publikowane, a co nie - i
+**codex czterokrotnie obalal moj wlasny akapit**, za kazdym razem slusznie. Warto zapisac wszystkie
+cztery, bo to najlepszy przyklad tej nocy na to, jak latwo napisac uspokajajace zdanie:
+
+1. **„whose id cannot be guessed"** - nieprawda. `reportId` to domena + sekunda + **2 losowe bajty**,
+   czyli 65 536 adresow do przejscia dla kogos, kto wie, kiedy mniej wiecej skanowano domene.
+2. **„keeps a permanent link"** - nieprawda, gdy baza odmowi zapisu: raport zyje wtedy tylko w
+   pamieci i strona `/r` sama o tym mowi.
+3. **„twojego skanu nie ma na /v ani w korpusie"** - nieprawda przy **15-minutowym oknie ponownego
+   uzycia**: kto pyta o domene przeskanowana przed chwila, dostaje TAMTEN raport, a jesli byl nasz,
+   to jest to jeden z opublikowanych.
+4. **„przed 20 sierpnia 16 bitow"** - nieprawda dla najstarszych. Zmierzone na 7327 raportach:
+   **24 nie maja sufiksu w ogole** (7 sierpnia, zanim powstal), 7303 ma 16 bitow.
+
+**Poprawione w obie strony: zdanie mowi teraz kazda z tych rzeczy, a sam adres jest wart wiecej.**
+`randomBytes(2)` → `randomBytes(8)`, czyli **64 bity** zamiast 16; stare linki dzialaja dalej, bo
+identyfikatory sa zapisane, a nie wyliczane. Zweryfikowane na produkcji: nowy skan dostal
+`posthog-com-20260820001706-8ab44bcd3a7d18d1`.
+
+**Sprawdzone przy okazji, czysto:** `/corpus.json` (173 wiersze) i lista `/v` **nie zawieraly nigdy**
+domen skanowanych przez gosci - `publishedCorpus()` filtruje po `seeded`. Wyciek byl tylko na
+`/v/<domena>` i jest zamkniety.
+
 ## CUDZY SKAN GOSCIA STAWAL SIE NASZA PUBLICZNA STRONA O CUDZEJ FIRMIE (02:15, v689)
 
 **Najpowazniejsze znalezisko tej czesci nocy, bo dotyczy cudzych danych i lamalo obietnice, ktora
