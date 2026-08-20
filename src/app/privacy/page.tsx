@@ -85,7 +85,7 @@ export default async function PrivacyPage() {
               <strong className="text-ink">A page counter.</strong> A date, a path, and whether the request looked like
               a browser, an unnamed client, or one of a short list of search and AI crawlers we watch for by name so we
               can tell which indexes read us. The crawler name is the only thing kept from the user-agent, and it names
-              a company's robot rather than a visitor. No IP address, no user-agent string stored, no identifier that
+              a company&apos;s robot rather than a visitor. No IP address, no user-agent string stored, no identifier that
               could be joined to a person.
             </li>
           </ul>

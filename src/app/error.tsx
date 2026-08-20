@@ -19,6 +19,9 @@ export default function Error({ reset }: { error: Error; reset: () => void }) {
           is unreachable there is nothing honest to show. Nothing is wrong with your domain and nothing has
           been published incorrectly: this page simply has no data to render right now.
         </p>
+        {/* Plain anchors on purpose: this page renders because something in the app broke, and a
+            client-side navigation asks the same broken tree to render the next route. A full page
+            load is the one thing here that does not depend on what just failed. */}
         <div className="mt-8 flex flex-wrap gap-4 font-mono text-sm">
           <button
             onClick={reset}
@@ -26,6 +29,7 @@ export default function Error({ reset }: { error: Error; reset: () => void }) {
           >
             Try again
           </button>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/" className="px-5 py-2.5 text-brass underline underline-offset-4">
             Scan a domain, which does not need this page
           </a>

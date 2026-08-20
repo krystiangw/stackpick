@@ -27,7 +27,6 @@ const runsRoots = (process.env.LETAGENTSIN_RUNS_ALL ?? '')
   .split(':')
   .filter(Boolean)
   .concat(process.env.LETAGENTSIN_RUNS ?? join(homedir(), '.letagentsin-runs'))
-const runsRoot = runsRoots[runsRoots.length - 1]
 const asksDir = join(new URL('.', import.meta.url).pathname, '..', 'harness', 'asks')
 
 type Row = { domain: string; named: number; first: number }

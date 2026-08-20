@@ -419,8 +419,8 @@ export default async function FindingsPage() {
               The number underneath it is stranger.{' '}
               <span className="font-mono">{corpus.mcpWithRegistration}</span> of the{' '}
               <span className="font-mono">{corpus.mcpServers}</span> vendors running a live MCP server also
-              publish RFC 7591 client registration, which is how an agent registers itself without a human at
-              almost every authorization server running today. Outside that group it is{' '}
+              publish RFC 7591 client registration, which lets an agent register itself without a human.
+              Outside that group it is{' '}
               <span className="font-mono">{corpus.registrationWithoutMcp}</span> of{' '}
               <span className="font-mono">{corpus.withoutMcp}</span>. Dynamic registration did not arrive
               because anybody decided to let agents in: it arrived because the MCP specification asks for it,

@@ -103,7 +103,7 @@ for (const name of collections) {
     // Indeksy po dokumentach, bo budowanie ich w trakcie wstawiania jest wolniejsze i nic nie daje.
     // Aplikacja i tak tworzy swoje przy starcie, ale kopia bez nich to inna baza niz oryginal.
     for (const index of indexes) {
-      const { key, name: indexName, v, ...options } = index as Document
+      const { key, name: indexName, v: _v, ...options } = index as Document
       await dst.collection(name).createIndex(key, { ...options, name: indexName })
     }
   }

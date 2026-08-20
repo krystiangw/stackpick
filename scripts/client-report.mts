@@ -237,7 +237,6 @@ const measurable = card.measurable ?? card.max
 const failed = card.checks.filter((check) => !check.inconclusive && !check.notApplicable && check.points < check.max)
 const unmeasured = card.checks.filter((check) => check.inconclusive)
 
-const mine = cell?.rows.find((row) => row.domain === domain)
 
 /**
  * Counts across every tool, because the headline is across every tool. Read off one cell, the
