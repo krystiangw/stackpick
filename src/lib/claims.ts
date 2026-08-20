@@ -35,3 +35,22 @@ export const ourWordsIn = (markdown: string): string =>
     .filter((line) => !/^- \*\*.+ run \d+\*\*[^:]*:\s*\u201c/.test(line))
     .join('\n')
     .replace(/^```[\s\S]*?^```/gm, ' ')
+
+/**
+ * To samo pytanie o DOSTARCZONY dokument, w obu jego postaciach.
+ *
+ * Dokument jest zapisany, wiec poprawka w kodzie go nie dotyka: trzy stare probki pod `/d/<id>`
+ * nadal nios\u0142y zdanie wycofane z `fixfirst.ts`. Nie przepisujemy tego, co ktos dostal, i nie
+ * kasujemy - strona ma o tym POWIEDZIEC.
+ *
+ * Czytamy tylko NASZA proze: w modelu sa to porady i zdanie o planie naprawy. Cytaty z przebiegow i
+ * dowody cytowane z dokumentacji vendora sa czyimis slowami.
+ */
+export const retractedScaleIn = (delivery: {
+  markdown?: string
+  model?: { fixes?: { how: string }[]; fixClaim?: string | null } | null
+}): string => {
+  const fromModel = [delivery.model?.fixClaim ?? '', ...(delivery.model?.fixes ?? []).map((fix) => fix.how)].join('\n')
+  const ours = delivery.model ? fromModel : ourWordsIn(delivery.markdown ?? '')
+  return scaleGuessIn(ours)
+}

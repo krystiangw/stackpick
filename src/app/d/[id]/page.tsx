@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { ReportMarkdown } from '@/components/report-markdown'
 import { ReportView } from './report-view'
 import { getStore } from '@/lib/store'
+import { retractedScaleIn } from '@/lib/claims'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,6 +28,7 @@ export default async function DeliveredReportPage({ params }: { params: Promise<
   const { id } = await params
   const delivery = await getStore().getDelivery(id)
   if (!delivery) notFound()
+  const retracted = retractedScaleIn(delivery)
 
   return (
     // The attribute the print stylesheet looks for. Only this page is a document somebody prints.
@@ -37,6 +39,17 @@ export default async function DeliveredReportPage({ params }: { params: Promise<
         </p>
         <p className="font-mono text-xs text-ink-faint">Prepared {delivery.preparedAt.slice(0, 10)}</p>
       </div>
+
+      {/* A delivered document is not rewritten and not deleted, so the only honest place to say
+          "we no longer stand behind this sentence" is above it. Three stored samples still carry
+          a scale claim we withdrew from the generator, and whoever holds the link reads it today. */}
+      {retracted !== '' && (
+        <p className="mt-6 max-w-2xl border-l-2 border-brass pl-4 text-sm leading-relaxed text-ink-soft">
+          One sentence below says how common something is across other companies (&ldquo;{retracted}&rdquo;), and we
+          never measured that. It is out of the report we generate today. This copy is kept exactly as it was
+          delivered rather than edited after the fact, so you can see what you were sent.
+        </p>
+      )}
 
       {/* The model when we have one, the markdown when the delivery predates it. Never both: two
           renderings of one report in one page is how a reader ends up quoting the wrong number. */}
