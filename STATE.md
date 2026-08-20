@@ -85,6 +85,45 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## 9.53: KAZDE OSKARZENIE MA NIESC DOWOD, I PIERWSZY RAZ TO POLICZYLISMY (15:30)
+
+Granica wczorajszego czujnika brzmiala: „brakujace pole, ktore zostawia zdanie GRAMATYCZNE, jest tu
+niewidoczne - lapie je tylko regula, ktora WIE, ze dowod jest wymagany". Napisalem ta regule.
+`npm run audit-evidence` pyta o nasza **pierwsza zasade domu**, ktorej do dzis nikt nie egzekwowal
+maszynowo: czy kazde oskarzenie niesie **adres, cytat albo liczbe sprawdzonych miejsc**.
+
+**WYNIK: 726 oskarzen w 177 publikowanych wierszach, 36 (5,0 %) bez zadnego z trzech.** Na czele
+**`signup_no_captcha`, 30 wierszy** - i to jest **najostrzejsze zdanie na calej karcie**, bo CAPTCHA
+to dla agenta twarde zero. Mowilismy „recaptcha appears in the signup page's server HTML" **nie
+podajac, ktora strone przeczytalismy**, podczas gdy galaz niemierzalna **cztery linijki nizej**
+nazywala ten sam adres od poczatku. Regula byla napisana dla sasiada i nieprzeniesiona - dokladnie
+tak, jak `docs_without_js` zawiodl raz wczesniej. **9.53** to naprawia, straznik stoi, mutacja
+oblewa 2 reguly, obserwatorzy osloniici.
+
+**TRZY RAZY MUSIALEM POPRAWIC WLASNE KRYTERIUM, zanim lista stala sie warta czytania:**
+- pierwszy przebieg: **237 oskarzen (30 %)** rzekomo bez dowodu. Wiekszosc to **wada mojego
+  wzorca**: „None of the **13 agent entry paths**" ma liczbe, „nothing answered at
+  **mcp.postmark.com**" wymienia hosty bez `https://`. Po zaostrzeniu: **43**.
+- codex: apex bez schematu (`vendor.io`) to tez adres, a moj wzorzec wymagal dwoch kropek.
+- i najwazniejsze: audyt liczyl **wiersze, ktorych w ogole nie publikujemy**. `postmark.com`,
+  `anvil.co`, `directus.io`, `opensrs.com` maja zasiane wiersze na **formule 7.4 z 10 sierpnia**, a
+  produkcja odpowiada na nie **„not measured"** (sprawdzone na zywo). Audyt mierzacy co innego niz
+  strona uczy ignorowac wlasne wyniki.
+
+**Z tego wyszla najlepsza czesc tej zmiany:** regula „co wolno dzis pokazac" mieszkala **wylacznie w
+komponencie strony**, wiec audyt musial ja przepisac i natychmiast sie rozjechal. Jest teraz jedna
+funkcja (`isPublishableRow` w `published.ts`), uzywana przez strone i przez audyt. **Straznik, ktory
+to pilnowal PO TEKSCIE, slusznie oblal** przy przenosinach - zamieniony na **behawioralny**, ktory
+przezyje kazde nastepne przeniesienie (mutacja „przepuszczaj wszystko" oblewa).
+
+**Codex jeszcze raz o kolejnosci:** filtr publikowalnosci stosowalem PRZED wyborem najnowszego
+wiersza, a kolejnosci kursora Mongo nie obiecuje - ukryty nowszy wiersz mogl odrzucic domene, po
+czym starszy publikowalny wchodzil po nim. Teraz: sortowanie, wybor najnowszego, filtr na koncu.
+
+**CO ZOSTAJE PO 9.53** (do wziecia, gdy korpus dogoni): `typed_package` 3 (nazwa paczki bez linku do
+rejestru), `machine_readable_api`, `no_crawl_delay` 2, `signup_reachable`, `user_agents_allowed`.
+Razem szesc, wszystkie lzejszego kalibru niz CAPTCHA.
+
 ## CZUJNIK NA CALA KLASE: SLAD, KTORY ZOSTAWIA POLE DODANE POZNIEJ (14:20)
 
 Audyt decyzji zapisal to jako punkt osobny: **czwarty raz tego samego wzorca w jednej dobie znaczy,
