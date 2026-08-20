@@ -85,6 +85,31 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## STRAZNIK NA CALA KLASE: STRONA NIE ZGADUJE SKALI CUDZEGO ZACHOWANIA (17:35, v740)
+
+Trzy zdania jednego wieczoru to nie przypadek, tylko **wzorzec**: liczby na tych stronach sa
+**policzone przy renderze**, a kwantyfikator obok nich byl **wpisany raz** i nic go nie odswiezalo.
+`npm run rules` ma teraz regule, ktora czyta **kazda strone pod `src/app`** (z wycietymi komentarzami)
+i oblewa build na `almost every|almost nobody|nearly all|hardly any|vast majority|most vendors|...`.
+
+**Kontrolki stoja W REGULE, nie na stronie** - sonda czytajaca wlasne uzasadnienie znajduje sama
+siebie, co w tym repo zdarzylo sie juz trzy razy.
+
+**Straznik znalazl trzecie zdanie w chwili, w ktorej powstal:** `/methodology` uzasadniala kontrolke
+MCP tym, ze *„almost every site answers 405 to a POST at a path it does not route"*. Nie mierzylismy
+tego. Zostalo: „a bare 405 is the ordinary answer to a POST at a path a site does not route".
+
+**A codex znalazl czwarte, ktorego moj pierwszy regexp nie lapal:** *„a check nearly everybody
+passes"* (o checkach SEO, ktorych nie wzielismy od kodustech). Regexp czytal tylko „nearly every",
+wiec „nearly everybody" przechodzilo - **straznik z dziura w tej samej klasie, ktora mial pilnowac**.
+Poszerzony, zdanie przepisane na powod, ktory znamy: te checki mierza, jak strona czyta sie
+wyszukiwarce, a nie czy agent wchodzi.
+
+**Zweryfikowane na produkcji:** `/standard`, `/findings`, `/methodology`, `/pricing` i `/report` -
+zero trafien na te fraze. **Do wziecia pozniej:** „almost every site answers 405" da sie **policzyc**
+z naszej wlasnej kontrolki (pytamy o nieistniejacy adres na kazdej domenie), wiec to zdanie moze
+kiedys wrocic **z liczba** zamiast bez niej.
+
 ## SZUKALEM DRUGIEGO TAKIEGO ZDANIA I ZNALAZLEM - A STRAZNIK ZLAPAL MNIE NA POPRAWCE (17:15, v739)
 
 Skoro `/standard` twierdzil „prawie nikt", przeszedlem **grepem po calym copy** za kwantyfikatorami
