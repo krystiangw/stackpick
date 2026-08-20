@@ -85,6 +85,29 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## PREDYKCJA DLA PRZEMIATU NA 9.55, ZAPISANA ZANIM RUSZYL (16:55)
+
+Migawka `src/data/przed-9-55.json` zrobiona **przed** przemiatem: 177 wierszy, z tego **172 na 9.52**,
+po jednym na 9.53 i 9.54 oraz trzy na 9.55 (recznie przeskanowane przy weryfikacji wdrozen). Zapisane
+sa **pelne werdykty** szesciu checkow, ktorych dotknely 9.53, 9.54 i 9.55, a nie same punkty: przejscie
+z oskarzenia w „niemierzalne" nie rusza punktow, a jest dokladnie tym, co potrafi zrobic 9.54.
+
+**PREDYKCJA, ktora da sie obalic:**
+
+1. **Werdykty rusza sie WYLACZNIE na `agent_entry_point`**, i tylko tam, gdzie nasza sonda nie dostala
+   odpowiedzi. 9.53 i 9.55 dopisuja adres do zdania, wiec sa zmiana **tekstu**, nie reguly. Kazdy ruch
+   werdyktu na `signup_no_captcha`, `user_agents_allowed`, `no_crawl_delay` albo `typed_package` jest
+   dowodem, ze zmiana redakcyjna ruszyla regule, albo ze vendor zmienil sie po swojej stronie - i
+   kazdy taki wiersz trzeba przeskanowac pojedynczo, ZANIM nazwiemy go regresem vendora.
+2. **`npm run audit-evidence` schodzi z 34 nagich oskarzen do zera.** Pomiar sprzed przemiatu, na
+   korpusie 9.52: **34 oskarzenia (4.7%) nie niosly ani adresu, ani cytatu, ani liczby** -
+   `signup_no_captcha` 30, `typed_package` 3, `no_crawl_delay` 1. Dokladnie te trzy checki dostaly
+   dowod w 9.53 i 9.55, wiec jesli po przemiecie zostanie tam cokolwiek, to znaczy, ze poprawka
+   pokrywa mniej przypadkow, niz zakladalem.
+3. **Zaden obserwator nie dostaje maila.** To juz zmierzone bramka `audit-watch-shield` i ona
+   zatrzyma przemiat, jesli sie myle - ale zapisuje to tutaj, bo przewidywanie po fakcie nie jest
+   przewidywaniem.
+
 ## „WSZYSTKIE 173 DOMENY W NASZYM KORPUSIE", GDY KORPUS MA 177 (16:15, v737)
 
 Liczby o brzegu vendora na `/pricing` sa od dzis **liczone** przy renderze (`edgeRefusalsInCorpus`),
