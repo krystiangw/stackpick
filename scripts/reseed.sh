@@ -75,6 +75,24 @@ fi
 # published. Set PASSES=1 if you only want to see what a visitor gets on a cold dyno.
 PASSES="${PASSES:-2}"
 
+# PRZED pierwszym skanem, bo po nim jest za pozno: przemiat przepisuje kazdy wiersz na biezaca
+# formule, wiec symulacja „co zrobi podbicie" nie ma juz czego symulowac, a maile do obserwatorow
+# zdazyly wyjsc. Pierwsza wersja stala na koncu pliku - z komentarzem „przed samym przemiatem, nie
+# po" nad wywolaniem, ktore bylo po (codex).
+#
+# Gdy formula sie podniosla, kazdy wiersz „sie zmienia" i bez oslony kazdy obserwator dostaje maila o
+# czyms, co zrobilismy MY. Audyt ma wlasna kontrolke: mowi, czy oslona NAPRAWDE cos zdjela, zeby
+# zielony wynik nie znaczyl po prostu „nic sie nie zmienilo".
+echo "== czy podbicie formuly wysle maile obserwatorom"
+# `|| exit` a nie `|| echo`: bramka, ktora tylko drukuje, przepuszcza dokladnie to, czemu ma
+# zapobiec. Dotyczy to takze przypadku, gdy audyt sie nie uruchomi - nieznany stan oslony przed
+# przemiatem zmieniajacym formule jest powodem, zeby nie przemiatac, a nie zeby isc dalej.
+if ! MONGODB_URI="${MONGODB_URI:-$(heroku config:get MONGODB_URI -a stackpick 2>/dev/null)}" \
+  npm run --silent audit-watch-shield; then
+  echo "STOP: oslona obserwatorow nie przeszla (albo audyt nie wystartowal). Przemiat wstrzymany."
+  exit 1
+fi
+
 for pass in $(seq 1 "$PASSES"); do
 [ "$PASSES" -gt 1 ] && echo "== pass $pass of $PASSES"
 
