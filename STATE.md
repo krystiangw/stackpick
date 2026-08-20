@@ -85,6 +85,30 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## PREDYKCJA DOSTALA SWOJ SKRYPT, A CODEX ZAOSTRZYL JA TRZY RAZY (18:20)
+
+`npm run po-przemiacie-9-55` porownuje migawke sprzed przemiatu z tym, co przemiat zostawi. Trzy
+rundy review i **kazda zwezala to, co wolno nazwac potwierdzeniem**:
+
+1. **Ruch na `agent_entry_point` nie jest sam z siebie „spodziewany".** Predykcja mowi o wierszach,
+   gdzie sonda nie dostala odpowiedzi, a 9.52 nie umiala takiego wiersza opisac inaczej niz **zerem
+   bez flagi**. Wiec jedyne dozwolone przejscie to `0/x` -> `0/x niemierzalne`. Ruch z `1/2` albo
+   `2/2` idzie do niespodzianek, gdzie ktos go przeskanuje pojedynczo.
+2. **Nazwa grupy nie moze klamac.** „Niespodzianki na pozostalych pieciu" zbieraly takze nieoczekiwany
+   ruch `agent_entry_point`. Teraz to po prostu **INNE RUCHY**.
+3. **Zdanie o predykcji niesie swoj zasieg.** Codex chcial pelnego pokrycia (177 z 177) przed
+   jakimkolwiek „potwierdzeniem". Przy 9.49 jeden wiersz zostal na starszej formule i tak bywa za
+   kazdym razem, wiec taka bramka bylaby na stale czerwona. Zamiast tego **potwierdzenie mowi, ilu
+   wierszy nie obejmuje**.
+
+Sprawdzone **przed** przemiatem: przy 3 wierszach na 9.55 skrypt **odmawia wniosku i wychodzi kodem 1**,
+nie drukujac wczesniej uspokajajacego „bez ruchu" (kolejnosc straznika wzgledem podsumowania to ta
+sama pulapka, ktora poprawialem dzis w szesciu audytach).
+
+**BRAMKA PRZEMIATU PRZEBIEGNIETA NA SUCHO (18:25):** `audit-watch-shield` mowi „zaden obserwator nie
+dostalby maila po podbiciu formuly", oslona zdjela zmiany w 1 z 4 przeliczonych baseline'ow, czyli
+**nie jest to zielone przez to, ze nic sie nie zmienilo**. Przemiat moze ruszyc po progu 6 h.
+
 ## TRZY DOSTARCZONE DOKUMENTY NADAL TO NIOSA, I NIE WOLNO ICH PRZEPISAC (18:05, v743)
 
 Skoro `/d/sample` niosl wycofane zdanie, zapytalem o **wszystkie dostarczone dokumenty**: 5 w bazie,
