@@ -15,6 +15,7 @@
 import { getStore } from '../src/lib/store'
 import { FORMULA_VERSION } from '../src/lib/score'
 import { rulesChangedBetween } from '../src/lib/watch'
+import { ourWordsIn, scaleGuessIn } from '../src/lib/claims'
 import { CHECKS } from '../src/lib/score'
 
 const store = getStore()
@@ -27,6 +28,38 @@ if (!sample) {
 }
 
 console.log(`probka: ${sample.domain}, formula ${sample.formulaVersion}, przygotowana ${sample.preparedAt.slice(0, 10)}`)
+
+// Wersja formuly nie widzi zmiany SLOW. 2026-08-20 probka stala na biezacej formule i nadal niosla
+// zdanie „at almost every authorization server today", ktore tego samego wieczoru wycofalismy z
+// kodu: poprawka w `fixfirst.ts` nie dotyka dokumentu zapisanego wczoraj. Ten sam wzorzec, ktorego
+// `rules.mts` pilnuje w zrodlach, czyta wiec teraz takze TRESC witryny sklepu.
+const guess = scaleGuessIn(ourWordsIn(sample.markdown))
+if (guess !== '') {
+  console.log(`\nPROBKA NIESIE SZACUNEK BEZ POMIARU: „${guess}"`)
+  console.log('To zdanie wycofalismy z kodu, a dokument zostal. Wygeneruj probke ponownie:')
+  console.log('  MONGODB_URI=... npx tsx scripts/client-report.mts <domena> --publish --id sample --sample')
+  await new Promise<void>((done) => process.stdout.write('', () => done()))
+  process.exit(1)
+}
+// Kontrolka w obie strony: sonda ma widziec zdanie, ktore ja stworzylo, i ma przepuscic to samo
+// zdanie w cudzyslowie, bo cytat z przebiegu jest czyimis slowami, nie naszym oszacowaniem.
+const NASZE = 'registers itself without a human at almost every authorization server today'
+if (scaleGuessIn(ourWordsIn(NASZE)) === '') {
+  console.log('KONTROLKA OBLANA: sonda nie widzi zdania, ktore ja stworzylo, wiec jej cisza nic nie znaczy')
+  process.exit(1)
+}
+const CYTATY = [
+  `- **claude run 3**: \u201c${NASZE}\u201d`,
+  // Cytat z cudzyslowem w srodku: pierwsza wersja urywala sie na nim i czytala ogon jako nasz.
+  `- **codex run 1** (in Polish): \u201cAcme calls this \u201cautomatic\u201d, and most vendors do the same\u201d`,
+]
+for (const cytat of CYTATY) {
+  if (scaleGuessIn(ourWordsIn(cytat)) !== '') {
+    console.log(`KONTROLKA OBLANA: sonda czyta cytat z przebiegu jak nasze zdanie: ${cytat.slice(0, 60)}`)
+    process.exit(1)
+  }
+}
+
 if (sample.formulaVersion === FORMULA_VERSION) {
   console.log(`skaner tez stoi na ${FORMULA_VERSION} - kupujacy czyta to, co dzis mierzymy`)
   process.exit(0)

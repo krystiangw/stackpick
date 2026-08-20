@@ -70,6 +70,7 @@ import {
 import { asPublishedToday } from '../src/lib/publishable'
 import { visitKey, pathOf, kindOf } from '../src/lib/visits'
 import { isPublishableRow } from '../src/lib/published'
+import { UNMEASURED_SCALE, scaleGuessIn } from '../src/lib/claims'
 
 // Ceny dostawcy przychodza ze srodowiska, a bez nich katalog nie rozpoznaje zadnej ceny i cala
 // sciezka przyznawania uprawnien jest nietestowana. Ustawiane TUTAJ, a nie w skrypcie npm: build
@@ -3374,14 +3375,12 @@ check('a sonda widzi brak takiego zdania', cronWatch.includes('rulesChangedBetwe
 // reki i nic go nie odswiezalo. Zdania o SKALI zjawiska u innych firm albo maja policzona liczbe,
 // albo ich nie ma.
 console.log('\nnie szacujemy skali slowem tam, gdzie umiemy ja policzyc')
-const NIEMIERZONY_KWANTYFIKATOR =
-  /\b((almost|nearly) (every(body|one)?|all|no(body|ne))|hardly any|vast majority|most (vendors|sites|companies|servers|domains|of them))\b/i
 // Ta sama lista, co przy RFC 7591: strony PLUS `score.ts` i `fixfirst.ts`, bo zdania stamtad ida do
 // PLATNEGO raportu. Tam wlasnie stalo czwarte takie zdanie („at almost every authorization server
 // today"), czyli klient placil za oszacowanie, ktorego nie zmierzylismy.
 for (const page of [...pagesUnder('src/app'), 'src/lib/score.ts', 'src/lib/fixfirst.ts']) {
   const told = readFileSync(page, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ')
-  check(`${page}: bez kwantyfikatora zamiast pomiaru`, NIEMIERZONY_KWANTYFIKATOR.exec(told)?.[0] ?? '', '')
+  check(`${page}: bez kwantyfikatora zamiast pomiaru`, scaleGuessIn(told), '')
 }
 // Kontrolka: sonda musi znalezc oba zdania, ktore ja wywolaly. Literaly stoja TUTAJ, a nie na
 // stronie, bo sonda czytajaca wlasne uzasadnienie znajduje sama siebie - ten blad zdarzyl sie w tym
@@ -3393,9 +3392,9 @@ for (const zdanie of [
   // regexpa czytala tylko „nearly every", wiec „a check nearly everybody passes" przechodzilo.
   'we took neither of their per-page SEO checks, because a check nearly everybody passes',
 ]) {
-  check(`kontrolka: sonda widzi "${zdanie.slice(0, 24)}..."`, NIEMIERZONY_KWANTYFIKATOR.test(zdanie), true)
+  check(`kontrolka: sonda widzi "${zdanie.slice(0, 24)}..."`, UNMEASURED_SCALE.test(zdanie), true)
 }
-check('kontrolka: i przepuszcza zdanie o naszej wlasnej metodzie', NIEMIERZONY_KWANTYFIKATOR.test('nobody watching, every source they read'), false)
+check('kontrolka: i przepuszcza zdanie o naszej wlasnej metodzie', UNMEASURED_SCALE.test('nobody watching, every source they read'), false)
 
 console.log('\nnie nazywamy RFC 7591 jedyna standardowa droga')
 for (const page of [...pagesUnder('src/app'), 'src/lib/score.ts', 'src/lib/fixfirst.ts']) {
