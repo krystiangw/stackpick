@@ -178,6 +178,26 @@ za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). 
 wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
 Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
 
+## STRAZNIK Z WCZORAJ ZLAPAL DRIFT PRZY PIERWSZEJ OKAZJI (07:50, v704)
+
+Kontrolny przebieg calej baterii po dzisiejszych piegciu wdrozeniach - i **jedyna nowa rzecz przyszla
+od straznika, ktorego dopisalem wczoraj o pierwszej w nocy**:
+
+```
+UWAGA: zdanie na /pricing rozjechalo sie z korpusem, popraw je RAZEM Z DATA (18 August 2026):
+  odmowy na brzegu: cennik mowi 16, przemiat dal 15; wyzwania: cennik mowi 12, przemiat dal 11
+```
+
+To jedyne trzy liczby na `/pricing` wpisane recznie (reszta idzie z kodu), i **przy pierwszym
+przemiecie, ktory je ruszyl, straznik je zlapal** - dokladnie po to powstal. Poprawione razem z data:
+**177 domen, 15 odmow na brzegu, 11 z markerem wyzwania, policzone 20 sierpnia 2026**. Zdanie obok
+(„jeden host dokumentacji odbil trzynascie z trzynastu zadan") **nadal jest prawda co do liczby** -
+to `split.io`, dzis 13/13 w zapisie przemiatu.
+
+**Reszta baterii zielona:** 177 wierszy na 9.51 i 0 sprzecznosci, platny raport i miesieczny mail bez
+zdania kloccego sie z danymi, probka na 9.51, cztery „gorsze" werdykty to te same przejsciowe
+przypadki, ktore przeczytalem po kolei wyzej.
+
 ## PRZESTALISMY PUBLIKOWAC OSKARZENIE, KTOREGO REGULE SAMI WYCOFALISMY (07:30, v703)
 
 Ostatnia pozycja z listy „do wziecia po przemiecie": czternascie **zasianych** wierszy **poza
