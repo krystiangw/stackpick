@@ -85,6 +85,51 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## 9.54: NASZA CISZA NIE JEST ICH BRAKIEM - I SPROSTOWANIE WLASNEJ DIAGNOZY (16:40, v720)
+
+**ZMIANA JEST SLUSZNA, MOJA DIAGNOZA BYLA BLEDNA. Najpierw sprostowanie, bo to wazniejsze.**
+
+Poszedlem za `calendly.com`, ktore przemiat oznaczyl jako regres (`agent_entry_point` 1 → 0).
+Cztery skany jednego dnia daly **1, 0, 1, 0**, a `https://developer.calendly.com/skill.md` odpowiadal
+mi 200 i 284 kB przy kazdym pojedynczym zapytaniu. Postawilem teze: **nasza rownoleglosc gubi plik**.
+**Teza jest obalona.** Ten plik to **soft-404**: zaczyna sie od „# Page Not Found", ma
+`content-type: text/html`, a kontrolka pod adresem, ktorego nie moze byc, zwraca **dokladnie te same
+284 328 bajtow** - podobnie `/agents.md`. Sprawdzone trzema pomiarami obok siebie.
+
+**Czyli oskarzenie o calendly.com jest SLUSZNE, a bledny byl ten jeden skan, ktory przyznal punkt.**
+Kierunek bledu jest **odwrotny** niz zakladalem: nie oskarzamy niesluszne, tylko czasem **przyznajemy
+punkt za cudzy soft-404**. Mechanizmy przeciw temu SA i dzialaja: kontrolka jest robiona **osobno dla
+kazdego origin** (`probeOne(docsOrigin, await servesCatchAllText(docsOrigin))`), a punktacja
+**odrzuca** trafienia niepewne. **Nie umiem odtworzyc, czemu tamten przebieg dal punkt** - nie
+zapisujemy odpowiedzi kontrolki per origin, wiec danych po prostu nie ma. Zgadywanie byloby dokladnie
+tym, czego tu zabraniamy. **Do zrobienia: zapisywac wynik kontrolki dla kazdego origin**, zeby
+nastepnym razem dalo sie to rozstrzygnac pomiarem zamiast hipoteza.
+
+**A SAMA ZMIANA ZOSTAJE, bo stoi na wlasnych nogach.** `isEdgeRefusal` to `status >= 400`, wiec
+**status 0 - zadanie, ktore nigdy nie dostalo odpowiedzi - przechodzil jako „pliku nie ma"**. Przy
+kilkunastu sondach na dwoch hostach rownolegle to zwykle nasz timeout. Nasza pierwsza zasada mowi, ze
+brak odpowiedzi nie dowodzi braku pliku, i to obowiazuje niezaleznie od tego, czy calendly bylo
+przykladem.
+
+**CODEX ODBIL TO PIEC RAZY, ZA KAZDYM RAZEM TRAFNIE, i to jest lekcja sama w sobie:**
+1. wlanie statusu 0 do `refused` **naprawialo jedno nieprawdziwe zdanie kosztem drugiego** - vendor
+   czytalby „twoj serwer nas odrzucil" o naszym timeoucie. Cisza ma **osobne pole i osobne zdanie**,
+   ktore nie obwinia go i nie daje mu instrukcji („Nothing for you to do").
+2. obsluzylem cisze tylko na stronie, a **calendly milczalo na hoscie dokumentacji** - czyli naprawa
+   nie obejmowala przypadku, od ktorego sie zaczela.
+3. mianownik ze stalej przy 12 sondach dawal **„12 z 9"**, liczbe nie do odtworzenia.
+4. przy odmowie **I** ciszy naraz wchodzila sama odmowa i obiecywala, ze wpuszczenie HTTP wystarczy.
+5. dopiero piate przejscie czyste.
+Kazde z tych piaciu bylo o tym samym: **zdanie ma mowic to, co zmierzylismy, i o wlasciwym winowajcy.**
+
+**Straznikow dziewiec, cztery mutacje oblewaja.** Zweryfikowane na produkcji: formula **9.54**,
+`calendly.com` przeskanowane ponownie i zasiane - werdykt 0 z pelnym zdaniem, **slusznie**.
+
+**PRZY OKAZJI: `npm run audit-entry-absence`** pyta adresy, o ktorych brak oskarzamy, **pojedynczo i
+z kontrolka**. Z 20 sprawdzonych domen (ze 121 oskarzonych) **zadne oskarzenie nie okazalo sie
+falszywe**; dwa trafienia - `logto.io` i `slatejs.org` - odpadly wlasnie na kontrolce soft-404. Bez
+niej zglosilbym dwa falszywe alarmy, i to po tym, jak caly dzien tropie brakujace kontrolki.
+
 ## 9.53: KAZDE OSKARZENIE MA NIESC DOWOD, I PIERWSZY RAZ TO POLICZYLISMY (15:30)
 
 Granica wczorajszego czujnika brzmiala: „brakujace pole, ktore zostawia zdanie GRAMATYCZNE, jest tu
