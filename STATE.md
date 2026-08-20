@@ -85,6 +85,37 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## „PRAWIE NIKT NIE PUBLIKUJE TYCH METADANYCH", A PUBLIKUJE POLOWA (17:05, v738)
+
+`/standard`, w sekcji „The one we refuse to add, and why", tlumaczyl, dlaczego nie punktujemy
+**AR-IDEN-05 (PKCE z S256)**: *„the reason is a number rather than an opinion: **almost nobody in our
+corpus publishes the metadata** that would let us check it without guessing"*. Akapit **zapowiada
+liczbe i zadnej nie podaje**, a zmierzone dzis w bazie: **95 ze 177** najnowszych wierszy korpusu ma
+`findings.funnel.oauth.metadataPublished === true`. Czyli publikuje **wiekszosc**, a nie „prawie
+nikt", i to my przez pol roku opowiadalismy o cudzych firmach cos, czego nasze wlasne dane nie niosa.
+
+**Czego naprawde nie mielismy, to pole W SRODKU dokumentu:** `code_challenge_methods_supported`.
+Skaner ten dokument **i tak pobiera** przy `oauth_dcr` i wyrzucal to pole do kosza. Wiec zamiast
+przepisac zdanie na inna niesprawdzona wersje, **skaner zaczal je zapisywac** (`codeChallengeMethods`,
+zero nowych requestow), a strona **liczy** zamiast twierdzic. Na produkcji: *„94 of 173 domains in our
+corpus publish an authorization-server metadata document, and we have not recorded whether any of them
+names S256, so there is no number behind the check yet"*. Po przemiecie zdanie samo przejdzie na
+wariant z liczba - **bez naszej edycji**, bo mianownik `recorded` jest w kodzie, nie w copy.
+
+**Trzy rundy codexa, kazda o tej samej klasie bledu:**
+- **P2, przyjete:** unia metod po **wszystkich** przeczytanych dokumentach. Apex bez pola, a `mcp.`
+  z S256, dawalby zapis „pusto" - czyli dokladnie ten ksztalt, na ktorym pieciokrotnie poleglismy:
+  **pole dodane pozniej czytane jako zmierzony brak**.
+- **P2, przyjete:** petla **przestala urywac sie** na dokumencie z `registration_endpoint`. Werdykt
+  DCR bez zmian, ale lista metod dojezdza do konca.
+- **P1, ODRZUCONE z uzasadnieniem w kodzie:** codex chcial `undefined`, gdy dokument nie ma tego pola.
+  RFC 8414 czyni je opcjonalnym, wiec brak pola **jest odczytem** („nie oglasza zadnej metody"), a nie
+  slepa plamka. Przyjecie tej uwagi zrobiloby z `recorded` zbior „dokumentow, ktore maja to pole", a
+  publikowany ulamek bylby wtedy bliski 100% **z konstrukcji** i nie mowilby nic.
+
+**Wersja formuly BEZ zmian (9.55):** zaden werdykt sie nie rusza, zapisujemy tylko wiecej z tego
+samego pobrania. Niezmiennik ze `score.ts` mowi o regulach, nie o polach.
+
 ## PREDYKCJA DLA PRZEMIATU NA 9.55, ZAPISANA ZANIM RUSZYL (16:55)
 
 Migawka `src/data/przed-9-55.json` zrobiona **przed** przemiatem: 177 wierszy, z tego **172 na 9.52**,
