@@ -278,7 +278,10 @@ export default async function PricingPage() {
                   : ''}
               ,{' '}
               {edge.refused} of them refused our requests at their own edge and {edge.challenged} of those
-              answered with a browser challenge rather than a rate limit.{' '}
+              answered with a browser challenge rather than a rate limit. Measured from our scanner&apos;s
+              address: asked again from an ordinary home connection on 20 August 2026, three of those hosts
+              answered normally and one challenged that address too, so part of this number is where we ask
+              from rather than how they treat agents.{' '}
             </>
           )} One vendor&apos;s documentation host challenged thirteen of the thirteen requests we made to
           it, which read as three checks going silent while nothing in their repository had changed; asked
