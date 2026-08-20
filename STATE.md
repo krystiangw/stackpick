@@ -178,6 +178,26 @@ za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). 
 wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
 Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
 
+## NAPRAWA JOBU SPRAWDZONA LOKALNIE, ZEBY PUSH BYL JEDYNYM KROKIEM (08:05)
+
+Job „Mirror the MCP registry" pada codziennie, bo poprawka siedzi tylko u nas. Zamiast zostawic
+Krystianowi „wypchnij i zobacz", **przeszedlem kroki tego joba recznie**:
+
+1. **`pnpm install --frozen-lockfile`** - czyli dokladnie ten krok, ktory job wywracal (`npm ci` w
+   repo z `pnpm-lock.yaml`, osiem sekund do porazki). Lokalnie: **„Already up to date", kod 0**, na
+   pnpm **10.33.2**, tej samej wersji, ktora workflow przypina przez `pnpm/action-setup@v4`, i tej
+   samej, ktora stoi w `packageManager`.
+2. **Krok wlasciwy** (`npx tsx scripts/mirror-mcp-registry.mts`) z prawdziwym tokenem, przeciw
+   produkcji: `17 stron, 1052 zdalnych adresow, 228 hostow` i **`200 {"hosts":228}`** w odpowiedzi.
+
+**Czego z tej strony sprawdzic nie moge:** czy sekret repozytorium `STACKPICK_CRON_TOKEN` jest
+ustawiony w GitHubie. To jedyna niewiadoma po pushu - jesli job padnie mimo poprawki, to bedzie to.
+
+**Skutek uboczny, zapisany swiadomie:** lustro zostalo dolane (9632 hosty, 07:02) i wygasa teraz
+**2026-08-27**. To jest dokladnie to „reczne dolanie", przed ktorym ostrzega wpis w KB - ale tym razem
+**niczego nie zaslania**, bo w checkliscie po przemiecie stoi juz `gh run list --workflow=mcp-registry.yml`,
+ktore patrzy na PRODUCENTA, a nie na wiek danych.
+
 ## STRAZNIK Z WCZORAJ ZLAPAL DRIFT PRZY PIERWSZEJ OKAZJI (07:50, v704)
 
 Kontrolny przebieg calej baterii po dzisiejszych piegciu wdrozeniach - i **jedyna nowa rzecz przyszla
@@ -1203,11 +1223,9 @@ dwuznaczny wiersz na szescdziesiat) i punkt 2 z audytu subagenta (zero wierszy w
 zgoda na imie i nazwisko jako administratora na `/privacy` · klucz do `agentaudit@agentmail.to` ·
 platne subskrypcje cursora i gemini · **szesc decyzji cenowych** · czy publikujemy porownanie
 nazywajace konkurenta (liczby przeweryfikowane 2026-08-19 o 09:00) · **push naprawy workflow do
-`origin`** (`git push origin main` + `gh workflow run mcp-registry.yml`) - **ma termin: lustro
-rejestru MCP wygasa 2026-08-26** (zsynchronizowane 2026-08-19 05:08, TTL 168 h; zmierzone 2026-08-20
-o 03:10: 20 h wieku, 148 h zapasu). Po wygasnieciu `mcp_present` traci kontrolke i wiersze robia sie
-niemierzalne. Doraznie da sie dolac z laptopa (`npm run mirror-mcp-registry`), ale to zaslania
-przyczyne, wiec zostawiam zegar widoczny · formularz katalogu
+`origin`** (`git push origin main` + `gh workflow run mcp-registry.yml`) - **przygotowany tak, zeby
+push byl jedynym krokiem**, patrz sekcja „NAPRAWA JOBU SPRAWDZONA LOKALNIE" nizej. Lustro rejestru
+MCP wygasa **2026-08-27** (dolane recznie 2026-08-20 o 07:02, 9632 hosty, TTL 168 h) · formularz katalogu
 konektorow w claude.ai (reszta pakietu gotowa w `docs/submitting-the-connector.md`) · **wlasny
 klaster Atlas** (my siedzimy na `equity-analyst-flex`, cudzym; rekomendacja: wlasny Flex w OSOBNYM
 projekcie, ~8 USD/mies. - narzedzia i runbook gotowe, brakuje tylko UI Atlasa albo kluczy Admin API
