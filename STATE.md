@@ -210,6 +210,12 @@ teraz **177 wierszy na 9.51, 0 sprzecznosci**. Bez podbicia wersji, swiadomie: z
 zmienila, a wiersz, ktory wczesniej **nie mial scorecardu w ogole**, nie moze miec innego scorecardu
 pod ta sama wersja.
 
+**Poszedlem tym ksztaltem dalej po `funnel.ts`** i znalazlem **drugie** takie miejsce: `new URL(signupUrl).origin`
+przy budowaniu celow OAuth. Adres rejestracji **tez pochodzi z ich strony**, wiec szablon albo smiec
+w linku zabilby skan tak samo. Teraz idzie przez `askable`. Pozostale nieoslonięte `new URL` w tym
+pliku przejrzalem po kolei - reszta ma juz `try/catch` albo pracuje na adresach, ktore sami
+zbudowalismy.
+
 **Lekcja, ktora warto zapamietac szerzej:** licznik „N z M" jest zla miara zdrowia, gdy M jest stale.
 Brakujacy wiersz nie krzyczy, tylko cicho publikuje stara prawde.
 
