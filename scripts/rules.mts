@@ -525,8 +525,37 @@ check(
 // Reguła produktu, nie szczegol implementacji: dopoki monitoring jest darmowy w trakcie budowy,
 // anulowanie zdejmuje oplate, a nie usluge. Gdy przestanie byc darmowy, zdanie na /pricing musi
 // zniknac w tym samym commicie, wiec straznik wiaze jedno z drugim.
-const pricingSaysFree = readFileSync('src/app/pricing/page.tsx', 'utf8').includes('Free while we are building it')
+const cennik = readFileSync('src/app/pricing/page.tsx', 'utf8')
+const pricingSaysFree = cennik.includes('Free while we are building it')
 check('darmowy monitoring w kodzie i na cenniku mowia to samo', monitoringIsFree(), pricingSaysFree)
+// Ta sama regula dla obietnicy kredytu, ktora do 2026-08-20 stala na cenniku bez pokrycia. Byla to
+// obietnica bez WARTOSCI, nie tylko bez mechanizmu: 49 USD zaliczone przeciw monitoringowi, ktory
+// kosztuje 0. Zdanie moze wrocic, ale nie samo - razem z procedura, ktora ktos umie wykonac.
+// Napisane jako implikacja, a nie zakaz: nie blokujemy oferty, blokujemy proze.
+// Tylko linie `note:`, nie caly plik: komentarz wyjasniajacy, DLACZEGO tego zdania tam nie ma,
+// cytuje je doslownie, wiec sonda czytajaca caly plik znajdowala najpierw wlasne uzasadnienie i
+// oblewala zaraz po naprawie. Repo zna ten blad: „sonda szukajaca samej siebie znajduje najpierw
+// wlasny tekst".
+const cennikObiecujeKredyt = cennik
+  .split('\n')
+  .filter((line) => line.trimStart().startsWith('note:'))
+  .some((line) => /credited against/i.test(line))
+// Dedykowany marker, nie slowo „credit": runbook opisuje TERAZ, dlaczego tej obietnicy nie ma, i
+// robi to slowem „credit" kilkanascie razy - wiec sonda szukajaca slowa byla spelniona przez samo
+// wyjasnienie i przepuscilaby powrot obietnicy bez procedury (codex). Marker trzeba dopisac
+// swiadomie, czyli dokladnie wtedy, gdy ktos naprawde spisal, co zrobic przy pierwszej sprzedazy.
+// Marker w OSOBNEJ linii, bo instrukcja jak go uzyc sama go cytuje w zdaniu - i `includes` bylo
+// spelnione przez to zdanie (codex, czwarty raz ta sama klasa dzisiaj: sonda znajduje wlasny tekst).
+const runbookOpisujeKredyt = readFileSync('docs/turning-billing-on.md', 'utf8')
+  .split('\n')
+  .some((line) => line.trim().startsWith('CREDIT PROCEDURE:'))
+check(
+  'obietnica kredytu wraca tylko razem z procedura, ktora ktos umie wykonac',
+  cennikObiecujeKredyt && !runbookOpisujeKredyt,
+  false,
+)
+// I nie wtedy, gdy monitoring jest darmowy, bo wtedy nie ma czego od czego odjac.
+check('kredyt nie stoi obok darmowego monitoringu', cennikObiecujeKredyt && monitoringIsFree(), false)
 // „Darmowy dzisiaj" bez niczego, co go konczy, nie jest decyzja, tylko stanem, do ktorego nikt nie
 // musi wrocic. Data nalezy do wlasciciela i tu jej nie ma; mechanizm jest, wiec ustawienie jej to
 // jedna linijka zamiast sporu o to, co znaczylo „darmowy".

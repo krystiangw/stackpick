@@ -14,6 +14,27 @@ Written 2026-08-18, when the only way to buy was `mailto:`.
   currently 404 on purpose, and a checkout without them is not something to open.
 - **The refund policy.** `src/lib/seller.ts` proposes 14 days on the report and no refund of the
   current monitoring month. It is a proposal until you say so.
+- **Whether the report credits against monitoring.** `/pricing` used to promise "Credited against
+  your first month of monitoring" and nothing implemented it. It was removed on 20 August 2026,
+  because it was a promise without a *value* rather than merely without a mechanism: monitoring is
+  free while we build it (`FREE_MONITORING_ENDS_ON`), so the page offered 49 dollars off nothing
+  while saying so two lines apart. `scripts/rules.mts` now refuses to build if that sentence
+  returns while monitoring is free, or without a credit procedure written here.
+
+  If you want the credit back, decide the shape first, because each of these changes what somebody
+  has to do by hand: the full 49 or part of it; `watch-monthly` only, or also the annual 790 and the
+  packs at 179 and 499; one domain or the whole pack; and whether it expires (90 days from the
+  report is the obvious candidate). Then write the procedure in this file and restore the sentence
+  in the same commit. Do it by hand for the first sales - a coupon issued manually costs less than
+  a field in the subscription until there are more cases than one person can remember.
+
+  When you have written it, start the procedure with the literal marker `CREDIT PROCEDURE:` on its
+  own line. The build guard looks for that marker and nothing else, because this explanation uses
+  the word "credit" throughout and a guard that matched the word would be satisfied by the very
+  paragraph saying the policy is undecided.
+
+  Open question that comes first: **when does free monitoring end**. Until that date exists the
+  credit has no base, and the question of a mechanism is moot.
 
 ## 1. Create the products, one per row
 

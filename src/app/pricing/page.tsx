@@ -62,7 +62,13 @@ const TIERS: readonly Tier[] = [
       'Every transcript handed over, so you read what the agent said rather than our summary of it',
       `Only the ${CATEGORIES.length} categories we measure. If your product is not in one of them we say so before you pay, not after`,
     ],
-    note: 'Credited against your first month of monitoring. It is a sample of that, not a competitor to it.',
+    // „Credited against your first month of monitoring" stalo tu do 2026-08-20 i bylo obietnica bez
+    // WARTOSCI, nie tylko bez mechanizmu: monitoring jest dzis darmowy (`monitoringIsFree`), wiec
+    // kupujacy czytal „49 USD zaliczone" i dwie linijki nizej „Free while we are building it".
+    // Czterdziesci dziewiec od zera. Zdania, ktorego nie umiemy poprzec, nie publikujemy o cudzych
+    // firmach - i nie ma powodu, zeby wolno bylo o wlasnej ofercie. Druga polowa zostaje, bo jest
+    // prawdziwa bez zadnego mechanizmu i robi cala robote, o ktora chodzilo.
+    note: 'It is a sample of monitoring, not a competitor to it.',
     sample: { label: 'Read a real one, start to finish', href: '/d/sample' },
     cta: { label: 'Ask for a report', href: 'mailto:hello@letagentsin.com?subject=One%20agent%20report' },
   },
