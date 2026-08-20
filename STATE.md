@@ -137,9 +137,23 @@ Zmieniamy zdanie, gdy: dane przekrocza ~3 GB, rachunek Flex dobije do capa 30 US
 ops/sec zacznie wydluzac przemiat, albo po wlaczeniu platnosci utrata do 24 h przestanie byc do
 przyjecia (wtedy M10 z PITR).
 
-**CZEGO NIE MOGE ZROBIC SAM:** nie ma tu `atlas` CLI, `mongosh`, `mongodump` ani kluczy Atlas Admin
-API. **Zalozenie klastra to akcja Krystiana** (UI Atlasa albo klucze API dla mnie). Reszta jest
-gotowa.
+**DECYZJA KRYSTIANA (2026-08-20, 10:30): klucze Atlas Admin API dla mnie**, czyli cala migracja po
+mojej stronie. Czekam na klucze. Zweryfikowane u zrodla przed poproszeniem o nie:
+- utworzenie projektu wymaga roli org **`Organization Project Creator`** (`ORG_GROUP_CREATOR`);
+- utworzenie klastra Flex przez API wymaga **`Project Owner`** w docelowym projekcie, a endpoint
+  `createFlexCluster` istnieje w Admin API v2;
+- klucz **projektowy** jest z zalozenia ograniczony do jednego projektu.
+
+**PROSZE O `ORG_GROUP_CREATOR`, NIE O `Organization Owner`** - i to nie jest ostroznosc na zapas:
+`Organization Owner` dalby mi `Project Owner` do WSZYSTKICH projektow w organizacji, czyli takze do
+`equity-analyst`, co jest dokladnie tym, czego Krystian zabronil. `ORG_GROUP_CREATOR` pozwala
+zalozyc nowy projekt i nie daje wstepu do projektow, ktorych nie jestem czlonkiem.
+**Klucze nie ida przez czat** (ladowalyby w transkrypcie): plik `~/.atlas-keys.env` poza repo.
+Admin API chodzi na HTTP Digest, wiec wystarczy `curl --digest`; `atlas` CLI nie jest potrzebne.
+
+**CZEGO NADAL NIE MOGE ZROBIC SAM:** nie ma tu `atlas` CLI, `mongosh`, `mongodump` ani kluczy (stan
+sprawdzony ponownie 2026-08-20, 10:25). Bez kluczy **zalozenie klastra to akcja Krystiana**. Reszta
+jest gotowa.
 
 **NARZEDZIA GOTOWE (`9c85888`):**
 - `npm run cluster-space` - rozliczane kontra dysk, per baza i per kolekcja. Read-only, nie czyta
