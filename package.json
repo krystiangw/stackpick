@@ -29,6 +29,7 @@
     "audit-headlines": "tsx scripts/audit-headlines.mts",
     "regressions": "tsx scripts/regressions.mts",
     "confirm-regressions": "tsx scripts/confirm-regressions.mts",
+    "after-reseed": "tsx scripts/after-reseed.mts",
     "audit-unblock": "tsx scripts/audit-unblock.mts",
     "audit-captcha": "tsx scripts/audit-captcha.mts",
     "audit-llms": "tsx scripts/audit-llms.mts",

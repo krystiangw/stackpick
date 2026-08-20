@@ -263,6 +263,15 @@ echo "== werdykty gorsze niz poprzedni pomiar"
 MONGODB_URI="${MONGODB_URI:-$(heroku config:get MONGODB_URI -a stackpick 2>/dev/null)}" \
 SWEEP_STARTED_AT="$SWEEP_STARTED_AT" \
   npm run --silent regressions || echo "guard regresji nie wystartowal"
+
+# Cztery pytania, ktore po kazdym przemiecie i tak sie zadaje: czy sprostowania wygasly, czy lustro
+# rejestru MCP jest swieze, czy zaliczone wiersze cytuja slowa, na ktorych stoja, i czy oblane
+# `oauth_dcr` podaja adres. Skrypt istnieje od dawna, ale wisial WYLACZNIE w runbooku - a guard,
+# ktory rusza tylko wtedy, gdy ktos o nim pamieta, to guard, ktory nie rusza. Nie pyta vendorow o
+# nic: czyta wylacznie nasza baze.
+echo "== co przemiat zostawil po sobie"
+MONGODB_URI="${MONGODB_URI:-$(heroku config:get MONGODB_URI -a stackpick 2>/dev/null)}" \
+  npm run --silent after-reseed || echo "PRZYPOMNIENIE: after-reseed nie doszedl do konca, przeczytaj jego wyjscie" 
 # Token bierze sie z $TOKEN, czyli z tego samego miejsca, co caly przemiat: wywolanie
 # `scripts/reseed.sh <token>` dzialalo dla skanow, a tutaj szukalo zmiennej srodowiskowej, ktorej
 # nikt nie eksportowal - i potwierdzanie po cichu sie nie odbywalo (codex).
