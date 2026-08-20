@@ -36,16 +36,19 @@ const measurableOf = (card: { total: number; measurable?: number; max: number })
  */
 async function publishedRowFor(domain: string) {
   const store = getStore()
-  // Only for a domain in the corpus. Anywhere else the seeded row is whatever we happened to scan
-  // from the console once, and preferring it froze our own page on formula 9.22 while the scanner
-  // had moved nine versions: a rule meant to keep the published corpus consistent was aging every
-  // page outside it.
-  if (!categoryFor(domain)) return store.latestForDomain(domain)
-  // No fallback for a domain we publish. `/bot` promises that an anonymous request cannot rewrite
-  // what this site says about a company, and this page is the only indexable one that could break
-  // it: a corpus domain with no seeded row would render whatever a visitor last scanned, on a page
-  // search engines are invited to. Today every one of the 177 has a seeded row, so this changes
-  // nothing that is rendered - it removes the one path where the promise could stop being true.
+  // Seeded only, for every domain and not just for the corpus. `/bot` promises that an anonymous
+  // request cannot rewrite what this site says about a company, and `/pricing` promises that a scan
+  // somebody runs themselves "gets a permanent link you can forward, and we do not post it
+  // anywhere". Outside the corpus that second promise was not true: this page took the newest row of
+  // any kind, so a stranger scanning tally.so published our verdicts about tally.so at an address
+  // anyone can guess - noindex, but readable by their competitor. Measured 2026-08-20: tally.so and
+  // svix.com had a guest row and no seeded one, and both rendered here.
+  //
+  // The reason it used to fall back was real and is kept: preferring a seeded row froze our own page
+  // on formula 9.22 while the scanner had moved nine versions. That is now answered by the banner
+  // this page carries when the row is older than the formula we run, rather than by publishing
+  // whatever a visitor last ran. A guest keeps their scan at `/r/<id>`, which is the unguessable
+  // link the copy promises them.
   return store.latestForDomain(domain, true)
 }
 

@@ -1416,6 +1416,15 @@ check('nie z przyszlosci', dniOdSprawdzenia >= -1, true)
 check('i nie starsza niz 60 dni - odpal je ponownie', dniOdSprawdzenia <= 60, true)
 check('i widzi ja czytelnik', stronaFindings.includes('Read on {RIVALS_CHECKED_ON}'), true)
 
+// `/v/<domena>` publikuje TYLKO to, co zeskanowalismy sami. Cudzy skan goscia nie moze stac sie
+// nasza publiczna strona o cudzej firmie - `/pricing` obiecuje „a permanent link you can forward, and
+// we do not post it anywhere", a `/bot`, ze anonimowe zadanie nie przepisze tego, co ta witryna mowi
+// o firmie. Zmierzone 2026-08-20: `tally.so` i `svix.com` mialy wylacznie wiersz goscia i renderowaly
+// sie tutaj w calosci.
+const stronaV = readFileSync('src/app/v/[domain]/page.tsx', 'utf8')
+check('/v czyta wylacznie wiersze zasiane', stronaV.includes('return store.latestForDomain(domain, true)'), true)
+check('i nie ma juz galezi bioracej najnowszy wiersz jakikolwiek', stronaV.includes('return store.latestForDomain(domain)\n'), false)
+
 // Blad z serwera MCP ma nazwac argument, ktorego brakuje. Zmierzone na zywym serwerze: wolanie z
 // `{"problem": "..."}` dostawalo `isError: true` i zdanie „Describe the problem, for example ...",
 // ktore NIE mowi, ze klucz nazywa sie `job` - agent moze powtorzyc ten sam bledny call w kolko.
