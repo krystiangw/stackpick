@@ -85,6 +85,27 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## PLIKI DLA AGENTOW OBIECYWALY „OKOLO DZIESIECIU SEKUND" (18:10, v747)
+
+`agents.md` i `agent-signup.md` to pliki, ktore agent czyta **zamiast pytac czlowieka**, i z ktorych
+**ustawia sobie timeout**. Oba mowily: *„A scan takes about ten seconds for most domains"* - czyli
+dokladnie ten sam ksztalt („most ..."), ktory dzis przestal byc dozwolony na stronach.
+
+**Zmierzone: 7408 skanow z 7 dni. Mediana 5.3 s, p90 11.8 s, 84.4% ponizej 10 s.** Obietnica byla
+prawdziwa i **zachowawcza**, ale byla zgadnieta, a agent planujacy timeout dostaje teraz p90 zamiast
+przyslowia. Zdanie niesie **date i liczbe skanow**.
+
+**`npm run audit-latency` czyta zdanie z powrotem z obu plikow** i porownuje z baza: rozjazd
+mediany/p90 powyzej 30% albo udzialu powyzej 10 pp oblewa. Data: po **30 dniach przypomnienie**, po
+**90 oblanie** - bramka „data musi byc dzisiejsza" swiecilaby na czerwono codziennie i nikt by jej nie
+czytal. Wpiete w `reseed.sh` po przemiecie, bo to wtedy 340 skanow naraz moze te liczbe ruszyc.
+
+**Pierwsze uruchomienie przeczytalo ZERO skanow** - `durationMs` siedzi w `findings`, nie na wierzchu
+wiersza. Straznik „zero pomiarow", ktory dopisalem po poludniu do szesciu audytow, **zlapal to przy
+pierwszym uzyciu**, zamiast wydrukowac percentyle pustego zbioru. Druga poprawka tej samej klasy:
+kontrolka parsera oblewala, bo zdanie w pliku jest **zawiniete na dwie linie** - teraz dopasowanie
+liczy sie na splaszczonych bialych znakach.
+
 ## „NOBODY HAS RUN IT THROUGH THE CHECKS YET" O NASZYM WLASNYM SKANIE (18:40, v746)
 
 Wszedlem na `/v/letagentsin.com` jak obcy i przeczytalem: **„Nobody has run it through the checks
