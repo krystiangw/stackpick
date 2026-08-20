@@ -1021,6 +1021,32 @@ const zMaszynowym = zGrantami(['authorization_code', 'client_credentials'], true
 check('droga maszynowa nie dostaje instrukcji', zMaszynowym.unblock, undefined)
 check('i mowi to wprost', zMaszynowym.detail.includes('documented path to a token'), true)
 
+// 9.52. Ta galaz oskarza vendora o to, czego NIE MA w jego dokumencie, wiec musi powiedziec, gdzie
+// ten dokument czytalismy. 293 zapisanych raportow publikowalo ja z pustym miejscem po adresie, bo
+// pole `metadataAt` powstalo pozniej, a fallback renderowal nic zamiast odmowic. Kontrolki stoja na
+// wszystkich trzech wyjsciach, bo pomylka w kazda strone kosztuje: albo oskarzamy bez dowodu, albo
+// tracimy prawdziwy sygnal.
+const metadaneBez = (oauth: Record<string, unknown>) =>
+  rejestracjaKlienta.evaluate({
+    funnel: { oauth: { metadataPublished: true, dynamicClientRegistration: false, probedHosts: 3, ...oauth } },
+    discovered: { pricing: 'https://v.test/pricing', signup: 'https://v.test/signup' },
+  } as never)
+
+const zAdresem = metadaneBez({ metadataAt: 'https://auth.v.test/.well-known/oauth-authorization-server', probedOrigins: ['https://auth.v.test'] })
+check('znany adres dokumentu trafia do zdania', zAdresem.detail.includes('at https://auth.v.test/.well-known/oauth-authorization-server'), true)
+check('i to nadal jest oskarzenie, nie niemierzalne', Boolean(zAdresem.inconclusive), false)
+
+const bezAdresu = metadaneBez({ probedOrigins: ['https://a.v.test', 'https://b.v.test', 'https://c.v.test', 'https://d.v.test'] })
+check('bez adresu zdanie nazywa sondowane originy', bezAdresu.detail.includes('on one of the 4 origins we probed'), true)
+check('i przyznaje sie, ze nie zapisalismy ktory', bezAdresu.detail.includes('did not record which'), true)
+check('nigdy nie zostawia pustego miejsca po adresie', bezAdresu.detail.includes('published, but no registration_endpoint'), false)
+
+const bezNiczego = metadaneBez({ probedOrigins: [] })
+check('bez adresu I bez originow to nie jest znalezisko', bezNiczego.inconclusive === true, true)
+check('i mowi wprost, czego nie zapisalismy', bezNiczego.detail.includes('did not record the address'), true)
+// Stare raporty nie maja tego pola w ogole, nie pustej tablicy - to ten sam przypadek.
+check('brak pola zachowuje sie jak brak originow', metadaneBez({}).inconclusive === true, true)
+
 const docs = CHECKS.find((c) => c.id === 'docs_without_js')!
 const rendering = (chars: number) =>
   docs.evaluate({

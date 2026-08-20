@@ -218,6 +218,12 @@ const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   // A truncated candidate now needs a control asking for a path that cannot exist, so a host that
   // really does answer everything with one shell is still refused. Nothing about a vendor changed;
   // which of their pages we went on to read did.
+  // 9.52 stops charging a vendor for what a document lacks when we cannot say where we read it.
+  // 293 stored reports published "OAuth metadata published, but no registration_endpoint in it"
+  // with no address at all: the field that carries it was added later, and the branch rendered
+  // nothing in its place instead of refusing. The sentence now names the origins we searched, and
+  // where it cannot name even those the check goes unmeasurable. Nothing about a vendor changed.
+  '9.52': ['oauth_dcr'],
   '9.50': ['docs_without_js', 'programmatic_provisioning', 'machine_readable_api', 'price_in_snippet'],
   // 9.49 stops reading a press release as a documentation page. Exactly one in the corpus, and it
   // was holding up a hard zero on datadoghq.com.

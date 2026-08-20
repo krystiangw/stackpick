@@ -15,7 +15,7 @@ import { challengedUs, challengeSentence, CHALLENGE_UNBLOCK } from './limits'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.51'
+export const FORMULA_VERSION = '9.52'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -754,8 +754,28 @@ export const CHECKS: Check[] = [
         // Seventeen rows carried this sentence with neither an address nor a next step, so a
         // vendor could not check it and could not act on it. It is the only failing branch of this
         // check that named nothing, and it is the check the runs relate most strongly to.
+        //
+        // The address was then recorded, and the empty fallback stayed: 293 stored reports still
+        // publish the bare sentence, because `metadataAt` did not exist when they were scanned and
+        // the branch quietly rendered nothing in its place. A scan that cannot say where it read
+        // the document is not allowed to charge for what the document lacks, so the fallback now
+        // names the origins we searched, and if we cannot name even those, this is not a finding.
+        const searched = oauth.probedOrigins ?? []
+        const where = oauth.metadataAt
+          ? ` at ${oauth.metadataAt}`
+          : searched.length > 0
+            ? ` on one of the ${searched.length} origins we probed (${searched.slice(0, 3).join(', ')}${searched.length > 3 ? ', and others' : ''}), though this scan did not record which`
+            : null
+        if (where === null) {
+          return {
+            points: 0,
+            detail: 'Unmeasurable: we read OAuth metadata for you but did not record the address we read it at, so there is nothing here you could check',
+            unblock: 'Nothing for you to do. The next scan records the address and this becomes measurable.',
+            inconclusive: true,
+          }
+        }
         return {
-          ...yes(0, `OAuth metadata published${oauth.metadataAt ? ` at ${oauth.metadataAt}` : ''}, but no registration_endpoint in it`),
+          ...yes(0, `OAuth metadata published${where}, but no registration_endpoint in it`),
           unblock:
             'Add registration_endpoint to that document and accept RFC 7591 client registration on it, so an agent can introduce itself without somebody creating credentials for it by hand.',
         }

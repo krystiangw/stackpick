@@ -172,7 +172,11 @@ for (const domain of CURATED_DOMAINS) {
   const oauth = check('oauth_dcr')
   if (oauth && !oauth.inconclusive && !oauth.notApplicable && oauth.points === 0) {
     oauthFails += 1
-    if (oauth.detail.includes('probed: http')) oauthNamesHosts += 1
+    // Liczymy FAKT, nie ksztalt zdania. Poprzednia wersja szukala frazy `probed: http`, wiec 17
+    // wierszy z kompletnym dowodem („metadata published at <adres>") czytalo sie jak oskarzenia bez
+    // dowodu, a linijka meldowala 72 z 89. Diagnostyka, ktora zaniza sama siebie, kosztuje jedno
+    // sledztwo za kazdym razem, gdy ktos ja przeczyta - u mnie kosztowala 2026-08-20.
+    if (/https?:\/\//.test(oauth.detail)) oauthNamesHosts += 1
   }
 
   // An erratum that still fires is a row the reseed did not correct, which is the one outcome
@@ -237,7 +241,13 @@ console.log(
   }`,
 )
 console.log(`programmatic_provisioning: ${provisioningQuoted} z ${provisioningCredited} zaliczonych wierszy cytuje slowa, na ktorych stoi punkt`)
-console.log(`oauth_dcr: ${oauthNamesHosts} z ${oauthFails} oblanych wierszy wymienia sprawdzone adresy`)
+console.log(
+  oauthFails === 0
+    ? 'oauth_dcr: zaden wiersz nie oblewa, wiec nie ma czego sprawdzac'
+    : oauthNamesHosts === oauthFails
+      ? `oauth_dcr: wszystkie ${oauthFails} oblanych wierszy wymienia adres, ktorym vendor odtworzy wynik`
+      : `UWAGA: ${oauthFails - oauthNamesHosts} z ${oauthFails} oblanych wierszy oauth_dcr NIE podaje zadnego adresu, czyli oskarza bez dowodu`,
+)
 console.log(
   `price_in_snippet: ${snippetPasses} przechodzi, ${snippetFails} oblewa, ${snippetUnmeasurable} niemierzalnych, ${snippetNotApplicable} nie dotyczy`,
 )
