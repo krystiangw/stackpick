@@ -900,7 +900,10 @@ async function probeOauthOrigins(targets: OauthTarget[]): Promise<OauthProbe> {
  * round of probes in series.
  */
 function oauthTargetsKnownUpFront(domain: string, site: string, signupUrl: string | null): OauthTarget[] {
-  const signupOrigin = signupUrl ? new URL(signupUrl).origin : null
+  // Adres rejestracji pochodzi Z ICH STRONY, wiec moze byc szablonem albo smieciem - a `new URL`
+  // rzuca, i tak wlasnie jeden placeholder w dokumentacji `signoz.io` zabijal caly skan. Nieparsujacy
+  // sie adres to po prostu brak drugiego originu do sprawdzenia, nie awaria.
+  const signupOrigin = signupUrl && askable(signupUrl) ? new URL(signupUrl).origin : null
   const named = [...new Set([site, ...(signupOrigin ? [signupOrigin] : [])])]
   // Cheaper on the subdomains we are guessing at: an auth host publishes authorization-server
   // metadata, a resource host publishes protected-resource metadata, and neither publishes both.

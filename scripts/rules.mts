@@ -2182,6 +2182,13 @@ check(
   readFileSync('src/lib/scan/funnel.ts', 'utf8').includes(').filter(askable)'),
   true,
 )
+// Ten sam ksztalt na adresie rejestracji: tez pochodzi z ich strony i tez szedl do nieoslonietego
+// `new URL`. Przejrzalem pozostale takie miejsca w `funnel.ts` - reszta ma juz try/catch.
+check(
+  'origin rejestracji liczony tylko z adresu, ktory da sie zapytac',
+  readFileSync('src/lib/scan/funnel.ts', 'utf8').includes('signupUrl && askable(signupUrl)'),
+  true,
+)
 
 // Zgadnieta sciezka kontra nasz wlasny sufit. Dlugosc widocznego tekstu czytala nasze ciecie jako
 // cudza pustke: cialo, ktore wypelnilo 400 kB, jest ucinane w srodku bloku, `stripCodeBlocks`
