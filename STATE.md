@@ -85,6 +85,43 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## STRAZNIK REGRESJI POROWNYWAL PRZEMIAT SAM ZE SOBA (20:40, v750)
+
+Wzialem sie za automatyzacje zdania, ktore wisi w runbooku od sierpnia: *„przeskanuj taki wiersz
+pojedynczo, ZANIM uznasz go za regres vendora"*. Dzis wieczorem zrobilem to recznie dla trzech
+wierszy, wiec to jest dokladnie ta robota, ktora ma robic maszyna.
+
+**`npm run confirm-regressions`** bierze liste pogorszen, **przeskanowuje kazda dotknieta domene raz**
+(nasza konsola, 5 s przerwy miedzy domenami) i mowi, ktory werdykt sie powtorzyl. **Pierwszy przebieg:
+`POTWIERDZONE 2, ZNIKNELO 3`** - froala.com i split.io (dwa checki) wrocily po jednym reskanie, czyli
+byly naszym obciazeniem, a nie zmiana u vendora. Korpus **poprawil sie przy okazji**, bo reskan
+zapisuje swiezy wiersz.
+
+**A potem codex znalazl cos grubszego, i to w kodzie, ktory dziala od dni:** `regressions.mts`
+porownuje **dwa najnowsze zasiane wiersze**, a przy `PASSES=2` **oba pochodza z tego samego
+przemiatu**. Zmierzone w bazie:
+
+```
+stripe.com   17:14 (9.55)  |  16:43 (9.55)  |  10:27 (9.52)   <- baseline byl 16:43, nie 10:27
+algolia.com  17:16 (9.55)  |  16:46 (9.55)  |  10:29 (9.52)
+```
+
+Czyli straznik od dawna widzial **wylacznie nasza wlasna chwiejnosc** i byl **slepy na regres
+vendora powtorzony w obu przebiegach** - a to jest jego cala nazwa.
+
+**Baseline idzie teraz sprzed przemiatu** (`SWEEP_STARTED_AT`, eksportowane przez `reseed.sh`; bez
+znacznika: najnowszy wiersz starszy o 2 h, bo przebiegi dzieli okolo 30 minut). **Domena, ktorej ten
+przemiat nie przeskanowal**, jest liczona osobno jako nieprzemieciona, zamiast porownywac dwa stare
+wiersze i zglaszac historyczny spadek jako dzisiejszy (tez codex).
+
+**Wynik po poprawce jest zupelnie inny i o wiele zdrowszy:** 177 domen porownanych z porannym
+pomiarem, **0 werdyktow gorszych**, 2 spadki poprawnie przypisane naszej zmianie reguly (`fly.io`,
+robots). Dzisiejsze „piec regresji" bylo w calosci artefaktem porownywania przemiatu z samym soba.
+
+**Codex odbil te zmiane piec razy**: brak wyjscia niezerowego przy calkowitej awarii, potem przy
+czesciowej, token nieprzekazywany z `reseed.sh <token>`, obietnica argumentu pozycyjnego, ktorego
+skrypt nie czyta, i na koncu baseline. Kazde znalezisko bylo prawdziwe.
+
 ## CZESC „ODMOWY NA ICH BRZEGU" TO NASZ ADRES, NIE ICH KONFIGURACJA (20:00, v749)
 
 Poszedlem za `fly.io` z przemiatu i zapytalem **te same 14 domen, ktore u nas stoja na odmowie brzegu,
