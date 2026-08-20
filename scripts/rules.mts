@@ -68,6 +68,7 @@ import {
   everyFreeSignalIsAQuestion,
 } from '../src/lib/scan/funnel'
 import { asPublishedToday } from '../src/lib/publishable'
+import { visitKey, pathOf, kindOf } from '../src/lib/visits'
 
 // Ceny dostawcy przychodza ze srodowiska, a bez nich katalog nie rozpoznaje zadnej ceny i cala
 // sciezka przyznawania uprawnien jest nietestowana. Ustawiane TUTAJ, a nie w skrypcie npm: build
@@ -1110,6 +1111,14 @@ const zPunktem = asPublishedToday({
   scorecard: { formulaVersion: '9.41', total: 8, max: 16, measurable: 15, checks: [{ id: 'oauth_dcr', points: 1, max: 1, detail: 'registration_endpoint published' }] },
 } as never)
 check('zaliczony wiersz nie jest wycofywany', zPunktem.degraded.length, 0)
+
+// Klucz licznika odwiedzin: zapis i odczyt musza sie zgadzac, bo inaczej audyt zasiegu melduje zero
+// z powodu, ktory nie ma nic wspolnego z odwiedzinami (codex zlapal dokladnie taki rozjazd).
+check('klucz odwiedzin wraca w calosci', pathOf(visitKey('/r/vendor.test', 'browser')), '/r/vendor.test')
+check('i rodzaj klienta tez', kindOf(visitKey('/r/vendor.test', 'browser')), 'browser')
+check('nazwa crawlera z myslnikiem nie lamie klucza', pathOf(visitKey('/v/a.test', 'oai-searchbot')), '/v/a.test')
+// Stare wiersze sprzed tej konwencji nie maja rodzaju - odczyt ma je oddac, a nie uciac.
+check('klucz bez rodzaju zostaje sciezka', pathOf('/findings'), '/findings')
 
 const docs = CHECKS.find((c) => c.id === 'docs_without_js')!
 const rendering = (chars: number) =>

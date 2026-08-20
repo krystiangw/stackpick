@@ -24,6 +24,16 @@ export type VisitDay = { day: string; path: string; count: number }
  */
 const OURS = /LetAgentsIn|letagentsin-audit/i
 
+/**
+ * The stored key packs the path and the kind of visitor into one string, and both halves are read
+ * back by the audits. Written out by hand in two places it drifted immediately: the counter filed
+ * `/r/<domain> browser` while an audit asked for `/r/<id>`, so the reach number was zero for a
+ * reason that had nothing to do with visits (codex). One function writes it, one reads it.
+ */
+export const visitKey = (path: string, kind: string): string => `${path} ${kind}`
+export const pathOf = (key: string): string => (key.includes(' ') ? key.slice(0, key.lastIndexOf(' ')) : key)
+export const kindOf = (key: string): string => (key.includes(' ') ? key.slice(key.lastIndexOf(' ') + 1) : '')
+
 /** Never throws and never blocks the page: a counter that can 500 a page is worse than no counter. */
 export function recordVisit(path: string, userAgent?: string | null): void {
   if (userAgent && OURS.test(userAgent)) return
@@ -32,7 +42,7 @@ export function recordVisit(path: string, userAgent?: string | null): void {
   // A crawler we can name is a third thing: it says which index has a chance of holding us.
   const kind = crawlerName(userAgent) ?? (looksLikeAgent(userAgent) ? 'agent' : 'browser')
   void getStore()
-    .recordVisit({ day, path: `${path} ${kind}` })
+    .recordVisit({ day, path: visitKey(path, kind) })
     .catch((error) => console.error('visit counter failed, page unaffected', error))
 }
 

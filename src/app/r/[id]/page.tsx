@@ -16,6 +16,7 @@ import { pickHeadline } from '@/lib/headline'
 import { ShareRow } from '@/components/share-row'
 import { CHECKS, STAGES, type ScoredCheck } from '@/lib/score'
 import { reportAsPublished } from '@/lib/publishable'
+import { recordVisit } from '@/lib/visits'
 
 export const dynamic = 'force-dynamic'
 
@@ -110,6 +111,11 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   if (!published || addressProtectsNothing(id)) notFound()
   const { report, degraded } = published
   const { scorecard, findings } = report
+  // Filed under the domain, never the report id: one row per vendor instead of one per scan, so the
+  // counter answers "did anyone read what we published about this company" without growing a row
+  // for every report we ever wrote. Counting this at all was missing until 20 August, and its
+  // absence is why "how many people saw the accusation we withdrew" had no answer.
+  recordVisit(`/r/${report.domain}`, (await headers()).get('user-agent'))
   // A check we could not measure is not a failure we can charge someone for.
   // Not applicable is not failing. It counted here and nowhere else, so linear.app was told "5 of
   // the checks does not pass" while the SARIF from the same scan listed four failures and one check

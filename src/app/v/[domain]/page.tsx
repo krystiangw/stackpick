@@ -78,7 +78,7 @@ export async function generateMetadata({ params }: { params: Promise<{ domain: s
   const canonical = { alternates: { canonical: `${SITE_URL}/v/${name}` } }
   if (!report) return { title: `${name}: not measured yet · Let Agents In`, robots: { index: false }, ...canonical }
 
-  const { scorecard, findings } = report
+  const { scorecard } = report
   const measurable = measurableOf(scorecard)
   // Only the corpus is published, so only the corpus is offered to an index. A page built from a
   // visitor's own scan of a company that never asked is a page about somebody else, and it stays
@@ -134,6 +134,10 @@ function verdictTone(check: ScoredCheck) {
 export default async function VendorPage({ params }: { params: Promise<{ domain: string }> }) {
   const { domain } = await params
   const name = normalizeDomain(decodeURIComponent(domain))
+  // Not counted here on purpose. Reading `headers()` for the user-agent would make this route
+  // request-time and quietly undo the `revalidate = 600` above, which exists because every page
+  // being a database read once put the dyno down. Counting visits is worth less than that cache,
+  // so /v stays unmeasured until there is a way to record it off the cached path (codex).
   const report = await publishedRowFor(name)
   // A bare 404 here is the wrong answer to the only visitor who matters: somebody typing their
   // own domain, which is exactly the company we want measuring itself. They get the scan instead.
