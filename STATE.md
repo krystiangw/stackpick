@@ -1169,10 +1169,11 @@ gdy to pisalem. Uruchom je i przeczytaj recznie; nigdy w trakcie przemiatu.
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te czterdziesci linijek, potem reszte)
 
-**WERSJE (2026-08-20, 07:15): kod, produkcja (v702) i korpus na 9.51.** Przemiat zamkniety 06:13,
+**WERSJE (2026-08-20, 09:20): kod, produkcja (v710) i korpus na 9.51.** Przemiat zamkniety 06:13,
 bateria przeszla, a po naprawie padajacego skanu korpus jest **kompletny: 177 wierszy na 9.51, 0
 sprzecznosci** (pierwszy pelny komplet od kilku dni). Drzewo czyste, wszystko wdrozone.
-**Nic nie jest w toku.**
+**Nic nie jest w toku:** przemiat zamkniety, oba waitery zakonczone, drzewo czyste, bateria kontrolna
+przeszla po ostatnim wdrozeniu.
 
 **CO SIE STALO TEJ NOCY, od najwazniejszego (kazde: codex → build → straznik z mutacja → deploy →
 weryfikacja na produkcji, kazde ma wlasna sekcje nizej):**
