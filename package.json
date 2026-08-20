@@ -28,6 +28,7 @@
     "audit-mcp-probes": "tsx scripts/audit-mcp-probes.mts",
     "audit-headlines": "tsx scripts/audit-headlines.mts",
     "regressions": "tsx scripts/regressions.mts",
+    "confirm-regressions": "tsx scripts/confirm-regressions.mts",
     "audit-unblock": "tsx scripts/audit-unblock.mts",
     "audit-captcha": "tsx scripts/audit-captcha.mts",
     "audit-llms": "tsx scripts/audit-llms.mts",

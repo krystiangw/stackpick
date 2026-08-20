@@ -616,6 +616,17 @@ check('kontrola: sonda widzi martwa komende', npmSkrypty.has('audit-signup'), fa
 // Kontrolka na samo rozszerzenie: gdyby regula lapala tylko `.mts`, ten plik bylby dla niej niewidzialny.
 check('kontrola: regula widzi tez skrypty powloki', wKatalogu.has('reseed.sh'), true)
 
+// Lista regresji ma porownywac przemiat z pomiarem sprzed niego, nie dwa przejscia tego samego
+// przemiatu. Pilnujemy obu koncow kontraktu, a kontrolka dowodzi, ze sonda umie powiedziec „nie".
+const regressionSource = readFileSync('scripts/regressions.mts', 'utf8')
+const reseedSource = readFileSync('scripts/reseed.sh', 'utf8')
+const readsSweepStart = (source: string) => source.includes('process.env.SWEEP_STARTED_AT')
+const exportsSweepStart = (source: string) => source.includes('export SWEEP_STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"')
+check('regresje czytaja poczatek przemiatu', readsSweepStart(regressionSource), true)
+check('reseed eksportuje poczatek przemiatu', exportsSweepStart(reseedSource), true)
+check('kontrola: regresje bez zmiennej odpadaja', readsSweepStart('const cutoff = new Date()'), false)
+check('kontrola: reseed bez eksportu odpada', exportsSweepStart('SWEEP_STARTED_AT=$(date)'), false)
+
 // Audyt, ktory sprawdza nasze oskarzenia, sam potrzebuje kontrolki. `audit-mcp` zglosil szesc
 // adresow „ktore jednak odpowiadaja" u uploadthing.com i imagekit.io, a te hosty odpowiadaja tym
 // samym bledem uwierzytelnienia pod sciezka, ktorej nie ma. Bez kontrolki narzedzie sprawdzajace

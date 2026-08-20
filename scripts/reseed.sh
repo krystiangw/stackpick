@@ -11,6 +11,7 @@
 # made postmark.com answer 429 and launchdarkly.com refuse documentation pages, and those rows
 # then said more about our load than about the vendor. Reseed once per set of changes.
 set -u
+export SWEEP_STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 BASE="${BASE:-https://letagentsin.com}"
 TOKEN="${1:-${STACKPICK_CONSOLE_TOKEN:-}}"
@@ -260,5 +261,12 @@ echo "== werdykty gorsze niz poprzedni pomiar"
 # than required of the caller, because a guard that only runs when somebody remembers to export a
 # variable is a guard that does not run.
 MONGODB_URI="${MONGODB_URI:-$(heroku config:get MONGODB_URI -a stackpick 2>/dev/null)}" \
+SWEEP_STARTED_AT="$SWEEP_STARTED_AT" \
   npm run --silent regressions || echo "guard regresji nie wystartowal"
-echo "Powyzsze przeskanuj pojedynczo (console /api/scan) ZANIM uznasz je za regres vendora." 
+# Token bierze sie z $TOKEN, czyli z tego samego miejsca, co caly przemiat: wywolanie
+# `scripts/reseed.sh <token>` dzialalo dla skanow, a tutaj szukalo zmiennej srodowiskowej, ktorej
+# nikt nie eksportowal - i potwierdzanie po cichu sie nie odbywalo (codex).
+MONGODB_URI="${MONGODB_URI:-$(heroku config:get MONGODB_URI -a stackpick 2>/dev/null)}" \
+STACKPICK_CONSOLE_TOKEN="$TOKEN" \
+SWEEP_STARTED_AT="$SWEEP_STARTED_AT" \
+  npm run --silent confirm-regressions || echo "POTWIERDZANIE REGRESJI: nie objelo wszystkich wierszy (albo nie wystartowalo) - przeczytaj liste powyzej"
