@@ -24,7 +24,8 @@ That is the whole procedure. The response carries a report id; the readable vers
 ## Limits, stated up front so you can plan around them
 
 - 5 scans per hour per registrable domain, 30 per hour per source address. Exceeding either returns 429 with `retry-after`.
-- A scan takes about ten seconds for most domains. This endpoint answers only when the scan is
+- Half of our scans finish in 5.4 seconds and nine in ten within 11.8 seconds; 84 percent are done
+  inside 10 seconds (measured over the 7 days to 2026-08-20, 7406 scans). Slow sites take longer. This endpoint answers only when the scan is
   finished, so a slow domain can hit a gateway timeout and return 503; `/api/scan/stream` sends
   progress events and does not go silent.
 - The same scan is available as an MCP tool at `/mcp`, and every published result as one dataset

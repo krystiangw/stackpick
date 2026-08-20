@@ -252,6 +252,8 @@ echo
 echo "== czy probka sprzedazowa nadaza za formula"
 MONGODB_URI="${MONGODB_URI:-$(heroku config:get MONGODB_URI -a stackpick 2>/dev/null)}" \
   npm run --silent audit-sample || echo "PRZYPOMNIENIE: /d/sample stoi na starszej formule, odswiez ja"
+MONGODB_URI="${MONGODB_URI:-$(heroku config:get MONGODB_URI -a stackpick 2>/dev/null)}" \
+  npm run --silent audit-latency || echo "PRZYPOMNIENIE: opublikowany czas skanu rozjechal sie z pomiarem"
 
 echo "== werdykty gorsze niz poprzedni pomiar"
 # Reads the database rather than the site, so it needs the connection string. Fetched here rather
