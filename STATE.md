@@ -85,6 +85,34 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## 9.55: LISTA OSKARZEN BEZ DOWODU DOMKNIETA (18:05, v722)
+
+`audit-evidence` zostawil po 9.53 szesc pozycji lzejszego kalibru. **Dwie z nich okazaly sie stare
+wiersze, nie defekty kodu** - sprawdzone u zrodla, zanim cokolwiek ruszylem: `signup_reachable` juz
+podaje adres formularza (`opensrs.com` stoi na formule **7.7**), a `machine_readable_api` juz wymienia
+sondowane sciezki. **Trzy byly prawdziwe** i wszystkie w jednej wersji:
+
+| zdanie | czego brakowalo |
+|---|---|
+| `Blocked: ChatGPT-User` | **ktory** robots.txt przeczytalismy, a hostow bywa kilka |
+| `Crawl-delay: 10s applies to the agents we check` | to samo |
+| `X ships without bundled types` | **ktora** paczke sprawdzilismy - a przy dopasowaniu po wydawcy to pierwsze pytanie vendora |
+
+**Codex dolozyl czwarta,** te sama luke o galaz dalej: `blanketDisallowAll` wychodzil **przed** nowym
+zdaniem, wiec „robots.txt disallows everything" nadal nie mowilo, czyj plik czytalismy.
+
+Adres strony paczki w rejestrze mial **dwie definicje** (`export.ts` skladal go osobno) - teraz jedna.
+Zweryfikowane na produkcji swiezymi skanami: `Blocked in https://www.june.so/robots.txt: ChatGPT-User`
+oraz `Crawl-delay: 10s in https://uploadcare.com/robots.txt`.
+
+**Straznikow piac, dwie mutacje oblewaja.** Fixtures wymagaly uzupelnienia o pola, ktorych check
+dotyka po drodze (`crawlers`, `blanketDisallowAll`) - test, ktory wywala sie na brakujacym polu, jest
+tanszy niz test, ktory przechodzi z niepelnym stanem.
+
+**STAN WERSJI:** kod **9.55**, korpus **176 na 9.52 + 1 na 9.54**. Mediana wieku korpusu to niespelna
+godzina, wiec przemiat dopiero po przekroczeniu **6 h** - to prog, ktory chroni vendorow przed naszym
+tempem, nie formalnosc. Jeden przemiat obejmie 9.53, 9.54 i 9.55 naraz.
+
 ## PYTANIE Z WCZORAJ ZAMKNIETE POMIAREM, NIE HIPOTEZA (17:10, v721)
 
 Zostawilem wczoraj otwarte: „nie umiem odtworzyc, czemu tamten przebieg przyznal punkt za cudze
