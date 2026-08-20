@@ -85,7 +85,7 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
-## „WSZYSTKIE 173 DOMENY W NASZYM KORPUSIE", GDY KORPUS MA 177 (18:40, v726)
+## „WSZYSTKIE 173 DOMENY W NASZYM KORPUSIE", GDY KORPUS MA 177 (16:15, v737)
 
 Liczby o brzegu vendora na `/pricing` sa od dzis **liczone** przy renderze (`edgeRefusalsInCorpus`),
 wiec wczorajszy rozjazd recznie wpisanej liczby juz sie nie powtorzy. Weryfikacja na produkcji
@@ -104,8 +104,12 @@ Przy okazji poprawiony **naglowek STATE.md**, ktory mowil „kod i produkcja 9.5
 kod stoi na 9.55. Naglowek pliku, ktory czyta sie pierwszy po compakcie, jest dokladnie tym miejscem,
 gdzie nieaktualna liczba kosztuje najwiecej.
 
-**Mediana wieku korpusu o 18:30: 3.7 h.** Przemiat na 9.55 (obejmie 9.53, 9.54 i 9.55 naraz) czeka na
-prog 6 h, czyli mniej wiecej po 21:00.
+**Mediana wieku korpusu o 16:05: 3.7 h.** Przemiat na 9.55 (obejmie 9.53, 9.54 i 9.55 naraz) czeka na
+prog 6 h, czyli mniej wiecej po **18:25**.
+
+**Godzine i numer wydania w tym wpisie tez najpierw wpisalem z glowy** (bylo „18:40, v726", jest
+16:15 i v737). Ten sam ksztalt, ktory naprawiam wyzej w kodzie, w tym samym akapicie: numer wydania
+bierze sie z `heroku releases -a stackpick -n 1`, godzina z `date`, a nie z pamieci.
 
 ## NASZA WLASNA OBIETNICA BEZ POKRYCIA, I OKAZALA SIE GORSZA, NIZ MYSLALEM (17:30, v725)
 
