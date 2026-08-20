@@ -85,6 +85,42 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## BRAMKA PRZED PRZEMIATEM: DOWOD, ZE PODBICIE FORMULY NIE OBUDZI OBSERWATOROW (19:50, v723)
+
+Przed nami przemiat, ktory przepisze 177 wierszy naraz z 9.52 na 9.55. Wtedy **kazdy wiersz „sie
+zmienia"**, i bez oslony kazdy obserwator dostaje maila o czyms, co zrobilismy MY. `CHECK_RULE_CHANGED`
+istnieje wlasnie po to, ale **do dzis sprawdzalismy tylko, czy funkcja zwraca wlasciwa liste** - nigdy
+czy cala sciezka decyzyjna crona konczy sie milczeniem.
+
+**WYNIK, i jest to dowod, a nie zalozenie:** 6 aktywnych obserwacji, 4 z baseline'em, **oslona
+realnie zdejmuje zmiane w 1 z nich**, i **zaden obserwator nie dostalby maila** po podbiciu do 9.55.
+Kontrolka nie jest pusta, wiec zielony wynik cos znaczy.
+
+**BRAMKA MA ZEBY:** stoi **przed pierwszym skanem** w `reseed.sh` i **wychodzi niezerowo**, wiec
+nieznany stan zatrzymuje przemiat zamiast go informowac po fakcie.
+
+**CODEX ODBIL TO SIEDEM RAZY i to najostrzejsza seria tej doby.** Kazde znalezisko bylo o tym samym:
+**bramka, ktora mierzy nie to, co sie wydarzy, jest gorsza niz jej brak, bo daje spokoj.**
+1. wpialem straznik **PO** operacji, ktora ma strzec - z komentarzem „przed samym przemiatem, nie po"
+   nad wywolaniem, ktore bylo po.
+2. bramka tylko **drukowala** UWAGA i wychodzila zerem, wiec `reseed.sh` szedl dalej.
+3. cicho pomijala wiersze, ktorych nie da sie przeliczyc - mogla wyjsc zerem **nie sprawdziwszy nic**.
+4. liczyla domeny **spoza korpusu**, wiec cudza obserwacja zablokowalaby przemiat, ktorego nie dotyczy.
+5. **P1 i najwazniejszy:** symulowala najnowszy **zasiany wiersz**, a cron porownuje
+   `watch.lastReportId`. Reczny skan z konsoli mogl juz stac na biezacej formule, podczas gdy baseline
+   subskrybenta zostal na starej - i taki subskrybent **wypadal z symulacji w calosci**.
+6. porownywala baseline z **przeliczonym baselinem**, a cron porownuje ze **swiezym skanem**. Wersja,
+   ktora zmienia to, CO skaner czyta (nowe pole w 9.54), byla tu **niewidoczna**. Teraz bramka
+   naprawde skanuje szesc obserwowanych domen i **nic nie zapisuje**.
+7. blokade na krawedzi ocenialismy ze **starych** findings - vendor, ktory wlasnie wlaczyl ochrone
+   przed botami, jest powodem maila, a baseline o tym jeszcze nie wie.
+
+**PRZY OKAZJI USTALONE I WARTE ZAPAMIETANIA:** `changesBetween` porownuje **werdykty**, nie tresc
+zdan. Wersja, ktora dodaje adres do zdania (9.53, 9.55), **nie budzi obserwatorow w ogole** - oslona
+liczy sie tam, gdzie werdykt sie przesuwa, jak w 9.54 („oskarzenie" na „niemierzalne"). Sprawdzone
+przez **wylaczenie oslony i powtorzenie przebiegu**, a nie przez przeczytanie kodu. Audyt mowi to
+teraz wprost w wyniku, zeby nikt nie czytal zera jako dowodu.
+
 ## 9.55: LISTA OSKARZEN BEZ DOWODU DOMKNIETA (18:05, v722)
 
 `audit-evidence` zostawil po 9.53 szesc pozycji lzejszego kalibru. **Dwie z nich okazaly sie stare
