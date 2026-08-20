@@ -178,6 +178,23 @@ za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). 
 wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
 Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
 
+## DWADZIESCIA CZTERY STRONY, KTORYCH ADRES NIE CHRONIL NICZEGO, WYCOFANE (02:40, v691)
+
+Domkniecie poprzedniego. Te 24 raporty bez losowego sufiksu sprawdzone **co do wiersza**: wszystkie
+**24 to skany GOSCIA** (`seeded=false`) o cudzych domenach - `htmx.org`, `statuspage.io`,
+`linear.app` i podobne, wszystkie z 7 sierpnia. Ich adres to **domena i minuta**
+(`htmx-org-202608072323`), wiec kazdy z nich znajdzie sie przechodzac minuty tamtego dnia.
+
+Skoro `/privacy` mowi od dzis, ze skan goscia nie jest nigdzie publikowany, a jego adres jest cala
+ochrona, to dla tych dwudziestu czterech nie bylo to prawda. **`/r` przestal je wydawac** (404,
+razem z metadanymi). **Nic nie skasowalem**: wiersze leza tam, gdzie lezaly, i jedna linijka je
+przywraca - dlatego zrobilem to sam, bez budzenia Krystiana. Do potwierdzenia rano, ale kierunek jest
+bezpieczny: **publikujemy mniej, nie wiecej**.
+
+Zweryfikowane na produkcji: `/r/htmx-org-202608072323` → **404**,
+`/r/svix-com-20260819233014-4829` → **200**. Straznik ma kontrolki na oba nowe ksztalty adresu
+(16- i 64-bitowy), zeby ten filtr nigdy nie zjadl zywego raportu.
+
 ## ADRES RAPORTU BYL JEDYNA OCHRONA I NIE BYL TEGO WART (02:20, v690)
 
 Ciag dalszy poprzedniego: skoro skan goscia zyje **wylacznie** pod `/r/<id>`, to ten adres jest cala
