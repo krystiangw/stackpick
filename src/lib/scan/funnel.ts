@@ -657,6 +657,7 @@ export type FunnelFindings = {
      */
     unattendedGrant: boolean
     grantTypes?: string[]
+    codeChallengeMethods?: string[]
     probedHosts: number
     /** Named so the vendor can rerun exactly what we ran instead of taking "we looked" on trust. */
     probedOrigins?: string[]
@@ -783,6 +784,7 @@ type OauthProbe = {
   metadataPublished: boolean
   dynamicClientRegistration: boolean
   grantTypes?: string[]
+  codeChallengeMethods?: string[]
   origins: string[]
   /** The document that carried the registration endpoint, so the verdict can name it. */
   registrationAt?: string
@@ -833,6 +835,28 @@ function metadataUrlsFor(issuer: string): string[] {
   }
 }
 
+/**
+ * An accepted metadata document that names no method reads as an empty list, and a document we
+ * never read reads as `undefined`. The scan has published a late-added field as a measured absence
+ * five times; here the two states stay apart at the source.
+ *
+ * Collected as a UNION across every document we accepted, on both hosts. A vendor whose apex
+ * metadata omits the field while the MCP host names S256 would otherwise be recorded as naming
+ * nothing, and an empty list is the shape a future check would read as "they do not support it"
+ * (codex, twice on the same change).
+ *
+ * A document that omits the field deliberately reads as `[]`, not `undefined`: RFC 8414 makes the
+ * field optional, so omitting it means the server advertises no method, which is what an agent
+ * sees and is a reading rather than a blind spot. Codex asked for `undefined` there; taking it
+ * would make the recorded set "documents that name the field", and the published fraction would
+ * then be near 100% by construction and say nothing.
+ */
+const methodsIn = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((method): method is string => typeof method === 'string') : []
+
+const unionOfMethods = (...lists: (string[] | undefined)[]): string[] | undefined =>
+  lists.some((list) => list !== undefined) ? [...new Set(lists.flatMap((list) => list ?? []))] : undefined
+
 async function probeOauthOrigins(targets: OauthTarget[]): Promise<OauthProbe> {
   // The origin travels with the address rather than being read back off the answer: a successful
   // fetch reports the URL it ended on, so a well-known that redirects cross-origin would credit
@@ -877,6 +901,8 @@ async function probeOauthOrigins(targets: OauthTarget[]): Promise<OauthProbe> {
 
   let metadataPublished = false
   let metadataAt: string | undefined
+  let codeChallengeMethods: string[] | undefined
+  let registration: { at: string; grantTypes?: string[] } | undefined
   for (const got of ordered) {
     if (!got.ok || looksLikeHtml(got)) continue
     try {
@@ -885,24 +911,33 @@ async function probeOauthOrigins(targets: OauthTarget[]): Promise<OauthProbe> {
         issuer?: string
         authorization_endpoint?: string
         grant_types_supported?: string[]
+        code_challenge_methods_supported?: string[]
       }
       if (!metadata.issuer && !metadata.authorization_endpoint) continue
       if (!metadataPublished) metadataAt = got.url
+      codeChallengeMethods = unionOfMethods(codeChallengeMethods, methodsIn(metadata.code_challenge_methods_supported))
       metadataPublished = true
-      if (metadata.registration_endpoint) {
-        return {
-          metadataPublished: true,
-          dynamicClientRegistration: true,
-          grantTypes: metadata.grant_types_supported,
-          origins,
-          registrationAt: metadata.registration_endpoint,
-        }
+      // The first document that carries a registration endpoint decides the DCR verdict, but the
+      // loop keeps going: it used to return here, and that cut the method list short at whichever
+      // document happened to come first (codex). The verdict is unchanged, the reading is longer.
+      if (metadata.registration_endpoint && registration === undefined) {
+        registration = { at: metadata.registration_endpoint, grantTypes: metadata.grant_types_supported }
       }
     } catch {
       /* a JSON body that is not JSON tells us nothing */
     }
   }
-  return { metadataPublished, dynamicClientRegistration: false, origins, metadataAt }
+  if (registration !== undefined) {
+    return {
+      metadataPublished: true,
+      dynamicClientRegistration: true,
+      grantTypes: registration.grantTypes,
+      codeChallengeMethods,
+      origins,
+      registrationAt: registration.at,
+    }
+  }
+  return { metadataPublished, dynamicClientRegistration: false, origins, metadataAt, codeChallengeMethods }
 }
 
 /**
@@ -958,12 +993,14 @@ function mergeOauthProbes(first: OauthProbe, second: OauthProbe): FunnelFindings
   // the second one. weglot.com is the same shape. The MCP host wins when it published grants,
   // because that is the door the claim is about.
   const grantTypes = first.grantTypes ?? second.grantTypes ?? []
+  const codeChallengeMethods = unionOfMethods(first.codeChallengeMethods, second.codeChallengeMethods)
   return {
     metadataPublished: first.metadataPublished || second.metadataPublished,
     dynamicClientRegistration: first.dynamicClientRegistration || second.dynamicClientRegistration,
     ...(first.metadataAt ?? second.metadataAt ? { metadataAt: first.metadataAt ?? second.metadataAt } : {}),
     unattendedGrant: grantTypes.includes('client_credentials'),
     ...(grantTypes.length > 0 ? { grantTypes } : {}),
+    ...(codeChallengeMethods !== undefined ? { codeChallengeMethods } : {}),
     probedHosts: origins.length,
     probedOrigins: origins,
   }

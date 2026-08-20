@@ -5,6 +5,7 @@ import { CHECKS } from '@/lib/score'
 import { publishedCorpus } from '@/lib/published'
 import { recordVisit } from '@/lib/visits'
 import { SITE_URL } from '@/lib/site'
+import { oauthMetadataInCorpus } from '@/lib/limits'
 
 export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/standard` },
@@ -99,6 +100,7 @@ const NO_EQUIVALENT = [
 
 export default async function StandardPage() {
   const corpus = await publishedCorpus()
+  const oauth = corpus.reports.length > 0 ? oauthMetadataInCorpus(corpus.reports) : null
   // Counted from what the scan found at each address, not from the sentence it wrote. Reading the
   // published detail instead gave 2, because a domain serving several of these files is described
   // by whichever one the sentence names first: a number about our prose rather than about them.
@@ -160,13 +162,30 @@ export default async function StandardPage() {
 
       <section className="border-b border-rule py-12">
         <h2 className="text-lg font-semibold tracking-tight">The one we refuse to add, and why</h2>
+        {/* The paragraph stands with or without the reading: a database blip must not take our reason
+            for not scoring a check off the page, and a corpus we could not count must not print a
+            zero that reads as a measured absence. `recorded` is the coverage denominator and it is
+            said out loud, because between shipping the field and the next sweep it covers a part of
+            the corpus, and a fraction of a corpus stated as the corpus is the error this page is
+            about. */}
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          AR-IDEN-05 asks for PKCE with S256. We do not score it, and the reason is a number rather than an opinion:
-          almost nobody in our corpus publishes the metadata that would let us check it without guessing, and a check
-          measured on a handful of rows cannot tell a real absence from our own blind spot. Every check costs requests
-          and a place on the card, and one that credits nothing certain while risking a wrong accusation is worse than
-          the gap it closes. We already collect the evidence while checking OAuth, so the decision reverses itself the
-          moment the number grows.
+          AR-IDEN-05 asks for PKCE with S256. We do not score it.{' '}
+          {oauth && oauth.recorded === 0 && (
+            <>
+              {oauth.metadata} of {oauth.domains} domains in our corpus publish an authorization-server metadata
+              document, and we have not recorded whether any of them names S256, so there is no number behind the
+              check yet and we do not score what we have not measured.{' '}
+            </>
+          )}
+          {oauth && oauth.recorded > 0 && (
+            <>
+              {oauth.metadata} of {oauth.domains} domains in our corpus publish an authorization-server metadata
+              document. We have read the field on {oauth.recorded} of them so far, and {oauth.namingS256} name S256.{' '}
+            </>
+          )}
+          Every check costs requests and a place on the card, and one that credits nothing certain while risking a
+          wrong accusation is worse than the gap it closes. We already collect the evidence while checking OAuth, so
+          the decision reverses itself the moment the number grows.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           For the same reason we watch AR-CAPA-04 rather than celebrate it. On {PROBED_ON} we asked 59 domains spread

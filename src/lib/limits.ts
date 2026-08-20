@@ -151,3 +151,19 @@ export function edgeRefusalsInCorpus(
   }
   return { domains: rows.length, refused, challenged }
 }
+
+export function oauthMetadataInCorpus(
+  rows: { domain: string; findings?: ScanFindings }[],
+): { domains: number; metadata: number; recorded: number; namingS256: number } {
+  let metadata = 0
+  let recorded = 0
+  let namingS256 = 0
+  for (const row of rows) {
+    const oauth = row.findings?.funnel.oauth
+    if (oauth?.metadataPublished === true) metadata += 1
+    if (!Array.isArray(oauth?.codeChallengeMethods)) continue
+    recorded += 1
+    if (oauth.codeChallengeMethods.includes('S256')) namingS256 += 1
+  }
+  return { domains: rows.length, metadata, recorded, namingS256 }
+}
