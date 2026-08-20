@@ -1019,9 +1019,10 @@ weryfikacja na produkcji, kazde ma wlasna sekcje nizej):**
    przestal liczyc nazwy plikow tak, jakby liczyl zapytania; limity z trzech plikow dla agentow maja
    straznika na stalych.
 
-**W TOKU: waiter przemiatu na 9.50** - `/tmp/reseed-950.sh` (PID 15629, log `/tmp/reseed-950.log`),
-czeka az mediana wieku korpusu przekroczy 6 h. O 23:54 bylo 0,85 h, wiec **przemiat rusza okolo
-05:00**. **W trakcie przemiatu nie deployujemy** i nie odpalamy trzech audytow pytajacych cudze
+**W TOKU: waiter przemiatu** - `/tmp/reseed-950.sh` (PID 15629, log `/tmp/reseed-950.log`). Jego log
+napisze **„startuje przemiat na 9.50"**, a przemiat pojdzie na **9.51**: to nazwa pliku, nie wersja -
+`reseed.sh` bierze kod z repo (ta sama pomylka co poprzednio z waiterem nazwanym 948). Waiter czeka,
+az mediana wieku korpusu przekroczy 6 h: o 04:00 bylo **4,96 h**, wiec **przemiat rusza okolo 05:05**. **W trakcie przemiatu nie deployujemy** i nie odpalamy trzech audytow pytajacych cudze
 serwery (`audit-docs-js`, `audit-front-door`, `audit-named-crawlers`); ich nigdy tez nie puszczamy
 przez `| tail`, bo wtedy nie widac postepu.
 
