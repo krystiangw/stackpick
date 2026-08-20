@@ -94,6 +94,13 @@ ogranicza nam to maksymalny storage; zmigrujmy na osobny, ale **nie ruszaj danyc
 (`...dgiima2.mongodb.net`), czyli klaster zalozony dla innego projektu. Jestesmy tam gosciem. Mongo
 8.0.29, Atlas **Flex**, sufit **5 GB twardy**.
 
+**POMIAR POWTORZONY 2026-08-20, 10:25** (Krystian zapytal drugi raz). Nadal `equity-analyst-flex`,
+nadal jestesmy gosciem, a zajetosc **spadla**: `1796 MB z 5120 MB (35,1 %)`, sasiad **1656 MB**
+(bylo 2856), my **139 MB** (dane 134 + indeksy 5), plik nadal 1470 MB. Sasiad zwolnil **1,2 GB w
+kilkanascie godzin, bez naszej wiedzy** - co jest najlepszym argumentem za migracja, jaki mozna
+dostac: nie kontrolujemy ani pojemnosci, ani tego, kto i kiedy nia rusza. Sprawdzone ponownie: brak
+`atlas` CLI, `mongosh`, `mongodump` i kluczy Admin API na tej maszynie.
+
 **PRZESLANKA O CIASNOCIE JEST FALSZYWA, i to w nasza korzysc** (`npm run cluster-space`, nowy skrypt):
 ```
 ROZLICZANE (to jest sufit): 2987 MB z 5120 MB (58,3 %)
