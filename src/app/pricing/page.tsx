@@ -242,8 +242,8 @@ export default async function PricingPage() {
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           <strong className="font-semibold text-ink">Your edge is production configuration, not
-          code.</strong> Sweeping all 177 domains in our corpus on 18 August 2026, 16 of them refused our
-          requests at their own edge and 12 of those answered with a browser challenge rather than a rate
+          code.</strong> Sweeping all 177 domains in our corpus on 20 August 2026, 15 of them refused our
+          requests at their own edge and 11 of those answered with a browser challenge rather than a rate
           limit. One vendor&apos;s documentation host challenged thirteen of the thirteen requests we made to
           it, which read as three checks going silent while nothing in their repository had changed; asked
           again on its own an hour later, the same host answered and all three came back. A bot rule added in
