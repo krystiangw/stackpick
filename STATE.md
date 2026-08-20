@@ -85,6 +85,27 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## PRZESZEDLEM SCIEZKE ZWYKLEGO GOSCIA I ZNALAZLEM JEDNA STRONE BEZ `noindex` (21:20, v753)
+
+Przeskanowalem `plausible.io` **bez konta, jak kazdy odwiedzajacy**, i przeczytalem `/r/<id>` jak
+kupujacy. Dokument trzyma sie: naglowek niesie dowod („We asked for 10 entry files by name ... not one
+of them answered"), plan naprawy jest konkretny, a **poprawione dzis zdanie o RFC 7591 jest juz w
+dokumencie** („which is how an agent registers itself without a human", bez „at almost every").
+
+**Sprawdzilem tez obietnice prywatnosci i ona sie trzyma:** wiersz goscia ma `seeded: false` i **nie**
+trafia na `/v`. To, co widac pod `/v/plausible.io`, to wiersz korpusowy z dzisiejszego przemiatu -
+przez chwile wygladalo to na wyciek i warto zapisac, ze **nie bylo**.
+
+**Ale jedna strona nie miala `noindex`:** `/r/<id>`. `/watch/confirm` i `/watch/stop` maja go od
+poczatku, a strona opisana w cenniku jako **link prywatny**, ktora do tego potrafi mowic o **cudzej
+firmie** (skanuje sie dowolna domene), miala go tylko wtedy, gdy raport byl wycofany albo ulotny.
+
+**Codex slusznie zauwazyl konflikt:** `robots.txt` ma `Disallow: /r/`, wiec crawler, ktory to
+uszanuje, **nigdy nie pobierze strony i nie zobaczy `noindex`**. Zdjecie Disallow zaprosiloby jednak z
+powrotem **siedemdziesiat rownoleglych pobran, ktore raz polozyly ten dyno** (2026-08-12). Wybor jest
+swiadomy: zostaja obie warstwy, a **powod stoi teraz w obu plikach**, zeby nikt go za miesiac nie
+odkrecil w dobrej wierze.
+
 ## STRAZNIK REGRESJI POROWNYWAL PRZEMIAT SAM ZE SOBA (20:40, v750)
 
 Wzialem sie za automatyzacje zdania, ktore wisi w runbooku od sierpnia: *„przeskanuj taki wiersz
