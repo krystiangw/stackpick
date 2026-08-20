@@ -28,6 +28,7 @@ import { arithmeticExplained, scoreSection } from '../src/lib/report-numbers'
 import { categoryOfWatch } from '../src/lib/watch'
 import { readWithGuest } from '../src/lib/guest-cell'
 import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR, REUSE_WINDOW_MS } from '../src/lib/scan-gate'
+import { addressProtectsNothing } from '../src/lib/store'
 import { DEFAULT_SCAN_BUDGET_MS, MAX_PER_SITE, backoffFor } from '../src/lib/scan/http'
 import { forStorage } from '../src/lib/store'
 import { REMEDIES } from '../src/lib/fixfirst'
@@ -1435,6 +1436,13 @@ check('i mowi, ile ten adres naprawde wart', stronaPrywatnosc.includes('64 rando
 // tych 24 i zanizalo, jak przewidywalne sa. Codeksa, czwarte przejscie po tym samym akapicie.
 check('i nazywa najstarsze adresy bez sufiksu', stronaPrywatnosc.includes('carry none at all'), true)
 check('z data, kiedy je policzylem', stronaPrywatnosc.includes('counted on 20 August 2026'), true)
+check('i mowi, ze przestaly byc serwowane', stronaPrywatnosc.includes('stopped being served on 20 August'), true)
+// I `/r` naprawde ich nie wydaje. Adres bez losowego sufiksu nie chroni niczego, wiec strona go nie
+// otwiera; dane zostaja, wraca jedna linijka.
+check('adres bez sufiksu nie chroni niczego', addressProtectsNothing('htmx-org-202608072323'), true)
+check('a adres z sufiksem 16-bitowym juz tak', addressProtectsNothing('svix-com-20260819233014-4829'), false)
+check('i 64-bitowy tym bardziej', addressProtectsNothing('posthog-com-20260820001706-8ab44bcd3a7d18d1'), false)
+check('strona /r odmawia takiego adresu', readFileSync('src/app/r/[id]/page.tsx', 'utf8').includes('addressProtectsNothing(id)) notFound()'), true)
 // Okno ponownego uzycia: kto pyta o domene przeskanowana w ostatnich 15 minutach, dostaje TAMTEN skan,
 // wiec zdanie „twojego skanu nie ma na /v" bylo nieprawda dokladnie dla tego przypadku. Codeksa,
 // trzecie przejscie po moim wlasnym akapicie.

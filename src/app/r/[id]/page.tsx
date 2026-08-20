@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
+import { addressProtectsNothing } from '@/lib/store'
 import { ComparisonSection } from '@/components/comparison'
 import { buildComparison } from '@/lib/compare'
 import { CONTROLLER_IS_NAMED } from '@/lib/seller'
@@ -20,6 +21,7 @@ export const dynamic = 'force-dynamic'
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
   const report = (await getStore().getReport(id)) ?? heldReport(id)
+  if (report && addressProtectsNothing(id)) return { title: 'Not found · Let Agents In', robots: { index: false } }
   if (!report) return { title: 'Scorecard not found: Let Agents In' }
 
   const headline = pickHeadline(report.findings, report.scorecard)
@@ -97,7 +99,7 @@ function verdictTone(check: ScoredCheck) {
 export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const report = (await getStore().getReport(id)) ?? heldReport(id)
-  if (!report) notFound()
+  if (!report || addressProtectsNothing(id)) notFound()
 
   const { scorecard, findings } = report
   // A check we could not measure is not a failure we can charge someone for.

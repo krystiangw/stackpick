@@ -378,6 +378,17 @@ export function getStore(): Store {
  * that 2^64 and the claim on `/privacy` true. Codex's, and old ids keep working because they are
  * stored rather than derived.
  */
+/**
+ * An address from before the random suffix existed, which is the domain and the minute and nothing
+ * else. Twenty-four of them were made on 7 August 2026, all of them scans a visitor ran about
+ * somebody else's domain, and every one can be found by walking the minutes of that day.
+ *
+ * `/privacy` says a scan you run is not posted anywhere and that its address is the only thing
+ * protecting it. For these that was not true, so `/r` stops serving them: nothing is deleted, the
+ * rows stay where they are, and one line brings them back if that turns out to be the wrong call.
+ */
+export const addressProtectsNothing = (id: string) => /-\d{12,14}$/.test(id)
+
 export function reportId(domain: string, scannedAt: string): string {
   const stamp = scannedAt.replace(/[-:TZ.]/g, '').slice(0, 14)
   const suffix = randomBytes(8).toString('hex')

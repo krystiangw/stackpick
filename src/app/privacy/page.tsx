@@ -69,8 +69,9 @@ export default async function PrivacyPage() {
               published ones. The address is the only thing protecting a scan of your own, and it has not always been
               worth that job: from 20 August 2026 it carries 64 random bits, before that 16, and twenty-four reports
               made on 7 August 2026 - counted on 20 August 2026 - carry none at all, because the suffix did not exist
-              yet and the address is the domain and the time. Treat it as a link to keep rather than a secret, and
-              write to us if you hold one of those oldest ones and would rather it were gone.
+              yet and the address is the domain and the minute. Those twenty-four stopped being served on 20 August
+              2026: the rows are still there, the pages are not. Treat any of the others as a link to keep rather
+              than a secret.
               And if our database refuses the write, the report lives only in memory and its page says so.
             </li>
             <li>
