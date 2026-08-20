@@ -178,6 +178,35 @@ za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). 
 wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
 Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
 
+## KAZDA POWIERZCHNIA DLA KLIENTA PRZECZYTANA JAKO JEJ ODBIORCA: PELNA LISTA (09:25)
+
+Metoda, ktora dala tej nocy najwiecej: **wygeneruj dokument, ktory dostaje klient, i przeczytaj go
+jako ten klient**. Dla porzadku - i zeby nikt nie powtarzal przegladu od zera - co zostalo
+przeczytane i z jakim skutkiem:
+
+| powierzchnia | czytana jako | wynik |
+|---|---|---|
+| miesieczny mail o biegach | vendor, ktory go dostaje | **2 bledy** (brak wieku biegow, liczba mnoga) |
+| tygodniowy mail o zmianie | vendor | **1 blad** (podstawa bez daty) |
+| mail potwierdzajacy obserwacje | vendor | czysto |
+| platny raport 49 USD | kupujacy | czysto (galaz 9.49 brzmi uczciwie) |
+| `/d/sample` | prospekt przed zakupem | **1 blad** (formula sprzed 5 wydan, falszywe oskarzenie) |
+| `/pricing` | kupujacy | **1 blad** (trzy liczby recznie, potem drift) |
+| `/v/<domena>` | vendor, ktorego oceniamy | **2 bledy** (cudzy skan goscia, `PASS` bez instrukcji) |
+| `/r/<id>` + mail ze skanem | wlasciciel domeny | **1 blad** (link w `localhost`) |
+| `/findings` | czytelnik badan | **1 blad** (twierdzenie o cudzych narzedziach bez daty) |
+| `/methodology` | vendor kwestionujacy werdykt | **1 blad** (sufit cytowany, nieopisany) |
+| `/report` | dziennikarz | **1 blad** (kolizja „paths") |
+| `/docs`, `/audit`, `/standard`, `/bot`, `/privacy` | deweloper / vendor | czysto (poza driftem, ktory sam wprowadzilem w `/bot`) |
+| serwer MCP (`tools/list`, oba formaty, SARIF) | agent, ktory go wola | **1 blad** (blad nie nazywal argumentu) |
+| `/c/<kategoria>/runs` | vendor czytajacy o sobie | czysto |
+
+**Dwa razy zdanie wygladalo na blad i nim nie bylo** - oba razy uratowalo mnie przeczytanie calosci
+zamiast fragmentu: flaga `isError` zgubiona przy drukowaniu odpowiedzi MCP, oraz „six of those seven"
+kontra „Five of those seven" na `/standard` (szesc MIERZYMY, piec jest WARUNKOWYCH). Trzeci raz to
+samo: adresy w transkryptach na `/c/.../runs` wygladaly na polamane spacjami, a spacje wstawil moj
+wlasny ekstraktor tekstu - w HTML sa poprawne.
+
 ## NAPRAWA JOBU SPRAWDZONA LOKALNIE, ZEBY PUSH BYL JEDYNYM KROKIEM (08:05)
 
 Job „Mirror the MCP registry" pada codziennie, bo poprawka siedzi tylko u nas. Zamiast zostawic
