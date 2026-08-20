@@ -122,6 +122,14 @@ robots). Dzisiejsze „piec regresji" bylo w calosci artefaktem porownywania prz
 czesciowej, token nieprzekazywany z `reseed.sh <token>`, obietnica argumentu pozycyjnego, ktorego
 skrypt nie czyta, i na koncu baseline. Kazde znalezisko bylo prawdziwe.
 
+**DOPISANE 21:00 (v751):** przeciecie decydujace o tym, ktore werdykty trafiaja do klienta, mieszkalo
+**w routcie crona**, wiec jedynym sposobem, zeby je sprawdzic, bylo poczekac, az prawdziwej
+obserwacji ruszy sie werdykt. Wyszlo do `watch.ts` jako `reproducedChanges` i `unseenChanges`, z
+regulami w `rules.mts`: ten sam check i ten sam werdykt, ten sam check i INNY werdykt, obcy check,
+pusta lista czekajaca. **Mutacja „dopasuj po samym ID checku" oblewa dwie reguly**, wiec te testy
+potrafia oblac. Przy okazji **straznik z tej samej zmiany zlapal moj wlasny refaktor** w chwili, w
+ktorej go zrobilem: pilnowal wklejonego filtra, wiec teraz pilnuje wywolania.
+
 ## CZESC „ODMOWY NA ICH BRZEGU" TO NASZ ADRES, NIE ICH KONFIGURACJA (20:00, v749)
 
 Poszedlem za `fly.io` z przemiatu i zapytalem **te same 14 domen, ktore u nas stoja na odmowie brzegu,
