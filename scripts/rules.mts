@@ -17,7 +17,7 @@ import { crawlerName } from '../src/lib/visits'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
 import { looksLikeEntryPackage, readBulkDownloads, readsAsOwnedBy, readsAsTheirLibrary, shapeRankOf } from '../src/lib/scan/discover'
-import { changesBetween, comparableScorecards, rulesChangedBetween, turnedAwayAtTheEdge, worthTelling } from '../src/lib/watch'
+import { changesBetween, comparableScorecards, reproducedChanges, rulesChangedBetween, turnedAwayAtTheEdge, unseenChanges, worthTelling } from '../src/lib/watch'
 import { withoutTags } from '../src/lib/scan/http'
 import { isOlderThan } from '../src/lib/formula'
 import { buildFixPlan } from '../src/lib/fixfirst'
@@ -2396,6 +2396,21 @@ check('ani pass -> unmeasured, gdy to nasz pomiar', worthTelling([move('pass', '
 // unmeasured and nothing else, and that is the email they signed up for.
 check('ale pass -> unmeasured PRZY blokadzie ich brzegu juz tak', worthTelling([move('pass', 'unmeasured')], true), true)
 check('blokada brzegu bez zadnej zmiany to nadal brak maila', worthTelling([], true), false)
+// Potwierdzanie ruchu przed mailem. Regula zyla w routcie crona, wiec jedynym sposobem, zeby ja
+// sprawdzic, bylo poczekac, az prawdziwemu klientowi ruszy sie werdykt - a ruszy sie rzadko i wtedy
+// juz nie ma jak sie pomylic po cichu.
+console.log('\npotwierdzanie ruchu: co drugi pomiar musi powtorzyc, zeby poszedl mail')
+const ruch = (checkId: string, to: string) => ({ checkId, label: 'x', from: 'pass', to, detail: '', worse: true }) as never
+const czeka = [{ checkId: 'typed_package', to: 'fail' }] as never
+check('ten sam check i ten sam werdykt: potwierdzony', reproducedChanges(czeka, [ruch('typed_package', 'fail')]).length, 1)
+check('ten sam check, INNY werdykt: nie potwierdzony', reproducedChanges(czeka, [ruch('typed_package', 'unmeasured')]).length, 0)
+check('inny check: nie potwierdzony', reproducedChanges(czeka, [ruch('llms_txt', 'fail')]).length, 0)
+check('pusta lista czekajaca nie potwierdza niczego', reproducedChanges([] as never, [ruch('typed_package', 'fail')]).length, 0)
+check('a ruch, ktorego nikt nie czekal, jest widziany jako nowy', unseenChanges(czeka, [ruch('llms_txt', 'fail')]).length, 1)
+check('i ten sam ruch nie jest jednoczesnie nowy', unseenChanges(czeka, [ruch('typed_package', 'fail')]).length, 0)
+// Kontrolka: gdyby dopasowanie szlo po samym ID checku, linijka o innym werdykcie dawalaby 1.
+check('kontrolka: dopasowanie NIE jest po samym ID', reproducedChanges(czeka, [ruch('typed_package', 'unmeasured')]).length !== 1, true)
+
 check('sygnal brzegu: blocksPlainRequests', turnedAwayAtTheEdge({ blocksPlainRequests: true }), true)
 check('sygnal brzegu: nieczytelny robots.txt', turnedAwayAtTheEdge({ robots: { unreadable: true } }), true)
 check('zwykly skan nie jest blokada', turnedAwayAtTheEdge({ blocksPlainRequests: false, robots: { unreadable: false } }), false)
@@ -3370,11 +3385,10 @@ check('i wyrzuca checki, ktorych regule ruszylismy', cronWatch.includes('all.fil
 check('jedno wywolanie crona mierzy domene tylko raz', (cronWatch.match(/scanDomain\(watch\.domain\)/g) ?? []).length, 1)
 check('pierwszy ruch zapisuje do odroczonego potwierdzenia', cronWatch.includes('watch.pending = {'), true)
 check('i wyznacza mu wczesniejszy termin', cronWatch.includes('watch.recheckAt = new Date(Date.now() + 30 * 60 * 1000)'), true)
-check(
-  'mail dostaje tylko przeciecie tego samego checku i nowego werdyktu',
-  cronWatch.includes('firstChange.checkId === change.checkId && firstChange.to === change.to'),
-  true,
-)
+// Regula pilnuje TERAZ wywolania, a nie wklejonego filtra: dopasowanie mieszka w `watch.ts`, gdzie
+// ma wlasne testy wyzej. Ten straznik zlapal moj wlasny refaktor w chwili, w ktorej go zrobilem.
+check('mail dostaje tylko potwierdzone przeciecie', cronWatch.includes('reproducedChanges(waiting, changes)'), true)
+check('a ruch widziany raz zaczyna wlasna runde', cronWatch.includes('unseenChanges(waiting, changes)'), true)
 const doubleMeasured = 'Every verdict listed here was measured twice, about half an hour apart; a verdict that moved only once is not in this email.'
 const watchEmailSource = readFileSync('src/lib/watch-email.ts', 'utf8')
 check('mail wyjasnia podwojny pomiar', watchEmailSource.includes(doubleMeasured), true)

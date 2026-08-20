@@ -3,7 +3,7 @@ import { scanDomain } from '@/lib/scan'
 import { scoreFindings } from '@/lib/score'
 import { getStore, reportId, type Report } from '@/lib/store'
 import { sendEmail } from '@/lib/email'
-import { changesBetween, comparableScorecards, measurableOf, rulesChangedBetween, turnedAwayAtTheEdge, watchIsDue, worthTelling } from '@/lib/watch'
+import { changesBetween, comparableScorecards, measurableOf, reproducedChanges, rulesChangedBetween, turnedAwayAtTheEdge, unseenChanges, watchIsDue, worthTelling } from '@/lib/watch'
 import { stanceTowardsUs } from '@/lib/scan/robots'
 import { changeEmail } from '@/lib/watch-email'
 
@@ -200,9 +200,7 @@ export async function POST(request: Request) {
     let advanceBaseline = true
     if (watch.pending && previous && comparable) {
       const waiting = watch.pending.changes
-      const confirmed = changes.filter((change) =>
-        waiting.some((firstChange) => firstChange.checkId === change.checkId && firstChange.to === change.to),
-      )
+      const confirmed = reproducedChanges(waiting, changes)
       const didNotReproduce = waiting.length - confirmed.length
       console.log(`watch ${watch.domain}: ${didNotReproduce} zmian nie powtorzylo sie przy ponownym pomiarze`)
 
@@ -222,9 +220,7 @@ export async function POST(request: Request) {
 
       // A move first seen by this confirming scan has one measurement too. Keep it against this
       // same older report for one more round; advancing the standing baseline must not erase it.
-      const newlySeen = changes.filter((change) =>
-        !waiting.some((firstChange) => firstChange.checkId === change.checkId && firstChange.to === change.to),
-      )
+      const newlySeen = unseenChanges(waiting, changes)
       watch.pending = null
       watch.recheckAt = null
       if (worthTelling(newlySeen, edgeTurnedUsAway)) defer(newlySeen, previous.id)

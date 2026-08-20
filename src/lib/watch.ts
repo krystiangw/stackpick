@@ -131,6 +131,24 @@ export function worthTelling(changes: WatchChange[], theirEdgeTurnedUsAway = fal
   return theirEdgeTurnedUsAway && changes.some((change) => change.to === 'unmeasured')
 }
 
+/**
+ * Ktore ze zmian czekajacych na potwierdzenie powtorzyl swiezy pomiar.
+ *
+ * Zgodnosc jest po ID checku ORAZ po nowym werdykcie: check, ktory ruszyl sie dwa razy w dwie rozne
+ * strony, nie jest potwierdzony, tylko chwiejny, a mail o nim mowilby o stanie, ktorego juz nie ma.
+ *
+ * Mieszkalo w routcie crona, wiec jedyny sposob, zeby to sprawdzic, to bylo poczekac, az prawdziwemu
+ * klientowi ruszy sie werdykt. Tutaj ma test w `rules.mts`, ktory potrafi oblac.
+ */
+export function reproducedChanges(waiting: { checkId: string; to: CorpusVerdict }[], fresh: WatchChange[]): WatchChange[] {
+  return fresh.filter((change) => waiting.some((one) => one.checkId === change.checkId && one.to === change.to))
+}
+
+/** Ruch, ktorego czekajaca lista nie zna: widziany raz, wiec zaczyna wlasna runde zamiast zniknac. */
+export function unseenChanges(waiting: { checkId: string; to: CorpusVerdict }[], fresh: WatchChange[]): WatchChange[] {
+  return fresh.filter((change) => !waiting.some((one) => one.checkId === change.checkId && one.to === change.to))
+}
+
 /** One cadence for the ordinary round and the shorter one for a move waiting to be reproduced. */
 export function watchIsDue(watch: Pick<Watch, 'checkedAt' | 'recheckAt'>, now: number, staleAfterMs: number): boolean {
   return (
