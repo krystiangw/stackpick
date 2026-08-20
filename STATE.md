@@ -85,6 +85,60 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## BRAMA PUBLIKACYJNA: WYCOFALISMY OSKARZENIE Z 294 STRON, NIE RUSZAJAC ANI JEDNEGO WIERSZA (v718)
+
+Naprawa reguly (9.52) nie dotykala tego, co **juz opublikowane**, bo `/r/<id>` renderuje ZAPISANY
+scorecard. **Decyzja poszla do audytu subagenta (opus)** i jego rekomendacja to nie byla zadna z
+opcji, ktore uwazalem za oczywiste: **nie cichy rescore i nie 404**, tylko **brama publikacyjna**.
+Argument, ktory to rozstrzyga: `/r/<id>` **nie jest archiwum, tylko trwajaca publikacja** pod
+adresem, ktory sami wyslalismy vendorowi mailem. Wiernosc zapisu chroni **dane**, nie **serwowanie**,
+a audytor po cichu przepisujacy wlasne akta robi dokladnie to, co zarzucamy vendorom.
+
+**JAK TO DZIALA:** wiersz w bazie **nietkniety**. `asPublishedToday()` poprawia RENDER, dopasowujac
+**ksztalt** znaleziska, nigdy tresc zdania. Znalezisko wycofane do „niemierzalnego", **mianownik
+schodzi razem z nim** (i w sumie, i na etapie), a strona **mowi o tym na glos** - cicha korekta jest
+gorsza od milczenia, gdy ktos ma zrzut ekranu starej wersji. Gdzie skan zachowal `probedOrigins`,
+**pokazujemy je jako dowod odzyskany**, jawnie opisany jako odtworzony z zapisu, a nie podany za to,
+co wtedy napisalismy (koyeb.com: „it asked 13 origins").
+
+**LICZBA SIE NIE ZGADZALA I TO BYLO CENNE.** Recznie naliczylem **293**, brama znalazla **294**.
+Roznica to `allegro.pl` z 7 sierpnia na **formule 2.1**, gdzie zdanie brzmialo inaczej
+(„OAuth metadata without registration_endpoint") i **tak samo nie podawalo adresu**. Moje
+dopasowanie po tekscie bylo zanizone; warunek strukturalny zlapal to, czego szukanie po slowach nie
+umialo. `npm run audit-gate` trzyma ten inwariant i **oblewa w obie strony**.
+
+**CODEX ODBIL TO PIEC RAZY, I ZA KAZDYM RAZEM O TYM SAMYM:** korekta zastosowana na JEDNYM wyjsciu.
+Kolejno: mianownik **etapu**, obrazek **podgladu linku**, **metadata** strony, **ranking i
+porownania**, a na koncu **`7/NaN`**. Po trzecim odbiciu zmienilem podejscie: brama przestala byc
+latka przy kazdym rendererze i stala sie **jedynym wejsciem** (`reportAsPublished`), przez ktore ida
+strona, metadata, obrazek, porownanie i korpus. **Piaty punkt byl realny, nie teoretyczny:** 26
+raportow w bazie nie ma pola `measurable`, **8 z nich jest dotknietych brama**, wiec odejmowanie
+dawaloby doslownie `7/NaN` na stronach, ktore mialy zostac naprawione. **To czwarty raz tej doby, gdy
+pole dodane pozniej zmienia znaczenie starych rekordow** (`docsThinnerForAgents`,
+`docsTextCharsTruncated`, `metadataAt`, `measurable`).
+
+**PULAPKA, KTORA SAM ZASTAWILEM I ZLAPALEM:** pierwszy `audit-gate-corpus` mierzyl korpus **juz
+przepuszczony przez brame**, wiec z definicji zawsze pokazywalby zero. Czujnik pyta teraz o stan
+**przed** brama. Zmierzone: **177 wierszy korpusu, zero dotknietych** - porownania nie staly na
+wycofanym oskarzeniu, ale to fakt o dacie ostatniego przemiatu, nie gwarancja, wiec korpus i tak
+idzie przez brame.
+
+**Straznikow dwanascie, cztery mutacje oblewaja** (mianownik nie schodzi → 1; brama lapie raporty z
+adresem → 2; zmyslony dowod bez originow → 1; powrot `NaN` → 2).
+
+**ZWERYFIKOWANE NA PRODUKCJI (v718)**, na tej samej stronie, ktora rano oskarzala bez dowodu:
+nota „We withdrew a finding on this page", zarzut jako `Unmeasurable`, aneks z 13 originami, ocena
+**5/12** bez `NaN`, a kontrolny raport, ktory adres PODAL, nietkniety.
+
+**CO POTWIERDZIC Z KRYSTIANEM RANO (z audytu decyzji):** (1) czy `/r/<id>` jest formalnie zapisem
+historycznym czy zywym twierdzeniem, bo to przesadza polityke na zawsze; (2) **materialnosc** - w
+ilu z 294 ten check faktycznie przesunal werdykt, bo bez tej liczby decyzja o powiadamianiu jest
+zgadywaniem; (3) czy powiadamiamy vendorow (rekomendacja: **bez masowej wysylki**, proaktywnie tylko
+podzbior materialny, plus gotowy szablon - i tak jako **draft**); (4) brzmienie noty, bo to nasze
+przyznanie sie do bledu; (5) czy `/r` ma byc indeksowane, czy wypychamy na rzecz `/v`; (6) czy raport
+po N dniach ma sam oznaczac sie jako nieaktualny; (7) publiczna **errata formul**; (8) checklista przy
+dodawaniu pola, ktorego stare rekordy nie maja - czwarty raz oznacza, ze waskim gardlem jest proces.
+
 ## 9.52: 293 RAPORTY OSKARZALY O BRAK W DOKUMENCIE, KTOREGO NIE UMIALY WSKAZAC (12:40, v717)
 
 **Jak to znalazlem, bo droga jest tu pouczajaca.** Diagnostyka po przemiecie melduje
