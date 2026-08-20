@@ -624,6 +624,15 @@ export type FunnelFindings = {
    * a real 9.6 kB skill.md and answers 403 to most of our requests, intermittently.
    */
   entryPathsRefused?: number
+  /**
+   * Sondy, ktore NIE DOSTALY odpowiedzi (status 0). Nie odmowa i nie brak pliku: u nas zwykle
+   * timeout przy kilkunastu rownoleglych zapytaniach na dwa hosty. Trzymane osobno, bo vendor
+   * dostaje o tym inne zdanie niz o odmowie - i bo to jedyne z trzech, ktore jest o NAS.
+   */
+  entryPathsUnanswered?: number
+  entrySiteUnanswered?: number
+  /** Ile sond poszlo na sama strone, bo zdanie o ciszy dzieli przez to, nie przez dlugosc listy. */
+  entrySiteProbes?: number
   /** How many probes the refusal count and the absence sentence are out of. Nine per origin. */
   entryProbesAsked?: number
   /** Refusals on the site alone, which is the half that decides whether we measured anything. */
@@ -2343,8 +2352,20 @@ export async function scanFunnel({
     // The same predicate the rest of the scanner uses. This one counted a 429 as a refusal,
     // which is our own load: name.com answered the door test (200, 200, 429) and was reported as
     // refusing all nine entry paths on the origin whose llms.txt we had just read in full.
+    // Status 0 jest tu odmowa tak samo jak 403, i to nie jest hojnosc wobec vendora, tylko nasza
+    // wlasna regula: zadanie, ktore NIE DOSTALO odpowiedzi, nie dowodzi, ze pliku nie ma. Pytamy o
+    // kilkanascie sciezek na dwoch hostach rownolegle, wiec status 0 to zwykle nasze tempo albo
+    // nasz timeout. Zmierzone na `calendly.com` 2026-08-20: cztery skany tego samego dnia daly
+    // 1, 0, 1, 0 punktu, a `https://developer.calendly.com/skill.md` odpowiada 200 przy kazdym
+    // pojedynczym zapytaniu i wazy 284 kB. Publikowalismy „nie publikujesz zadnego z tych plikow"
+    // o firmie, ktora publikuje.
     const refused = isEdgeRefusal(got.status)
-    return [`${base}${path}`, present, present && describesAProcedure(got.body), got.body, refused, base, uncertain] as const
+    // Osobno od odmowy, bo to dwa rozne zdania do napisania vendorowi. Odmowa to jego edge; status 0
+    // to zadanie, ktore nie dostalo odpowiedzi - u nas zwykle timeout przy kilkunastu rownoleglych
+    // sondach na dwoch hostach. Zlanie ich w jedno naprawialo jedno nieprawdziwe zdanie („nie
+    // publikujesz tych plikow") kosztem drugiego („twoj serwer nas odrzucil") - codex.
+    const unanswered = got.status === 0
+    return [`${base}${path}`, present, present && describesAProcedure(got.body), got.body, refused, base, uncertain, unanswered] as const
   })
 
   // The site first, and the documentation host only when the site had nothing. Asking both every
@@ -2398,11 +2419,11 @@ export async function scanFunnel({
     for (const [, present, , body, , base] of probed) {
       if (present) seenBodies.set(shapeOf(base, body), (seenBodies.get(shapeOf(base, body)) ?? 0) + 1)
     }
-    return probed.map(([path, present, procedure, body, refused, base, uncertain]) => {
+    return probed.map(([path, present, procedure, body, refused, base, uncertain, unanswered]) => {
       const shared = present && (seenBodies.get(shapeOf(base, body)) ?? 0) > 1
       // A body served twice on one origin is the shell whatever the control said, so it stops
       // being uncertain and becomes decided: not a file.
-      return [path, present && !shared, procedure && !shared, refused, uncertain && !shared] as const
+      return [path, present && !shared, procedure && !shared, refused, uncertain && !shared, unanswered] as const
     })
   })
 
@@ -2466,6 +2487,12 @@ export async function scanFunnel({
 
   const entryPaths = Object.fromEntries(entries.map(([path, hit]) => [path, hit]))
   const entryPathsRefused = entries.filter(([, , , refused]) => refused).length
+  const entryPathsUnanswered = entries.filter((entry) => entry[5]).length
+  const entrySiteUnanswered = entries.filter(([url, , , , , unanswered]) => unanswered && url.startsWith(site)).length
+  // Ile sond POSZLO na sama strone. Zdanie o ciszy dzieli przez to, a nie przez stala dlugosc listy:
+  // gdy dziewiec malymi literami nic nie dalo, pytamy jeszcze trzy wielkimi, wiec licznik potrafil
+  // przekroczyc mianownik i zdanie brzmialoby „12 z 9" - liczba, ktorej nikt nie odtworzy (codex).
+  const entrySiteProbes = entries.filter(([url]) => url.startsWith(site)).length
   // Split by origin, because they answer different questions. A refusal on the site means we do
   // not know what the site publishes. A refusal on the documentation host, after the site answered
   // cleanly and held nothing, does not undo that measurement: reporting the pair as one
@@ -2482,6 +2509,9 @@ export async function scanFunnel({
     entryPointsUncertain: entries.filter(([, , , , uncertain]) => uncertain).map(([path]) => path),
     entryPointsWithProcedure: entries.filter(([, , procedure]) => procedure).map(([path]) => path),
     entryPathsRefused,
+    entryPathsUnanswered,
+    entrySiteUnanswered,
+    entrySiteProbes,
     entryProbesAsked: entries.length,
     entrySiteRefused,
     entryDocsProbed: docsOrigin !== null && entries.some(([url]) => url.startsWith(docsOrigin)),

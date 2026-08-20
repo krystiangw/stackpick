@@ -218,6 +218,11 @@ const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   // A truncated candidate now needs a control asking for a path that cannot exist, so a host that
   // really does answer everything with one shell is still refused. Nothing about a vendor changed;
   // which of their pages we went on to read did.
+  // 9.54 stops reading our own silence as the vendor's absence. A probe that never got an answer
+  // (status 0) counted as "this file is not there", and with a dozen paths asked in parallel on two
+  // hosts that is usually our timeout. calendly.com scored 1, 0, 1, 0 on four scans of one day while
+  // its skill.md answered 200 every single time it was asked alone.
+  '9.54': ['agent_entry_point'],
   // 9.53 names the page a CAPTCHA was read out of. 32 rows carried the sharpest accusation on the
   // card without saying which page we read, while the unmeasurable branch beside it named the same
   // address all along. Nothing about a vendor changed; the sentence now says where we looked.

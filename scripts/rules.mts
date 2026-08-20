@@ -1873,6 +1873,60 @@ check('bramki strony, ktora dostalismy, sa mierzalne', zBramka.points, 0)
 check('oskarzenie o captche podaje adres formularza', zBramka.detail.includes('server HTML of https://v.test/signup'), true)
 check('i nie mowi juz bezokolicznie „the signup page"', zBramka.detail.includes("the signup page's server HTML"), false)
 
+// 9.54. Nasza cisza nie jest ich brakiem. Sonda o kilkunastu sciezkach na dwoch hostach chodzi
+// rownolegle, wiec status 0 to zwykle NASZ timeout - a liczyl sie jak „pliku nie ma". calendly.com
+// dal 1, 0, 1, 0 punktu na czterech skanach jednego dnia, podczas gdy jego `skill.md` odpowiada 200
+// przy kazdym pojedynczym zapytaniu i wazy 284 kB.
+check('403 na sciezce wejsciowej to odmowa', isEdgeRefusal(403), true)
+check('404 to prawdziwy brak pliku', isEdgeRefusal(404), false)
+check('429 to nasze tempo, nie odmowa vendora', isEdgeRefusal(429), false)
+// `isEdgeRefusal` zostaje bez zmian, bo sluzy calemu skanerowi; status 0 dokladamy TAM, gdzie sonda
+// jest rownolegla. Ten straznik czyta wiec wywolanie, a nie sama funkcje.
+const funnelSource = readFileSync('src/lib/scan/funnel.ts', 'utf8')
+check('sciezka bez odpowiedzi jest liczona osobno od odmowy', funnelSource.includes('const unanswered = got.status === 0'), true)
+check('i nie jest wlewana do odmowy', funnelSource.includes('isEdgeRefusal(got.status) || got.status === 0'), false)
+// Codex: naprawa, ktora zamienia „nie publikujesz tych plikow" na „twoj serwer nas odrzucil", nie
+// jest naprawa. Zdanie o naszym timeoucie ma nie obwiniac vendora i nie dawac mu instrukcji.
+const wejscieBezOdpowiedzi = CHECKS.find((c) => c.id === 'agent_entry_point')!
+const cisza = wejscieBezOdpowiedzi.evaluate({
+  site: 'https://v.test',
+  discovered: { docs: null },
+  funnel: { entryPaths: { 'https://v.test/skill.md': false }, entryPointsFound: [], entryPointsUncertain: [], entryPointsWithProcedure: [], entryPathsRefused: 0, entrySiteRefused: 0, entrySiteUnanswered: 3, entryProbesAsked: 9, entryDocsProbed: false },
+} as never)
+check('cisza jest niemierzalna, nie oskarzeniem', cisza.inconclusive === true, true)
+check('i mowi, ze to my nie dostalismy odpowiedzi', cisza.detail.includes('never answered us at all'), true)
+// Mianownik z POMIARU, nie ze stalej: gdy dziewiec malymi literami nic nie dalo, pytamy jeszcze trzy
+// wielkimi, wiec „12 z 9" bylo mozliwe do wydrukowania (codex).
+const dwanascieSond = wejscieBezOdpowiedzi.evaluate({
+  site: 'https://v.test',
+  discovered: { docs: null },
+  funnel: { entryPaths: {}, entryPointsFound: [], entryPointsUncertain: [], entryPointsWithProcedure: [], entryPathsRefused: 0, entrySiteRefused: 0, entrySiteUnanswered: 12, entrySiteProbes: 12, entryProbesAsked: 12, entryDocsProbed: false },
+} as never)
+check('licznik nie przekracza mianownika', dwanascieSond.detail.includes('12 of the 12 agent entry paths'), true)
+check('i nie drukujemy „12 of the 9"', dwanascieSond.detail.includes('of the 9'), false)
+// Odmowa I cisza naraz: sama odmowa obiecywalaby, ze wpuszczenie HTTP wystarczy, a czesci sciezek
+// nie zmierzylismy z NASZEGO powodu (codex).
+const jednoIDrugie = wejscieBezOdpowiedzi.evaluate({
+  site: 'https://v.test',
+  discovered: { docs: null },
+  funnel: { entryPaths: {}, entryPointsFound: [], entryPointsUncertain: [], entryPointsWithProcedure: [], entryPathsRefused: 2, entrySiteRefused: 2, entrySiteUnanswered: 3, entrySiteProbes: 9, entryProbesAsked: 9, entryDocsProbed: false },
+} as never)
+check('zdanie mowi o odmowie', jednoIDrugie.detail.includes('2 of the 9 agent entry paths'), true)
+check('i o naszej ciszy w tym samym zdaniu', jednoIDrugie.detail.includes('3 more never answered us at all'), true)
+check('i nazywa ja naszym timeoutem', jednoIDrugie.detail.includes('our own timeout'), true)
+check('nie obwinia edge vendora', cisza.detail.includes('refusal'), false)
+check('i nie kaze mu niczego naprawiac', Boolean(cisza.unblock?.includes('Nothing for you to do')), true)
+// I to samo, gdy milczy HOST DOKUMENTACJI, a strona odpowiada - to byl dokladnie przypadek
+// calendly.com, wiec bez tego naprawa nie naprawiala tego, od czego sie zaczela (codex).
+const ciszaNaDocs = wejscieBezOdpowiedzi.evaluate({
+  site: 'https://v.test',
+  discovered: { docs: 'https://developer.v.test/' },
+  funnel: { entryPaths: { 'https://v.test/skill.md': false }, entryPointsFound: [], entryPointsUncertain: [], entryPointsWithProcedure: [], entryPathsRefused: 0, entrySiteRefused: 0, entrySiteUnanswered: 0, entryPathsUnanswered: 4, entryProbesAsked: 18, entryDocsProbed: true },
+} as never)
+check('cisza na hoscie dokumentacji tez nie jest oskarzeniem', ciszaNaDocs.inconclusive === true, true)
+check('i zdanie nie mowi juz „zaden z tych plikow"', ciszaNaDocs.detail.includes('None of the'), false)
+check('a przyznaje, ze czesci nie zmierzylismy', ciszaNaDocs.detail.includes('never answered us at all'), true)
+
 const surface = CHECKS.find((c) => c.id === 'mcp_present')!
 // phrase.com, tolgee.io and medusajs.com all register a live endpoint in the MCP registry and all
 // three were told "No MCP surface" on the sweep where the registry did not answer us in time.

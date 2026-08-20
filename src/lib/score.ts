@@ -15,7 +15,7 @@ import { challengedUs, challengeSentence, CHALLENGE_UNBLOCK } from './limits'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.53'
+export const FORMULA_VERSION = '9.54'
 
 /** Dead entries an llms.txt may carry before its map stops being worth following. */
 const TOLERATED_DEAD_LINKS = 1
@@ -690,12 +690,35 @@ export const CHECKS: Check[] = [
       // Only the site can make this unmeasurable. Older rows have no split and fall back to the
       // total, which is what they were scored on.
       const refusedOnSite = f.funnel.entrySiteRefused ?? refused
+      const unansweredOnSiteFirst = f.funnel.entrySiteUnanswered ?? 0
       if (refusedOnSite > 0) {
+        // Gdy w jednym skanie jest i odmowa, i cisza, zdanie musi powiedziec o obu: sama odmowa
+        // przypisywalaby vendorowi cala winę i obiecywala, ze wpuszczenie HTTP wystarczy, podczas
+        // gdy czesci sciezek nie zmierzylismy z NASZEGO powodu (codex).
+        const alsoSilent =
+          unansweredOnSiteFirst > 0
+            ? `, and ${unansweredOnSiteFirst} more never answered us at all, which is our own timeout rather than anything you did`
+            : ''
         return {
           points: 0,
-          detail: `Unmeasurable: ${refusedOnSite} of the ${AGENT_ENTRY_PATHS.length} agent entry paths we asked on your site answered with a refusal rather than a file or a 404, so what you publish there is not something we measured`,
+          detail: `Unmeasurable: ${refusedOnSite} of the ${f.funnel.entrySiteProbes ?? AGENT_ENTRY_PATHS.length} agent entry paths we asked on your site answered with a refusal rather than a file or a 404${alsoSilent}, so what you publish there is not something we measured`,
           inconclusive: true,
           unblock: 'Let ordinary HTTP reach these paths and this becomes measurable.',
+        }
+      }
+      // Nasza cisza, nie ich odmowa, i zdanie musi to rozrozniac. Sonda pyta o kilkanascie sciezek
+      // na dwoch hostach rownolegle, wiec zadanie bez odpowiedzi to najczesciej nasz timeout -
+      // calendly.com dal 1, 0, 1, 0 punktu na czterech skanach jednego dnia, a jego skill.md
+      // odpowiada 200 i wazy 284 kB, gdy zapytac o niego samotnie. Do 9.54 taka cisza przechodzila
+      // jako „nie publikujesz zadnego z tych plikow". Winy nie przypisujemy nikomu, bo jej nie
+      // zmierzylismy, i nie dajemy vendorowi instrukcji, ktora nic u niego nie zmieni.
+      const unansweredOnSite = f.funnel.entrySiteUnanswered ?? 0
+      if (unansweredOnSite > 0) {
+        return {
+          points: 0,
+          detail: `Unmeasurable: ${unansweredOnSite} of the ${f.funnel.entrySiteProbes ?? AGENT_ENTRY_PATHS.length} agent entry paths we asked on your site never answered us at all, and a request that got no answer does not tell us whether the file is there`,
+          inconclusive: true,
+          unblock: 'Nothing for you to do. We ask these paths in parallel and a slow answer times out on our side, so the next scan may well measure it.',
         }
       }
       // "None of them answer" was false on every site that serves its app shell for unknown
@@ -705,6 +728,20 @@ export const CHECKS: Check[] = [
       // answer. We looked there because the site held nothing, and being turned away there is a
       // fact about the second place we looked, not about the first.
       const docsRefused = refused - refusedOnSite
+      // To samo dla ciszy, co linijke wyzej dla odmowy, tylko na drugim hoscie - i to wlasnie ten
+      // przypadek zlapal `calendly.com`: strona odpowiadala na wszystko, a milczal
+      // `developer.calendly.com`, wiec galaz wyzej nie wchodzila i zdanie nadal twierdzilo „zaden z
+      // tych plikow", obejmujac host, ktorego nie zmierzylismy (codex). Nie mowimy „zaden", gdy
+      // czesci nie widzielismy: mowimy o tym, co naprawde przeczytalismy.
+      const docsUnanswered = (f.funnel.entryPathsUnanswered ?? 0) - unansweredOnSite
+      if (docsUnanswered > 0) {
+        return {
+          points: 0,
+          detail: `Unmeasurable: your site publishes none of the ${f.funnel.entrySiteProbes ?? AGENT_ENTRY_PATHS.length} agent entry paths we asked for, and ${docsUnanswered} of the paths on your documentation host never answered us at all, so we cannot say the file is not there either`,
+          inconclusive: true,
+          unblock: 'Nothing for you to do. We ask these paths in parallel and a slow answer times out on our side, so the next scan may well measure it.',
+        }
+      }
       const caveat = docsRefused > 0 ? `, and your documentation host refused ${docsRefused} of them` : ''
       return yes(0, `None of the ${asked} agent entry paths we asked ${where} returns a file rather than your page shell${caveat}`)
     },

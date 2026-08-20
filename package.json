@@ -42,6 +42,7 @@
     "audit-gate": "tsx scripts/audit-gate.mts",
     "audit-empty-slots": "tsx scripts/audit-empty-slots.mts",
     "audit-evidence": "tsx scripts/audit-evidence.mts",
+    "audit-entry-absence": "tsx scripts/audit-entry-absence.mts",
     "audit-withdrawal-reach": "tsx scripts/audit-withdrawal-reach.mts",
     "audit-gate-corpus": "tsx scripts/audit-gate-corpus.mts",
     "audit-front-door": "tsx scripts/audit-front-door.mts",
