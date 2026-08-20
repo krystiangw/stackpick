@@ -85,6 +85,55 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## MIGRACJA WYKONANA: MAMY WLASNY KLASTER (2026-08-20, 11:10, produkcja v715)
+
+**Zrobione w calosci, produkcja stoi na naszym klastrze.** Krystian dal klucze Atlas Admin API
+(`MONGO_ADMIN_API_KEY` / `MONGO_ADMIN_SECRET` w `.env.local`, plik jest w `.gitignore` przez `.env*`).
+
+**Klucz okazal sie wskazywac na INNA organizacje, niz zakladalismy.** Widzi wylacznie organizacje
+`jobsquery` i jeden projekt `58d7620196e82162d20c2a64`, w ktorym stoi klaster `muster` (tablica
+zadan). Naszego dotychczasowego `equity-analyst-flex` (host `dgiima2`) ten klucz **nie widzi wcale**,
+wiec tamten klaster jest w innej organizacji. Role klucza to komplet uprawnien PROJEKTOWYCH
+(`GROUP_OWNER` i reszta) plus `ORG_MEMBER`, **bez `ORG_GROUP_CREATOR`**, czyli nowego projektu
+zalozyc nie moze. Decyzja Krystiana po przedstawieniu opcji: **nowy klaster Flex w projekcie
+`jobsquery`**, obok Mustera. Argument, ktory to uzasadnia: restore snapshotu jest operacja na
+**klastrze**, wiec izolacje backupu daje osobny klaster, a nie osobny projekt.
+
+**CEL:** `letagentsin.k6mdeo6.mongodb.net`, Flex, AWS **EU_WEST_1** (tam, gdzie dyno Heroku i gdzie
+stoi `muster`), 5 GB, Mongo **8.0.29**, czyli ta sama wersja co zrodlo.
+
+**PRZEBIEG:** proba bez zapisu → `heroku maintenance:on` → kopia sterownikiem z zachowaniem `_id` →
+weryfikacja czytana **z celu** → `heroku config:set MONGODB_URI` → `maintenance:off`. Wszystkie 9
+kolekcji zgadza sie co do dokumentu i indeksu: **19 989 dokumentow**. Bateria po przelaczeniu:
+**177 wierszy na 9.51, 0 sprzecznosci, 21 liczb i 5 twierdzen o vendorach bez dryfu**. Historyczne
+`/r/<id>` odpowiadaja 200, czyli identyfikatory przeszly. `/api/health`: `writable: true`.
+
+**MIEJSCE PO MIGRACJI:** nowy klaster **137 MB z 5120 (2,7 %)**, sami na nim. Plik zszedl z 1470 MB
+do 42 MB, bo swiezy zapis nie ma slacku po nadpisaniach.
+
+**CZY RUSZYLEM COS CUDZEGO: NIE, i to sprawdzone, a nie zalozone.**
+- User bazy `letagentsin-app` ma `readWrite` **wylacznie na bazie `stackpick`** i `scopes` zawezone
+  do klastra `letagentsin`, wiec do `muster` nie siega.
+- Allowlist w Atlasie jest **per projekt**, nie per klaster, wiec wpis `0.0.0.0/0` (dyno Heroku nie
+  ma stalego IP) dotyczylby takze Mustera. Feed zdarzen mowi, ze `0.0.0.0/0` w tym projekcie stoi od
+  **2025-10-23** i moj POST byl duplikatem: **zadnego dzisiejszego zdarzenia sieciowego nie ma**.
+  Osloną Mustera nie ruszylem. (Osobno warte uwagi Krystiana: ten projekt jest otwarty na swiat od
+  pazdziernika.)
+- **Zrodlo NIETKNIETE:** `equity-analyst` nadal 1657 MB, nasza stara baza `stackpick` nadal 139 MB.
+
+**ROLLBACK, jednym krokiem:** stary URI lezy w `.env.local` jako `MONGODB_URI_ROLLBACK`;
+`heroku config:set MONGODB_URI="$MONGODB_URI_ROLLBACK" -a stackpick` wraca na stare.
+
+**HASLO ZROTOWANE.** `heroku config:set` wypisal pelne URI **z haslem** na ekran, wiec pierwsze
+haslo wyladowalo w transkrypcie sesji. Zmienione przez API zaraz po smoke tescie, produkcja
+zweryfikowana po zmianie (`writable: true`). Wniosek na przyszlosc: `heroku config:set` echuje
+wartosc, wiec sekrety ustawiamy z `> /dev/null`.
+
+**CO ZOSTAJE DLA KRYSTIANA (nie robie sam):** skasowanie starej bazy `stackpick` z klastra
+`equity-analyst-flex`. **Dopiero po tygodniu** (czyli nie przed **2026-08-27**), za wyrazna zgoda i
+**wylacznie baza `stackpick`**, nigdy klaster i nigdy `equity-analyst`. Do tego czasu jest naszym
+rollbackiem i nikomu nie przeszkadza: to 139 MB z 5120 na cudzym sufcie.
+
 ## SIEDZIMY NA CUDZYM KLASTRZE: POTWIERDZONE, ALE NIE Z TEGO POWODU, CO SIE WYDAWALO (22:45)
 
 Krystian: „nasza baza jest chyba na klastrze MongoFlex razem z innym projektem, potwierdz - i chyba
