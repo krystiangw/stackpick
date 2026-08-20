@@ -85,6 +85,36 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## PIATE ZDANIE BYLO W PLATNYM RAPORCIE, A SZOSTE W WITRYNIE SKLEPU (17:55, v742)
+
+Straznik z poprzedniej sekcji czytal tylko `src/app`. Grep po reszcie repo znalazl to samo zdanie
+**w `fixfirst.ts`**, czyli w **lekarstwie, ktore dostaje platny klient**: *„which is how an agent
+registers itself without a human **at almost every authorization server today**"*. Zdanie, za ktore
+ktos zaplacil, oszacowane slowem. Straznik obejmuje teraz te sama liste, co regula o RFC 7591:
+strony **plus `score.ts` i `fixfirst.ts`**, bo tam pisza sie zdania dla kupujacego.
+
+**I to nie zamknelo sprawy, bo dokument nie jest kodem.** `/d/sample` - jedyny sposob, zeby zobaczyc
+platny raport przed zakupem - **nadal niosl to zdanie**, chociaz `audit-sample` swiecil na zielono:
+pilnowal **numeru formuly**, a ten sie zgadzal (9.55). Zmiana slow jest dla niego niewidzialna.
+Probka przegenerowana (`--publish --id sample --sample`, ze store, bez ruszania vendorow),
+zweryfikowana na produkcji: zero trafien.
+
+**Wzorzec zamieszkal w `src/lib/claims.ts`, bo pilnuja go dwie rozne bramki:** `rules.mts` czyta
+**zrodla** przed buildem, `audit-sample` czyta **dokument juz zapisany w bazie**. Kod poprawiony nie
+poprawia dokumentu, ktory wyszedl wczoraj - to jest cala lekcja tej sekcji.
+
+**Codex dwa razy z rzedu obronil cudze slowa:**
+- raport **cytuje odpowiedzi agentow doslownie**, wiec „most vendors" w cudzym zdaniu nie jest naszym
+  oszacowaniem. Bez tego bramka swiecilaby na czerwono do konca swiata, bo cytatu nie zmienimy.
+- pierwsza wersja wycinania urywala sie na **cudzyslowie wewnatrz cytatu** („Acme calls this
+  „automatic", and most vendors...") i ogon cudzej wypowiedzi wracal jako nasze zdanie. Teraz
+  wycinamy **cale linie cytatu**, ktore w tym raporcie maja staly ksztalt, a kontrolka ma oba
+  przypadki.
+
+**GRANICA napisana wprost w kodzie:** dowody w werdyktach cytuja dokumentacje vendora w prostych
+cudzyslowach **w srodku naszego zdania** i tego nie wycinamy, bo nie da sie tam oddzielic cytatu od
+zdania. Jesli kiedys oblejemy na takim wierszu, to jest miejsce, w ktore trzeba spojrzec.
+
 ## STRAZNIK NA CALA KLASE: STRONA NIE ZGADUJE SKALI CUDZEGO ZACHOWANIA (17:35, v740)
 
 Trzy zdania jednego wieczoru to nie przypadek, tylko **wzorzec**: liczby na tych stronach sa
