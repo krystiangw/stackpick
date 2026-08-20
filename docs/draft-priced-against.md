@@ -1,6 +1,12 @@
 # Draft, not published: what a reader should be told about the $29 scanners
 
-**Status: a draft. Nothing here is on the site and none of it goes up without Krystian saying so.**
+**Status: a draft, and after the decision audit of 20 August 2026 it stays one on purpose. This is
+material for a one-to-one conversation, not copy for the site.** A dated price checked the morning of
+a sales reply is honest; the same number sitting on a page goes stale without anybody touching it.
+`/pricing` now answers the same objection without naming anybody and without quoting a competitor's
+price, under "There are cheaper scanners that do a weekly check".
+
+**Nothing here is on the site and none of it goes up without Krystian saying so.**
 `/pricing` currently says, in its own words, that we have not independently measured anybody else's
 product. That sentence is what makes this draft hard to write and worth writing carefully: naming a
 competitor is publishing a claim about a third party, and the only safe material is what they publish
@@ -38,6 +44,10 @@ anything goes up; this line records a state, not a fact that stays true.
 
 ## What must be true before it goes up
 
+0. All of these together, not any one of them: billing on and monitoring actually charged; the agency
+   tier fixed or the paragraph silent about packs; the number pulled or guarded automatically, with a
+   visible read date and a link to their page; and a guard in `scripts/rules.mts` that covers page
+   prose, not only report rows. Until all four hold, the answer is the category argument on /pricing.
 1. Somebody has to decide we are willing to name a competitor at all. Today we are not.
 2. Every number in it has to come from their published page on the day we publish, not from this
    file. Prices move.

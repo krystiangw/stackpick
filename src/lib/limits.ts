@@ -116,3 +116,38 @@ export function challengeSentence(limits: EdgeLimits): string {
 /** Aimed at the vendor, because with a challenge there is nothing on our side left to wait out. */
 export const CHALLENGE_UNBLOCK =
   'Let plain HTTP clients read your documentation host, or allow the named agents through your bot rules, and this becomes measurable.'
+
+/**
+ * Ilu vendorow z korpusu odmowilo nam na wlasnym brzegu, i ilu z nich wyzwaniem przegladarkowym.
+ *
+ * `/pricing` niosl te liczby **wpisane recznie** razem z data przemiatu, wiec zmienialy sie dokladnie
+ * wtedy, kiedy nikt na nie nie patrzyl: 2026-08-20 strona mowila 15 i 11, a korpus dawal 14 i 10.
+ * Straznik w `after-reseed` to lapal i kazal poprawiac, ale poprawianie liczby po kazdym przemiacie
+ * to nie jest rozwiazanie, tylko przypomnienie. Liczone raz, tutaj, i czytane przez strone.
+ */
+/**
+ * Kiedy korpus byl czytany, powiedziane tak, zeby bylo prawda takze wtedy, gdy nie w jednym dniu.
+ * Data najnowszego wiersza podana jako data calego przemiatu jest falszem przy kazdym niepelnym
+ * przebiegu - a te sa normalne: domena, ktora padla, wraca dzien pozniej (codex).
+ */
+export function sweptOn(rows: { scannedAt: string }[]): { from: string; to: string; oneDay: boolean } | null {
+  if (rows.length === 0) return null
+  const days = rows.map((row) => row.scannedAt.slice(0, 10)).sort()
+  const from = days[0]
+  const to = days[days.length - 1]
+  return { from, to, oneDay: from === to }
+}
+
+export function edgeRefusalsInCorpus(
+  rows: { domain: string; findings?: ScanFindings }[],
+): { domains: number; refused: number; challenged: number } {
+  let refused = 0
+  let challenged = 0
+  for (const row of rows) {
+    const edge = limitsAtTheirEdge(row.findings, row.domain)
+    if (edge.onSite === 0) continue
+    refused += 1
+    if (edge.challenges > 0) challenged += 1
+  }
+  return { domains: rows.length, refused, challenged }
+}

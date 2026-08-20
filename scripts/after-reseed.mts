@@ -283,8 +283,16 @@ const cennikZrodlo = readFileSync('src/app/pricing/page.tsx', 'utf8').replace(/\
 const zdanieOBrzegu = cennikZrodlo.match(
   /Sweeping all (\d+) domains in our corpus on ([^,]+), (\d+) of them refused our requests at their own edge and (\d+) of those answered with a browser challenge/,
 )
-if (!zdanieOBrzegu) {
-  console.log('UWAGA: nie znalazlem na /pricing zdania o brzegu vendora - albo je przepisano, albo ten straznik czyta nie to')
+// Od 2026-08-20 te liczby sa LICZONE z korpusu przy renderze, a nie wpisywane recznie, wiec regex
+// nizej nie ma czego dopasowac - i to jest stan docelowy, nie awaria. Straznik pilnuje wiec czego
+// innego: ze strona naprawde je liczy. Poprawianie recznej liczby po kazdym przemiacie bylo
+// przypomnieniem, nie rozwiazaniem; ostatni rozjazd (15/11 wobec 14/10) wyszedl kilka godzin po tym,
+// jak ktos ja poprawil.
+const cennikLiczySam = cennikZrodlo.includes('edgeRefusalsInCorpus(')
+if (!zdanieOBrzegu && cennikLiczySam) {
+  console.log(`cennik liczy brzeg vendora z korpusu, wiec nie ma czego porownywac (dzis: ${rows}/${limitedAtEdge}/${challengedAtEdge})`)
+} else if (!zdanieOBrzegu) {
+  console.log('UWAGA: nie znalazlem na /pricing zdania o brzegu vendora ANI wywolania edgeRefusalsInCorpus - albo je przepisano, albo ten straznik czyta nie to')
 } else {
   const [, napisaneDomeny, napisanaData, napisaneOdmowy, napisaneWyzwania] = zdanieOBrzegu
   const rozjazd = [

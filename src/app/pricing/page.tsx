@@ -8,6 +8,8 @@ import { headers } from 'next/headers'
 import { SITE_URL } from '@/lib/site'
 import { getStore } from '@/lib/store'
 import { NOISE_FLOOR_PERCENT } from '@/lib/published'
+import { publishedCorpus } from '@/lib/published'
+import { edgeRefusalsInCorpus, sweptOn } from '@/lib/limits'
 
 export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/pricing` },
@@ -106,6 +108,9 @@ const TIERS: readonly Tier[] = [
   },
 ]
 
+const asDay = (day: string) =>
+  new Date(`${day}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+
 export default async function PricingPage() {
   // Linked only when it is there AND marked as a sample. A fresh deployment has no deliveries and a
   // link to a 404 is worse than no link, but the flags are independent: publishing a customer's
@@ -113,6 +118,18 @@ export default async function PricingPage() {
   // page. Existence is not permission.
   // And never at the cost of the page: on 2026-08-13 the cluster hit its quota and every read
   // failed, so an awaited lookup here would have turned the pricing page into a 500 over a link.
+  // Liczone z korpusu, nie wpisane recznie. Do 2026-08-20 stalo tu „15 ... 11" przy korpusie, ktory
+  // dawal 14 i 10: liczba wpisana recznie zmienia sie dokladnie wtedy, kiedy nikt na nia nie patrzy.
+  //
+  // Zlapane, a nie puszczone dalej: `publishedCorpus` rzuca, gdy baza nie odpowiada, a cennik to
+  // ostatnia strona, ktora ma paść przez odczyt ozdobnika - obok stoi `getDelivery` z tym samym
+  // zabezpieczeniem (codex). Gdy liczb nie mamy, zdanie ich NIE ZMYSLA: znika w calosci, bo „0 domen
+  // w naszym korpusie" i „Invalid Date" to twierdzenia, ktorych nie zmierzylismy.
+  const edge = await publishedCorpus()
+    .then(({ reports }) =>
+      reports.length === 0 ? null : { ...edgeRefusalsInCorpus(reports), swept: sweptOn(reports) },
+    )
+    .catch(() => null)
   const sampleReady = await getStore()
     .getDelivery('sample')
     .then((delivery) => delivery?.sample === true)
@@ -248,9 +265,20 @@ export default async function PricingPage() {
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           <strong className="font-semibold text-ink">Your edge is production configuration, not
-          code.</strong> Sweeping all 177 domains in our corpus on 20 August 2026, 15 of them refused our
-          requests at their own edge and 11 of those answered with a browser challenge rather than a rate
-          limit. One vendor&apos;s documentation host challenged thirteen of the thirteen requests we made to
+          code.</strong>{' '}
+          {edge && (
+            <>
+              Sweeping all {edge.domains} domains in our corpus{' '}
+              {edge.swept?.oneDay
+                ? `on ${asDay(edge.swept.to)}`
+                : edge.swept
+                  ? `between ${asDay(edge.swept.from)} and ${asDay(edge.swept.to)}`
+                  : ''}
+              ,{' '}
+              {edge.refused} of them refused our requests at their own edge and {edge.challenged} of those
+              answered with a browser challenge rather than a rate limit.{' '}
+            </>
+          )} One vendor&apos;s documentation host challenged thirteen of the thirteen requests we made to
           it, which read as three checks going silent while nothing in their repository had changed; asked
           again on its own an hour later, the same host answered and all three came back. A bot rule added in
           a dashboard by somebody who never opens the pipeline is the most common way this fails, and it is
@@ -337,6 +365,16 @@ export default async function PricingPage() {
             [
               'Five runs a month is not much of a sample.',
               'It is not, and it decides what the number is allowed to say. Five runs catch a wall every run hits, and they cannot separate you from a competitor that finishes close. So monitoring does not sell you a position: it reports how many of the five named you, and the thing worth reacting to is the month that number moves.',
+            ],
+            [
+              'There are cheaper scanners that do a weekly check. Why is this priced above them?',
+              // Bez nazwy i bez cudzej liczby, swiadomie. Draft z cena konkurenta lezy w
+              // `docs/draft-priced-against.md` i tam zostaje: audyt decyzji (subagent, opus,
+              // 2026-08-20) wskazal, ze cudza cena zestarzeje sie na naszej stronie bez niczyjej
+              // interwencji, a nasza wlasna zasada zada, zeby czytelnik mogl twierdzenie odtworzyc -
+              // czego przy „skanerze za 29 dolarow" bez adresu zrobic nie moze. Argument kategorii
+              // daje kupujacemu to samo i nie kosztuje nas ani odtwarzalnosci, ani liczby do pilnowania.
+              'They should be, and the weekly half of what we do is comparable to one. We would not argue you should pay more for a file check. What is not on offer at that price is the other half: five times a month we put a buying question to an agent in an empty directory, count who it named instead of you, and quote the sentence it named them with. A check that verifies a file exists cannot tell you that a run picked somebody else, or why. Ask that question of anything you are comparing us to, including us.',
             ],
             [
               'Everyone else in AI visibility sells prompts by the hundred. Why does this sell one question?',
