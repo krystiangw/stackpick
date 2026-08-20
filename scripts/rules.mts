@@ -1459,7 +1459,16 @@ check('a identyfikator ma te 64 bity naprawde', readFileSync('src/lib/store.ts',
 check('i mowi, ze nie ma go ani na /v, ani w korpusie', stronaPrywatnosc.includes('do not include it in') && stronaPrywatnosc.includes('do not show it at'), true)
 
 const stronaV = readFileSync('src/app/v/[domain]/page.tsx', 'utf8')
-check('/v czyta wylacznie wiersze zasiane', stronaV.includes('return store.latestForDomain(domain, true)'), true)
+check('/v czyta wylacznie wiersze zasiane', stronaV.includes('await store.latestForDomain(domain, true)'), true)
+// I poza korpusem tylko wiersz na BIEZACEJ formule. Zmierzone na czternastu takich wierszach: piec
+// publikowalo werdykt, ktorego ta sama tresc juz by dzis nie dostala, i kazda roznica szla w te sama
+// strone - zmierzone zero na „nie zmierzylismy". Korpus zostaje z banerem, bo jego wiersze utrzymuje
+// przemiat; poza korpusem nic ich nie odswiezy.
+check(
+  'poza korpusem publikujemy tylko biezaca formule',
+  stronaV.includes('categoryFor(domain) || seeded.scorecard.formulaVersion === FORMULA_VERSION'),
+  true,
+)
 check('i nie ma juz galezi bioracej najnowszy wiersz jakikolwiek', stronaV.includes('return store.latestForDomain(domain)\n'), false)
 
 // Blad z serwera MCP ma nazwac argument, ktorego brakuje. Zmierzone na zywym serwerze: wolanie z
@@ -2869,11 +2878,16 @@ console.log('\nstrona korpusowa nie spada na skan odwiedzajacego')
 const stronaVendora = readFileSync('src/app/v/[domain]/page.tsx', 'utf8')
 const stronaBota = readFileSync('src/app/bot/page.tsx', 'utf8')
 check('obietnica nadal stoi na /bot', stronaBota.includes('nothing a visitor scans joins the corpus we publish'), true)
-check('wiersz korpusu czytamy tylko zasiany', stronaVendora.includes('return store.latestForDomain(domain, true)'), true)
+check('wiersz korpusu czytamy tylko zasiany', stronaVendora.includes('await store.latestForDomain(domain, true)'), true)
 check('i nie ma juz zapasowego odczytu', stronaVendora.includes('?? store.latestForDomain(domain)'), false)
 // Obietnica ma tez powiedziec, co widzi firma SPOZA korpusu, bo tam faktycznie pokazujemy skan
 // odwiedzajacego - tyle ze poza indeksem.
-check('i mowi, co ze stronami spoza korpusu', stronaBota.includes('kept out of search'), true)
+// `/bot` opisuje TO, co robimy, wiec zmiana zachowania musi go ruszyc razem z kodem. Do 2026-08-20
+// mowil „its page shows the most recent scan of any kind" - a od wczoraj `/v` nie pokazuje skanu
+// goscia w ogole, a od dzis poza korpusem takze nie pokazuje starej formuly.
+check('i mowi, co ze stronami spoza korpusu', stronaBota.includes('out of search'), true)
+check('i nie obiecuje juz, ze pokazuje skan kogokolwiek', stronaBota.includes('the most recent scan of any kind'), false)
+check('tylko nasz wlasny i tylko na biezacej formule', stronaBota.includes('only a scan we ran ourselves, and only while it still'), true)
 check('a te strony naprawde sa poza indeksem', stronaVendora.includes("if (!categoryFor(name)) return { title: `${name} · Let Agents In`, robots: { index: false }"), true)
 
 console.log('\nbramki wymienione w runbooku dostawy istnieja')

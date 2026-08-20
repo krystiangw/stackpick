@@ -49,7 +49,19 @@ async function publishedRowFor(domain: string) {
   // this page carries when the row is older than the formula we run, rather than by publishing
   // whatever a visitor last ran. A guest keeps their scan at `/r/<id>`, which is the unguessable
   // link the copy promises them.
-  return store.latestForDomain(domain, true)
+  const seeded = await store.latestForDomain(domain, true)
+  // Poza korpusem publikujemy tylko wiersz na BIEZACEJ formule. Zmierzone 2026-08-20 na czternastu
+  // takich wierszach: **piec z nich publikuje werdykt, ktorego ta sama tresc juz by dzis nie
+  // dostala**, i kazda roznica idzie w te sama strone - zmierzone zero zamienia sie w „nie
+  // zmierzylismy". Czyli te strony niosly oskarzenia, ktore sami zdazylismy wycofac
+  // (`directus.io` trzy, `livekit.io` i `messagebird.com` po jednym na provisioningu).
+  //
+  // Korpus zostaje z banerem „measured under an older formula", bo jego wiersze SA utrzymywane:
+  // przemiat wyrownuje je co kilka dni, a baner opisuje okno miedzy podbiciem wersji a przemiatem.
+  // Poza korpusem nie ma czego czekac - nic tych wierszy nie odswiezy, wiec jedyna uczciwa opcja to
+  // przestac je pokazywac, dopoki ktos ich nie przeskanuje.
+  if (!seeded || categoryFor(domain) || seeded.scorecard.formulaVersion === FORMULA_VERSION) return seeded
+  return null
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ domain: string }> }): Promise<Metadata> {
