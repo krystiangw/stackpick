@@ -1019,7 +1019,11 @@ dwuznaczny wiersz na szescdziesiat) i punkt 2 z audytu subagenta (zero wierszy w
 zgoda na imie i nazwisko jako administratora na `/privacy` · klucz do `agentaudit@agentmail.to` ·
 platne subskrypcje cursora i gemini · **szesc decyzji cenowych** · czy publikujemy porownanie
 nazywajace konkurenta (liczby przeweryfikowane 2026-08-19 o 09:00) · **push naprawy workflow do
-`origin`** (`git push origin main` + `gh workflow run mcp-registry.yml`) · formularz katalogu
+`origin`** (`git push origin main` + `gh workflow run mcp-registry.yml`) - **ma termin: lustro
+rejestru MCP wygasa 2026-08-26** (zsynchronizowane 2026-08-19 05:08, TTL 168 h; zmierzone 2026-08-20
+o 03:10: 20 h wieku, 148 h zapasu). Po wygasnieciu `mcp_present` traci kontrolke i wiersze robia sie
+niemierzalne. Doraznie da sie dolac z laptopa (`npm run mirror-mcp-registry`), ale to zaslania
+przyczyne, wiec zostawiam zegar widoczny · formularz katalogu
 konektorow w claude.ai (reszta pakietu gotowa w `docs/submitting-the-connector.md`) · **wlasny
 klaster Atlas** (my siedzimy na `equity-analyst-flex`, cudzym; rekomendacja: wlasny Flex w OSOBNYM
 projekcie, ~8 USD/mies. - narzedzia i runbook gotowe, brakuje tylko UI Atlasa albo kluczy Admin API
