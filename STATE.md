@@ -245,7 +245,10 @@ traci nic: jego skan zostaje pod `/r/<id>`, czyli tym **niezgadywalnym** linkiem
 kopia.
 
 **Zweryfikowane na produkcji:** `tally.so` i `svix.com` mowia teraz „not measured yet",
-`letagentsin.com` (nasz zasiany wiersz) i `mixpanel.com` (korpus) bez zmian.
+`letagentsin.com` (nasz zasiany wiersz) i `mixpanel.com` (korpus) bez zmian. Potem **wszystkie 173
+opublikowane wiersze przepytane po kolei** - zaden nie zrobil sie pusty, i takze trzy wiersze
+wstrzymane poza agregacja (`filestack.com`, `cal.com`, `posthog.com`, dzis na 9.50) nadal pokazuja
+werdykty. Zmiana, ktora publikuje mniej, moze przypadkiem opublikowac nic - dlatego to sprawdzenie.
 
 ## DZIESIEC NAZW PLIKOW TO NIE DWADZIESCIA TRZY ZAPYTANIA (01:45, v688)
 
