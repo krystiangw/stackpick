@@ -1,5 +1,6 @@
 import { CURATED_DOMAINS } from './categories'
 import { getStore, type Report } from './store'
+import { asPublishedToday } from './publishable'
 
 /**
  * How much the corpus moves between two identical rescans, as a percentage, measured rather than
@@ -94,9 +95,17 @@ export async function publishedCorpus(): Promise<PublishedCorpus> {
 }
 
 async function loadCorpus(): Promise<PublishedCorpus> {
-  const seeded = (await getStore().latestPerDomain(1000, true)).filter((report) =>
-    CURATED_DOMAINS.has(report.domain),
-  )
+  // Through the same gate as a single report. Ranks, percentiles and "beaten on" are published
+  // claims about the rest of the corpus, so a peer still carrying a finding we withdrew would make
+  // the page count against a neighbour exactly what it just declined to count against the subject
+  // (codex). Measured today: no corpus row is affected, because every one of them is newer than
+  // the last report that was - but that is a fact about the last sweep, not a guarantee.
+  const seeded = (await getStore().latestPerDomain(1000, true))
+    .filter((report) => CURATED_DOMAINS.has(report.domain))
+    .map((report) => {
+      const { scorecard } = asPublishedToday(report)
+      return scorecard === report.scorecard ? report : { ...report, scorecard }
+    })
   if (seeded.length === 0) return EMPTY
 
   const byVersion = new Map<string, Report[]>()

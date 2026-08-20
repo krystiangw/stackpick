@@ -4,7 +4,7 @@ import { ImageResponse } from 'next/og'
 import { buildComparison } from '@/lib/compare'
 import { pickHeadline } from '@/lib/headline'
 import { buildMark, fillHeight, hasUnmeasured, MARK_PALETTE, scoreTone } from '@/lib/mark'
-import { getStore } from '@/lib/store'
+import { reportAsPublished } from '@/lib/publishable'
 
 /**
  * Without a font, satori falls back to its own typeface and the card that represents the brand at
@@ -37,7 +37,10 @@ const BRASS = '#7d5c10'
 
 export default async function Image({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const [report, fonts] = await Promise.all([getStore().getReport(id), loadFonts()])
+  // One entrance, same as the page: the rank and the comparison below are drawn from this report,
+  // so it has to arrive already corrected rather than be patched afterwards.
+  const [published, fonts] = await Promise.all([reportAsPublished(id), loadFonts()])
+  const report = published?.report
 
   if (!report) {
     return new ImageResponse(

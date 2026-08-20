@@ -67,6 +67,7 @@ import {
   everyFreeSignalIsAButton,
   everyFreeSignalIsAQuestion,
 } from '../src/lib/scan/funnel'
+import { asPublishedToday } from '../src/lib/publishable'
 
 // Ceny dostawcy przychodza ze srodowiska, a bez nich katalog nie rozpoznaje zadnej ceny i cala
 // sciezka przyznawania uprawnien jest nietestowana. Ustawiane TUTAJ, a nie w skrypcie npm: build
@@ -1046,6 +1047,69 @@ check('bez adresu I bez originow to nie jest znalezisko', bezNiczego.inconclusiv
 check('i mowi wprost, czego nie zapisalismy', bezNiczego.detail.includes('did not record the address'), true)
 // Stare raporty nie maja tego pola w ogole, nie pustej tablicy - to ten sam przypadek.
 check('brak pola zachowuje sie jak brak originow', metadaneBez({}).inconclusive === true, true)
+
+// BRAMA PUBLIKACYJNA (9.52). `/r/<id>` renderuje ZAPISANY scorecard, wiec naprawa reguly nie ruszy
+// 294 stron, ktore juz oskarzaja bez dowodu. Brama poprawia RENDER, nigdy wiersz w bazie, i
+// dopasowuje KSZTALT znaleziska, nie tresc zdania - bo tresc zdania to wlasnie to, co sie zmienia
+// (te same 294 wiersze niosa dwa rozne brzmienia tego samego zarzutu).
+const zapisanyRaport = (oauth: Record<string, unknown>, detail: string, extra: Record<string, unknown> = {}) => ({
+  domain: 'v.test',
+  scannedAt: new Date().toISOString(),
+  findings: { funnel: { oauth: { metadataPublished: true, dynamicClientRegistration: false, ...oauth } } },
+  scorecard: {
+    formulaVersion: '9.41', total: 7, max: 16, measurable: 15,
+    stages: [
+      { stage: 'entry', letter: 'B', title: 'Entry', question: '', points: 3, max: 4, measurable: 4 },
+      { stage: 'discovery', letter: 'A', title: 'Discovery', question: '', points: 5, max: 6, measurable: 6 },
+    ],
+    checks: [
+      { id: 'oauth_dcr', stage: 'entry', points: 0, max: 1, detail, ...extra },
+      { id: 'docs_without_js', stage: 'discovery', points: 1, max: 1, detail: 'fine' },
+    ],
+  },
+})
+
+const bezDowodu = asPublishedToday(zapisanyRaport({ probedOrigins: ['https://a.v.test', 'https://b.v.test'] }, 'OAuth metadata published, but no registration_endpoint in it') as never)
+check('brama wycofuje zarzut bez dowodu', bezDowodu.degraded.length, 1)
+check('i robi z niego niemierzalne, a nie zaliczone', bezDowodu.scorecard.checks[0].inconclusive === true, true)
+check('punktow nie przyznaje', bezDowodu.scorecard.checks[0].points, 0)
+// Mianownik musi isc za wycofaniem, inaczej strona pokazuje sume, ktorej jej wlasne wiersze przecza.
+check('mianownik schodzi o wycofany punkt', bezDowodu.scorecard.measurable, 14)
+check('a suma punktow zostaje bez zmian', bezDowodu.scorecard.total, 7)
+// Etap ma WLASNY mianownik i strona drukuje oba. Poprawiony tylko total dawal strone, ktora
+// przeczy sobie o jeden naglowek dalej (codex).
+check('mianownik ETAPU tez schodzi', bezDowodu.scorecard.stages?.find((s) => s.stage === 'entry')?.measurable, 3)
+check('a cudzy etap zostaje nietkniety', bezDowodu.scorecard.stages?.find((s) => s.stage === 'discovery')?.measurable, 6)
+check('odzyskane originy ida jako dowod', bezDowodu.degraded[0].evidence?.length, 2)
+
+// Stary raport bez pola `measurable` - 26 takich w bazie, 8 z nich brama poprawia. Odejmowanie od
+// `undefined` dawalo `7/NaN` dokladnie na stronach, ktore mialy zostac naprawione (codex).
+const starySchemat = zapisanyRaport({ probedOrigins: ['https://a.v.test'] }, 'OAuth metadata without registration_endpoint')
+delete (starySchemat.scorecard as Record<string, unknown>).measurable
+delete (starySchemat.scorecard.stages[0] as Record<string, unknown>).measurable
+const bezPola = asPublishedToday(starySchemat as never)
+check('brak measurable spada na max, nie na NaN', bezPola.scorecard.measurable, 15)
+check('to samo na poziomie etapu', bezPola.scorecard.stages?.find((s) => s.stage === 'entry')?.measurable, 3)
+check('i zaden mianownik nie jest NaN', [bezPola.scorecard.measurable, ...(bezPola.scorecard.stages ?? []).map((s) => s.measurable)].some(Number.isNaN), false)
+
+// Starsze brzmienie tego samego bledu. Recznie naliczylem 293 przez dopasowanie tekstu, brama
+// znalazla 294: `allegro.pl` z 7 sierpnia (formula 2.1) mowil to innymi slowami i tak samo nie
+// podawal adresu. Dlatego warunek jest strukturalny.
+const stareBrzmienie = asPublishedToday(zapisanyRaport({ probedOrigins: [] }, 'OAuth metadata without registration_endpoint') as never)
+check('inne brzmienie tego samego zarzutu tez lapie', stareBrzmienie.degraded.length, 1)
+check('bez originow nie zmyslamy dowodu', stareBrzmienie.degraded[0].evidence, undefined)
+
+// Kontrolki, bo brama, ktora wycofuje ZA DUZO, kasuje prawdziwe znaleziska o cudzych firmach.
+const zAdresemZapisany = asPublishedToday(zapisanyRaport({ metadataAt: 'https://auth.v.test/.well-known/x', probedOrigins: ['https://auth.v.test'] }, 'OAuth metadata published at https://auth.v.test/.well-known/x, but no registration_endpoint in it') as never)
+check('raport, ktory PODAL adres, zostaje nietkniety', zAdresemZapisany.degraded.length, 0)
+check('i jego mianownik sie nie rusza', zAdresemZapisany.scorecard.measurable, 15)
+const juzNiemierzalny = asPublishedToday(zapisanyRaport({ probedOrigins: ['https://a.v.test'] }, 'Unmeasurable: cos', { inconclusive: true }) as never)
+check('wiersz juz niemierzalny nie jest wycofywany drugi raz', juzNiemierzalny.degraded.length, 0)
+const zPunktem = asPublishedToday({
+  ...zapisanyRaport({ probedOrigins: ['https://a.v.test'] }, 'registration_endpoint published'),
+  scorecard: { formulaVersion: '9.41', total: 8, max: 16, measurable: 15, checks: [{ id: 'oauth_dcr', points: 1, max: 1, detail: 'registration_endpoint published' }] },
+} as never)
+check('zaliczony wiersz nie jest wycofywany', zPunktem.degraded.length, 0)
 
 const docs = CHECKS.find((c) => c.id === 'docs_without_js')!
 const rendering = (chars: number) =>

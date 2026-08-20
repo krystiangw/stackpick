@@ -10,19 +10,23 @@ import { EmailGate } from '@/components/email-gate'
 import { FixFirst } from '@/components/fix-first'
 import { FunnelMark } from '@/components/funnel-mark'
 import { buildFixPlan } from '@/lib/fixfirst'
-import { getStore , heldReport, isHeldOnly } from '@/lib/store'
+import { isHeldOnly } from '@/lib/store'
 import { erratumFor } from '@/lib/errata'
 import { pickHeadline } from '@/lib/headline'
 import { ShareRow } from '@/components/share-row'
 import { CHECKS, STAGES, type ScoredCheck } from '@/lib/score'
+import { reportAsPublished } from '@/lib/publishable'
 
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
-  const report = (await getStore().getReport(id)) ?? heldReport(id)
-  if (report && addressProtectsNothing(id)) return { title: 'Not found · Let Agents In', robots: { index: false } }
-  if (!report) return { title: 'Scorecard not found: Let Agents In' }
+  // Through the gate as well: the title and the share description are published surfaces too, and
+  // a withdrawn point that survives in the search result is the correction missing its audience.
+  const published = await reportAsPublished(id)
+  if (published && addressProtectsNothing(id)) return { title: 'Not found · Let Agents In', robots: { index: false } }
+  if (!published) return { title: 'Scorecard not found: Let Agents In' }
+  const { report } = published
 
   const headline = pickHeadline(report.findings, report.scorecard)
   return {
@@ -98,9 +102,13 @@ function verdictTone(check: ScoredCheck) {
 
 export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const report = (await getStore().getReport(id)) ?? heldReport(id)
-  if (!report || addressProtectsNothing(id)) notFound()
-
+  // Loaded through the publication gate, so everything downstream - comparison, rank, headline,
+  // metadata, share image - sees one and the same corrected scorecard. The stored row is never
+  // touched; when a rule of ours turns out to have charged somebody without evidence, the finding
+  // is withdrawn here and the page says so out loud.
+  const published = await reportAsPublished(id)
+  if (!published || addressProtectsNothing(id)) notFound()
+  const { report, degraded } = published
   const { scorecard, findings } = report
   // A check we could not measure is not a failure we can charge someone for.
   // Not applicable is not failing. It counted here and nowhere else, so linear.app was told "5 of
@@ -143,6 +151,37 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             </a>{' '}
             if you need a permanent copy sooner.
           </p>
+        </div>
+      )}
+      {/* A correction nobody can see is worse than none: anyone holding a screenshot of the old page
+          deserves to find out here why it no longer says that. Named check, named reason, and the
+          evidence we did keep, labelled as recovered rather than passed off as what we wrote. */}
+      {degraded.length > 0 && (
+        <div className="mt-8 border-l-2 border-brass bg-surface p-6">
+          <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-brass">We withdrew a finding on this page</h2>
+          {degraded.map((withdrawn) => (
+            <div key={withdrawn.checkId} className="mt-3 max-w-2xl">
+              <p className="leading-relaxed">
+                <span className="font-mono text-sm">{withdrawn.checkId}</span>: {withdrawn.because} The scan itself is
+                untouched and so is every other row below.
+              </p>
+              {withdrawn.evidence && withdrawn.evidence.length > 0 && (
+                <p className="mt-3 text-sm leading-relaxed text-ink-faint">
+                  Recovered from this scan&apos;s own record, not from the sentence we published: it asked{' '}
+                  {withdrawn.evidence.length} {withdrawn.evidence.length === 1 ? 'origin' : 'origins'} for OAuth
+                  metadata, starting with {withdrawn.evidence.slice(0, 3).join(', ')}.
+                </p>
+              )}
+              <p className="mt-3 text-sm leading-relaxed text-ink-faint">
+                This report is a scan from a single moment, on formula v{scorecard.formulaVersion}. The current
+                verdict for {report.domain} is at{' '}
+                <a href={`/v/${report.domain}`} className="text-brass underline underline-offset-4">
+                  /v/{report.domain}
+                </a>
+                .
+              </p>
+            </div>
+          ))}
         </div>
       )}
       <section className="border-b border-rule py-12">
