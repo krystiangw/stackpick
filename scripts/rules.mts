@@ -655,6 +655,13 @@ check('i mowi, gdzie o nie pytal', brakWejscia.evidence.includes('on your site a
 check('bez hosta dokumentacji mowi tylko o witrynie', bezWejscia(false).evidence.includes('agent-access.json, on your site, and not one'), true)
 check('a stary wiersz bez flagi tez', bezWejscia(undefined).evidence.includes('agent-access.json, on your site, and not one'), true)
 check('i nie mowi juz "paths answered", ktore kolodowalo z wierszem checku', brakWejscia.evidence.includes('agent entry paths answered'), false)
+// I to samo slowo na `/report`, bo tam ta liczba stoi obok innych i czytelnik moze miec obie strony
+// otwarte. Straznik na PLIK, bo strona nie ma tu funkcji do wywolania.
+check(
+  'raport rynkowy tez liczy nazwy plikow',
+  readFileSync('src/app/report/page.tsx', 'utf8').includes('entry files we look for by name'),
+  true,
+)
 
 // Unmeasurable signup: the check says so, the headline must not accuse anyway.
 const throttled = pickHeadline(headlineFindings(), headlineCard([one('signup_reachable', { inconclusive: true })], 12))

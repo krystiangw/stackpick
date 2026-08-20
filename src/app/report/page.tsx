@@ -119,7 +119,10 @@ export default async function IndustryReportPage() {
               <span className="font-mono tabular-nums">
                 {entryPoint.zero} of {report.sampleSize}
               </span>{' '}
-              answer none of the {AGENT_ENTRY_PATH_COUNT} known agent entry paths: no{' '}
+              {/* Nazwy plikow, nie zapytania. To samo slowo w dwoch znaczeniach czytalo sie jak
+                  sprzecznosc: naglowek na `/r` mowil o dziesieciu „paths", a wiersz checku o
+                  dwudziestu trzech, bo kazda nazwa jest pytana takze na hoscie dokumentacji. */}
+              answer none of the {AGENT_ENTRY_PATH_COUNT} entry files we look for by name: no{' '}
               <span className="font-mono text-sm">/agent-signup.md</span>, no{' '}
               <span className="font-mono text-sm">/.well-known/agent-access.json</span>, nothing.
               {entryPoint.partial > 0 && (
