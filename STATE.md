@@ -297,6 +297,11 @@ Kontrolki na obie galezie plus na stary ksztalt danych.
 **nie jest czescia scorecardu**, wiec niezmiennik z `score.ts` (dwa skanery pod jednym numerem) tu nie
 obowiazuje. Zweryfikowane na produkcji na wierszu `svix.com`.
 
+**Domkniete 04:05:** to samo slowo stalo jeszcze na `/report` („118 of 173 answer none of the 10 known
+agent entry **paths**"), gdzie liczba sasiaduje z kilkoma innymi i czytelnik moze miec obie strony
+otwarte. Teraz i tam sa **„entry files we look for by name"**. Straznik na plik, bo strona nie ma tu
+funkcji do wywolania; mutacja oblewa. Zweryfikowane na produkcji.
+
 ## SERWER MCP PRZECZYTANY JAKO AGENT, KTORY GO WOLA (01:30, v687)
 
 Nasz `/mcp` jest powierzchnia dla **naszego docelowego uzytkownika**, a nie przeczytalem go tej nocy
