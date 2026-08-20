@@ -85,6 +85,24 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## TRZY DOSTARCZONE DOKUMENTY NADAL TO NIOSA, I NIE WOLNO ICH PRZEPISAC (18:05, v743)
+
+Skoro `/d/sample` niosl wycofane zdanie, zapytalem o **wszystkie dostarczone dokumenty**: 5 w bazie,
+**3 z nich niosa** „almost every" (stare probki filestack.com z 18 sierpnia, formuly 9.40 i 9.41,
+kazda pod wlasnym `/d/<id>`). Nikt ich nie skasuje i nikt ich nie przepisze: **dokument, ktory ktos
+dostal, jest jego**, a cicha edycja po fakcie jest gorsza od bledu, ktory poprawiamy jawnie.
+
+Wiec strona **mowi to nad tekstem**: „One sentence below says how common something is across other
+companies, and we never measured that. It is out of the report we generate today. This copy is kept
+exactly as it was delivered rather than edited after the fact." Zweryfikowane na produkcji: baner jest
+na `/d/XKCn43afq7HL`, a na biezacej probce go **nie ma**, bo nie ma czego zglaszac.
+
+**Czyta tylko NASZA proze** (`fixes[].how` i zdanie o planie w modelu, a w starszych dokumentach
+markdown bez linii cytatow) - cytat z przebiegu jest cudzym slowem i nie jest naszym oszacowaniem.
+
+**To jest ta sama regula, co brama publikacyjna z rana**, tylko dla dokumentu zamiast wiersza:
+**nie ruszamy tego, co zapisane; poprawiamy to, co pokazujemy**.
+
 ## PIATE ZDANIE BYLO W PLATNYM RAPORCIE, A SZOSTE W WITRYNIE SKLEPU (17:55, v742)
 
 Straznik z poprzedniej sekcji czytal tylko `src/app`. Grep po reszcie repo znalazl to samo zdanie
