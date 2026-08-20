@@ -4,7 +4,7 @@ import path from 'node:path'
 import { MongoStore } from './store-mongo'
 import type { ScanFindings } from './scan'
 import type { Scorecard } from './score'
-import type { Watch } from './watch'
+import { watchIsDue, type Watch } from './watch'
 import type { Delivery } from './delivery'
 import { stayOutAfter, type StayOut } from './stayout'
 
@@ -295,9 +295,15 @@ class FileStore implements Store {
   }
 
   async listWatchesDue(limit: number) {
+    const now = Date.now()
     return (await this.watches())
       .filter((watch) => watch.confirmedAt !== null && watch.stoppedAt === null)
-      .sort((a, b) => (a.checkedAt ?? '').localeCompare(b.checkedAt ?? ''))
+      .sort((a, b) => {
+        const aRecheck = watchIsDue(a, now, Number.POSITIVE_INFINITY) && a.checkedAt !== null
+        const bRecheck = watchIsDue(b, now, Number.POSITIVE_INFINITY) && b.checkedAt !== null
+        if (aRecheck !== bRecheck) return aRecheck ? -1 : 1
+        return (a.checkedAt ?? '').localeCompare(b.checkedAt ?? '')
+      })
       .slice(0, limit)
   }
 

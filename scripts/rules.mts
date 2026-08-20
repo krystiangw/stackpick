@@ -409,7 +409,7 @@ check('i mowi, ze kupujacy widzi niepoliczone wystapienia', runbookDostawy.inclu
 check('generator odmawia gosciowi, ktory laduje w korpusie', generatorSource.includes('CURATED_DOMAINS.has(landedOn)'), true)
 check('i mowi, ktora komende uruchomic', generatorSource.includes('Uruchom: npx tsx scripts/client-report.mts ${landedOn}'), true)
 check('kontrola: nie odmawia przy braku przekierowania', generatorSource.includes('landedOn && landedOn !== domain'), true)
-check('kazde pole watcha ma opis', Object.keys(WATCH_FIELDS_DISCLOSED).length, 14)
+check('kazde pole watcha ma opis', Object.keys(WATCH_FIELDS_DISCLOSED).length, 16)
 check('kontrola: opis nie jest pusty', Object.values(WATCH_FIELDS_DISCLOSED).every((one) => one.length > 5), true)
 check('formularz tez nie mowi „nic wiecej"', formSource.includes('the domain, nothing else'), false)
 // Zdanie o braku spolki wisi na istnieniu spolki, a nie na tym, czy jest administratorem:
@@ -3356,6 +3356,17 @@ const cronWatch = readFileSync('src/app/api/cron/watch/route.ts', 'utf8')
 check('cron porownuje karty tej samej formuly', cronWatch.includes('comparableScorecards(previous.scorecard, report.scorecard)'), true)
 check('a przy innej przelicza stary pomiar', cronWatch.includes('scoreFindings(previous!.findings)'), true)
 check('i wyrzuca checki, ktorych regule ruszylismy', cronWatch.includes('all.filter((change) => !ourDoing.has(change.checkId))'), true)
+check('jedno wywolanie crona mierzy domene tylko raz', (cronWatch.match(/scanDomain\(watch\.domain\)/g) ?? []).length, 1)
+check('pierwszy ruch zapisuje do odroczonego potwierdzenia', cronWatch.includes('watch.pending = {'), true)
+check('i wyznacza mu wczesniejszy termin', cronWatch.includes('watch.recheckAt = new Date(Date.now() + 30 * 60 * 1000)'), true)
+check(
+  'mail dostaje tylko przeciecie tego samego checku i nowego werdyktu',
+  cronWatch.includes('firstChange.checkId === change.checkId && firstChange.to === change.to'),
+  true,
+)
+const doubleMeasured = 'Every verdict listed here was measured twice, about half an hour apart; a verdict that moved only once is not in this email.'
+const watchEmailSource = readFileSync('src/lib/watch-email.ts', 'utf8')
+check('mail wyjasnia podwojny pomiar', watchEmailSource.includes(doubleMeasured), true)
 check(
   'podloga szumu na cenniku idzie ze stalej',
   readFileSync('src/app/pricing/page.tsx', 'utf8').includes('NOISE_FLOOR_PERCENT.toFixed(2)'),
@@ -3363,6 +3374,7 @@ check(
 )
 // Kontrolka: sonda musi umiec powiedziec „nie" o pliku, ktorego tam nie ma.
 check('a sonda widzi brak takiego zdania', cronWatch.includes('rulesChangedBetween(FORMULA_VERSION)'), false)
+check('kontrola: sonda widzi brak innego zdania w mailu', watchEmailSource.includes(`${doubleMeasured} Not really.`), false)
 
 // MCP 2026-07-28 przenosi rejestracje dynamiczna do MAY i pisze o niej "deprecated", stawiajac
 // Client ID Metadata Documents jako SHOULD. Zdanie "jedyna standardowa droga" bylo prawda, gdy je
@@ -3903,4 +3915,3 @@ check('a przed nim regul jest wiele', rulesSource.slice(0, rulesSource.lastIndex
 
 console.log(failures === 0 ? '\nwszystkie reguły zachowują się jak opisane' : `\n${failures} reguł nie zachowuje się jak opisane`)
 process.exit(failures === 0 ? 0 : 1)
-

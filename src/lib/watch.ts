@@ -23,6 +23,10 @@ export type Watch = {
   lastTotal: number | null
   lastMeasurable: number | null
   checkedAt: string | null
+  /** When this watch should be looked at again before its ordinary weekly turn. */
+  recheckAt: string | null
+  /** A move seen once and not yet reproduced. Nothing is mailed until a second scan agrees. */
+  pending: { baselineReportId: string | null; changes: { checkId: string; to: CorpusVerdict }[]; since: string } | null
   /** Kept rather than deleted when someone stops, so an unsubscribe cannot be undone by us. */
   stoppedAt: string | null
   plan: 'trial' | 'paid'
@@ -60,6 +64,8 @@ export const WATCH_FIELDS_DISCLOSED: Record<keyof Watch, string> = {
   lastTotal: 'the score at that measurement',
   lastMeasurable: 'how many points were measurable then',
   checkedAt: 'when we last checked',
+  recheckAt: 'when it should be checked again before its ordinary turn',
+  pending: 'which changes are waiting for a second measurement before we mail them',
   stoppedAt: 'when you stopped it, kept so we cannot undo your unsubscribe',
   plan: 'whether it is a trial or paid',
   subscriptionId: 'the subscription identifier, when there is one',
@@ -123,6 +129,15 @@ export function worthTelling(changes: WatchChange[], theirEdgeTurnedUsAway = fal
   // switching on bot protection would have moved three checks from pass to unmeasured and heard
   // nothing from us.
   return theirEdgeTurnedUsAway && changes.some((change) => change.to === 'unmeasured')
+}
+
+/** One cadence for the ordinary round and the shorter one for a move waiting to be reproduced. */
+export function watchIsDue(watch: Pick<Watch, 'checkedAt' | 'recheckAt'>, now: number, staleAfterMs: number): boolean {
+  return (
+    watch.checkedAt === null ||
+    now - Date.parse(watch.checkedAt) > staleAfterMs ||
+    (watch.recheckAt != null && now >= Date.parse(watch.recheckAt))
+  )
 }
 
 /**
@@ -301,6 +316,8 @@ export function newWatch(email: string, domain: string, now: string): Watch {
     lastTotal: null,
     lastMeasurable: null,
     checkedAt: null,
+    recheckAt: null,
+    pending: null,
     stoppedAt: null,
     plan: 'trial',
     subscriptionId: null,

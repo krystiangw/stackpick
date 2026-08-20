@@ -97,6 +97,8 @@ export function changeEmail(
           : `, from ${watch.lastTotal} of ${watch.lastMeasurable}${measuredBefore ? ` measured on ${measuredBefore.slice(0, 10)}` : ''}`
       }.`,
       '',
+      'Every verdict listed here was measured twice, about half an hour apart; a verdict that moved only once is not in this email.',
+      '',
       ...section(`Lost ground (${worse.length}):`, worse),
       ...(step ? [`What to do about ${lost.label.toLowerCase()}: ${step}`, ''] : []),
       ...section(`Gained or moved (${better.length}):`, better),

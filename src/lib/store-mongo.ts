@@ -407,13 +407,25 @@ export class MongoStore implements Store {
 
   async listWatchesDue(limit: number) {
     const { watches } = await collections()
-    return (await watches
-      .find({ confirmedAt: { $ne: null }, stoppedAt: null }, withoutId)
+    const nowIso = new Date().toISOString()
+    const active = { confirmedAt: { $ne: null }, stoppedAt: null }
+    // Dwa zapytania, a nie jedno na calej kolekcji posortowane w pamieci: obserwacja czekajaca na
+    // POTWIERDZENIE ruchu ma swiezy `checkedAt`, wiec w zwyklym sortowaniu wypadnie na sam koniec i
+    // przy dosc dlugiej kolejce nie zmiescilaby sie w limicie. Baza sortuje i tnie, jak przedtem.
+    const rechecks = (await watches
+      .find({ ...active, recheckAt: { $ne: null, $lte: nowIso } }, withoutId)
+      .sort({ recheckAt: 1 })
+      .limit(limit)
+      .toArray()) as Watch[]
+    const ordinary = (await watches
+      .find({ ...active }, withoutId)
       // Never checked first, then longest since. A new watch hearing from us the same day it is
       // made is the whole reason somebody believes the next email will arrive too.
       .sort({ checkedAt: 1 })
       .limit(limit)
       .toArray()) as Watch[]
+    const seen = new Set(rechecks.map((one) => one.id))
+    return [...rechecks, ...ordinary.filter((one) => !seen.has(one.id))].slice(0, limit)
   }
 
   async listWatchesForEmail(email: string) {

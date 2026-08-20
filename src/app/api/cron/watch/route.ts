@@ -3,7 +3,7 @@ import { scanDomain } from '@/lib/scan'
 import { scoreFindings } from '@/lib/score'
 import { getStore, reportId, type Report } from '@/lib/store'
 import { sendEmail } from '@/lib/email'
-import { changesBetween, comparableScorecards, measurableOf, rulesChangedBetween, turnedAwayAtTheEdge, worthTelling } from '@/lib/watch'
+import { changesBetween, comparableScorecards, measurableOf, rulesChangedBetween, turnedAwayAtTheEdge, watchIsDue, worthTelling } from '@/lib/watch'
 import { stanceTowardsUs } from '@/lib/scan/robots'
 import { changeEmail } from '@/lib/watch-email'
 
@@ -50,7 +50,7 @@ export async function GET(request: Request) {
   const waitedDays = (watch: { checkedAt: string | null; confirmedAt: string | null; createdAt: string }) =>
     (now - Date.parse(watch.checkedAt ?? watch.confirmedAt ?? watch.createdAt)) / 86_400_000
   const longestWait = queue.length === 0 ? 0 : Math.max(...queue.map((watch) => Math.min(waitedDays(watch), 9_999)))
-  const due = queue.filter((watch) => watch.checkedAt === null || now - Date.parse(watch.checkedAt) > STALE_AFTER_MS)
+  const due = queue.filter((watch) => watchIsDue(watch, now, STALE_AFTER_MS))
   return NextResponse.json({ watches: queue.length, due: due.length, longestWaitDays: Math.round(longestWait) })
 }
 
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
   // at the batch size reports a healthy `remaining` while the backlog behind it grows, and this
   // product has already been down for two days once without anything saying so.
   const queue = await store.listWatchesDue(500)
-  const due = queue.filter((watch) => watch.checkedAt === null || now - Date.parse(watch.checkedAt) > STALE_AFTER_MS)
+  const due = queue.filter((watch) => watchIsDue(watch, now, STALE_AFTER_MS))
   /** The oldest check in the whole queue, in days. The one number a cadence alarm can be built on. */
   const waitedDays = (watch: { checkedAt: string | null; confirmedAt: string | null; createdAt: string }) =>
     (now - Date.parse(watch.checkedAt ?? watch.confirmedAt ?? watch.createdAt)) / 86_400_000
@@ -116,6 +116,7 @@ export async function POST(request: Request) {
       // this call takes one watch, so a domain that opts out would otherwise be picked and skipped
       // for ever and every watch behind it would starve. Not stopped either: the subscriber paid
       // for this and nobody has told them, and if the block goes away the next pass resumes.
+      if (watch.pending) watch.recheckAt = new Date(Date.now() + 30 * 60 * 1000).toISOString()
       watch.checkedAt = new Date().toISOString()
       await store.saveWatch(watch)
       continue
@@ -139,7 +140,11 @@ export async function POST(request: Request) {
         .catch((error) => console.error('stay-out record not cleared, watch continues', error))
     }
 
-    const previous = watch.lastReportId ? await store.getReport(watch.lastReportId) : null
+    // A chained confirmation can keep comparing with the report before the standing baseline.
+    // That is why the pending record carries the report it was measured against instead of merely
+    // assuming `lastReportId` still names it.
+    const baselineReportId = watch.pending?.baselineReportId ?? watch.lastReportId
+    const previous = baselineReportId ? await store.getReport(baselineReportId) : null
     // Two scorecards from two formula versions are not a before and an after. We reseed the
     // corpus every few days and the rules move with it, so without this the first rescan after
     // every formula change mails every watcher a list of verdicts that moved because we changed
@@ -178,17 +183,67 @@ export async function POST(request: Request) {
     if (all.length !== changes.length) {
       console.log(`watch ${watch.domain}: ${all.length - changes.length} zmian pominietych, bo zmienila sie regula`)
     }
-    // Nothing is mailed on the first check: there is no before, and "here is your score again"
-    // is the email that teaches somebody to stop reading us.
-    if (previous && comparable && worthTelling(changes, turnedAwayAtTheEdge(report.findings, report.domain))) {
-      const { subject, text } = changeEmail(watch, report, changes, previousCard !== previous.scorecard, previous.scannedAt)
-      const sent = await sendEmail(watch.email, subject, text)
-      if (sent.delivered) mailed += 1
+    const edgeTurnedUsAway = turnedAwayAtTheEdge(report.findings, report.domain)
+    const defer = (waiting: typeof changes, against: string | null) => {
+      watch.pending = {
+        baselineReportId: against,
+        changes: waiting.map(({ checkId, to }) => ({ checkId, to })),
+        since: report.scannedAt,
+      }
+      watch.recheckAt = new Date(Date.now() + 30 * 60 * 1000).toISOString()
+      console.log(`watch ${watch.domain}: ${waiting.length} zmian czeka na ponowny pomiar`)
     }
 
-    watch.lastReportId = report.id
-    watch.lastTotal = report.scorecard.total
-    watch.lastMeasurable = measurableOf(report)
+    // Nothing is mailed on the first check: there is no before, and "here is your score again"
+    // is the email that teaches somebody to stop reading us. A first sighting against a real
+    // baseline waits for the next cron call instead of spending a second scan in this request.
+    let advanceBaseline = true
+    if (watch.pending && previous && comparable) {
+      const waiting = watch.pending.changes
+      const confirmed = changes.filter((change) =>
+        waiting.some((firstChange) => firstChange.checkId === change.checkId && firstChange.to === change.to),
+      )
+      const didNotReproduce = waiting.length - confirmed.length
+      console.log(`watch ${watch.domain}: ${didNotReproduce} zmian nie powtorzylo sie przy ponownym pomiarze`)
+
+      if (worthTelling(confirmed, edgeTurnedUsAway)) {
+        // A chained round can stand against a report older than `lastReportId`. Keep the score in
+        // the opening sentence tied to that same before, just like the verdicts below it.
+        const watchAtBaseline = {
+          ...watch,
+          lastTotal: previousCard.total,
+          lastMeasurable: previousCard.measurable ?? previousCard.max,
+        }
+        const { subject, text } = changeEmail(
+          watchAtBaseline, report, confirmed, previousCard !== previous.scorecard, previous.scannedAt)
+        const sent = await sendEmail(watch.email, subject, text)
+        if (sent.delivered) mailed += 1
+      }
+
+      // A move first seen by this confirming scan has one measurement too. Keep it against this
+      // same older report for one more round; advancing the standing baseline must not erase it.
+      const newlySeen = changes.filter((change) =>
+        !waiting.some((firstChange) => firstChange.checkId === change.checkId && firstChange.to === change.to),
+      )
+      watch.pending = null
+      watch.recheckAt = null
+      if (worthTelling(newlySeen, edgeTurnedUsAway)) defer(newlySeen, previous.id)
+    } else if (!watch.pending && previous && comparable && worthTelling(changes, edgeTurnedUsAway)) {
+      defer(changes, previous.id)
+      advanceBaseline = false
+    } else if (watch.pending) {
+      // A vanished or unreadable baseline cannot support an honest intersection. Stand behind the
+      // fresh measurement and let the next ordinary comparison start cleanly.
+      console.log(`watch ${watch.domain}: ${watch.pending.changes.length} zmian nie dalo sie potwierdzic bez baseline`)
+      watch.pending = null
+      watch.recheckAt = null
+    }
+
+    if (advanceBaseline) {
+      watch.lastReportId = report.id
+      watch.lastTotal = report.scorecard.total
+      watch.lastMeasurable = measurableOf(report)
+    }
     watch.checkedAt = new Date().toISOString()
     await store.saveWatch(watch)
     done.push(watch.domain)
