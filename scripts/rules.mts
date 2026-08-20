@@ -3367,6 +3367,33 @@ check('a sonda widzi brak takiego zdania', cronWatch.includes('rulesChangedBetwe
 // Client ID Metadata Documents jako SHOULD. Zdanie "jedyna standardowa droga" bylo prawda, gdy je
 // pisalismy, i przestalo nia byc bez zadnej zmiany u nas. Idzie do platnego raportu jako
 // uzasadnienie oskarzenia, wiec nie ma prawa wrocic przy najblizszym przepisywaniu kopii.
+// Dwa razy jednej doby strona liczyla o cudzych firmach cos innego, niz mowila: `/standard` pisal
+// „almost nobody in our corpus publishes the metadata", gdy publikuje 95 na 177, a `/findings`
+// przypisywal RFC 7591 „almost every authorization server running today", czego nie mierzylismy
+// nigdzie. Liczby na tych stronach sa policzone przy renderze; kwantyfikator obok nich byl pisany z
+// reki i nic go nie odswiezalo. Zdania o SKALI zjawiska u innych firm albo maja policzona liczbe,
+// albo ich nie ma.
+console.log('\nnie szacujemy skali slowem tam, gdzie umiemy ja policzyc')
+const NIEMIERZONY_KWANTYFIKATOR =
+  /\b((almost|nearly) (every(body|one)?|all|no(body|ne))|hardly any|vast majority|most (vendors|sites|companies|servers|domains|of them))\b/i
+for (const page of pagesUnder('src/app')) {
+  const told = readFileSync(page, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ')
+  check(`${page}: bez kwantyfikatora zamiast pomiaru`, NIEMIERZONY_KWANTYFIKATOR.exec(told)?.[0] ?? '', '')
+}
+// Kontrolka: sonda musi znalezc oba zdania, ktore ja wywolaly. Literaly stoja TUTAJ, a nie na
+// stronie, bo sonda czytajaca wlasne uzasadnienie znajduje sama siebie - ten blad zdarzyl sie w tym
+// repo trzy razy.
+for (const zdanie of [
+  'almost nobody in our corpus publishes the metadata that would let us check it',
+  'without a human at almost every authorization server running today',
+  // Codex znalazl to zdanie w tym samym przebiegu, w ktorym straznik powstal: pierwsza wersja
+  // regexpa czytala tylko „nearly every", wiec „a check nearly everybody passes" przechodzilo.
+  'we took neither of their per-page SEO checks, because a check nearly everybody passes',
+]) {
+  check(`kontrolka: sonda widzi "${zdanie.slice(0, 24)}..."`, NIEMIERZONY_KWANTYFIKATOR.test(zdanie), true)
+}
+check('kontrolka: i przepuszcza zdanie o naszej wlasnej metodzie', NIEMIERZONY_KWANTYFIKATOR.test('nobody watching, every source they read'), false)
+
 console.log('\nnie nazywamy RFC 7591 jedyna standardowa droga')
 for (const page of [...pagesUnder('src/app'), 'src/lib/score.ts', 'src/lib/fixfirst.ts']) {
   const told = readFileSync(page, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ')
