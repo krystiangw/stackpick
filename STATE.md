@@ -85,6 +85,37 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## CZESC „ODMOWY NA ICH BRZEGU" TO NASZ ADRES, NIE ICH KONFIGURACJA (20:00, v749)
+
+Poszedlem za `fly.io` z przemiatu i zapytalem **te same 14 domen, ktore u nas stoja na odmowie brzegu,
+z domowego lacza, naszym wlasnym user-agentem**. Wynik jest niewygodny i wazny:
+
+```
+13 z 14 odpowiada normalnie (200/301/308), jedna (contentful.com) odmawia takze mnie
+docs.split.io           3/3 -> 200, zero naglowkow challenge   (korpus: 20/20 z challenge)
+developers.pandadoc.com 3/3 -> 200, zero naglowkow challenge   (korpus: 20/20)
+www.name.com            3/3 -> 200, zero naglowkow challenge   (korpus: 20/20)
+contentful.com          3/3 -> 429 + x-vercel-mitigated: challenge  <- to jest ICH konfiguracja
+```
+
+**Detektor challenge'a jest czysty** - `isBotChallenge` czyta wylacznie **naglowki**
+(`x-vercel-mitigated`, `cf-mitigated`, `x-vercel-challenge-token`), nigdy tresci strony. Moj wlasny
+grep po ciele zlapal `readmeRecaptchaSiteKey` w konfiguracji ReadMe i przez chwile wygladalo to na
+falszywe oskarzenie - to byla wada mojego greapa, nie skanera. Warto zapisac, bo to trzeci raz tej
+nocy, kiedy **sonda znajduje wlasny wzorzec**.
+
+**Czego to NIE przesadza:** skaner wysyla w jednym przebiegu ~20 zapytan, ja wyslalem 3. Roznica moze
+byc **adresem** (zakres chmurowy Heroku) albo **seria**. Nie mamy drugiego punktu obserwacyjnego, wiec
+tego nie rozstrzygniemy z produkcji.
+
+**Co z tym zrobilismy:** zdanie na `/pricing`, ktore podaje te liczbe, **niesie teraz to zastrzezenie**
+wprost. Checki per-vendor mowily „from any address like ours" **od dawna**; liczba zbiorcza na cenniku
+nie mowila nic, a to wlasnie ona czyta sie jak fakt o tym, jak vendorzy traktuja agenty.
+
+**DO WZIECIA (nie dzis):** drugi punkt obserwacyjny. Jedno zapytanie kontrolne z innej sieci przy
+kazdej odmowie brzegu zamienialoby „nie wpuscili nas" w „nie wpuszczaja z chmury" albo „nie wpuszczaja
+nikogo" - to jest roznica, ktora vendor ma prawo znac, zanim cokolwiek o nim opublikujemy.
+
 ## PRZEMIAT 9.55 ZAMKNIETY (18:35-19:35): PREDYKCJA 1 OBALONA, PREDYKCJA 2 TRAFIONA CO DO ZERA
 
 **177 wierszy na 9.55, 0 sprzecznosci. 21 podanych liczb i 5 twierdzen nazywajacych vendora
