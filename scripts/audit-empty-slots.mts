@@ -12,6 +12,7 @@
  * interpolacji zostal slad. Skutek jest jeden i policzalny, a przyczyn jest tyle, ile pol.
  */
 import { MongoClient } from 'mongodb'
+import { refuseIfNothingMeasured } from './nothing-measured'
 
 /**
  * Nasze wlasne slowa, bez tego, co cytujemy. Pierwszy przebieg zglosil 44 zdania z „ ," i wszystkie
@@ -66,7 +67,13 @@ if (missed.length > 0) {
 }
 console.log(`kontrolka: ${CONTROL.length} z ${CONTROL.length} znanych zlych zdan zostaje zlapanych\n`)
 
-const client = await MongoClient.connect(process.env.MONGODB_URI!)
+if (!process.env.MONGODB_URI) {
+  console.log('MONGODB_URI nie jest ustawione. Uruchom:')
+  console.log('  MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/audit-empty-slots.mts')
+  process.exit(1)
+}
+
+const client = await MongoClient.connect(process.env.MONGODB_URI)
 const reports = client.db(process.env.MONGODB_DB || 'stackpick').collection('reports')
 
 let seen = 0, sentences = 0
@@ -104,6 +111,8 @@ for await (const row of reports.find({}, { projection: { 'scorecard.checks': 1, 
 }
 
 console.log(`przejrzanych raportow: ${seen}, zdan: ${sentences}`)
+refuseIfNothingMeasured(seen, 'raportow')
+refuseIfNothingMeasured(sentences, 'zdan')
 if (hits.size === 0) {
   console.log('zadne opublikowane zdanie nie nosi sladu brakujacego pola')
   // Granica tej sondy, napisana wprost, zeby nikt nie przeczytal „czysto" jako „klasa domknieta".

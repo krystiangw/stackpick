@@ -9,6 +9,7 @@
  * znalezisko; niezlapany wiersz ze zdaniem bez adresu znaczy, ze dalej publikujemy zarzut bez dowodu.
  */
 import { MongoClient } from 'mongodb'
+import { refuseIfNothingMeasured } from './nothing-measured'
 import { asPublishedToday } from '../src/lib/publishable'
 
 // Kazde brzmienie, w ktorym publikowalismy ten zarzut BEZ adresu. Recznie liczylem tylko pierwsze
@@ -21,7 +22,13 @@ const BARE = new Set([
   'OAuth metadata without registration_endpoint',
 ])
 
-const client = await MongoClient.connect(process.env.MONGODB_URI!)
+if (!process.env.MONGODB_URI) {
+  console.log('MONGODB_URI nie jest ustawione. Uruchom:')
+  console.log('  MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/audit-gate.mts')
+  process.exit(1)
+}
+
+const client = await MongoClient.connect(process.env.MONGODB_URI)
 const reports = client.db(process.env.MONGODB_DB || 'stackpick').collection('reports')
 
 let seen = 0, gated = 0, withEvidence = 0, bare = 0, gatedWithAddress = 0, bareNotGated = 0
@@ -42,6 +49,7 @@ for await (const row of reports.find({}, { projection: { scorecard: 1, 'findings
 }
 
 console.log(`przejrzanych raportow: ${seen}`)
+refuseIfNothingMeasured(seen, 'raportow')
 console.log(`zdanie bez adresu w bazie: ${bare}`)
 console.log(`brama poprawia: ${gated}, w tym ${withEvidence} z odzyskanymi originami`)
 console.log(

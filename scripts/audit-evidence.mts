@@ -17,6 +17,7 @@
  *  - LICZBA SPRAWDZONYCH MIEJSC, gdy wynikiem jest brak („4 locations probed", „13 hosts").
  */
 import { MongoClient } from 'mongodb'
+import { refuseIfNothingMeasured } from './nothing-measured'
 import { isPublishableRow } from '../src/lib/published'
 
 const HAS_URL = /https?:\/\/\S+/
@@ -67,7 +68,13 @@ if (wrong.length > 0) {
 }
 console.log(`kontrolka: ${CONTROL.length} z ${CONTROL.length} przykladow ocenionych zgodnie z oczekiwaniem\n`)
 
-const client = await MongoClient.connect(process.env.MONGODB_URI!)
+if (!process.env.MONGODB_URI) {
+  console.log('MONGODB_URI nie jest ustawione. Uruchom:')
+  console.log('  MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/audit-evidence.mts')
+  process.exit(1)
+}
+
+const client = await MongoClient.connect(process.env.MONGODB_URI)
 const reports = client.db(process.env.MONGODB_DB || 'stackpick').collection('reports')
 
 // Tylko to, co NAPRAWDE publikujemy. Pierwsza wersja brala najnowszy zasiany wiersz kazdej domeny i
@@ -119,6 +126,14 @@ for (const [domain, row] of latest) {
 const total = [...naked.values()].reduce((sum, entry) => sum + entry.count, 0)
 console.log(`wierszy publikowanych: ${latest.size}, oskarzen w nich: ${accusations}`)
 console.log(`(pominietych wierszy, ktorych i tak nie pokazujemy: ${hiddenRows})`)
+refuseIfNothingMeasured(latest.size, 'wierszy publikowanych')
+// Zero oskarzen to nie to samo, co „kazde niesie dowod": zdanie ponizej opisuje zbior, ktorego nie
+// ma. Wiersze przeczytane, wiec przebieg jest wazny, tylko nie bylo dzis czego sprawdzac.
+if (accusations === 0) {
+  console.log('zero oskarzen w publikowanych wierszach, wiec dzis nie bylo czego sprawdzac')
+  await client.close()
+  process.exit(0)
+}
 console.log(
   total === 0
     ? 'kazde oskarzenie niesie adres, cytat albo liczbe sprawdzonych miejsc'

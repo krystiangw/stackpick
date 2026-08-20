@@ -11,12 +11,17 @@
  */
 import { changesBetween, comparableScorecards, rulesChangedBetween, turnedAwayAtTheEdge, worthTelling } from '../src/lib/watch'
 import { MongoClient } from 'mongodb'
-import { CURATED_DOMAINS } from '../src/lib/categories'
 import type { Report } from '../src/lib/store'
 import { FORMULA_VERSION, scoreFindings } from '../src/lib/score'
 import { scanDomain } from '../src/lib/scan'
 
-const client = await MongoClient.connect(process.env.MONGODB_URI!)
+if (!process.env.MONGODB_URI) {
+  console.log('MONGODB_URI nie jest ustawione. Uruchom:')
+  console.log('  MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/audit-watch-shield.mts')
+  process.exit(1)
+}
+
+const client = await MongoClient.connect(process.env.MONGODB_URI)
 const db = client.db(process.env.MONGODB_DB || 'stackpick')
 const reports = db.collection('reports')
 
@@ -162,7 +167,9 @@ if (noBaseline > 0) console.log(`  ${noBaseline} obserwacji bez baseline'u - cro
 // jest linijka wyzej, gdy pokazuje liczbe wieksza od zera.
 console.log('  (zmiana samego zdania nie jest zmiana werdyktu, wiec takiej wersji oslona nie dotyczy)')
 console.log(
-  simWouldMail === 0
+  simulated === 0
+    ? 'symulacja nie objela zadnego obserwatora, wiec ten przebieg NIE DOWODZI NIC o oslonie'
+    : simWouldMail === 0
     ? 'zaden obserwator nie dostalby maila po podbiciu formuly'
     : `UWAGA: ${simWouldMail} wierszy wyslaloby maila po podbiciu formuly - kazdy PRZECZYTAJ:`,
 )

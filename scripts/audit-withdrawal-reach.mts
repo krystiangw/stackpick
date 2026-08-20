@@ -16,8 +16,15 @@
 import { MongoClient } from 'mongodb'
 import { asPublishedToday } from '../src/lib/publishable'
 import { pathOf } from '../src/lib/visits'
+import { refuseIfNothingMeasured } from './nothing-measured'
 
-const client = await MongoClient.connect(process.env.MONGODB_URI!)
+if (!process.env.MONGODB_URI) {
+  console.log('MONGODB_URI nie jest ustawione. Uruchom:')
+  console.log('  MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/audit-withdrawal-reach.mts')
+  process.exit(1)
+}
+
+const client = await MongoClient.connect(process.env.MONGODB_URI)
 const db = client.db(process.env.MONGODB_DB || 'stackpick')
 
 // KONTROLKA. Zero odwiedzin znaczy „nikt nie wszedl" tylko wtedy, gdy w ogole liczymy wejscia na te
@@ -56,12 +63,13 @@ for (const [name, field] of [['leads', 'reportId'], ['watches', 'lastReportId']]
   }
 }
 
-let affected = 0, given = 0, onlyAccusation = 0
+let seen = 0, affected = 0, given = 0, onlyAccusation = 0
 // Ruch liczymy per DOMENA, nie per raport: klucz licznika jest domenowy, wiec firma z kilkoma
 // dotknietymi raportami dodawalaby te same odslony tyle razy, ile ma wierszy (codex).
 const affectedDomains = new Set<string>()
 const worth: string[] = []
 for await (const row of db.collection('reports').find({}, { projection: { scorecard: 1, 'findings.funnel.oauth': 1, domain: 1, scannedAt: 1 } })) {
+  seen += 1
   const before = (row as never as { scorecard: { checks: { id: string; points: number; max: number; inconclusive?: boolean; notApplicable?: boolean }[] } }).scorecard
   const { degraded } = asPublishedToday(row as never)
   if (degraded.length === 0) continue
@@ -79,6 +87,7 @@ for await (const row of db.collection('reports').find({}, { projection: { scorec
     worth.push(`  ${String((row as unknown as { domain: string }).domain).padEnd(24)} ${String((row as unknown as { scannedAt: string }).scannedAt).slice(0, 10)}  odwiedzin ${String(views).padStart(3)}${wasGiven ? '  PODANY KOMUS' : ''}`)
 }
 
+refuseIfNothingMeasured(seen, 'raportow')
 console.log(`raportow dotknietych wycofaniem: ${affected}`)
 console.log(`  PEWNE: podanych komus przez nas: ${given} (lead albo obserwacja, czyli adres wyslany z naszej strony)`)
 console.log(`  gdzie byl to JEDYNE oskarzenie na karcie: ${onlyAccusation}`)

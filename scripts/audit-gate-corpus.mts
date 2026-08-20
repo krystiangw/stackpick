@@ -15,10 +15,12 @@
 import { CURATED_DOMAINS } from '../src/lib/categories'
 import { getStore } from '../src/lib/store'
 import { asPublishedToday } from '../src/lib/publishable'
+import { refuseIfNothingMeasured } from './nothing-measured'
 
 const seeded = (await getStore().latestPerDomain(1000, true)).filter((row) => CURATED_DOMAINS.has(row.domain))
 const affected = seeded.filter((row) => asPublishedToday(row).degraded.length > 0)
 console.log(`zasianych wierszy korpusu (przed brama): ${seeded.length}`)
+refuseIfNothingMeasured(seeded.length, 'wierszy korpusu')
 console.log(
   affected.length === 0
     ? 'zaden nie jest dotkniety brama, wiec porownania nie stoja na wycofanym oskarzeniu'
