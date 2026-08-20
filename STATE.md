@@ -109,6 +109,12 @@ zdanie, ktorego dzis bysmy nie napisali, jest gorsze niz brak zdania.
 **Prywatnosc bez zmian:** czytamy wylacznie wiersz **zasiany**, wiec istnienia skanu goscia nie
 zdradzamy nawet slowem - `/pricing` obiecuje, ze jego skan nie jest nigdzie wywieszony.
 
+**PRZY OKAZJI PRZESKANOWALISMY SIE NA 9.55: `letagentsin.com` 12/13.** Jedyne oblanie to `oauth_dcr`
+(nie mamy kont, wiec nie mamy metadanych OAuth - decyzja zamknieta), a cztery checki sa niemierzalne
+z tego samego, strukturalnego powodu: nie ma rejestracji, nie wydajemy paczki, jedna strona
+dokumentacji to za malo, zeby cokolwiek orzec o provisioningu. Mianownik spadl z 18 na 13, bo tyle
+naprawde da sie o nas zmierzyc - i to jest ten sam mechanizm, ktory tlumaczymy vendorom.
+
 ## PREDYKCJA DOSTALA SWOJ SKRYPT, A CODEX ZAOSTRZYL JA TRZY RAZY (18:20)
 
 `npm run po-przemiacie-9-55` porownuje migawke sprzed przemiatu z tym, co przemiat zostawi. Trzy
