@@ -311,6 +311,11 @@ const stated: { page: string; pattern: RegExp; expected: number; what: string }[
     expected: withoutMcp.length,
     what: 'vendors without an MCP server',
   },
+  // Ta lista NIE jest kompletna lista liczb, ktore publikujemy, i lepiej, zeby nikt tak jej nie
+  // czytal. Trzy liczby o brzegu vendora na `/pricing` („15 of them refused our requests at their own
+  // edge") sprawdza `after-reseed.mts`, bo tam juz stoi ich zrodlo - stan brzegu liczony ze
+  // wszystkich zapisanych findings, a nie z opublikowanego korpusu. Zlapal drift 2026-08-20 przy
+  // pierwszym przemiecie, ktory te liczby ruszyl.
   { page: '/report', pattern: /(\d+) domains · formula/, expected: corpus.rows.length, what: 'corpus size' },
   { page: '/findings', pattern: /it now covers (\d+) vendors/, expected: corpus.rows.length, what: 'corpus size' },
   {
