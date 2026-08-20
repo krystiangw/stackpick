@@ -85,6 +85,51 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## ALARM O MIEJSCU MOWIL O KLASTRZE, KTOREGO JUZ NIE MAMY (2026-08-20, 12:05, v716)
+
+Pierwsza rzecz po migracji: co jeszcze opisuje swiat sprzed przeprowadzki. **Automatyka byla czysta**
+(workflows wolaja nasze API tokenem i nie maja wlasnego `MONGODB_URI`, wiec przeszly na nowy klaster
+same; Heroku Scheduler jedzie na config varach aplikacji). **Klamal alarm o konczacym sie miejscu** -
+czyli rzecz, ktora ma zadzialac w awarii takiej jak ta z 13 sierpnia, gdy zapisy byly odrzucane przez
+godzine. Mail nadal radzil: *„If it is another project, this cluster is shared and the space has to
+come from there"*. Sasiada nie ma od wczoraj, wiec w kryzysie odeslalby czytelnika po miejsce do
+projektu, ktorego tam nie ma.
+
+**Naprawa nie jest przepisaniem zdania na nowa prawde, bo ta znowu sie zestarzeje.** Mail nazywa
+teraz sasiada **tylko wtedy, gdy pomiar go pokazuje**, a nazwe naszej bazy bierze z tej samej
+konfiguracji, co store i skrypt prune. Nowe `ourDatabaseName()` w `store-mongo.ts` jest jedynym
+miejscem, ktore o tym decyduje (bylo wypisane recznie w trzech plikach).
+
+**CODEX ODBIL TO PIEC RAZY I ZA KAZDYM RAZEM MIAL RACJE** - to najlepszy przebieg tej bramki, jaki
+pamietam, bo kazde znalezisko bylo o tym samym: alarm, ktory w awarii mowi nie to, co zmierzyl.
+1. „wszystko powyzej jest nasze do sprzatniecia" jest **falszem, gdy w odczycie stoi `admin`** -
+   ksiegowosc Atlasa nie jest nasza do kasowania. Mail nazywa teraz **liczbe**, nie cala liste.
+2. `MONGODB_DB` **jest wspierane** w `store-mongo.ts` i w `prune-reports.mts` (sprawdzone u zrodla,
+   nie na slowo), wiec sztywne „stackpick" uznaloby **nasza** baze za cudzy projekt i odradzilo
+   sprzatanie jedynej rzeczy, ktora da sie sprzatnac.
+3. **P1: moj wlasny straznik wywracalby `npm run build`** przy ustawionym `MONGODB_DB`, bo zakladal,
+   ze zmienna jest pusta - i kasowal ja zamiast oddac. Teraz ustawia ja jawnie i przywraca dokladnie
+   to, co bylo, takze brak.
+4. Komenda w mailu niosla tylko `MONGODB_URI`, wiec `prune-reports.mts` spadlby na wlasna nazwe
+   domyslna i **kasowal z innej bazy niz ta, o ktorej mail wlasnie mowi**.
+5. Nazwa bazy w komendzie bez cudzyslowu rozsypalaby sie na spacji. Escape sprawdzony **prawdziwym
+   shellem**: `it's-here` wraca jako jedna wartosc.
+Przy okazji punktu 2: `??` zamienione na `||`, bo config var ustawiony na pusty string to realny stan
+na Heroku, a `??` podalby dalej `client.db('')`.
+
+**Straznikow szesc, kazdy z testem mutacyjnym** (przywrocenie starego zdania → 2 reguly oblewaja;
+`admin` liczony jako sasiad → 3; sztywna nazwa bazy → 2; cala lista jako nasza → 1). Bramka
+przechodzi **i z pusta, i z ustawiona** zmienna `MONGODB_DB`.
+
+**Zweryfikowane na produkcji (v716):** `/api/cron/quota` zwraca `137 MB z 5120 (2,7 %)`, jedna baza,
+`verdict: ok`. Korpus po deployu: **177 wierszy na 9.51, 0 sprzecznosci**.
+
+**PULAPKA, ktora mnie dzis zlapala:** `pgrep -f reseed` **zawsze** trafia w systemowy proces macOS
+`/usr/libexec/seputil --daemonize-reseed`, wiec jako sprawdzenie „czy trwa przemiat" jest bezuzyteczny
+i daje falszywy alarm za kazdym razem. Prawdziwe sprawdzenie to `tail` najnowszego `/tmp/reseed-*.log`
+i szukanie procesu `reseed.sh`. (Wisi tez kilka starych waiterow na `/tmp/reseed-942.log`, z dawno
+zamknietego przemiatu - nieszkodliwe, ale nie sa dowodem, ze cos trwa.)
+
 ## MIGRACJA WYKONANA: MAMY WLASNY KLASTER (2026-08-20, 11:10, produkcja v715)
 
 **Zrobione w calosci, produkcja stoi na naszym klastrze.** Krystian dal klucze Atlas Admin API
