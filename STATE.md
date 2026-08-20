@@ -206,13 +206,19 @@ weryfikowany przez przeczytanie kazdego ruchu - czyli to, co i tak zrobilem.
 **Druga lekcja, o moim wlasnym pomiarze:** `audit-cap-selection` pyta o sciezki **tylko na apeksie**
 (`https://<domena>/docs` i podobne), a skaner probuje takze hostow dokumentacji. „16 sciezek na 9
 domenach" to wiec **dolna granica warunku wyzwalajacego**, a nie zasieg zmiany - i tak trzeba to
-cytowac.
+cytowac. Powtorzony po przemiecie (06:20) daje **17 sciezek na 10 domenach**: doszedl `mongodb.com`.
+Warunek jest wiec realny i powtarzalny, a jego zbior **plynie razem z rozmiarem cudzych stron** -
+kolejny powod, zeby nie cytowac go jako zasiegu.
 
 **Regresje: 8 werdyktow gorszych, wszystkie wyjasnione** i zadna nie jest regresem vendora poza
 jednym znanym: `netim.com` x3 (nasz timeout), `split.io` x2 (ich brzeg), `froala.com` (403 dla
 naszego agenta w trzech probach), `kinde.com` (puste 2xx na kazdy JSON-RPC, lacznie z kontrolka -
 czyli kontrolka slusznie nie przyznaje punktu), `name.com` (prawdziwa zmiana u nich, ta sama co
 poprzednio: `skill.md` mowi polityke zamiast procedury).
+
+**Trzy audyty powtarzajace nasze oskarzenia - czyste:** `audit-docs-js` **zero oskarzen**,
+`audit-front-door` trzy sciany i **wszystkie trzy potwierdzone dzis**, `audit-named-crawlers` cztery
+pary wiersz-crawler i **wszystkie cztery potwierdzone dzis**; kontrolki zdrowe w kazdym z trzech.
 
 **Job lustra MCP padl trzeci dzien z rzedu** (2026-08-20T04:01) - nowa linijka w checkliscie
 (`gh run list --workflow=mcp-registry.yml`) zlapala to od razu. Lustro wygasa **2026-08-26**.
