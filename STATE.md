@@ -178,6 +178,41 @@ za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). 
 wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
 Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
 
+## JEDEN PLACEHOLDER W CUDZEJ DOKUMENTACJI ZABIJAL CALY SKAN (06:45, v698)
+
+Po przemiecie zostalo „**176 z 177**" i to czytalo sie jak zdrowie. Poszedlem sprawdzic, kto zostal -
+i to jest najpowazniejszy blad techniczny tej nocy.
+
+**`signoz.io` NIE DAWAL SIE PRZESKANOWAC OD DNI.** W logu przemiatu: `FAILED`, `STILL FAILING`, w obu
+przebiegach, tak samo w poprzednim przemiecie. Nie robots (`stayOut: null`), nie timeout - **500 w
+dwie sekundy**. W logu dyna:
+```
+⨯ unhandledRejection: TypeError: Invalid URL
+  code: 'ERR_INVALID_URL'
+  input: 'https://mcp.<region>.signoz.cloud/mcp'
+```
+SigNoz dokumentuje **szablon adresu z placeholderem**. `new URL` na tym **rzuca**, jeden nieoslonięty
+parse robil z tego unhandled rejection i **caly skan padal**. Skutek dla danych: wiersz stal
+zamrozony na **formule 9.45**, publikowany dalej, a licznik „176 z 177" nie brzmial jak awaria.
+
+**Poprawka w JEDNYM miejscu, nie w siedmiu.** Nowy `askable()` w `http.ts` odsiewa adresy, ktorych
+nie da sie zapytac: placeholdery (`<...>`, `{...}`, `:param`), bialy znak, i schematy inne niz
+http(s). Filtr stoi na **liscie kandydatow MCP** (i na liscie adresow nazwanych przez vendora), bo
+dalej ten adres trafia do kilku `new URL` bez `try/catch` - filtr na wejsciu jest tansza gwarancja
+niz siedem osobnych lapaczy. Szablon nie jest zreszta endpointem takze wtedy, gdy sie parsuje:
+nikt nie routuje JSON-RPC pod `<region>`.
+
+Osiem straznikow (placeholdery w trzech notacjach, spacja, `mailto:`, adres z portem, filtr na
+wywolaniu), mutacja oblewa. Codex czysty za pierwszym razem.
+
+**Zweryfikowane na produkcji:** `signoz.io` skanuje sie znowu - **10/18 na 9.51** - a korpus mowi
+teraz **177 wierszy na 9.51, 0 sprzecznosci**. Bez podbicia wersji, swiadomie: zadna regula sie nie
+zmienila, a wiersz, ktory wczesniej **nie mial scorecardu w ogole**, nie moze miec innego scorecardu
+pod ta sama wersja.
+
+**Lekcja, ktora warto zapamietac szerzej:** licznik „N z M" jest zla miara zdrowia, gdy M jest stale.
+Brakujacy wiersz nie krzyczy, tylko cicho publikuje stara prawde.
+
 ## PRZEMIAT 9.51 ZAMKNIETY (05:06-06:13) I PREDYKCJA, KTORA SIE NIE OBRONILA
 
 **176 wierszy na 9.51, 0 sprzecznosci**, 177 zasianych (jeden zostal na 9.45). Bateria przeszla;
