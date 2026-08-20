@@ -1096,9 +1096,10 @@ gdy to pisalem. Uruchom je i przeczytaj recznie; nigdy w trakcie przemiatu.
 
 ## OD CZEGO ZACZAC PO COMPACT (przeczytaj te czterdziesci linijek, potem reszte)
 
-**WERSJE (2026-08-20, 03:00): kod i produkcja na 9.51 (v691), korpus na 9.49** - przemiat na 9.51
-czeka na karencje (nizej). Drzewo czyste, wszystko wdrozone. Przemiat na 9.49 zamkniety 23:28:
-**176 wierszy, 0 sprzecznosci**, bateria kontroli przeszla w calosci.
+**WERSJE (2026-08-20, 07:15): kod, produkcja (v702) i korpus na 9.51.** Przemiat zamkniety 06:13,
+bateria przeszla, a po naprawie padajacego skanu korpus jest **kompletny: 177 wierszy na 9.51, 0
+sprzecznosci** (pierwszy pelny komplet od kilku dni). Drzewo czyste, wszystko wdrozone.
+**Nic nie jest w toku.**
 
 **CO SIE STALO TEJ NOCY, od najwazniejszego (kazde: codex → build → straznik z mutacja → deploy →
 weryfikacja na produkcji, kazde ma wlasna sekcje nizej):**
@@ -1115,7 +1116,13 @@ weryfikacja na produkcji, kazde ma wlasna sekcje nizej):**
 5. **9.51**: jedyny zielony wiersz opisujacy sciane (`oauth_dcr`) ma wreszcie instrukcje.
 6. **Maile klienckie** nie moga juz spasc na `localhost`, miesieczny mowi ile dni maja biegi, a
    tygodniowy datuje wynik, z ktorym porownuje.
-7. Drobniejsze: metodyka publikuje sufit, ktory cytuja werdykty; blad MCP nazywa argument; naglowek
+7. **Jeden placeholder w cudzej dokumentacji zabijal caly skan.** `signoz.io` nie dawal sie
+   przeskanowac od dni (`https://mcp.<region>.signoz.cloud/mcp` → `new URL` rzuca → unhandled
+   rejection), a jego wiersz stal zamrozony na formule **9.45**, podczas gdy „176 z 177" czytalo sie
+   jak zdrowie. Naprawione w jednym miejscu (`askable`), plus **drugie** takie miejsce znalezione tym
+   samym tropem (origin rejestracji). Od teraz wiersz, ktory ominie przemiat, jest **alarmem z nazwa i
+   komenda do reprodukcji**, a nie linijka statystyki.
+8. Drobniejsze: metodyka publikuje sufit, ktory cytuja werdykty; blad MCP nazywa argument; naglowek
    przestal liczyc nazwy plikow tak, jakby liczyl zapytania; limity z trzech plikow dla agentow maja
    straznika na stalych.
 
