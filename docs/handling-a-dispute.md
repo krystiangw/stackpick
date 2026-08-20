@@ -134,6 +134,22 @@ Run the matching script before answering a dispute about one of them, and quote 
 | "you say we publish no OAuth metadata" | `npx tsx scripts/audit-oauth.mts 177` | asks every origin the row names, all three documents, following protected-resource pointers |
 | "you say our MCP server is not there" | `npx tsx scripts/audit-mcp.mts 177` | sends a JSON-RPC initialize to every address the row names |
 
+### When the complaint is about a document we already sent
+
+A delivered report is a file in the database, so a sentence we retract in code stays in every copy
+that went out before the fix. On 2026-08-20 three stored samples still carried a scale claim removed
+from `fixfirst.ts` an hour earlier, and `/d/sample` carried it while `audit-sample` was green,
+because that audit only compared formula versions.
+
+- **Do not edit the delivered document and do not delete it.** It is theirs, and a silent edit after
+  the fact is worse than the error. `/d/<id>` now prints, above the text, which sentence we no longer
+  stand behind - `retractedScaleIn` in `src/lib/claims.ts` decides that at render.
+- **Check the shop window first:** `MONGODB_URI=... npm run audit-sample` reads the stored copy, not
+  only its formula version, and refuses to pass on a retracted sentence.
+- **Regenerate the sample rather than editing it:**
+  `MONGODB_URI=... npx tsx scripts/client-report.mts <domain> --publish --id sample --sample`.
+  It reads the store, so it costs the vendor nothing.
+
 Each one takes 20 to 45 minutes on the full corpus and a domain count can be passed to shorten it.
 Measured 2026-08-18 on all three at once: 5851 requests to addresses we had published, and not one
 sentence turned out to be false. That number is the reason to answer a dispute with a rerun rather
