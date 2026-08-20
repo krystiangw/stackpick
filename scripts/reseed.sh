@@ -245,6 +245,14 @@ npm run --silent audit || echo "audyt zglosil rozjazd, korpus jest zaciagniety, 
 # sendlayer.com as having no MCP server and no reachable signup, all three restored by a single
 # rescan. Nobody would have looked. This prints the list so somebody does.
 echo
+# Probka sprzedazowa starzeje sie przy podbiciu formuly, nie przy przemiacie - ale przemiat jest
+# momentem, w ktorym wszystko inne dochodzi do biezacej wersji, wiec to najlepsze miejsce, zeby o
+# nia zapytac. Raz juz stala cztery wydania z tylu i nikt nie patrzyl. Ostrzezenie, nie blokada:
+# przemiat nie jest od tego, zeby go zatrzymywac za dokument sprzedazowy.
+echo "== czy probka sprzedazowa nadaza za formula"
+MONGODB_URI="${MONGODB_URI:-$(heroku config:get MONGODB_URI -a stackpick 2>/dev/null)}" \
+  npm run --silent audit-sample || echo "PRZYPOMNIENIE: /d/sample stoi na starszej formule, odswiez ja"
+
 echo "== werdykty gorsze niz poprzedni pomiar"
 # Reads the database rather than the site, so it needs the connection string. Fetched here rather
 # than required of the caller, because a guard that only runs when somebody remembers to export a

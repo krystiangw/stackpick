@@ -34,6 +34,17 @@ if (!given) {
   console.error('usage: npx tsx scripts/client-report.mts <domain> [--out FILE] [--category ID] [--brand NAME]')
   process.exit(2)
 }
+// Sprawdzane PRZY ARGUMENTACH, nie przed samym zapisem: `--id` i `--sample` bez `--publish` byly
+// cicho ignorowane, wiec skrypt konczyl sie sukcesem, drukowal „zapisany" i zostawial stara probke
+// pod adresem. Zlapalem to na sobie, odswiezajac `/d/sample` po czterech podbiciach formuly, i przez
+// chwile szukalem bledu w `saveDelivery`. Pierwsza wersja tego sprawdzenia stala tuz nad publikacja,
+// czyli po wygenerowaniu calego raportu - odmowa po zmarnowanej pracy to nadal zmarnowana praca.
+const publishOnly = ['--id', '--sample'].filter((flag) => rest.includes(flag))
+if (!rest.includes('--publish') && publishOnly.length > 0) {
+  console.error(`${publishOnly.join(' i ')} dziala tylko razem z --publish; bez niego powstaje sam plik i nic sie nie zmienia pod adresem`)
+  process.exit(2)
+}
+
 // A buyer writes the domain the way they say it out loud. Without this, `www.stripe.com` was told
 // it belongs to none of the categories we measure, about a domain sitting in the corpus.
 const domain = normalizeDomain(given)
