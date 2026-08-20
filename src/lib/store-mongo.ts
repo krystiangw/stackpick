@@ -27,9 +27,18 @@ function connect(): Promise<MongoClient> {
   return clientPromise
 }
 
+/**
+ * The one place that decides which database is ours. It was written out by hand in three files,
+ * and the quota alarm then classified our own data as a neighbouring project whenever `MONGODB_DB`
+ * was set, telling the reader during an incident not to prune the only thing worth pruning.
+ */
+// `||`, not `??`: a config var set to an empty string is a real state on Heroku, and `??` would
+// hand `client.db('')` down the line instead of falling back.
+export const ourDatabaseName = (): string => process.env.MONGODB_DB || 'stackpick'
+
 async function db(): Promise<Db> {
   const client = await connect()
-  return client.db(process.env.MONGODB_DB ?? 'stackpick')
+  return client.db(ourDatabaseName())
 }
 
 /**

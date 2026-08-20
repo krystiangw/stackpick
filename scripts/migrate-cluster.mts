@@ -5,7 +5,9 @@
  *   MONGODB_URI=<zrodlo> MONGODB_URI_TARGET=<cel> npx tsx scripts/migrate-cluster.mts --go   # zapis
  *
  * Written for one situation: `stackpick` lives on a Flex cluster created for somebody else's
- * project (`equity-analyst-flex`), and moving off it must not be able to touch that neighbour. So
+ * project (`equity-analyst-flex`), and moving off it must not be able to touch that neighbour. The
+ * move was carried out on 20 August 2026; this stays because the source is still there as rollback
+ * and because the next move should not have to reinvent the refusals below. So
  * this reads from the source and writes to the target and does nothing else - no drop, no delete,
  * no compact, and it never opens a database whose name is not ours. Leaving the old copy in place
  * is the rollback: switching back is one Heroku config var.

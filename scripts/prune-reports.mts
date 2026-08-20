@@ -1,5 +1,6 @@
 import { MongoClient } from 'mongodb'
 import { CURATED_DOMAINS } from '../src/lib/categories'
+import { ourDatabaseName } from '../src/lib/store-mongo'
 
 /**
  * How much of the cluster the superseded scans are holding, and optionally give it back.
@@ -21,7 +22,7 @@ const client = new MongoClient(process.env.MONGODB_URI!)
 await client.connect()
 // The same selection the app makes. client.db() takes the default out of the URI, which on this
 // cluster is a different project's database entirely: the first dry run counted 0 reports there.
-const database = client.db(process.env.MONGODB_DB ?? 'stackpick')
+const database = client.db(ourDatabaseName())
 console.log(`baza: ${database.databaseName}`)
 const reports = database.collection<{ _id: string; domain: string }>('reports')
 
@@ -39,7 +40,7 @@ const mb = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(0)} MB`
  * silently lost the comparison that cycle, and this script exists to be run again.
  */
 const keep = new Set<string>()
-const watches = client.db(process.env.MONGODB_DB ?? 'stackpick').collection<{ lastReportId?: string | null }>('watches')
+const watches = client.db(ourDatabaseName()).collection<{ lastReportId?: string | null }>('watches')
 for await (const watch of watches.find({}, { projection: { lastReportId: 1 } })) {
   if (watch.lastReportId) keep.add(watch.lastReportId)
 }

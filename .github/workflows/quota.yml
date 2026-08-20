@@ -5,8 +5,9 @@ name: Check Atlas headroom
 # true until it is false. This asks the number that moves first, and the endpoint mails only when
 # it crosses the threshold, so a quiet run is the normal one.
 #
-# Weekly rather than daily because the quota moves over days and the cluster is shared with a
-# project we do not write to, so the figure changes without us.
+# Weekly rather than daily because the quota moves over days, not hours. Until 20 August there was
+# a second reason, a neighbouring project whose writes moved the figure without us; we now have the
+# cluster to ourselves, so the number only moves when a sweep does.
 on:
   schedule:
     - cron: '41 5 * * 1'

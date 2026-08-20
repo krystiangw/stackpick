@@ -1989,14 +1989,64 @@ check(
 check('dzisiejsze 2849 MB to jeszcze spokoj', verdictFor(2849), 'ok')
 check('4200 MB ostrzega, zanim zapisy padna', verdictFor(4200), 'warning')
 check('4740 MB, czyli poziom awarii z 13.08, jest krytyczne', verdictFor(4740), 'critical')
+// Te testy pytaja o zdanie, ktore ZALEZY od `MONGODB_DB`, wiec nie wolno im zakladac, ze zmienna
+// jest pusta: przy buildzie z ustawiona nazwa fixture „stackpick" bylby cudza baza i bramka
+// wywracalaby build w konfiguracji, ktora sama przed chwila dopuscilismy (codex, trzecie przejscie).
+// Ustawiamy ja wiec jawnie na czas bloku i oddajemy dokladnie to, co bylo - takze brak zmiennej.
+const savedDatabaseName = process.env.MONGODB_DB
+process.env.MONGODB_DB = 'stackpick'
+
+const quotaMail = (databases: { name: string; mb: number }[]) =>
+  quotaEmail({
+    usedMb: 4200, quotaMb: FLEX_QUOTA_MB, percent: 82, verdict: 'warning', measuredAt: '', databases,
+  }).text
+const withNeighbour = quotaMail([{ name: 'equity-analyst', mb: 4000 }, { name: 'stackpick', mb: 200 }])
+const aloneNow = quotaMail([{ name: 'stackpick', mb: 4100 }, { name: 'admin', mb: 100 }])
+
 check(
   'mail nazywa najwieksza baze, bo to ona decyduje, gdzie szukac miejsca',
-  quotaEmail({
-    usedMb: 4200, quotaMb: FLEX_QUOTA_MB, percent: 82, verdict: 'warning', measuredAt: '',
-    databases: [{ name: 'equity-analyst', mb: 4000 }, { name: 'stackpick', mb: 200 }],
-  }).text.includes('Largest is equity-analyst'),
+  withNeighbour.includes('Largest is equity-analyst'),
   true,
 )
+// Migracja z 20.08 zdjela sasiada, a zdanie o wspoldzielonym klastrze zostalo w mailu i doradzalo
+// szukania miejsca u kogos, kogo juz nie ma. Alarm ma mowic to, co ZMIERZYL, wiec obie galezie
+// stoja tu obok siebie: dopoki cudza baza jest w odczycie, mail ja nazywa; gdy jej nie ma, nie
+// wolno mu jej wymyslic. Bez tego straznika kazda kolejna przeprowadzka cofa to po cichu.
+check(
+  'gdy w odczycie stoi cudza baza, mail ja nazywa',
+  withNeighbour.includes('also holds equity-analyst'),
+  true,
+)
+check(
+  'gdy jestesmy sami, mail NIE wysyla nas po miejsce do cudzego projektu',
+  aloneNow.includes('also holds') || aloneNow.includes('another project'),
+  false,
+)
+check('i mowi wprost, ze zaden inny projekt tu nie mieszka', aloneNow.includes('No other project lives here'), true)
+// Codex na pierwszej wersji: „wszystko powyzej jest nasze do sprzatniecia" jest nieprawda, gdy w
+// odczycie stoi `admin`. Alarm ma nazwac LICZBE, ktora da sie sprzatnac, a nie cala liste.
+check('nazywa nasze megabajty, nie cala liste', aloneNow.includes('4100 MB is stackpick and ours to prune'), true)
+// Codex, drugie przejscie: `MONGODB_DB` jest wspierane w `store-mongo.ts` i w skrypcie prune, wiec
+// wpisana na sztywno nazwa „stackpick" kazalaby alarmowi uznac NASZA baze za cudzy projekt i
+// odradzic sprzatanie jedynej rzeczy, ktora da sie sprzatnac. Nazwa ma isc z konfiguracji.
+process.env.MONGODB_DB = 'letagentsin-prod'
+const renamed = quotaMail([{ name: 'letagentsin-prod', mb: 4100 }, { name: 'admin', mb: 100 }])
+check('pod inna nazwa bazy nadal wie, ktora jest nasza', renamed.includes('4100 MB is letagentsin-prod and ours to prune'), true)
+check('i nie uznaje jej za cudzy projekt', renamed.includes('also holds letagentsin-prod'), false)
+check('a komenda prune celuje w te sama baze', renamed.includes(`MONGODB_DB='letagentsin-prod'`), true)
+// Nazwa ze spacja rozsypalaby komende na dwa slowa dokladnie wtedy, gdy ktos wkleja ja w awarii.
+process.env.MONGODB_DB = 'two words'
+check('nazwa ze spacja zostaje jednym argumentem', quotaMail([{ name: 'two words', mb: 10 }]).includes(`MONGODB_DB='two words'`), true)
+if (savedDatabaseName === undefined) delete process.env.MONGODB_DB
+else process.env.MONGODB_DB = savedDatabaseName
+// `admin` to ksiegowosc Atlasa, nie sasiad: policzona jako cudza baza kazalaby nam szukac miejsca
+// tam, gdzie nie mamy czego kasowac.
+check('ksiegowosc Atlasa nie jest sasiadem', aloneNow.includes('also holds admin'), false)
+// Komenda prune musi zostac w obu galeziach - to jedyna rzecz w tym mailu, ktora cos naprawia.
+check('komenda prune jest w obu wersjach maila', withNeighbour.includes('prune-reports.mts --delete') && aloneNow.includes('prune-reports.mts --delete'), true)
+// Komenda w mailu musi trafic w TE baze, o ktorej mail mowi. Bez `MONGODB_DB` skrypt prune spada
+// na wlasna nazwe domyslna i kasuje gdzie indziej niz raportowane megabajty (codex, czwarte).
+check('komenda niesie nazwe bazy, nie tylko URI', aloneNow.includes(`MONGODB_DB='stackpick' MONGODB_URI=$(heroku`), true)
 
 // statsig.com answers only at the versioned address on the api host, and we published that they
 // run no server. The bare and versioned forms are different addresses on both hosts we probe.

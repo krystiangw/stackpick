@@ -4,7 +4,8 @@
  *   MONGODB_URI=... npx tsx scripts/cluster-space.mts
  *
  * Read-only, and deliberately prints every database on the cluster rather than only ours: our data
- * lives on a Flex cluster created for another project (`equity-analyst-flex`), so "how much space do
+ * lived on a Flex cluster created for another project (`equity-analyst-flex`) until 20 August 2026,
+ * when it moved to its own (`letagentsin`, same region). The question "how much space do
  * we have" is a question about a neighbour we do not control. Nothing here writes anything, and
  * nothing here reads a document out of a database that is not ours - `listDatabases` returns sizes,
  * not contents.
