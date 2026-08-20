@@ -178,6 +178,39 @@ za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). 
 wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
 Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
 
+## PRZESTALISMY PUBLIKOWAC OSKARZENIE, KTOREGO REGULE SAMI WYCOFALISMY (07:30, v703)
+
+Ostatnia pozycja z listy „do wziecia po przemiecie": czternascie **zasianych** wierszy **poza
+korpusem** stalo na formulach od **7.4** do 9.40 i - po wczorajszej zmianie `/v` - bylo publicznie
+widocznych z banerem „measured under an older formula".
+
+**Nie zgadywalem, czy to szkodzi. Przeliczylem te wiersze dzisiejszymi regulami** (`scoreFindings` na
+zapisanych findings, tak jak robi to cron obserwacji) i wynik rozstrzyga: **5 z 14 publikuje werdykt,
+ktorego ta sama tresc juz by dzis nie dostala**, a **kazda roznica idzie w te sama strone - zmierzone
+zero zamienia sie w „nie zmierzylismy"**:
+```
+directus.io    (7.4)  signup_no_captcha, signup_reachable, typed_package   0/1 -> 0/1 niemierzalne
+livekit.io     (7.4)  programmatic_provisioning                            0/2 -> 0/2 niemierzalne
+messagebird.com(7.4)  programmatic_provisioning                            0/2 -> 0/2 niemierzalne
+deno.com       (9.35) typed_package                                        0/1 -> 0/1 niemierzalne
+```
+Czyli te strony **nie byly „stare, ale uczciwe"** - niosly oskarzenia, ktore sami zdazylismy wycofac
+(9.44-9.49 zwezily provisioning wlasnie po znalezieniu falszywych zaliczen).
+
+**Regula:** poza korpusem `/v` publikuje **wylacznie wiersz na biezacej formule**. Korpus zostaje z
+banerem, bo jego wiersze **sa utrzymywane** - przemiat wyrownuje je co kilka dni i baner opisuje
+okno miedzy podbiciem wersji a przemiatem. Poza korpusem nie ma na co czekac: nic tych wierszy nie
+odswiezy.
+
+**Przy okazji zlapalem drift, ktory sam wczoraj wprowadzilem:** `/bot` nadal obiecywal, ze strona
+firmy spoza korpusu „shows **the most recent scan of any kind**" - a od wczoraj nie pokazuje skanu
+goscia w ogole, a od dzis takze nie pokazuje starej formuly. Strona opisujaca nasze zachowanie musi
+sie ruszac razem z kodem; teraz mowi, co naprawde robimy, i ma na to straznika (mutacja przywracajaca
+stare zdanie oblewa).
+
+**Zweryfikowane na produkcji:** `livekit.io` i `directus.io` → „not measured yet",
+`letagentsin.com` (przeskanowany dzis z konsoli, 12/18) i `mixpanel.com` (korpus) → werdykty na 9.51.
+
 ## JEDEN PLACEHOLDER W CUDZEJ DOKUMENTACJI ZABIJAL CALY SKAN (06:45, v698)
 
 Po przemiecie zostalo „**176 z 177**" i to czytalo sie jak zdrowie. Poszedlem sprawdzic, kto zostal -
