@@ -85,6 +85,25 @@ druga sesja. Czyli obie sesje sa na boardzie **jednym agentem** i ich wpisow nie
 Praktyka bez zmian (`[podpis: AI-audytor]` na poczatku komentarza), ale powod inny. Blad byl moj,
 zdazyl trafic do KB i zostal tam wycofany wpisem-sprostowaniem.
 
+## TRZECI RAZ TEJ NOCY: GUARD, KTORY RUSZAL TYLKO Z PAMIECI (22:00, v755)
+
+`after-reseed.mts` zadaje **cztery pytania, ktore po kazdym przemiecie i tak sie zadaje**: czy
+sprostowania wygasly, czy lustro rejestru MCP jest swieze, czy zaliczone wiersze cytuja slowa, na
+ktorych stoi punkt, i czy kazdy oblany `oauth_dcr` podaje adres. Istnial od dni i **wisial wylacznie
+w runbooku**. Wpiety w `reseed.sh` (bazy tylko czyta, vendorow nie pyta o nic).
+
+**Dzisiejszy przebieg jest czysty:** wszystkie sprostowania **wygasly** (przemiat poprawil kazdy
+wiersz, o ktorym wiedzielismy, ze mysli), **51 z 51** zaliczonych wierszy provisioningu cytuje swoje
+zdanie, **89 z 89** oblanych `oauth_dcr` podaje adres, a brzeg vendora: **14 z 177 wierszy, 10 z
+markerem wyzwania** - dokladnie liczba, ktora liczy cennik.
+
+**Lustro rejestru MCP odswiezone recznie** (9691 hostow, +128 z dzisiaj): dzienny workflow nadal nie
+chodzi, **bo repo nie jest wypchniete do `origin`**, a bez tego GitHub Actions nie ma czego uruchomic.
+TTL lustra to 7 dni i po jego przekroczeniu skaner czyta rejestr **jak milczacy** (czyli
+„niemierzalne", nie „nie maja serwera") - wiec awaria jest bezpieczna, ale kosztuje trafnosc.
+**Do zrobienia rano: push do `origin`** - to odblokowuje dzienny job i przestaje wymagac, zeby ktos
+pamietal.
+
 ## KAZDE OSKARZENIE PRZEPYTANE NA ZYWO PO PRZEMIECIE, WSZYSTKIE SIE TRZYMAJA (21:45)
 
 Po przemiecie korpus jest w calosci swiezy, ale „swiezy" nie znaczy „prawdziwy", wiec trzy audyty,
