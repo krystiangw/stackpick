@@ -178,6 +178,34 @@ za 49 USD **nie ma mechanizmu** (audyt subagenta z 2026-08-18 nazwal to proza). 
 wylaczone, nikt tego nie wyegzekwuje, ale to **obietnica handlowa bez implementacji** - do decyzji
 Krystiana razem z szescioma pozostalymi decyzjami cenowymi.
 
+## OSKARZENIE O SKORUPE: ZERO NA 177, I DLACZEGO WARTO BYLO TO ZMIERZYC PONOWNIE (10:10)
+
+Poszedlem za logiem `audit-docs-js`, ktory meldowal **dwa oskarzenia o skorupe** (`filestack.com`,
+`pandadoc.com`) i „noscript niesie 393 900 zn". Log byl **sprzed naprawy** z tej nocy. Pomiar dzisiaj:
+
+| co zmierzone | filestack.com | pandadoc.com |
+|---|---|---|
+| pelna strona, nasz czytelnik | **12 282 zn** | **2 406 zn** |
+| po naszym sufcie 400 kB | 53 zn | 63 zn |
+| tresc w `<noscript>` | 29 zn (4 bloki) | 0 zn (0 blokow) |
+
+Czyli 393 900 nigdy nie bylo trescia `noscript`: to byl niedomkniety `<script>` po ucieciu na
+sufcie, a naprawa (`dangling`) juz to zdejmuje - luzny czytelnik daje dzis **te same 53 i 63 zn**.
+Produkcja publikuje o obu **Unmeasurable ... describe where we stopped rather than what you serve**,
+wiec oskarzenie jest wycofane end-to-end.
+
+**Sprawdzone tez to, co bylo warte sprawdzenia bardziej:** czy naprawa nie oslepila checku. Rozklad
+calego korpusu na `docs_without_js`: **163 zaliczone · 10 bez strony docs · 2 uciete naszym sufitem ·
+2 bez czego czytac · 0 oskarzonych**. Suma 177. Naprawa dotknela **dokladnie tych dwoch wierszy**,
+ktore byly falszywie oskarzone, i niczego wiecej. Kontrolka audytu potwierdza, ze czytelnik nadal
+umie zwrocic duza liczbe (5 z 5 zaliczonych stron czyta sie dzis powyzej progu).
+
+**Pulapka na przyszlosc, dwa razy w jednym tropie:** log audytu jest zdjeciem chwili i po naprawie
+klamie w druga strone; a `npm run audit-*` bez `MONGODB_URI` **nie wybucha**, tylko widzi pusty
+korpus i melduje „0 ze 177" - `.env.local` tego klucza nie ma, bierze sie go z
+`heroku config:get MONGODB_URI -a stackpick`. Pierwszy przebieg dzis wyszedl wlasnie tak i uratowala
+mnie bramka `refuseIfNothingMeasured` (exit 2, „ten przebieg NIE MOWI NIC o naszym zdaniu").
+
 ## KAZDA POWIERZCHNIA DLA KLIENTA PRZECZYTANA JAKO JEJ ODBIORCA: PELNA LISTA (09:25)
 
 Metoda, ktora dala tej nocy najwiecej: **wygeneruj dokument, ktory dostaje klient, i przeczytaj go
