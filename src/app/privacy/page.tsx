@@ -91,10 +91,17 @@ export default async function PrivacyPage() {
             <li>
               <strong className="text-ink">Cookieless web analytics.</strong> For browsers that run JavaScript, PostHog
               counts page views, approximate unique visitors and the few actions that make up the product funnel: starting
-              and completing a scan, opening a report, and successfully submitting an email form. We do not send the
+              and completing a scan or visibility audit, opening a report, and successfully submitting an email form. We do not send the
               domain scanned, an email address, a report address, a watch token, or URL query strings. PostHog processes
               the request IP address and user-agent transiently to make a privacy-preserving identifier on its EU servers;
               neither raw value is stored and the identifier is not kept in the browser.
+            </li>
+            <li>
+              <strong className="text-ink">AI visibility audit inputs.</strong> When you run the beta, the brand,
+              domain, product category and three neutral prompts are sent to whichever of OpenAI, Anthropic, Google
+              Gemini and Perplexity are configured at that time. Their answers and cited sources return to your browser;
+              we do not currently save an audit or give it a public address. Do not put confidential information in the
+              category field.
             </li>
           </ul>
         </div>
@@ -113,8 +120,9 @@ export default async function PrivacyPage() {
         <div>
           <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Who processes it for us</h2>
           <p className="mt-4">
-            Heroku (hosting, EU region), MongoDB Atlas (storage), Resend (email delivery), and PostHog Cloud EU
-            (cookieless aggregate web analytics). Each of them sees only what is needed to do that job. A payment provider
+            Heroku (hosting, EU region), MongoDB Atlas (storage), Resend (email delivery), PostHog Cloud EU
+            (cookieless aggregate web analytics), and — only when you run the visibility beta — the configured model
+            providers among OpenAI, Anthropic, Google Gemini and Perplexity. Each sees only what is needed to do that job. A payment provider
             is added here the day payments go live, and it will be named before anybody is asked for a card.
           </p>
         </div>

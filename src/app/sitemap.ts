@@ -4,7 +4,7 @@ import { CONTROLLER_IS_NAMED, SELLER_IS_COMPLETE } from '@/lib/seller'
 
 const BASE = process.env.STACKPICK_BASE_URL ?? 'http://localhost:3000'
 
-const PAGES = ['', '/c', '/docs', '/methodology', '/report', '/findings', '/audit', '/audit/froala-editors', '/audit/uploadcare-storage', '/audit/workos-auth', '/audit/paddle-payments', '/pricing', '/bot', '/standard']
+const PAGES = ['', '/c', '/docs', '/methodology', '/report', '/findings', '/audit', '/visibility', '/audit/froala-editors', '/audit/uploadcare-storage', '/audit/workos-auth', '/audit/paddle-payments', '/pricing', '/bot', '/standard']
 
 export default function sitemap(): MetadataRoute.Sitemap {
   // The privacy notice belongs in the sitemap only while it is served: the pages behind the seller

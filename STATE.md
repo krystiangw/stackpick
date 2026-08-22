@@ -1,5 +1,23 @@
 # Let Agents In: stan na 2026-08-22 (produkcja v762, organic discovery i PostHog)
 
+## HANDOVER 2026-08-22: „CAN AGENTS FIND YOU?” BETA (KOD GOTOWY, KLUCZE NIEPODLACZONE)
+
+Publiczna powierzchnia `/visibility` i `POST /api/visibility` implementuja osobny audyt widocznosci:
+trzy neutralne prompty na dostawce, wzmianka, pierwsza linia wzmianki, bezposredni link, pelna
+odpowiedz, cytowane zrodla i jawny blad. Blad modelu nie wchodzi do mianownika. To **nie zmienia**
+deterministycznego readiness score i nie uzywa go jako skladowej.
+
+Rdzen jest taki jak w BabyLoveGrowth: OpenAI/ChatGPT, Claude, Gemini i Perplexity, ale przez oficjalne
+API z web search. Lokalne subskrypcje zostaja w `pnpm visibility` jako instrument badawczy, nie
+backend uzytkownikow. Implementacja, zmienne i granice sa w `docs/visibility-audit-beta.md`.
+
+**BLOCKER AKTYWACJI:** na Heroku nie ma zadnego z czterech kluczy API. Bez nich strona uczciwie
+pokazuje stan konfiguracji i blokuje przycisk; endpoint odpowiada 503. Do uruchomienia wystarczy
+co najmniej jeden z `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`,
+`PERPLEXITY_API_KEY`; pelne porownanie wymaga wszystkich czterech. Nie wolno podmieniac tego na
+subskrypcyjne CLI na serwerze. Po dodaniu kluczy zrobic jeden audit Let Agents In i przeczytac
+wszystkie odpowiedzi oraz URL-e, zanim beta zostanie ogloszona.
+
 ## HANDOVER 2026-08-22: ANALITYKA, PLIKI DLA AGENTOW I ORGANIC DISCOVERY
 
 **WERSJE I STAN:** `main`, `origin/main` i `heroku/main` wskazuja commit `be45a2e`; produkcja to

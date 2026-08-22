@@ -347,6 +347,35 @@ export function GET() {
           },
         },
       },
+      '/api/visibility': {
+        post: {
+          summary: 'Ask whether search-enabled AI models find a brand in neutral category questions',
+          operationId: 'auditAiVisibility',
+          description:
+            'Beta. Runs three frozen prompts per configured provider. Invalid provider calls are reported and excluded from the visibility denominator. Limited to one audit per caller per hour.',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['brand', 'domain', 'category'],
+                  properties: {
+                    brand: { type: 'string', example: 'Acme' },
+                    domain: { type: 'string', example: 'acme.com' },
+                    category: { type: 'string', example: 'file upload API' },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            '200': { description: 'Prompts, dated model answers, citations and an aggregate valid-answer count' },
+            '429': { description: 'The caller has already run the beta audit in this window' },
+            '503': { description: 'No model API has been configured' },
+          },
+        },
+      },
       '/mcp': {
         post: {
           summary: 'MCP over Streamable HTTP: scan_domain and find_providers',

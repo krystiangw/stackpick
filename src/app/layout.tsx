@@ -121,6 +121,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/audit" className="hover:text-ink">
                 Audits
               </Link>
+              <Link href="/visibility" className="hover:text-ink">
+                AI visibility
+              </Link>
               <Link href="/pricing" className="hover:text-ink">
                 Pricing
               </Link>
