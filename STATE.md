@@ -1,5 +1,14 @@
 # Let Agents In: stan na 2026-08-22 (produkcja v763, organic discovery i PostHog)
 
+## HANDOVER 2026-08-22: REDESIGN RAPORTU WIDOCZNOSCI
+
+Wynik `/visibility?audit=...` zostal przebudowany po audycie wzorcow konkurencji GEO. Raport prowadzi
+teraz od presence rate, KPI, macierzy kanalow i trzech dzialan; cytowane domeny sa agregowane jako
+mapa zrodel, a kompletne odpowiedzi sa zachowane w zwijanym evidence logu per prompt i kanal.
+Gotowy link nie pokazuje hero ani formularza przed wynikiem. Perplexity Search ma osobny KPI i nie
+wchodzi do mianownika odpowiedzi agentow. Zweryfikowano render calej strony na desktopie oraz
+mobilny breakpoint; TypeScript, ESLint i pelny build przeszly.
+
 ## HANDOVER 2026-08-22: PRODUKCYJNA KOLEJKA AUDYTOW WIDOCZNOSCI
 
 `POST /api/visibility` nie wykonuje juz modeli na dyno ani nie zalezy od kluczy czterech API.

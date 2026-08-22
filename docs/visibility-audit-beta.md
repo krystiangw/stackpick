@@ -7,6 +7,11 @@ observations) or a `full` audit (three prompts, twelve observations). It returns
 128-bit random job id. `GET /api/visibility?id=<id>` returns queued, running, complete or failed.
 The browser polls that endpoint and renders the stored result after completion.
 
+The result page is an executive report, not a transcript dump: presence rate and four grounded KPIs,
+channel breakdown, source-domain frequency, three next actions and collapsed prompt-level evidence.
+Perplexity Search has its own metric and is excluded from the answer-agent presence denominator.
+Raw outputs remain available under the relevant prompt and channel for verification.
+
 Jobs live in MongoDB collection `visibilityJobs`. The Heroku dyno never tries to impersonate a
 consumer subscription. A persistent worker on the signed-in operator machine claims one queued job
 atomically and runs each prompt in a fresh private git root, so no model can discover the brand by
