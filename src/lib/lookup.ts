@@ -408,10 +408,7 @@ function proseWords(category: Category): Set<string> {
   return proseIndex.get(category.id) ?? new Set()
 }
 
-export async function lookup(job: string): Promise<Lookup | null> {
-  const category = categoryForJob(job)
-  if (!category) return null
-
+async function lookupCategory(category: Category): Promise<Lookup> {
   const reports = new Map((await publishedCorpus()).reports.map((report) => [report.domain, report]))
   const held = category.domains
     .map((domain) => reports.get(domain))
@@ -426,4 +423,15 @@ export async function lookup(job: string): Promise<Lookup | null> {
     blocked: held.filter((entry) => entry.barriers.length > 0),
     unknown: held.filter((entry) => entry.barriers.length === 0 && entry.unknown),
   }
+}
+
+/** The exact-category form used by stable URLs, where routing a sentence would only add error. */
+export async function lookupCategoryById(id: string): Promise<Lookup | null> {
+  const category = CATEGORIES.find((candidate) => candidate.id === id)
+  return category ? lookupCategory(category) : null
+}
+
+export async function lookup(job: string): Promise<Lookup | null> {
+  const category = categoryForJob(job)
+  return category ? lookupCategory(category) : null
 }

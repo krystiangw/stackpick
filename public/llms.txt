@@ -26,6 +26,9 @@
 - [/openapi.json](/openapi.json): OpenAPI 3.1 spec, generated from the same check definitions the scanner runs
 - [/corpus.json](/corpus.json) and [/corpus.csv](/corpus.csv): every published scan as data, one entry
   per domain and check, scored under a single formula version. Free to use with attribution
+- `/c/{category}/corpus.json`: a citable slice for one buying category, including the job to be
+  done, providers grouped by whether an unattended agent clears or hits a measured barrier, dated
+  evidence, and the underlying check rows. Example: [/c/file-storage/corpus.json](/c/file-storage/corpus.json)
 - [/docs](/docs): how to scan from code
 
 ## Pages

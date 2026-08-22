@@ -1,5 +1,6 @@
 import { CHECKS, MAX_SCORE, STAGES } from '@/lib/score'
 import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR } from '@/lib/scan-gate'
+import { CATEGORIES } from '@/lib/categories'
 
 const BASE = process.env.STACKPICK_BASE_URL ?? 'http://localhost:3000'
 
@@ -323,6 +324,27 @@ export function GET() {
           summary: 'The same corpus, one row per domain and check',
           operationId: 'getCorpusCsv',
           responses: { '200': { description: 'text/csv, long format' } },
+        },
+      },
+      '/c/{category}/corpus.json': {
+        get: {
+          summary: 'The published corpus and agent reachability result for one buying category',
+          operationId: 'getCategoryCorpus',
+          parameters: [
+            {
+              name: 'category',
+              in: 'path',
+              required: true,
+              schema: { type: 'string', enum: CATEGORIES.map((category) => category.id) },
+            },
+          ],
+          responses: {
+            '200': {
+              description:
+                'A dated, machine-readable category slice. clear describes measured reachability, not a product recommendation.',
+            },
+            '404': { description: 'Unknown category or no published corpus yet' },
+          },
         },
       },
       '/mcp': {

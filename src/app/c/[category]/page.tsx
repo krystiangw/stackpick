@@ -79,6 +79,25 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
 
   return (
     <main className="mx-auto max-w-5xl px-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Dataset',
+            name: `${category.label}: agent reachability dataset`,
+            description: `Dated measurements of where an unattended agent stops across ${category.label.toLowerCase()}, with the evidence behind every verdict.`,
+            url: `${SITE_URL}/c/${id}`,
+            isAccessibleForFree: true,
+            creator: { '@type': 'Organization', name: 'Let Agents In', url: SITE_URL },
+            distribution: {
+              '@type': 'DataDownload',
+              encodingFormat: 'application/json',
+              contentUrl: `${SITE_URL}/c/${id}/corpus.json`,
+            },
+          }),
+        }}
+      />
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Category</p>
         <h1 className="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-tight tracking-tight">
@@ -185,6 +204,13 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
           <Link href="/methodology#named" className="text-brass underline underline-offset-4">
             how every number here is measured
           </Link>
+        </p>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          Building an agent or comparing providers programmatically?{' '}
+          <a href={`/c/${id}/corpus.json`} className="text-brass underline underline-offset-4">
+            Download this category as JSON
+          </a>{' '}
+          with every dated measurement and the barrier where an unattended agent stops.
         </p>
       </section>
 
