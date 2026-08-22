@@ -35,7 +35,9 @@ export async function createVisibilityJob(input: Pick<VisibilityJob, 'brand' | '
     status: 'queued',
     createdAt: new Date().toISOString(),
   }
-  await (await jobs()).insertOne(job)
+  // The Mongo driver mutates the inserted object by attaching `_id`. Insert a copy so the public
+  // 202 response contains only our random job identifier and never a database implementation id.
+  await (await jobs()).insertOne({ ...job })
   return job
 }
 
@@ -44,8 +46,9 @@ export async function getVisibilityJob(id: string): Promise<VisibilityJob | null
 }
 
 export async function claimVisibilityJob(worker: string): Promise<VisibilityJob | null> {
+  const abandonedBefore = new Date(Date.now() - 15 * 60_000).toISOString()
   return await (await jobs()).findOneAndUpdate(
-    { status: 'queued' },
+    { $or: [{ status: 'queued' }, { status: 'running', startedAt: { $lt: abandonedBefore } }] },
     { $set: { status: 'running', startedAt: new Date().toISOString(), worker } },
     { sort: { createdAt: 1 }, returnDocument: 'after', projection: { _id: 0 } },
   ) as VisibilityJob | null
