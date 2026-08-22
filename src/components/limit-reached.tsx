@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { captureAnalytics } from '@/lib/analytics'
 
 type Example = { id: string; domain: string; total: number; max: number }
 
@@ -33,6 +34,7 @@ export function LimitReached({ error, example, domain }: { error: string; exampl
       setState('idle')
       return
     }
+    captureAnalytics('email_submitted', { purpose: 'rate_limit_queue' })
     setState('sent')
   }
 

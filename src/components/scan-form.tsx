@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { LimitReached } from './limit-reached'
+import { captureAnalytics } from '@/lib/analytics'
 
 type Step = { label: string; done: number; total: number }
 type Limited = { error: string; example: { id: string; domain: string; total: number; max: number } | null; domain: string }
@@ -30,6 +31,7 @@ export function ScanForm({ autoFocus = false, initialDomain = '' }: { autoFocus?
     setSteps([])
     setError(null)
     setLimited(null)
+    captureAnalytics('scan_started')
 
     try {
       const response = await fetch('/api/scan/stream', {
@@ -76,6 +78,7 @@ export function ScanForm({ autoFocus = false, initialDomain = '' }: { autoFocus?
             return
           }
           if (type === 'done') {
+            captureAnalytics('scan_completed')
             router.push(`/r/${payload.id}`)
             return
           }

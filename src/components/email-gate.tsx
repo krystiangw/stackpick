@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { WatchForm } from './watch-form'
+import { captureAnalytics } from '@/lib/analytics'
 
 export function EmailGate({
   domain,
@@ -26,6 +27,8 @@ export function EmailGate({
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'undelivered'>('idle')
   const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => captureAnalytics('report_viewed'), [])
+
   async function submit(event: React.FormEvent) {
     event.preventDefault()
     if (state === 'sending') return
@@ -48,6 +51,7 @@ export function EmailGate({
     // used to call that success: a visitor at the deepest point of intent was told the
     // scorecard was in their inbox when nothing had been sent.
     const payload = (await response.json().catch(() => ({}))) as { delivered?: boolean; queued?: boolean }
+    captureAnalytics('email_submitted', { purpose: 'scorecard' })
     setState(payload.delivered === false && !payload.queued ? 'undelivered' : 'sent')
   }
 

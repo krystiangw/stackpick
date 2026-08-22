@@ -9,7 +9,7 @@ import { SITE_URL } from '@/lib/site'
 export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/privacy` },
   title: 'Privacy: Let Agents In',
-  description: 'What we store, what we do not, and how to have it deleted. No cookies, no analytics, no third-party trackers.',
+  description: 'What we store, what we do not, and how to have it deleted. No cookies, advertising or session recording.',
 }
 
 /**
@@ -88,25 +88,34 @@ export default async function PrivacyPage() {
               a company&apos;s robot rather than a visitor. No IP address, no user-agent string stored, no identifier that
               could be joined to a person.
             </li>
+            <li>
+              <strong className="text-ink">Cookieless web analytics.</strong> For browsers that run JavaScript, PostHog
+              counts page views, approximate unique visitors and the few actions that make up the product funnel: starting
+              and completing a scan, opening a report, and successfully submitting an email form. We do not send the
+              domain scanned, an email address, a report address, a watch token, or URL query strings. PostHog processes
+              the request IP address and user-agent transiently to make a privacy-preserving identifier on its EU servers;
+              neither raw value is stored and the identifier is not kept in the browser.
+            </li>
           </ul>
         </div>
 
         <div>
           <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">What we do not do</h2>
           <p className="mt-4">
-            No cookies. No analytics script, no advertising pixel, no session recording, no third-party tag of any
-            kind. We sell vendors the argument that a page should be readable without running a bundle, so a tracker
-            that needs JavaScript would sit badly next to it and would miss the visitor we care about anyway. We do not
-            sell or share personal data, and we do not use it to train anything.
+            No cookies, advertising pixel or session recording. The PostHog script records only aggregate web analytics
+            and the named funnel events above: automatic click capture, heatmaps, surveys, user profiles, exception
+            capture and feature flags are disabled. A page remains fully readable without running that script, and our
+            separate server counter measures the agents that do not run it. We do not sell personal data or use it to
+            train anything.
           </p>
         </div>
 
         <div>
           <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Who processes it for us</h2>
           <p className="mt-4">
-            Heroku (hosting, EU region), MongoDB Atlas (storage), and Resend (email delivery). Each of them sees only
-            what is needed to do that job. A payment provider is added here the day payments go live, and it will be
-            named before anybody is asked for a card.
+            Heroku (hosting, EU region), MongoDB Atlas (storage), Resend (email delivery), and PostHog Cloud EU
+            (cookieless aggregate web analytics). Each of them sees only what is needed to do that job. A payment provider
+            is added here the day payments go live, and it will be named before anybody is asked for a card.
           </p>
         </div>
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { captureAnalytics } from '@/lib/analytics'
 
 /**
  * Two fields and no account. We charge every vendor a point for putting a wall in front of an
@@ -48,6 +49,7 @@ export function WatchForm({
     }
     const payload = (await response.json().catch(() => ({}))) as { delivered?: boolean; alreadyWatching?: boolean }
     if (payload.alreadyWatching) return setState('already')
+    captureAnalytics('email_submitted', { purpose: 'watch' })
     setState(payload.delivered === false ? 'undelivered' : 'sent')
   }
 
