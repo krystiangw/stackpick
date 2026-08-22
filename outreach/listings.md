@@ -1,8 +1,21 @@
 # Where to list us, and what each one needs
 
-Checked by request on 2026-08-14: every URL below returned a live page, and the MCP registry was
-queried for `letagentsin` and returned nothing, so we are not in it yet. Nothing here is from
-memory.
+Originally checked on 2026-08-14. Status refreshed on 2026-08-22 from the live directories and
+our published registry entry; completed and blocked items below supersede the original checklist.
+
+## 2026-08-22 status
+
+- **Official MCP Registry: done.** `com.letagentsin/scanner` 1.0.1 is live. The mirror workflow is
+  healthy again.
+- **Smithery and Glama: discoverable.** Both search surfaces return Let Agents In without another
+  manual submission.
+- **PulseMCP: no action available.** Manual submissions are paused; its submit page says it plans
+  to ingest from the Official MCP Registry.
+- **mcp.so: decision required.** Submission is now a $39 one-time purchase. No purchase was made.
+- **Hacker News: handoff.** The submit page requires a logged-in account. If used, submit the
+  measured file-storage result rather than the home page.
+- **BabyLoveGrowth: baseline only.** Its free audit returned 0/20 mentions, but categorized the
+  product as an API-auditing competitor. Do not treat that as a product-equivalence audit.
 
 ## Done, no account needed
 
@@ -17,17 +30,14 @@ memory.
 
 ## Needs you, because an agent must not create accounts
 
-**1. Official MCP registry** — `registry.modelcontextprotocol.io`. We are not listed; a search for
-our name returns nothing. `server.json` is ready in the repo root and its shape was diffed against
-a live entry rather than against the schema prose. Publishing authenticates by proving you own the
-domain, which needs a DNS record only you can add.
+**1. Official MCP registry — COMPLETED 2026-08-22.** Version 1.0.1 is live. Keep `server.json`,
+`/.well-known/mcp.json` and the runtime `serverInfo.version` aligned for every future publication.
 
 **2. Bing Webmaster Tools** — `bing.com/webmasters`. IndexNow already feeds Bing, so this is worth
 it for the reporting rather than the indexing.
 
-**3. MCP directories** — `smithery.ai`, `glama.ai/mcp/servers`, `mcp.so`. All three are live.
-Each wants a GitHub sign-in. `pulsemcp.com` refused our request with a 403, so treat it as
-unverified rather than absent.
+**3. MCP directories** — Smithery and Glama already find us. `mcp.so` is paid ($39); PulseMCP has
+paused manual submissions and points publishers to the Official MCP Registry.
 
 **4. llms.txt directories** — `directory.llmstxt.cloud` and `llmstxt.site`. Both live. Low effort,
 low certainty of traffic; do them last.
@@ -36,7 +46,7 @@ low certainty of traffic; do them last.
 
 > Let Agents In measures whether an AI coding agent can find, register with and integrate a
 > product. Fifteen deterministic HTTP checks with published rules across five funnel stages, no
-> model involved, and a corpus of 170 vendors published as JSON and CSV. Two MCP tools:
+> model involved, and a public vendor corpus published as JSON and CSV. Two MCP tools:
 > `scan_domain` scores one domain, `find_providers` answers which vendors in a category an
 > unattended run can finish with.
 

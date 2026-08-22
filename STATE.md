@@ -1,4 +1,83 @@
-# Let Agents In: stan na 2026-08-20 wieczor (kod, produkcja i korpus 9.55, przemiat zamkniety 19:35)
+# Let Agents In: stan na 2026-08-22 (produkcja v762, organic discovery i PostHog)
+
+## HANDOVER 2026-08-22: ANALITYKA, PLIKI DLA AGENTOW I ORGANIC DISCOVERY
+
+**WERSJE I STAN:** `main`, `origin/main` i `heroku/main` wskazuja commit `be45a2e`; produkcja to
+**Heroku v762**. Drzewo bylo czyste po wdrozeniu. TypeScript, ESLint, `scripts/rules.mts`, build
+Next.js i workflow publikacji datasetu przeszly. Oficjalny MCP Registry publikuje
+`com.letagentsin/scanner` **1.0.1**; starsza 1.0.0 pozostaje w historii rejestru.
+
+**CO ZOSTALO DOSTARCZONE:**
+
+1. **PostHog EU** jest podlaczony na produkcji w trybie cookieless (commit `0f80833`, v760).
+   To zewnetrzna analityka produktu, nie zrodlo prawdy o ruchu agentow. Tryb cookieless hashuje IP
+   do `distinct_id`, ale przez usuniecie IP przed transformacjami wylacza GeoIP i wzbogacanie
+   detekcji botow oparte na IP. Dlatego nie wolno z jego liczby unikalnych osob robic precyzyjnego
+   podzialu „czlowiek kontra agent". Wlasny serwerowy licznik odwiedzin nadal jest potrzebny, bo
+   liczy klientow bez JavaScriptu i rozroznia klase przegladarki od klienta programowego.
+2. **Pliki branżowe dla agentow** sa publiczne pod `/c/<category>/corpus.json` (commit `2a483a2`,
+   v761). Strona HTML kazdej kategorii pokazuje teraz rowniez, kto jest `clear`, `blocked` i
+   `unknown`, gdzie przebieg sie zatrzymal, date pomiaru oraz dowod. To jest pomiar osiagalnosci,
+   nie rekomendacja produktu: nie mierzymy dopasowania funkcji, ceny ani supportu.
+3. **Dataset ma wersjonowane snapshoty.** Workflow `.github/workflows/dataset-release.yml` uruchamia
+   sie pierwszego dnia miesiaca i publikuje JSON, CSV oraz `SHA256SUMS` jako GitHub Release.
+   Pierwszy snapshot `dataset-2026-08-22` przeszedl, oba checksumy sprawdzone lokalnie. Live
+   `/corpus.json` pozostaje kanonicznym najnowszym odczytem; release jest cytowalna migawka.
+4. **Pozycjonowanie strony zostalo wyostrzone** do „AI agent readiness scanner for SaaS". Strony
+   kategorii lacza dwa pytania: czy agent wymienia firme oraz czy potrafi do niej dojsc i zakonczyc
+   integracje. `llms.txt` i `agents.md` nazywaja snapshoty danych.
+5. **Monitoring widocznosci w odpowiedziach modeli** jest powtarzalny przez `pnpm visibility`.
+   Zamrozone prompty sa w `harness/visibility-prompts.json`, metoda i ograniczenia w
+   `docs/visibility-monitoring.md`, a wyniki jednego przebiegu laduja poza repo w
+   `~/.letagentsin-runs/visibility/<data>`. Nie przenosimy tego do GitHub Actions, bo lokalne CLI
+   korzystaja z subskrypcji i kontekstu operatora; zamiana na API bylaby innym eksperymentem.
+
+**BASELINE BABYLOVEGROWTH NIE JEST AUDYTEM NASZEGO TYPU.** Darmowy audit z 2026-08-22 zadal piec
+pytan czterem modelom i zmierzyl, czy marka Let Agents In wystepuje w 20 odpowiedziach: **0/20**.
+To mierzy **„can agents find/name us?" (AI visibility/GEO)**. Let Agents In mierzy
+**„can an unattended agent use you?" (discovery, signup, provisioning i integration)**. Produkty
+sa komplementarne, nie substytucyjne. Baseline jest kierunkowy, bo BabyLoveGrowth blednie ustawil
+nas w kategorii konkurentow Postmana, SmartBeara i Stoplighta. Dokladne prompty i wyniki sa w
+`docs/visibility-baseline-2026-08-22.md`. Lokalna kontrolka Codexa na dwoch lepiej dopasowanych
+promptach dala **0/2**; Claude byl na limicie, a Gemini mial niewazna autoryzacje, wiec te proby
+zostaly oznaczone jako niewazne i nie weszly do mianownika.
+
+**DECYZJE ZAMKNIETE:**
+
+- Budujemy organiczna widocznosc przez **oryginalne, datowane pomiary, strony kategorii, cytowalny
+  dataset i standardowe powierzchnie maszynowe**, a nie przez masowa produkcje artykulow.
+- Darmowy audyt BabyLoveGrowth jest uzyteczny jako zewnetrzny baseline. **Nie kupujemy teraz ich
+  automatycznego contentu/backlink network dla glownej domeny**: deklarowane automatyczne linki
+  wzajemne/dofollow tworza ryzyko spam policy niewspolmierne do obecnego dowodu wartosci.
+- Oficjalny MCP Registry jest kanonicznym wpisem. Smithery i Glama juz nas znajduja. PulseMCP ma
+  reczne zgloszenia wstrzymane i deklaruje przyszly import z oficjalnego rejestru.
+- Nie kupiono wpisu w `mcp.so`: formularz wymaga **39 USD**. Nie jest to techniczny blocker, tylko
+  decyzja wydatkowa.
+- Nie opublikowano posta na Hacker News bez konta. Chrome doszedl do ekranu logowania; publiczna
+  publikacja wymaga tozsamosci wlasciciela i pozostaje recznym handoffem.
+
+**OTWARTE TICKETY / NASTEPNY RUCH (Muster nie jest dzis zrodlem prawdy):** `clad-task mine`
+2026-08-22 zwraca `human (brak)`, a stara tablica miala termin wygasniecia 2026-08-25. Dopoki nie
+zostanie ponownie odebrana lub utworzona, ponizsza lista w repo jest trwalym backlogiem:
+
+1. **Tygodniowy baseline widocznosci:** uruchomic `pnpm visibility` po odnowieniu limitu Claude i
+   naprawie logowania Gemini; porownywac tylko wazne odpowiedzi. Owner: human/agent. Bez kosztu.
+2. **Hacker News:** po zalogowaniu opublikowac jeden techniczny wynik, nie landing page — najlepiej
+   `/c/file-storage`, z teza „Which file-upload APIs can an unattended AI agent actually
+   integrate?". Owner: Krystian. Wymaga konta i decyzji o publicznym podpisie.
+3. **mcp.so:** zdecydowac, czy wpis jest wart 39 USD. Owner: Krystian. Nie placic bez osobnego
+   potwierdzenia zakupu.
+4. **Dataset poza GitHubem:** rozwazyc Hugging Face dopiero, gdy mamy konto/namespace i kilka
+   miesiecznych snapshotow; GitHub Release juz daje wersjonowanie, checksumy i stabilny link, wiec
+   nie jest to blocker wyszukiwalnosci.
+5. **Ocena po 4-6 tygodniach:** powtorzyc te same prompty i sprawdzic GSC/PostHog. Dopiero wtedy
+   decydowac o platnym narzedziu GEO. Nie zmieniac promptow w srodku serii.
+
+**LINKI OPERACYJNE:** workflow datasetu
+`https://github.com/krystiangw/stackpick/actions/runs/32569885469`; pierwszy release
+`https://github.com/krystiangw/stackpick/releases/tag/dataset-2026-08-22`; produkcyjna strona
+branżowa `https://letagentsin.com/c/file-storage`; audit BabyLoveGrowth jest zapisany opisowo w
+repo, bo sam URL wynikow zalezy od zewnetrznej uslugi.
 
 
 
