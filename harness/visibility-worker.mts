@@ -75,6 +75,6 @@ async function runOne() {
 
 do {
   const worked = await runOne()
-  if (once) break
+  if (once) process.exit(0)
   if (!worked) await pause(10_000)
 } while (true)

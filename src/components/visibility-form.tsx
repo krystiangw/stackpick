@@ -15,6 +15,14 @@ export function VisibilityForm() {
   const running = job?.status === 'queued' || job?.status === 'running'
 
   useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('audit')
+    if (!id || !/^[a-f0-9]{32}$/.test(id)) return
+    fetch(`/api/visibility?id=${id}`, { cache: 'no-store' })
+      .then(async (response) => response.ok ? setJob(await response.json() as VisibilityJob) : undefined)
+      .catch(() => undefined)
+  }, [])
+
+  useEffect(() => {
     if (!running || !job) return
     const timer = window.setInterval(async () => {
       const response = await fetch(`/api/visibility?id=${job.id}`, { cache: 'no-store' })
@@ -39,7 +47,9 @@ export function VisibilityForm() {
       })
       const payload = await response.json()
       if (!response.ok) throw new Error(payload.error || 'The audit failed.')
-      setJob(payload as VisibilityJob)
+      const created = payload as VisibilityJob
+      setJob(created)
+      window.history.replaceState(null, '', `/visibility?audit=${created.id}`)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'The audit failed.')
     }
@@ -58,7 +68,7 @@ export function VisibilityForm() {
       <button disabled={running || !brand || !domain || !category} className="bg-ink px-6 py-3 font-mono text-sm text-ground disabled:opacity-40 sm:col-span-2">{running ? job?.status === 'queued' ? 'Queued…' : 'Asking the agents…' : 'Run audit'}</button>
     </form>
     <p className="mt-3 font-mono text-xs text-ink-faint">Claude, Codex and Gemini through Antigravity run from signed-in subscriptions. Perplexity is measured through its Search API and labelled separately. Failed calls never count as “not found”.</p>
-    {job && running && <p className="mt-4 font-mono text-xs text-brass">Audit {job.id.slice(0, 8)} is {job.status}. Keep this page open while the local subscription worker runs.</p>}
+    {job && running && <p className="mt-4 font-mono text-xs text-brass">Audit {job.id.slice(0, 8)} is {job.status}. You can keep this page open or return to its URL later.</p>}
     {job?.status === 'failed' && <p role="alert" className="mt-4 font-mono text-xs text-fail">{job.error || 'The worker failed.'}</p>}
     {error && <p role="alert" className="mt-4 font-mono text-xs text-fail">{error}</p>}
     {job?.result && <Result audit={job.result} />}
