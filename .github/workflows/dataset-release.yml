@@ -1,0 +1,36 @@
+name: Publish corpus snapshot
+
+on:
+  schedule:
+    - cron: '23 5 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and publish the current corpus
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          date_utc=$(date -u +%Y-%m-%d)
+          tag="dataset-${date_utc}"
+          json="letagentsin-corpus-${date_utc}.json"
+          csv="letagentsin-corpus-${date_utc}.csv"
+
+          curl --fail --silent --show-error --retry 3 https://letagentsin.com/corpus.json --output "$json"
+          curl --fail --silent --show-error --retry 3 https://letagentsin.com/corpus.csv --output "$csv"
+          sha256sum "$json" "$csv" > SHA256SUMS
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$json" "$csv" SHA256SUMS --clobber
+          else
+            gh release create "$tag" "$json" "$csv" SHA256SUMS \
+              --title "Agent readiness corpus — ${date_utc}" \
+              --notes "A dated snapshot of every vendor measurement Let Agents In publishes. JSON preserves one object per vendor with every check and its evidence; CSV is long-form, one row per vendor and check. Formula version, methodology, terms and measurement dates travel inside the files. Canonical live dataset: https://letagentsin.com/corpus.json"
+          fi

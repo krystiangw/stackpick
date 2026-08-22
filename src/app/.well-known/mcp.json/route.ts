@@ -18,7 +18,7 @@ export function GET() {
     {
       name: 'letagentsin',
       description: `Agent readiness scanning and provider lookup. Scores a domain out of ${MAX_SCORE} points on whether an agent can find, register with and integrate it, and answers which providers an unattended run can finish with.`,
-      version: '1.0.0',
+      version: '1.0.1',
       documentation: `${SITE_URL}/docs`,
       transport: { type: 'http', url: `${SITE_URL}/mcp` },
       // Every field a client needs to decide, not a subset. The card dropped `annotations` while

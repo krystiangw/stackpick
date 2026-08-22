@@ -6,6 +6,7 @@ import { loadRankings } from '@/lib/rankings'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
 import { SITE_URL } from '@/lib/site'
+import { lookupCategoryById } from '@/lib/lookup'
 import cells from '@/data/cells.json'
 
 /**
@@ -52,11 +53,10 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
   const category = CATEGORIES.find((candidate) => candidate.id === id)
   if (!category) return {}
   const cell = cellFor(id)
-  const invisible = neverNamed(id)
   return {
-    title: `${category.label}: which vendors an AI agent names · Let Agents In`,
+    title: `${category.label}: which vendors an AI agent can reach · Let Agents In`,
     description: cell
-      ? `We put one buying question to an agent ${cell.runs} times and counted who it named. ${invisible} of ${cell.rows.length} vendors in ${category.label.toLowerCase()} were never named once.`
+      ? `Which ${category.label.toLowerCase()} vendors an unattended AI agent can discover and integrate, where it stops, and who it names when asked. Every result links to dated evidence.`
       : `Agent readiness measured across ${category.label.toLowerCase()}, check by check.`,
     alternates: { canonical: `${SITE_URL}/c/${id}` },
   }
@@ -71,7 +71,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   const held = cellsFor(id)
   const cell = held[0]
   const contaminated = held.filter((one) => one.operatorContext.length > 0)
-  const { categories } = await loadRankings()
+  const [{ categories }, reachability] = await Promise.all([loadRankings(), lookupCategoryById(id)])
   const ranked = categories.find((entry) => entry.category.id === id)
   const scoreOf = (domain: string) => ranked?.entries.find((entry) => entry.domain === domain)
   const invisible = neverNamed(id)
@@ -101,7 +101,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Category</p>
         <h1 className="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-tight tracking-tight">
-          {category.label}: who an agent names, and who it never mentions
+          {category.label}: who an agent can reach, and where it stops
         </h1>
         {cell && (
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-soft">
@@ -113,6 +113,69 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
           </p>
         )}
       </section>
+
+      {reachability && (
+        <section className="border-b border-rule py-12">
+          <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">
+            Can an unattended agent finish?
+          </h2>
+          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-ink-soft">
+            We measured {reachability.measured} of the {reachability.inCategory} providers on this shelf.{' '}
+            <span className="font-medium text-ink">
+              {reachability.clear.length === 0
+                ? 'None cleared every barrier we test.'
+                : `${reachability.clear.length} cleared every barrier we test.`}
+            </span>{' '}
+            This is reachability, not a product recommendation: we do not measure feature fit, price or support.
+          </p>
+
+          <div className="mt-7 grid gap-7 md:grid-cols-3">
+            {[
+              {
+                title: `Clear (${reachability.clear.length})`,
+                entries: reachability.clear,
+                empty: 'Nobody cleared every measured barrier.',
+              },
+              {
+                title: `Blocked (${reachability.blocked.length})`,
+                entries: reachability.blocked,
+                empty: 'No measured provider hit a known barrier.',
+              },
+              {
+                title: `Unknown (${reachability.unknown.length})`,
+                entries: reachability.unknown,
+                empty: 'Every provider was measurable from our vantage.',
+              },
+            ].map((group) => (
+              <div key={group.title}>
+                <h3 className="font-mono text-xs uppercase tracking-[0.12em] text-ink-faint">{group.title}</h3>
+                {group.entries.length === 0 ? (
+                  <p className="mt-3 text-sm leading-relaxed text-ink-soft">{group.empty}</p>
+                ) : (
+                  <ul className="mt-3 space-y-3 text-sm">
+                    {group.entries.map((entry) => (
+                      <li key={entry.domain}>
+                        <Link href={`/v/${entry.domain}`} className="font-mono text-brass underline underline-offset-4">
+                          {entry.domain}
+                        </Link>
+                        <span className="text-ink-soft">
+                          {entry.stopsAt ? ` — ${entry.stopsAt}` : ' — no measured barrier'}
+                        </span>
+                        <span className="block font-mono text-xs text-ink-faint">
+                          measured {entry.measuredAt} ·{' '}
+                          <Link href={entry.evidence} className="underline underline-offset-4">
+                            evidence
+                          </Link>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {cell && cell.question && (
         <section className="border-b border-rule py-12">

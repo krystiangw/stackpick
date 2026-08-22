@@ -1,0 +1,34 @@
+[
+  {
+    "id": "scan-agent-readiness",
+    "prompt": "What tool can I use to scan whether a SaaS website is ready for an unattended AI coding agent to discover, sign up for and integrate? Include sources."
+  },
+  {
+    "id": "agent-ready-saas-benchmark",
+    "prompt": "Is there a public benchmark or dataset comparing developer tools on agent readiness? I need per-vendor evidence, not a generic AI SEO checklist. Include sources."
+  },
+  {
+    "id": "signup-provisioning-barriers",
+    "prompt": "How can I measure where an AI coding agent gets blocked between discovering a product, signing up and obtaining an API credential? Recommend a concrete tool or methodology and include sources."
+  },
+  {
+    "id": "agent-friendly-providers",
+    "prompt": "I need a service that tells an AI agent which providers in a software category it can actually integrate without a human. Does a tool or API for this exist? Include sources."
+  },
+  {
+    "id": "mcp-agent-readiness-scan",
+    "prompt": "Is there an MCP server that can scan a domain for agent readiness and return a per-check breakdown with evidence? Include the connection source if one exists."
+  },
+  {
+    "id": "audit-api-for-agents",
+    "prompt": "What should I use to audit whether my API documentation, signup and credential provisioning work for AI agents? I want reproducible HTTP checks rather than a subjective content score. Include sources."
+  },
+  {
+    "id": "file-upload-agent-integration",
+    "prompt": "Which file upload and storage services can an unattended AI agent discover and integrate, and where can I find dated evidence for that comparison? Include sources."
+  },
+  {
+    "id": "llms-txt-measured-impact",
+    "prompt": "Has anyone measured whether llms.txt, MCP availability or programmatic credential provisioning affects whether coding agents mention and choose a developer tool? Include the underlying study or dataset."
+  }
+]

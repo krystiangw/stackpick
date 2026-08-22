@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "com.letagentsin/scanner",
   "title": "Let Agents In",
-  "description": "Deterministic score of whether an unattended AI agent can find, sign up for and integrate a domain.",
-  "version": "1.0.0",
+  "description": "Scan agent readiness, or find measured providers an unattended AI agent can finish with.",
+  "version": "1.0.1",
   "websiteUrl": "https://letagentsin.com",
   "remotes": [
     {

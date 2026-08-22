@@ -24,13 +24,14 @@ const plexMono = IBM_Plex_Mono({
  * no card was wanted. "Free, no account" is the sentence we would have wanted Auth0 to have.
  */
 const DESCRIPTION =
-  'Measures whether an AI coding agent can find, register with and integrate your product. Free, no account: deterministic checks, published formula, reproducible score.'
+  'Scan whether an AI coding agent can discover, sign up for and integrate your SaaS. Free deterministic checks, public methodology and dated evidence.'
+const TITLE = 'AI agent readiness scanner for SaaS · Let Agents In'
 
 export const metadata: Metadata = {
   // Without this Next resolves the file-based OG image against localhost, so every
   // scorecard forwarded to Slack or LinkedIn arrived as a bare link with no card.
   metadataBase: new URL(process.env.STACKPICK_BASE_URL ?? 'http://localhost:3000'),
-  title: 'Let Agents In: can an AI agent get through your product?',
+  title: TITLE,
   description: DESCRIPTION,
   // Only the vendor pages carried these, so the two pages somebody would actually forward - the
   // front page and /findings - arrived in Slack and on LinkedIn as a bare link with no card.
@@ -40,7 +41,7 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'Let Agents In',
     url: SITE_URL,
-    title: 'Let Agents In: can an AI agent get through your product?',
+    title: TITLE,
     description: DESCRIPTION,
   },
   twitter: { card: 'summary_large_image' },

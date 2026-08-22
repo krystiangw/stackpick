@@ -39,6 +39,10 @@ argument. The card describing it is at `/.well-known/mcp.json`.
 the verdict and the sentence it was measured from. Free to use and quote with attribution. If you
 want to argue with the formula, that is the cheapest way to do it.
 
+Dated snapshots with SHA-256 checksums are published at
+`https://github.com/krystiangw/stackpick/releases` so an analysis can cite the data it actually read
+rather than a live corpus that changes on the next measurement.
+
 For one buying category, use `/c/{category}/corpus.json`. It adds the job to be done and groups
 providers into clear, blocked and unknown for an unattended agent without pretending that
 reachability is a product recommendation. For example: `/c/file-storage/corpus.json`.
