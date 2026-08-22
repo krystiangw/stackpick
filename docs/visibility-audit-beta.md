@@ -1,45 +1,47 @@
 # AI visibility audit beta
 
+## Production shape
+
+`POST /api/visibility` validates and queues either a `quick` audit (one frozen prompt, four
+observations) or a `full` audit (three prompts, twelve observations). It returns HTTP 202 and a
+128-bit random job id. `GET /api/visibility?id=<id>` returns queued, running, complete or failed.
+The browser polls that endpoint and renders the stored result after completion.
+
+Jobs live in MongoDB collection `visibilityJobs`. The Heroku dyno never tries to impersonate a
+consumer subscription. A persistent worker on the signed-in operator machine claims one queued job
+atomically and runs each prompt in a fresh private git root, so no model can discover the brand by
+walking into this repository.
+
+| Reported surface | Execution | Authentication |
+| --- | --- | --- |
+| OpenAI | Codex CLI | ChatGPT subscription |
+| Anthropic | Claude CLI | Claude subscription |
+| Gemini | Antigravity CLI, pinned `gemini-3.7-flash-low` | Google subscription |
+| Perplexity | official `pplx search web` CLI | Search API key |
+
+The Perplexity CLI is not a consumer-answer client. Its ranked sources are labelled `search-api`;
+they are useful evidence of search discoverability but are not represented as a Perplexity chat
+answer. A failed or empty run is stored and excluded from the denominator.
+
+## Operations
+
+Run a single queued job manually:
+
+```bash
+MONGODB_URI="$(heroku config:get MONGODB_URI -a stackpick)" pnpm visibility-worker -- --once
+```
+
+The installed macOS LaunchAgent runs `scripts/run-visibility-worker.zsh`, restarts it after failure,
+and obtains the current Mongo URI from Heroku rather than storing the credential in its plist.
+Logs are under `~/Library/Logs/letagentsin-visibility-worker.*.log`.
+
+This is a beta production dependency on the operator machine. Sleep, loss of network, expired CLI
+sessions or subscription limits can delay a job. Individual provider failures do not fail the
+whole audit; a database or worker failure does.
+
 ## Product boundary
 
-This is **Can agents find you?**, not the deterministic **Can agents use you?** score. It asks three
-neutral category questions per configured search-enabled provider and reports a dated sample:
-mentions over valid answers, direct links, exact prompts, answers, sources, model IDs and failures.
-A provider failure is excluded from the denominator; it is never converted into "not found".
-
-BabyLoveGrowth names ChatGPT, Claude, Gemini and Perplexity. The beta uses the corresponding APIs:
-
-| Surface | API | default model |
-| --- | --- | --- |
-| ChatGPT/OpenAI | Responses API + web search | `gpt-5.6-luna` |
-| Claude | Messages API + web search | `claude-sonnet-4-6` |
-| Gemini | Generate Content + Google Search grounding | `gemini-3.6-flash` |
-| Perplexity | Sonar API | `sonar` |
-
-Defaults are overridable with `<PROVIDER>_VISIBILITY_MODEL`. The exact model travels with every
-answer, so changing a default does not silently rewrite an old observation.
-
-## Configuration
-
-Set one or more of `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, and
-`PERPLEXITY_API_KEY`. The page lists only configured providers. No key is exposed to the browser.
-With no key, the page remains readable and the submit button stays disabled.
-
-The public endpoint is `POST /api/visibility` with `brand`, bare `domain`, and a short `category`.
-It is limited to one admitted audit per caller per hour while in beta. Twelve calls are made when
-all four providers are configured. Calls run concurrently and each has a 22-second timeout.
-
-## Why local subscriptions stay separate
-
-`pnpm visibility` remains the research harness: it runs signed-in local CLIs in isolated git roots
-and records operator context. It is useful for a weekly benchmark, but it is not a production
-backend: subscriptions are tied to one person, have interactive limits, and can change tools or
-context without an API contract. Public audits therefore use provider APIs and record model IDs.
-
-## Deliberate beta limits
-
-- Results currently return to the browser and are not stored or shareable.
-- `position` means the first answer line containing the brand or domain, not a universal search rank.
-- Correctness of a model's description is not auto-scored yet; that needs either human review or a
-  separately versioned judge, never the same answer model grading itself.
-- A repeated run can move. Report counts such as `3/12`, not a synthetic score out of 100.
+This measures **Can agents find you?** The deterministic scanner still measures **Can agents use
+you?** A quick run is a smoke observation, not a ranking. A full run repeats three different buying
+questions across the same four surfaces. Neither replaces the separate, bespoke build audit in
+which agents receive an application scaffold and must ship an integration.

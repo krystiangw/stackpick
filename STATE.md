@@ -1,5 +1,21 @@
 # Let Agents In: stan na 2026-08-22 (produkcja v763, organic discovery i PostHog)
 
+## HANDOVER 2026-08-22: PRODUKCYJNA KOLEJKA AUDYTOW WIDOCZNOSCI
+
+`POST /api/visibility` nie wykonuje juz modeli na dyno ani nie zalezy od kluczy czterech API.
+Tworzy w Mongo zadanie `quick` (4 obserwacje) albo `full` (12), zwraca 202 i losowy 128-bitowy
+identyfikator. UI odpytuje GET o stan i renderuje zapisany wynik. Lokalny LaunchAgent
+`com.letagentsin.visibility-worker` stale pobiera kolejke i uruchamia Claude, Codex i Antigravity
+w pustych katalogach Git oraz oficjalny Perplexity Search API. Plist nie trzyma sekretu: worker
+pobiera aktualny Mongo URI z Heroku przy starcie.
+
+Prawdziwy test E2E `b7462cafe62c45628cf26525b09dd02b` przeszedl: queued -> running -> complete.
+Codex, Antigravity i Perplexity Search byly wazne, Claude odpadl na limicie subskrypcji i nie wszedl
+do mianownika; wynik Let Agents In 0/3. Perplexity nadal nie jest czwartym agentem wykonawczym dla
+bespoke build audit: oficjalny `pplx` potrafi szukac i pobierac tresc, ale nie generuje ani nie
+edytuje aplikacji. Pelny build harness obsluguje Claude, Codex i Antigravity przez wspolny adapter;
+nie wolno twierdzic klientowi, ze Perplexity wykonalo build.
+
 ## HANDOVER 2026-08-22: SUBSKRYPCYJNY HARNESS PO MIGRACJI GEMINI
 
 Pelny raport i lokalny monitoring nadal korzystaja ze wspolnego `harness/agents.mts`. Dostepne

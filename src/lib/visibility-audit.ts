@@ -102,6 +102,25 @@ function rank(text: string, brand: string, domain: string): number | null {
   return at < 0 ? null : at + 1
 }
 
+export function visibilityAnswer(input: {
+  provider: VisibilityProvider
+  model: string
+  prompt: string
+  brand: string
+  domain: string
+  answer: string
+  sources?: string[]
+  error?: string
+}): VisibilityAnswer {
+  if (input.error || !input.answer.trim()) {
+    return { provider: input.provider, model: input.model, prompt: input.prompt, valid: false, mentioned: false, position: null, linked: false, answer: '', sources: [], error: input.error || 'The model returned no answer.' }
+  }
+  const answer = input.answer.trim()
+  const sources = [...new Set(input.sources ?? urlsIn(answer))]
+  const position = rank(answer, input.brand, input.domain)
+  return { provider: input.provider, model: input.model, prompt: input.prompt, valid: true, mentioned: position !== null, position, linked: sources.some((url) => url.toLowerCase().includes(input.domain.toLowerCase())), answer, sources }
+}
+
 export async function runVisibilityAudit(input: { brand: string; domain: string; category: string }): Promise<VisibilityAudit> {
   const active = providers()
   if (active.length === 0) throw new Error('No visibility model API is configured.')

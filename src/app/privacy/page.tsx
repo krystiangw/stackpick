@@ -98,10 +98,10 @@ export default async function PrivacyPage() {
             </li>
             <li>
               <strong className="text-ink">AI visibility audit inputs.</strong> When you run the beta, the brand,
-              domain, product category and three neutral prompts are sent to whichever of OpenAI, Anthropic, Google
-              Gemini and Perplexity are configured at that time. Their answers and cited sources return to your browser;
-              we do not currently save an audit or give it a public address. Do not put confidential information in the
-              category field.
+              domain, product category, selected depth, prompts, answers and cited sources are saved with a random audit
+              identifier in MongoDB. A worker sends the prompts to signed-in Claude, Codex and Google Antigravity CLI
+              sessions and to the Perplexity Search API. The result returns to this browser by that random identifier.
+              Do not put confidential information in the category field.
             </li>
           </ul>
         </div>
@@ -122,7 +122,7 @@ export default async function PrivacyPage() {
           <p className="mt-4">
             Heroku (hosting, EU region), MongoDB Atlas (storage), Resend (email delivery), PostHog Cloud EU
             (cookieless aggregate web analytics), and — only when you run the visibility beta — the configured model
-            providers among OpenAI, Anthropic, Google Gemini and Perplexity. Each sees only what is needed to do that job. A payment provider
+            providers Anthropic, OpenAI, Google and Perplexity. Each sees only what is needed to do that job. A payment provider
             is added here the day payments go live, and it will be named before anybody is asked for a card.
           </p>
         </div>
@@ -133,7 +133,8 @@ export default async function PrivacyPage() {
             Scan results are kept as long as they are published, because a permanent link that stops working is worse
             than one that ages. An address given for monitoring is kept until you stop it: every email we send carries
             a stop link, and using it ends the mail immediately. An address given for a one-off delivery is kept for as
-            long as we owe you a receipt or a rescan.
+            long as we owe you a receipt or a rescan. Visibility audit jobs and their answers are kept while the beta
+            is being evaluated; ask us to delete one by sending its identifier.
           </p>
         </div>
 

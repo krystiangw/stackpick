@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server'
 import { checkRateLimit, clientKey, recordUse } from '@/lib/rate-limit'
-import { configuredVisibilityProviders, runVisibilityAudit } from '@/lib/visibility-audit'
-
-export const maxDuration = 60
+import { createVisibilityJob, getVisibilityJob, type VisibilityDepth } from '@/lib/visibility-job'
 
 const clean = (value: unknown, max: number) => typeof value === 'string' ? value.trim().slice(0, max) : ''
 
-export async function GET() {
-  return NextResponse.json({ beta: true, providers: configuredVisibilityProviders() })
+export async function GET(request: Request) {
+  const id = new URL(request.url).searchParams.get('id') ?? ''
+  if (!/^[a-f0-9]{32}$/.test(id)) return NextResponse.json({ beta: true, mode: 'queued-subscription-worker' })
+  const job = await getVisibilityJob(id)
+  if (!job) return NextResponse.json({ error: 'Audit not found.' }, { status: 404 })
+  return NextResponse.json(job)
 }
 
 export async function POST(request: Request) {
@@ -16,12 +18,12 @@ export async function POST(request: Request) {
   const brand = clean(body.brand, 80)
   const domain = clean(body.domain, 253).toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/^www\./, '')
   const category = clean(body.category, 100)
+  const depth: VisibilityDepth = body.depth === 'full' ? 'full' : 'quick'
   if (!brand || !domain || !category || !/^[a-z0-9.-]+$/.test(domain) || !/^[\p{L}\p{N} &+.,/'()-]+$/u.test(category)) return NextResponse.json({ error: 'Use a brand, a bare domain, and a short product category.' }, { status: 400 })
-  if (configuredVisibilityProviders().length === 0) return NextResponse.json({ error: 'The beta is installed, but no model API is configured yet.' }, { status: 503 })
   const key = `visibility:${clientKey(request)}`
-  const limit = checkRateLimit(key, 1)
-  if (!limit.allowed) return NextResponse.json({ error: 'One visibility audit per hour while this is in beta.', retryAfterSeconds: limit.retryAfterSeconds }, { status: 429, headers: { 'retry-after': String(limit.retryAfterSeconds) } })
+  const limit = checkRateLimit(key, 3)
+  if (!limit.allowed) return NextResponse.json({ error: 'Three queued audits per hour while this is in beta.', retryAfterSeconds: limit.retryAfterSeconds }, { status: 429, headers: { 'retry-after': String(limit.retryAfterSeconds) } })
   recordUse(key)
-  const audit = await runVisibilityAudit({ brand, domain, category })
-  return NextResponse.json(audit)
+  const job = await createVisibilityJob({ brand, domain, category, depth })
+  return NextResponse.json(job, { status: 202 })
 }
