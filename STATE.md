@@ -1,4 +1,19 @@
-# Let Agents In: stan na 2026-08-22 (produkcja v762, organic discovery i PostHog)
+# Let Agents In: stan na 2026-08-22 (produkcja v763, organic discovery i PostHog)
+
+## HANDOVER 2026-08-22: SUBSKRYPCYJNY HARNESS PO MIGRACJI GEMINI
+
+Pelny raport i lokalny monitoring nadal korzystaja ze wspolnego `harness/agents.mts`. Dostepne
+adaptery subskrypcyjne to Claude, Codex i Gemini przez Antigravity (`agy`); Antigravity ma przypiety
+model `gemini-3.7-flash-low`, aby zmiana domyslnego modelu nie psula porownan. Stary adapter
+`gemini` usunieto, bo indywidualna autoryzacja Gemini CLI przestala obslugiwac te konta.
+
+Oficjalny `pplx` zostal zweryfikowany: to klient Perplexity Search API autoryzowany kluczem API,
+nie klient konsumenckiej subskrypcji i nie generator odpowiedzi Perplexity. `pnpm visibility`
+zapisuje go osobno jako `perplexity-search-api`; nie miesza jego wynikow z mianownikiem odpowiedzi
+Claude/Codex/Antigravity. Platne wywolania sa domyslnie wylaczone; wlacza je tylko jawna flaga
+`--with-pplx`. Smoke test: Claude byl na limicie i zostal wykluczony, Codex oraz Antigravity
+odpowiedzialy poprawnie, a pojedynczy test Search API zadzialal; Let Agents In znaleziono 0/2 w
+odpowiedziach i 0/1 w wyszukiwaniu.
 
 ## HANDOVER 2026-08-22: „CAN AGENTS FIND YOU?” BETA (KOD GOTOWY, KLUCZE NIEPODLACZONE)
 

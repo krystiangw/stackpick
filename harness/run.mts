@@ -46,7 +46,8 @@ if (copies.length < runs) {
 }
 
 const version = agent.version()
-console.log(`cell: ${category} x ${agentName}${model ? ` (${model})` : ''} x ${runs} runs, ${agent.bin} ${version}`)
+const resolvedModel = model ?? agent.defaultModel ?? 'default'
+console.log(`cell: ${category} x ${agentName} (${resolvedModel}) x ${runs} runs, ${agent.bin} ${version}`)
 
 for (const copy of copies.slice(0, runs)) {
   const dir = join(runsDir, copy)
@@ -71,7 +72,7 @@ for (const copy of copies.slice(0, runs)) {
     ...(JSON.parse(readFileSync(join(dir, 'RUN.json'), 'utf8')) as object),
     agent: agentName,
     cli: `${agent.bin} ${version}`,
-    model: model ?? 'default',
+    model: resolvedModel,
     auth: 'subscription',
     startedAt,
     finishedAt: new Date().toISOString(),

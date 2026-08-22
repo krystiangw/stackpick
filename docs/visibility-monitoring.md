@@ -1,7 +1,9 @@
 # Weekly agent visibility measurement
 
 Run `pnpm visibility` once a week from the same machine. It asks eight frozen discovery questions
-once each of Claude, Codex and Gemini: 24 answers in isolated directories. Results live outside the
+once each of Claude, Codex and Gemini through Antigravity: 24 answers in isolated directories.
+With explicit `--with-pplx`, it also runs the same query through the official Perplexity Search API CLI. That fourth observation
+is labelled as a search surface and is not mixed into the answer-model denominator. Results live outside the
 repository under `~/.letagentsin-runs/visibility/YYYY-MM-DD`, with the exact prompt, CLI version,
 model setting, operator context, answer, cited URLs and whether Let Agents In was named.
 
@@ -10,14 +12,15 @@ machine; Actions has none of those accounts, and replacing them with API models 
 the next point in the series into another experiment. Put the command in the operator's weekly
 calendar, and do not compare a run from another machine without naming that change.
 
-Use `pnpm visibility -- --limit 2` for a six-answer smoke test. Use `--agents claude,codex` when an
+Use `pnpm visibility -- --limit 2` for a small smoke test. Use `--agents claude,codex` when an
 agent is unavailable, but record the missing agent rather than filling its denominator with zeroes.
-Perplexity is not automated here because the project has neither an API credential nor a stable
-subscription CLI for it. Its answers belong in a separate series when one exists.
+Use `--with-pplx` only when the paid Search API observation is wanted. The `pplx` CLI does not use the Perplexity consumer
+subscription and does not generate a Perplexity answer; it returns ranked web sources using an API
+key. A future stable subscription answer CLI must start a new, separately labelled series.
 
 A failed or empty invocation is recorded but excluded from the denominator. On the first smoke run
 Claude had reached its weekly subscription limit and Gemini's former individual Code Assist client
-was no longer eligible; calling both “not found” would have converted billing and authentication
+was no longer eligible. Gemini subscription runs now use Antigravity; calling failures “not found” would have converted billing and authentication
 failures into a visibility result. Codex runs inside a private git root because it refuses an
 untrusted directory and because the root stops every agent walking up into this repository.
 

@@ -70,8 +70,9 @@ const held = adding
 const from = held.length > 0 ? Math.max(...held) + 1 : 1
 
 const version = agent.version()
+const resolvedModel = model ?? agent.defaultModel ?? 'default'
 console.log(
-  `ask: ${category} x ${agentName}${model ? ` (${model})` : ''} x ${runs}${adding ? ` dodane do ${held.length} juz trzymanych` : ''}, ${agent.bin} ${version}`,
+  `ask: ${category} x ${agentName} (${resolvedModel}) x ${runs}${adding ? ` dodane do ${held.length} juz trzymanych` : ''}, ${agent.bin} ${version}`,
 )
 
 for (let run = from; run < from + runs; run++) {
@@ -105,7 +106,7 @@ for (let run = from; run < from + runs; run++) {
         run,
         agent: agentName,
         cli: `${agent.bin} ${version}`,
-        model: model ?? 'default',
+        model: resolvedModel,
         auth: clean ? 'api-key' : 'subscription',
         cleanRoom: Boolean(clean),
         operatorContext: clean ? [] : agent.contextFiles(dir),

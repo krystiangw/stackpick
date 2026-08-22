@@ -13,6 +13,8 @@ import { dirname, join } from 'node:path'
 
 export type Agent = {
   bin: string
+  /** Pin defaults that would otherwise drift when the CLI vendor changes its current model. */
+  defaultModel?: string
   /** Non-interactive invocation. Each CLI spells "do not ask me anything" differently. */
   argv: (prompt: string, model?: string) => string[]
   version: () => string
@@ -114,10 +116,22 @@ export const AGENTS: Record<string, Agent> = {
     ],
     settings: codexSettings,
   },
-  gemini: {
-    bin: 'gemini',
-    argv: (prompt, model) => ['-p', prompt, '--approval-mode', 'yolo', ...(model ? ['-m', model] : [])],
-    version: () => firstLine('gemini', ['--version']),
+  antigravity: {
+    bin: 'agy',
+    defaultModel: 'gemini-3.7-flash-low',
+    argv: (prompt, model) => [
+      '--print',
+      prompt,
+      '--model',
+      model ?? 'gemini-3.7-flash-low',
+      '--sandbox',
+      '--disable-slash-commands',
+      '--output-format',
+      'text',
+      '--print-timeout',
+      '5m',
+    ],
+    version: () => firstLine('agy', ['--version']),
     contextFiles: (dir) => [...ifThere(join(homedir(), '.gemini', 'GEMINI.md')), ...upwards(dir, 'GEMINI.md')],
   },
   cursor: {
