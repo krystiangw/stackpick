@@ -1,4 +1,53 @@
-# Let Agents In: stan na 2026-08-22 (produkcja v763, organic discovery i PostHog)
+# Let Agents In: stan na 2026-08-23 (produkcja v768, kolejka audytu widocznosci mowi prawde)
+
+## HANDOVER 2026-08-23: CZEKANIE NA AUDYT WIDOCZNOSCI PRZESTALO BYC SPINNEREM NAD NICZYM
+
+Kolejke `/visibility` obsluguje jeden laptop, wiec „zadanie czeka w kolejce" i „nikogo nie ma przy
+kolejce" wygladaly z przegladarki identycznie: strona pisala `queued` i odpytywala co cztery sekundy
+bez konca. To ten sam ksztalt klamstwa co bramka swiecaca na zielono po odczytaniu zera wierszy,
+tylko skierowany do odwiedzajacego.
+
+Worker bije teraz **miedzy wywolaniami agentow**, serwer czyta uderzenie i **serwer** liczy werdykt.
+Sa **trzy** stany, nie dwa: worker jest online, zaden nie zglosil sie ostatnio, albo **nie dalo sie
+sprawdzic**. Trzeci istnieje, bo nieodczytane uderzenie to nie brak uderzenia: czkawka naszej bazy
+nie moze zamienic sie w zdanie „nikt nad tym nie pracuje". Zadanie w stanie `running` pyta o
+uderzenie **tego** workera, ktory je zaklepal, bo proces, ktory padl, trzyma zadanie przy sobie przez
+pietnascie minut.
+
+**Kontrolka na produkcji, para odczytow:** po skasowaniu wiersza uderzenia `POST /api/visibility`
+zwrocil `worker: never` i zdanie „nothing is measuring this audit right now"; dwadziescia pare sekund
+pozniej, gdy worker znowu uderzyl, to samo zadanie czytalo sie `worker: online` i „A worker is asking
+the agents". Sonda umie zobaczyc oba przypadki.
+
+**Pulapka warta zapamietania** (znalazl ja codex, nie ja): heartbeat na `setInterval` **nie tyka**,
+bo agenci chodza przez `spawnSync`, ktory trzyma petle zdarzen przez cale wywolanie. Zajety worker
+czytalby sie jak nieobecny, czyli to samo klamstwo w druga strone. Dlatego bije miedzy wywolaniami,
+a prog ciszy jest **wyprowadzony** ze stalej timeoutu (`WORKER_SILENT_AFTER_MS = AGENT_CALL_TIMEOUT_MS
++ 2 min`), zeby te dwie liczby nie mogly sie rozjechac. Z tego samego powodu **workera restartuje sie
+PRZED deployem** strony: launchd trzyma stary modul do awarii. Kroki sa w
+`docs/visibility-audit-beta.md`.
+
+**Przy okazji dwie liczby przestaly byc niemierzone:** worker wpisywal `providers: 4` na sztywno,
+wiec przebieg z Claude na limicie subskrypcji i tak twierdzil, ze odpowiedzialo czterech dostawcow.
+Teraz liczba wychodzi z waznych odpowiedzi (tak samo w sciezce API). Kafelki raportu pokazuja
+`no sample` zamiast `0/0`, a nagłówek przy zerze waznych odpowiedzi mowi, ze przebieg nie zmierzyl
+niczego o tej marce, zamiast pisac, ze nikt jej nie wymienil. Kafelek Perplexity rozroznia „nie
+uruchomiono" od „wywolanie sie nie udalo".
+
+Reguly w `scripts/rules.mts` pilnuja calosci i **potrafia oblac**: przy celowym zepsuciu stanu
+`unknown` trzy z nich zapalily sie na czerwono. Cztery przebiegi `codex review`, wszystkie znalezione
+uwagi przyjete (P1 o `spawnSync`, zegar laptopa kontra zegar bazy, wiersz na proces zamiast na
+maszyne wraz z TTL, uderzenie w odpowiedzi 202, opis nieudanego wywolania Perplexity).
+
+**Jeden pomiar na marginesie, nie trend:** w przebiegu z 2026-08-23 Claude jako jedyny wymienil Let
+Agents In (1 z 3 agentow odpowiadajacych, przy 4 z 4 waznych obserwacji). Baseline z 2026-08-22 to
+bylo 0/20. Jedno pytanie w jednym przebiegu nie jest zmiana widocznosci i tak ma byc czytane.
+
+**KORPUS BEZ ZMIAN:** 177 z 177 wierszy na 9.55, `awaitingRescan` 0, mediana wieku 75 h. `after-reseed`
+i `audit-sample` przechodza; lustro rejestru MCP mialo 16 h. Nie przemiatalem, bo nic w regulach sie
+nie ruszylo.
+
+## STAN Z 2026-08-22 (produkcja v763, organic discovery i PostHog)
 
 ## HANDOVER 2026-08-22: REDESIGN RAPORTU WIDOCZNOSCI
 
