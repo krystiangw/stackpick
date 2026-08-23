@@ -47,8 +47,12 @@ const BARRIERS = [
   { id: 'programmatic_provisioning', when: 'no documented way to get a credential', partialCounts: true },
 ] as const
 
-function reachabilityOf(report: Report): Reachability {
-  const at = (id: string) => report.scorecard.checks.find((check) => check.id === id)
+/**
+ * Which walls a card names, and whether anything in the way of naming them went unread. Pure and
+ * exported so a rule can hold it to a case: the sentences here are published about named companies.
+ */
+export function barriersFrom(checks: { id: string; points: number; max: number; inconclusive?: boolean; notApplicable?: boolean }[]): { barriers: string[]; unknown: boolean } {
+  const at = (id: string) => checks.find((check) => check.id === id)
   const met = (id: string) => {
     const check = at(id)
     return check !== undefined && check.points === check.max
@@ -57,21 +61,36 @@ function reachabilityOf(report: Report): Reachability {
     const check = at(id)
     return check !== undefined && !check.inconclusive && !check.notApplicable
   }
+  // Unmeasurable is not the same as absent. `oauth_dcr` marked not applicable is a judgement we made
+  // on purpose (a library has no server to register a client against), so that door really is not
+  // there. Inconclusive means the page did not answer us, and a door we could not look at is not a
+  // door we can say is missing.
+  const unreadable = (id: string) => {
+    const check = at(id)
+    return check === undefined || check.inconclusive === true
+  }
+  const measuredShut = (id: string) => known(id) && !met(id)
 
   const barriers: string[] = []
-  let anyUnknown = false
+  let unknown = false
   for (const barrier of BARRIERS) {
-    const ids = [barrier.id, ...('alternatives' in barrier ? barrier.alternatives : [])]
-    const passed =
-      ids.some(met) || ('partialCounts' in barrier && (at(barrier.id)?.points ?? 0) >= 1)
+    const ids = [barrier.id, ...('alternatives' in barrier ? barrier.alternatives : [])] as string[]
+    const passed = ids.some(met) || ('partialCounts' in barrier && (at(barrier.id)?.points ?? 0) >= 1)
     if (passed) continue
-    if (!ids.some(known)) {
-      anyUnknown = true
+    // Every door in the group has to have been looked at. "No door built for a machine anywhere on
+    // your domain" was published about thirteen named vendors whose entry-point namespace never
+    // answered us: the sentence rested on the two alternatives instead of on the check it names.
+    if (ids.some(unreadable) || !ids.some(measuredShut)) {
+      unknown = true
       continue
     }
     barriers.push(barrier.when)
   }
+  return { barriers, unknown }
+}
 
+function reachabilityOf(report: Report): Reachability {
+  const { barriers, unknown } = barriersFrom(report.scorecard.checks)
   return {
     domain: report.domain,
     stopsAt: barriers[0] ?? null,
@@ -80,7 +99,7 @@ function reachabilityOf(report: Report): Reachability {
     evidence: `/r/${report.id}`,
     // An unknown barrier is neither cleared nor failed, and a lookup that hid the difference
     // would be telling an agent to try a vendor we never got through to.
-    ...(anyUnknown ? { unknown: true } : {}),
+    ...(unknown ? { unknown: true } : {}),
   } as Reachability & { unknown?: boolean }
 }
 

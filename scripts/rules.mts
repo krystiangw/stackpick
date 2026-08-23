@@ -6,7 +6,7 @@ import { paddle } from '../src/lib/billing/provider'
 import { CATEGORIES, CURATED_DOMAINS } from '../src/lib/categories'
 import { overDomainBudget } from '../src/lib/scan-gate'
 import { spreadAcrossHints } from '../src/lib/scan'
-import { aboutTheirOwnCode, categoryForJob } from '../src/lib/lookup'
+import { aboutTheirOwnCode, barriersFrom, categoryForJob } from '../src/lib/lookup'
 import { pickHeadline } from '../src/lib/headline'
 import { FRESH_QUESTIONS, HELD_OUT_2, HELD_OUT_3, HELD_OUT_4, HELD_OUT_5, HELD_OUT_6, HELD_OUT_7 } from './routing-questions'
 import { asksUsToStayOut, crawlDelayForAgents, parseRobots, stanceFrom } from '../src/lib/scan/robots'
@@ -4028,6 +4028,48 @@ check('a skonczony pomiar nie jest wyrzucany przez zmiane statusu', visJob.inclu
 // zadaniu wobec budzetu, ktory juz sie zresetowal.
 check('caly osad idzie z jednego odczytu zegara', (visRoute.match(/databaseNow\(\)/g) ?? []).length, 1)
 check('i nie z zegara dyna', visRoute.includes('Date.now()'), false)
+// Zdanie „no door built for a machine" szlo na strony kategorii o 68 nazwanych firmach. Dla 13 z
+// nich check, ktory to zdanie NAZYWA (`agent_entry_point`), byl niemierzalny, a zdanie stalo na
+// dwoch alternatywach. To brak dowodu podany jako dowod braku, o cudzej firmie, z imienia.
+const zamkniety = (id: string) => ({ id, points: 0, max: 2 })
+const niemierzalny = (id: string) => ({ id, points: 0, max: 2, inconclusive: true })
+const nieDotyczy = (id: string) => ({ id, points: 0, max: 2, notApplicable: true })
+const drzwi = ['agent_entry_point', 'oauth_dcr', 'mcp_present']
+check(
+  'nieczytelny punkt wejscia nie jest brakiem punktu wejscia',
+  barriersFrom([niemierzalny('agent_entry_point'), zamkniety('oauth_dcr'), zamkniety('mcp_present')]).barriers.includes('no door built for a machine'),
+  false,
+)
+// Kontrolka: gdy wszystkie troje zmierzone i zamkniete, zdanie ma paść. Bez tego regula wyzej
+// przechodzilaby rowniez wtedy, gdyby sonda nie umiala nazwac bariery nigdy.
+check(
+  'a trzy zmierzone i zamkniete drzwi to jest brak drzwi',
+  barriersFrom(drzwi.map(zamkniety)).barriers.includes('no door built for a machine'),
+  true,
+)
+// „Nie dotyczy" to nasz swiadomy osad (biblioteka nie ma serwera, do ktorego rejestruje sie klient),
+// wiec tych drzwi naprawde nie ma i nie zamienia sie ich w niewiadoma.
+check(
+  'nie dotyczy nie zamienia sie w niewiadoma',
+  barriersFrom([zamkniety('agent_entry_point'), nieDotyczy('oauth_dcr'), zamkniety('mcp_present')]).barriers.includes('no door built for a machine'),
+  true,
+)
+check(
+  'a jedne otwarte drzwi zdejmuja zdanie',
+  barriersFrom([zamkniety('agent_entry_point'), zamkniety('oauth_dcr'), { id: 'mcp_present', points: 2, max: 2 }]).barriers.includes('no door built for a machine'),
+  false,
+)
+// Pozostale bariery domkniete celowo, zeby jedynym zrodlem niewiadomej byla grupa drzwi. Bez tego
+// regula przechodzila rowniez przez brakujace checki signupu i nie mowila nic o tym, co bada.
+const resztaZamknieta = ['signup_reachable', 'signup_no_captcha', 'programmatic_provisioning'].map(zamkniety)
+check(
+  'niemierzalna grupa zostawia slad niewiadomej',
+  barriersFrom([niemierzalny('agent_entry_point'), zamkniety('oauth_dcr'), zamkniety('mcp_present'), ...resztaZamknieta]).unknown,
+  true,
+)
+// Kontrolka: przy trzech zmierzonych drzwiach i domknietej reszcie nie ma juz zadnej niewiadomej.
+check('a komplet pomiarow nie zostawia zadnej', barriersFrom([...drzwi.map(zamkniety), ...resztaZamknieta]).unknown, false)
+
 const workerSource = readFileSync('harness/visibility-worker.mts', 'utf8')
 // Uderzenie na timerze bylo tym samym klamstwem w druga strone: kazde wywolanie agenta to
 // spawnSync, ktory trzyma petle zdarzen, wiec timer nie tyka w trakcie i zajety worker czytalby sie
