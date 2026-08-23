@@ -24,6 +24,7 @@ import { buildFixPlan } from '../src/lib/fixfirst'
 import { changeEmail, confirmEmail } from '../src/lib/watch-email'
 import { AGENT_CALL_TIMEOUT_MS, visibilityQueueState, WORKER_SILENT_AFTER_MS } from '../src/lib/visibility-queue'
 import { citationGapLine } from '../src/lib/visibility-copy'
+import { budgetVerdict, DAILY_OBSERVATION_BUDGET, observationsFor, SURFACES_PER_PROMPT } from '../src/lib/visibility-queue'
 import { CHECKS, FORMULA_VERSION } from '../src/lib/score'
 import { CORPUS_LICENCE, CORPUS_LICENCE_IS_PUBLISHED } from '../src/lib/seller'
 import { arithmeticExplained, scoreSection } from '../src/lib/report-numbers'
@@ -3962,7 +3963,7 @@ const jobSource = readFileSync('src/lib/visibility-job.ts', 'utf8')
 check('przy running pytamy o uderzenie wlasciciela zadania', jobSource.includes("seenAt(job.status === 'running' ? job.worker : undefined)"), true)
 check(
   'a cisza wlasciciela nie jest zdaniem o calej kolejce',
-  visibilityQueueState({ status: 'running', createdAt: zadanie.createdAt, startedAt: zadanie.createdAt }, null, teraz).line.includes('picks it up within fifteen minutes'),
+  visibilityQueueState({ status: 'running', createdAt: zadanie.createdAt, startedAt: zadanie.createdAt }, null, teraz).line.includes('once that process stops reporting in'),
   true,
 )
 // Uderzenie stempluje zegar bazy, bo zegar laptopa nie jest dowodem na to, kiedy laptop mowil.
@@ -3991,11 +3992,59 @@ check(
 )
 check('zaden wariant nie zgaduje skali', scaleGuessIn(citationGapLine([{ domain: 'a.test', count: 4 }])), '')
 
+// Beta widocznosci wydaje SUBSKRYPCJE operatora na zyczenie anonimowego goscia, a limiter na wejsciu
+// jest per-wolajacy i w pamieci dyna. Jego wlasny komentarz mowi, ze to dobry kompromis, „dopoki skan
+// kosztuje pasmo i nic wiecej" - beta ten warunek zlamala. Stad drugi, globalny sufit, liczony w bazie.
+check('przy pustym budzecie audyt przechodzi', budgetVerdict(0, Date.UTC(2026, 7, 23, 12)).allowed, true)
+check('a przy wyczerpanym juz nie', budgetVerdict(DAILY_OBSERVATION_BUDGET, Date.UTC(2026, 7, 23, 12)).allowed, false)
+// Brama pyta „czy zostalo cokolwiek", nie „czy to zadanie sie miesci". Zadanie, ktore sie nie miesci,
+// i tak jest brane, wiec dzien moze przestrzelic o jeden audyt. Ostrzejszy wariant byl GORSZY:
+// kolejke bierze sie od najstarszego, wiec pelny audyt na jej czele blokowalby wszystkie szybkie za
+// soba az do polnocy.
+check('resztka mniejsza niz pelny audyt nadal go wpuszcza', budgetVerdict(DAILY_OBSERVATION_BUDGET - 4, Date.UTC(2026, 7, 23, 12)).allowed, true)
+check('odmowa mowi, kiedy budzet wraca', budgetVerdict(DAILY_OBSERVATION_BUDGET, Date.UTC(2026, 7, 23, 23)).retryAfterSeconds, 3600)
+// Sufit, ktory sie czyta a potem zapisuje, przestaje byc sufitem: dwa zadania naraz widza to samo
+// miejsce, ktore miala tylko jedna z nich. Rezerwacja i wydanie to jeden zapis, sprawdzone na
+// zywej bazie 2026-08-23: osiem pelnych audytow naraz przy pustym dniu, przeszlo dokladnie piec,
+// licznik stanal na 60 z 60.
+//
+// I ladowanie budzetu stoi tam, gdzie sie go wydaje - u workera przy zaklepaniu zadania. Sufit
+// trzymany na wejsciu przepuszczalby kolejke z wczoraj i ponowne zaklepanie porzuconego zadania.
+const visRoute = readFileSync('src/app/api/visibility/route.ts', 'utf8')
+const visJob = readFileSync('src/lib/visibility-job.ts', 'utf8')
+check('wejscie tylko czyta budzet, nie rezerwuje', visRoute.includes('reserveObservations'), false)
+check('budzet jest pobierany przy zaklepaniu', visJob.includes('await reserveObservations(job.depth, now)'), true)
+// Dzien budzetu bierze sie z zegara BAZY, bo worker to laptop: zegar godzine w jutrze rezerwowalby
+// wobec swiezego dnia, gdy dzisiejsze szescdziesiat jest juz wydane.
+check('dzien budzetu idzie zegarem bazy', visJob.includes("$set: { now: '$$NOW' }"), true)
+check('a wejscie pyta o ten sam zegar', visRoute.includes('const now = await databaseNow()'), true)
+check('a zadanie bez pokrycia wraca do kolejki', visJob.includes('await returnJobToQueue(job.id, worker)'), true)
+// Porzucenie mierzy sie uderzeniem, nie stoperem: pelny audyt moze legalnie trwac dluzej niz kazdy
+// staly prog, a wtedy drugi worker bral to samo zadanie i placilismy za nie dwa razy.
+check('porzucone zadanie rozpoznaje cisza workera, nie stoper', visJob.includes('await workerIsBeating(one.worker, now)'), true)
+check('i nie ma juz stalego progu pietnastu minut', visJob.includes('15 * 60_000'), false)
+check('a skonczony pomiar nie jest wyrzucany przez zmiane statusu', visJob.includes("{ id, status: 'running' },\n    { $set: { status: 'complete'"), false)
+// Jeden zegar na cala decyzje: odczyt po jednej stronie polnocy i osad po drugiej odmawialby
+// zadaniu wobec budzetu, ktory juz sie zresetowal.
+check('caly osad idzie z jednego odczytu zegara', (visRoute.match(/databaseNow\(\)/g) ?? []).length, 1)
+check('i nie z zegara dyna', visRoute.includes('Date.now()'), false)
 const workerSource = readFileSync('harness/visibility-worker.mts', 'utf8')
 // Uderzenie na timerze bylo tym samym klamstwem w druga strone: kazde wywolanie agenta to
 // spawnSync, ktory trzyma petle zdarzen, wiec timer nie tyka w trakcie i zajety worker czytalby sie
 // jak nieobecny. Bije miedzy wywolaniami, a prog ciszy musi przykryc jedno cale wywolanie.
-check('nic nie uderza z timera, bo timer nie tyka pod spawnSync', workerSource.includes('setInterval'), false)
+// Nie „zaden timer", tylko „timer nie jest mechanizmem bicia wokol wywolan agenta": pod spawnSync
+// nie tyka. Przy czystym czekaniu na budzet petla zdarzen jest wolna i tam timer jest poprawny,
+// wiec regula pilnuje, ze jedyny w pliku siedzi wlasnie w tym czekaniu.
+check('jest dokladnie jeden timer', (workerSource.match(/setInterval/g) ?? []).length, 1)
+check('i siedzi w czekaniu na budzet, nie wokol agentow', workerSource.indexOf('setInterval') > workerSource.indexOf('async function sleepBeating'), true)
+check('worker chodzi przez brame budzetu', workerSource.includes('await claimJobWithinBudget(me)'), true)
+// Bez czekania na budzet ten sam wiersz bylby brany i odkladany co dziesiec sekund az do polnocy.
+check('i czeka na budzet zamiast krecic petle', workerSource.includes('await sleepBeating(spanie)'), true)
+check('i nie zaklepuje z pominieciem bramy', workerSource.includes('claimVisibilityJob('), false)
+// Budzet liczy powierzchnie, wiec musi to byc TA sama liczba, ktora worker odpala na jeden prompt.
+const agenciWWorkerze = (/for \(const name of \[([^\]]+)\] as const\)/.exec(workerSource)?.[1].match(/'/g)?.length ?? 0) / 2
+check('worker odpala tylu agentow, ile liczy budzet', agenciWWorkerze + 1, SURFACES_PER_PROMPT)
+check('a quick to jeden prompt na te powierzchnie', observationsFor('quick'), SURFACES_PER_PROMPT)
 check('worker bije miedzy wywolaniami agentow', (workerSource.match(/await beat\(\)/g) ?? []).length >= 2, true)
 check('prog ciszy przykrywa cale wywolanie agenta', WORKER_SILENT_AFTER_MS > AGENT_CALL_TIMEOUT_MS, true)
 check('i worker liczy limit z tej samej stalej', workerSource.includes('timeout: AGENT_CALL_TIMEOUT_MS'), true)

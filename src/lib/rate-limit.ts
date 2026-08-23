@@ -37,6 +37,18 @@ export function recordUse(key: string): void {
 }
 
 /**
+ * Gives back the hit charged a moment ago, for a request that was admitted by this limiter and then
+ * refused by something else. The charge still has to happen first, because the refusal can be
+ * decided across an await and a burst from one caller would otherwise pass the check together.
+ */
+export function refundUse(key: string): void {
+  const now = Date.now()
+  const window = recent(key, now)
+  window.pop()
+  hits.set(key, window)
+}
+
+/**
  * The LAST entry in X-Forwarded-For, not the first. Heroku's router appends the real client
  * address to whatever the client sent, so reading the first entry read a value the caller
  * controls: measured on production, ten requests as 203.0.113.9 hit the limit and changing

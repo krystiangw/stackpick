@@ -5,6 +5,7 @@ import type { VisibilityAnswer, VisibilityAudit, VisibilityProvider } from '@/li
 import type { VisibilityDepth, VisibilityJob } from '@/lib/visibility-job'
 import type { VisibilityQueueState } from '@/lib/visibility-queue'
 import { citationGapLine } from '@/lib/visibility-copy'
+import { observationsFor } from '@/lib/visibility-queue'
 import { captureAnalytics } from '@/lib/analytics'
 
 const CHANNELS: Record<VisibilityProvider, { name: string; note: string }> = {
@@ -72,8 +73,8 @@ export function VisibilityForm() {
     <label className="font-mono text-xs text-ink-faint sm:col-span-2">Product category<input value={category} onChange={(event) => setCategory(event.target.value)} placeholder="file upload API" className="mt-1 w-full border border-rule bg-surface px-4 py-3 text-base text-ink" /></label>
     <fieldset className="flex flex-wrap gap-6 border border-rule p-4 sm:col-span-2">
       <legend className="px-2 font-mono text-xs text-ink-faint">Depth</legend>
-      <label className="text-sm"><input type="radio" checked={depth === 'quick'} onChange={() => setDepth('quick')} className="mr-2" />Quick · 4 observations</label>
-      <label className="text-sm"><input type="radio" checked={depth === 'full'} onChange={() => setDepth('full')} className="mr-2" />Full visibility · 12 observations</label>
+      <label className="text-sm"><input type="radio" checked={depth === 'quick'} onChange={() => setDepth('quick')} className="mr-2" />Quick · {observationsFor('quick')} observations</label>
+      <label className="text-sm"><input type="radio" checked={depth === 'full'} onChange={() => setDepth('full')} className="mr-2" />Full visibility · {observationsFor('full')} observations</label>
     </fieldset>
     <button disabled={running || !brand || !domain || !category} className="bg-ink px-6 py-3 font-mono text-sm text-ground disabled:opacity-40 sm:col-span-2">{running ? job?.status === 'queued' ? 'Queued…' : 'Asking the agents…' : 'Run audit'}</button>
   </form>

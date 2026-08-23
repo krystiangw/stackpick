@@ -50,6 +50,26 @@ watching an unbounded spinner. Three states are distinguished on purpose: a work
 worker has reported in recently, or we could not read the heartbeat at all. The last one claims
 nothing, because a database we could not query is not evidence that nobody is working.
 
+### The daily observation budget
+
+Every observation is one agent asked one question, and it is spent from the operator's own
+subscriptions, one of which is shared with his day's work. The per-caller rate limit is in a dyno's
+memory and its own comment says that trade is right "while a scan costs bandwidth and nothing else",
+which this beta stopped being true.
+
+So there is a second ceiling, `DAILY_OBSERVATION_BUDGET`, counted per UTC day in Mongo. It is charged
+where the spending happens, when a worker takes a job, not when a visitor asks: a queue filled
+yesterday runs today, and an abandoned job is claimed again. The endpoint reads the same counter, but
+only to refuse early with an honest sentence.
+
+The gate asks whether any budget is left, not whether this job fits, so a day can overshoot by at
+most one audit. The stricter version is worse: the queue is taken oldest first, so a full audit that
+did not fit would sit at the head and block every quick one behind it until midnight. The day comes
+from the database clock, never from the laptop.
+
+**60 is a judgement, not a measurement.** Fifteen quick audits or five full ones a day. Change it if
+the beta gets real traffic, and say so here when you do.
+
 **Restart the worker before deploying a change to the heartbeat.** launchd keeps the running
 process on the old module until it fails, so a deploy-first rollout would have the new page telling
 every visitor that nothing is measuring their audit while the old worker is measuring it:

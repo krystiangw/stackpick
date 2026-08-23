@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import { checkRateLimit, clientKey, recordUse } from '@/lib/rate-limit'
-import { createVisibilityJob, getVisibilityJob, visibilityQueueStateFor, type VisibilityDepth } from '@/lib/visibility-job'
+import { checkRateLimit, clientKey, recordUse, refundUse } from '@/lib/rate-limit'
+import { createVisibilityJob, databaseNow, getVisibilityJob, observationsSpentToday, visibilityQueueStateFor, type VisibilityDepth } from '@/lib/visibility-job'
+import { budgetVerdict } from '@/lib/visibility-queue'
 
 const clean = (value: unknown, max: number) => typeof value === 'string' ? value.trim().slice(0, max) : ''
 
@@ -25,7 +26,22 @@ export async function POST(request: Request) {
   const key = `visibility:${clientKey(request)}`
   const limit = checkRateLimit(key, 3)
   if (!limit.allowed) return NextResponse.json({ error: 'Three queued audits per hour while this is in beta.', retryAfterSeconds: limit.retryAfterSeconds }, { status: 429, headers: { 'retry-after': String(limit.retryAfterSeconds) } })
+  // Charged before the first await: the budget lookup below yields, and a burst from one caller was
+  // all through the check and none of it recorded by the time the first request reached this line.
   recordUse(key)
+  // Advisory, not the ceiling. The budget is charged where it is spent, when a worker takes the job,
+  // because a queue filled yesterday runs today and an abandoned job is claimed twice. Refusing here
+  // only saves the visitor from joining a queue nothing can drain before midnight. One `now` for the
+  // whole decision: read on one side of midnight and judged on the other, a request would be refused
+  // against a budget that had already reset.
+  const now = await databaseNow()
+  const budget = budgetVerdict(await observationsSpentToday(now), now)
+  if (!budget.allowed) {
+    // Nothing was queued, so nothing is owed: three refusals at 23:50 must not lock a caller out of
+    // the fresh budget at 00:00.
+    refundUse(key)
+    return NextResponse.json({ error: budget.line, retryAfterSeconds: budget.retryAfterSeconds }, { status: 429, headers: { 'retry-after': String(budget.retryAfterSeconds) } })
+  }
   const job = await createVisibilityJob({ brand, domain, category, depth })
   return NextResponse.json({ ...job, queue: await visibilityQueueStateFor(job) }, { status: 202 })
 }

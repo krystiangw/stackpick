@@ -36,9 +36,10 @@ const forHumans = (minutes: number) =>
  * exactly that reason: the visitor's laptop clock is not evidence about our worker.
  */
 export function visibilityQueueState(
-  job: { status: string; createdAt: string; startedAt?: string },
+  job: { status: string; createdAt: string; startedAt?: string; depth?: VisibilityDepthName },
   workerSeenAt: string | null | undefined,
   now: number,
+  spentToday?: number,
 ): VisibilityQueueState {
   const waitingMinutes = minutesBetween(job.status === 'running' ? job.startedAt ?? job.createdAt : job.createdAt, now)
   const workerSilentMinutes = typeof workerSeenAt === 'string' ? minutesBetween(workerSeenAt, now) : null
@@ -51,17 +52,61 @@ export function visibilityQueueState(
         : 'silent'
   const saved = 'It stays saved at this URL and runs when a worker is back.'
   // A running job asks after its own worker, so silence there means that process is gone, not that
-  // the queue is unstaffed. The queue hands an abandoned job to the next worker after fifteen
-  // minutes, and saying so is more use to the visitor than a count of minutes.
+  // the queue is unstaffed. An abandoned job goes to the next worker once its own heartbeat stops,
+  // and saying that is more use to the visitor than a count of minutes.
   const gone = job.status === 'running'
-    ? `The worker that took this audit stopped reporting in, so nothing is measuring it right now. Another worker picks it up within fifteen minutes.`
+    ? `The worker that took this audit stopped reporting in, so nothing is measuring it right now. Another worker picks it up once that process stops reporting in.`
     : worker === 'never'
       ? `No audit worker has reported in recently, so nothing is measuring this audit right now. ${saved}`
       : `No audit worker has reported in for ${forHumans(workerSilentMinutes ?? 0)}, so nothing is measuring this audit right now. ${saved}`
+  // A queued audit with a worker on shift and no budget left is waiting on the budget, not on the
+  // worker, and the budget comes back at a known hour while a worker's return does not.
+  const outOfBudget = spentToday !== undefined && job.status === 'queued' && !budgetVerdict(spentToday, now).allowed
   const line = worker === 'unknown'
     ? `We could not check whether a worker is on shift, so this says nothing either way. ${saved}`
     : worker === 'online'
-      ? `${job.status === 'running' ? 'A worker is asking the agents' : 'A worker is online and this audit is queued behind other work'}. Waiting ${forHumans(waitingMinutes)} so far.`
+      ? outOfBudget
+        ? `A worker is online, but today's observation budget is spent. This beta runs on one operator's own subscriptions, so the audit waits for the budget to reset at 00:00 UTC.`
+        : `${job.status === 'running' ? 'A worker is asking the agents' : 'A worker is online and this audit is queued behind other work'}. Waiting ${forHumans(waitingMinutes)} so far.`
       : gone
   return { waitingMinutes, worker, workerSilentMinutes, line }
+}
+
+export type VisibilityDepthName = 'quick' | 'full'
+
+/**
+ * One observation is one agent asked one question. The counts live here so the form, the worker and
+ * the budget cannot drift: the form advertises four and twelve, and it has to be the same four and
+ * twelve the worker runs and the budget spends.
+ */
+export const PROMPTS_PER_DEPTH: Record<VisibilityDepthName, number> = { quick: 1, full: 3 }
+export const SURFACES_PER_PROMPT = 4
+export const observationsFor = (depth: VisibilityDepthName) => PROMPTS_PER_DEPTH[depth] * SURFACES_PER_PROMPT
+
+/**
+ * The rate limiter is per caller, in memory, and its own comment says that is the right trade
+ * "while a scan costs bandwidth and nothing else". This beta broke that premise: every observation
+ * spends an operator's own subscription quota, and the Anthropic one is shared with the work he does
+ * all day. So there is a second, global ceiling, counted in the database rather than in a dyno.
+ *
+ * The number is a judgement, not a measurement: fifteen quick audits, or five full ones, a day.
+ *
+ * The gate is "is there any budget left", not "does this job fit". A job that does not fit is still
+ * taken, so the day can overshoot by at most one audit. Refusing the job that does not fit sounds
+ * tighter and is worse: the queue is claimed oldest first, so an unaffordable full audit at the head
+ * would sit there blocking every quick one behind it until midnight.
+ */
+export const DAILY_OBSERVATION_BUDGET = 60
+
+export const startOfUtcDay = (now: number) => new Date(new Date(now).toISOString().slice(0, 10) + 'T00:00:00.000Z')
+
+export function budgetVerdict(spentToday: number, now: number, budget = DAILY_OBSERVATION_BUDGET) {
+  const resetsAt = startOfUtcDay(now).getTime() + 86_400_000
+  return {
+    allowed: spentToday < budget,
+    retryAfterSeconds: Math.max(1, Math.ceil((resetsAt - now) / 1000)),
+    line: spentToday < budget
+      ? ''
+      : 'The beta runs on one operator’s own subscriptions and today’s budget is spent. It resets at 00:00 UTC.',
+  }
 }

@@ -4,8 +4,8 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { AGENTS } from './agents.mjs'
-import { claimVisibilityJob, failVisibilityJob, finishVisibilityJob, recordWorkerHeartbeat } from '../src/lib/visibility-job'
-import { AGENT_CALL_TIMEOUT_MS } from '../src/lib/visibility-queue'
+import { claimJobWithinBudget, failVisibilityJob, finishVisibilityJob, recordWorkerHeartbeat } from '../src/lib/visibility-job'
+import { AGENT_CALL_TIMEOUT_MS, PROMPTS_PER_DEPTH } from '../src/lib/visibility-queue'
 import { visibilityAnswer, visibilityPrompts, type VisibilityAnswer, type VisibilityAudit, VISIBILITY_METHOD } from '../src/lib/visibility-audit'
 
 const once = process.argv.includes('--once')
@@ -40,14 +40,33 @@ const me = `${hostname()}:${process.pid}`
 // Between calls, never on a timer: every agent call is a spawnSync that holds the event loop, so a
 // timer would not fire during one and a busy worker would read as an absent worker.
 const beat = () => recordWorkerHeartbeat(me).catch(() => undefined)
+/**
+ * Czekanie na budzet trwa dluzej niz prog ciszy, wiec bez bicia w trakcie zywy worker czytalby sie
+ * jak nieobecny i strona mowilaby „nikt tego nie mierzy" zamiast prawdy o budzecie. Tu timer JEST
+ * poprawny: petla zdarzen jest wolna, bo czekamy na timer, a nie na spawnSync.
+ */
+async function sleepBeating(ms: number) {
+  const ticking = setInterval(() => { void beat() }, 60_000)
+  try { await pause(ms) } finally { clearInterval(ticking) }
+}
 
 async function runOne() {
   await beat()
-  const job = await claimVisibilityJob(me)
+  const { job, outOfBudget, retryAfterMs } = await claimJobWithinBudget(me)
+  if (outOfBudget) {
+    if (once) { console.log('dzienny budzet obserwacji wyczerpany, nie ma czego uruchomic'); return false }
+    // Czekamy na budzet, nie na kolejny obrot petli: bez tego ten sam wiersz bylby brany, odrzucany
+    // i odkladany co dziesiec sekund az do polnocy. Sufit na pol godziny, zeby reczne podniesienie
+    // budzetu nie czekalo do rana.
+    const spanie = Math.min(retryAfterMs, 30 * 60_000)
+    console.log(`dzienny budzet obserwacji wyczerpany, czekam ${Math.round(spanie / 60_000)} min`)
+    await sleepBeating(spanie)
+    return true
+  }
   if (!job) return false
   console.log(`claimed ${job.id} ${job.domain} (${job.depth})`)
   try {
-    const prompts = visibilityPrompts(job.category).slice(0, job.depth === 'quick' ? 1 : 3)
+    const prompts = visibilityPrompts(job.category).slice(0, PROMPTS_PER_DEPTH[job.depth])
     const answers: VisibilityAnswer[] = []
     for (const prompt of prompts) {
       for (const name of ['claude', 'codex', 'antigravity'] as const) {
