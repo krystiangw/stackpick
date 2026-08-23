@@ -15,7 +15,7 @@ import { challengedUs, challengeSentence, CHALLENGE_UNBLOCK } from './limits'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.55'
+export const FORMULA_VERSION = '9.56'
 
 /** Gdzie vendor obejrzy paczke, o ktorej mowimy. Jedno miejsce, bo `export.ts` sklada ten sam adres. */
 export const NPM_REGISTRY_PAGE = 'https://www.npmjs.com/package/'
@@ -211,7 +211,7 @@ export const CHECKS: Check[] = [
         if (!f.discovered.pricing && !f.funnel.signup.url) {
           return {
             points: 0,
-            detail: 'Not applicable: nothing on the site links to pricing or to an account, so there is no price for a search result to carry',
+            detail: 'Not applicable: we found no pricing page and no signup page of theirs, so there is no price for a search result to carry',
             notApplicable: true,
           }
         }
@@ -852,6 +852,12 @@ export const CHECKS: Check[] = [
           inconclusive: true,
         }
       }
+      // Sprawdzone 2026-08-24: tomtom.com podaje na stronie glownej "pricing" piec razy i "login"
+      // dziewiec, a gandi.net "register" jedenascie. Zdanie „nothing on the site links to pricing or
+      // to an account" bylo o ICH witrynie i bylo falszywe. Zdanie mowi teraz wylacznie o tym, czego
+      // MY nie znalezlismy, i celowo nie mowi o HTML: strona glowna jest z zalozenia odrzucana jako
+      // kandydat na rejestracje (discover.ts), wiec formularz osadzony na niej nie zostalby przez nas
+      // zobaczony. Werdykt zostaje ten sam, zmienia sie zakres tego, co twierdzi.
       // An npm library has no server to issue tokens and nothing to register a client against, so
       // "no registration endpoint" reads as a deficiency where there is no facility. The same
       // eight rows we already tell "there is no gate to measure" were being charged for this, and
@@ -859,7 +865,7 @@ export const CHECKS: Check[] = [
       if (!f.discovered.pricing && !f.discovered.signup && !f.blocksPlainRequests) {
         return {
           points: 0,
-          detail: 'Not applicable: nothing on the site links to pricing or to an account, so there is no client for an agent to register',
+          detail: 'Not applicable: we found no pricing page and no signup page of theirs, so there is no client for an agent to register',
           notApplicable: true,
           unblock: 'If you do issue tokens, publish /.well-known/oauth-authorization-server on the host that issues them and we will rescan.',
         }
@@ -1042,7 +1048,7 @@ export const CHECKS: Check[] = [
               }
             : {
                 points: 0,
-                detail: 'Not applicable: nothing on the site links to pricing or to an account signup, so there is no gate to measure',
+                detail: 'Not applicable: we found no pricing page and no signup page of theirs, so there is no gate to measure',
                 notApplicable: true,
                 unblock: 'If accounts are created somewhere else, tell us where and we will rescan.',
               }
@@ -1146,7 +1152,7 @@ export const CHECKS: Check[] = [
               }
             : {
                 points: 0,
-                detail: 'Not applicable: nothing on the site links to pricing or to an account signup',
+                detail: 'Not applicable: we found no pricing page and no signup page of theirs',
                 notApplicable: true,
                 unblock: 'A product with no accounts cannot fail this. If yours has them elsewhere, point us at the page.',
               }
@@ -1488,7 +1494,7 @@ export const CHECKS: Check[] = [
         if (!f.discovered.pricing && !f.discovered.signup && !f.blocksPlainRequests) {
           return {
             points: 0,
-            detail: 'Not applicable: nothing on the site links to pricing or to an account, so there is no tier to state',
+            detail: 'Not applicable: we found no pricing page and no signup page of theirs, so there is no tier to state',
             notApplicable: true,
             unblock: 'If there is a paid tier, link its pricing from your home page and we will rescan.',
           }

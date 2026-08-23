@@ -1,6 +1,7 @@
 import { CHECKS } from '../src/lib/score'
 import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR } from '../src/lib/scan-gate'
 import { SITE_URL } from '../src/lib/site'
+import { refuseIfNothingMeasured } from './nothing-measured'
 /**
  * A scorecard has to hold together when read line by line, and it did not: rows claimed every
  * request had been refused while their neighbours quoted the pages we had just fetched. This
@@ -42,11 +43,17 @@ const REFUSAL = /every request was refused|edge refused our requests|nothing we 
 // "only 0 documentation pages could be read" is a denial, not evidence, so the counts have to
 // be non-zero for a sentence to prove we read anything.
 const READ_SOMETHING = /[1-9][\d,]* characters|[1-9][\d,]* documentation pages|pages we read|Found: |present\b|at https?:\/\//i
-const NO_SIGNUP = /nothing on the site links to an account signup|nothing on the site links to pricing/i
+// Zdanie zmienilo sie na 9.56 i sam wzorzec by tego nie zauwazyl: straznik przestalby cokolwiek
+// znajdowac i przeszedlby na zielono. Stary tekst zostaje, zeby wiersze sprzed przemiatu nadal byly
+// badane, a nizej stoi kontrolka na zero dopasowan.
+const NO_SIGNUP = /nothing on the site links to an account signup|nothing on the site links to pricing|no pricing page and no signup page of theirs/i
 /** Checks whose evidence is one page, so a pass has to say which one. */
 const URL_BACKED = new Set(['machine_readable_api', 'mcp_present', 'agent_entry_point', 'signup_reachable'])
 
 let bad = 0
+// Ile wierszy ten wzorzec w ogole rozpoznal. Zero znaczy, ze straznik nic nie zbadal, a nie ze nie
+// ma czego badac - i wlasnie tak by wygladal, gdyby zdanie zmienilo sie bez niego.
+let denialsSeen = 0
 for (const row of corpus.rows) {
   const say = (why: string) => {
     bad++
@@ -70,6 +77,7 @@ for (const row of corpus.rows) {
   }
 
   const denies = row.checks.filter((c) => NO_SIGNUP.test(c.detail))
+  if (denies.length > 0) denialsSeen++
   // Citing a signup means naming a page, so the guard wants a URL and not just the word. Without
   // that it fired on quilljs.com because the MCP sentence says "a path nobody registered", which
   // is a guard reporting its own vocabulary rather than a row disagreeing with itself.
@@ -88,6 +96,10 @@ for (const row of corpus.rows) {
 }
 
 console.log(`\n${corpus.rows.length} rows on formula ${corpus.formulaVersion}, ${bad} contradiction${bad === 1 ? '' : 's'}`)
+console.log(`${denialsSeen} rows carry the "no pricing and no signup" verdict this guard reads`)
+// Zero dopasowan to nie „nie ma sprzecznosci", tylko „ten straznik nic nie przeczytal": dokladnie
+// tak wyglada zmiana zdania werdyktu bez zmiany wzorca. Przebieg ma wtedy nie mowic nic.
+refuseIfNothingMeasured(denialsSeen, 'wierszy z werdyktem o braku cennika i rejestracji')
 
 /**
  * The other half of the same job: a page that states a number the data has moved past. Every

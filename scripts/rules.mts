@@ -4070,6 +4070,37 @@ check(
 // Kontrolka: przy trzech zmierzonych drzwiach i domknietej reszcie nie ma juz zadnej niewiadomej.
 check('a komplet pomiarow nie zostawia zadnej', barriersFrom([...drzwi.map(zamkniety), ...resztaZamknieta]).unknown, false)
 
+// Zdanie „nie dotyczy" tez jest zdaniem o cudzej witrynie. „Nothing on the site links to pricing or
+// to an account" bylo publikowane o dziewieciu firmach, a dla tomtom.com i gandi.net jest falszywe:
+// ich strona glowna wymienia „pricing" i „login" (sprawdzone 2026-08-24). Zmierzylismy wylacznie to,
+// czego MY nie znalezlismy, wiec tyle ma mowic zdanie.
+const zrodloScore = readFileSync('src/lib/score.ts', 'utf8')
+const oNichNieONas = /detail: '[^']*nothing on the site links[^']*'/.exec(zrodloScore)?.[0] ?? ''
+check('zaden werdykt nie orzeka o ich witrynie zamiast o naszym odczycie', oNichNieONas, '')
+// Straznik sprzecznosci w `audit-corpus.mts` dopasowuje TEKST werdyktu, wiec zmiana zdania cicho go
+// wylacza: przestaje cokolwiek znajdowac i przechodzi na zielono. Zdanie i wzorzec musza sie znac.
+const audytKorpusu = readFileSync('scripts/audit-corpus.mts', 'utf8')
+const wzorzecOdmowy = /const NO_SIGNUP = \/(.+?)\/i/.exec(audytKorpusu)?.[1] ?? ''
+// Zdania zbierane STRUKTURALNIE - po `notApplicable: true`, nie po tresci, ktorej regula pilnuje.
+// Kolektor pytajacy o brzmienie, ktorego strzeze, przepuszcza kazde przepisane zdanie, bo samo
+// przestaje je widziec. Liczby stoja tutaj, zeby nowa galaz „nie dotyczy" musiala zostac swiadomie
+// zaklasyfikowana, zamiast wsliznac sie obok straznika.
+check('wzorzec straznika daje sie odczytac', wzorzecOdmowy.length > 10, true)
+const zdaniaNieDotyczy = [...zrodloScore.matchAll(/detail: '([^']+)',\s*notApplicable: true/g)].map((m) => m[1])
+check('galezi „nie dotyczy" jest siedem', zdaniaNieDotyczy.length, 7)
+const rozpoznane = zdaniaNieDotyczy.filter((zdanie) => new RegExp(wzorzecOdmowy, 'i').test(zdanie))
+check('straznik sprzecznosci rozpoznaje wszystkie piec zdan o cenniku i rejestracji', rozpoznane.length, 5)
+// Kontrolka: pozostale dwa (robots.txt) sa poza zakresem tego straznika i maja sie NIE dopasowac.
+check('i nie lapie zdan spoza swojego zakresu', zdaniaNieDotyczy.length - rozpoznane.length, 2)
+
+// Kontrolka: sonda umie zobaczyc takie zdanie, gdy naprawde stoi w pliku. Literal jest TUTAJ, bo
+// sonda czytajaca wlasne uzasadnienie znajduje sama siebie - ten blad zdarzyl sie w tym repo.
+check(
+  'a sonda rozpoznaje takie zdanie',
+  /detail: '[^']*nothing on the site links[^']*'/.test("detail: 'Not applicable: nothing on the site links to pricing or to an account'"),
+  true,
+)
+
 const workerSource = readFileSync('harness/visibility-worker.mts', 'utf8')
 // Uderzenie na timerze bylo tym samym klamstwem w druga strone: kazde wywolanie agenta to
 // spawnSync, ktory trzyma petle zdarzen, wiec timer nie tyka w trakcie i zajety worker czytalby sie
