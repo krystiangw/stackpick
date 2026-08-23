@@ -1,4 +1,37 @@
-# Let Agents In: stan na 2026-08-23 (produkcja v768, kolejka audytu widocznosci mowi prawde)
+# Let Agents In: stan na 2026-08-23 (produkcja v770, kolejka audytu widocznosci mowi prawde i ma sufit)
+
+## HANDOVER 2026-08-23: BETA WIDOCZNOSCI MA DZIENNY SUFIT NA TO, CO WYDAJE
+
+Kazda obserwacja to jedno wywolanie agenta z **subskrypcji operatora**, a limit Anthropic jest
+wspolny z praca, ktora Krystian wykonuje w ciagu dnia. Jedynym ogranicznikiem byl limiter
+per-wolajacy, w pamieci dyna, ktorego wlasny komentarz mowi, ze to dobry kompromis, „dopoki skan
+kosztuje pasmo i nic wiecej". Beta ten warunek zlamala: anonimowy gosc mogl kolejkowac audyty, ktore
+placi Krystian.
+
+`DAILY_OBSERVATION_BUDGET = 60` na dobe UTC, liczony w Mongo. **60 to osad, nie pomiar**:
+pietnascie szybkich audytow albo piec pelnych. Do zmiany, gdy beta zlapie prawdziwy ruch.
+
+Trzy decyzje, ktore warto znac, bo kazda byla kontrintuicyjna:
+1. **Budzet pobiera sie u workera, nie na wejsciu.** Sufit trzymany przy `POST` przepuszcza kolejke
+   z wczoraj (uruchamia sie dzisiaj) i ponowne zaklepanie porzuconego zadania. Endpoint czyta ten sam
+   licznik, ale tylko po to, zeby uczciwie odmowic od razu.
+2. **Brama pyta „czy zostalo cokolwiek", nie „czy to zadanie sie miesci".** Dzien moze przestrzelic o
+   jeden audyt (najwyzej 11 obserwacji). Ostrzejszy wariant byl gorszy: kolejke bierze sie od
+   najstarszego, wiec pelny audyt bez pokrycia blokowalby wszystkie szybkie za soba az do polnocy.
+3. **Porzucenie mierzy uderzenie, nie stoper.** Prog pietnastu minut byl krotszy, niz pelny audyt
+   moze legalnie trwac (dwanascie wywolan po piec minut), wiec wolny przebieg byl brany po raz drugi:
+   placilismy dwa razy, a wynik pierwszego workera ladowal na zadaniu, ktore juz nalezalo do kogos
+   innego. Teraz pyta sie heartbeatu, czyli tego, co naprawde wie, czy tamten proces jeszcze zyje.
+
+**Zmierzone na zywym klastrze, nie wywnioskowane:** osiem pelnych rezerwacji naraz przy pustym dniu
+wpuscilo dokladnie piec i licznik stanal na 60; przy wyczerpanym budzecie worker nie bierze zadania i
+zostaje ono `queued`, a nie zawieszone w `running`; worker, ktory nadal bije, zachowuje swoje
+godzinne zadanie, a milczacy je traci. Po wdrozeniu jeden audyt na produkcji przeszedl caly tor i
+licznik dnia pokazal `4`.
+
+Dzien budzetu bierze sie z **zegara bazy** (`$$NOW`), nie z laptopa. Odmowa z powodu budzetu **zwraca**
+naliczony limit per-wolajacy: nic nie trafilo do kolejki, wiec trzy odbicia o 23:50 nie moga zablokowac
+kogos na swiezy budzet o 00:00.
 
 ## HANDOVER 2026-08-23: CZEKANIE NA AUDYT WIDOCZNOSCI PRZESTALO BYC SPINNEREM NAD NICZYM
 
@@ -33,6 +66,13 @@ Teraz liczba wychodzi z waznych odpowiedzi (tak samo w sciezce API). Kafelki rap
 `no sample` zamiast `0/0`, a nagłówek przy zerze waznych odpowiedzi mowi, ze przebieg nie zmierzyl
 niczego o tej marce, zamiast pisac, ze nikt jej nie wymienil. Kafelek Perplexity rozroznia „nie
 uruchomiono" od „wywolanie sie nie udalo".
+
+Przy okazji poprawione: `The answers repeatedly drew from x, y, z` w raporcie klienta stalo nad
+rzedem chipow z `x1`, czyli oszacowanie zamiast liczby - **dokladnie ta klasa, ktora zglaszamy na
+cudzych stronach**. Zdanie liczy teraz powroty. Bramka na te klase czytala tylko strony z `src/app`,
+wiec tekst raportu nigdy nie byl nia objety; czyta juz rowniez `src/components` i `src/lib`
+(z wylaczeniem `claims.ts`, ktory trzyma sam wzorzec). Kontrolka: wstawione probne „Most vendors"
+w komponencie zapala bramke na czerwono.
 
 Reguly w `scripts/rules.mts` pilnuja calosci i **potrafia oblac**: przy celowym zepsuciu stanu
 `unknown` trzy z nich zapalily sie na czerwono. Cztery przebiegi `codex review`, wszystkie znalezione
