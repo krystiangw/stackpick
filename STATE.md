@@ -1,4 +1,15 @@
-# Let Agents In: stan na 2026-08-23 (produkcja v771, kolejka widocznosci uczciwa i z sufitem, 13 firm mniej oskarzonych)
+# Let Agents In: stan na 2026-08-24 (produkcja v772, formula 9.56, przemiat w toku)
+
+## PREDYKCJA PRZED PRZEMIATEM NA 9.56 (zapisana ZANIM ruszyl)
+
+9.56 zmienia **wylacznie zdanie** pieciu werdyktow „nie dotyczy". Zadna regula punktowa sie nie
+ruszyla, wiec **przewiduje: zero zmian werdyktu na 177 wierszach**. Kazda zmiana punktow po tym
+przemiacie jest zaskoczeniem i wymaga wyjasnienia co do wiersza, a nie dopisania po fakcie.
+
+Migawka sprzed przemiatu: `src/data/przed-9-56.json` (177 wierszy, total, measurable i kazdy check
+z jego stanem). Sprawdza to `scripts/regressions.mts` plus `confirm-regressions`, ktore reskanuja
+kazde pogorszenie, zanim nazwiemy je regresja vendora.
+
 
 ## HANDOVER 2026-08-23: TRZYNASTU VENDOROM MOWILISMY O DRZWIACH, NA KTORE NIE SPOJRZELISMY
 
