@@ -1,4 +1,30 @@
-# Let Agents In: stan na 2026-08-23 (produkcja v770, kolejka audytu widocznosci mowi prawde i ma sufit)
+# Let Agents In: stan na 2026-08-23 (produkcja v771, kolejka widocznosci uczciwa i z sufitem, 13 firm mniej oskarzonych)
+
+## HANDOVER 2026-08-23: TRZYNASTU VENDOROM MOWILISMY O DRZWIACH, NA KTORE NIE SPOJRZELISMY
+
+Strony kategorii i `/c/<id>/corpus.json` publikowaly zdanie **„no door built for a machine"** o **68
+nazwanych firmach**. Dla **13 z nich check, ktory to zdanie NAZYWA** (`agent_entry_point`), byl
+**niemierzalny**: przestrzen nazw nie odpowiedziala na nasze zapytanie, a zdanie stalo na dwoch
+alternatywach (`oauth_dcr`, `mcp_present`). Brak dowodu podany jako dowod braku, o cudzej firmie, z
+imienia, i w kazdym z tych 13 przypadkow bylo to **zdanie naglowkowe** (`stopsAt`).
+
+Bariera grupowa jest teraz nazywana **tylko wtedy, gdy na kazde drzwi w grupie naprawde spojrzelismy**.
+**„Nie dotyczy" pozostaje pomiarem**, bo jest naszym swiadomym osadem: biblioteka nie ma serwera, do
+ktorego klient mialby sie zarejestrowac, wiec tych drzwi faktycznie nie ma. Rozroznienie idzie po
+`inconclusive` (nie czytalismy) kontra `notApplicable` (przeczytalismy i orzeklismy).
+
+**Zmierzone na zywym korpusie:** zdanie schodzi z **68 wierszy na 55**. Sprawdzone na produkcji:
+`sendgrid.com` i `mailgun.com` maja teraz jako werdykt naglowkowy bariere, ktora zmierzylismy
+(„the signup form is not in the served HTML"), a nie te, na ktora nie spojrzelismy.
+
+Logika siedzi w `barriersFrom()` w `src/lib/lookup.ts` (czysta i eksportowana, zeby regula mogla ja
+przycisnac). Cztery reguly z kontrolkami; przy przywroceniu starego warunku dwie zapalaja sie na
+czerwono.
+
+**Do sprawdzenia przy okazji** (znalezione, nie naprawione): `uploadthing.com` ma `oauth_dcr`
+oznaczone `notApplicable`, co wymaga, zeby skan **nie znalazl ani cennika, ani rejestracji**. To
+komercyjne SaaS z widocznym cennikiem, wiec albo skan ich nie dosiegl, albo discovery ma tam dziure.
+Wiersz jest z 2026-08-20.
 
 ## HANDOVER 2026-08-23: BETA WIDOCZNOSCI MA DZIENNY SUFIT NA TO, CO WYDAJE
 
