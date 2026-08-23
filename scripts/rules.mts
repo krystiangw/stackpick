@@ -22,6 +22,7 @@ import { withoutTags } from '../src/lib/scan/http'
 import { isOlderThan } from '../src/lib/formula'
 import { buildFixPlan } from '../src/lib/fixfirst'
 import { changeEmail, confirmEmail } from '../src/lib/watch-email'
+import { AGENT_CALL_TIMEOUT_MS, visibilityQueueState, WORKER_SILENT_AFTER_MS } from '../src/lib/visibility-queue'
 import { CHECKS, FORMULA_VERSION } from '../src/lib/score'
 import { CORPUS_LICENCE, CORPUS_LICENCE_IS_PUBLISHED } from '../src/lib/seller'
 import { arithmeticExplained, scoreSection } from '../src/lib/report-numbers'
@@ -3912,6 +3913,69 @@ check(
     .join(' ')
     .includes('https://console.cloud.google.com/iam-admin/serviceaccounts/very/long/path/that/runs/past/the'),
   false,
+)
+
+// Kolejka audytu widocznosci chodzi na jednym laptopie, wiec „queued" i „nikogo nie ma" wygladaja
+// z przegladarki identycznie. To ten sam ksztalt co bramka, ktora swieci na zielono po odczytaniu
+// zera wierszy: uspokajajace zdanie bez pomiaru pod spodem.
+const zadanie = { status: 'queued', createdAt: new Date(Date.now() - 8 * 60_000).toISOString() }
+const teraz = Date.now()
+check(
+  'bez ani jednego uderzenia strona mowi, ze nikt tego nie mierzy',
+  visibilityQueueState(zadanie, null, teraz).line.includes('nothing is measuring this audit right now'),
+  true,
+)
+// Wiersze uderzen wygasaja, wiec „w ogole nie zglosil sie zaden" przezylby dowod, na ktorym stoi.
+check('i nie twierdzi wiecej, niz przechowuje', visibilityQueueState(zadanie, null, teraz).line.includes('at all'), false)
+check(
+  'stare uderzenie tez znaczy, ze nikogo nie ma',
+  visibilityQueueState(zadanie, new Date(teraz - WORKER_SILENT_AFTER_MS - 60_000).toISOString(), teraz).worker,
+  'silent',
+)
+// Kontrolka: sonda umie zobaczyc przypadek przeciwny, wiec „nikogo nie ma" cos znaczy.
+const swiezy = visibilityQueueState(zadanie, new Date(teraz - 20_000).toISOString(), teraz)
+check('przy swiezym uderzeniu nie oskarzamy sie o cisze', swiezy.worker, 'online')
+check('i nie mowimy wtedy, ze nic sie nie mierzy', swiezy.line.includes('nothing is measuring'), false)
+// Nieodczytane uderzenie to nie brak uderzenia: awaria naszej bazy nie jest dowodem, ze nikt nie
+// pracuje. To ta sama zasada co „brak dowodu to nie dowod braku" na wierszach vendorow.
+const nieznany = visibilityQueueState(zadanie, undefined, teraz)
+check('nieodczytane uderzenie nie jest oskarzeniem o cisze', nieznany.worker, 'unknown')
+check('i nie mowi, ze nic sie nie mierzy', nieznany.line.includes('nothing is measuring'), false)
+check('tylko przyznaje, ze nie sprawdzilismy', nieznany.line.includes('could not check'), true)
+// Zajety worker mierzy TO zadanie, wiec przy running pytamy o jego wlasne uderzenie, a nie o
+// dowolne: proces, ktory sie wywalil, zostawia zadanie przy sobie na pietnascie minut.
+const jobSource = readFileSync('src/lib/visibility-job.ts', 'utf8')
+check('przy running pytamy o uderzenie wlasciciela zadania', jobSource.includes("seenAt(job.status === 'running' ? job.worker : undefined)"), true)
+check(
+  'a cisza wlasciciela nie jest zdaniem o calej kolejce',
+  visibilityQueueState({ status: 'running', createdAt: zadanie.createdAt, startedAt: zadanie.createdAt }, null, teraz).line.includes('picks it up within fifteen minutes'),
+  true,
+)
+// Uderzenie stempluje zegar bazy, bo zegar laptopa nie jest dowodem na to, kiedy laptop mowil.
+check('uderzenie idzie zegarem bazy', jobSource.includes('$currentDate: { seenAt: true }'), true)
+// I jeden wiersz na maszyne, bo klucz z pidem zostawialby slad po kazdym restarcie pod zapytaniem,
+// ktore strona wykonuje co cztery sekundy.
+// Wiersz na proces, bo dwa workery na jednym laptopie nadpisywalyby sie nawzajem, a rosniecie
+// kolekcji zdejmuje TTL, nie klucz.
+check('wiersz uderzenia jest kluczowany procesem', jobSource.includes('updateOne({ _id: worker }'), true)
+check('a kolekcja uderzen wygasa sama', jobSource.includes('expireAfterSeconds: 3_600'), true)
+check('czas czekania jest liczony z zadania, nie zgadywany', visibilityQueueState(zadanie, null, teraz).waitingMinutes, 8)
+
+const workerSource = readFileSync('harness/visibility-worker.mts', 'utf8')
+// Uderzenie na timerze bylo tym samym klamstwem w druga strone: kazde wywolanie agenta to
+// spawnSync, ktory trzyma petle zdarzen, wiec timer nie tyka w trakcie i zajety worker czytalby sie
+// jak nieobecny. Bije miedzy wywolaniami, a prog ciszy musi przykryc jedno cale wywolanie.
+check('nic nie uderza z timera, bo timer nie tyka pod spawnSync', workerSource.includes('setInterval'), false)
+check('worker bije miedzy wywolaniami agentow', (workerSource.match(/await beat\(\)/g) ?? []).length >= 2, true)
+check('prog ciszy przykrywa cale wywolanie agenta', WORKER_SILENT_AFTER_MS > AGENT_CALL_TIMEOUT_MS, true)
+check('i worker liczy limit z tej samej stalej', workerSource.includes('timeout: AGENT_CALL_TIMEOUT_MS'), true)
+// Liczba dostawcow byla wpisana na sztywno jako 4, wiec przebieg z Claude na limicie i tak podawal
+// czterech. Ma wychodzic z odpowiedzi, ktore przeszly.
+check('liczba dostawcow nie jest stala w workerze', /providers: \d/.test(workerSource), false)
+check(
+  'i liczy sie z waznych odpowiedzi',
+  workerSource.includes('providers: new Set(valid.map((answer) => answer.provider)).size'),
+  true,
 )
 
 console.log('\nzadna regula nie stoi za wyjsciem ze skryptu')

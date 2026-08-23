@@ -44,6 +44,20 @@ This is a beta production dependency on the operator machine. Sleep, loss of net
 sessions or subscription limits can delay a job. Individual provider failures do not fail the
 whole audit; a database or worker failure does.
 
+The waiting page says which of those it is. The worker writes a heartbeat between agent calls and
+`GET /api/visibility` reads it, so a visitor is told plainly when nobody is on shift instead of
+watching an unbounded spinner. Three states are distinguished on purpose: a worker is online, no
+worker has reported in recently, or we could not read the heartbeat at all. The last one claims
+nothing, because a database we could not query is not evidence that nobody is working.
+
+**Restart the worker before deploying a change to the heartbeat.** launchd keeps the running
+process on the old module until it fails, so a deploy-first rollout would have the new page telling
+every visitor that nothing is measuring their audit while the old worker is measuring it:
+
+```bash
+launchctl kickstart -k "gui/$(id -u)/com.letagentsin.visibility-worker"
+```
+
 ## Product boundary
 
 This measures **Can agents find you?** The deterministic scanner still measures **Can agents use

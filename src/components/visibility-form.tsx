@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { VisibilityAnswer, VisibilityAudit, VisibilityProvider } from '@/lib/visibility-audit'
 import type { VisibilityDepth, VisibilityJob } from '@/lib/visibility-job'
+import type { VisibilityQueueState } from '@/lib/visibility-queue'
 import { captureAnalytics } from '@/lib/analytics'
 
 const CHANNELS: Record<VisibilityProvider, { name: string; note: string }> = {
@@ -12,12 +13,14 @@ const CHANNELS: Record<VisibilityProvider, { name: string; note: string }> = {
   perplexity: { name: 'Perplexity Search', note: 'ranked sources, not a chat answer' },
 }
 
+type WaitingJob = VisibilityJob & { queue?: VisibilityQueueState | null }
+
 export function VisibilityForm() {
   const [brand, setBrand] = useState('')
   const [domain, setDomain] = useState('')
   const [category, setCategory] = useState('')
   const [depth, setDepth] = useState<VisibilityDepth>('quick')
-  const [job, setJob] = useState<VisibilityJob | null>(null)
+  const [job, setJob] = useState<WaitingJob | null>(null)
   const [error, setError] = useState<string | null>(null)
   const running = job?.status === 'queued' || job?.status === 'running'
 
@@ -25,7 +28,7 @@ export function VisibilityForm() {
     const id = new URLSearchParams(window.location.search).get('audit')
     if (!id || !/^[a-f0-9]{32}$/.test(id)) return
     fetch(`/api/visibility?id=${id}`, { cache: 'no-store' })
-      .then(async (response) => response.ok ? setJob(await response.json() as VisibilityJob) : undefined)
+      .then(async (response) => { if (response.ok) { setJob(await response.json() as WaitingJob) } })
       .catch(() => undefined)
   }, [])
 
@@ -34,7 +37,7 @@ export function VisibilityForm() {
     const timer = window.setInterval(async () => {
       const response = await fetch(`/api/visibility?id=${job.id}`, { cache: 'no-store' })
       if (!response.ok) return
-      const next = await response.json() as VisibilityJob
+      const next = await response.json() as WaitingJob
       setJob(next)
       if (next.status === 'complete') captureAnalytics('visibility_audit_completed')
     }, 4_000)
@@ -54,7 +57,7 @@ export function VisibilityForm() {
       })
       const payload = await response.json()
       if (!response.ok) throw new Error(payload.error || 'The audit failed.')
-      const created = payload as VisibilityJob
+      const created = payload as WaitingJob
       setJob(created)
       window.history.replaceState(null, '', `/visibility?audit=${created.id}`)
     } catch (caught) {
@@ -85,9 +88,23 @@ export function VisibilityForm() {
   return <div>
     {form}
     <p className="mt-3 font-mono text-xs leading-relaxed text-ink-faint">Claude, Codex and Gemini through Antigravity run from signed-in subscriptions. Perplexity is a separate Search API observation. Failed calls never count as “not found”.</p>
-    {job && running && <div className="mt-6 border border-rule bg-brass-soft p-5"><p className="font-medium">Your audit is {job.status}.</p><p className="mt-1 font-mono text-xs text-ink-soft">Reference {job.id.slice(0, 8)}. You can return to this URL later.</p></div>}
+    {job && running && <Waiting job={job} />}
     {job?.status === 'failed' && <p role="alert" className="mt-4 font-mono text-xs text-fail">{job.error || 'The worker failed.'}</p>}
     {error && <p role="alert" className="mt-4 font-mono text-xs text-fail">{error}</p>}
+  </div>
+}
+
+/**
+ * The queue runs on one laptop. Saying "queued" while nothing is on shift is the same shape as a
+ * green audit over zero rows, so the panel reads the worker's own beat and says which it is.
+ */
+function Waiting({ job }: { job: WaitingJob }) {
+  // Only a read that found silence turns the panel red. Not knowing is not the same as nobody home.
+  const nobodyHome = job.queue?.worker === 'never' || job.queue?.worker === 'silent'
+  return <div className={`mt-6 border p-5 ${nobodyHome ? 'border-fail/40 bg-fail/5' : 'border-rule bg-brass-soft'}`}>
+    <p className="font-medium">Your audit is {job.status}.</p>
+    {job.queue && <p className="mt-1 text-sm leading-relaxed text-ink-soft">{job.queue.line}</p>}
+    <p className="mt-2 font-mono text-xs text-ink-faint">Reference {job.id.slice(0, 8)}. You can return to this URL later.</p>
   </div>
 }
 
@@ -95,6 +112,7 @@ function Result({ audit }: { audit: VisibilityAudit }) {
   const answerRuns = audit.answers.filter((answer) => answer.provider !== 'perplexity')
   const searchRuns = audit.answers.filter((answer) => answer.provider === 'perplexity')
   const validAnswers = answerRuns.filter((answer) => answer.valid)
+  const validSearchRuns = searchRuns.filter((answer) => answer.valid)
   const mentions = validAnswers.filter((answer) => answer.mentioned).length
   const links = validAnswers.filter((answer) => answer.linked).length
   const presence = validAnswers.length === 0 ? null : Math.round(mentions / validAnswers.length * 100)
@@ -121,17 +139,17 @@ function Result({ audit }: { audit: VisibilityAudit }) {
         </div>
         <div>
           <p className={`font-mono text-xs uppercase tracking-[0.15em] ${presence === 0 ? 'text-fail' : 'text-brass'}`}>{verdict}</p>
-          <h3 className="mt-3 max-w-2xl text-balance text-3xl font-semibold leading-tight">{mentions === 0 ? `No valid answer recommended or named ${audit.brand}.` : `${audit.brand} appeared in ${mentions} of ${validAnswers.length} valid answers.`}</h3>
+          <h3 className="mt-3 max-w-2xl text-balance text-3xl font-semibold leading-tight">{validAnswers.length === 0 ? `Every answer agent failed, so this run measured nothing about ${audit.brand}.` : mentions === 0 ? `No valid answer recommended or named ${audit.brand}.` : `${audit.brand} appeared in ${mentions} of ${validAnswers.length} valid answers.`}</h3>
           <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">This is a dated sample, not a universal ranking. Perplexity Search is shown separately because ranked web results are not equivalent to a generated answer.</p>
         </div>
       </div>
     </section>
 
     <section className="grid gap-px border-b border-rule bg-rule py-px sm:grid-cols-2 lg:grid-cols-4">
-      <Metric value={`${mentions}/${validAnswers.length}`} label="Brand mentions" note="valid answer-agent runs" />
-      <Metric value={`${links}/${validAnswers.length}`} label="Owned citations" note="answers linking your domain" />
+      <Metric value={validAnswers.length === 0 ? 'no sample' : `${mentions}/${validAnswers.length}`} label="Brand mentions" note="valid answer-agent runs" />
+      <Metric value={validAnswers.length === 0 ? 'no sample' : `${links}/${validAnswers.length}`} label="Owned citations" note="answers linking your domain" />
       <Metric value={`${answerRuns.filter((answer) => answer.valid).length}/${answerRuns.length}`} label="Answer coverage" note="failed runs excluded" />
-      <Metric value={`${searchRuns.filter((answer) => answer.mentioned).length}/${searchRuns.filter((answer) => answer.valid).length}`} label="Perplexity Search" note="brand in ranked sources" />
+      <Metric value={validSearchRuns.length === 0 ? 'no sample' : `${validSearchRuns.filter((answer) => answer.mentioned).length}/${validSearchRuns.length}`} label="Perplexity Search" note={validSearchRuns.length > 0 ? 'brand in ranked sources' : searchRuns.length === 0 ? 'the search call did not run' : 'the search call failed'} />
     </section>
 
     <section className="border-b border-rule py-10">

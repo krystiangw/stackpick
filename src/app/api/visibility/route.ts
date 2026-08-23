@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { checkRateLimit, clientKey, recordUse } from '@/lib/rate-limit'
-import { createVisibilityJob, getVisibilityJob, type VisibilityDepth } from '@/lib/visibility-job'
+import { createVisibilityJob, getVisibilityJob, visibilityQueueStateFor, type VisibilityDepth } from '@/lib/visibility-job'
 
 const clean = (value: unknown, max: number) => typeof value === 'string' ? value.trim().slice(0, max) : ''
 
@@ -9,7 +9,9 @@ export async function GET(request: Request) {
   if (!/^[a-f0-9]{32}$/.test(id)) return NextResponse.json({ beta: true, mode: 'queued-subscription-worker' })
   const job = await getVisibilityJob(id)
   if (!job) return NextResponse.json({ error: 'Audit not found.' }, { status: 404 })
-  return NextResponse.json(job)
+  // Only while the visitor is still waiting: a finished audit says nothing about who is on shift.
+  const waiting = job.status === 'queued' || job.status === 'running'
+  return NextResponse.json({ ...job, queue: waiting ? await visibilityQueueStateFor(job) : null })
 }
 
 export async function POST(request: Request) {
@@ -25,5 +27,5 @@ export async function POST(request: Request) {
   if (!limit.allowed) return NextResponse.json({ error: 'Three queued audits per hour while this is in beta.', retryAfterSeconds: limit.retryAfterSeconds }, { status: 429, headers: { 'retry-after': String(limit.retryAfterSeconds) } })
   recordUse(key)
   const job = await createVisibilityJob({ brand, domain, category, depth })
-  return NextResponse.json(job, { status: 202 })
+  return NextResponse.json({ ...job, queue: await visibilityQueueStateFor(job) }, { status: 202 })
 }

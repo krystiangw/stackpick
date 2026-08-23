@@ -22,6 +22,7 @@ export type VisibilityAudit = {
   runAt: string
   prompts: string[]
   answers: VisibilityAnswer[]
+  /** `providers` counts the distinct providers behind the valid answers, not the ones we tried. */
   summary: { attempted: number; valid: number; mentioned: number; linked: number; providers: number }
 }
 
@@ -138,7 +139,7 @@ export async function runVisibilityAudit(input: { brand: string; domain: string;
     }
   })))
   const valid = answers.filter((one) => one.valid)
-  return { method: VISIBILITY_METHOD, ...input, runAt: new Date().toISOString(), prompts, answers, summary: { attempted: answers.length, valid: valid.length, mentioned: valid.filter((one) => one.mentioned).length, linked: valid.filter((one) => one.linked).length, providers: active.length } }
+  return { method: VISIBILITY_METHOD, ...input, runAt: new Date().toISOString(), prompts, answers, summary: { attempted: answers.length, valid: valid.length, mentioned: valid.filter((one) => one.mentioned).length, linked: valid.filter((one) => one.linked).length, providers: new Set(valid.map((one) => one.provider)).size } }
 }
 
 export function configuredVisibilityProviders(): VisibilityProvider[] { return providers().map((one) => one.id) }
