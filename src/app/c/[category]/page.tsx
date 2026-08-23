@@ -159,7 +159,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
                           {entry.domain}
                         </Link>
                         <span className="text-ink-soft">
-                          {entry.stopsAt ? ` — ${entry.stopsAt}` : ' — no measured barrier'}
+                          {entry.stopsAt ? ` - ${entry.stopsAt}` : ' - no measured barrier'}
                         </span>
                         <span className="block font-mono text-xs text-ink-faint">
                           measured {entry.measuredAt} ·{' '}

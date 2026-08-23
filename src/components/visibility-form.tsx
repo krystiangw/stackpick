@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { VisibilityAnswer, VisibilityAudit, VisibilityProvider } from '@/lib/visibility-audit'
 import type { VisibilityDepth, VisibilityJob } from '@/lib/visibility-job'
 import type { VisibilityQueueState } from '@/lib/visibility-queue'
+import { citationGapLine } from '@/lib/visibility-copy'
 import { captureAnalytics } from '@/lib/analytics'
 
 const CHANNELS: Record<VisibilityProvider, { name: string; note: string }> = {
@@ -153,7 +154,7 @@ function Result({ audit }: { audit: VisibilityAudit }) {
     </section>
 
     <section className="border-b border-rule py-10">
-      <SectionTitle eyebrow="Channel breakdown" title="Where you appeared — and where you did not" />
+      <SectionTitle eyebrow="Channel breakdown" title="Where you appeared, and where you did not" />
       <div className="mt-6 overflow-hidden border border-rule">
         {channels.map((provider) => <ChannelRow key={provider} provider={provider} answers={audit.answers.filter((answer) => answer.provider === provider)} />)}
       </div>
@@ -163,7 +164,7 @@ function Result({ audit }: { audit: VisibilityAudit }) {
       <SectionTitle eyebrow="What to do next" title="Three actions from this sample" />
       <div className="mt-6 grid gap-px bg-rule lg:grid-cols-3">
         <Action number="01" title={`Own the “${audit.category}” answer`} body={`Publish one canonical page that directly defines the category, states who ${audit.brand} is for, and compares the decision criteria used in these prompts.`} />
-        <Action number="02" title="Close the citation gap" body={sourceDomains.length > 0 ? `The answers repeatedly drew from ${sourceDomains.slice(0, 3).map((source) => source.domain).join(', ')}. Study the pages they cited and earn independent references from the same information ecosystem.` : 'The valid answers did not expose usable sources. Strengthen machine-readable product, category and comparison pages before the next run.'} />
+        <Action number="02" title="Close the citation gap" body={citationGapLine(sourceDomains)} />
         <Action number="03" title="Rerun the same prompts" body="Keep these questions frozen. Repeat after publishing or earning citations; a changed prompt would measure a different market question, not improvement." />
       </div>
       {sourceDomains.length > 0 && <div className="mt-8">

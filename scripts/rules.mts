@@ -23,6 +23,7 @@ import { isOlderThan } from '../src/lib/formula'
 import { buildFixPlan } from '../src/lib/fixfirst'
 import { changeEmail, confirmEmail } from '../src/lib/watch-email'
 import { AGENT_CALL_TIMEOUT_MS, visibilityQueueState, WORKER_SILENT_AFTER_MS } from '../src/lib/visibility-queue'
+import { citationGapLine } from '../src/lib/visibility-copy'
 import { CHECKS, FORMULA_VERSION } from '../src/lib/score'
 import { CORPUS_LICENCE, CORPUS_LICENCE_IS_PUBLISHED } from '../src/lib/seller'
 import { arithmeticExplained, scoreSection } from '../src/lib/report-numbers'
@@ -2613,6 +2614,16 @@ const pagesUnder = (dir: string): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
     entry.isDirectory() ? pagesUnder(`${dir}/${entry.name}`) : entry.name === 'page.tsx' ? [`${dir}/${entry.name}`] : [],
   )
+const sourcesUnder = (dir: string): string[] =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
+    entry.isDirectory() ? sourcesUnder(`${dir}/${entry.name}`) : /\.tsx?$/.test(entry.name) ? [`${dir}/${entry.name}`] : [],
+  )
+// Strony to nie wszystko, co czyta klient. Raport widocznosci mieszka w komponencie i to wlasnie
+// tam stalo „The answers repeatedly drew from x, y, z" nad rzedem chipow z x1: poprawka w kodzie
+// nie doszla do powierzchni, na ktorej tekst naprawde stoi. `claims.ts` jest wylaczony, bo trzyma
+// sam wzorzec i sonda czytajaca wlasna definicje znajduje siebie.
+const prozaKlienta = [...pagesUnder('src/app'), ...sourcesUnder('src/components'), ...sourcesUnder('src/lib')]
+  .filter((path) => path !== 'src/lib/claims.ts')
 // To samo dla limitow, ktore obiecujemy agentom maszynowo. `agent-access.json` mowilo „10 na
 // godzine na adres", a naprawde jest 5 na domene i 30 na adres: agent planujacy pod ta liczbe albo
 // dusi sie bez powodu, albo wpada w 429. Plik jest statyczny, wiec nic go samo nie poprawi.
@@ -3416,10 +3427,13 @@ console.log('\nnie szacujemy skali slowem tam, gdzie umiemy ja policzyc')
 // Ta sama lista, co przy RFC 7591: strony PLUS `score.ts` i `fixfirst.ts`, bo zdania stamtad ida do
 // PLATNEGO raportu. Tam wlasnie stalo czwarte takie zdanie („at almost every authorization server
 // today"), czyli klient placil za oszacowanie, ktorego nie zmierzylismy.
-for (const page of [...pagesUnder('src/app'), 'src/lib/score.ts', 'src/lib/fixfirst.ts']) {
+for (const page of prozaKlienta) {
   const told = readFileSync(page, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ')
   check(`${page}: bez kwantyfikatora zamiast pomiaru`, scaleGuessIn(told), '')
 }
+// Kontrolka zasiegu: bramka faktycznie siega do komponentow, a nie tylko do stron.
+check('bramka czyta tez raport z komponentu', prozaKlienta.includes('src/components/visibility-form.tsx'), true)
+check('i nie czyta pliku ze wzorcem', prozaKlienta.includes('src/lib/claims.ts'), false)
 // Kontrolka: sonda musi znalezc oba zdania, ktore ja wywolaly. Literaly stoja TUTAJ, a nie na
 // stronie, bo sonda czytajaca wlasne uzasadnienie znajduje sama siebie - ten blad zdarzyl sie w tym
 // repo trzy razy.
@@ -3960,6 +3974,22 @@ check('uderzenie idzie zegarem bazy', jobSource.includes('$currentDate: { seenAt
 check('wiersz uderzenia jest kluczowany procesem', jobSource.includes('updateOne({ _id: worker }'), true)
 check('a kolekcja uderzen wygasa sama', jobSource.includes('expireAfterSeconds: 3_600'), true)
 check('czas czekania jest liczony z zadania, nie zgadywany', visibilityQueueState(zadanie, null, teraz).waitingMinutes, 8)
+
+// „The answers repeatedly drew from x, y, z" stalo w raporcie klienta nad rzedem chipow z x1, czyli
+// oszacowanie zamiast liczby - dokladnie ta klasa, ktora zglaszamy na cudzych stronach.
+check(
+  'raz zacytowane zrodlo nie jest cytowane wielokrotnie',
+  citationGapLine([{ domain: 'a.test', count: 1 }, { domain: 'b.test', count: 1 }]).includes('once each'),
+  true,
+)
+check('i nie ma tam slowa o powrotach', citationGapLine([{ domain: 'a.test', count: 1 }]).includes('came back'), false)
+// Kontrolka: gdy zrodlo naprawde wraca, zdanie to mowi i podaje ile razy.
+check(
+  'a zrodlo, ktore wraca, dostaje liczbe',
+  citationGapLine([{ domain: 'a.test', count: 3 }, { domain: 'b.test', count: 1 }]).includes('a.test (3 times)'),
+  true,
+)
+check('zaden wariant nie zgaduje skali', scaleGuessIn(citationGapLine([{ domain: 'a.test', count: 4 }])), '')
 
 const workerSource = readFileSync('harness/visibility-worker.mts', 'utf8')
 // Uderzenie na timerze bylo tym samym klamstwem w druga strone: kazde wywolanie agenta to

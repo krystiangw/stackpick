@@ -121,7 +121,7 @@ export default async function PrivacyPage() {
           <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Who processes it for us</h2>
           <p className="mt-4">
             Heroku (hosting, EU region), MongoDB Atlas (storage), Resend (email delivery), PostHog Cloud EU
-            (cookieless aggregate web analytics), and — only when you run the visibility beta — the configured model
+            (cookieless aggregate web analytics), and, only when you run the visibility beta, the configured model
             providers Anthropic, OpenAI, Google and Perplexity. Each sees only what is needed to do that job. A payment provider
             is added here the day payments go live, and it will be named before anybody is asked for a card.
           </p>
