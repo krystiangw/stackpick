@@ -12,11 +12,11 @@
  * 4. Poza vercel.com zaden inny wiersz nie zmieni punktow Z POWODU 9.57. Zmierzone wczesniej na 26
  *    domenach lokalnie: ruszyl jeden check i to w kierunku, ktorego ta zmiana wywolac nie moze.
  *
- *   MONGODB_URI=... npx tsx scripts/przed-9-55.mts
+ *   MONGODB_URI=... npx tsx scripts/przed-9-57.mts
  *
- * Zapisuje `src/data/przed-9-55.json`. Czyta szesc checkow, ktorych dotknely 9.53, 9.54 i 9.57, i
- * zapisuje werdykt, a nie punkty: przejscie z oskarzenia w „niemierzalne" nie rusza punktow, a jest
- * dokladnie tym, co potrafi zrobic 9.54.
+ * Zapisuje `src/data/przed-9-57.json`. Czyta trzy checki, ktorych dotyka 9.57, i zapisuje
+ * werdykt, a nie punkty: przejscie z oskarzenia w „niemierzalne" nie rusza punktow, a jest dokladnie
+ * tym, co potrafi zrobic zmiana w tym, co skan przeczytal.
  */
 import { writeFileSync } from 'node:fs'
 import { MongoClient } from 'mongodb'
@@ -25,7 +25,7 @@ import { refuseIfNothingMeasured } from './nothing-measured'
 
 if (!process.env.MONGODB_URI) {
   console.log('MONGODB_URI nie jest ustawione. Uruchom:')
-  console.log('  MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/przed-9-55.mts')
+  console.log('  MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/przed-9-57.mts')
   process.exit(1)
 }
 
@@ -60,7 +60,7 @@ refuseIfNothingMeasured(latest.size, 'wierszy korpusu')
 const snapshot = [...latest]
   .sort((a, b) => a[0].localeCompare(b[0]))
   .map(([domain, row]) => ({ domain, ...row }))
-writeFileSync('src/data/przed-9-55.json', `${JSON.stringify(snapshot, null, 2)}\n`)
+writeFileSync('src/data/przed-9-57.json', `${JSON.stringify(snapshot, null, 2)}\n`)
 
 const versions = new Map<string, number>()
 for (const row of snapshot) versions.set(row.formulaVersion, (versions.get(row.formulaVersion) ?? 0) + 1)

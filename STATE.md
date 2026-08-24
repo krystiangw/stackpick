@@ -1,4 +1,57 @@
-# Let Agents In: stan na 2026-08-24 (produkcja v774, formula 9.57, korpus czyta to, co vendor publikuje)
+# Let Agents In: stan na 2026-08-24 (produkcja v774, formula 9.57 przemieciona, korpus czyta to, co vendor publikuje)
+
+## PRZEMIAT 9.57 ZAMKNIETY, I TYM RAZEM PREDYKCJA SIE OBRONILA
+
+**177/177 na 9.57**, `npm run audit` zielony: 0 sprzecznosci, 21 podanych liczb i 5 twierdzen o
+nazwanych firmach zgodnych z danymi. Mediana skanu 5,5 s, p90 12,3 s. Dwa przebiegi, **177 ok, 0
+nieudanych** w pierwszym; dwa 429 od naszego wlasnego obciazenia, jeden odzyskany po odczekaniu.
+
+**Predykcja, zapisana i zacommitowana ZANIM przemiat ruszyl** (`scripts/przed-9-57.mts`, commit
+5e82b6c). Nauka z 9.56 brzmiala: predykcje o formule pisz WASKO.
+```
+2. vercel.com programmatic_provisioning 0/2 -> 2/2                    TRAFIONA
+3. czworka mowi "llms.txt and llms-full.txt present"        4/4       TRAFIONA
+1. zaden spadek na provisioningu NIE Z POWODU 9.57                    TRAFIONA, ale dopiero po sprawdzeniu
+```
+
+**Punkt 1 wymagal roboty, bo spadki byly dwa** - `here.com` 1->0 i `maptiler.com` 2->1 - a moj model
+mowil, ze 9.57 moze korpusowi tylko dodac tekstu. Bramka `confirm-regressions` ich NIE zlapala i to
+jest poprawne: `CHECK_RULE_CHANGED['9.57']` zawiera `programmatic_provisioning`, wiec straznik z
+zalozenia nie nazywa regresja checku, ktorego regule sami ruszylismy. Sprawdzilem je sam.
+
+**Kontrolka rozstrzygajaca: ten sam skan STARYM kodem, dzisiaj** (worktree na 4214b7a).
+```
+here.com      stary kod 9.56 dzisiaj -> prov 0   (czyli tyle samo, co 9.57)
+maptiler.com  stary kod 9.56 dzisiaj -> prov 0   (czyli MNIEJ niz 9.57, ktore dalo 1)
+```
+Zaden spadek nie jest nasz. Na maptilerze 9.57 jest wrecz **lepsze** od starego kodu: stare sklejenie
+zostawialo 430 kB prozy z 1 270 kB dokumentow, czyli **wyrzucalo dwie trzecie tekstu**.
+
+**Dlaczego te dwie firmy spadly naprawde, i to jest osobny problem do zrobienia:**
+- `maptiler.com`: fraza `/v1/api_keys` siedzi na pozycji 570 kB strony, ktora ma **708 kB**. Nasz
+  limit odczytu to 400 kB, wiec dzis jej po prostu nie widzimy. Wczoraj byla w zasiegu.
+- `here.com`: obie strony, z ktorych czytalismy "Create Access Key", **zyja i nadal to niosa** (po
+  2,78 MB kazda) - tylko nasz WYBOR stron przestal je brac. Trzy skany dzis daly trzy rozne zestawy
+  czterech stron, wiec na tej domenie ranking jest niestabilny z przebiegu na przebieg.
+
+**Wspolny mianownik, wart wlasnego przejscia:** limit 400 kB przestal byc zabezpieczeniem i stal sie
+**cichym wyborem, ktore strony vendora ogladamy**. Przy dokumentacji liczonej w megabajtach decyduje
+o tym, co o firmie publikujemy, a decyduje przypadkiem. To jest ta sama rodzina co blad, ktory
+zamknelismy dzis: nie mierzymy vendora, tylko wlasne okno na niego.
+
+**Potwierdzone regresje po `confirm-regressions` (3 z 7 kandydatow, 57% znika po jednym reskanie):**
+`postmarkapp.com machine_readable_api`, `calendly.com machine_readable_api`,
+`locationiq.com docs_without_js`. Znikly po reskanie: froala, split.io (dwa checki), namecheap.
+
+**Erraty: wszystkie wpisy wygasly**, czyli przemiat poprawil kazdy wiersz, o ktorym wiedzielismy, ze
+niesie blad.
+
+**Wpadka wlasna, naprawiona:** `sed 's/9\.55/9.57/'` przy tworzeniu skryptu predykcji podmienil
+tylko wersje z kropka, wiec `writeFileSync` nadal wskazywal `src/data/przed-9-55.json` - i pierwszy
+przebieg **nadpisal historyczna migawke sprzed 9.55** wlasnymi danymi. Odtworzona z `HEAD~1`,
+migawka 9.57 lezy juz pod wlasna nazwa. Kontrolka: `przed-9-55.json` niesie znowu 177 wierszy na
+formulach 9.52-9.55 i szesc swoich checkow, `przed-9-57.json` 177 wierszy na 9.56 i swoje trzy.
+
 
 ## HANDOVER 2026-08-24: JEDEN DOKUMENT KASOWAL NASTEPNY, A MY PUBLIKOWALISMY TO JAKO BRAK
 
@@ -426,7 +479,7 @@ zostanie ponownie odebrana lub utworzona, ponizsza lista w repo jest trwalym bac
 
 1. **Tygodniowy baseline widocznosci:** uruchomic `pnpm visibility` po odnowieniu limitu Claude i
    naprawie logowania Gemini; porownywac tylko wazne odpowiedzi. Owner: human/agent. Bez kosztu.
-2. **Hacker News:** po zalogowaniu opublikowac jeden techniczny wynik, nie landing page — najlepiej
+2. **Hacker News:** po zalogowaniu opublikowac jeden techniczny wynik, nie landing page, najlepiej
    `/c/file-storage`, z teza „Which file-upload APIs can an unattended AI agent actually
    integrate?". Owner: Krystian. Wymaga konta i decyzji o publicznym podpisie.
 3. **mcp.so:** zdecydowac, czy wpis jest wart 39 USD. Owner: Krystian. Nie placic bez osobnego
