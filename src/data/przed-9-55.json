@@ -1,2303 +1,1772 @@
 [
   {
     "domain": "agora.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:34:55",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:11:25",
     "checks": {
-      "agent_entry_point": "1/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "algolia.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:29:45",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:06:11",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "0/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "amplitude.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:26:24",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:03:17",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "api.video",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:34:19",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:10:45",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "apify.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:35:15",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:11:43",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "auth0.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:24:09",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:01:02",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "axiom.co",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:39:34",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:15:45",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "baseten.co",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:34:08",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:10:31",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "2/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "betterstack.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:28:43",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:05:14",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "0/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "bigcommerce.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:40:35",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:16:48",
     "checks": {
-      "agent_entry_point": "0/2 niemierzalne",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "bird.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:31:08",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:07:34",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "bitmovin.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:35:00",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:11:29",
     "checks": {
-      "agent_entry_point": "0/2 niemierzalne",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "0/1 niemierzalne",
-      "no_crawl_delay": "0/1 niemierzalne",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "browserbase.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:35:11",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:11:39",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "2/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "browserless.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:35:32",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:11:59",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "bugsnag.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:28:36",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:05:07",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "bunny.net",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:22:28",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T22:59:29",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "cal.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:36:42",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:13:11",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "calendly.com",
-    "formulaVersion": "9.54",
-    "scannedAt": "2026-08-20T11:28:32",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:28:14",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "chargebee.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:27:54",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:04:34",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "ckeditor.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:23:04",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:00:10",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "0/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "clerk.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:24:14",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:01:08",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "cloudflare.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:22:59",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:00:03",
     "checks": {
-      "agent_entry_point": "1/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "cloudinary.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:22:19",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T22:59:20",
     "checks": {
-      "agent_entry_point": "0/2 niemierzalne",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "cockroachlabs.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:38:37",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:14:45",
     "checks": {
-      "agent_entry_point": "1/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "2/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "commercetools.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:41:23",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:17:15",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "configcat.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:29:29",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:05:51",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "contentful.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:31:24",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:07:49",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "0/1 niemierzalne",
-      "no_crawl_delay": "0/1 niemierzalne",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "courier.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:36:02",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:12:31",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "cronofy.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:37:13",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:13:38",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "crowdin.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:41:46",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:17:33",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "daily.co",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:34:31",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:11:00",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "datadoghq.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:39:11",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:15:19",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "deepl.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:41:32",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:17:20",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "directus.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:32:03",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:08:29",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "dnsimple.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:42:55",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:18:43",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "documenso.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:39:45",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:15:57",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "docuseal.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:39:42",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:15:54",
     "checks": {
-      "agent_entry_point": "1/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "dropboxsign.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:39:49",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:16:01",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "dynadot.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:42:32",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:18:20",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "editorjs.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:23:25",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:00:32",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 nie-dotyczy",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1 nie-dotyczy"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "elastic.co",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:30:04",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:06:32",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "filestack.com",
-    "formulaVersion": "9.55",
-    "scannedAt": "2026-08-20T13:25:34",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T22:59:43",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "firecrawl.dev",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:35:22",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:11:49",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "fireworks.ai",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:33:40",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:10:00",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "2/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "flagsmith.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:29:21",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:05:43",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "fly.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:44:42",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:20:23",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "froala.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:23:32",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:27:19",
     "checks": {
-      "agent_entry_point": "0/2 niemierzalne",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "gandi.net",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:42:49",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:18:38",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 nie-dotyczy",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "0/1 nie-dotyczy"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "getunleash.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:29:26",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:05:48",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "2/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "godaddy.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:43:05",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:18:52",
     "checks": {
-      "agent_entry_point": "0/2 niemierzalne",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "0/1 niemierzalne",
-      "no_crawl_delay": "0/1 niemierzalne",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "grafana.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:39:15",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:15:24",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "groq.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:33:46",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:10:07",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "growthbook.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:29:38",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:06:04",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "hatchet.run",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:32:51",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:09:15",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "here.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:38:04",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:14:16",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "heroku.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:44:58",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:20:41",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "highlight.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:28:48",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:05:17",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "honeybadger.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:28:40",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:05:10",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "honeycomb.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:39:23",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:15:33",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "2/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "hover.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:43:19",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:19:06",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "0/1 niemierzalne"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "hygraph.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:32:10",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:08:35",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "imagekit.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:22:23",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T22:59:25",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "inngest.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:32:15",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:08:40",
     "checks": {
-      "agent_entry_point": "1/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "inwx.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:43:29",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:19:17",
     "checks": {
-      "agent_entry_point": "0/2 niemierzalne",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "june.so",
-    "formulaVersion": "9.55",
-    "scannedAt": "2026-08-20T11:37:12",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:03:26",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "0/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "kinde.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:24:49",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:01:46",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1 niemierzalne"
     }
   },
   {
     "domain": "knock.app",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:35:56",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:12:25",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "2/2",
+      "llms_txt": "0/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "koyeb.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:45:03",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:20:45",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "launchdarkly.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:28:57",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:05:26",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "2/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "lemonsqueezy.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:27:43",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:04:24",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "0/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "lexical.dev",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:23:15",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:00:22",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 nie-dotyczy",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1 nie-dotyczy"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "liveblocks.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:24:00",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:00:53",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "livekit.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:34:38",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:11:08",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "locationiq.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:38:08",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:14:20",
     "checks": {
-      "agent_entry_point": "0/2 niemierzalne",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "logto.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:48:09",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:23:50",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "lokalise.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:41:40",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:17:28",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "loops.so",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:25:46",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:02:44",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "magicbell.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:36:33",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:13:03",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "mailgun.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:25:43",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:02:41",
     "checks": {
-      "agent_entry_point": "0/2 niemierzalne",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "mapbox.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:37:28",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:13:53",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "maptiler.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:37:32",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:13:56",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "2/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "medusajs.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:41:00",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:16:54",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "meilisearch.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:29:51",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:06:18",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "mixpanel.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:26:12",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:03:05",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "modal.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:34:01",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:10:22",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1 niemierzalne"
     }
   },
   {
     "domain": "mongodb.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:38:54",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:28:38",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "mux.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:34:13",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:10:38",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "name.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:42:43",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:18:32",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "namecheap.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:42:11",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:17:57",
     "checks": {
-      "agent_entry_point": "0/2 niemierzalne",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "neon.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:38:12",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:14:24",
     "checks": {
-      "agent_entry_point": "1/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "netim.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:43:49",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:19:35",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "netlify.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:44:30",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:20:12",
     "checks": {
-      "agent_entry_point": "1/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "newrelic.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:39:27",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:15:38",
     "checks": {
-      "agent_entry_point": "0/2 niemierzalne",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "njal.la",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:44:08",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:19:54",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "novu.co",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:36:09",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:12:40",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "nylas.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:37:02",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:13:29",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "onesignal.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:36:16",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:12:46",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "openrouter.ai",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:33:14",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:09:36",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "oramasearch.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:30:12",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:06:39",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "paddle.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:27:34",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:04:14",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "pandadoc.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:39:55",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:16:08",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "0/1 niemierzalne",
-      "no_crawl_delay": "0/1 niemierzalne",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "payloadcms.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:31:59",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:08:24",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "pdfmonkey.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:40:07",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:16:19",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1 niemierzalne"
     }
   },
   {
     "domain": "phrase.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:41:55",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:17:42",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "pinecone.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:26:41",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:03:30",
     "checks": {
-      "agent_entry_point": "1/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "2/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "plaid.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:28:00",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:04:40",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "planetscale.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:38:18",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:14:29",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "plausible.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:26:27",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:03:19",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "plivo.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:30:43",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:07:11",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "polar.sh",
-    "formulaVersion": "9.53",
-    "scannedAt": "2026-08-20T10:51:56",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:04:30",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "porkbun.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:42:21",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:18:09",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "posthog.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:26:00",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:27:53",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "postmarkapp.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:25:25",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:27:44",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "prosemirror.net",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:23:23",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:27:08",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 nie-dotyczy",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1 nie-dotyczy"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "pusher.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:36:20",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:12:51",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "qdrant.tech",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:26:53",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:03:39",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "quilljs.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:23:20",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:00:27",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 nie-dotyczy",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1 nie-dotyczy"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1 niemierzalne"
     }
   },
   {
     "domain": "radar.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:37:42",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:14:03",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "railway.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:44:46",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:20:26",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "raygun.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:28:52",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:05:21",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "0/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "redis.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:39:00",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:15:08",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "render.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:44:38",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:20:18",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "0/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "replicate.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:33:54",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:10:15",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "0/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "resend.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:25:04",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:02:03",
     "checks": {
-      "agent_entry_point": "1/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "restate.dev",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:33:03",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:09:25",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "rollbar.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:28:31",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:05:02",
     "checks": {
-      "agent_entry_point": "0/2 niemierzalne",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "saleor.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:41:05",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:16:59",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "sanity.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:31:29",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:07:55",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "savvycal.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:48:27",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:24:44",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "scrapingbee.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:35:26",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:11:53",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "searchkit.co",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:30:14",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:06:42",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 nie-dotyczy",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1 nie-dotyczy"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "sendgrid.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:25:32",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:02:32",
     "checks": {
-      "agent_entry_point": "0/2 niemierzalne",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "sendlayer.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:25:56",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:02:53",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "sentry.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:28:09",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:04:52",
     "checks": {
-      "agent_entry_point": "1/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "shopify.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:40:12",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:16:25",
     "checks": {
-      "agent_entry_point": "1/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "signoz.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:39:39",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:15:51",
     "checks": {
-      "agent_entry_point": "1/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "sinch.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:31:22",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:07:46",
     "checks": {
-      "agent_entry_point": "0/2 niemierzalne",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "slatejs.org",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:23:37",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:00:45",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 nie-dotyczy",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1 nie-dotyczy"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "split.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:29:34",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:28:03",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "statsig.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:29:17",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:05:39",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "storyblok.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:31:49",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:08:13",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "strapi.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:31:35",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:08:02",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "stripe.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:27:24",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:04:06",
     "checks": {
-      "agent_entry_point": "1/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "stytch.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:24:38",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:01:33",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "supabase.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:39:03",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:15:11",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "supertokens.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:24:59",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:01:59",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "swell.is",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:41:15",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:17:09",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "telnyx.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:31:03",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:07:30",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "temporal.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:32:37",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:09:04",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "2/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "tigrisdata.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:22:13",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T22:59:14",
     "checks": {
-      "agent_entry_point": "1/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "timekit.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:37:21",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:13:46",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "tiny.cloud",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:23:07",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:00:13",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "tiptap.dev",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:23:13",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:00:19",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "together.ai",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:33:28",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:09:45",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "tolgee.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:42:03",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:17:50",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "tomtom.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:37:47",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:14:08",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 nie-dotyczy",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1 nie-dotyczy"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "transloadit.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:22:46",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T22:59:49",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "trigger.dev",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:32:27",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:08:51",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "trychroma.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:27:01",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:03:46",
     "checks": {
-      "agent_entry_point": "1/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "turbopuffer.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:27:07",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:03:50",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "1/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "turso.tech",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:38:26",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:28:24",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "twilio.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:30:27",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:06:54",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "2/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "typesense.org",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:29:57",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:06:25",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "2/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "uploadcare.com",
-    "formulaVersion": "9.55",
-    "scannedAt": "2026-08-20T11:37:19",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T22:59:10",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "0/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "uploadthing.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:22:01",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T22:59:03",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 nie-dotyczy",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1 nie-dotyczy"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "0/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "upstash.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:32:45",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:09:11",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "useanvil.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:39:59",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:16:12",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "usefathom.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:26:31",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:03:23",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "vercel.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:44:19",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:28:50",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "vonage.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:30:36",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:07:04",
     "checks": {
-      "agent_entry_point": "0/2 niemierzalne",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "0/1 niemierzalne",
-      "no_crawl_delay": "0/1 niemierzalne",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "weaviate.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:26:45",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:03:34",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "weglot.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:42:00",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:17:47",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "windmill.dev",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:33:06",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:09:28",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "workos.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:24:20",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:01:14",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "2/2",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "xata.io",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:38:44",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:14:51",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "0/1 niemierzalne",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "1/2",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   },
   {
     "domain": "zenrows.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:35:41",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:12:08",
     "checks": {
-      "agent_entry_point": "2/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "1/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "1/1"
     }
   },
   {
     "domain": "zilliz.com",
-    "formulaVersion": "9.52",
-    "scannedAt": "2026-08-20T10:27:16",
+    "formulaVersion": "9.56",
+    "scannedAt": "2026-08-23T23:03:58",
     "checks": {
-      "agent_entry_point": "0/2",
-      "signup_no_captcha": "0/1 niemierzalne",
-      "user_agents_allowed": "1/1",
-      "no_crawl_delay": "1/1",
-      "typed_package": "1/1",
-      "oauth_dcr": "0/1"
+      "programmatic_provisioning": "0/2 niemierzalne",
+      "llms_txt": "1/1",
+      "mcp_present": "0/1"
     }
   }
 ]
