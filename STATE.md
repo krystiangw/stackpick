@@ -1,14 +1,39 @@
 # Let Agents In: stan na 2026-08-24 (produkcja v772, formula 9.56, przemiat w toku)
 
-## PREDYKCJA PRZED PRZEMIATEM NA 9.56 (zapisana ZANIM ruszyl)
+## PRZEMIAT 9.56 ZAMKNIETY, I MOJA PREDYKCJA BYLA ZLE POSTAWIONA
 
-9.56 zmienia **wylacznie zdanie** pieciu werdyktow „nie dotyczy". Zadna regula punktowa sie nie
-ruszyla, wiec **przewiduje: zero zmian werdyktu na 177 wierszach**. Kazda zmiana punktow po tym
-przemiacie jest zaskoczeniem i wymaga wyjasnienia co do wiersza, a nie dopisania po fakcie.
+**Predykcja (zapisana przed startem):** „9.56 zmienia wylacznie zdanie pieciu werdyktow, wiec zero
+zmian werdyktu na 177 wierszach". **Obalona jak napisana.** Zmienilo sie 27 checkow, 11 na gorsze.
 
-Migawka sprzed przemiatu: `src/data/przed-9-56.json` (177 wierszy, total, measurable i kazdy check
-z jego stanem). Sprawdza to `scripts/regressions.mts` plus `confirm-regressions`, ktore reskanuja
-kazde pogorszenie, zanim nazwiemy je regresja vendora.
+Blad byl w sformulowaniu, nie w kodzie: miedzy migawka a przemiatem leza **cztery dni**, wiec
+predykcja o formule zostala napisana tak, jakby dotyczyla calego swiata. Powinna byla brzmiec: „na
+pieciu checkach, ktorych 9.56 dotknelo, nie ruszy sie ani jeden punkt". **Tak postawiona sprawdza
+sie**: na tej piatce zmienil sie **jeden** check i to **na plus** - `highlight.io oauth_dcr 0/1 ->
+1/1`, bo publikuja teraz `registration_endpoint` z `client_credentials`. Zmiana zdania w galezi „nie
+dotyczy" nie moze zamienic zera w jedynke, wiec to ich ruch, nie nasz.
+
+**Reszta to dryf vendorow przez cztery dni**, przepuszczony przez `confirm-regressions`, ktory
+reskanuje kazde pogorszenie osobno, zanim nazwiemy je regresja:
+```
+POTWIERDZONE (6)                              ZNIKNELO PO RESKANIE (5, czyli NASZE obciazenie)
+prosemirror.net  user_agents_allowed 1->0     froala.com       answers_plain_request
+posthog.com      machine_readable_api 1->0    postmarkapp.com  machine_readable_api
+turso.tech       agent_entry_point    2->1    split.io         programmatic_provisioning
+mongodb.com      docs_without_js      1->0    split.io         machine_readable_api
+vercel.com       programmatic_provisioning 2->0   calendly.com machine_readable_api
+vercel.com       typed_package        1->0
+```
+**45% pogorszen znika po pojedynczym reskanie.** Gdyby nie ta bramka, opublikowalibysmy pieciu
+vendorom regresje, ktora byla naszym ruchem. `vercel.com` traci dwa checki naraz i to jest jedyny
+wiersz wart obejrzenia z reki.
+
+**Stan po przemiacie:** 177 wierszy na 9.56, `awaitingRescan` 0, `npm run audit` zielony (0
+sprzecznosci, 21 podanych liczb i 5 twierdzen o nazwanych vendorach zgodnych z danymi). Poprawione
+zdanie doszlo do opublikowanych wierszy: `tomtom.com`, `gandi.net` i `uploadthing.com` czytaja teraz
+„we found no pricing page and no signup page of theirs", a nie „nothing on the site links...".
+Straznik sprzecznosci widzi 9 takich wierszy, wiec nie przeszedl na zielono po odczytaniu zera.
+
+Migawka sprzed przemiatu zostaje w `src/data/przed-9-56.json`.
 
 
 ## HANDOVER 2026-08-23: TRZYNASTU VENDOROM MOWILISMY O DRZWIACH, NA KTORE NIE SPOJRZELISMY
