@@ -1,4 +1,55 @@
-# Let Agents In: stan na 2026-08-24 (produkcja v772, formula 9.56, przemiat w toku)
+# Let Agents In: stan na 2026-08-24 (produkcja v773, formula 9.56, licznik ruchu mowi prawde)
+
+## HANDOVER 2026-08-24: POLOWA NASZEGO RUCHU BYLA JEDNA LICZBA, KTORA NIC NIE ZNACZYLA
+
+Licznik mial dwa kubly, a jeden z nich, `agent`, znaczyl **tylko tyle, ze klient nie powiedzial
+Mozilla**. Prawdziwy agent, scraper, monitoring i nasz wlasny curl lezaly w nim razem, a to **46%
+ruchu z szesciu dni**. Kazdy wiersz niesie teraz **jedno slowo z zamknietej listy** nazywajace
+rodzine klienta (`curl`, `python`, `chrome`, `headless-chrome`, `node`, `go`...), **nigdy samego user
+agenta**: pelny string niesie wersje, build i platforme, a to razem wskazuje na jedna osobe.
+`/privacy` mowi, co trzymamy, i regula trzyma strone przy kodzie - zapalila sie sama w chwili, gdy
+zdanie „The crawler name is the only thing kept" przestalo byc prawda.
+
+**Dwa bledy klasyfikacji, ktore siedzialy tam od poczatku:** bezglowy Chrome liczyl sie jako
+**przegladarka**, wiec automat sterujacy prawdziwym silnikiem siedzial w liczbie ludzi; a Chrome,
+Firefox, Edge i Opera **na iOS** wszystkie mowia `Safari`, wiec wszystkie byly Safari.
+
+**Indeks musial sie poszerzyc razem z kluczem.** Unikalny `{day, path}` sprawilby, ze druga rodzina
+tego samego dnia wpada na kolizje, upsert leci bledem, ktory licznik lapie i loguje, a ruch znika po
+cichu. `scripts/migrate-visit-index.mts` (nowy indeks powstaje PIERWSZY) juz przeszedl na produkcji.
+
+**Nasz health check przestal udawac odwiedzajacego.** Skanuje `example.com` przez publiczny endpoint,
+wiec **227 z 420 wierszy „od odwiedzajacych" bylo nami** i kazde pytanie „ilu ludzi cos sprawdzilo"
+wychodzilo ponad dwa razy za duze. Przedstawia sie teraz **sekretem crona** (`STACKPICK_CRON_TOKEN`,
+ten sam, ktory pilnuje trzech endpointow cron). Nazwa w user agencie **nie wystarczyla**: string,
+ktory kazdy moze wpisac, pozwolilby dowolnemu goscowi wypisac sie z naszych statystyk.
+
+**Historii NIE przypisujemy.** Probowalem po rytmie crona i po godzinowych kubelkach; obie wersje
+codex rozlozyl na tym samym zarzucie: rytm mowi, ze wiersz jest prawdopodobny, a nie **czyj jest**.
+Skrypt migracyjny zostal skasowany, 162 wnioskowane oznaczenia cofniete. Uczciwa liczba brzmi:
+**193 skany na domenach innych niz example.com**, a 227 skanow example.com jest nierozstrzygalnych w
+obie strony i nie liczy sie jako odwiedzajacy.
+
+**Kontrolka na produkcji po wdrozeniu:** zapytanie z UA Chrome zapisalo sie jako `browser | chrome`,
+a gole `curl` jako `agent | curl`. Oba nowe wiersze niosa rodzine.
+
+**CO Z TEGO WYSZLO O RUCHU** (18-23.08, szesc pelnych dni, 5537 odslon):
+```
+browser        2578  47%   gorna granica liczby ludzi, nie pomiar: bot z naglowkiem Mozilla tez tu wpada
+agent          2536  46%   do wczoraj jedna liczba bez znaczenia; od dzis rozkladalna na rodziny
+indeksujace     394   7%   googlebot, bingbot, gptbot, claudebot, meta-externalagent, applebot
+na zlecenie      29   1%   ChatGPT-User, Claude-User, Perplexity-User - jedyna liczba, ktora mowi
+                           „agent przyszedl, bo czlowiek go poprosil". 21 z tych 29 na /docs
+```
+59% ruchu z kubla `agent` idzie na sama strone glowna i nic dalej. Przegladarki maja 45% na `/` i
+rozchodza sie po `/docs`, `/pricing`, `/methodology`.
+
+**CZEGO NADAL NIE WIEMY, I DLACZEGO:** kto kliknal. `autocapture: false`, `person_profiles: 'never'`,
+`cookieless_mode: 'always'`, nagrywanie sesji wylaczone, a `before_send` wycina skanowana domene, id
+raportu i token watcha z kazdego URL-a przed wyslaniem. To sa decyzje, nie przeoczenia. Zeby
+odpowiedziec na „kto kliknal Kup", trzeba pierwszej strony identyfikatora sesji - to **czeka na
+decyzje Krystiana**, bo zmienia to, co zbieramy o odwiedzajacych.
+
 
 ## PRZEMIAT 9.56 ZAMKNIETY, I MOJA PREDYKCJA BYLA ZLE POSTAWIONA
 
