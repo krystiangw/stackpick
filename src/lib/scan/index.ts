@@ -18,6 +18,7 @@ import {
   isBotChallenge,
   isEdgeRefusal,
   isRealTextFile,
+  joinDocuments,
   limitsSeen,
   looksLikeHtml,
   NAMED_CRAWLERS,
@@ -787,6 +788,14 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
       ),
     ]),
   )
+  // Read once and handed to the funnel twice: stripped per document for the prose grep, joined raw
+  // for the address regex.
+  const documents = Promise.all([docsPending, machinePending]).then(([deeper, machine]) => [
+    docsText,
+    ...deeper.pages.map((page) => page.body),
+    found.home.body,
+    ...machine.llmsBodies,
+  ])
   const funnelPending = phase('funnel', () =>
     scanFunnel({
       domain,
@@ -796,9 +805,8 @@ async function scanWithinBudget(domain: string, onProgress?: ScanProgress): Prom
       // llms.txt out of it meant trigger.dev scored zero for not documenting the Management API
       // named in the llms.txt we had open. It is handed over unresolved: the grep is the last
       // thing the funnel does, so nothing here waits on it.
-      corpus: Promise.all([docsPending, machinePending]).then(([deeper, machine]) =>
-        [docsText, ...deeper.pages.map((page) => page.body), found.home.body, machine.llmsCorpus].join('\n'),
-      ),
+      corpus: documents.then((parts) => joinDocuments(parts)),
+      addressCorpus: documents.then((parts) => parts.join('\n')),
       pricingUrl: found.pricing,
       signupUrl: found.signup,
       docsUrl: found.docs,

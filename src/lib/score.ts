@@ -15,7 +15,7 @@ import { challengedUs, challengeSentence, CHALLENGE_UNBLOCK } from './limits'
  */
 export { DOCS_SHELL_FLOOR }
 
-export const FORMULA_VERSION = '9.56'
+export const FORMULA_VERSION = '9.57'
 
 /** Gdzie vendor obejrzy paczke, o ktorej mowimy. Jedno miejsce, bo `export.ts` sklada ten sam adres. */
 export const NPM_REGISTRY_PAGE = 'https://www.npmjs.com/package/'

@@ -1,4 +1,108 @@
-# Let Agents In: stan na 2026-08-24 (produkcja v773, formula 9.56, licznik ruchu mowi prawde)
+# Let Agents In: stan na 2026-08-24 (produkcja v774, formula 9.57, korpus czyta to, co vendor publikuje)
+
+## HANDOVER 2026-08-24: JEDEN DOKUMENT KASOWAL NASTEPNY, A MY PUBLIKOWALISMY TO JAKO BRAK
+
+Zaczelo sie od jedynego wiersza, ktory przemiat 9.56 kazal obejrzec z reki: **vercel.com traci dwa
+checki naraz**. Zaden z nich nie byl dryfem vendora.
+
+**`programmatic_provisioning` 2 -> 0.** Publikowalismy "None of the 7 provisioning phrases appears"
+o firmie, ktora w publicznym OpenAPI (`openapi.vercel.sh`, 288 sciezek) ma `POST /api-keys` i
+`POST /v3/user/tokens`, a w `vercel.com/docs/llms-full.txt` pierwszym dokumentem jest "Access tokens:
+Create and scope Vercel access tokens". Przyczyna byla u nas i jest ogolna:
+
+**Korpus byl sklejany, a dopiero potem czyszczony.** `stripCodeBlocks` przy niezamknietym `<script`
+ucina reszte dokumentu i to jest poprawne **dla jednej strony**. Strona glowna vercela ma 409 556
+bajtow, czyli dokladnie limit odczytu, wiec konczy sie w srodku skryptu. Po sklejeniu "reszta
+dokumentu" to byly **wszystkie nastepne dokumenty**: 1,22 MB wejscia, 523 kB prozy, zero z 411 kB
+llms-full.txt. Dokumenty maszynowe stoja w sklejeniu na koncu, wiec ginely pierwsze.
+
+To ta sama przyczyna, ktora **9.50 naprawilo dla czujnika skorupy** ("A body that filled the cap is
+cut mid-block, `stripCodeBlocks` drops the rest"). Trzy tygodnie pozniej okazalo sie, ze ma druga
+powierzchnie. Teraz `joinDocuments()` czysci **kazdy dokument osobno**: zepsuty nadal traci wlasny
+ogon (w HTML to tresc skryptu, nie proza), ale juz nie zabiera nastepnego.
+
+**Drugi blad: indeks wart jest tyle, ile z niego przeczytamy.** vercel zamienil llms.txt z 215 kB i
+1872 linkami na **1,6 kB indeksu**, ktory nazywa `vercel.com/docs/llms-full.txt` (8,3 MB). My pytamy
+o **adresy konwencjonalne**, nie o ten, ktory vendor wlasnie nam podal, wiec 8,3 MB nie weszlo do
+skanu. Czyli: **firma poprawila swoj llms.txt zgodnie z formatem, a my ja za to ukaralismy.**
+Idziemy teraz za linkiem, ktory indeks nazywa, ograniczonym do **rejestrowalnej domeny vendora** -
+link w cudzym pliku to cudzy tekst i nie moze wybierac naszego nastepnego zapytania.
+
+**Kogo to dotyczy, zmierzone, a nie oszacowane:**
+```
+llms-full.txt pod adresem, o ktory nie pytalismy   4 z 150 firm z llms.txt
+  tigrisdata.com  typesense.org  courier.com  vercel.com   (wszystkie <origin>/docs/llms-full.txt)
+zdanie werdyktu poprawione                         4 z 4   ("llms.txt present" -> "llms.txt i llms-full.txt present")
+punkty zmienione                                   1 z 4   vercel.com 9 -> 11
+kontrolka: stripe.com, ktorego indeks nie nazywa pelnego pliku, nie dostal nic (hasFull: false)
+```
+
+**A teraz liczba, ktorej NIE wolno rozdmuchac.** 84 ze 177 wierszy korpusu czytalo uciety dokument.
+To jest **populacja ryzyka, nie szkoda**: przeskanowalem 24 z tych 84 (12 losowych + 12 z podzbioru
+"uciety I zero na provisioningu", czyli tam, gdzie falszywe zero powinno siedziec) i **ruszyl jeden
+check, w kierunku, ktorego ta poprawka wywolac nie moze** (`mongodb.com docs_without_js 0->1`,
+potwierdzony dryf z wczoraj; `telnyx.com agent_entry_point 2->1` to probe, nie fraza). O tym, czy ciecie
+wypadnie w srodku bloku kodu, decyduje przypadek i przewaznie nie wypada. Napisalem najpierw w
+komentarzu "the reach of that is not one vendor" i to bylo zdanie o zasiegu, ktorego nie zmierzylem -
+poprawione w kodzie, zanim wyszlo poza maszyne.
+
+**Monotonicznosc jako wbudowana kontrolka:** poprawka moze korpusowi tylko **dodac** tekstu, wiec
+check frazowy moze po niej pojsc w gore albo stac. Kazdy spadek na przemiacie 9.57 jest z definicji
+dryfem vendora albo bledem w moim modelu - i tak nalezy go czytac.
+
+**Czego ta zmiana NIE naprawia, a co przy okazji zobaczylem (nastepna robota):**
+1. **`typed_package` na vercel.com nadal 0.** 20.08 sadzilismy `@vercel/sdk@1.28.19` (ma typy, dzis
+   1.28.21 dalej ma), 23.08 sadzimy `vercel` (CLI, typow nie ma - to prawda). Zdanie jest prawdziwe,
+   ale **wybor paczki przeskakuje miedzy skanami**, wiec opublikowana liczba nie jest odtwarzalna.
+2. **Probka linkow z llms.txt nie filtruje po wlascicielu.** 23 firmy maja opublikowany martwy link,
+   **7 z nich wylacznie na cudzej domenie**. Ale to nie jest czysta historia o obcych: groq.com i
+   oramasearch.com to ich **wlasne** repo na github.com, livekit.com to `docs.livekit.io`, czyli ich
+   wlasna druga domena (moj pomiar liczyl ja jako obca), a radar.com to `schemas.xmlsoap.org`, czyli
+   **namespace XML, ktory nigdy nie byl strona**. Filtr "tylko rejestrowalna domena vendora" bylby
+   wiec zly. Wymaga wlasnego, zmierzonego przejscia.
+3. **Efekt uboczny mojej zmiany, ktory biore na siebie:** wiersz vercela mowil "the 11 links we
+   sampled across the file all answer", a teraz mowi "11 of the 12 (...). One is gone:
+   https://platform.openai.com/docs/models/overview". Sprawdzilem ten adres recznie: **404 na HEAD i
+   na GET**, wiec zdanie jest prawdziwe. Punktu nie kosztuje. Czy sprawiedliwe - to jest dokladnie
+   pytanie z punktu 2 i tam nalezy je rozstrzygnac, a nie tutaj.
+
+**Trzy przebiegi codexa, cztery uwagi, wszystkie przyjete.**
+
+**Pierwsza zamknela dziure, ktora sam sobie odpuscilem.** Napisalem wyzej, ze pliki maszynowe wchodza do
+sklejenia jako **jeden** dokument i uznalem to za akceptowalna resztke. Nie jest: `llmsCorpus` byl juz
+sklejeniem trzech plikow, wiec niedomkniety `<script` w llms.txt kasowal to samo llms-full.txt, po
+ktore ta zmiana poszla. Teraz `llmsCorpus` powstaje przez `joinDocuments(bodies)` z osobnych plikow,
+a surowe, nieczyszczone sklejenie zostaje tylko do wyciagania adresow MCP regexem (adres w probce kodu
+to nadal ich adres). Druga uwaga: dopasowanie tylko do adresow absolutnych mijalo `[Full](/docs/llms-full.txt)`,
+czyli forme, ktora format zwykle przyjmuje - link liczy sie teraz od pliku, w ktorym stoi.
+
+**Trzecia i czwarta uwaga dotyczyly juz samego podazania za linkiem.** Warunek „ta sama domena
+rejestrowalna" jest **za slaby na wspoldzielonym hostingu**: `registrableDomain` bierze dwie labelki,
+wiec `mine.github.io` i `other.github.io` sprowadzaja sie do tej samej nazwy i cudza dokumentacja
+weszlaby pod czyjs wynik. Warunkiem jest teraz **ten sam host, co plik indeksu**, z ktorego link
+wyszedl - indeks to adres, ktory sami wybralismy, wiec plik, na ktory wskazuje, ma lezec pod tym
+samym adresem. Firma, ktorej apex nazywa plik na subdomenie docsow, nic na tym nie traci, bo ten
+adres i tak jest wsrod odpytywanych konwencjonalnie. Druga rzecz: **martwy pierwszy kandydat konczyl
+szukanie**, wiec zywy plik nazwany nizej nigdy by nie wszedl. Teraz do trzech adresow, po kolei, az
+ktorys odpowie tekstem.
+
+**Piata i szosta uwaga: dwie rzeczy, ktore sam popsulem po drodze.** Trzy kandydaci odpytywani po
+kolei to trzy 8-sekundowe timeouty z 27-sekundowego budzetu skanu, wiec host, ktory przyjmuje
+polaczenie i nigdy nie konczy, zabralby budzet fazom za soba i ich checki wyszlyby jako niemierzalne.
+Teraz **jedna fala rownolegle**, wygrywa pierwszy, ktory odpowie tekstem. Druga: `joinDocuments`
+usuwa tresc skryptow, a **adres MCP w hydracji strony renderowanej klientem to nadal ich adres** -
+przez chwile szukanie adresow czytalo korpus juz oczyszczony i `mcp_present` moglo spasc do zera na
+firmie, ktora nic nie zmienila. Funnel dostaje teraz **dwa** korpusy z tych samych dokumentow:
+oczyszczony dokument po dokumencie do grepu frazy, surowy do wyciagania adresow regexem.
+
+**Siodma i osma uwaga zamknely to samo od drugiej strony.** Pliki maszynowe wychodza teraz ze skanu
+**jako lista, nie jako sklejony string** (`llmsBodies`), bo obu ksztaltow nie da sie odzyskac jeden z
+drugiego, a probowalem: gdy oddawalem je juz oczyszczone, adres MCP wpisany w literalny `<script>`
+w llms.txt przepadal i `mcp_present` moglo spasc do zera. I jeszcze jedno: ten sam indeks podany z
+apeksu **i** z hosta dokumentacji to **jedno cialo i dwa adresy**. Odrzucenie duplikatu ciala
+zabieralo druga baze, a link wzgledny liczy sie od pliku, przy ktorym stoi - wiec szukanie pelnego
+pliku dostaje teraz kazdy adres, ktory odpowiedzial, a odsiew duplikatow zostaje przy dowodach.
+
 
 ## HANDOVER 2026-08-24: POLOWA NASZEGO RUCHU BYLA JEDNA LICZBA, KTORA NIC NIE ZNACZYLA
 

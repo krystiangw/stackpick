@@ -709,6 +709,26 @@ export function stripCodeBlocks(html: string): string {
 }
 
 /**
+ * Several documents read as one body of text, each stripped before they touch each other.
+ *
+ * `stripCodeBlocks` drops everything after an unterminated `<script`, which is right for one page
+ * and destroys a concatenation: a home page cut at the 400 kB read cap ends mid-script, so joining
+ * first deleted every document that came after it. vercel.com measured 1.22 MB of documents, 523 kB
+ * of prose and none of the 411 kB of llms-full.txt that carried "Call POST /v1/api-keys", and the
+ * provisioning check published "None of the 7 provisioning phrases appears" about it.
+ *
+ * 84 of the 177 corpus rows read a truncated document, which is the population at risk and not the
+ * damage: 24 of those 84 were rescanned with this in place and one check moved, in the direction
+ * this cannot cause. Whether the cut lands inside a code block is what decides it, and mostly it
+ * does not. 9.50 fixed the same cause for the shell check; this is its second surface.
+ *
+ * A malformed document still loses its own tail. What it can no longer do is take the next one.
+ */
+export function joinDocuments(documents: string[]): string {
+  return documents.map((document) => stripCodeBlocks(document)).join('\n')
+}
+
+/**
  * Tags removed by walking the string rather than by `replace(/<[^>]+>/g, ' ')`.
  *
  * Measured on the shapes a hostile page can take, at the 400 kB we cap bodies at: 400 000 `<`

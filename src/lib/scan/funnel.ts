@@ -2274,6 +2274,13 @@ export type FunnelInput = {
    * socket put the two longest phases of the scan end to end for no reason.
    */
   corpus: Promise<string>
+  /**
+   * The same documents unstripped, and used for nothing but pulling addresses out with a regex. An
+   * MCP endpoint that a client-rendered page carries only in its hydration `<script>` is still the
+   * vendor's own address, and `corpus` no longer holds it: the prose grep needs script bodies gone,
+   * address discovery needs them kept, and one string cannot be both.
+   */
+  addressCorpus: Promise<string>
   pricingUrl: string | null
   signupUrl: string | null
   /**
@@ -2323,6 +2330,7 @@ export async function scanFunnel({
   domain,
   site,
   corpus,
+  addressCorpus,
   pricingUrl,
   signupUrl,
   docsUrl = null,
@@ -2484,7 +2492,9 @@ export async function scanFunnel({
   // documents a path on their own host that no guess reaches, and both answer a real JSON-RPC
   // challenge while we published that they run no server at all.
   const deeper =
-    firstWave.endpoints.length === 0 ? await addressesInTheirMcpPages(domain, await corpus) : { candidates: [], followed: [] }
+    firstWave.endpoints.length === 0
+      ? await addressesInTheirMcpPages(domain, await addressCorpus)
+      : { candidates: [], followed: [] }
   const secondWave =
     deeper.candidates.length > 0
       ? await probeMcpEndpoints(domain, site, { documented: deeper.candidates, onlyDocumented: true })

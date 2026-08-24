@@ -255,6 +255,13 @@ const CHECK_RULE_CHANGED: Record<string, readonly string[]> = {
   // block and the Crawl-delay out of, and which registry page the package is on. Measured by
   // `audit-evidence`, which asks our own first house rule of every published accusation. Nothing
   // about a vendor changed - the sentences now say where to look.
+  // 9.57 stops one document deleting the next. The corpus was joined and then stripped, so a home
+  // page cut at the read cap inside a `<script` swallowed every document after it, llms.txt and
+  // llms-full.txt last of all. Same cause 9.50 fixed for the shell check, a second surface. It also
+  // reads the llms-full.txt an index names rather than only the ones at addresses we guess, which
+  // is four vendors. A row that gains here documented no more than it did before; we finally read
+  // what it published.
+  '9.57': ['programmatic_provisioning', 'llms_txt', 'mcp_present'],
   '9.55': ['user_agents_allowed', 'no_crawl_delay', 'typed_package'],
   // 9.54 stops reading our own silence as the vendor's absence. A probe that never got an answer
   // (status 0) counted as "this file is not there", and with a dozen paths asked in parallel on two

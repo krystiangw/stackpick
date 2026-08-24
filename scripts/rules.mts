@@ -15,10 +15,10 @@ import { WATCH_FIELDS_DISCLOSED } from '../src/lib/watch'
 import { stayOutAfter } from '../src/lib/stayout'
 import { clientFamily, crawlerName, FAMILY_NAMES } from '../src/lib/visits'
 import { thinnerForAgents } from '../src/lib/scan'
-import { declaredSpecs } from '../src/lib/scan/machine'
+import { declaredSpecs, namedFullFiles } from '../src/lib/scan/machine'
 import { looksLikeEntryPackage, readBulkDownloads, readsAsOwnedBy, readsAsTheirLibrary, shapeRankOf } from '../src/lib/scan/discover'
 import { changesBetween, comparableScorecards, reproducedChanges, rulesChangedBetween, turnedAwayAtTheEdge, unseenChanges, worthTelling } from '../src/lib/watch'
-import { withoutTags } from '../src/lib/scan/http'
+import { joinDocuments, stripCodeBlocks, withoutTags } from '../src/lib/scan/http'
 import { isOlderThan } from '../src/lib/formula'
 import { buildFixPlan } from '../src/lib/fixfirst'
 import { changeEmail, confirmEmail } from '../src/lib/watch-email'
@@ -4117,6 +4117,70 @@ check(
 const zrodloMongo = readFileSync('src/lib/store-mongo.ts', 'utf8')
 check('indeks odwiedzin obejmuje rodzine', zrodloMongo.includes('visits.createIndex({ day: -1, path: 1, family: 1 }, { unique: true })'), true)
 check('i nie ma juz wezszego klucza', zrodloMongo.includes('visits.createIndex({ day: -1, path: 1 }, { unique: true })'), false)
+// Dokument, ktory sie nie domyka, zabieral kazdy nastepny: strona ucieta na limicie odczytu konczy
+// sie w srodku <script, a sklejenie przed czyszczeniem kasowalo wszystko za nia. vercel.com stracil
+// tak cale llms-full.txt i dostal „None of the 7 provisioning phrases appears".
+const urwany = '<p>alfa</p><script>var x = "'
+const drugi = '<p>POST /v1/api-keys</p>'
+check('sklejone dokumenty nie zjadaja sie nawzajem', joinDocuments([urwany, drugi]).includes('POST /v1/api-keys'), true)
+// Kontrolka: bez tego regula wyzej nie sprawdzalaby niczego, bo naiwne sklejenie gubi drugi dokument.
+check('a sklejenie przed czyszczeniem gubilo drugi', stripCodeBlocks([urwany, drugi].join('\n')).includes('POST /v1/api-keys'), false)
+// I nie poluzowalismy czyszczenia: wlasny ogon zepsutego dokumentu nadal odpada, bo w HTML to jest
+// tresc skryptu, a nie proza.
+check('zepsuty dokument nadal traci wlasny ogon', joinDocuments(['<p>alfa</p><script>tajne'])
+  .includes('tajne'), false)
+
+// Ten sam indeks podany z apeksu i z hosta dokumentacji to jedno cialo i dwa adresy. Link wzgledny
+// liczy sie od tego, przy ktorym stoi, wiec odrzucenie duplikatu ciala nie moze zabrac drugiej bazy.
+const dwieBazy = [
+  { body: '- [Full](/docs/llms-full.txt): all', base: 'https://vendor.com/llms.txt', index: true },
+  { body: '- [Full](/docs/llms-full.txt): all', base: 'https://docs.vendor.com/llms.txt', index: true },
+]
+check('kazdy adres, spod ktorego przyszedl indeks, liczy sie osobno',
+  namedFullFiles(dwieBazy, []).join(' '),
+  'https://vendor.com/docs/llms-full.txt https://docs.vendor.com/docs/llms-full.txt')
+
+// Proza i adresy potrzebuja dwoch roznych rzeczy z tych samych dokumentow: grep frazy wymaga, zeby
+// tresc skryptow zniknela, a adres MCP w hydracji strony renderowanej klientem to nadal ich adres.
+// Jeden string nie moze byc obydwoma naraz, wiec funnel dostaje dwa.
+const zrodloKorpusu = readFileSync('src/lib/scan/index.ts', 'utf8')
+check('proza idzie po dokumencie', /corpus: documents\.then\(\(parts\) => joinDocuments\(parts\)\)/.test(zrodloKorpusu), true)
+check('adresy czyta sie z surowego sklejenia', /addressCorpus: documents\.then\(\(parts\) => parts\.join/.test(zrodloKorpusu), true)
+const zrodloLejka = readFileSync('src/lib/scan/funnel.ts', 'utf8')
+check('szukanie adresow MCP siega po surowy korpus', /addressesInTheirMcpPages\(domain, await addressCorpus\)/.test(zrodloLejka), true)
+
+// Indeks wart jest tyle, ile z niego przeczytamy. Cztery firmy w korpusie nazywaja llms-full.txt pod
+// adresem, o ktory sami nigdy nie pytamy.
+const indeks = (body: string, base = 'https://vendor.com/llms.txt') => [{ body, base, index: true }]
+const nazwane = (body: string, ...args: [string?, string[]?]) =>
+  namedFullFiles(indeks(body, args[0]), args[1] ?? []).join(' ')
+check('idziemy za pelnym plikiem, ktory indeks nazywa',
+  nazwane('- [Full](https://vendor.com/docs/llms-full.txt): all of it'),
+  'https://vendor.com/docs/llms-full.txt')
+// Format zwykle pisze sie wzglednie, wiec dopasowanie tylko do adresow absolutnych przechodziloby
+// obok tego, po co tu jestesmy.
+check('link wzgledny liczy sie od pliku, w ktorym stoi',
+  nazwane('- [Full](/docs/llms-full.txt): all of it'),
+  'https://vendor.com/docs/llms-full.txt')
+// Kontrolka: indeks bez takiego linku niczego nie dodaje, wiec regula wyzej rozroznia dwa przypadki.
+check('a indeks bez pelnego pliku nie dodaje nic', nazwane('- [Docs](https://vendor.com/docs): pages'), '')
+// Link w cudzym pliku to cudzy tekst: gdyby prowadzil gdziekolwiek, pobrany plik wybieralby nam
+// nastepne zapytanie.
+check('cudza domena nie kieruje naszego zapytania',
+  nazwane('- [Full](https://evil.example/llms-full.txt): all of it'), '')
+// Na wspoldzielonym hostingu dwie labelki to za malo: mine.github.io i other.github.io maja te sama
+// domene rejestrowalna, wiec cudza dokumentacja trafilaby pod czyjs wynik.
+check('sasiad na wspoldzielonym hostingu to nie ta sama firma',
+  nazwane('- [Full](https://other.github.io/llms-full.txt): all', 'https://mine.github.io/llms.txt'), '')
+// O ten sam adres nie pytamy drugi raz.
+check('adres juz odpytany nie wraca',
+  nazwane('- [Full](https://vendor.com/docs/llms-full.txt): all', undefined, ['https://vendor.com/docs/llms-full.txt']),
+  '')
+// Pierwszy kandydat moze byc martwy, wiec lista nie konczy sie na nim.
+check('martwy pierwszy kandydat nie konczy szukania',
+  nazwane('- [A](/a/llms-full.txt): one\n- [B](/b/llms-full.txt): two'),
+  'https://vendor.com/a/llms-full.txt https://vendor.com/b/llms-full.txt')
+
 check('rodzina to jedno slowo z listy', FAMILY_NAMES.includes(clientFamily('curl/8.7.1') as never), true)
 // Bezglowa przegladarka to program, nie czlowiek: bez tego liczylaby sie jako „browser" i nowa
 // rodzina nigdy by sie nie pojawila w rozbiciu.

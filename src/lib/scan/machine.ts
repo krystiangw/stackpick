@@ -1,4 +1,10 @@
-import { fetchUrl, inParallel, wasNeverAsked, isRealTextFile, type Fetched } from './http'
+import {
+  fetchUrl,
+  inParallel,
+  wasNeverAsked,
+  isRealTextFile,
+  type Fetched,
+} from './http'
 
 export const WELL_KNOWN_PATHS = {
   api_catalog_rfc9727: '/.well-known/api-catalog',
@@ -79,7 +85,17 @@ export type MachineFindings = {
  * provisioning grep has to see it: trigger.dev documents its Management API in the llms.txt this
  * scan had already read, and scored zero for not documenting it.
  */
-export type MachineScan = { findings: MachineFindings; llmsCorpus: string; llmsUrls: string[] }
+export type MachineScan = {
+  findings: MachineFindings
+  /**
+   * The machine-readable files as read, one entry each and unstripped. Handed over as a list rather
+   * than a string because the caller needs both shapes and cannot recover one from the other: the
+   * prose grep wants each document stripped before they touch, and the address regex wants the
+   * script bodies kept.
+   */
+  llmsBodies: string[]
+  llmsUrls: string[]
+}
 
 /** Enough to catch a stale map, few enough that checking one costs nobody a phase. */
 const MOST_LLMS_LINKS_SAMPLED = 12
@@ -284,6 +300,54 @@ async function negotiatesMarkdown(
   }
 }
 
+/** Enough to survive a dead first candidate, few enough that a hostile index cannot spend the scan. */
+const MOST_NAMED_FULL_FILES = 3
+
+/**
+ * The full files an index names, in the order it names them, minus the addresses we already asked
+ * for. Restricted to the host that served the index itself, not to the registrable domain: two
+ * labels is all `registrableDomain` takes, so `mine.github.io` and `other.github.io` reduce to the
+ * same name and a sibling tenant's documentation would be published under our subject's score. The
+ * index is an address we chose; the file it points at has to be on that same address. A vendor
+ * whose apex names a file on their documentation subdomain loses nothing by it, because that is one
+ * of the locations probed above.
+ */
+export function namedFullFiles(
+  files: { body: string; base: string; index: boolean }[],
+  alreadyProbed: string[],
+): string[] {
+  const probed = new Set(alreadyProbed)
+  const found: string[] = []
+  for (const file of files) {
+    if (!file.index) continue
+    let indexHost: string
+    try {
+      indexHost = new URL(file.base).hostname
+    } catch {
+      continue
+    }
+    // Resolved against the file it was written in, like every other link we follow out of an index:
+    // `[Full](/docs/llms-full.txt)` is how the format is usually written and an absolute-only match
+    // would walk past it.
+    for (const match of file.body.matchAll(/\]\(([^\s)]+)\)/g)) {
+      let resolved: URL
+      try {
+        resolved = new URL(match[1], file.base)
+      } catch {
+        continue
+      }
+      if (!/llms[-_]full\.txt$/i.test(resolved.pathname)) continue
+      if (resolved.hostname !== indexHost) continue
+      const candidate = resolved.href.split('#')[0]
+      if (probed.has(candidate)) continue
+      probed.add(candidate)
+      found.push(candidate)
+      if (found.length === MOST_NAMED_FULL_FILES) return found
+    }
+  }
+  return found
+}
+
 export async function scanMachineContext(
   site: string,
   docs: string | null,
@@ -360,6 +424,13 @@ export async function scanMachineContext(
   // thoroughness it does not have.
   const llmsProbed = [...new Set(Object.values(locations))]
   let corpus = ''
+  /**
+   * The same files apart, because the funnel greps them and `stripCodeBlocks` run over a
+   * concatenation lets an unterminated block in one file delete the ones behind it. `corpus` stays
+   * joined and unstripped: the MCP addresses are read off it with a regex, and one sitting inside a
+   * code sample is still the vendor's own address.
+   */
+  const bodies: string[] = []
   /** The count of a word is only a fact about a file we hold all of. */
   let countable = ''
   let anyTruncated = false
@@ -369,15 +440,61 @@ export async function scanMachineContext(
   // The same file answers at more than one of these locations - chargebee.com serves its llms.txt
   // on the apex and on www - and counting one document twice would be counting evidence twice.
   const seenBodies = new Set<string>()
+  /**
+   * Every address that answered, before the body-level deduplication. A relative link resolves
+   * against the file it was written in, so an index served from both the apex and the documentation
+   * host names two different addresses with one body: keeping only the first base would probe the
+   * apex candidate and walk past the file sitting beside the copy we dropped.
+   */
+  const servingBases: { body: string; base: string; index: boolean }[] = []
   for (const [label, file, body, url, servedFrom] of llmsEntries) {
     llms[label] = file
-    if (!file.present || seenBodies.has(body)) continue
+    if (!file.present) continue
+    servingBases.push({ body, base: servedFrom, index: !label.includes('full') })
+    if (seenBodies.has(body)) continue
     seenBodies.add(body)
     llmsUrls.push(url)
     llmsFiles.push({ body, base: servedFrom, index: !label.includes('full') })
+    bodies.push(body)
     corpus += body
     if (file.truncated) anyTruncated = true
     else countable += body
+  }
+
+  // The index is only worth publishing if we then read what it points at. vercel.com replaced a
+  // 215 kB llms.txt carrying 1872 page links with a 1.6 kB index naming
+  // vercel.com/docs/llms-full.txt, and because we probe conventional addresses instead of the
+  // address the vendor just gave us, the 8.3 MB behind that link never entered the scan. Their
+  // score fell three points and the provisioning check published "None of the 7 provisioning
+  // phrases appears" about a vendor documenting POST /api-keys. Four vendors in the corpus name a
+  // full file at a path we never asked for, all of them for following the format as written.
+  if (!Object.entries(llms).some(([label, file]) => label.includes('full') && file.present)) {
+    // All of them at once, and the first that answers with text wins. Asked one after another, three
+    // candidates that accept a connection and never finish are three 8-second timeouts out of a
+    // 27-second budget, and the phases behind this one would go unmeasured to pay for it.
+    const candidates = namedFullFiles(servingBases, llmsProbed)
+    if (candidates.length > 0) {
+      llmsProbed.push(...candidates)
+      const answers = await inParallel(candidates, (url) => fetchUrl(url, { accept: 'text/plain' }))
+      const at = answers.findIndex((answer) => isRealTextFile(answer))
+      const got = answers[at === -1 ? 0 : at]
+      const present = at !== -1
+      llms.named_llms_full_txt = {
+        present,
+        bytes: present ? got.body.length : 0,
+        links: present ? (got.body.match(/\]\(http/g) ?? []).length : 0,
+        truncated: present && got.truncated,
+      }
+      if (present && !seenBodies.has(got.body)) {
+        seenBodies.add(got.body)
+        llmsUrls.push(candidates[at])
+        llmsFiles.push({ body: got.body, base: got.url || candidates[at], index: false })
+        bodies.push(got.body)
+        corpus += got.body
+        if (got.truncated) anyTruncated = true
+        else countable += got.body
+      }
+    }
   }
 
   const llmsLinks = await sampleLlmsLinks(llmsFiles)
@@ -445,7 +562,7 @@ export async function scanMachineContext(
         exposesOwnServer: uniqueMcpUrls.some((url) => /\/(docs|tools)\/.*mcp|mcp-server/i.test(url)),
       },
     },
-    llmsCorpus: corpus,
+    llmsBodies: bodies,
     llmsUrls,
   }
 }
