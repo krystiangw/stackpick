@@ -62,9 +62,14 @@ jobs:
           fi
 
       - name: A scan must still run end to end
+        env:
+          # Nie po to, zeby wejsc: endpoint jest publiczny. Po to, zeby wiersz dalo sie odroznic od
+          # skanu obcego czlowieka czyms, czego obcy czlowiek nie moze napisac.
+          TOKEN: ${{ secrets.STACKPICK_CRON_TOKEN }}
         run: |
           set -euo pipefail
           body=$(curl -sS --max-time 90 -X POST https://letagentsin.com/api/scan \
+            -H "authorization: Bearer $TOKEN" \
             -H 'content-type: application/json' -d '{"domain":"example.com"}')
           total=$(echo "$body" | jq -r '.scorecard.total // "none"')
           echo "example.com scored $total"

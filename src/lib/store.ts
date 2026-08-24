@@ -16,6 +16,20 @@ export type Report = {
   scorecard: Scorecard
   /** Run by us to build the published corpus, as opposed to run by a visitor on their own site. */
   seeded?: boolean
+  /**
+   * Our own hourly health check, which scans example.com through the public endpoint. Without this
+   * it lands in the same collection as a stranger's scan, and every count of "how many people
+   * scanned something" comes out over twice too high: 227 of the 420 non-seeded rows on
+   * 2026-08-24 were this one cron.
+   */
+  probe?: boolean
+  /**
+   * How we know, and there is only one way that counts: the caller proved it with the cron secret.
+   * An earlier version of this marked rows by a user agent and attributed history by the hourly
+   * rhythm of the cron. Both were dropped. A name anybody can type is not proof, and a rhythm says
+   * a row is plausible rather than whose it is.
+   */
+  probeBy?: 'cron-token'
 }
 
 /** The payment reference a stored line carries, or null when the line is not a payment or not JSON. */
@@ -99,7 +113,7 @@ export interface Store {
   /** Every watch on one domain, so the report can be told what the mail already knows about them. */
   watchesForDomain(domain: string): Promise<Watch[]>
   /** One counter per day and path. Upserted, so a page render costs one small write. */
-  recordVisit(visit: { day: string; path: string }): Promise<void>
+  recordVisit(visit: { day: string; path: string; family: string }): Promise<void>
   /**
    * Whether the store would accept a write, asked without leaving one behind that matters.
    *
@@ -109,7 +123,7 @@ export interface Store {
    * that cannot write is down whatever its home page renders.
    */
   writable(): Promise<true | string>
-  listVisits(days: number): Promise<{ day: string; path: string; count: number }[]>
+  listVisits(days: number): Promise<{ day: string; path: string; family?: string; count: number }[]>
 }
 
 

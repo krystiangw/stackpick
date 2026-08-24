@@ -21,6 +21,21 @@ function fromConsole(request: Request): boolean {
   )
 }
 
+/**
+ * Our hourly health check runs a real scan through the public endpoint, which is the point of it,
+ * and lands in the same collection as a stranger's. Marked here so counting strangers stays honest.
+ *
+ * The proof is the cron secret, not a name. A user agent is whatever the caller types, so marking on
+ * one would let anybody drop their own scan out of our numbers by copying a string - self
+ * identification wearing the clothes of a measurement, which is the mistake this file exists to
+ * avoid. The same secret already guards the three cron endpoints.
+ */
+function isOurHealthCheck(request: Request): boolean {
+  const secret = process.env.STACKPICK_CRON_TOKEN
+  if (!secret) return false
+  return request.headers.get('authorization') === `Bearer ${secret}`
+}
+
 export async function runScan(request: Request, domain: string): Promise<ScanRun> {
   const seeded = fromConsole(request)
   const gate = await gateScan(request, domain, seeded)
@@ -84,6 +99,7 @@ export async function runScan(request: Request, domain: string): Promise<ScanRun
       findings,
       scorecard: scoreFindings(findings),
       seeded,
+      ...(isOurHealthCheck(request) ? { probe: true, probeBy: 'cron-token' as const } : {}),
     }
     // The measurement is the product and it is already finished by here; saving it is what gives
     // it a permanent address. On 2026-08-13 the cluster hit its quota and every scan returned

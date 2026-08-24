@@ -113,7 +113,11 @@ async function collections(): Promise<{
     leads.createIndex({ createdAt: -1 }),
     // Sparse: only payment leads carry one, and free-scan leads share a report id by design.
     leads.createIndex({ paymentRef: 1 }, { unique: true, sparse: true }),
-    visits.createIndex({ day: -1, path: 1 }, { unique: true }),
+    // Rodzina jest czescia klucza, bo bez niej druga rodzina tego samego dnia i tej samej sciezki
+    // wpada na unikalnosc, upsert leci bledem, a licznik po cichu gubi ruch. Stary indeks
+    // `day_-1_path_1` trzeba usunac, inaczej dalej pilnuje wezszego klucza: robi to
+    // `scripts/migrate-visit-index.mts`.
+    visits.createIndex({ day: -1, path: 1, family: 1 }, { unique: true }),
     watches.createIndex({ id: 1 }, { unique: true }),
     // One person watching one domain once. Two rows would mail them the same change twice.
     watches.createIndex({ email: 1, domain: 1 }, { unique: true }),
@@ -433,10 +437,13 @@ export class MongoStore implements Store {
     return (await watches.find({ email: email.toLowerCase() }, withoutId).toArray()) as Watch[]
   }
 
-  async recordVisit(visit: { day: string; path: string }) {
+  async recordVisit(visit: { day: string; path: string; family: string }) {
     const { visits } = await collections()
-    await visits
-      .updateOne({ day: visit.day, path: visit.path }, { $inc: { count: 1 } }, { upsert: true })
+    await visits.updateOne(
+      { day: visit.day, path: visit.path, family: visit.family },
+      { $inc: { count: 1 } },
+      { upsert: true },
+    )
   }
 
   async listVisits(days: number) {
@@ -445,7 +452,7 @@ export class MongoStore implements Store {
     return (await visits
       .find({ day: { $gte: since } }, withoutId)
       .sort({ day: -1, count: -1 })
-      .toArray()) as { day: string; path: string; count: number }[]
+      .toArray()) as { day: string; path: string; family?: string; count: number }[]
   }
 
   async hasPaymentRef(paymentRef: string) {

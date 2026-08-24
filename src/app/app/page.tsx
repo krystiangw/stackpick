@@ -22,6 +22,18 @@ export default async function AppPage() {
   const crawlers = Object.entries(byKind)
     .filter(([kind]) => kind !== 'browser' && kind !== 'agent')
     .sort((a, b) => b[1] - a[1])
+  // The half of our traffic that is not a browser was one undivided number, and "agent" in it means
+  // nothing more than "did not say Mozilla": a real agent, a scraper, a monitor and our own curl all
+  // landed together. The family splits it without keeping a string that describes one visitor.
+  const agentFamilies = Object.entries(
+    visits
+      .filter((visit) => visit.path.endsWith(' agent'))
+      .reduce<Record<string, number>>((totals, visit) => {
+        const family = visit.family ?? 'not recorded'
+        totals[family] = (totals[family] ?? 0) + visit.count
+        return totals
+      }, {}),
+  ).sort((a, b) => b[1] - a[1])
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
@@ -37,14 +49,19 @@ export default async function AppPage() {
           {byKind.browser ?? 0} browser renders · {byKind.agent ?? 0} from unnamed clients that are not a browser
         </p>
         <p className="mt-2 max-w-2xl font-mono text-xs text-ink-soft">
+          {agentFamilies.length > 0
+            ? `unnamed clients by family: ${agentFamilies.map(([name, count]) => `${name} ${count}`).join(' · ')}`
+            : 'no unnamed client counted yet'}
+        </p>
+        <p className="mt-2 max-w-2xl font-mono text-xs text-ink-soft">
           {crawlers.length > 0
             ? `named crawlers: ${crawlers.map(([name, count]) => `${name} ${count}`).join(' · ')}`
             : 'no named crawler has fetched a counted page yet'}
         </p>
         <ul className="mt-3 flex flex-col gap-1 font-mono text-xs text-ink-soft">
           {visits.slice(0, 12).map((visit) => (
-            <li key={`${visit.day}${visit.path}`}>
-              {visit.day} · {visit.path} · {visit.count}
+            <li key={`${visit.day}${visit.path}${visit.family ?? ''}`}>
+              {visit.day} · {visit.path} · {visit.family ?? 'not recorded'} · {visit.count}
             </li>
           ))}
           {visits.length === 0 && <li>nothing counted yet</li>}

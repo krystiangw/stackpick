@@ -84,9 +84,15 @@ export default async function PrivacyPage() {
             <li>
               <strong className="text-ink">A page counter.</strong> A date, a path, and whether the request looked like
               a browser, an unnamed client, or one of a short list of search and AI crawlers we watch for by name so we
-              can tell which indexes read us. The crawler name is the only thing kept from the user-agent, and it names
-              a company&apos;s robot rather than a visitor. No IP address, no user-agent string stored, no identifier that
-              could be joined to a person.
+              can tell which indexes read us. Alongside that, one word from a fixed list naming the family of client
+              that asked: <span className="font-mono text-xs">chrome</span>,{' '}
+              <span className="font-mono text-xs">firefox</span>, <span className="font-mono text-xs">curl</span>,{' '}
+              <span className="font-mono text-xs">python</span> and a dozen others, or{' '}
+              <span className="font-mono text-xs">other</span> when it is none of them. It tells us how much of our
+              traffic is a script rather than a person, which is the question this product exists to ask. The crawler
+              name and that one word are the only things kept from the user-agent, and neither carries a version, a
+              platform or a build. No IP address, no user-agent string stored, no identifier that could be joined to a
+              person.
             </li>
             <li>
               <strong className="text-ink">Cookieless web analytics.</strong> For browsers that run JavaScript, PostHog

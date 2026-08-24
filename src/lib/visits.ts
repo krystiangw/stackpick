@@ -34,6 +34,49 @@ export const visitKey = (path: string, kind: string): string => `${path} ${kind}
 export const pathOf = (key: string): string => (key.includes(' ') ? key.slice(0, key.lastIndexOf(' ')) : key)
 export const kindOf = (key: string): string => (key.includes(' ') ? key.slice(key.lastIndexOf(' ') + 1) : '')
 
+/**
+ * The client families we file a visit under. A closed list on purpose: the point is to split the
+ * "not a browser" half of our traffic into things that mean different things - a person's browser,
+ * a script somebody wrote, a headless browser driving the page - without keeping a string that
+ * describes one visitor closely enough to recognise them again.
+ *
+ * Ordered, first match wins. Headless before Chrome because it says both; Edge and every other
+ * Chromium shell before Chrome for the same reason; Safari last of the browsers because Chrome's
+ * user agent claims Safari too.
+ */
+const FAMILIES: [name: string, marker: RegExp][] = [
+  ['headless-chrome', /HeadlessChrome|Puppeteer|Playwright/i],
+  ['curl', /^curl\//i],
+  ['wget', /^Wget/i],
+  ['python', /python-requests|httpx|aiohttp|urllib|scrapy|Python\//i],
+  ['node', /node-fetch|undici|axios|got \(|Node\.js/i],
+  ['go', /Go-http-client|go-resty/i],
+  ['java', /Java\/|okhttp|Apache-HttpClient/i],
+  ['php', /GuzzleHttp|PHP\//i],
+  ['ruby', /Ruby|Faraday/i],
+  ['rust', /reqwest|rust-/i],
+  // Na iOS kazda przegladarka jest Safari pod spodem i tak sie przedstawia, wiec jej wlasny token
+  // musi zostac przeczytany, zanim `Safari/` zgarnie wszystko do jednego kubla.
+  ['edge', /Edg[A-Z]?\/|EdgiOS\//],
+  ['opera', /OPR\/|OPiOS\//],
+  ['firefox', /Firefox\/|FxiOS\//],
+  ['chrome', /Chrome\/|Chromium\/|CriOS\//],
+  ['safari', /Safari\//],
+]
+
+export const FAMILY_NAMES = [...FAMILIES.map(([name]) => name), 'other', 'none'] as const
+
+/**
+ * A coarse family and nothing else. Never the user agent itself: a full string carries version,
+ * build and platform, which together single somebody out, and we have no use for any of that. The
+ * question this answers is "how much of the half that is not a browser is a script", which needs
+ * one token out of a fixed list.
+ */
+export function clientFamily(userAgent?: string | null): string {
+  if (!userAgent) return 'none'
+  return FAMILIES.find(([, marker]) => marker.test(userAgent))?.[0] ?? 'other'
+}
+
 /** Never throws and never blocks the page: a counter that can 500 a page is worse than no counter. */
 export function recordVisit(path: string, userAgent?: string | null): void {
   if (userAgent && OURS.test(userAgent)) return
@@ -42,7 +85,7 @@ export function recordVisit(path: string, userAgent?: string | null): void {
   // A crawler we can name is a third thing: it says which index has a chance of holding us.
   const kind = crawlerName(userAgent) ?? (looksLikeAgent(userAgent) ? 'agent' : 'browser')
   void getStore()
-    .recordVisit({ day, path: visitKey(path, kind) })
+    .recordVisit({ day, path: visitKey(path, kind), family: clientFamily(userAgent) })
     .catch((error) => console.error('visit counter failed, page unaffected', error))
 }
 
@@ -85,7 +128,7 @@ export function crawlerName(userAgent?: string | null): string | null {
 }
 
 const AGENT_MARKERS =
-  /bot\b|crawler|spider|claude|gpt|openai|anthropic|perplexity|curl|wget|python-requests|httpx|node-fetch|axios|go-http|java\/|okhttp/i
+  /bot\b|crawler|spider|claude|gpt|openai|anthropic|perplexity|curl|wget|python-requests|httpx|node-fetch|axios|go-http|java\/|okhttp|HeadlessChrome|Puppeteer|Playwright/i
 
 function looksLikeAgent(userAgent?: string | null): boolean {
   if (!userAgent) return true

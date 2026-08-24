@@ -13,7 +13,7 @@ import { asksUsToStayOut, crawlDelayForAgents, parseRobots, stanceFrom } from '.
 import { CONTROLLER_IS_NAMED } from '../src/lib/seller'
 import { WATCH_FIELDS_DISCLOSED } from '../src/lib/watch'
 import { stayOutAfter } from '../src/lib/stayout'
-import { crawlerName } from '../src/lib/visits'
+import { clientFamily, crawlerName, FAMILY_NAMES } from '../src/lib/visits'
 import { thinnerForAgents } from '../src/lib/scan'
 import { declaredSpecs } from '../src/lib/scan/machine'
 import { looksLikeEntryPackage, readBulkDownloads, readsAsOwnedBy, readsAsTheirLibrary, shapeRankOf } from '../src/lib/scan/discover'
@@ -3672,7 +3672,15 @@ check('ClaudeBot to nadal ClaudeBot', crawlerName('Mozilla/5.0 (compatible; Clau
 check('przegladarka nie jest nazwanym crawlerem', crawlerName('Mozilla/5.0 (Macintosh) Safari/605'), null)
 check('nasz wlasny UA tez nie', crawlerName('LetAgentsIn/1.0 (+https://letagentsin.com/bot)'), null)
 const prywatnosc = readFileSync('src/app/privacy/page.tsx', 'utf8').replace(/\s+/g, ' ')
-check('prywatnosc mowi o nazwie crawlera', prywatnosc.includes('The crawler name is the only thing kept from the user-agent'), true)
+// Bylo tu zdanie „The crawler name is the only thing kept from the user-agent" i ta regula zapalila
+// sie w chwili, gdy licznik zaczal zapisywac rodzine klienta - czyli zrobila dokladnie to, po co
+// jest. Prywatnosc ma teraz wymieniac OBIE rzeczy i nie moze twierdzic, ze trzymamy tylko jedna.
+check('prywatnosc mowi o nazwie crawlera i o rodzinie', prywatnosc.includes('The crawler name and that one word are the only things kept from the user-agent'), true)
+check('i nie twierdzi juz, ze to jedyna rzecz', prywatnosc.includes('The crawler name is the only thing kept'), false)
+check('prywatnosc nazywa rodziny po imieniu', ['chrome', 'firefox', 'curl', 'python'].every((f) => prywatnosc.includes(`>${f}<`)), true)
+// Kontrolka: strona nadal mowi, ze pelnego user agenta nie przechowujemy, bo to obietnica, ktora
+// pilnuje regula wyzej po stronie kodu.
+check('i nadal obiecuje, ze pelny user agent nie jest zapisywany', prywatnosc.includes('no user-agent string stored'), true)
 check('i nie twierdzi juz, ze to tylko browser albo agent', prywatnosc.includes('whether the request looked like a browser or an agent'), false)
 
 // Strona o cudzym standardzie publikuje werdykt o czyms, czego nie kontrolujemy, wiec liczby na
@@ -4100,6 +4108,51 @@ check(
   /detail: '[^']*nothing on the site links[^']*'/.test("detail: 'Not applicable: nothing on the site links to pricing or to an account'"),
   true,
 )
+
+// Polowa naszego ruchu to „agent", co znaczy tylko tyle, ze klient nie powiedzial Mozilla. Rodzina
+// dzieli to na rzeczy, ktore znacza co innego, ale wolno jej byc TYLKO jednym slowem z zamknietej
+// listy: pelny user agent niesie wersje, platforme i build, a to razem wskazuje na jedna osobe.
+// Klucz w bazie musi obejmowac rodzine, inaczej druga rodzina tego samego dnia wpada na unikalnosc
+// i licznik gubi ruch przez blad, ktorego nikt nie zobaczy.
+const zrodloMongo = readFileSync('src/lib/store-mongo.ts', 'utf8')
+check('indeks odwiedzin obejmuje rodzine', zrodloMongo.includes('visits.createIndex({ day: -1, path: 1, family: 1 }, { unique: true })'), true)
+check('i nie ma juz wezszego klucza', zrodloMongo.includes('visits.createIndex({ day: -1, path: 1 }, { unique: true })'), false)
+check('rodzina to jedno slowo z listy', FAMILY_NAMES.includes(clientFamily('curl/8.7.1') as never), true)
+// Bezglowa przegladarka to program, nie czlowiek: bez tego liczylaby sie jako „browser" i nowa
+// rodzina nigdy by sie nie pojawila w rozbiciu.
+const zrodloVisits = readFileSync('src/lib/visits.ts', 'utf8')
+check('bezglowa przegladarka liczy sie jako program', /HeadlessChrome\|Puppeteer\|Playwright/.test(zrodloVisits.split('AGENT_MARKERS')[1] ?? ''), true)
+// Na iOS kazda przegladarka mowi Safari, wiec bez wlasnych tokenow wszystkie wpadlyby do safari,
+// a pelnego user agenta juz nie mamy, wiec taki blad byloby nieodwracalny.
+check('chrome na iOS to chrome', clientFamily('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0) CriOS/141.0 Mobile/15E148 Safari/604.1'), 'chrome')
+check('firefox na iOS to firefox', clientFamily('Mozilla/5.0 (iPhone) FxiOS/141.0 Mobile/15E148 Safari/605.1.15'), 'firefox')
+check('edge na iOS to edge', clientFamily('Mozilla/5.0 (iPhone) EdgiOS/141.0 Mobile/15E148 Safari/605.1.15'), 'edge')
+// Kontrolka: prawdziwe Safari na iPhone nadal jest safari, wiec reguly wyzej cos rozrozniaja.
+check('a samo Safari na iPhone zostaje safari', clientFamily('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0) Version/18.0 Mobile/15E148 Safari/604.1'), 'safari')
+check('curl to curl', clientFamily('curl/8.7.1'), 'curl')
+check('bezglowa przegladarka przed chrome', clientFamily('Mozilla/5.0 HeadlessChrome/141.0 Safari/537.36'), 'headless-chrome')
+check('edge przed chrome', clientFamily('Mozilla/5.0 Chrome/141.0 Safari/537.36 Edg/141.0'), 'edge')
+check('safari dopiero po chrome', clientFamily('Mozilla/5.0 Version/18.0 Safari/605.1.15'), 'safari')
+check('nieznany klient to other, nie jego nazwa', clientFamily('ZupelnieNowyKlient/9.9 (build 12345; unikat-abc)'), 'other')
+check('brak naglowka to none', clientFamily(undefined), 'none')
+// Kontrolka, ktora naprawde pilnuje obietnicy z /privacy: nic z tego stringa nie moze wyjsc dalej.
+const unikat = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/141.0.7390.55 Safari/537.36 UNIKAT-4f3a9'
+check('nic z user agenta nie wychodzi poza rodzine', clientFamily(unikat).includes('UNIKAT') || clientFamily(unikat).includes('141'), false)
+check('a sam unikat bylby widoczny, gdyby przeszedl', unikat.includes('UNIKAT-4f3a9'), true)
+
+// Nasz cogodzinny health check skanuje example.com przez publiczny endpoint i laduje w tej samej
+// kolekcji co skan obcego czlowieka: 227 z 420 wierszy „od odwiedzajacych" bylo tym cronem.
+// Dowodem jest SEKRET, nie nazwa. Pierwsza wersja oznaczala wiersz po user agencie, czyli po
+// stringu, ktory kazdy moze wpisac - wtedy dowolny gosc wypisywalby sie z naszych statystyk.
+const zrodloSkanu = readFileSync('src/lib/scan-run.ts', 'utf8')
+const healthWorkflow = readFileSync('.github/workflows/health.yml', 'utf8')
+check('sonda rozpoznaje sie sekretem crona', zrodloSkanu.includes('`Bearer ${secret}`') && zrodloSkanu.includes('STACKPICK_CRON_TOKEN'), true)
+check('i nie po nazwie, ktora kazdy moze wpisac', /user-agent/i.test(zrodloSkanu), false)
+check('workflow zdrowia wysyla ten sekret przy skanie', healthWorkflow.includes('authorization: Bearer $TOKEN'), true)
+check('a wiersz zapisuje, ze stoi na sekrecie', zrodloSkanu.includes("probeBy: 'cron-token'"), true)
+// Historii nie przypisujemy wcale: rytm crona mowi, ze wiersz jest prawdopodobny, a nie czyj jest.
+// Skany example.com sprzed tej zmiany zostaja nieprzypisane i nie licza sie jako odwiedzajacy.
+check('migracja historii nie zgaduje po rytmie', existsSync('scripts/mark-health-probes.mts'), false)
 
 const workerSource = readFileSync('harness/visibility-worker.mts', 'utf8')
 // Uderzenie na timerze bylo tym samym klamstwem w druga strone: kazde wywolanie agenta to
