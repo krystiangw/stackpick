@@ -1,4 +1,36 @@
-# Let Agents In: stan na 2026-08-24 (produkcja v774, formula 9.57 przemieciona, korpus czyta to, co vendor publikuje)
+# Let Agents In: stan na 2026-08-26 (produkcja v774, formula 9.57 przemieciona, stary klaster oddany)
+
+## STARA BAZA SKASOWANA, CUDZY KLASTER ODDANY (2026-08-26, na wyrazna prosbe Krystiana)
+
+Migracja z 20 sierpnia zostawila nasza stara baze na `equity-analyst-flex` jako rollback, z warunkiem
+"nie wczesniej niz 2026-08-27". Krystian: "skasuj juz teraz, chcemy miec porzadek". Skasowane.
+
+**Co zniknelo:** bazy `stackpick` (9 kolekcji, 18 019 dokumentow, 1464 MB na dysku) i `stackpick_test`
+(10 dokumentow) z klastra `equity-analyst-flex.dgiima2`. Listing klastra pokazuje teraz `equity-analyst`
+1686 MB, `admin`, `local` i **nic naszego**.
+
+**Cudzej bazy nie ruszylem, i to jest sprawdzone po fakcie, nie zalozone:** `equity-analyst` ma po
+operacji dokladnie te sama wielkosc co przed nia.
+
+**`dropDatabase` sie nie udalo i to bylo w porzadku:** user `readWrite` na tej bazie nie ma tego prawa
+(`user is not allowed to do action [dropDatabase]`), a nasz klucz Atlas Admin API tamtej organizacji nie
+widzi. Poszlo kolekcja po kolekcji, na co `readWrite` pozwala; baza bez kolekcji znika z listingu tak
+samo. Efekt koncowy identyczny, uprawnien nikt nie podnosil.
+
+**Kopia offline PRZED skasowaniem:** `~/backups/stackpick-stary-klaster-2026-08-26`, EJSON `relaxed:false`
+po jednym pliku `.jsonl.gz` na kolekcje plus `manifest.json` z liczbami. 12 MB. Zweryfikowana przed
+kasowaniem, nie po: 7 696 linii w `reports`, pierwszy dokument parsuje sie z zachowanym `_id`
+(`openai-com-202608071615`), wiec przywrocenie zachowa historyczne `/r/<id>`.
+
+**PULAPKA, ktora przy okazji rozbroilem:** `MONGODB_URI_ROLLBACK` w `.env.local` po skasowaniu bazy
+prowadzil na **pusto**, a nazwa nadal obiecywala rollback. Jedna komenda z runbooka przelaczylaby
+produkcje na pusta baze i wygladalaby na wykonana poprawnie. Zmienna nazywa sie teraz
+`MONGODB_URI_STARY_KLASTER_PUSTY` i ma nad soba dwie linie mowiace, co sie stalo i gdzie lezy kopia.
+Nic w kodzie jej nie czytalo (sprawdzone), wiec zmiana nazwy niczego nie psuje.
+
+**Sprawdzone przed kasowaniem, ze nic juz tam nie siega:** zero config varow Heroku z `dgiima2`,
+worker widocznosci nie ma wlasnego URI (bierze z aplikacji), w repo tylko wzmianka w tym pliku.
+Produkcja po operacji: `/api/health` `writable: true`, ostatni skan tego samego dnia.
 
 ## PRZEMIAT 9.57 ZAMKNIETY, I TYM RAZEM PREDYKCJA SIE OBRONILA
 
@@ -1538,8 +1570,9 @@ do 42 MB, bo swiezy zapis nie ma slacku po nadpisaniach.
   pazdziernika.)
 - **Zrodlo NIETKNIETE:** `equity-analyst` nadal 1657 MB, nasza stara baza `stackpick` nadal 139 MB.
 
-**ROLLBACK, jednym krokiem:** stary URI lezy w `.env.local` jako `MONGODB_URI_ROLLBACK`;
-`heroku config:set MONGODB_URI="$MONGODB_URI_ROLLBACK" -a stackpick` wraca na stare.
+**ROLLBACK, jednym krokiem** (nieaktualne od 2026-08-26, stara baza skasowana, patrz sekcja na
+gorze pliku): stary URI lezal w `.env.local` jako `MONGODB_URI_ROLLBACK`;
+`heroku config:set MONGODB_URI="$MONGODB_URI_ROLLBACK" -a stackpick` wracal na stare.
 
 **HASLO ZROTOWANE.** `heroku config:set` wypisal pelne URI **z haslem** na ekran, wiec pierwsze
 haslo wyladowalo w transkrypcie sesji. Zmienione przez API zaraz po smoke tescie, produkcja
