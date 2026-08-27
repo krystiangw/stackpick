@@ -322,7 +322,7 @@ export default async function PricingPage() {
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           One person, and you should know that before you put an audit through procurement.{' '}
           <a
-            href="https://krystiangw.github.io/krystiangw/"
+            href="https://one-good-engineer.github.io/"
             className="text-brass underline underline-offset-4"
           >
             Krystian Gwizdała

@@ -165,7 +165,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <p>
               Built by{' '}
               <a
-                href="https://krystiangw.github.io/krystiangw/"
+                href="https://one-good-engineer.github.io/"
                 className="text-brass underline underline-offset-4 hover:text-ink"
               >
                 Krystian Gwizdała
