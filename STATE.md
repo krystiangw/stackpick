@@ -1,4 +1,18 @@
-# Let Agents In: stan na 2026-08-26 (produkcja v774, formula 9.57 przemieciona, stary klaster oddany)
+# Let Agents In: stan na 2026-08-27 (produkcja v775, formula 9.57 przemieciona, stary klaster oddany)
+
+## NASZA WLASNA ATRYBUCJA BYLA SLEPYM ZAULKIEM (2026-08-27, v775)
+
+Stopka na kazdej podstronie i akapit "Who does the work" na `/pricing` linkowaly "Built by Krystian
+Gwizdala" na `krystiangw.github.io/krystiangw/`. Tytul tamtej strony to **"Krystian Gwizdala has
+moved"**, a cala jej tresc to `<meta http-equiv="refresh">`. Czlowiek przeskakuje i nic nie zauwaza;
+crawler, ktory nie wykonuje meta refresh, czyta nasza **jedyna** informacje o autorze jako pustke.
+
+To ta sama klasa, ktora sprzedajemy vendorom, u nas w stopce. Skill `agent-discoverability` mowi
+wprost, zeby przepuszczac przez to takze wlasne strony, i tego nie zrobilismy dla tego jednego linku.
+
+Oba linki wskazuja teraz `one-good-engineer.github.io`, czyli aktualna strone agencji. Sprawdzone,
+ze to nie kolejna zaslepka: 200, 58 kB HTML, zero meta refresh. Zmiana to dwa `href`, wiec restart
+workera widocznosci nie byl potrzebny (regula dotyczy zmian w heartbeacie).
 
 ## STARA BAZA SKASOWANA, CUDZY KLASTER ODDANY (2026-08-26, na wyrazna prosbe Krystiana)
 
