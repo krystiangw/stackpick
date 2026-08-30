@@ -65,10 +65,16 @@ export function WebMcpTools() {
             const domain = typeof input.domain === 'string' ? input.domain.trim() : ''
             if (!domain) return { error: 'Give a domain, for example "stripe.com".' }
 
+            // Never with the operator's console cookie. Middleware sets `stackpick_console` on
+            // `path: '/'`, so a same-origin fetch from this page carries it, and `runScan` reads it
+            // as a seed: no public rate limit, and the report is marked `seeded`, which is what
+            // decides whether a row can enter the published corpus. An agent calling a tool we
+            // registered must not quietly run as an admin because the operator once opened `/app`.
             const response = await fetch('/api/scan', {
               method: 'POST',
               headers: { 'content-type': 'application/json' },
               body: JSON.stringify({ domain }),
+              credentials: 'omit',
               signal: options?.signal,
             })
             const payload = await response.json().catch(() => null)

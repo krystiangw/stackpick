@@ -1580,6 +1580,20 @@ check('nie z przyszlosci', dniOdWebmcp >= -1, true)
 check('i nie starsza niz 60 dni - sprawdz implementation-status.md ponownie', dniOdWebmcp <= 60, true)
 check('i widzi ja czytelnik', stronaDocs.includes('read on {WEBMCP_READ_ON}'), true)
 
+// Publiczne powierzchnie skanu nie moga jechac na uprawnieniach operatora. Middleware ustawia
+// `stackpick_console` na `path: '/'`, wiec fetch z tej samej domeny niesie je domyslnie, a `runScan`
+// czyta je jako seed: bez limitu publicznego i z raportem oznaczonym `seeded`, czyli tym, co decyduje
+// o wejsciu wiersza do publikowanego korpusu. Pod formularzem stoi zdanie „never added to the
+// published corpus", wiec dla jednego odwiedzajacego bylo nieprawdziwe. Znalazl to codex przy
+// narzedziu WebMCP; ta sama wada siedziala w formularzu od dawna.
+for (const [plik, gdzie] of [
+  ['src/components/webmcp-tools.tsx', 'narzedzie WebMCP'],
+  ['src/components/scan-form.tsx', 'formularz skanu'],
+] as const) {
+  const zrodlo = readFileSync(plik, 'utf8')
+  check(`${gdzie} nie wysyla ciasteczka konsoli`, /credentials: 'omit'/.test(zrodlo), true)
+}
+
 // `/v/<domena>` publikuje TYLKO to, co zeskanowalismy sami. Cudzy skan goscia nie moze stac sie
 // nasza publiczna strona o cudzej firmie - `/pricing` obiecuje „a permanent link you can forward, and
 // we do not post it anywhere", a `/bot`, ze anonimowe zadanie nie przepisze tego, co ta witryna mowi

@@ -33,6 +33,18 @@ nie robi nic, wiec dla zwyklego odwiedzajacego koszt jest zerowy. Opisane na `/d
 projekcja **wyrzucala oba i podawala adres jak staly**. Czyli dokladnie to, za znajdowanie czego
 bierzemy pieniadze, u siebie. Naprawione, oba pola ida dalej.
 
+**DRUGI PRZEBIEG CODEXA ZNALAZL POWAZNIEJSZA RZECZ: narzedzie dziedziczylo uprawnienia operatora.**
+Middleware ustawia `stackpick_console` na `path: '/'`, wiec fetch z tej samej domeny niesie je
+domyslnie, a `runScan` czyta je jako **seed**: bez limitu publicznego i z raportem oznaczonym
+`seeded`, czyli tym, co decyduje o wejsciu wiersza do publikowanego korpusu. Agent w przegladarce
+Krystiana mogl **opublikowac wiersz o cudzej firmie na jego uprawnieniach**, bo ten kiedys otworzyl
+`/app`.
+
+**Ta sama wada siedziala w istniejacym formularzu skanu i tam lamala zdanie z tej samej strony:**
+pod formularzem stoi „Your scan ... is never added to the published corpus", a dla jednego
+odwiedzajacego, operatora, bylo to nieprawda. Obie sciezki maja teraz `credentials: 'omit'` i
+**strazniki w `rules.mts`**, po jednym na plik, mutacja sprawdzona.
+
 **Straznik nr 4 na twierdzenia o cudzym produkcie:** `WEBMCP_READ_ON` na `/docs`, widoczny dla
 czytelnika, build oblewa po 60 dniach. Numer wersji przegladarki starzeje sie szybciej niz proza.
 Dwie mutacje sprawdzone, obie oblewaja. Twierdzenie o Lighthousie datowane istniejacym

@@ -34,10 +34,15 @@ export function ScanForm({ autoFocus = false, initialDomain = '' }: { autoFocus?
     captureAnalytics('scan_started')
 
     try {
+      // The line under this form promises a visitor's scan is never added to the published corpus.
+      // For one visitor that was false: the console cookie is set on `path: '/'`, so the operator's
+      // own browser sent it here and `runScan` recorded the scan as seeded, which is exactly the
+      // flag that lets a row be published. The form is a public surface and now asks as the public.
       const response = await fetch('/api/scan/stream', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ domain }),
+        credentials: 'omit',
       })
 
       if (!response.ok || !response.body) {
