@@ -59,7 +59,8 @@
     "migrate-cluster": "tsx scripts/migrate-cluster.mts",
     "audit-cap-selection": "tsx scripts/audit-cap-selection.mts",
     "po-przemiacie-9-50": "tsx scripts/po-przemiacie-9-50.mts",
-    "po-przemiacie-9-55": "tsx scripts/po-przemiacie-9-55.mts"
+    "po-przemiacie-9-55": "tsx scripts/po-przemiacie-9-55.mts",
+    "why-not": "tsx harness/why-not.mts"
   },
   "dependencies": {
     "mongodb": "^7.5.0",

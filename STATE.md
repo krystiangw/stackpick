@@ -1,4 +1,54 @@
-# Let Agents In: stan na 2026-08-27 (produkcja v775, formula 9.57 przemieciona, stary klaster oddany)
+# Let Agents In: stan na 2026-08-30 (produkcja v775, falsyfikator zakladu 01 zdany na starych danych)
+
+## FALSYFIKATOR ZAKLADU 01: POWODY ODMOWY SIE POWTARZAJA (2026-08-30, `npm run why-not`)
+
+Dokument "Swiadomosc sytuacyjna" proponuje przestac sprzedawac skan i zaczac sprzedawac zdania,
+ktorymi agent odrzucil klienta. Warunek, ktory sam postawilem przed budowa: **powod musi wracac
+miedzy biegami**, bo ten sam dokument w sekcji 10 pisze, ze listy marek to szum. Obie rzeczy nie
+moga byc prawdziwe naraz.
+
+**Zmierzone bez jednego nowego tokena.** Sierpniowe cele (`~/.letagentsin-runs-codex/ask`) to
+**26 kategorii, 131 odpowiedzi, codex gpt-5.6-sol, 17 sierpnia**, `operatorContext: []`, wiec czyste
+z konstrukcji: codex nie ma globalnego AGENTS.md, a cwd to swiezy katalog.
+
+**Wynik 1, nieoczekiwany: wybor jest stabilny.** Zwyciezca powtarza sie w **23 na 26** kategorii przy
+progu 80%, w tym osiemnascie razy 5/5. Teza dokumentu, ze lista marek zmienia sie niemal za kazdym
+razem, pochodzi z badan cytowan w wyszukiwarkach AI i **nie opisuje decyzji zakupowej agenta na
+konkretnym problemie**. Nasz aparat jest powtarzalniejszy niz szum, przed ktorym ostrzega.
+
+**Wynik 2, ten o ktory szlo: 11 par (vendor, powod) wraca w >=80% biegow**, przy minimum dwoch.
+Najmocniejsze: `datadoghq.com` cena 5/5, `auth0.com` koszt operacyjny 4/4, `ckeditor.com`
+licencjonowanie 4/4. To jest produkt: jedno zdanie, ktore vendor moze zmienic.
+
+**Czego ten pomiar NIE mowi, i to jest wieksza polowa:**
+- **Tylko 58 ze 131 odpowiedzi (44%) ma tabele porownawcza**, z ktorej da sie odczytac odrzucenie.
+  Reszta pisze prosa i nasz czytnik jej nie widzi. Dziewiec to podloga, nie sufit.
+- **42% wyciagnietych odrzucen nie pasuje do zadnego markera.** Taksonomia jest niepelna i tak jest
+  wydrukowana, nad wynikiem a nie pod nim.
+- **N=5 na cele**, przy protokole mowiacym N>=8. Prog 4/5 jest zgrubny.
+- **Jeden agent, jeden model, jeden dzien.** Wlasna regula mowi, zeby nie wnioskowac z jednej
+  platformy.
+
+**Pierwsza wersja czytnika oblala i to jest zapisane w kodzie:** brala najbogatsze zdanie nazywajace
+vendora i sklasyfikowala 1 z 278 wzmianek, bo to zdanie mowi, dlaczego vendora ROZWAZONO. Odrzucenie
+siedzi w ostatniej komorce tabeli, ktorej naglowek zmienia brzmienie, ale nigdy pozycji.
+
+**Trzy falszywe pozytywy wyciete, bo trafilyby do vendora jako zarzut:** "inexpensive" liczone jako
+"expensive", slowo "Pricing" z etykiety przypisu pod zdaniem o retencji logow, oraz "GPL compliance"
+liczone jako ksztalt enterprise.
+
+**CODEX ZNALAZL DWIE RZECZY, KTORYCH SAM BYM NIE ZOBACZYL, i obie zmieniaja liczby:**
+1. **Mianownikiem byly odrzucenia, nie biegi.** Vendor potrafi stac w dwoch wierszach tej samej
+   tabeli (grafana.com: Grafana Cloud i self-hosted, w kazdym z pieciu biegow), wiec "4 z 5 biegow"
+   czytalo sie z liczby dziesiec. Po deduplikacji na (bieg, vendor) powtarzalnych powodow jest 11.
+2. **Zwyciezce czytalismy takze z przypisow.** Pierwsza nazwa z korpusu w celach commerce, domains-dns
+   i maps-geo byla fragmentem URL-a dokumentacji, wiec wygrywal ten, kogo bieg akurat pierwszego
+   zalinkowal. Po wycieciu `[...](...)` i golych adresow stabilnosc **rosnie z 21 do 23 na 26**,
+   czyli przypisy ja ZANIZALY. Ta sama wada siedzi w `asked.mts` i jego liczbie "first".
+
+**Co z tego wynika dla instrumentu, zanim cokolwiek pojdzie na sprzedaz:** odpowiedz musi byc
+**ustrukturyzowana** (schemat z lista rozwazonych i powodem), zeby czytac 100% biegow zamiast 44%,
+N>=8, i wiecej niz jeden agent. Dopiero wtedy liczba nadaje sie pod fakture.
 
 ## NASZA WLASNA ATRYBUCJA BYLA SLEPYM ZAULKIEM (2026-08-27, v775)
 
