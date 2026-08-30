@@ -1,4 +1,51 @@
-# Let Agents In: stan na 2026-08-30 (produkcja v775, falsyfikator zakladu 01 zdany, 8 powtarzalnych powodow)
+# Let Agents In: stan na 2026-08-30 (produkcja v775, produktem jest nieobecnosc: 84 ze 177 firm nienazwanych)
+
+## RUSZAMY Z NIEOBECNOSCIA, NIE Z ODMOWA (2026-08-30, decyzja Krystiana)
+
+Po falsyfikatorze zmienilem rekomendacje. **Powod odmowy jest slabszym produktem niz nieobecnosc**,
+i to widac w liczbach z tego samego dnia:
+
+| | powod odmowy | nieobecnosc |
+| --- | --- | --- |
+| pokrycie pomiaru | 40% odpowiedzi (tylko te z tabela) | **100%** |
+| czego wymaga | parsowanie tabel, taksonomia markerow | sam matcher nazw, juz zaudytowany |
+| ile znalezisk | 8 par (vendor, powod) | **84 firmy ze 177 (47%)** |
+| co mowi vendorowi | to, co on juz wie | "jak to, w ogole mnie nie bylo?" |
+
+**84 ze 177 firm nie padlo ani razu** w pieciu biegach agenta rozwiazujacego problem, do ktorego te
+firmy istnieja. Liczba z samych cel codexa, bez polowy skazonej przez `CLAUDE.md` operatora.
+
+**Wycofalem sie z "zbudujmy lepszy instrument" i to bylo wazniejsze od samej rekomendacji.** Waskim
+gardlem nie jest jakosc pomiaru, tylko to, ze nikt o nas nie wie: 700 renderow dziennie, zero skanow
+z zewnatrz od tygodnia, zero prawdziwych leadow. Lepszy harness nie rusza w tym ani jednej liczby.
+
+**Co powstalo:**
+- `npm run never-named` -> `outreach/never-named.md`, 84 firmy z kategoria, pytaniem, zwyciezca,
+  linkiem do publicznych biegow i wynikiem skanu.
+- `harness/answers.mts` - `chosenIn`, `rejectionsIn` i `winnersOf` w jednym miejscu, bo `why-not`
+  i `never-named` musza sie zgadzac co do tego, kto wygral cele. Dwie kopie tej reguly rozjechalyby
+  sie, a pierwszym objawem byloby zdanie w cudzej skrzynce.
+- `outreach/targets.md` odswiezony: byl na **formule 7.7 przy 167 domenach**, teraz 9.57 przy 177.
+- `outreach/drafts/never-named-2026-08-30.md` - **dziesiec draftow, nic nie wyslane.**
+
+**KONTROLA DRAFTOW ZLAPALA DWA MOJE BLEDY, oba juz po tym, jak codex zlapal te same klasy w kodzie:**
+1. Draft do fireworks.ai cytowal "adds an intermediary and charges a 5.5% fee" jako powod, dla
+   ktorego bieg odrzucil OpenRoutera. **OpenRouter te kategorie wygral 5/5**, wiec to jest
+   zastrzezenie przy zwyciezcy, nie odmowa. Dokladnie ten blad, ktory codex wytkanl w analizie kilka
+   godzin wczesniej, wprowadzony przeze mnie z powrotem, tym razem do maila do obcej firmy.
+2. editorjs.io opisany jako "najchudszy w kategorii" przy 4/9, gdy **prosemirror.net ma 4/10**.
+Oba wyciete, oba zapisane w draftach nad lista kontrolna, zeby nikt ich nie wstawil z powrotem.
+Wszystkie linki w draftach sprawdzone: 8 stron biegow i 3 scorecardy odpowiadaja 200.
+
+**Kryterium sukcesu, ustalone przed wyslaniem: jedna odpowiedz w dwa tygodnie.** Jesli nikt nie
+odpisze na "agent rozwiazujacy problem twojej kategorii nie wymienil cie ani razu, oto surowe biegi",
+to zaden lepszy instrument tez sie nie sprzeda. Cennika nie ruszamy, dopoki nie bedzie pierwszej
+rozmowy.
+
+**Nastepne po odpowiedzi (albo po jej braku):** uzupelnic korpus w trzech kategoriach, gdzie
+publikujemy ranking bez firmy, po ktora agent naprawde siega (`documents-signature` Yousign,
+`domains-dns` OpenSRS i Openprovider, `commerce` Fourthwall), a dopiero potem wymuszony schemat
+odpowiedzi, N>=8 i drugi agent.
 
 ## FALSYFIKATOR ZAKLADU 01: ZDANY, ALE DOPIERO PO CZTERECH POPRAWKACH OD CODEXA (2026-08-30)
 
