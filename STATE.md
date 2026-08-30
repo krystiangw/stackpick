@@ -1,5 +1,45 @@
 # Let Agents In: stan na 2026-08-30 (produkcja v775, produktem jest nieobecnosc: 84 ze 177 firm nienazwanych)
 
+## WEBMCP: WYSTAWIAMY, NIE MIERZYMY, I MOWIMY DLACZEGO (2026-08-30)
+
+**Co to:** MCP po stronie klienta. Strona rejestruje narzedzia przez `document.modelContext.registerTool`,
+a agent dzialajacy W PRZEGLADARCE je wola zamiast zgadywac selektory. W3C Web Machine Learning
+Community Group, Draft Community Group Report z **26 sierpnia 2026**, autorzy z Microsoftu i Google.
+Origin trial w **Chrome 149+** i **Edge 150+**, pelne wsparcie w ChatGPT Desktop, eksperymentalnie w
+Brave. Firefox i Safari na etapie standards-positions.
+
+**Pulapka przy researchu:** blogi pod te fraze pisza `navigator.modelContext`. Specyfikacja i repo
+mowia konsekwentnie `document.modelContext` i nie ma tam sladu po tamtej nazwie. Wzielismy spec, nie
+blogi. Adnotacje tez sa inne, niz sie zaklada: spec definiuje `readOnlyHint` i `untrustedContentHint`,
+a nie caly zestaw z MCP serwerowego.
+
+**CZEGO NIE ROBIMY, I TO JEST DECYZJA, NIE ZANIEDBANIE:** WebMCP nie wchodzi do skanera. Narzedzia
+rejestruja sie w runtime, wiec jedynym uczciwym sprawdzeniem jest zaladowanie strony w przegladarce i
+zapytanie `getTools()`. Caly nasz skaner to czyste HTTP bez JavaScriptu, wiec moglibysmy najwyzej
+grepowac HTML za `registerTool`, co czyta zbundlowany chunk jako nieobecnosc i **opublikowaloby
+"nie wystawiasz narzedzi" o stronie, ktora je wystawia**. Lighthouse to mierzy (trzy audyty w
+`agentic-browsing`), bo i tak steruje Chromem. Nowy wpis w "Known limits" na `/methodology` mowi to
+wprost i odsyla po te liczbe do nich.
+
+**CO ROBIMY:** `src/components/webmcp-tools.tsx` rejestruje na stronie glownej narzedzie
+`scan_domain`, te sama nazwe co nasz serwer MCP, przez ten sam `/api/scan`. Adnotacje uczciwe:
+`readOnlyHint: false`, bo skan wysyla zapytania na cudze serwery i zapisuje raport, ktory potem
+publikujemy, a `untrustedContentHint: true`, bo wszystko w wyniku pochodzi ze stron skanowanego
+vendora. Wyrejestrowanie przez `AbortSignal`, bo tylko to daje spec. Bez API w przegladarce komponent
+nie robi nic, wiec dla zwyklego odwiedzajacego koszt jest zerowy. Opisane na `/docs`.
+
+**Codex zlapal jedno P2 i bylo z naszej ulubionej klasy:** `/api/scan` przy nieudanym zapisie zwraca
+`saved: false` i ostrzezenie, ze link `/r/<id>` przestanie dzialac po najblizszym deployu, a moja
+projekcja **wyrzucala oba i podawala adres jak staly**. Czyli dokladnie to, za znajdowanie czego
+bierzemy pieniadze, u siebie. Naprawione, oba pola ida dalej.
+
+**Straznik nr 4 na twierdzenia o cudzym produkcie:** `WEBMCP_READ_ON` na `/docs`, widoczny dla
+czytelnika, build oblewa po 60 dniach. Numer wersji przegladarki starzeje sie szybciej niz proza.
+Dwie mutacje sprawdzone, obie oblewaja. Twierdzenie o Lighthousie datowane istniejacym
+`RIVALS_READ_ON` (19 sierpnia), bo dzis go nie przemierzylem.
+
+**Niewdrozone.** Czeka na decyzje o deployu.
+
 ## RUSZAMY Z NIEOBECNOSCIA, NIE Z ODMOWA (2026-08-30, decyzja Krystiana)
 
 Po falsyfikatorze zmienilem rekomendacje. **Powod odmowy jest slabszym produktem niz nieobecnosc**,

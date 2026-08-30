@@ -7,6 +7,9 @@ import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
 import { SITE_URL } from '@/lib/site'
 
+/** When the browser support below was last read at the source. A version number ages faster than prose. */
+const WEBMCP_READ_ON = '30 August 2026'
+
 export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/docs` },
   title: 'Docs: Let Agents In',
@@ -122,6 +125,17 @@ data: {"id":"example-com-202608072143","total":9,"max":${MAX_SCORE}}`}</Code>
           authentication, one tool called <span className="font-mono text-xs">scan_domain</span>. It runs the same
           scan as the REST endpoint through the same limits, and the card describing it is at{' '}
           <span className="font-mono text-xs">/.well-known/mcp.json</span>.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          The home page registers the same <span className="font-mono text-xs">scan_domain</span> tool through{' '}
+          <a href="https://webmachinelearning.github.io/webmcp/" className="text-brass underline underline-offset-4">
+            WebMCP
+          </a>
+          , so an agent running inside a visitor&rsquo;s browser can call it without driving the form. It is in
+          origin trial in Chrome 149+ and Edge 150+, read on {WEBMCP_READ_ON}, so on most visits{' '}
+          <span className="font-mono text-xs">document.modelContext</span> is absent and nothing is registered.
+          Nothing here depends on it: the endpoints above do the same work with no JavaScript at all, which is the
+          argument this whole site makes.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           Both surfaces take a <code className="font-mono text-xs">format</code>.{' '}

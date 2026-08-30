@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { FunnelMark } from '@/components/funnel-mark'
 import { Rankings } from '@/components/rankings'
 import { ScanForm } from '@/components/scan-form'
+import { WebMcpTools } from '@/components/webmcp-tools'
 import { WatchForm } from '@/components/watch-form'
 import { CONTROLLER_IS_NAMED } from '@/lib/seller'
 import { loadRankings } from '@/lib/rankings'
@@ -92,6 +93,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
         <div className="mt-8 max-w-xl">
           <ScanForm autoFocus initialDomain={asked} />
         </div>
+        {/* Renders nothing. Offers the same scan to an agent running inside the visitor's browser. */}
+        <WebMcpTools />
         <p className="mt-3 font-mono text-xs text-ink-faint">
           Free. No account. Reads only what you publish.
         </p>

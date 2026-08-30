@@ -1568,6 +1568,18 @@ check('nie z przyszlosci', dniOdSprawdzenia >= -1, true)
 check('i nie starsza niz 60 dni - odpal je ponownie', dniOdSprawdzenia <= 60, true)
 check('i widzi ja czytelnik', stronaFindings.includes('Read on {RIVALS_CHECKED_ON}'), true)
 
+// Czwarte miejsce z twierdzeniem o cudzym produkcie: `/docs` podaje numery wersji przegladarek, w
+// ktorych WebMCP jest w origin trialu. Numer wersji starzeje sie szybciej niz proza, a to jest
+// zdanie o Chrome i Edge, nie o nas. Sprawdzone 2026-08-30 w `implementation-status.md` w repozytorium
+// specyfikacji.
+const stronaDocs = readFileSync('src/app/docs/page.tsx', 'utf8')
+const webmcpCzytanyDnia = stronaDocs.match(/const WEBMCP_READ_ON = '([^']+)'/)?.[1] ?? ''
+const dniOdWebmcp = wiekWDniach(webmcpCzytanyDnia)
+check('data wsparcia przegladarek dla WebMCP jest datą', Number.isFinite(dniOdWebmcp), true)
+check('nie z przyszlosci', dniOdWebmcp >= -1, true)
+check('i nie starsza niz 60 dni - sprawdz implementation-status.md ponownie', dniOdWebmcp <= 60, true)
+check('i widzi ja czytelnik', stronaDocs.includes('read on {WEBMCP_READ_ON}'), true)
+
 // `/v/<domena>` publikuje TYLKO to, co zeskanowalismy sami. Cudzy skan goscia nie moze stac sie
 // nasza publiczna strona o cudzej firmie - `/pricing` obiecuje „a permanent link you can forward, and
 // we do not post it anywhere", a `/bot`, ze anonimowe zadanie nie przepisze tego, co ta witryna mowi
