@@ -22,10 +22,42 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { CATEGORIES } from '../src/lib/categories'
-import { certain, mentionsIn } from '../src/lib/vendors'
+import { certain, mentionsIn, namesFor } from '../src/lib/vendors'
 
-/** The last column of a comparison table, whatever the run titled it. */
-const WHY_NOT = /why|wouldn|isn.t|didn.t|not my|against|drawback|trade.?off|caveat|concern/i
+/**
+ * The last column of a comparison table, and only when its title is actually negative. "Why" alone
+ * is not: one headless-cms run titles that column "Why I'd choose it instead", so every condition
+ * favouring a vendor was being read as an objection against it.
+ */
+const WHY_NOT = /wouldn|didn.t|isn.t|wasn.t|\bnot\b|\bno\b|drawback|downside|trade.?off|against|caveat|concern|limitation|\brisk/i
+
+/**
+ * What the run picked, from the first bold span. Every answer opens "I'd use **X**", and the first
+ * corpus name in the body is not that: the documents-signature runs choose Yousign and the commerce
+ * runs choose Fourthwall, neither of which we track, so reading the body reported Dropbox Sign and
+ * Shopify as winners of cells they did not win.
+ *
+ * Null means the run picked something outside the corpus, which is a finding rather than a gap in
+ * the reading: it is a category where we do not carry the vendor an agent actually reaches for.
+ */
+export function chosenIn(text: string, domains: readonly string[]): string | null {
+  const bold = text.match(/\*\*([^*]{2,80})\*\*/)
+  if (!bold) return null
+  // Two conditions, because neither alone is safe. The bold must carry one of the names, and the
+  // whole answer must mention that vendor beyond doubt: half this corpus is named with an ordinary
+  // English word - Neon, Paddle, Knock, Sanity - and only the surrounding text tells the company
+  // from the word. Positions cannot do this job: `mentionsIn` reports where the DOMAIN appears,
+  // which is usually a citation far below the sentence that names the choice.
+  const sure = new Set(certain(mentionsIn(text, domains)).map((mention) => mention.domain))
+  for (const domain of domains) {
+    if (!sure.has(domain)) continue
+    const forms = [domain, ...namesFor(domain)]
+    if (forms.some((form) => new RegExp(`\\b${form.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(bold[1]))) {
+      return domain
+    }
+  }
+  return null
+}
 
 /**
  * Why a run walks away, written against the 140 rejections the August cells actually contain.
@@ -94,16 +126,24 @@ let rejections = 0
 let unclassified = 0
 let conditional = 0
 let stableWinner = 0
+let outsideCorpus = 0
 const recurring: { category: string; domain: string; reason: string; inRuns: number; ofRuns: number; quote: string }[] = []
 
 for (const category of CATEGORIES.filter((candidate) => !only || candidate.id === only)) {
   const dir = join(runsRoot, category.id)
   if (!existsSync(dir)) continue
+  // A run that timed out or exited nonzero still leaves an ANSWER.txt, and a partial answer names
+  // fewer vendors and carries no table. Counted as an answer it would quietly move both the
+  // coverage share and the recurrence denominator.
   const texts = readdirSync(dir)
     .filter((name) => name.startsWith('run-'))
-    .map((name) => join(dir, name, 'ANSWER.txt'))
-    .filter(existsSync)
-    .map((path) => readFileSync(path, 'utf8'))
+    .map((name) => ({ answer: join(dir, name, 'ANSWER.txt'), meta: join(dir, name, 'RUN.json') }))
+    .filter((run) => existsSync(run.answer) && existsSync(run.meta))
+    .filter((run) => {
+      const meta = JSON.parse(readFileSync(run.meta, 'utf8')) as { exitCode: number; timedOut: boolean }
+      return meta.exitCode === 0 && !meta.timedOut && readFileSync(run.answer, 'utf8').trim().length > 0
+    })
+    .map((run) => readFileSync(run.answer, 'utf8'))
   if (texts.length === 0) continue
   cells++
 
@@ -114,11 +154,9 @@ for (const category of CATEGORIES.filter((candidate) => !only || candidate.id ==
 
   for (const text of texts) {
     answers++
-    // Who was picked is read from prose, never from a citation. Before the links came out, the
-    // first corpus name in the commerce, domains-dns and maps-geo cells was a fragment of a
-    // documentation URL, so the winner there was whoever the run happened to link to first.
-    const found = certain(mentionsIn(withoutCitations(text), category.domains)).sort((a, b) => a.at - b.at)
-    if (found[0]) winners.push(found[0].domain)
+    const chosen = chosenIn(text, category.domains)
+    if (chosen) winners.push(chosen)
+    else outsideCorpus++
 
     const theirs = rejectionsIn(text, category.domains)
     if (theirs.length > 0) answersWithTable++
@@ -128,6 +166,9 @@ for (const category of CATEGORIES.filter((candidate) => !only || candidate.id ==
     // with itself only once.
     const perRun = new Map<string, string>()
     for (const rejection of theirs) {
+      // The chosen vendor usually has its own row, with the caveat that comes with any choice.
+      // Counting it made datadoghq.com "rejected on price in 5 of 5" in the cell it won 4 of 5.
+      if (rejection.domain === chosen) continue
       const merged = perRun.get(rejection.domain)
       perRun.set(rejection.domain, merged ? `${merged} ${rejection.text}` : rejection.text)
     }
@@ -152,7 +193,10 @@ for (const category of CATEGORIES.filter((candidate) => !only || candidate.id ==
     .sort((a, b) => b[1] - a[1])
   const top = tally[0]
   if (top && top[1] / texts.length >= RECURS) stableWinner++
-  console.log(`${category.id.padEnd(24)} ${top ? `${top[0]} ${top[1]}/${texts.length}` : 'brak zwyciezcy'}`)
+  const off = texts.length - winners.length
+  console.log(
+    `${category.id.padEnd(24)} ${top ? `${top[0]} ${top[1]}/${texts.length}` : 'nikt z korpusu'}${off > 0 ? `  (poza korpusem ${off}/${texts.length})` : ''}`,
+  )
 
   for (const [key, hits] of reasonIn) {
     const [domain, reason] = key.split('|')
@@ -165,7 +209,8 @@ for (const category of CATEGORIES.filter((candidate) => !only || candidate.id ==
 
 console.log(`\n=== FALSYFIKATOR, prog powtarzalnosci ${RECURS * 100}%`)
 console.log(`kategorii ${cells}, odpowiedzi ${answers}, z tabela odrzucen ${answersWithTable} (${Math.round((answersWithTable / answers) * 100)}%)`)
-console.log(`stabilny zwyciezca: ${stableWinner}/${cells}`)
+console.log(`stabilny zwyciezca z korpusu: ${stableWinner}/${cells}`)
+console.log(`biegow, w ktorych wybrano vendora SPOZA korpusu: ${outsideCorpus}/${answers}`)
 console.log(`odrzucen: ${rejections}, bez markera ${unclassified} (${Math.round((unclassified / Math.max(rejections, 1)) * 100)}%), warunkowych ${conditional} (${Math.round((conditional / Math.max(rejections, 1)) * 100)}%)`)
 console.log(`powtarzalnych powodow (ten sam vendor, ten sam marker, min 2 odrzucenia): ${recurring.length}`)
 for (const hit of recurring.sort((a, b) => b.ofRuns - a.ofRuns || a.category.localeCompare(b.category))) {
