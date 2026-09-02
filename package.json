@@ -61,7 +61,8 @@
     "po-przemiacie-9-50": "tsx scripts/po-przemiacie-9-50.mts",
     "po-przemiacie-9-55": "tsx scripts/po-przemiacie-9-55.mts",
     "why-not": "tsx harness/why-not.mts",
-    "never-named": "tsx harness/never-named.mts"
+    "never-named": "tsx harness/never-named.mts",
+    "drift": "tsx harness/drift.mts"
   },
   "dependencies": {
     "mongodb": "^7.5.0",
