@@ -48,6 +48,16 @@ function readCell(root: string, category: string): Cell | null {
   return texts.length > 0 ? { texts, cli, ranAt } : null
 }
 
+/**
+ * The first bold span, whatever it names. Used only to tell one outside-the-corpus winner from
+ * another; who won inside the corpus is `chosenIn`'s job and stays there.
+ */
+const pickedName = (texts: readonly string[]): string | null => {
+  const picks = texts.map((text) => text.match(/\*\*([^*]{2,80})\*\*/)?.[1]?.trim().toLowerCase() ?? null)
+  const first = picks[0]
+  return first !== null && picks.every((pick) => pick === first) ? first : null
+}
+
 const namedIn = (cell: Cell, domains: readonly string[]) =>
   new Set(certain(mentionsIn(cell.texts.join('\n'), domains)).map((mention) => mention.domain))
 
@@ -56,6 +66,7 @@ let bothMonths = 0
 let onlyBefore = 0
 let onlyAfter = 0
 let sameWinner = 0
+let unreadableWinner = 0
 let compared = 0
 
 for (const category of CATEGORIES) {
@@ -75,12 +86,26 @@ for (const category of CATEGORIES) {
 
   const winnerBefore = winnersOf(before.texts, category.domains)[0]
   const winnerAfter = winnersOf(after.texts, category.domains)[0]
-  const held = winnerBefore && winnerAfter && winnerBefore[0] === winnerAfter[0]
+  // Two months of "nobody from our corpus won" is not automatically a cell that held: Yousign in
+  // August and DocuSign in September would be two nulls and a real change. So when the winner is
+  // outside the corpus both times, the names themselves are compared, and a cell whose winner we
+  // cannot read at all is counted as unknown rather than quietly as stable.
+  const outsideBoth = !winnerBefore && !winnerAfter
+  const outsideNames = outsideBoth ? [pickedName(before.texts), pickedName(after.texts)] : null
+  const outsideHeld = outsideNames !== null && outsideNames[0] !== null && outsideNames[0] === outsideNames[1]
+  const held = outsideBoth ? outsideHeld : Boolean(winnerBefore && winnerAfter && winnerBefore[0] === winnerAfter[0])
+  // Stable to the eye and unreadable by rule is its own answer, not a change. Both months of
+  // documents-signature pick Yousign and both months of domains-dns pick OpenSRS or Openprovider,
+  // but each run writes the name differently ("Yousign API", "Yousign, now transitioning to
+  // Youtrust"), so the rule cannot say so and must not pretend either way.
+  const unreadable = outsideBoth && !outsideHeld
   if (held) sameWinner++
+  if (unreadable) unreadableWinner++
 
   console.log(
     `${category.id.padEnd(24)} ${before.texts.length}+${after.texts.length} biegow  ` +
-      `zwyciezca ${winnerBefore?.[0] ?? 'spoza korpusu'} -> ${winnerAfter?.[0] ?? 'spoza korpusu'}${held ? ' =' : ' ZMIANA'}  ` +
+      `zwyciezca ${winnerBefore?.[0] ?? 'spoza korpusu'} -> ${winnerAfter?.[0] ?? 'spoza korpusu'}` +
+      `${held ? (outsideBoth ? ` = (nie nasz: ${outsideNames?.[0]})` : ' =') : unreadable ? ' NIECZYTELNE' : ' ZMIANA'}  ` +
       `nieobecni w obu ${missingBoth.length}, wrocilo ${appeared.length}, zniknelo ${vanished.length}`,
   )
 
@@ -103,6 +128,8 @@ for (const category of CATEGORIES) {
 
 console.log(`\n=== DWA PUNKTY, ${compared} kategorii`)
 console.log(`zwyciezca ten sam w obu miesiacach: ${sameWinner}/${compared}`)
+console.log(`zwyciezca spoza korpusu, nieczytelny dla reguly: ${unreadableWinner}/${compared}`)
+console.log(`realnie zmieniony: ${compared - sameWinner - unreadableWinner}/${compared}`)
 console.log(`nieobecnych w OBU miesiacach: ${bothMonths}`)
 console.log(`pojawilo sie we wrzesniu po nieobecnosci: ${onlyAfter}`)
 console.log(`zniknelo we wrzesniu po obecnosci: ${onlyBefore}`)

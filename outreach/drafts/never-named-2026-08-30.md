@@ -1,6 +1,10 @@
-# Outreach drafts: never named once (2026-08-30)
+# SUPERSEDED - DO NOT SEND (2026-08-30)
 
-**Status: DRAFTS. Nothing here has been sent.** Krystian sends, or nobody does.
+**These drafts are wrong and must not be used. Nothing here was sent.**
+Three of the ten claims below expired within sixteen days: bird.com, fireworks.ai and
+together.ai were all named in the September runs after being absent in August. Every claim here
+rests on one day of measurement, which is exactly why it was not enough.
+Use `never-named-2026-09-03.md` instead, which rests on two dates.
 
 Ten companies from `outreach/never-named.md`. All ten were never mentioned in five runs of their own
 category. Two shapes, because they need different emails:

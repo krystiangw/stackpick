@@ -1,4 +1,42 @@
-# Let Agents In: stan na 2026-08-30 (produkcja v775, produktem jest nieobecnosc: 84 ze 177 firm nienazwanych)
+# Let Agents In: stan na 2026-09-03 (produkcja v776, dwa punkty pomiarowe, 69 firm nieobecnych w obu miesiacach)
+
+## DRUGI PUNKT SZEREGU: TRZY Z DZIESIECIU MAILI BYLY JUZ NIEPRAWDZIWE (2026-09-03)
+
+Sierpniowe cele byly jedynym pomiarem, a dziesiec draftow outreach mowilo "piec biegow, jeden
+dzien". To jest pierwsza rzecz, ktora podwazy kazdy odbiorca. Wrzesniowy przemiat celi (130 biegow,
+`~/.letagentsin-runs-codex-wrzesien`) daje drugi punkt.
+
+**NAJWAZNIEJSZY WYNIK, i to jest uzasadnienie calej roboty: `bird.com`, `fireworks.ai` i
+`together.ai` zostaly we wrzesniu NAZWANE**, po nieobecnym sierpniu. Gdyby maile poszly, trzy firmy
+dostalyby twierdzenie, ktore zestarzalo sie w szesnascie dni. Drafty wymienione na
+`outreach/drafts/never-named-2026-09-03.md`, stare oznaczone jako nieuzywane.
+
+**Liczby z dwoch punktow** (`npm run drift`):
+- **zwyciezca ten sam w 24 z 26 kategorii**, w tym 2, gdzie w obu wygrala firma spoza korpusu.
+  Realne zmiany dwie: `observability` datadoghq -> honeycomb, `commerce` shopify -> spoza korpusu.
+- **69 firm nienazwanych w ZADNYM z dwoch miesiecy** (w sierpniu samym bylo 84).
+- 15 wrocilo po nieobecnym sierpniu, 3 zniknelo po obecnym.
+
+**Przyrzad utrzymany, z jednym wyjatkiem powiedzianym na glos:** te same pliki pytan, ten sam model
+`gpt-5.6-sol`, effort przypiety do `low` po obu stronach, `operatorContext: []` we wszystkich 130
+biegach. **Ruszyla wersja CLI: 0.147.0 -> 0.152.1.** `drift` drukuje to nad tabela, a kazdy draft
+mowi to w tresci.
+
+**Cztery biegi padly po stronie OpenAI** (`Selected model is at capacity`), zostaly dobite przez
+`--add`, a nieudane proby zostaly na dysku jako slad. Zadna cela nie byla porownywana przy mniej niz
+pieciu udanych biegach.
+
+**Wlasny blad w raportowaniu, zlapany przy czytaniu wynikow:** dwie kategorie ze zwyciezca spoza
+korpusu w obu miesiacach liczylem jako ZMIANE, bo porownywalem dwa `null`. To zamienialo dwie cele
+najbardziej stabilne w dowod dryfu, czyli odwrotnosc tego, co pokazuja. Poprawione, stabilnosc
+wzrosla z 22 na 24 z 26.
+
+**Nowa czolowka draftow: `zenrows.com`.** Skanuje sie **13/13, jedyny komplet w calym korpusie 177
+firm**, i nie padl ani razu w dziesieciu biegach przez dwa miesiace. To najostrzejszy rozjazd miedzy
+"agent umie cie uzyc" a "agent do ciebie dociera", jaki mamy zmierzony.
+
+**Sierpien zabezpieczony przed przebiegiem** w `~/backups/letagentsin-runs-codex-sierpien-2026-08-17`,
+bo `npm run ask` domyslnie podmienia cele. Wrzesien pisal do osobnego korzenia.
 
 ## WEBMCP: WYSTAWIAMY, NIE MIERZYMY, I MOWIMY DLACZEGO (2026-08-30)
 
