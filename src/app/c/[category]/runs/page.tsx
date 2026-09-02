@@ -92,15 +92,23 @@ export default async function RunsPage({ params }: { params: Promise<{ category:
           What the agent actually answered, all {held.reduce((sum, one) => sum + one.answers.length, 0)} times
         </h1>
         <blockquote className="mt-6 max-w-2xl border-l-2 border-brass pl-5 leading-relaxed">{cell.question}</blockquote>
+        {/* Every cell on the page, not just the cleanest one. The header used to name one tool and one
+            date while the sections below carried answers from all of them, so a page holding two
+            months of runs said they were all from the first morning. */}
         <p className="mt-4 font-mono text-xs leading-relaxed text-ink-faint">
-          {cell.tool} ({cell.model}), {cell.ranAt}. Each run is a separate session with nothing carried between
-          them. Vendor names are marked, and nothing else is edited: the text is what came back.
+          {held.map((one) => `${one.tool} (${one.model}), ${one.ranAt}, ${one.answers.length} runs`).join(' · ')}.
+          Each run is a separate session with nothing carried between them. Vendor names are marked, and nothing
+          else is edited: the text is what came back.
         </p>
-        {cell.operatorContext.length > 0 && (
+        {held.some((one) => one.operatorContext.length > 0) && (
           <p className="mt-3 max-w-2xl font-mono text-xs leading-relaxed text-ink-faint">
-            Not a clean measurement: these runs could read the operator instructions on the machine they ran on
-            ({cell.operatorContext.join(', ')}), which is also why some answers below are in Polish rather than
-            English: those instructions ask for it.
+            Not every cell here is a clean measurement: the{' '}
+            {held
+              .filter((one) => one.operatorContext.length > 0)
+              .map((one) => `${one.tool.split(' ')[0]} runs of ${one.ranAt}`)
+              .join(' and ')}{' '}
+            could read the operator instructions on the machine they ran on, which is also why some answers below
+            are in Polish rather than English: those instructions ask for it.
           </p>
         )}
       </section>
@@ -110,7 +118,7 @@ export default async function RunsPage({ params }: { params: Promise<{ category:
         <section key={`${one.tool}-${answer.run}`} className="border-b border-rule py-10">
           <div className="flex flex-wrap items-baseline gap-3">
             <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">
-              {one.tool.split(' ')[0]} · run {answer.run}
+              {one.tool.split(' ')[0]} · {one.ranAt} · run {answer.run}
             </h2>
             <p className="font-mono text-xs text-ink-soft">
               {answer.first ? `named ${answer.first} first` : 'named no vendor we measure'}
