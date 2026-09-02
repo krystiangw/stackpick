@@ -73,12 +73,22 @@ function codexReadsMemories(): boolean {
 }
 
 /** What the tool was configured to be, which is a parameter of the measurement rather than context. */
+/**
+ * The reasoning effort every cell runs at. Pinned to what the August cells used, so a September run
+ * is comparable to them; change it and you have started a new series, not extended the old one.
+ */
+const CELL_EFFORT = 'low'
+
 function codexSettings(): string[] {
+  // The effort we pass wins over the file, so report the one that actually ran. Reading it back off
+  // config.toml would file every cell under whatever the operator last set for their own work.
+  const pinned = `model_reasoning_effort=${CELL_EFFORT}`
   try {
     const config = readFileSync(join(homedir(), '.codex', 'config.toml'), 'utf8')
-    return [...config.matchAll(/^(model|model_reasoning_effort)\s*=\s*"([^"]+)"/gm)].map((found) => `${found[1]}=${found[2]}`)
+    const model = [...config.matchAll(/^model\s*=\s*"([^"]+)"/gm)].map((found) => `model=${found[1]}`)
+    return [...model, pinned]
   } catch {
-    return []
+    return [pinned]
   }
 }
 
@@ -104,7 +114,21 @@ export const AGENTS: Record<string, Agent> = {
   codex: {
     bin: 'codex',
     // exec is codex's non-interactive mode; the sandbox flag is what stops it stopping.
-    argv: (prompt, model) => ['exec', '--sandbox', 'workspace-write', ...(model ? ['-m', model] : []), prompt],
+    //
+    // Reasoning effort is pinned rather than inherited. `settings` records what the operator's
+    // config.toml says, which is honest but not enough: the August cells ran at `low` and that file
+    // now says `high`, so a second point in the time series would have been measured with a
+    // different instrument and nothing would have said so out loud. Same rule as FORMULA_VERSION -
+    // a number is only comparable to the one before it if the thing that produced both did not move.
+    argv: (prompt, model) => [
+      'exec',
+      '--sandbox',
+      'workspace-write',
+      '-c',
+      `model_reasoning_effort="${CELL_EFFORT}"`,
+      ...(model ? ['-m', model] : []),
+      prompt,
+    ],
     version: () => firstLine('codex', ['--version']),
     // No CLAUDE.md here, which is the point of running a cell twice: a finding that survives two
     // tools reading two different sets of the operator's files is a finding about the vendors.
