@@ -1,4 +1,50 @@
-# Let Agents In: stan na 2026-09-03 (produkcja v776, dwa punkty pomiarowe, 69 firm nieobecnych w obu miesiacach)
+# Let Agents In: stan na 2026-09-03 (produkcja v780, korpus 181, dwa punkty pomiarowe, 69 firm nieobecnych w obu miesiacach)
+
+## KORPUS BEZ ZWYCIEZCY W TRZECH KATEGORIACH (2026-09-03, v779/v780)
+
+**Trzy kategorie byly oceniane wobec listy, na ktorej nie bylo firmy wybieranej niemal w kazdym
+biegu.** `documents-signature` -> Yousign/Youtrust (15 z 15 biegow, trzy daty, dwa narzedzia),
+`domains-dns` -> OpenSRS/Openprovider (10 z 10), `commerce` -> Fourthwall (12 z 15).
+
+**Brak firmy w korpusie nie objawia sie jako brak, tylko jako trzy falszywe odczyty naraz:**
+1. zwyciezca „spoza korpusu", komorka wypada z pomiaru stabilnosci,
+2. wygrana przypisana nie tej firmie - `commerce` czytalo sie jako „wygral shopify.com",
+3. zamrozone wiersze `cells.json` opublikowalyby „nazwany w 0 z 5 biegow" o firmie nazwanej w 15/15,
+   gdyby domena weszla do korpusu bez ponownego eksportu cel.
+
+**`opensrs.com` byl wyrzucony recznie 11 sierpnia** jako „dobra firma, zla polka" (sprzedaje
+hurtowo rejestratorom). Ten argument przeczyl NASZEMU wlasnemu pytaniu, ktore opisuje produkt
+rejestrujacy domeny dla swoich klientow z backendu, czyli odsprzedaz. Kuracja byla bledna, nie
+odpowiedz. Wrocil razem z `openprovider.com`.
+
+**Liczby po poprawce:** `npm run drift` 25/26 tego samego zwyciezcy (bylo 22), jedna realna zmiana
+(`observability` datadog -> honeycomb), zero nieczytelnych. **Licznik nieobecnych w obu miesiacach
+nie drgnal: 69 przed i po** - kontrolka, ze nie napompowalismy sobie wyniku, bo kazda dodana firma
+byla juz nazywana.
+
+**Skany nowych domen** (konsola, 9.57, 2026-09-03): fourthwall 11/13, youtrust 5/11, opensrs 5/12,
+openprovider 4/9. Zwyciezcy skanuja sie SLABO. Odwrotnie niz zenrows 13/13, ktorego nie nazwal
+nikt. `npm run named-vs-score` na wrzesniu z pelnym korpusem: powyzej mediany 58% nazywalnosci,
+ponizej 40%, przypadek daje taka roznice w 0.009 przebiegow. Najmocniejszy pojedynczy check to
+`oauth_dcr` (27pp, p=0.000) - ten, na ktorym MY mamy 0/1.
+
+**Runbook sporu mial zamrozony rozmiar korpusu** (`audit-entry.mts 177`) i po dojsciu do 181 pytalby
+177 domen, obiecujac kazda. `howManyRows` przyjmuje teraz `all`, runbook podaje `all`, a regula w
+`rules.mts` z kontrolka mutacyjna wywala build, gdy ktos wpisze tam liczbe.
+
+**`outreach/never-named.md` drukowal kazda kategorie dwa razy** pod identycznymi, niedatowanymi
+naglowkami, pod zdaniem „wszystko tutaj to piec biegow jednego dnia". bird.com stal tam jako
+nieobecny (sierpien) i nazwany (wrzesien). Generator daje teraz date w naglowku, kieruje do
+`absent-both-months.md` jako jedynej listy do wysylki i liczy NIEOBECNOSCI, nie firmy.
+
+**Nowy adresat z twardym haczykiem:** `fourthwall.com` stawia serwer MCP pod `mcp.fourthwall.com`
+i nie dokumentuje drogi do klucza, a agent wybiera go 12 z 15 biegow. Drzwi dla maszyny sa, klucza
+nie ma - najlepiej udokumentowany cel, jaki mamy.
+
+**Wdrozone v779 i v780**, `npm run audit`: 181 wierszy na 9.57, 0 sprzecznosci.
+KB: `luka-w-korpusie-produkuje-falszywe-znalezisko-nie-tylko-brak`,
+`codex-review---uncommitted-chwilowo-cofa-pliki-edytowane-w-t`.
+
 
 ## DRUGI PUNKT SZEREGU: TRZY Z DZIESIECIU MAILI BYLY JUZ NIEPRAWDZIWE (2026-09-03)
 
