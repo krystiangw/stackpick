@@ -1,4 +1,3 @@
-import { execSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { coverageLine } from './how-many'
 import { readsAsPolish } from '../src/lib/vendors'
@@ -3839,12 +3838,20 @@ check('runbook naprawde zawiera te komendy', /scripts\/audit-oauth\.mts all`/.te
 
 // Klucz do prywatnego raportu to sam identyfikator w `/d/<id>`, a repo jest publiczne. Draft
 // outreachu z dziesiecioma takimi linkami lezal 2026-09-03 jako plik nieśledzony o jeden `git add`
-// od publikacji; codex to zlapal, nie my. Sonda czyta tylko pliki sledzone, bo o nie chodzi.
+// od publikacji; codex to zlapal, nie my. Sonda czyta to, co lezy w repo na dysku.
 console.log('\nzaden sledzony plik nie niesie klucza do prywatnego raportu')
 const linkDoDostawy = (text: string) => [...text.matchAll(/letagentsin\.com\/d\/([A-Za-z0-9_-]+)/g)].map((hit) => hit[1]).filter((id) => id !== 'sample')
-const sledzone = execSync('git ls-files outreach docs src scripts public', { encoding: 'utf8' }).split('\n').filter((f) => /\.(md|mdx|tsx?|mts|txt)$/.test(f) && f !== 'scripts/rules.mts')
-const przecieki = sledzone.flatMap((f) => linkDoDostawy(readFileSync(f, 'utf8')).map((id) => `${f}: ${id}`))
-check('zadnego /d/<id> poza probka w plikach sledzonych', przecieki.join(', '), '')
+// Po dysku, nie po `git ls-files`: Heroku buduje bez katalogu .git i pierwsza wersja polozyla
+// deploy. Dysk jest tez surowszy, bo widzi plik zanim ktos go doda. `*.private.md` to jedyne
+// miejsce, gdzie taki link ma prawo lezec, i .gitignore trzyma je poza repo.
+const naDysku = (dir: string): string[] =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = `${dir}/${entry.name}`
+    if (entry.isDirectory()) return entry.name === 'node_modules' ? [] : naDysku(path)
+    return /\.(md|mdx|tsx?|mts|txt)$/.test(entry.name) && !/\.private\.md$/.test(entry.name) && path !== 'scripts/rules.mts' ? [path] : []
+  })
+const przecieki = ['outreach', 'docs', 'src', 'scripts', 'public'].filter(existsSync).flatMap(naDysku).flatMap((f) => linkDoDostawy(readFileSync(f, 'utf8')).map((id) => `${f}: ${id}`))
+check('zadnego /d/<id> poza probka w plikach, ktore moga trafic do repo', przecieki.join(', '), '')
 // Kontrolka z wymyslonym id: prawdziwy w tym pliku bylby dokladnie przeciekiem, o ktory chodzi.
 check('sonda widzi klucz', linkDoDostawy('see https://letagentsin.com/d/abcDEF123-_x today').length, 1)
 check('a probke przepuszcza', linkDoDostawy('https://letagentsin.com/d/sample').length, 0)
