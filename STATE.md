@@ -35,6 +35,15 @@ zalozeniem:** `PROBE-DMARC-FORWARDING-20260903115308` wyslana przez Resend z `sc
 do INBOX w dwie sekundy, bez etykiety pomijajacej skrzynke. Petla zamknieta: rekord jest, adres
 odbiera, raporty maja gdzie dojsc.
 
+**Domena nie ma catch-alla** (sonda na zmyslony adres nie doszla, przy sondzie na `dmarc@`
+dostarczonej w dwie sekundy), wiec odbieraja wylacznie adresy wpisane recznie. Dolozone i
+**zweryfikowane sondami** `PROBE-FWD-*-20260903120821`, obie w INBOX w 1-3 sekundy:
+`scorecards@` (nadawca wszystkich maili produktu) i `muster@` (kody logowania do tablicy).
+Powod: `reply_to: hello@` w kodzie pokrywa normalna sciezke odpowiedzi, ale nie pokrywa recznego
+przepisania `From`, autoresponderow ignorujacych `Reply-To`, zgloszen naduzyc i niestandardowych
+NDR-ow. Catch-all swiadomie ODRZUCONY: kazdy adres stalby sie wazny i ataki slownikowe trafialyby
+w calosci do skrzynki.
+
 **Osobno, przed outreachem:** z `hello@letagentsin.com` NIE DA SIE wysylac, Porkbun robi tylko
 przekierowanie przychodzace. „Wyslij jako" z Gmaila podpisze DKIM-em gmail.com i po dodaniu DMARC
 bedzie to widoczne jako nieuzgodnione. Dziesiec draftow ma wyjsc z domeny zweryfikowanej w Resend.
