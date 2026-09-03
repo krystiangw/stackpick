@@ -244,7 +244,7 @@ Nie padli ani razu w ZADNYM z dwoch miesiecy:
 ## Documents and e-signature (`documents-signature`)
 
 Zmierzone dwa razy: 2026-08-17 (codex codex-cli 0.147.0, 5 biegow) i 2026-09-02 (codex codex-cli 0.152.1, 5 biegow).
-Wybrano: spoza korpusu, potem spoza korpusu.
+Wybrano: youtrust.com, potem youtrust.com.
 Dowod: https://letagentsin.com/c/documents-signature/runs
 
 Nie padli ani razu w ZADNYM z dwoch miesiecy:
@@ -256,7 +256,7 @@ Nie padli ani razu w ZADNYM z dwoch miesiecy:
 ## Commerce platforms (`commerce`)
 
 Zmierzone dwa razy: 2026-08-17 (codex codex-cli 0.147.0, 5 biegow) i 2026-09-02 (codex codex-cli 0.152.1, 5 biegow).
-Wybrano: shopify.com, potem spoza korpusu.
+Wybrano: fourthwall.com, potem fourthwall.com.
 Dowod: https://letagentsin.com/c/commerce/runs
 
 Nie padli ani razu w ZADNYM z dwoch miesiecy:
@@ -282,7 +282,7 @@ Nie padli ani razu w ZADNYM z dwoch miesiecy:
 ## Domain registration and DNS (`domains-dns`)
 
 Zmierzone dwa razy: 2026-08-17 (codex codex-cli 0.147.0, 5 biegow) i 2026-09-02 (codex codex-cli 0.152.1, 5 biegow).
-Wybrano: spoza korpusu, potem spoza korpusu.
+Wybrano: opensrs.com, potem opensrs.com.
 Dowod: https://letagentsin.com/c/domains-dns/runs
 
 Nie padli ani razu w ZADNYM z dwoch miesiecy:

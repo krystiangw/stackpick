@@ -55,6 +55,9 @@ const ALIASES: Record<string, string[]> = {
   'datadoghq.com': ['Datadog'],
   'cockroachlabs.com': ['CockroachDB', 'Cockroach Labs'],
   'dropboxsign.com': ['Dropbox Sign'],
+  // Mid-rename. yousign.com redirects to youtrust.com and their own title tag carries both, so
+  // runs write "Yousign", "Youtrust (formerly Yousign)" and "Yousign/Youtrust" in the same cell.
+  'youtrust.com': ['Youtrust', 'Yousign'],
   'medusajs.com': ['Medusa'],
   'payloadcms.com': ['Payload CMS', 'Payload'],
   'together.ai': ['Together AI', 'TogetherAI', 'Together'],

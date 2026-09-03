@@ -17,10 +17,14 @@ whole argument for measuring twice before writing to anybody.
   to `low` on both sides, `operatorContext: []` in every run on both dates. **One thing did move: the codex CLI
   went from 0.147.0 to 0.152.1.** Every draft says so, because a reader who finds that out for
   themselves stops believing the rest.
-- **What it showed**: the same winner in **22 of 26** categories, 2 changed, and 2 where the winner
-  is outside our corpus and written differently in every run, so our rule cannot say either way
-  and does not. **69 vendors were named in neither month.** Fifteen came back after an absent
-  August, three went the other way.
+- **What it showed**: the same winner in **25 of 26** categories and one real change. The first
+  reading of this said 22, with two cells changed and two unreadable, and it was our list that was
+  wrong rather than the answers: three categories were being scored against a corpus that did not
+  contain the vendor the runs kept picking. Yousign (now Youtrust), OpenSRS, Openprovider and
+  Fourthwall were added on 2026-09-03 and all four cells then read cleanly on both dates.
+  **69 vendors were named in neither month**, the same 69 as before the fix, because every vendor
+  added was one the runs had already named. Fifteen came back after an absent August, three went
+  the other way.
 - Four runs failed on the OpenAI side with `Selected model is at capacity`, were re-run, and the
   failed attempts are still on disk. No cell was compared at fewer than five usable runs.
 

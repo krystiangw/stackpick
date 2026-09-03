@@ -24,7 +24,7 @@ export default async function VendorIndex() {
   const { reports, formulaVersion } = await publishedCorpus()
   const scores = new Map(reports.map((report) => [report.domain, report.scorecard]))
   // One read for the whole list, not one per row. A frozen score sitting unmarked in a ranked list
-  // is the same stale claim the vendor page now refuses to make, printed 177 times.
+  // is the same stale claim the vendor page now refuses to make, printed once per row.
   //
   // A failed read is not "nothing is frozen". Swallowed into an empty set it would print every
   // frozen row as an ordinary ranked result, so the page says it could not check instead: the

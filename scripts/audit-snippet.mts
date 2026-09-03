@@ -7,7 +7,7 @@
  * no entry condition, which is a sentence about their marketing rather than their server, so a
  * false accusation is cheap to make and expensive to publish. This prints what the production
  * reader saw next to the words it read, on domains outside the corpus, so the verdict can be
- * argued with by a person before it lands on 177 rows.
+ * argued with by a person before it lands on every row.
  */
 import { fetchUrl } from '../src/lib/scan/http'
 import { readSnippet } from '../src/lib/scan/funnel'

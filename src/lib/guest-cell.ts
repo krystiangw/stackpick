@@ -3,7 +3,7 @@ import { certain, mentionsIn, nameGuest } from './vendors'
 /**
  * Reading a cell for somebody who was not in it when it ran.
  *
- * Every real customer is a guest: the corpus is 177 domains we chose to publish about, and the
+ * Every real customer is a guest: the corpus is the domains we chose to publish about, and the
  * people who pay are the ones who are not on it. Their runs exist, because a cell is a question put
  * to an agent about a category, but their name was never looked for in the answers, so the stored
  * per-domain rows say nothing about them.

@@ -59,7 +59,7 @@ if (outAt !== -1 && !named) {
 }
 const out = named ?? `report-${domain.replace(/\./g, '-')}.md`
 
-// A buyer is almost never in the corpus. The corpus is 177 domains we chose to publish about, and
+// A buyer is almost never in the corpus. The corpus is the domains we chose to publish about, and
 // `categoryFor` matches that list, so every real prospect - an email provider we simply had not
 // listed - was told their product is in none of the categories we measure. The category is the
 // unit we sell, not the list, so a domain outside it can be placed into one by hand and read
@@ -140,7 +140,7 @@ const labelOfGuest = domain.split('.')[0]
  * list it resolves against. That last part matters and is not a detail: the matcher decides an
  * ambiguous name by its neighbours, so a newcomer has to be in the list to be read at all, and
  * everybody else has to be re-read alongside them or "named first" would still be the old winner.
- * The published rows stay the source for the 177 we do publish, so a report about them cannot
+ * The published rows stay the source for the ones we do publish, so a report about them cannot
  * disagree with the site.
  */
 const withGuest = guest ? [...category.domains, domain] : category.domains

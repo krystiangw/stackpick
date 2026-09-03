@@ -3822,6 +3822,20 @@ check('pelne przejscie nie zglasza pominiecia', coverageLine(177, 177, 30).inclu
 check('a przerwane w polowie zglasza', coverageLine(88, 177, 30).includes('NIE przeczytana'), true)
 check('pelne przejscie mowi, ile wierszy pasowalo', coverageLine(177, 177, 49).includes('49 z nich pasowalo'), true)
 
+// Runbook sporu kazal uruchomic trzy audyty z sufitem 177, bo tyle liczyl korpus w dniu, w ktorym
+// to napisano. 2026-09-03 korpus urosl do 181 i ta sama komenda pytalaby 177 domen, obiecujac
+// „kazda". Liczba przepisana do prozy starzeje sie po cichu, wiec runbook ma podawac `all`, a nie
+// liczbe: `all` bierze rozmiar korpusu w chwili uruchomienia.
+console.log('\nrunbook sporu nie zamraza rozmiaru korpusu')
+const runbookSporu = readFileSync('docs/handling-a-dispute.md', 'utf8')
+const zLiczba = [...runbookSporu.matchAll(/scripts\/(audit-[a-z-]+)\.mts (\d+)`/g)].map((hit) => `${hit[1]} ${hit[2]}`)
+check('zadna komenda w runbooku nie ma wpisanego sufitu', zLiczba.join(', '), '')
+// Kontrolka: sonda odroznia `all` od liczby, wiec zielony wynik nie znaczy „nie znalazlem tabeli".
+const sufitWKomendzie = (text: string) => [...text.matchAll(/scripts\/(audit-[a-z-]+)\.mts (\d+)`/g)].length
+check('sonda widzi wpisany sufit', sufitWKomendzie('`npx tsx scripts/audit-oauth.mts 177`') > 0, true)
+check('a `all` przepuszcza', sufitWKomendzie('`npx tsx scripts/audit-oauth.mts all`') > 0, false)
+check('runbook naprawde zawiera te komendy', /scripts\/audit-oauth\.mts all`/.test(runbookSporu), true)
+
 // Ten repozytorium ma pnpm-lock.yaml i nie ma package-lock.json, wiec `npm ci` w workflow konczy sie
 // bledem w osiem sekund. Job lustrzacy rejestr MCP tak wlasnie umarl na obu swoich przebiegach i
 // nikt tego nie zauwazyl, bo stare lustro jest czytane jeszcze przez siedem dni.

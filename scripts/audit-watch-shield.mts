@@ -4,7 +4,7 @@
  *   MONGODB_URI=... npx tsx scripts/audit-watch-shield.mts
  *
  * Obserwator placi za zdanie „u tego vendora cos sie zmienilo". Gdy podbijemy formule i przemiat
- * przepisze 177 wierszy naraz, kazdy z nich „sie zmienia" - i bez oslony kazdy obserwator dostaje
+ * przepisze kazdy wiersz naraz, wiec kazdy z nich „sie zmienia" - i bez oslony kazdy obserwator dostaje
  * maila o czyms, co zrobilismy MY. `CHECK_RULE_CHANGED` ma to blokowac, ale dotad sprawdzalismy
  * tylko, czy funkcja zwraca wlasciwa liste; ten audyt przepuszcza PRAWDZIWE pary raportow przez te
  * sama sciezke decyzyjna, ktorej uzywa cron, i pyta, czy mail by wyszedl.

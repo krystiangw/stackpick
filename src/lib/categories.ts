@@ -175,16 +175,41 @@ export const CATEGORIES: Category[] = [
     domains: ['datadoghq.com', 'grafana.com', 'honeycomb.io', 'newrelic.com', 'axiom.co', 'signoz.io'],
   },
   {
+    // youtrust.com added 2026-09-03, after ten runs on two dates picked it and our rule could not
+    // read the answer, because the corpus held no domain for the company the runs were naming.
+    // The question asks for a signature that is legal in the EU and we curated a list with no
+    // qualified EU provider on it, which made the cell unanswerable rather than competitive.
+    // Filed under youtrust.com because yousign.com redirects there and the runs write both names.
     id: 'documents-signature',
     label: 'Documents and e-signature',
     jobToBeDone: 'generate a document and get it signed',
-    domains: ['docuseal.com', 'documenso.com', 'dropboxsign.com', 'pandadoc.com', 'useanvil.com', 'pdfmonkey.io'],
+    domains: [
+      'docuseal.com',
+      'documenso.com',
+      'dropboxsign.com',
+      'pandadoc.com',
+      'useanvil.com',
+      'pdfmonkey.io',
+      'youtrust.com',
+    ],
   },
   {
+    // fourthwall.com added 2026-09-03. Eight of ten runs on two dates picked it and it was not on
+    // the list they were being scored against. The question asks for merchandise beside a product
+    // with the checkout, tax and shipping handled, and every domain here except Shopify answers a
+    // heavier question than that, so the shelf was missing its cheap end.
     id: 'commerce',
     label: 'Commerce platforms',
     jobToBeDone: 'sell something without building a checkout',
-    domains: ['shopify.com', 'bigcommerce.com', 'medusajs.com', 'saleor.io', 'swell.is', 'commercetools.com'],
+    domains: [
+      'shopify.com',
+      'bigcommerce.com',
+      'medusajs.com',
+      'saleor.io',
+      'swell.is',
+      'commercetools.com',
+      'fourthwall.com',
+    ],
   },
   {
     id: 'localization',
@@ -203,15 +228,21 @@ export const CATEGORIES: Category[] = [
     // balance and an IP allowlist, and GoDaddy behind a minimum number of domains already held.
     // An agent building a site has to buy a domain before anything else, so whichever registrar
     // it can actually drive becomes the default for every site an agent builds.
-    // opensrs.com was here until 2026-08-11 and is not a registrar an agent can use. Its own title
-    // tag reads "Reseller Platform for Domains, Email, and SSL" and its home page "the world's
-    // largest wholesale domain platform", so the product is sold to registrars rather than to
-    // whoever wants a domain. Right company, wrong shelf, like liveblocks.io under editors.
+    // opensrs.com was removed on 2026-08-11 as "right company, wrong shelf": its own title tag
+    // reads "Reseller Platform for Domains, Email, and SSL", so the product is sold to registrars
+    // rather than to whoever wants a domain. Both it and openprovider.com went back in on
+    // 2026-09-03, and the reason is that the removal argued against our own question. We ask about
+    // a product that hands every customer a subdomain and now needs to register custom domains for
+    // them from a backend, which is reselling. Ten runs on two dates picked one of these two every
+    // time, and our rule reported the winner as unreadable because neither was on the list. The
+    // curation was wrong, not the answer.
     id: 'domains-dns',
     label: 'Domain registration and DNS',
     jobToBeDone: 'register a domain and point it somewhere with nobody at the keyboard',
     domains: [
       'namecheap.com',
+      'opensrs.com',
+      'openprovider.com',
       'porkbun.com',
       'dynadot.com',
       'name.com',

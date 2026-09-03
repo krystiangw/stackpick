@@ -113,7 +113,7 @@ correction stays visible rather than becoming furniture.
 
 ## 4. Fix the rule, and measure it before it ships
 
-A rule change touches all 177 rows, so it is never justified by the one vendor who wrote in.
+A rule change touches every row in the corpus, so it is never justified by the one vendor who wrote in.
 
 - Verify the disputed rows **by hand** first. On `typed_package` this changed the answer: of the ten
   rows failing it, four were true and six were the wrong artefact, so switching the check off would
@@ -130,9 +130,9 @@ Run the matching script before answering a dispute about one of them, and quote 
 
 | The vendor disputes | Run | What it proves |
 |---|---|---|
-| "you say nothing answers at our agent paths" | `npx tsx scripts/audit-entry.mts 177` | asks every path on both hosts, with the scanner's own Accept header and a control per namespace |
-| "you say we publish no OAuth metadata" | `npx tsx scripts/audit-oauth.mts 177` | asks every origin the row names, all three documents, following protected-resource pointers |
-| "you say our MCP server is not there" | `npx tsx scripts/audit-mcp.mts 177` | sends a JSON-RPC initialize to every address the row names |
+| "you say nothing answers at our agent paths" | `npx tsx scripts/audit-entry.mts all` | asks every path on both hosts, with the scanner's own Accept header and a control per namespace |
+| "you say we publish no OAuth metadata" | `npx tsx scripts/audit-oauth.mts all` | asks every origin the row names, all three documents, following protected-resource pointers |
+| "you say our MCP server is not there" | `npx tsx scripts/audit-mcp.mts all` | sends a JSON-RPC initialize to every address the row names |
 
 ### When the complaint is about a document we already sent
 

@@ -12,8 +12,11 @@ dostalyby twierdzenie, ktore zestarzalo sie w szesnascie dni. Drafty wymienione 
 `outreach/drafts/never-named-2026-09-03.md`, stare oznaczone jako nieuzywane.
 
 **Liczby z dwoch punktow** (`npm run drift`):
-- **zwyciezca ten sam w 24 z 26 kategorii**, w tym 2, gdzie w obu wygrala firma spoza korpusu.
-  Realne zmiany dwie: `observability` datadoghq -> honeycomb, `commerce` shopify -> spoza korpusu.
+- **zwyciezca ten sam w 25 z 26 kategorii**, jedna realna zmiana: `observability` datadoghq ->
+  honeycomb. Pierwszy odczyt mowil 24 i byl bledem NASZEJ listy, nie odpowiedzi: `commerce`,
+  `documents-signature` i `domains-dns` byly oceniane wobec korpusu bez firmy, ktora biegi wybieraly
+  w kazdym miesiacu. Po dodaniu youtrust.com, opensrs.com, openprovider.com i fourthwall.com
+  (2026-09-03) wszystkie trzy komorki czytaja sie czysto w obu datach.
 - **69 firm nienazwanych w ZADNYM z dwoch miesiecy** (w sierpniu samym bylo 84).
 - 15 wrocilo po nieobecnym sierpniu, 3 zniknelo po obecnym.
 

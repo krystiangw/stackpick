@@ -3,7 +3,7 @@
  *
  *   MONGODB_URI=... npx tsx scripts/assign-watch.mts <domain> <email> --category <id> [--brand Name]
  *
- * Every paying customer needs this. The corpus is 177 domains we chose to publish about, the people
+ * Every paying customer needs this. The corpus is the domains we chose to publish about, the people
  * who buy are the ones who are not on it, and the monthly agent run needs a category to have a
  * question at all. Which category is a person's decision and not a guess: "email" for email.com
  * would count every sentence about email as a mention of them.

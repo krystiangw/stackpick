@@ -12,8 +12,8 @@
  */
 /**
  * @param population How many rows exist to read, when the cap slices that list directly. Given,
- * the cap announces itself: ten of these audits stop after 25 to 40 domains of the 177 in the
- * corpus and then print a verdict that reads like the whole thing. I read "43 credited rows,
+ * the cap announces itself: ten of these audits stop after 25 to 40 domains of the corpus and then
+ * print a verdict that reads like the whole thing. I read "43 credited rows,
  * nothing indistinguishable" on 2026-08-19 and only noticed on the second run that the first had
  * read 12. A cap nobody says out loud is a silent claim about the rows nobody asked.
  *
@@ -22,9 +22,9 @@
  * make. That distinction is codex's, on the first version of this, and it was right.
  */
 export function howManyRows(fallback: number, population?: number): number {
-  const chosen = chooseHowMany(fallback)
+  const chosen = chooseHowMany(fallback, population)
   if (population !== undefined && chosen < population) {
-    console.log(`czytam ${chosen} z ${population}; reszta POMINIETA - podaj liczbe, zeby przeczytac wszystkie`)
+    console.log(`czytam ${chosen} z ${population}; reszta POMINIETA - podaj "all", zeby przeczytac wszystkie`)
   }
   return chosen
 }
@@ -49,13 +49,29 @@ export function reportCap(visited: number, population: number, matched: number):
   console.log(coverageLine(visited, population, matched))
 }
 
-function chooseHowMany(fallback: number): number {
+/**
+ * `all` exists because the alternative is a number written down somewhere. The dispute runbook said
+ * `audit-entry.mts 177`, and on 2026-09-03 the corpus went to 181: following that page would have
+ * asked 177 domains while promising every one of them. A count copied into prose is a claim that
+ * expires the next time the corpus changes, and it expires quietly.
+ *
+ * It needs the population, so a script that caps QUALIFYING rows rather than slicing the list
+ * refuses it instead of guessing: there `all` has no number behind it.
+ */
+function chooseHowMany(fallback: number, population?: number): number {
   const given = process.argv[2]
   if (given === undefined) return fallback
+  if (given === 'all') {
+    if (population === undefined) {
+      console.error(`"all" nie ma tu liczby za soba: ten audyt nie tnie listy, tylko liczy pasujace wiersze. Podaj liczbe.`)
+      process.exit(2)
+    }
+    return population
+  }
   // Zero is refused for the same reason a word is: it produces a run that measures nothing and then
   // prints that our sentence holds.
   if (!/^[1-9]\d*$/.test(given)) {
-    console.error(`"${given}" nie jest dodatnia liczba wierszy. Uzycie: npx tsx ${process.argv[1]?.split('/').pop() ?? 'skrypt'} [ile]`)
+    console.error(`"${given}" nie jest dodatnia liczba wierszy ani slowem "all". Uzycie: npx tsx ${process.argv[1]?.split('/').pop() ?? 'skrypt'} [ile|all]`)
     process.exit(2)
   }
   return Number(given)

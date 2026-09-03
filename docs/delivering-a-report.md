@@ -14,7 +14,7 @@ in three months will not remember what the pricing page promised today.
 
 ## Before taking money
 
-0. **A buyer is almost never in the corpus.** The 177 domains we publish are the ones we chose to
+0. **A buyer is almost never in the corpus.** The domains we publish are the ones we chose to
    write about; a prospect who finds us is usually not one of them. That is not a refusal any more:
    place them into the category they belong to and the report is read out of the same answers.
 
