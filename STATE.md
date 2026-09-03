@@ -29,9 +29,11 @@ NASZEJ domenie, bo raport na gmail.com wymagalby rekordu autoryzacyjnego po stro
 `aspf` musi zostac luzne, bo Resend trzyma Return-Path na `send.letagentsin.com`, wiec strict
 wywalilby nasza wlasna, poprawna wysylke.
 
-**Do zrobienia recznie:** przekierowanie `dmarc@letagentsin.com` w panelu Porkbuna (API do
-przekierowan pocztowych nie istnieje, `email/retrieve` zwraca 404). Bez tego rekord jest wazny,
-ale raporty nie maja gdzie dojsc.
+**Przekierowanie `dmarc@letagentsin.com` zalozone** przez Krystiana w panelu Porkbuna (API do
+przekierowan pocztowych nie istnieje, `email/retrieve` zwraca 404). **Zweryfikowane sonda, nie
+zalozeniem:** `PROBE-DMARC-FORWARDING-20260903115308` wyslana przez Resend z `scorecards@` dotarla
+do INBOX w dwie sekundy, bez etykiety pomijajacej skrzynke. Petla zamknieta: rekord jest, adres
+odbiera, raporty maja gdzie dojsc.
 
 **Osobno, przed outreachem:** z `hello@letagentsin.com` NIE DA SIE wysylac, Porkbun robi tylko
 przekierowanie przychodzace. „Wyslij jako" z Gmaila podpisze DKIM-em gmail.com i po dodaniu DMARC
