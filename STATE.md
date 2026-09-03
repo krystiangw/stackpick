@@ -1,4 +1,39 @@
-# Let Agents In: stan na 2026-09-03 (produkcja v780, korpus 181, dwa punkty pomiarowe, 69 firm nieobecnych w obu miesiacach)
+# Let Agents In: stan na 2026-09-03 (produkcja v782, korpus 181, kampania „raport w prezencie" czeka na zatwierdzenie wysylki)
+
+## KAMPANIA: DZIESIEC RAPORTOW W PREZENCIE, DRAFTY DO ZATWIERDZENIA (2026-09-03, 17:00)
+
+**Decyzja Krystiana (2026-09-03): wychodzimy do korpusu.** Nie ma zadnych klientow w bazie (27 leadow
+i 4 obserwacje to nasze testy), platnosci sa wylaczone, monitoring darmowy, wiec kampania konczy sie
+odpowiedzia i rozmowa, nie checkoutem. Trzy kroki: raport za 49 USD w prezencie z jednym pytaniem
+(„czy to sie zgadza z Waszymi rejestracjami?"), monitoring jako haczyk dopiero w follow-upie, audyt
+tylko dla tych, ktorzy odpowiedza i u ktorych raport pokazal sciane.
+
+**Dziesiec raportow opublikowanych** pod `/d/<id>` (`client-report.mts --publish`), obie bramki
+dostawy zielone. Lista: docuseal.com, loops.so, transloadit.com, upstash.com, logto.io, raygun.com,
+windmill.dev, trychroma.com, polar.sh, betterstack.com. Kryterium: serwer MCP albo rejestracja OAuth
+bez sciezki do klucza, i 0/15 nazwan na dwoch narzedziach (08-16/08-17 i 09-02). livekit.com i
+agora.io wypadly, bo pytanie „video" dotyczy uploadu i odtwarzania, a oni sprzedaja rozmowy na zywo:
+„nienazwani" to nasza kategoria, nie ich absencja. Wygenerowane dla nich raporty leza w bazie pod
+nieuzywanymi id, nieszkodliwe.
+
+**Drafty z imiennymi odbiorcami:** `outreach/drafts/gift-report-2026-09-03.private.md`, POZA GITEM
+(`*.private.md` w .gitignore), bo kazdy link `/d/<id>` jest kluczem, a repo jest publiczne. Odbiorcy
+z researchu publicznego (zalozyciel/CEO w kazdej firmie, wszystkie 2-30 osob), zadnego adresu nie
+zgadywalismy. **Nic nie wyslane. Krystian zatwierdza przed pierwsza wysylka.**
+
+**Do zrobienia po jego stronie przed wysylka:** send-as `hello@` przez SMTP Resenda (nie przez
+Gmail, bo podpis gmail.com nie przejdzie DMARC), zwezenie filtra `Stats`, wybor skrzynek odbiorcow.
+
+**Cennik przebudowany (v782):** tabela porownawcza pod hero, karty po 3 punkty, monitoring jako
+„Free" z 79 USD jako pozniejsza cena (takze w snippetcie), trzy dlugie sekcje i FAQ zwiniete w
+`<details>`. HTML nadal niesie cala proze (6754 slow), widoczne bez klikania jest kilkaset. Codex
+zlapal trzy rzeczy, wszystkie trafne: id raportu liczony w `visits` lamal obietnice z `/privacy`
+(teraz liczymy `/d` bez id), tabela obiecywala biegi poza mierzonymi kategoriami, snippet mowil 79
+przy „Free". Nowy straznik w `rules.mts`: zaden plik w repo nie niesie `/d/<id>` poza `sample`;
+pierwsza wersja wolala `git ls-files` i polozyla build na Heroku (brak `.git`), teraz chodzi po dysku.
+
+**Generator raportu** pisal „3 different tools (codex, codex, claude)" odkad sa dwie daty codexa;
+teraz liczy narzedzia i partie osobno. Dziesiatka zostala przegenerowana pod tymi samymi id.
 
 ## POCZTA: DMARC DODANY, A „HELLO NIE DZIALA" BYLO FILTREM W GMAILU (2026-09-03)
 
