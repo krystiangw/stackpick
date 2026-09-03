@@ -11,6 +11,12 @@
  * Codex cells only. Half the published cells were run by Claude Code with the operator's CLAUDE.md
  * in reach, and the site says so; a sentence we put in a stranger's inbox should rest on the half
  * that needs no caveat.
+ *
+ * One section per CELL, not per category, and the date is in the heading. There are now two codex
+ * dates, so a category appears twice and the two halves disagree: bird.com is absent on 2026-08-17
+ * and named on 2026-09-02. Printing both under one undated heading is how three drafts nearly went
+ * out on a claim that had already expired. Nothing here is an outreach list on its own -
+ * `outreach/absent-both-months.md` is, because it needs a vendor to be absent on both dates.
  */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -39,8 +45,12 @@ const lines: string[] = [
   'One row per vendor an agent never mentioned in five runs of its own category.',
   '',
   'Absence is not a ranking and is not evidence the vendor is bad. It is evidence that on this',
-  'question, on this date, with this agent, they were not in the room. Everything here is five runs',
-  'of one model on one day, and any message quoting it has to say so.',
+  'question, on this date, with this agent, they were not in the room.',
+  '',
+  '**One section per cell, and a category appears once per date.** A vendor missing from one',
+  'section may be named in the next one down: that is the whole reason a single date cannot carry',
+  'an email. Write to nobody off this file. `outreach/absent-both-months.md` is the outreach list,',
+  'and it requires absence on both dates.',
   '',
 ]
 
@@ -59,7 +69,7 @@ for (const cell of cells) {
 
   total += missing.length
   lines.push(
-    `## ${category.label} (\`${category.id}\`)`,
+    `## ${category.label} (\`${category.id}\`), ${cell.ranAt}`,
     '',
     `**Pytanie:** ${cell.question}`,
     '',
@@ -73,6 +83,14 @@ for (const cell of cells) {
   )
 }
 
-lines.push(`---`, ``, `Razem: **${total}** firm, z ${cells.length} cel codexa, przy formule skanera ${corpus.formulaVersion}.`)
+// „Firm" byloby klamstwem: ta sama firma nieobecna w obu datach liczy sie tu dwa razy. Liczba
+// FIRM stoi w absent-both-months.md i jest mniejsza.
+lines.push(
+  `---`,
+  ``,
+  `Razem **${total}** nieobecnosci (kategoria x data) z ${cells.length} cel codexa, przy formule`,
+  `skanera ${corpus.formulaVersion}. To nie jest liczba firm: firma nieobecna w obu datach stoi`,
+  `tu dwa razy.`,
+)
 writeFileSync(join('outreach', 'never-named.md'), `${lines.join('\n')}\n`)
-console.log(`outreach/never-named.md: ${total} nienazwanych w ${cells.length} kategoriach`)
+console.log(`outreach/never-named.md: ${total} nieobecnosci w ${cells.length} celach codexa (kategoria x data, nie firm)`)
