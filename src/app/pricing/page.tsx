@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   // The prices go in the snippet. A pricing description with no number in it reads as "contact
   // sales", and the runs we published measured agents passing over a vendor on exactly that
   // reading, without opening the page that would have corrected it.
-  description: `Free scan, no account and no card: ${CHECKS.length} deterministic checks. One agent report ${priceOf(skuById('report-one')!)}, monitoring ${priceOf(skuById('watch-monthly')!)} a month, the audit priced by conversation.`,
+  description: `Free scan, no account and no card: ${CHECKS.length} deterministic checks. One agent report ${priceOf(skuById('report-one')!)}, monitoring free while we build it and ${priceOf(skuById('watch-monthly')!)} a month after, the audit priced by conversation.`,
 }
 
 type Tier = {
@@ -41,7 +41,6 @@ const TIERS: readonly Tier[] = [
     pitch: 'What a machine can see from outside.',
     includes: [
       `${CHECKS.length} deterministic checks across five funnel stages, ${MAX_SCORE} points on paper`,
-      'A score out of the points we could actually measure on your domain, with the rest named rather than counted against you',
       'A permanent link you can forward',
       'The published formula, so the number can be argued with',
     ],
@@ -56,36 +55,28 @@ const TIERS: readonly Tier[] = [
       // "Ten" was written when every cell held five runs. One category already holds six on one
       // tool, and a floor is the only version of this sentence a topped-up cell cannot falsify.
       'One question from your category, the one your buyers ask, put to an agent at least ten times in isolation',
-      // Five runs is what monitoring sends monthly and what the section below admits cannot
-      // separate two close providers. Selling five as a one-off product would be selling the
-      // weakness: a single reading has no next month to correct it.
-      'Two different tools, five runs each at least. A result that appears on only one of them is about the tool',
       'How many of the ten named you, which provider was picked instead, and the sentence that passed over you, quoted',
       'Every transcript handed over, so you read what the agent said rather than our summary of it',
-      `Only the ${CATEGORIES.length} categories we measure. If your product is not in one of them we say so before you pay, not after`,
     ],
-    // „Credited against your first month of monitoring" stalo tu do 2026-08-20 i bylo obietnica bez
+    // Obietnica zaliczenia ceny raportu na pierwszy miesiac monitoringu stala tu do 2026-08-20 bez
     // WARTOSCI, nie tylko bez mechanizmu: monitoring jest dzis darmowy (`monitoringIsFree`), wiec
     // kupujacy czytal „49 USD zaliczone" i dwie linijki nizej „Free while we are building it".
     // Czterdziesci dziewiec od zera. Zdania, ktorego nie umiemy poprzec, nie publikujemy o cudzych
     // firmach - i nie ma powodu, zeby wolno bylo o wlasnej ofercie. Druga polowa zostaje, bo jest
     // prawdziwa bez zadnego mechanizmu i robi cala robote, o ktora chodzilo.
-    note: 'It is a sample of monitoring, not a competitor to it.',
+    note: `It is a sample of monitoring, not a competitor to it. Only the ${CATEGORIES.length} categories we measure: if yours is not one of them we say so before you pay, not after.`,
     sample: { label: 'Read a real one, start to finish', href: '/d/sample' },
     cta: { label: 'Ask for a report', href: 'mailto:hello@letagentsin.com?subject=One%20agent%20report' },
   },
   {
     name: 'Monitoring',
-    price: priceOf(skuById('watch-monthly')!),
-    cadence: 'per domain, per month',
+    price: 'Free',
+    cadence: `while we build it, later ${priceOf(skuById('watch-monthly')!)} a month per domain`,
     pitch: 'Whether an agent can still use you, and whether it ever considers you at all.',
     includes: [
       'The same checks, rerun every week, so a verdict that moves is caught within days',
       'Real agents every month: one buying question, put to an agent five times in isolation, and how many of the five named you. The question is the unit here, and you can add more of them',
-      `The agent runs cover the ${CATEGORIES.length} categories we measure. If your product is not in one of them we say so before you switch it on, rather than after`,
-      'Which provider got picked instead, and the sentence that passed over you, quoted from the transcript',
       'One email when something moves, nothing when nothing does, which is most weeks',
-      'No account and no card. One link in every email stops it',
     ],
     note: `Pay for ten months, get twelve. Three domains ${priceOf(skuById('watch-pack-3')!)} a month; Agency, ten domains, ${priceOf(skuById('watch-agency')!)}. Another buying question, asked the same way, ${priceOf(skuById('extra-question')!)} a month. Free while we are building it, and we will ask before it ever costs anything.`,
     featured: true,
@@ -99,11 +90,10 @@ const TIERS: readonly Tier[] = [
     includes: [
       'Build runs: an agent gets a working application and a brief for your category, and is told to ship with nobody available to answer questions',
       'Where the run stalls: registration, credentials, or the first integration',
-      'Every transcript and every artefact handed over, with what shipped read from the files rather than from what the run says it did',
-      'The argument about what it means, with the person who wrote the brief rather than an account manager',
       'The fixes, quoted from what the runs found: documentation an agent can read, an entry point built for a machine, a credential path with no human in it, or an MCP server for your API',
     ],
     note: 'Four figures, scoped once we agree what to measure. It is a conversation, not a checkout, because the brief is most of the work.',
+    sample: { label: 'Read the four published audits', href: '/audit' },
     cta: { label: 'Ask what it would cost', href: 'mailto:hello@letagentsin.com?subject=Agent%20audit' },
   },
 ]
@@ -148,6 +138,73 @@ export default async function PricingPage() {
           so you hear the day a verdict moves, and real agents asked the question your buyers ask, to find out
           whether you are named at all.
         </p>
+        <div className="mt-7 flex flex-wrap gap-3">
+          <Link
+            href="/#watch"
+            className="w-fit border border-ink bg-ink px-5 py-2.5 font-mono text-sm text-ground transition-colors hover:bg-ground hover:text-ink"
+          >
+            Watch your domain, free
+          </Link>
+          <Link
+            href="/"
+            className="w-fit border border-ink px-5 py-2.5 font-mono text-sm transition-colors hover:bg-ink hover:text-ground"
+          >
+            Scan it first
+          </Link>
+        </div>
+        <p className="mt-3 font-mono text-xs text-ink-faint">
+          No account, no card. Monitoring is free while we build it, and one link in any email stops it.
+        </p>
+      </section>
+
+      <section className="border-b border-rule py-12">
+        <h2 className="text-lg font-semibold tracking-tight">What each one is</h2>
+        <div className="mt-6 overflow-x-auto">
+          <table className="w-full min-w-[56rem] border-collapse text-left">
+            <thead>
+              <tr>
+                <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em]" />
+                <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em]">Free scan</th>
+                <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em]">One agent report</th>
+                <th className="border-b border-rule bg-brass-soft p-3 align-top font-mono text-xs uppercase tracking-[0.15em]">Monitoring</th>
+                <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em]">Audit and fixes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">What runs</th>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">{CHECKS.length} HTTP checks, no model</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">One buying question put to an agent at least ten times on two tools</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">The same checks weekly, plus one agent question five times a month, in the {CATEGORIES.length} categories we measure</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Agents given a real app and told to ship against you</td>
+              </tr>
+              <tr>
+                <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">Who does it</th>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">A script, the formula is published</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Real agents, read by a published rule</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Real agents, read by a published rule</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Real agents, and a person reading every transcript</td>
+              </tr>
+              <tr>
+                <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">What you get</th>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">A permanent link and the formula</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">How many named you, who was picked instead, the sentence that passed over you, every transcript</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">One email when a verdict moves, one a month with the agent count</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Where the run stalls, every artefact, the fixes that follow</td>
+              </tr>
+              <tr>
+                <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">Price</th>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">$0</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">{priceOf(skuById('report-one')!)} once</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">
+                  Free while we build it
+                  <span className="mt-1 block font-mono text-xs text-ink-faint">later {priceOf(skuById('watch-monthly')!)} a month</span>
+                </td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Four figures, scoped by conversation</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section className="border-b border-rule py-12">
@@ -176,7 +233,15 @@ export default async function PricingPage() {
               {tier.note && (
                 <p className="font-mono text-xs leading-relaxed text-ink-faint">{tier.note}</p>
               )}
-              {tier.sample && sampleReady && (
+              {/* Delivery samples need a published flag; static samples are always safe to link. */}
+              {tier.sample && !tier.sample.href.startsWith('/d/') && (
+                <p className="font-mono text-xs">
+                  <Link href={tier.sample.href} className="text-brass underline underline-offset-4">
+                    {tier.sample.label}
+                  </Link>
+                </p>
+              )}
+              {tier.sample && sampleReady && tier.sample.href.startsWith('/d/') && (
                 <p className="font-mono text-xs">
                   <Link href={tier.sample.href} className="text-brass underline underline-offset-4">
                     {tier.sample.label}
@@ -194,9 +259,22 @@ export default async function PricingPage() {
         </div>
       </section>
 
-      {/* The objection a sceptical buyer arrives with, answered before they have to ask it. */}
       <section className="border-b border-rule py-12">
-        <h2 className="text-lg font-semibold tracking-tight">Why one run of an agent proves nothing</h2>
+        <h2 className="text-lg font-semibold tracking-tight">The long version, for the sceptical buyer</h2>
+        <p className="mt-2 text-ink-soft">
+          Everything below is the argument behind the table. Read it before an audit goes through procurement, or skip it.
+        </p>
+
+        {/* The objection a sceptical buyer arrives with, answered before they have to ask it. */}
+        <details className="group border-b border-rule py-6">
+          <summary className="cursor-pointer list-none text-lg font-semibold tracking-tight">
+            <span className="mr-3 font-mono text-xs text-brass">
+              <span className="group-open:hidden">+</span>
+              <span className="hidden group-open:inline">-</span>
+            </span>
+            Why one run of an agent proves nothing
+          </summary>
+          <div className="mt-4">
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           Ask a model the same question twice and it will not answer the same way. Our own runs say it plainly:
           one vendor was rejected in nineteen of twenty runs and chosen in the twentieth, and one signup endpoint
@@ -221,12 +299,20 @@ export default async function PricingPage() {
             Read the four published audits, which are the sample of the deliverable
           </Link>
         </p>
-      </section>
+          </div>
+        </details>
 
-      {/* The distinction the two paid tiers turn on, and the one a buyer cannot be expected to
-          guess from the word "agent" appearing in both columns. */}
-      <section className="border-b border-rule py-12">
-        <h2 className="text-lg font-semibold tracking-tight">Two kinds of agent run, and why only one of them is in monitoring</h2>
+        {/* The distinction the two paid tiers turn on, and the one a buyer cannot be expected to
+            guess from the word "agent" appearing in both columns. */}
+        <details className="group border-b border-rule py-6">
+          <summary className="cursor-pointer list-none text-lg font-semibold tracking-tight">
+            <span className="mr-3 font-mono text-xs text-brass">
+              <span className="group-open:hidden">+</span>
+              <span className="hidden group-open:inline">-</span>
+            </span>
+            Two kinds of agent run, and why only one of them is in monitoring
+          </summary>
+          <div className="mt-4">
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           A discovery run is one question and no more: a developer&apos;s problem with a deadline attached, put to
           an agent in an empty directory that has never heard of you. It reads the answer and records who was
@@ -250,13 +336,21 @@ export default async function PricingPage() {
           quoted for a human instead of counted. A model grading another model is the measurement this whole
           site exists to be an alternative to.
         </p>
-      </section>
+          </div>
+        </details>
 
-      {/* The buyer who is going to say no says it because a check already runs in their pipeline.
-          Written about pipelines rather than about a competitor: what we have measured is what our
-          own scans see, and we have not independently measured anyone else's product. */}
-      <section className="border-b border-rule py-12">
-        <h2 className="text-lg font-semibold tracking-tight">What a check in your own pipeline cannot see</h2>
+        {/* The buyer who is going to say no says it because a check already runs in their pipeline.
+            Written about pipelines rather than about a competitor: what we have measured is what our
+            own scans see, and we have not independently measured anyone else's product. */}
+        <details className="group border-b border-rule py-6">
+          <summary className="cursor-pointer list-none text-lg font-semibold tracking-tight">
+            <span className="mr-3 font-mono text-xs text-brass">
+              <span className="group-open:hidden">+</span>
+              <span className="hidden group-open:inline">-</span>
+            </span>
+            What a check in your own pipeline cannot see
+          </summary>
+          <div className="mt-4">
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           A readiness check that runs in CI is a good idea and you should have one. It reads your repository
           before you ship it, which is the cheapest moment to fix a missing file. Four of the things that
@@ -312,6 +406,8 @@ export default async function PricingPage() {
           Both belong in the same stack. Keep the check in CI for the files you control, and treat the series
           here as the part that watches everything you cannot fail a build on.
         </p>
+          </div>
+        </details>
       </section>
 
       {/* The second question a buyer asks after "is the method sound", and the one this page used to
@@ -353,7 +449,7 @@ export default async function PricingPage() {
 
       <section className="py-12">
         <h2 className="text-lg font-semibold tracking-tight">Questions people ask first</h2>
-        <dl className="mt-6 flex flex-col">
+        <div className="mt-6 flex flex-col">
           {[
             [
               `Monitoring says ${priceOf(skuById('watch-monthly')!)} and also says free. Which is it?`,
@@ -418,12 +514,20 @@ export default async function PricingPage() {
               'Yes, but a fix sprint without a measurement is guesswork with an invoice attached. If you already know what is wrong, say so and we will scope it directly.',
             ],
           ].map(([question, answer]) => (
-            <div key={question} className="grid gap-2 border-t border-rule py-5 sm:grid-cols-[18rem_1fr] sm:gap-8">
-              <dt className="font-medium leading-snug">{question}</dt>
-              <dd className="max-w-2xl text-sm leading-relaxed text-ink-soft">{answer}</dd>
-            </div>
+            <details key={question} className="group border-b border-rule py-4">
+              <summary className="cursor-pointer list-none font-medium leading-snug">
+                <span className="mr-3 font-mono text-xs text-brass">
+                  <span className="group-open:hidden">+</span>
+                  <span className="hidden group-open:inline">-</span>
+                </span>
+                {question}
+              </summary>
+              <div className="mt-4">
+                <p className="max-w-2xl text-sm leading-relaxed text-ink-soft">{answer}</p>
+              </div>
+            </details>
           ))}
-        </dl>
+        </div>
       </section>
     </main>
   )

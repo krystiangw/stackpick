@@ -280,7 +280,7 @@ if (!cell) {
 } else {
   lines.push(
     held.length > 1
-      ? `We put one buying question to an agent ${runsAll} times across ${held.length} different tools (${held.map((one) => `${one.tool.split(' ')[0]}: ${one.runs}`).join(', ')}), each run a separate session with nothing carried between them. Two tools rather than one because a result that appears on only one of them is about the tool.`
+      ? `We put one buying question to an agent ${runsAll} times on ${new Set(held.map((one) => one.tool.split(' ')[0])).size} different tools across ${held.length} batches (${held.map((one) => `${one.tool.split(' ')[0]} on ${one.ranAt}: ${one.runs}`).join(', ')}), each run a separate session with nothing carried between them. Two tools rather than one because a result that appears on only one of them is about the tool.`
       : `We put one buying question to an agent ${cell.runs} times, each in a separate session with nothing carried between them.`,
   )
   lines.push('')

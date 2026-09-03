@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation'
 import { ReportMarkdown } from '@/components/report-markdown'
 import { ReportView } from './report-view'
 import { getStore } from '@/lib/store'
+import { recordVisit } from '@/lib/visits'
+import { headers } from 'next/headers'
 import { retractedScaleIn } from '@/lib/claims'
 
 export const dynamic = 'force-dynamic'
@@ -28,6 +30,9 @@ export default async function DeliveredReportPage({ params }: { params: Promise<
   const { id } = await params
   const delivery = await getStore().getDelivery(id)
   if (!delivery) notFound()
+  // Counted as '/d', never by id: the id is the only key to a private report, and a path in
+  // `visits` shows up in /app. Which recipient opened it is exactly what /privacy says we do not keep.
+  recordVisit('/d', (await headers()).get('user-agent'))
   const retracted = retractedScaleIn(delivery)
 
   return (

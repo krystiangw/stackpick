@@ -16,3 +16,6 @@ harness/runs/  # legacy: runs now live at ~/.stackpick-runs
 
 # Wygenerowane raporty dla klientow: wynik skryptu, nie zrodlo.
 report-*.md
+
+# Outreach drafts carrying /d/<id> links: the id is the only key to a private report and this repo is public.
+outreach/drafts/*.private.md

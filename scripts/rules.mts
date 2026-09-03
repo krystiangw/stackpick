@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { coverageLine } from './how-many'
 import { readsAsPolish } from '../src/lib/vendors'
@@ -3835,6 +3836,18 @@ const sufitWKomendzie = (text: string) => [...text.matchAll(/scripts\/(audit-[a-
 check('sonda widzi wpisany sufit', sufitWKomendzie('`npx tsx scripts/audit-oauth.mts 177`') > 0, true)
 check('a `all` przepuszcza', sufitWKomendzie('`npx tsx scripts/audit-oauth.mts all`') > 0, false)
 check('runbook naprawde zawiera te komendy', /scripts\/audit-oauth\.mts all`/.test(runbookSporu), true)
+
+// Klucz do prywatnego raportu to sam identyfikator w `/d/<id>`, a repo jest publiczne. Draft
+// outreachu z dziesiecioma takimi linkami lezal 2026-09-03 jako plik nieśledzony o jeden `git add`
+// od publikacji; codex to zlapal, nie my. Sonda czyta tylko pliki sledzone, bo o nie chodzi.
+console.log('\nzaden sledzony plik nie niesie klucza do prywatnego raportu')
+const linkDoDostawy = (text: string) => [...text.matchAll(/letagentsin\.com\/d\/([A-Za-z0-9_-]+)/g)].map((hit) => hit[1]).filter((id) => id !== 'sample')
+const sledzone = execSync('git ls-files outreach docs src scripts public', { encoding: 'utf8' }).split('\n').filter((f) => /\.(md|mdx|tsx?|mts|txt)$/.test(f) && f !== 'scripts/rules.mts')
+const przecieki = sledzone.flatMap((f) => linkDoDostawy(readFileSync(f, 'utf8')).map((id) => `${f}: ${id}`))
+check('zadnego /d/<id> poza probka w plikach sledzonych', przecieki.join(', '), '')
+// Kontrolka z wymyslonym id: prawdziwy w tym pliku bylby dokladnie przeciekiem, o ktory chodzi.
+check('sonda widzi klucz', linkDoDostawy('see https://letagentsin.com/d/abcDEF123-_x today').length, 1)
+check('a probke przepuszcza', linkDoDostawy('https://letagentsin.com/d/sample').length, 0)
 
 // Ten repozytorium ma pnpm-lock.yaml i nie ma package-lock.json, wiec `npm ci` w workflow konczy sie
 // bledem w osiem sekund. Job lustrzacy rejestr MCP tak wlasnie umarl na obu swoich przebiegach i
