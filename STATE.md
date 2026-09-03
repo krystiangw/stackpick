@@ -1,5 +1,43 @@
 # Let Agents In: stan na 2026-09-03 (produkcja v780, korpus 181, dwa punkty pomiarowe, 69 firm nieobecnych w obu miesiacach)
 
+## POCZTA: DMARC DODANY, A „HELLO NIE DZIALA" BYLO FILTREM W GMAILU (2026-09-03)
+
+**Zglosznie „maile z hello@letagentsin.com nie dochodza do gmaila" bylo falszywym alarmem.**
+Przekierowanie Porkbuna dziala. Test wpadl we WLASNY filtr Krystiana: wyslal go z
+`jobs.query.it@gmail.com`, konta botowego od raportow portfela, na ktore ma regule etykietujaca
+„Stats" i pomijajaca skrzynke. 201 z 201 wiadomosci od tego nadawcy ma etykiete „Stats" i zadna nie
+ma INBOX, wiec regula trafia po NADAWCY, nie po tresci, i zlapala test wyslany na zupelnie inny
+adres.
+
+**Oba wczesniejsze testy byly z konstrukcji niezdolne cokolwiek pokazac.** Ten z 14.08 z glownego
+Gmaila na `hello@` nie ma kopii odebranej, bo Gmail nie pokazuje drugiej kopii wiadomosci, ktora
+sam wyslales do siebie. Jedyny wiarygodny dowod to sonda z 14.08 wyslana przez Resend z
+`scorecards@` - ta wpadla do INBOX. **Adres przychodzacy testuje sie z konta bez filtrow i bez
+zwiazku ze skrzynka docelowa.**
+
+**Zostaje po stronie Krystiana:** poprawic filtr `from:jobs.query.it@gmail.com` (zwezic do
+`subject:Stats`), zeby nie zjadal poczty na `hello@`.
+
+**DMARC dodany** (nie bylo go w ogole): `_dmarc` TXT `v=DMARC1; p=none;
+rua=mailto:dmarc@letagentsin.com`, TTL 600, przez API Porkbuna. Potwierdzone na 8.8.8.8 i 1.1.1.1.
+`p=none` jest tu przyrzadem pomiarowym, nie ostroznoscia: przez dwa tygodnie raporty powiedza, kto
+wysyla jako my, i dopiero wtedy ma sens `quarantine`.
+
+**Dwa ustalenia, ktore trzymaja ten rekord przy zyciu** (szerzej w KB
+`dmarc-dla-domeny-wysylajacej-przez-resend-co-musi-byc-luzne-`): `rua` musi wskazywac skrzynke na
+NASZEJ domenie, bo raport na gmail.com wymagalby rekordu autoryzacyjnego po stronie Google; i
+`aspf` musi zostac luzne, bo Resend trzyma Return-Path na `send.letagentsin.com`, wiec strict
+wywalilby nasza wlasna, poprawna wysylke.
+
+**Do zrobienia recznie:** przekierowanie `dmarc@letagentsin.com` w panelu Porkbuna (API do
+przekierowan pocztowych nie istnieje, `email/retrieve` zwraca 404). Bez tego rekord jest wazny,
+ale raporty nie maja gdzie dojsc.
+
+**Osobno, przed outreachem:** z `hello@letagentsin.com` NIE DA SIE wysylac, Porkbun robi tylko
+przekierowanie przychodzace. „Wyslij jako" z Gmaila podpisze DKIM-em gmail.com i po dodaniu DMARC
+bedzie to widoczne jako nieuzgodnione. Dziesiec draftow ma wyjsc z domeny zweryfikowanej w Resend.
+
+
 ## KORPUS BEZ ZWYCIEZCY W TRZECH KATEGORIACH (2026-09-03, v779/v780)
 
 **Trzy kategorie byly oceniane wobec listy, na ktorej nie bylo firmy wybieranej niemal w kazdym
