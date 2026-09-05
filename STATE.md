@@ -21,8 +21,20 @@ nieuzywanymi id, nieszkodliwe.
 z researchu publicznego (zalozyciel/CEO w kazdej firmie, wszystkie 2-30 osob), zadnego adresu nie
 zgadywalismy. **Nic nie wyslane. Krystian zatwierdza przed pierwsza wysylka.**
 
-**Do zrobienia po jego stronie przed wysylka:** send-as `hello@` przez SMTP Resenda (nie przez
-Gmail, bo podpis gmail.com nie przejdzie DMARC), zwezenie filtra `Stats`, wybor skrzynek odbiorcow.
+**Stan na 2026-09-05 (sprawdzone):** dziesiec linkow `/d/<id>` odpowiada 200 z noindex, drafty poza gitem,
+filtr `Stats` zwezony przeze mnie w Gmailu (`-to:letagentsin.com`), publiczne skrzynki dziesieciu firm
+wpisane do tabeli odbiorcow (same wspolne: hello@/support@/contact@, wiec pierwsza linia maila ma nazwac
+osobe). **Nadal po stronie Krystiana:** send-as `hello@` przez SMTP Resenda (popup Gmaila jest poza
+zasiegiem rozszerzenia, a klucza API nie wpisuje), rotacja klucza Resenda, ktory trafil do transkryptu,
+i przeczytanie draftow. Pierwszy raport DMARC od Google (03.09): 3 nasze sondy, DKIM pass na selektorze
+`resend` przez forward Porkbuna, SPF fail przez SRS (spodziewane), DMARC pass. Alignment przezywa forwarding.
+
+**Realne wejscia (2026-09-05):** Search Console 28 dni: 3 klikniecia, 600 wyswietlen, pozycja 47, wszystkie
+klikniecia na `/`. Nasz licznik pokazuje 250-400 renderow "browser" dziennie, ale to crawler z naglowkiem
+Mozilla: 50-138 roznych `/r/<domena>` dziennie po jednym wejsciu, strona glowna 100-150 bez dalszych krokow.
+Podstrony zanieczyszczone nami (12 na /pricing 03.09 to moje sprawdzenia, 30 curl na /d 05.09 to moj test
+linkow). Leady (27) i obserwacje (8) wylacznie nasze. Poza trzema kliknieciami z Google brak dowodu na
+realnego czlowieka; wyszukiwarka nikogo nie przyprowadzi, kampania jest jedynym zrodlem.
 
 **Cennik przebudowany (v782):** tabela porownawcza pod hero, karty po 3 punkty, monitoring jako
 „Free" z 79 USD jako pozniejsza cena (takze w snippetcie), trzy dlugie sekcje i FAQ zwiniete w
