@@ -2,7 +2,7 @@
 
 Measures whether an AI coding agent can find, register with and integrate a product.
 
-Live: https://stackpick-f12d13a227ea.herokuapp.com
+Live: https://letagentsin.com (Heroku app `stackpick`). The business on one page: `docs/business.md`.
 
 ## Run it
 
@@ -17,7 +17,7 @@ VERBOSE=1 pnpm scan vercel.com
 
 ```bash
 git push heroku main
-heroku logs -a letagentsin --tail
+heroku logs -a stackpick --tail
 ```
 
 Config lives in Heroku config vars, see `.env.example` for the list. The console at `/app`
