@@ -82,7 +82,7 @@ export default async function PrivacyPage() {
               anything, and no third party receives it.
             </li>
             <li>
-              <strong className="text-ink">A page counter.</strong> A date, a path, and whether the request looked like
+              <strong className="text-ink">A page counter.</strong> A date, a path or the name of a button that was pressed, and whether the request looked like
               a browser, an unnamed client, or one of a short list of search and AI crawlers we watch for by name so we
               can tell which indexes read us. Alongside that, one word from a fixed list naming the family of client
               that asked: <span className="font-mono text-xs">chrome</span>,{' '}

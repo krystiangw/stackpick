@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { TrackedLink } from './tracked-link'
 import { WatchForm } from './watch-form'
 import { captureAnalytics } from '@/lib/analytics'
 
@@ -138,9 +139,9 @@ export function EmailGate({
       <p className="mt-3 font-mono text-xs text-ink-faint">
         One email with the report, and one follow-up asking what you did with it. No newsletter, no sequence.
         Delete on request at{' '}
-        <a href="mailto:hello@letagentsin.com" className="text-brass underline underline-offset-4">
+        <TrackedLink click="mail-hello" href="mailto:hello@letagentsin.com" className="text-brass underline underline-offset-4">
           hello@letagentsin.com
-        </a>
+        </TrackedLink>
         .
       </p>
     </div>

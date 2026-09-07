@@ -14,7 +14,10 @@ export default async function AppPage() {
   // someone wrote did. Nothing here identifies anybody, and none of it is published.
   // The kind is the last token of the stored path, so a named crawler counts as itself rather than
   // falling into 'browser' the way an endsWith(' agent') test would put it there.
-  const byKind = visits.reduce<Record<string, number>>((totals, visit) => {
+  // A pressed button is a row in the same collection, and a mailto click renders nothing, so it
+  // must not count as a render; it has its own line below (codex).
+  const renders = visits.filter((visit) => !visit.path.startsWith('/click/'))
+  const byKind = renders.reduce<Record<string, number>>((totals, visit) => {
     const kind = visit.path.slice(visit.path.lastIndexOf(' ') + 1)
     totals[kind] = (totals[kind] ?? 0) + visit.count
     return totals
@@ -26,11 +29,23 @@ export default async function AppPage() {
   // nothing more than "did not say Mozilla": a real agent, a scraper, a monitor and our own curl all
   // landed together. The family splits it without keeping a string that describes one visitor.
   const agentFamilies = Object.entries(
-    visits
+    renders
       .filter((visit) => visit.path.endsWith(' agent'))
       .reduce<Record<string, number>>((totals, visit) => {
         const family = visit.family ?? 'not recorded'
         totals[family] = (totals[family] ?? 0) + visit.count
+        return totals
+      }, {}),
+  ).sort((a, b) => b[1] - a[1])
+
+  // Buttons are filed under /click/<name>, a prefix no page has, and a click is only ever a
+  // browser's, so the kind is not worth showing here.
+  const clicks = Object.entries(
+    visits
+      .filter((visit) => visit.path.startsWith('/click/'))
+      .reduce<Record<string, number>>((totals, visit) => {
+        const name = visit.path.slice('/click/'.length, visit.path.lastIndexOf(' '))
+        totals[name] = (totals[name] ?? 0) + visit.count
         return totals
       }, {}),
   ).sort((a, b) => b[1] - a[1])
@@ -58,13 +73,18 @@ export default async function AppPage() {
             ? `named crawlers: ${crawlers.map(([name, count]) => `${name} ${count}`).join(' · ')}`
             : 'no named crawler has fetched a counted page yet'}
         </p>
+        <p className="mt-2 max-w-2xl font-mono text-xs text-ink-soft">
+          {clicks.length > 0
+            ? `buttons pressed: ${clicks.map(([name, count]) => `${name} ${count}`).join(' · ')}`
+            : 'no button pressed yet'}
+        </p>
         <ul className="mt-3 flex flex-col gap-1 font-mono text-xs text-ink-soft">
-          {visits.slice(0, 12).map((visit) => (
+          {renders.slice(0, 12).map((visit) => (
             <li key={`${visit.day}${visit.path}${visit.family ?? ''}`}>
               {visit.day} · {visit.path} · {visit.family ?? 'not recorded'} · {visit.count}
             </li>
           ))}
-          {visits.length === 0 && <li>nothing counted yet</li>}
+          {renders.length === 0 && <li>nothing counted yet</li>}
         </ul>
       </section>
 

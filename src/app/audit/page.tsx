@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { TrackedLink } from '@/components/tracked-link'
 import { listAudits, tally } from '@/lib/audit'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
@@ -97,15 +98,16 @@ export default async function AuditIndexPage() {
           interpretation is the part you cannot rerun yourself.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/pricing" className="bg-ink px-5 py-3 font-mono text-sm text-ground transition-opacity hover:opacity-85">
+          <TrackedLink click="pricing" href="/pricing" className="bg-ink px-5 py-3 font-mono text-sm text-ground transition-opacity hover:opacity-85">
             What it costs
-          </Link>
-          <a
+          </TrackedLink>
+          <TrackedLink
+            click="mail-audit"
             href="mailto:hello@letagentsin.com?subject=Full%20agent%20audit"
             className="border border-ink/40 px-5 py-3 font-mono text-sm transition-colors hover:border-brass hover:text-brass"
           >
             Ask what your brief would be
-          </a>
+          </TrackedLink>
         </div>
       </section>
     </main>

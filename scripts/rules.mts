@@ -6,6 +6,7 @@ import { paddle } from '../src/lib/billing/provider'
 import { CATEGORIES, CURATED_DOMAINS } from '../src/lib/categories'
 import { overDomainBudget } from '../src/lib/scan-gate'
 import { spreadAcrossHints } from '../src/lib/scan'
+import { CLICKS, isClick } from '../src/lib/clicks'
 import { aboutTheirOwnCode, barriersFrom, categoryForJob } from '../src/lib/lookup'
 import { pickHeadline } from '../src/lib/headline'
 import { FRESH_QUESTIONS, HELD_OUT_2, HELD_OUT_3, HELD_OUT_4, HELD_OUT_5, HELD_OUT_6, HELD_OUT_7 } from './routing-questions'
@@ -3855,6 +3856,16 @@ check('zadnego /d/<id> poza probka w plikach, ktore moga trafic do repo', przeci
 // Kontrolka z wymyslonym id: prawdziwy w tym pliku bylby dokladnie przeciekiem, o ktory chodzi.
 check('sonda widzi klucz', linkDoDostawy('see https://letagentsin.com/d/abcDEF123-_x today').length, 1)
 check('a probke przepuszcza', linkDoDostawy('https://letagentsin.com/d/sample').length, 0)
+
+console.log('\nprzyciski sprzedazowe sa liczone, a lista nazw zamknieta')
+// Golym <a href="mailto:"> nie liczy sie nic; kazdy taki link na stronach, ktore sprzedaja, idzie przez TrackedLink.
+for (const page of ['src/app/pricing/page.tsx', 'src/app/audit/page.tsx', 'src/app/page.tsx']) {
+  check(`${page}: zaden mailto golym <a>`, /<a\s[^>]*href="mailto:/.test(readFileSync(page, 'utf8')), false)
+}
+check('kazda karta cennika ma nazwe klikniecia', (readFileSync('src/app/pricing/page.tsx', 'utf8').match(/\bclick: '/g) ?? []).length, 4)
+check('polityka mowi o przyciskach', privacySource.includes('the name of a button that was pressed'), true)
+check('nazwa spoza listy odpada', isClick('anything-else'), false)
+check('a nazwa z listy przechodzi', isClick(CLICKS[0]), true)
 
 // Ten repozytorium ma pnpm-lock.yaml i nie ma package-lock.json, wiec `npm ci` w workflow konczy sie
 // bledem w osiem sekund. Job lustrzacy rejestr MCP tak wlasnie umarl na obu swoich przebiegach i

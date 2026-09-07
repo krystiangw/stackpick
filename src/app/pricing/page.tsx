@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { TrackedLink } from '@/components/tracked-link'
+import type { Click } from '@/lib/clicks'
 import { CHECKS, MAX_SCORE } from '@/lib/score'
 import { CATEGORIES, CURATED_DOMAINS } from '@/lib/categories'
 import { priceOf, skuById } from '@/lib/billing/catalog'
@@ -30,7 +32,7 @@ type Tier = {
   /** A finished example of the deliverable. Nobody buys a document they have never seen. */
   sample?: { label: string; href: string }
   featured?: boolean
-  cta: { label: string; href: string }
+  cta: { label: string; href: string; click: Click }
 }
 
 const TIERS: readonly Tier[] = [
@@ -44,7 +46,7 @@ const TIERS: readonly Tier[] = [
       'A permanent link you can forward',
       'The published formula, so the number can be argued with',
     ],
-    cta: { label: 'Scan your domain', href: '/' },
+    cta: { label: 'Scan your domain', href: '/', click: 'scan' },
   },
   {
     name: 'One agent report',
@@ -66,7 +68,7 @@ const TIERS: readonly Tier[] = [
     // prawdziwa bez zadnego mechanizmu i robi cala robote, o ktora chodzilo.
     note: `It is a sample of monitoring, not a competitor to it. Only the ${CATEGORIES.length} categories we measure: if yours is not one of them we say so before you pay, not after.`,
     sample: { label: 'Read a real one, start to finish', href: '/d/sample' },
-    cta: { label: 'Ask for a report', href: 'mailto:hello@letagentsin.com?subject=One%20agent%20report' },
+    cta: { label: 'Ask for a report', href: 'mailto:hello@letagentsin.com?subject=One%20agent%20report', click: 'mail-report' },
   },
   {
     name: 'Monitoring',
@@ -80,7 +82,7 @@ const TIERS: readonly Tier[] = [
     ],
     note: `Pay for ten months, get twelve. Three domains ${priceOf(skuById('watch-pack-3')!)} a month; Agency, ten domains, ${priceOf(skuById('watch-agency')!)}. Another buying question, asked the same way, ${priceOf(skuById('extra-question')!)} a month. Free while we are building it, and we will ask before it ever costs anything.`,
     featured: true,
-    cta: { label: 'Watch a domain', href: '/#watch' },
+    cta: { label: 'Watch a domain', href: '/#watch', click: 'watch' },
   },
   {
     name: 'Audit and fixes',
@@ -94,7 +96,7 @@ const TIERS: readonly Tier[] = [
     ],
     note: 'Four figures, scoped once we agree what to measure. It is a conversation, not a checkout, because the brief is most of the work.',
     sample: { label: 'Read the four published audits', href: '/audit' },
-    cta: { label: 'Ask what it would cost', href: 'mailto:hello@letagentsin.com?subject=Agent%20audit' },
+    cta: { label: 'Ask what it would cost', href: 'mailto:hello@letagentsin.com?subject=Agent%20audit', click: 'mail-audit' },
   },
 ]
 
@@ -139,18 +141,20 @@ export default async function PricingPage() {
           whether you are named at all.
         </p>
         <div className="mt-7 flex flex-wrap gap-3">
-          <Link
+          <TrackedLink
+            click="watch"
             href="/#watch"
             className="w-fit border border-ink bg-ink px-5 py-2.5 font-mono text-sm text-ground transition-colors hover:bg-ground hover:text-ink"
           >
             Watch your domain, free
-          </Link>
-          <Link
+          </TrackedLink>
+          <TrackedLink
+            click="scan"
             href="/"
             className="w-fit border border-ink px-5 py-2.5 font-mono text-sm transition-colors hover:bg-ink hover:text-ground"
           >
             Scan it first
-          </Link>
+          </TrackedLink>
         </div>
         <p className="mt-3 font-mono text-xs text-ink-faint">
           No account, no card. Monitoring is free while we build it, and one link in any email stops it.
@@ -248,12 +252,13 @@ export default async function PricingPage() {
                   </Link>
                 </p>
               )}
-              <Link
+              <TrackedLink
+                click={tier.cta.click}
                 href={tier.cta.href}
                 className="mt-auto w-fit border border-ink px-5 py-2.5 font-mono text-sm transition-colors hover:bg-ink hover:text-ground"
               >
                 {tier.cta.label}
-              </Link>
+              </TrackedLink>
             </article>
           ))}
         </div>
@@ -441,9 +446,9 @@ export default async function PricingPage() {
           you about what the runs mean, which is the part of this that does not survive being handed over.
         </p>
         <p className="mt-4 font-mono text-sm">
-          <a href="mailto:hello@letagentsin.com" className="text-brass underline underline-offset-4">
+          <TrackedLink click="mail-hello" href="mailto:hello@letagentsin.com" className="text-brass underline underline-offset-4">
             hello@letagentsin.com
-          </a>
+          </TrackedLink>
         </p>
       </section>
 

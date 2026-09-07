@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { TrackedLink } from './tracked-link'
 import { captureAnalytics } from '@/lib/analytics'
 
 /**
@@ -78,9 +79,9 @@ export function WatchForm({
       <div className="border border-warn p-6">
         <p className="leading-relaxed">
           We saved it but the confirmation email would not send, so nothing is watched yet. Write to{' '}
-          <a href="mailto:hello@letagentsin.com" className="text-brass underline underline-offset-4">
+          <TrackedLink click="mail-hello" href="mailto:hello@letagentsin.com" className="text-brass underline underline-offset-4">
             hello@letagentsin.com
-          </a>{' '}
+          </TrackedLink>{' '}
           and we will finish it by hand.
         </p>
       </div>

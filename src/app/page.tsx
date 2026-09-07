@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { TrackedLink } from '@/components/tracked-link'
 import { FunnelMark } from '@/components/funnel-mark'
 import { Rankings } from '@/components/rankings'
 import { ScanForm } from '@/components/scan-form'
@@ -205,9 +206,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
                 and the page that sells it is two clicks away behind a price list. */}
             <p className="text-sm leading-relaxed text-ink-soft">
               Want the agent runs once rather than every month?{' '}
-              <Link href="/pricing" className="text-brass underline underline-offset-4">
+              <TrackedLink click="pricing" href="/pricing" className="text-brass underline underline-offset-4">
                 One report, ten runs, two tools
-              </Link>
+              </TrackedLink>
               , and you keep the transcripts.
             </p>
             <div className="mt-2">
@@ -223,9 +224,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
         <p className="max-w-2xl leading-relaxed text-ink-soft">
           Run by Krystian Gwizdała. The scanner, the formula, the agent runs and every number on this site are
           mine, and an audit is run by me rather than by a team you never meet.{' '}
-          <Link href="/audit" className="text-brass underline underline-offset-4">
+          <TrackedLink click="audit" href="/audit" className="text-brass underline underline-offset-4">
             Four audits are published in full
-          </Link>{' '}
+          </TrackedLink>{' '}
           so you can see the work before deciding whether it is worth anything to you.
         </p>
       </section>
