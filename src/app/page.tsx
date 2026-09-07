@@ -25,16 +25,16 @@ const EVIDENCE = [
   {
     figure: '18 / 18',
     against: '0 / 12',
-    claim: 'Every run shipped an integration. Not one got a credential of its own where the work needed one.',
+    claim: 'Eighteen runs produced code. None obtained its own credential where one was needed.',
     detail:
-      'Eighteen runs in isolated copies of a real application, across the four categories we have run agents in. In the three that need an account, every run stopped at the signup form and said so in its own words. In the fourth no account was needed and the barrier still appeared, earlier: a required licence key struck vendors off during dependency research, before their product was opened.',
+      'Eighteen runs in isolated copies of a real application across four categories. Eight integrations were exercised; ten were checked from artefacts, including one whose payment interface was absent from the build. In the three that need an account, every run stopped at the signup form and said so in its own words. In the fourth no account was needed and the barrier still appeared, earlier: a required licence key struck vendors off during dependency research, before their product was opened.',
   },
   {
     figure: '0 / 10',
     against: '6 / 6',
-    claim: 'Whether your documentation gets read depends on the kind of decision, not on the model.',
+    claim: 'The same model skipped sources in one study and fetched them in another.',
     detail:
-      'In one study the cheaper model fetched no external source in ten runs and said so: own knowledge only. In another, where the choice turned on a licence, every run fetched sources including all of the cheaper ones. A decision that cannot be answered from memory is what makes your documentation get read.',
+      'In one study the cheaper model fetched no external source in ten runs and said so: own knowledge only. In another, where the choice turned on a licence, every run fetched sources including all of the cheaper ones. The task appears to affect source use; these studies do not isolate its effect from the model or prompt.',
   },
   {
     figure: '5 → 0',
@@ -46,9 +46,9 @@ const EVIDENCE = [
   {
     figure: '0 / 20',
     against: 'considered in 19',
-    claim: 'Being rejected for the same reason nineteen times is a positioning problem, not a product one.',
+    claim: 'Nineteen runs rejected a provider over the same framework assumption.',
     detail:
-      'One provider was never selected, yet was considered and dismissed in nineteen of twenty runs, always because it assumes a framework the project did not use. One documentation chapter fixes it.',
+      'One provider was never selected, yet was considered and dismissed in nineteen of twenty runs, always because it assumes a framework the project did not use. An example for the missing framework is a candidate fix. We have not tested whether it changes the choice.',
   },
 ]
 
@@ -68,13 +68,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
           Agent readiness, measured from outside
         </p>
         <h1 className="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">
-          Find out where an AI agent gets stuck on your product, before it quietly picks somebody else.
+          Can an AI agent get from your docs to a working integration?
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-soft">
-          Type your domain and {CHECKS.length} checks run against it in half a minute, telling you which step
-          an unattended agent dies on: finding you, reading your docs, creating an account, getting a key, or
-          the first API call. When a developer says “add file uploads”, an agent picks the provider and writes
-          the integration. It never files a support ticket to tell you it gave up.
+          Start with {CHECKS.length} free checks of your public site: documentation, access paths and API signals.
+          The scan identifies things to investigate. A hands-on audit follows an agent through agreed
+          integration tasks, records where it needs help, and retests one small fix. The scan alone does
+          not test signup or complete an API call.
         </p>
         {coverage.signupNeedsJavaScript > 0 && (
           <p className="mt-4 max-w-2xl font-mono text-sm leading-relaxed text-ink-soft">
@@ -88,7 +88,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
               `, ${coverage.signupNeedsJavaScript} serve a signup form that renders nothing without JavaScript, `}
             {coverage.signupRefusesAgents > 0
               ? `and ${coverage.signupRefusesAgents} answer an agent with a refusal where a browser gets through.`
-              : 'which an agent reads as a page with no way in. Outright refusals aimed at agents are rarer than the noise around them suggests, and we say so rather than counting every 403 our data centre collects.'}
+              : 'which our HTTP-only scanner cannot render. A browser-capable agent may still use it; a blank response alone does not establish a blocked signup.'}
           </p>
         )}
         <div className="mt-8 max-w-xl">
@@ -128,8 +128,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
       <section className="border-b border-rule py-14">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">The five stages</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Most scanners stop at whether you publish a file. The interesting failures happen further down the
-          funnel, where an agent has already chosen you and still cannot finish.
+          The score groups public HTTP signals into five stages. Completing those stages is a separate
+          question: an integration audit tests the actual task, including credentials and human handoffs.
         </p>
         {example && (
           <div className="mt-8 flex flex-wrap items-end gap-6 border border-rule p-6">
@@ -193,10 +193,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
               only when a verdict moves, naming what it says now and what it said before.
             </p>
             <p className="text-sm leading-relaxed text-ink-soft">
-              Once a month a real agent is asked the question your buyers ask, five times over, and you are told
-              how many of the five named you and which provider was picked instead. It answers a question and
-              signs up for nothing, so nothing of yours is touched. That half covers the {CATEGORIES.length} categories
-              we measure, and if your product is not in one of them we tell you rather than quietly skip it.
+              The agent part asks one buying question five times and counts which providers are named. I start
+              those runs manually, aiming for monthly checks; I may skip a batch, and unchanged results
+              produce no email. These are recommendation answers, with no signup or integration attempt.
+              Coverage is limited to the {CATEGORIES.length} categories we measure.
             </p>
             <p className="text-sm leading-relaxed text-ink-soft">
               Free while we are building it, and we will ask before it ever costs anything. No account, no card,

@@ -10,7 +10,7 @@
       "note": "Documents collections, ingestion, cloud setup and similarity queries."
     },
     {
-      "url": "https://docs.trychroma.com/reference/js-collection",
+      "url": "https://docs.trychroma.com/reference/typescript/collection",
       "note": "Documents JavaScript queries using embeddings and nResults."
     }
   ],

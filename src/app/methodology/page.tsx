@@ -372,8 +372,8 @@ export default async function MethodologyPage() {
           other vendor we measure.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Five runs separate a wall from silence and nothing finer, so nothing here ranks two vendors that finish
-          close. And these runs are not a clean measurement: they ran on a machine whose operator instructions
+          Five runs provide a small descriptive sample, so nothing here ranks two vendors that finish
+          close or estimates how often real buyers would choose them. And these runs are not a clean measurement: they ran on a machine whose operator instructions
           they could read, and those instructions ask for answers in Polish, which is why some of the published
           answers are in Polish rather than English. It describes an agent on that machine rather than an agent
           at your customer. The whole set was repeated on a second tool that reads none of those instructions and
@@ -386,7 +386,7 @@ export default async function MethodologyPage() {
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">We are scored by this too</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           This site is in the scanner like anybody else, and it fails a check we publish. There is no OAuth
-          metadata on any host we run, so an agent cannot register itself as a client with us. The reason is
+          metadata on any host we run, so the scanner discovers no OAuth client-registration path. The reason is
           that our MCP server needs no account at all, which makes the check inapplicable in spirit and
           failing in fact, and we would rather show the failing row than write ourselves an exemption nobody
           else gets. Scan the domain in the box on any page and you will get the same card a vendor gets.
