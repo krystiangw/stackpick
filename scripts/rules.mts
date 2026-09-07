@@ -533,8 +533,12 @@ check(
 // anulowanie zdejmuje oplate, a nie usluge. Gdy przestanie byc darmowy, zdanie na /pricing musi
 // zniknac w tym samym commicie, wiec straznik wiaze jedno z drugim.
 const cennik = readFileSync('src/app/pricing/page.tsx', 'utf8')
-const pricingSaysFree = cennik.includes('Free while we are building it')
+const disclosesFreeMonitoring = (source: string) =>
+  /note: 'Free while I am building it\. I will ask before charging you\.'/.test(source)
+const pricingSaysFree = disclosesFreeMonitoring(cennik)
 check('darmowy monitoring w kodzie i na cenniku mowia to samo', monitoringIsFree(), pricingSaysFree)
+check('control: removing free monitoring fails the disclosure', disclosesFreeMonitoring(cennik.replace('Free while I am building it.', 'Paid during development.')), false)
+check('control: removing charging consent fails the disclosure', disclosesFreeMonitoring(cennik.replace('I will ask before charging you.', 'I will charge you automatically.')), false)
 // Ta sama regula dla obietnicy kredytu, ktora do 2026-08-20 stala na cenniku bez pokrycia. Byla to
 // obietnica bez WARTOSCI, nie tylko bez mechanizmu: 49 USD zaliczone przeciw monitoringowi, ktory
 // kosztuje 0. Zdanie moze wrocic, ale nie samo - razem z procedura, ktora ktos umie wykonac.
@@ -3789,12 +3793,25 @@ const dostawaMowiOBrakuHarmonogramu = readFileSync('docs/delivering-a-report.md'
   'The monthly half of monitoring has no schedule behind it',
 )
 const cennikSource = readFileSync('src/app/pricing/page.tsx', 'utf8')
+const manualMonitoringFacts = [
+  'I start the five monthly agent runs',
+  'read the email before sending it',
+  'I may skip them when there is nothing to report',
+  'I choose the sending day; it is not a fixed monthly date',
+]
+const disclosesManualMonitoring = (source: string) => {
+  const answer = source.match(/'Monthly monitoring schedule',\s*'([^']+)'/)?.[1] ?? ''
+  return manualMonitoringFacts.every((fact) => answer.includes(fact))
+}
 check('dokumentacja dostawy nadal to przyznaje', dostawaMowiOBrakuHarmonogramu, true)
 check(
   'i cennik mowi to samo kupujacemu',
-  !dostawaMowiOBrakuHarmonogramu || cennikSource.includes('The five agent runs are started by a person'),
+  !dostawaMowiOBrakuHarmonogramu || disclosesManualMonitoring(cennikSource),
   true,
 )
+for (const fact of manualMonitoringFacts) {
+  check(`control: removing "${fact}" fails the manual monitoring disclosure`, disclosesManualMonitoring(cennikSource.replace(fact, '')), false)
+}
 
 // Straznik na sam ten plik. `process.exit` na koncu robi z kazdego `check` ponizej martwy kod,
 // ktory drukuje sie na zielono i nigdy nie oblewa - dopisalem tak jedna regule 2026-08-19 i przez

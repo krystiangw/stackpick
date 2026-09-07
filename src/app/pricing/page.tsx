@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   // The prices go in the snippet. A pricing description with no number in it reads as "contact
   // sales", and the runs we published measured agents passing over a vendor on exactly that
   // reading, without opening the page that would have corrected it.
-  description: `Free scan, no account and no card: ${CHECKS.length} deterministic checks. One agent report ${priceOf(skuById('report-one')!)}, monitoring free while we build it and ${priceOf(skuById('watch-monthly')!)} a month after, the audit priced by conversation.`,
+  description: `Free scan: ${CHECKS.length} deterministic checks, no account or card. One agent report: ${priceOf(skuById('report-one')!)}. Monitoring is free during development, then ${priceOf(skuById('watch-monthly')!)} a month. Audit priced by conversation.`,
 }
 
 type Tier = {
@@ -39,12 +39,12 @@ const TIERS: readonly Tier[] = [
   {
     name: 'Free scan',
     price: '$0',
-    cadence: 'instant, no account',
-    pitch: 'What a machine can see from outside.',
+    cadence: 'instant',
+    pitch: 'I scan your public pages.',
     includes: [
-      `${CHECKS.length} deterministic checks across five funnel stages, ${MAX_SCORE} points on paper`,
-      'A permanent link you can forward',
-      'The published formula, so the number can be argued with',
+      'Five funnel stages',
+      `${MAX_SCORE} possible points`,
+      'A published scoring formula',
     ],
     cta: { label: 'Scan your domain', href: '/', click: 'scan' },
   },
@@ -52,35 +52,27 @@ const TIERS: readonly Tier[] = [
     name: 'One agent report',
     price: priceOf(skuById('report-one')!),
     cadence: 'once, per domain',
-    pitch: 'Whether an agent names you at all, asked ten times over on two tools.',
+    pitch: 'I send you the recorded answers to a buying question.',
     includes: [
-      // "Ten" was written when every cell held five runs. One category already holds six on one
-      // tool, and a floor is the only version of this sentence a topped-up cell cannot falsify.
-      'One question from your category, the one your buyers ask, put to an agent at least ten times in isolation',
-      'How many of the ten named you, which provider was picked instead, and the sentence that passed over you, quoted',
-      'Every transcript handed over, so you read what the agent said rather than our summary of it',
+      'A question chosen for your category',
+      'Each run in a separate session',
+      'Every transcript included',
     ],
-    // Obietnica zaliczenia ceny raportu na pierwszy miesiac monitoringu stala tu do 2026-08-20 bez
-    // WARTOSCI, nie tylko bez mechanizmu: monitoring jest dzis darmowy (`monitoringIsFree`), wiec
-    // kupujacy czytal „49 USD zaliczone" i dwie linijki nizej „Free while we are building it".
-    // Czterdziesci dziewiec od zera. Zdania, ktorego nie umiemy poprzec, nie publikujemy o cudzych
-    // firmach - i nie ma powodu, zeby wolno bylo o wlasnej ofercie. Druga polowa zostaje, bo jest
-    // prawdziwa bez zadnego mechanizmu i robi cala robote, o ktora chodzilo.
-    note: `It is a sample of monitoring, not a competitor to it. Only the ${CATEGORIES.length} categories we measure: if yours is not one of them we say so before you pay, not after.`,
+    note: `Available for the ${CATEGORIES.length} categories I measure. I confirm category fit before you pay.`,
     sample: { label: 'Read a real one, start to finish', href: '/d/sample' },
     cta: { label: 'Ask for a report', href: 'mailto:hello@letagentsin.com?subject=One%20agent%20report', click: 'mail-report' },
   },
   {
     name: 'Monitoring',
     price: 'Free',
-    cadence: `while we build it, later ${priceOf(skuById('watch-monthly')!)} a month per domain`,
-    pitch: 'Whether an agent can still use you, and whether it ever considers you at all.',
+    cadence: `during development, later ${priceOf(skuById('watch-monthly')!)} a month per domain`,
+    pitch: 'I track changes in access and agent mentions.',
     includes: [
-      'The same checks, rerun every week, so a verdict that moves is caught within days',
-      'Real agents every month: one buying question, put to an agent five times in isolation, and how many of the five named you. The question is the unit here, and you can add more of them',
-      'One email when something moves, nothing when nothing does, which is most weeks',
+      'Weekly checks run automatically',
+      `Three domains: ${priceOf(skuById('watch-pack-3')!)} a month`,
+      `Each extra buying question: ${priceOf(skuById('extra-question')!)} a month`,
     ],
-    note: `Pay for ten months, get twelve. Three domains ${priceOf(skuById('watch-pack-3')!)} a month; Agency, ten domains, ${priceOf(skuById('watch-agency')!)}. Another buying question, asked the same way, ${priceOf(skuById('extra-question')!)} a month. Free while we are building it, and we will ask before it ever costs anything.`,
+    note: 'Free while I am building it. I will ask before charging you.',
     featured: true,
     cta: { label: 'Watch a domain', href: '/#watch', click: 'watch' },
   },
@@ -88,13 +80,13 @@ const TIERS: readonly Tier[] = [
     name: 'Audit and fixes',
     price: 'By conversation',
     cadence: 'one to three weeks',
-    pitch: 'Agents given a real app and told to ship against you, a person reading what happened, and the work that follows.',
+    pitch: 'I write your brief and read every transcript.',
     includes: [
-      'Build runs: an agent gets a working application and a brief for your category, and is told to ship with nobody available to answer questions',
-      'Where the run stalls: registration, credentials, or the first integration',
-      'The fixes, quoted from what the runs found: documentation an agent can read, an entry point built for a machine, a credential path with no human in it, or an MCP server for your API',
+      "Build runs without anyone answering the agent's questions",
+      'Registration, credentials and first integration examined',
+      'Fixes scoped from the observed failures',
     ],
-    note: 'Four figures, scoped once we agree what to measure. It is a conversation, not a checkout, because the brief is most of the work.',
+    note: 'Four figures. I scope the work once you agree what to measure.',
     sample: { label: 'Read the four published audits', href: '/audit' },
     cta: { label: 'Ask what it would cost', href: 'mailto:hello@letagentsin.com?subject=Agent%20audit', click: 'mail-audit' },
   },
@@ -132,13 +124,10 @@ export default async function PricingPage() {
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Pricing</p>
         <h1 className="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-tight tracking-tight">
-          Everything a machine can check is free. You pay for the part where real agents run.
+          Free scans. Agent reports and audits.
         </h1>
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
-          The scan costs us bandwidth and nothing else, so it costs you nothing, wants no account and no card,
-          and the formula is published with it. What is worth charging for is what a checklist cannot see: the same checks rerun every week
-          so you hear the day a verdict moves, and real agents asked the question your buyers ask, to find out
-          whether you are named at all.
+          I check how agents find and use your product. Choose a scan, a report, ongoing monitoring or an audit with fixes.
         </p>
         <div className="mt-7 flex flex-wrap gap-3">
           <TrackedLink
@@ -157,12 +146,12 @@ export default async function PricingPage() {
           </TrackedLink>
         </div>
         <p className="mt-3 font-mono text-xs text-ink-faint">
-          No account, no card. Monitoring is free while we build it, and one link in any email stops it.
+          No account or card needed.
         </p>
       </section>
 
       <section className="border-b border-rule py-12">
-        <h2 className="text-lg font-semibold tracking-tight">What each one is</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Plan comparison</h2>
         <div className="mt-6 overflow-x-auto">
           <table className="w-full min-w-[56rem] border-collapse text-left">
             <thead>
@@ -177,31 +166,31 @@ export default async function PricingPage() {
             <tbody>
               <tr>
                 <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">What runs</th>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">{CHECKS.length} HTTP checks, no model</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">{CHECKS.length} deterministic HTTP checks</td>
                 <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">One buying question put to an agent at least ten times on two tools</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">The same checks weekly, plus one agent question five times a month, in the {CATEGORIES.length} categories we measure</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Agents given a real app and told to ship against you</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Weekly HTTP checks. One buying question across five isolated monthly agent runs, within the measured categories. Manual schedule below.</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Agents given a working app and a brief to ship an integration</td>
               </tr>
               <tr>
                 <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">Who does it</th>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">A script, the formula is published</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Real agents, read by a published rule</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Real agents, read by a published rule</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Real agents, and a person reading every transcript</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">A script</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Agents; answers counted by a published matcher</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Agents; answers counted by a published matcher</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Agents with transcript review</td>
               </tr>
               <tr>
                 <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">What you get</th>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">A permanent link and the formula</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">How many named you, who was picked instead, the sentence that passed over you, every transcript</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">One email when a verdict moves, one a month with the agent count</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Where the run stalls, every artefact, the fixes that follow</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">A permanent link to the scorecard</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Mention count, chosen providers and quoted reasons for passing over your product</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Verdict change alerts and a monthly agent count email</td>
+                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Stall locations, every artefact and scoped fixes</td>
               </tr>
               <tr>
                 <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">Price</th>
                 <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">$0</td>
                 <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">{priceOf(skuById('report-one')!)} once</td>
                 <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">
-                  Free while we build it
+                  Free during development
                   <span className="mt-1 block font-mono text-xs text-ink-faint">later {priceOf(skuById('watch-monthly')!)} a month</span>
                 </td>
                 <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Four figures, scoped by conversation</td>
@@ -265,9 +254,9 @@ export default async function PricingPage() {
       </section>
 
       <section className="border-b border-rule py-12">
-        <h2 className="text-lg font-semibold tracking-tight">The long version, for the sceptical buyer</h2>
+        <h2 className="text-lg font-semibold tracking-tight">The long version</h2>
         <p className="mt-2 text-ink-soft">
-          Everything below is the argument behind the table. Read it before an audit goes through procurement, or skip it.
+          Run method, sample size and production checks.
         </p>
 
         {/* The objection a sceptical buyer arrives with, answered before they have to ask it. */}
@@ -277,27 +266,20 @@ export default async function PricingPage() {
               <span className="group-open:hidden">+</span>
               <span className="hidden group-open:inline">-</span>
             </span>
-            Why one run of an agent proves nothing
+            Run variation and sample size
           </summary>
           <div className="mt-4">
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Ask a model the same question twice and it will not answer the same way. Our own runs say it plainly:
-          one vendor was rejected in nineteen of twenty runs and chosen in the twentieth, and one signup endpoint
-          answered 200 once and 403 four times inside an hour. Anyone selling you a position in an AI ranking
-          from a single run is selling noise, and they should be treated that way.
+          In my runs, one vendor was rejected nineteen times out of twenty and chosen once.
+          One signup endpoint returned 200 once and 403 four times within an hour.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          So we do not sell a position. Every cell is repeated, every run is recorded separately, and what you
-          get is the spread rather than a number: how many runs chose you, how many named you at all, and the
-          words each one used. Where runs disagree, the disagreement is the finding and it is printed as one.
-          The four published audits are written that way, and you can check that before paying us anything:
-          each one names the models, the number of runs, the scaffold, and what a different scaffold would
-          have changed.
+          I record each run separately. The published audits name the models, run counts and scaffold.
+          They also describe what a different scaffold would have changed.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          The honest limit is the sample size. Four to six runs per cell is enough to see a wall every run hits
-          and not enough to rank two vendors that finish close together. We report which of those two a finding
-          is, every time.
+          Four to six runs per cell can reveal a failure every run hits.
+          That sample cannot reliably rank vendors with close results.
         </p>
         <p className="mt-5">
           <Link href="/audit" className="font-mono text-sm text-brass underline underline-offset-4">
@@ -315,31 +297,24 @@ export default async function PricingPage() {
               <span className="group-open:hidden">+</span>
               <span className="hidden group-open:inline">-</span>
             </span>
-            Two kinds of agent run, and why only one of them is in monitoring
+            Discovery and build runs
           </summary>
           <div className="mt-4">
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          A discovery run is one question and no more: a developer&apos;s problem with a deadline attached, put to
-          an agent in an empty directory that has never heard of you. It reads the answer and records who was
-          named, in what order, and in what words. Nothing is signed up for and nothing is created, which is
-          why it can run every month on any domain, including yours before you have spoken to us.
+          For discovery, I give an agent a developer&apos;s problem and deadline in an empty directory without prior context about your product.
+          I record names, mention order and wording. Discovery runs create no accounts or credentials and submit no forms.
+          I can run them on any domain before speaking with its owner.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          A build run is the opposite. The agent gets a working application, a brief, and instructions to ship,
-          and it walks straight into your registration form, your API key and your first integration. That
-          needs your agreement and a person watching it, so it stays in the audit and it is most of what the
-          audit costs.
+          Build runs require your agreement and someone watching the agent. I run them within a paid audit.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          They catch different failures, which is the reason both exist. The first tells you whether you are in
-          the room at all. The second tells you whether an agent that already wants you can actually get in.
-          A vendor can fail either one while passing the other, and we have measured both.
+          Discovery measures whether an agent names you. Build runs test whether it can use your product.
+          I have observed vendors failing either test while passing the other.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Reading the answers is done by rule rather than by a second model: a published list of names and a
-          published matcher decide who was named, and where a brand is also an ordinary English word the hit is
-          quoted for a human instead of counted. A model grading another model is the measurement this whole
-          site exists to be an alternative to.
+          The matcher uses a published list of names. I quote ambiguous matches, such as brands that are ordinary English words, for human review.
+          Those matches are excluded from the count.
         </p>
           </div>
         </details>
@@ -353,63 +328,54 @@ export default async function PricingPage() {
               <span className="group-open:hidden">+</span>
               <span className="hidden group-open:inline">-</span>
             </span>
-            What a check in your own pipeline cannot see
+            Production checks
           </summary>
           <div className="mt-4">
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          A readiness check that runs in CI is a good idea and you should have one. It reads your repository
-          before you ship it, which is the cheapest moment to fix a missing file. Four of the things that
-          decide whether an agent gets in are not in your repository at all, and no check that runs there can
-          see them.
+          I check production access, package and tool registries, search results and agent choices.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          <strong className="font-semibold text-ink">Your edge is production configuration, not
-          code.</strong>{' '}
+          <strong className="font-semibold text-ink">Edge access.</strong>{' '}
           {edge && (
             <>
               {edge.domains === CURATED_DOMAINS.size
-                ? `Sweeping all ${edge.domains} domains in our corpus`
-                : `Sweeping ${edge.domains} of the ${CURATED_DOMAINS.size} domains in our corpus`}{' '}
+                ? `I scanned all ${edge.domains} domains in the corpus`
+                : `I scanned ${edge.domains} of the ${CURATED_DOMAINS.size} domains in the corpus`}{' '}
               {edge.swept?.oneDay
                 ? `on ${asDay(edge.swept.to)}`
                 : edge.swept
                   ? `between ${asDay(edge.swept.from)} and ${asDay(edge.swept.to)}`
                   : ''}
-              ,{' '}
-              {edge.refused} of them refused our requests at their own edge and {edge.challenged} of those
-              answered with a browser challenge rather than a rate limit. Measured from our scanner&apos;s
-              address: asked again from an ordinary home connection on 20 August 2026, three of those hosts
-              answered normally and one challenged that address too, so part of this number is where we ask
-              from rather than how they treat agents.{' '}
+              . {edge.refused} refused requests at their edge from my scanner&apos;s address.
+              Of those, {edge.challenged} returned a browser challenge rather than a rate limit.
             </>
-          )} One vendor&apos;s documentation host challenged thirteen of the thirteen requests we made to
-          it, which read as three checks going silent while nothing in their repository had changed; asked
-          again on its own an hour later, the same host answered and all three came back. A bot rule added in
-          a dashboard by somebody who never opens the pipeline is the most common way this fails, and it is
-          invisible to your build and to any single scan alike.
+          )}
+        </p>
+        {edge && (
+          <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+            On 20 August 2026, I retried from an ordinary home connection. Three hosts answered normally; one challenged that address too.
+            Access varied with the request&apos;s origin.
+          </p>
+        )}
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          One documentation host challenged all thirteen requests, leaving three checks unmeasured while its repository was unchanged.
+          When I retried that host alone an hour later, it answered and all three checks returned.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          <strong className="font-semibold text-ink">Half the card is on somebody else&apos;s
-          domain.</strong> Whether the package registry has your types under the name an agent would guess,
-          whether a tool registry lists you, and what a search engine says about your pricing in the two lines
-          an agent reads before deciding not to open the page: all of that is measured against hosts you do
-          not deploy to. Your build passing says nothing about any of it.
+          <strong className="font-semibold text-ink">Registries and search.</strong>{' '}
+          I check package types under names an agent would guess and listings in tool registries.
+          I also read the two lines about pricing that search results show before an agent opens your page.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          <strong className="font-semibold text-ink">A threshold cannot tell you an agent chose somebody
-          else.</strong> That takes running an agent on a developer&apos;s problem and reading the sentence it
-          used to reject you, which is the one thing no static check produces, and the thing our own published
-          audits exist to produce.
+          <strong className="font-semibold text-ink">Agent choices.</strong>{' '}
+          I read the reasons agents give for choosing another provider.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          <strong className="font-semibold text-ink">A gate on a score fails builds on noise.</strong> We
-          measure {NOISE_FLOOR_PERCENT.toFixed(2)} percent of verdicts moving between two clean scans with
-          nothing changed. Any threshold that a normal week can cross gets muted within a month, and a muted
-          gate is worse than no gate, because it is evidence somebody already looked.
+          <strong className="font-semibold text-ink">Scan variation.</strong>{' '}
+          I measured {NOISE_FLOOR_PERCENT.toFixed(2)} percent of verdicts changing between two clean scans with nothing changed.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Both belong in the same stack. Keep the check in CI for the files you control, and treat the series
-          here as the part that watches everything you cannot fail a build on.
+          Keep repository checks in CI. Use monitoring to follow production access and external services over time.
         </p>
           </div>
         </details>
@@ -419,17 +385,17 @@ export default async function PricingPage() {
           leave them to work out from an email address. The answer is one person, and saying so is
           worth more than the impression of a company that the plural would create. */}
       <section className="border-b border-rule py-12">
-        <h2 className="text-lg font-semibold tracking-tight">Who does the work</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Your auditor</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          One person, and you should know that before you put an audit through procurement.{' '}
+          I&apos;m{' '}
           <a
             href="https://one-good-engineer.github.io/"
             className="text-brass underline underline-offset-4"
           >
             Krystian Gwizdała
           </a>
-          , a full-stack engineer in Kraków, wrote the scanner and the formula, ran all eighteen agent runs
-          behind the published audits, and produced every number on{' '}
+          , a full-stack engineer in Kraków. I wrote the scanner and formula.
+          I ran all eighteen agent runs behind the published audits and produced every number on{' '}
           <Link href="/findings" className="text-brass underline underline-offset-4">
             Findings
           </Link>{' '}
@@ -437,13 +403,11 @@ export default async function PricingPage() {
           <Link href="/report" className="text-brass underline underline-offset-4">
             the industry report
           </Link>
-          . He will also be the one reading your transcripts. There is no team behind this and no account
-          manager between you and the work.
+          .
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          What that costs you is capacity: two full audits a month, not ten, and no cover if one week goes
-          badly. What it buys you is that the person who designed the brief is the person who argues with
-          you about what the runs mean, which is the part of this that does not survive being handed over.
+          I handle two full audits a month. I have no cover if a week goes badly.
+          I discuss the results with you directly.
         </p>
         <p className="mt-4 font-mono text-sm">
           <TrackedLink click="mail-hello" href="mailto:hello@letagentsin.com" className="text-brass underline underline-offset-4">
@@ -453,70 +417,44 @@ export default async function PricingPage() {
       </section>
 
       <section className="py-12">
-        <h2 className="text-lg font-semibold tracking-tight">Questions people ask first</h2>
+        <h2 className="text-lg font-semibold tracking-tight">FAQ</h2>
         <div className="mt-6 flex flex-col">
           {[
             [
-              `Monitoring says ${priceOf(skuById('watch-monthly')!)} and also says free. Which is it?`,
-              'Free today, for everyone, and the price is printed so you know what it will become rather than finding out later. Nobody is charged without being asked first, and there is no card on file to charge.',
+              'Monthly monitoring schedule',
+              'I start the five monthly agent runs and read the email before sending it. Runs cost money on external tools, so I may skip them when there is nothing to report. I choose the sending day; it is not a fixed monthly date. Unchanged results produce no email.',
             ],
             [
-              'Do your monitoring agents sign up for our product?',
-              'No. A discovery run answers a question in an empty directory and touches nothing of yours: no form, no account, no key. Anything that creates something on your side happens only inside a paid audit, with your agreement and with somebody watching it, which is also why that half costs what it costs.',
+              'Agency work',
+              `The Agency pack covers ten domains for ${priceOf(skuById('watch-agency')!)} a month. I quote larger portfolios and reports carrying your name individually.`,
             ],
             [
-              'Is the monthly agent run automatic?',
-              'The weekly half is: the checks rerun on a schedule and an email goes out when a verdict moves. The monthly half is not. The five agent runs are started by a person and the email is read before it is sent, because a run costs real money on somebody else\u2019s tools and a month with nothing to say is better spent not running it. What that means for you is that the monthly mail arrives on a day we choose rather than on the same date each month.',
+              'Annual billing and cancellation',
+              'Pay for ten months and get twelve. Monthly monitoring has no minimum term. Stop monitoring through the link in any email.',
             ],
             [
-              'Five runs a month is not much of a sample.',
-              'It is not, and it decides what the number is allowed to say. Five runs catch a wall every run hits, and they cannot separate you from a competitor that finishes close. So monitoring does not sell you a position: it reports how many of the five named you, and the thing worth reacting to is the month that number moves.',
+              'Hourly work',
+              'I charge $250 an hour for work outside a package.',
             ],
             [
-              'There are cheaper scanners that do a weekly check. Why is this priced above them?',
-              // Bez nazwy i bez cudzej liczby, swiadomie. Draft z cena konkurenta lezy w
-              // `docs/draft-priced-against.md` i tam zostaje: audyt decyzji (subagent, opus,
-              // 2026-08-20) wskazal, ze cudza cena zestarzeje sie na naszej stronie bez niczyjej
-              // interwencji, a nasza wlasna zasada zada, zeby czytelnik mogl twierdzenie odtworzyc -
-              // czego przy „skanerze za 29 dolarow" bez adresu zrobic nie moze. Argument kategorii
-              // daje kupujacemu to samo i nie kosztuje nas ani odtwarzalnosci, ani liczby do pilnowania.
-              'They should be, and the weekly half of what we do is comparable to one. We would not argue you should pay more for a file check. What is not on offer at that price is the other half: five times a month we put a buying question to an agent in an empty directory, count who it named instead of you, and quote the sentence it named them with. A check that verifies a file exists cannot tell you that a run picked somebody else, or why. Ask that question of anything you are comparing us to, including us.',
+              'An audit with no findings',
+              'I document that result and include the supporting runs.',
             ],
             [
-              'Everyone else in AI visibility sells prompts by the hundred. Why does this sell one question?',
-              `Because a hundred prompts asked daily answers how often your name appears, and this answers whether an agent can use you once it does. The two are worth having together and they are not the same purchase. Our unit is a buying question, asked five times in isolation each month so the spread is visible, and you can add more questions at ${priceOf(skuById('extra-question')!)} a month each. If what you want is broad share-of-voice tracking across many prompts, a tool built for that will serve you better and we will say so rather than sell you ours.`,
+              'Publication permissions',
+              'I publish scans from my own corpus as I produce them. Visitor scans stay outside that corpus; I do not post them elsewhere.',
             ],
             [
-              'We look after a lot of client domains. Is there an agency price?',
-              `Ten domains for ${priceOf(skuById('watch-agency')!)} a month is the Agency pack, and past that it is a conversation rather than a table. A report carrying your name rather than ours is work we would rather quote than pretend is automatic.`,
+              'Paid audit publication',
+              'Your audit belongs to you. I publish material from it only with your written agreement. For any proposed article about a pattern, I send you the draft ten working days before publication.',
             ],
             [
-              'Is there an annual price?',
-              'Pay for ten months and get twelve. There is no minimum term on the monthly one either: monitoring stops from a link in any email we send you.',
+              'Audit access',
+              'I use the product as a customer sees it. I need no repository access, staging environment or calls with your engineers.',
             ],
             [
-              'Do you bill hourly?',
-              'For work outside a package, $250 an hour. It is rarely the right shape: the value here is a measurement and a decision, not time at a desk.',
-            ],
-            [
-              'What if the audit finds nothing?',
-              'Then you get that in writing, with the runs to back it up, and you stop worrying about it. A report that cannot come back empty is not a measurement, so that outcome has to stay on the table.',
-            ],
-            [
-              'Why is the free scan actually free?',
-              'It is HTTP requests. No language model runs, so it costs bandwidth and nothing else. Charging for it would be charging for a script whose every rule is published, which you can reproduce with curl.',
-            ],
-            [
-              'Will you publish what you find about us?',
-              'The scans in our own published corpus are published as we produce them, because every line is one HTTP request with a published rule and you can reproduce all of it. A scan you run yourself never joins that corpus: it gets a permanent link you can forward, and we do not post it anywhere. A paid audit is yours: nothing from it is published without your written agreement, and if we ever want to write about a pattern we saw, you get the draft and ten working days before anything goes out.',
-            ],
-            [
-              'What do you need from us?',
-              'For the audit, nothing but the product as a customer sees it. No repository access, no staging environment, no calls with your engineers. That is the point: the measurement has to happen from outside, the way an agent meets you.',
-            ],
-            [
-              'Can we just buy the fixes?',
-              'Yes, but a fix sprint without a measurement is guesswork with an invoice attached. If you already know what is wrong, say so and we will scope it directly.',
+              'Fixes without an audit',
+              'If you already know the problem, I can scope a fix sprint directly. Fixes can cover documentation, machine entry points, automatic credentials or an MCP server for your API.',
             ],
           ].map(([question, answer]) => (
             <details key={question} className="group border-b border-rule py-4">
