@@ -1,4 +1,15 @@
-# Let Agents In: stan na 2026-09-03 (produkcja v782, korpus 181, kampania „raport w prezencie" czeka na zatwierdzenie wysylki)
+# Let Agents In: stan na 2026-09-07 (produkcja v783, korpus 181, kampania „raport w prezencie" czeka na zatwierdzenie wysylki)
+
+## LICZNIK PRZYCISKOW (v783, 2026-09-07)
+
+Kliki w przyciski sprzedazowe sa liczone beaconem: `TrackedLink` (`src/components/tracked-link.tsx`)
+wysyla `POST /api/click/<nazwa>`, nazwy z zamknietej listy w `src/lib/clicks.ts` (scan, watch, pricing,
+audit, mail-report, mail-audit, mail-hello), wiersz w `visits` pod `/click/<nazwa>`. Href zostaje
+prawdziwy (agent czytajacy HTML widzi mailto), redirectu nie ma. `/app` pokazuje „buttons pressed"
+osobno, poza suma renderow (codex: wczesniej klik wpadal do „browser renders"). Straznik w `rules.mts`:
+zaden goly `<a href="mailto:` na cenniku, audycie i landingu; polityka wspomina o przyciskach.
+Do 7 wrzesnia nikt nie kliknal niczego, co zostawia slad (skany obcych domen 0, leady 0, obserwacje 0);
+od v783 kazdy klik jest widoczny w /app. Jeden klik `scan` z rodziny curl z 7 wrzesnia to moja sonda.
 
 ## KAMPANIA: DZIESIEC RAPORTOW W PREZENCIE, DRAFTY DO ZATWIERDZENIA (2026-09-03, 17:00)
 
