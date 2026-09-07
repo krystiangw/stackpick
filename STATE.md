@@ -18,8 +18,11 @@ i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dzi
 
 ## Co blokuje
 
-- „ok" Krystiana na przepisane drafty (nic nie wychodzi bez tego) i decyzja o Transloadit
-  (biegi odpowiadały o object storage, nie o uploadzie: wysyłać czy wstrzymać).
+- **KAMPANIA WSTRZYMANA (Krystian, 2026-09-07): nie wysyłać żadnego maila do dziesięciu firm,
+  dopóki nie odwoła wstrzymania wprost.** Do 07.09 nic nie wyszło (Sent z hello@: tylko trzy sondy).
+
+- Drafty ma za „ok" (07.09), ale wysyłka czeka na odwołanie wstrzymania. Otwarte: Transloadit
+  (wysyłać czy wstrzymać), widoczność repo albo migawki korpusu na stronie.
 - Rozszerzenie Chrome bywa odłączone; popup send-as Gmaila jest poza jego zasięgiem.
 
 ## Decyzje, których nie cofamy
