@@ -37,8 +37,9 @@ filtr `Stats` zwezony przeze mnie w Gmailu (`-to:letagentsin.com`), publiczne sk
 wpisane do tabeli odbiorcow (same wspolne: hello@/support@/contact@, wiec pierwsza linia maila ma nazwac
 osobe). **Send-as `hello@` przez SMTP Resenda DZIALA (07.09, Krystian skonfigurowal):** sonda na mail-tester
 (`test-lai0907sendas`) dala dkim=pass d=letagentsin.com s=resend, spf=pass, dmarc=pass, SA -0.7.
-Kopia do wlasnej skrzynki niczego nie dowodzi (Gmail skleja obie kopie po Message-ID). **Nadal po
-stronie Krystiana:** rotacja klucza Resenda, ktory trafil do transkryptu, i przeczytanie draftow. Pierwszy raport DMARC od Google (03.09): 3 nasze sondy, DKIM pass na selektorze
+Kopia do wlasnej skrzynki niczego nie dowodzi (Gmail skleja obie kopie po Message-ID). **Klucz Resenda z transkryptu
+zostaje bez rotacji (decyzja Krystiana, 07.09), nie wracac do tematu.** Do wysylki brakuje tylko jego
+"ok" na drafty. Pierwszy raport DMARC od Google (03.09): 3 nasze sondy, DKIM pass na selektorze
 `resend` przez forward Porkbuna, SPF fail przez SRS (spodziewane), DMARC pass. Alignment przezywa forwarding.
 
 **Realne wejscia (2026-09-05):** Search Console 28 dni: 3 klikniecia, 600 wyswietlen, pozycja 47, wszystkie
