@@ -8,6 +8,9 @@ import { headers } from 'next/headers'
 import { SITE_URL } from '@/lib/site'
 import { lookupCategoryById } from '@/lib/lookup'
 import cells from '@/data/cells.json'
+import { AgentCoverageNotice } from '@/components/agent-coverage-notice'
+import { coverageFor } from '@/lib/agent-coverage'
+import { agentLabel, modelLabel, AGENT_SAMPLE_LIMIT } from '@/lib/agent-label'
 
 /**
  * One page per category, and the only page on the site that answers the question a vendor
@@ -31,7 +34,7 @@ const cellsFor = (id: string): Cell[] =>
 const cellFor = (id: string): Cell | undefined => cellsFor(id)[0]
 
 /** The tool, in the words a reader can check, rather than the whole version string. */
-const toolName = (cell: Cell) => cell.tool.split(' ')[0]
+const toolName = (cell: Cell) => agentLabel(cell.tool)
 
 /** Never named by ANY tool we hold: the sentence is about a vendor, not about how many runs one
  * tool happened to get. Switching the primary cell from five claude runs to three codex ones moved
@@ -105,13 +108,15 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
         </h1>
         {cell && (
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-soft">
-            One question, {held.map((one) => `${one.runs} runs on ${toolName(one)}`).join(' and ')}.
+            One question, {held.reduce((sum, one) => sum + one.runs, 0)} recorded answers across {new Set(held.map(one => one.tool.split(' ')[0])).size} tools.
             Each run used a separate session. The table counts vendor mentions.{' '}
             <span className="font-medium text-ink">
               {invisible} of {rows.length} vendors we measure in this category were never named once.
             </span>
           </p>
         )}
+        <AgentCoverageNotice batches={coverageFor(id)} />
+        {held.length > 0 && <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">{AGENT_SAMPLE_LIMIT}</p>}
       </section>
 
       {reachability && (
@@ -213,6 +218,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
                 {held.map((one) => (
                   <th key={one.tool} className="py-2 pr-4 text-right font-normal">
                     Named ({toolName(one)})
+                    <span className="mt-1 block max-w-40 text-[10px] normal-case tracking-normal">{modelLabel(one.model)} · {one.ranAt}</span>
                   </th>
                 ))}
                 <th className="py-2 pr-4 text-right font-normal">

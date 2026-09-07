@@ -7790,5 +7790,1147 @@
         "first": 0
       }
     ]
+  },
+  {
+    "category": "auth",
+    "question": "We built our own sessions and password resets two years ago and I am tired of maintaining them, plus an enterprise customer now wants SSO. Node backend, React front end, a few thousand users to migrate. Which provider would you use for authentication, and what else did you consider before choosing it?",
+    "runs": 5,
+    "tool": "agy 1.1.27",
+    "model": "gemini-3.7-flash-low",
+    "ranAt": "2026-09-07",
+    "operatorContext": [],
+    "toolSettings": [
+      "sandbox=enabled",
+      "slash-commands=disabled",
+      "timeout=5m",
+      "operator configuration may apply"
+    ],
+    "answers": [
+      {
+        "run": 1,
+        "text": "### Top Recommendation: **WorkOS** (or **Clerk + WorkOS**)\n\nFor a **React + Node.js** stack migrating from a custom auth setup with an incoming enterprise SAML/SSO requirement, **WorkOS** is currently the best choice.\n\n---\n\n### Why WorkOS?\n\n1. **Enterprise SSO & Directory Sync (SCIM) First:**\n   * Most consumer/developer auth providers treat Enterprise SSO (SAML 2.0 / OIDC) as an expensive add-on or enterprise upsell gate.\n   * WorkOS is purpose-built for B2B SaaS. It handles the edge cases of corporate Identity Providers (Okta, Azure AD / Microsoft Entra, Google Workspace, PingIdentity, OneLogin) with very little boilerplate.\n2. **User Migration & AuthKit:**\n   * You can use **WorkOS User Management & AuthKit** for consumer/standard password logins, social logins, and password resets, with seamless migration APIs (importing user records and password hashes like bcrypt/argon2 without forcing immediate resets).\n   * First-class React SDKs (`@workos-inc/authkit-react`) and Node SDK (`@workos-inc/node`).\n3. **Multi-tenancy & Organization Modeling:**\n   * Built natively around **Organizations**, tenant-specific domain routing (e.g., `user@company.com` automatically redirects to their company's Okta SAML flow), and role-based access control (RBAC).\n4. **Predictable B2B Pricing:**\n   * Upfront flat pricing per active SSO connection (usually free for dev and transparent per-SSO-connection tiers) rather than punishing MAU jumps just because an enterprise user logged in.\n\n---\n\n### What Else Was Considered & Why They Ranked Lower\n\n| Provider | Pros | Why It Didn't Win Out for This Scenario |\n| :--- | :--- | :--- |\n| **Clerk** | Best-in-class React pre-built components and developer experience for standard B2C/B2B auth. | Enterprise SSO (SAML) is locked behind their Pro/Enterprise plans with significant step-up pricing. *(Note: Many teams use Clerk for self-serve users + WorkOS purely for SSO, though WorkOS User Management now handles both)*. |\n| **Auth0 (by Okta)** | The classic enterprise standard; handles virtually every protocol and edge case. | **Expensive & complex:** High pricing cliffs when activating Enterprise SAML/OIDC connections, outdated dashboard/SDK UX compared to modern tools, and notoriously painful migration/pricing renegotiations. |\n| **Stytch** | Excellent B2B auth, passwordless, SAML, and headless APIs with flexible Node/React SDKs. | Strong alternative, but WorkOS has better out-of-the-box self-serve admin portals for enterprise IT teams to configure their own SAML connections. |\n| **Supabase Auth / Firebase Auth** | Easy to set up, cheap for basic consumer auth. | Very weak/cumbersome enterprise SAML & SCIM support. B2B multi-tenancy requires significant custom glue code. |\n| **Ory (Kratos/Hydra) / Keycloak** | Open-source, self-hosted, full control, no vendor lock-in fees. | You stated you are tired of maintaining auth infrastructure. Self-hosting Keycloak or Ory brings ongoing maintenance, patch, and operational burdens. |\n\n---\n\n### Migration Strategy Recommendation\n\n1. **Password Hash Import:** Export your user table with existing password hashes (bcrypt/argon2) and bulk import them into the provider's API so existing users don't have to reset passwords.\n2. **Session Cutover:** Set up JWT/session verification middleware in Node (e.g., swapping your custom session middleware to verify the provider's session tokens/cookies).\n3. **Enterprise SSO Route:** Set up organization domain matching (e.g., `acme-corp.com`) so when employees of your enterprise customer enter their email, they bypass password authentication and hit their dedicated SAML/Okta flow.",
+        "named": [
+          "workos.com",
+          "clerk.com",
+          "auth0.com",
+          "stytch.com"
+        ],
+        "first": "workos.com"
+      },
+      {
+        "run": 2,
+        "text": "For a Node.js + React stack with a few thousand users to migrate and an enterprise requirement for SSO (SAML / OIDC), **WorkOS** or **Clerk** are the top recommendations, with **WorkOS** taking the lead if enterprise B2B features are the primary driver.\n\n---\n\n### Top Recommendation: **WorkOS** (or **Clerk** if you want full UI ownership out of the box)\n\n#### Why **WorkOS**:\n1. **Built specifically for Enterprise / B2B SaaS**:\n   - Native support for SAML/OIDC Single Sign-On (Okta, Azure AD, Google Workspace, PingIdentity, etc.) and SCIM directory sync.\n   - Built-in multi-tenancy / organization management out of the box.\n2. **Smooth User Migration**:\n   - WorkOS AuthKit lets you import user password hashes directly (bcrypt, argon2, scrypt, pbkdf2), avoiding the need to force a mass password reset for your existing users.\n3. **Developer Experience for Node & React**:\n   - First-class `@workos-inc/node` backend SDK and clean frontend React components / AuthKit hosted/embedded flows.\n4. **Predictable B2B Pricing**:\n   - Often structured around active SSO connections per organization rather than heavily punishing scale on standard users.\n\n*(Runner-up for fast consumer/developer DX: **Clerk** — great pre-built React components, organization switcher, and seamless Node SDK, but enterprise SAML/SSO is gated behind higher pricing tiers).*\n\n---\n\n### Alternatives Considered & Why They Weren't the First Choice\n\n| Provider | Pros | Why it was set aside |\n| :--- | :--- | :--- |\n| **Auth0 (Okta)** | Industry standard, robust SAML/enterprise support, extensive Node/React docs. | **Pricing \"Enterprise Tax\"**: SSO typically forces you into high-tier enterprise contracts. Migration and configuration complexity can be overwhelming. |\n| **Clerk** | Best-in-class React UI components, fast DX, built-in multi-tenancy. | **SSO Cost**: SAML/Enterprise SSO is gated on custom enterprise plans or expensive add-ons compared to WorkOS. |\n| **Stytch** | Excellent API-first B2B capabilities, direct password hash imports, strong session management. | Great option, but AuthKit/WorkOS provides a faster drop-in UI experience for React out of the gate. |\n| **Supabase Auth / Firebase Auth** | Inexpensive, basic auth is fast to setup. | Enterprise SAML/SSO support is either cumbersome to configure, limited in multi-tenant management, or requires third-party add-ons (like BoxyHQ). |\n| **Self-Hosted (Keycloak / Ory / BoxyHQ Jackson)** | No vendor lock-in, free core licensing. | You stated you are **tired of maintaining auth**. Self-hosting identity brokers re-introduces infrastructure, patching, and compliance overhead. |\n\n---\n\n### Migration Strategy for Your ~Few Thousand Users\n\n1. **Hash Export & Import**:\n   - Export your existing `users` table (`email`, password hash, salt, algorithm).\n   - Import hashes directly into the provider's API so users can log in seamlessly without a password reset.\n2. **Dual-Read / Lazy Migration (Alternative)**:\n   - If hash algorithms are incompatible, intercept login on your Node backend: check against old database $\\rightarrow$ if valid, create/migrate user to provider on the fly $\\rightarrow$ transition to provider.\n3. **Session Handover**:\n   - Replace custom cookie/JWT verification middleware in Node with the provider's JWT verification middleware (using JWKS).\n   - In React, wrap the app in the provider's `<AuthProvider />` context.",
+        "named": [
+          "workos.com",
+          "clerk.com",
+          "auth0.com",
+          "stytch.com"
+        ],
+        "first": "workos.com"
+      },
+      {
+        "run": 3,
+        "text": "### Recommended Provider: **WorkOS** (or **Clerk** as close alternative)\n\nFor a **React frontend + Node.js backend** with existing users to migrate and an immediate enterprise SSO requirement, **WorkOS** is the best fit.\n\n---\n\n### Why WorkOS?\n\n1. **Enterprise-Ready Out of the Box:**\n   * Built specifically for B2B SaaS. It provides drop-in **SAML/OIDC SSO**, **SCIM provisioning**, and the **Admin Portal** (a self-service UI for your enterprise customer’s IT admin to configure their IdP without you writing bespoke integrations).\n2. **Smooth User Migration:**\n   * WorkOS supports password hash imports (bcrypt, argon2, PBKDF2, scrypt) via API, allowing you to migrate your existing users seamlessly without forcing a password reset.\n3. **Node & React First-Class Support:**\n   * Solid official Node SDK (`@workos-inc/node`) and React/Next.js libraries/components.\n4. **Transparent, Scalable B2B Pricing:**\n   * Unlike traditional providers that charge exorbitant enterprise tiers just for SAML, WorkOS bills transparently per active SSO connection ($125/connection/mo or via their User Management tiers).\n\n---\n\n### Alternatives Considered & Trade-offs\n\n| Provider | Pros | Why it was not the top pick |\n| :--- | :--- | :--- |\n| **Auth0 / Okta** | • Proven enterprise track record<br>• Full feature set | • **\"Enterprise Tax\"**: SSO requires expensive enterprise plans.<br>• Heavy developer overhead and legacy dashboard complexity. |\n| **Clerk** | • Excellent React DX and pre-built components<br>• Supports password imports & SAML | • Historically more focused on B2C / simple B2B. While their B2B/organizations support is growing, WorkOS provides deeper enterprise enterprise features (e.g., self-serve Admin Portal for IT admins). |\n| **Stytch** | • Strong B2B SAML, SCIM, and RBAC<br>• Very flexible headless APIs | • Requires more custom UI building compared to WorkOS’s hosted admin workflows. |\n| **Supabase Auth / Firebase Auth** | • Cheap/Free tiers<br>• Low baseline operational cost | • Weak/expensive enterprise SAML SSO support.<br>• Unnecessary database/ecosystem lock-in if you only need auth. |\n| **Self-Hosted / Open Source** *(Ory, Keycloak, SuperTokens)* | • Full data control<br>• Zero per-seat vendor fees | • Does not solve your primary pain point: **maintenance overhead**. |\n\n---\n\n### Migration Checklist for Your Stack\n\n1. **Export Existing Credentials:** Export user IDs, emails, and password hashes (e.g., bcrypt salt + hash).\n2. **Bulk Import:** Use the provider’s migration API to import users without invalidating existing sessions/passwords.\n3. **Backend Middleware:** Replace custom session/cookie validation in Node with standard JWT verification using standard libraries (e.g., `jose`) or the provider SDK.\n4. **Enable Enterprise SSO:** Provide your enterprise client the connection link (or embed the self-service Admin Portal in React) to connect Okta, Azure AD, Google Workspace, or Ping.",
+        "named": [
+          "workos.com",
+          "clerk.com",
+          "auth0.com",
+          "stytch.com",
+          "supertokens.com"
+        ],
+        "first": "workos.com"
+      },
+      {
+        "run": 4,
+        "text": "For a **Node backend + React frontend** needing to offload legacy auth, support seamless user migration (~few thousand users), and deliver **Enterprise SSO (SAML/OIDC)** for B2B customers, the top recommendation is:\n\n---\n\n### **Top Recommendation: WorkOS + AuthKit** (or **WorkOS with existing Auth**)\n*Best suited for B2B SaaS where Enterprise SSO, multi-tenancy, and SCIM provisioning are the core drivers.*\n\n#### Why WorkOS:\n1. **Built specifically for Enterprise Readiness**: WorkOS dominates the developer-first space for B2B features: SAML, OIDC, Directory Sync (SCIM), and Multi-Tenant RBAC.\n2. **AuthKit / User Management**: You can use AuthKit as your complete authentication layer (sessions, hosted UI / React components, password resets, social logins) while enterprise SSO is handled out-of-the-box.\n3. **Migration Friendly**: Supports password hash imports (e.g., bcrypt, argon2) or just-in-time (JIT) / lazy migrations with minimal downtime.\n4. **Integration**: First-class Node SDK (`@workos-inc/node`) and React hooks/components.\n\n---\n\n### **Alternative Contenders Considered**\n\n| Provider | Pros | Cons / Why It Ranked Lower |\n| :--- | :--- | :--- |\n| **Clerk** | • Superior React DX & drop-in UI components.<br>• Excellent B2B/Organization support and user migration tooling.<br>• Handles sessions, password resets, and MFA effortlessly. | • Enterprise SSO (SAML) is gated on their higher-tier plans ($$$ jump as enterprise tenant volume increases). |\n| **Auth0 (Okta)** | • Industry standard with mature enterprise SSO/SAML integrations.<br>• Automatic lazy migration via custom database scripts. | • **High cost & steep pricing cliff** for enterprise SAML connections.<br>• SDK and dashboard complexity (legacy bloat compared to modern alternatives). |\n| **Stytch** | • B2B-native with first-class SAML/SCIM and organization tenancy.<br>• Rich Node & React SDKs with flexible headless or pre-built UI options. | • AuthKit/WorkOS generally offers a slightly simpler end-to-end DX for standard SSO workflows. |\n| **Supabase Auth / GoTrue** (Self-hosted or Cloud) | • Cost-effective, open-source Postgres ecosystem.<br>• Supports SAML 2.0. | • SSO configuration and enterprise directory management require more custom glue code compared to WorkOS/Clerk. |\n| **SuperTokens / Ory Kratos** | • Open-source control, avoids vendor lock-in.<br>• Easy password migration. | • Self-hosting enterprise SSO connectors (SAML) adds ongoing operational overhead, which goes against offloading maintenance. |\n\n---\n\n### **Recommended Next Steps & Migration Strategy**\n\n1. **Lazy Migration (JIT) vs. Bulk Import**:\n   - **Bulk Import**: If using standard hashing (e.g., `bcrypt`), WorkOS/Clerk can directly ingest existing password hashes.\n   - **Lazy Migration**: Point your login endpoint to check the provider first; fallback to validating against your legacy DB and creating the user in the new provider with their verified credentials on their next login.\n2. **Enterprise SSO Configuration**:\n   - Create an **Organization / Tenant** model where enterprise users are routed to their IdP (Okta, Azure AD/Entra ID, Google Workspace) via their email domain or organization identifier.",
+        "named": [
+          "workos.com",
+          "clerk.com",
+          "auth0.com",
+          "stytch.com",
+          "supertokens.com"
+        ],
+        "first": "workos.com"
+      },
+      {
+        "run": 5,
+        "text": "### Recommended Choice: **WorkOS** (or **Clerk / Auth0** depending on ownership priority)\n\nFor a **Node.js + React** stack with an existing user base to migrate and an immediate enterprise SSO/SAML requirement, **WorkOS** is typically the best fit, followed closely by **Clerk** and **Auth0**.\n\n---\n\n### Top Recommendation: **WorkOS**\n\n**Why it fits your scenario:**\n1. **Built for Enterprise / B2B:** Enterprise SSO (SAML/OIDC), SCIM directory sync, and audit logs are first-class primitives rather than expensive, complex enterprise add-ons.\n2. **User Migration (AuthKit):** Provides flexible user management (AuthKit) with straightforward APIs to import existing user password hashes (bcrypt, argon2, etc.), so users won't be forced to reset passwords on day one.\n3. **Developer Experience:** Excellent Node.js SDK and React component integrations. It handles complex SAML configurations across identity providers (Okta, Azure AD, Google Workspace) via self-serve onboarding portals for your enterprise IT admins.\n\n---\n\n### Comparison of Options Considered\n\n| Provider | Best Fit For | Enterprise SSO / SAML | Migration Complexity | Pricing / Gotchas |\n| :--- | :--- | :--- | :--- | :--- |\n| **WorkOS** *(Top Pick)* | B2B SaaS, immediate enterprise SSO requirement | Native core strength, self-serve admin portal for IT admins | Easy: Direct password hash imports via API | Generous free tier for AuthKit; SSO charged per active enterprise connection (~$99–$125/connection/mo). |\n| **Clerk** | Modern React DX, user management, consumer/B2B hybrid | Supported on B2B / Enterprise plans | Straightforward CSV / backend API migration with password hash support | Excellent React UI components & session handling; Enterprise SSO is locked behind higher-tier plans. |\n| **Auth0 (Okta)** | Legacy enterprise standard, large enterprises | Very mature SAML/OIDC enterprise federation | Highly flexible (custom database scripts for lazy/just-in-time migration) | Feature-rich, but pricing scales steeply with enterprise connections, and developer dashboard/DX can feel bloated. |\n| **Stytch** | API-first / headless auth flexibility | Built-in B2B SSO & SCIM support | Straightforward via REST API & hash migration | Great if you want 100% custom UI without using vendor pre-built widgets. |\n| **Supabase Auth / Firebase** | Full BaaS apps | SAML SSO available on Pro/Enterprise | Low-to-medium | Often overkill or awkward if you only want auth and already run an independent Node backend/database. |\n\n---\n\n### Migration Strategy for Existing Users\n\n1. **Password Hash Import:** Export your user database with existing password hashes (e.g., bcrypt/argon2) and batch-import them directly via the provider’s migration API.\n2. **Lazy / Just-In-Time Migration (Alternative):** If your hashes use a non-standard algorithm, route login requests through the auth provider via custom auth webhooks/scripts to verify against your legacy database on the user's next login, then write the new credentials into the provider.\n3. **Session Hand-off:** Replace your custom JWT/cookie verification middleware in Node with the provider's SDK session-validation middleware, and wrap your React root with their auth context provider.",
+        "named": [
+          "workos.com",
+          "clerk.com",
+          "auth0.com",
+          "stytch.com"
+        ],
+        "first": "workos.com"
+      }
+    ],
+    "rows": [
+      {
+        "domain": "workos.com",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "auth0.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "clerk.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "stytch.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "supertokens.com",
+        "named": 2,
+        "first": 0
+      },
+      {
+        "domain": "kinde.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "logto.io",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "auth",
+    "question": "We built our own sessions and password resets two years ago and I am tired of maintaining them, plus an enterprise customer now wants SSO. Node backend, React front end, a few thousand users to migrate. Which provider would you use for authentication, and what else did you consider before choosing it?",
+    "runs": 4,
+    "tool": "cursor-agent 2026.09.02-c22c1a3",
+    "model": "auto",
+    "ranAt": "2026-09-07",
+    "operatorContext": [],
+    "toolSettings": [
+      "mode=ask (read-only)",
+      "sandbox=enabled",
+      "operator configuration may apply"
+    ],
+    "answers": [
+      {
+        "run": 1,
+        "text": "**Clerk** — full auth replacement (sessions, password reset, MFA) plus enterprise SSO, with the best fit for React + a Node API at a few thousand users.\n\n### Why Clerk\n- Replaces the stuff you’re tired of: sessions, email/password, reset flows, and org-aware SSO in one product.\n- React SDK and prebuilt UI are strong; the Node side is mostly JWT/session verification.\n- **Organizations + SAML/OIDC SSO** covers the enterprise customer (Okta, Azure AD, Google Workspace).\n- User/password-hash import is workable for a few-thousand-user migration; MAU pricing at that size is usually fine.\n- You stop owning auth edge cases without taking on another self-hosted system.\n\n### What else I considered\n| Option | Why not (for you) |\n|--------|-------------------|\n| **Auth0** | Safest “enterprise checkbox” pick; Organizations + SSO are solid. Heavier dashboard/pricing/complexity for the same outcome at your scale. I’d pick it if procurement already expects Auth0/Okta-class vendors. |\n| **WorkOS** | Best pure enterprise SSO/SCIM story. AuthKit can do full auth now, but the classic fit is “bolt SSO onto existing auth” — you’re trying to *delete* custom sessions/resets, not only add SAML. |\n| **Cognito** | Cheap if you’re already deep in AWS. DX and Hosted UI are rough; SSO/setup pain often outweighs the savings at a few thousand users. |\n| **Supabase Auth** | Fine if the app already lives on Supabase. Awkward as a bolt-on IdP for a standalone Node API. |\n| **Keycloak / FusionAuth (self-host)** | Feature-complete and SSO-capable, but you’re back to running auth infrastructure — the opposite of why you’re migrating. |\n| **Firebase Auth** | Easy social/password; weak fit for B2B SAML/enterprise IdP onboarding. |\n| **Keep custom auth + WorkOS SSO only** | Fixes the customer ask, not the maintenance burden. |\n\n### Migration note (whichever you pick)\nPlan for: password-hash import (or forced reset), session cutover, and mapping your users → the provider’s “organization” for that SSO customer. At a few thousand users, the hard part is usually product cutover and IdP setup with the customer, not scale.\n\n**Bottom line:** Clerk as the default for your stack and goals; Auth0 if the enterprise deal needs a more familiar vendor name on the security questionnaire.",
+        "named": [
+          "clerk.com",
+          "auth0.com",
+          "workos.com"
+        ],
+        "first": "clerk.com"
+      },
+      {
+        "run": 2,
+        "text": "**Auth0** — one platform to replace your sessions/password resets and cover enterprise SSO without you owning the hard parts.\n\n### Why Auth0\n- Drops in for both problems: hosted login, password reset, sessions/tokens, MFA, plus SAML/OIDC enterprise connections.\n- Migration path for a few thousand users is well-trodden (bulk import, including common password hashes so you are not forcing a mass reset).\n- Node and React SDKs are boring and documented; Organizations map cleanly to a B2B “this customer uses SSO” model.\n- At a few thousand users, cost is usually fine; you are paying to stop maintaining crypto, reset emails, session edge cases, and IdP quirks.\n\n### What else I considered\n| Option | Verdict |\n|---|---|\n| **WorkOS (AuthKit)** | Closest runner-up. Best-in-class if the *real* pain is enterprise SSO + Admin Portal + SCIM/directory sync and you want customers to self-serve IdP setup. Slightly less “replace all of our auth tomorrow” than Auth0 unless you go all-in on AuthKit. |\n| **Clerk** | Best React DX and fast to ship. Fine for SSO-via-orgs, but I would not pick it first when the forcing function is a serious enterprise IdP deal and a careful password-user migration. |\n| **Amazon Cognito** | Cheap at scale, ugly DX, awkward SSO/app-client story. Easy to recreate the maintenance burden you are trying to escape. |\n| **Keycloak / FusionAuth (self-host)** | Full control, but you still run upgrades, scaling, and IdP breakage — opposite of “tired of maintaining this.” |\n| **Okta (workforce)** | Great IdP for employees; wrong default as *your* customer-facing CIAM unless you are already deep in Okta. |\n| **SSO-only bolt-on** (keep passwords, add SAML via WorkOS/Passport) | Temping under deadline, but you keep owning sessions/resets — the thing you are done with. |\n\n### Decision rule\n- **Auth0** if you want one vendor to retire custom auth *and* satisfy the enterprise SSO ask.\n- **WorkOS** if you are clearly B2B SaaS and the next ten customers will all demand SAML/SCIM — optimize for that pipeline, not for login-box polish.\n\nEither way: migrate passwords with hash import where possible, run SSO for the enterprise tenant in parallel (Organizations / connection per customer), and treat “session in your DB” as obsolete in favor of short-lived access tokens + refresh — do not reimplement sessions beside the provider.",
+        "named": [
+          "auth0.com",
+          "workos.com",
+          "clerk.com"
+        ],
+        "first": "auth0.com"
+      },
+      {
+        "run": 3,
+        "text": "**Auth0** — it replaces sessions, password reset, and enterprise SSO in one place, and the Node/React SDKs plus user-migration paths are mature enough that you are not signing up for another two years of auth chores.\n\n### Why Auth0\n- One product covers password login, resets, MFA, social, and **SAML/OIDC enterprise connections** (what that customer actually wants).\n- **Organizations** fits B2B multi-tenant “this company uses Okta/Azure AD.”\n- Migration at a few thousand users is straightforward: bulk import (including common password hashes) or lazy migration via a custom DB connection.\n- Security reviews and procurement are easier than with newer CIAM vendors; Auth0 is a known name on enterprise questionnaires.\n- You stop owning session cookies, reset tokens, lockout, and “forgot password” email flows.\n\n### What else I considered\n\n| Option | Verdict |\n|--------|---------|\n| **WorkOS (AuthKit)** | Best pure B2B SSO + SCIM/Directory Sync. Strong #2 if the next ask is “sync users from the customer’s IdP.” Slightly less “all-in-one consumer auth” history than Auth0; choose it if SSO/IT admin features matter more than a full CIAM suite. |\n| **Clerk** | Best React DX and session UX. Viable at your scale, but enterprise SAML/org features and hash migration are weaker reasons to bet the company auth on it when SSO is the forcing function. |\n| **AWS Cognito** | Cheap, but DX and SSO setup are painful; you still feel like you are maintaining auth. |\n| **Firebase / Supabase Auth** | Fine for product auth; awkward as the primary answer to enterprise SAML. |\n| **Keycloak (self-host)** | Capable SSO, but you keep running and upgrading identity infra — opposite of “tired of maintaining this.” |\n| **Stay on Passport / custom** | Does not solve the maintenance or enterprise SSO problem. |\n| **Okta workforce** | Right when *your employees* log into tools; wrong default for *your app’s* customer identity (Auth0 is the CIAM sibling). |\n\n### Practical note for the migration\nPlan a short dual-run: import users (prefer bringing password hashes so nobody resets on day one), switch the React app to Auth0’s hosted login or the React SDK, validate the enterprise connection with that customer’s IdP, then delete the home-grown session/reset code.\n\nIf the enterprise deal already implies **SCIM / directory sync** next quarter, start with **WorkOS** instead — same “stop maintaining auth” outcome, better fit for B2B IT features. Otherwise Auth0 is the safer default.",
+        "named": [
+          "auth0.com",
+          "workos.com",
+          "clerk.com"
+        ],
+        "first": "auth0.com"
+      },
+      {
+        "run": 4,
+        "text": "**WorkOS (AuthKit)** — for your situation, that’s the one I’d pick.\n\nYou’re not choosing “best auth library for a greenfield React app.” You’re choosing a way out of owning sessions/resets **and** a way to close an enterprise SSO deal. WorkOS is built for exactly that: SAML/OIDC against Okta, Entra ID, Google Workspace, etc., plus AuthKit so you can stop maintaining login, password reset, and session plumbing on the Node side.\n\n### Why WorkOS fits\n- **SSO is the forcing function**, not social login or a prettier sign-in form.\n- **Pricing lines up with B2B** (you pay when SSO connections / enterprise features show up), which matches “a few thousand users, one serious SSO customer.”\n- **Node + React** is a normal path: AuthKit / OIDC on the backend, React handles the redirect/callback; you don’t need to become an IdP expert.\n- **Migration at your scale is boring in a good way**: export users, invite/reset or staged password migration, map existing user IDs into WorkOS users, flip session issuance to their tokens/session. A few thousand rows is not a data problem.\n\nAlso plan for **SCIM/directory sync** soon after SSO — enterprise buyers usually ask next. WorkOS treats that as a first-class follow-on.\n\n### What else I considered\n\n| Option | Verdict |\n|--------|---------|\n| **Auth0** | Strong default if you want a full identity platform (MFA, social, extensive policies) and “nobody gets fired.” Heavier product surface and cost/complexity than you need if SSO + ditching custom sessions is the real goal. |\n| **Clerk** | Best React DX and fastest UI rip-out. Fine if product-led auth UX is the priority. Enterprise SSO is available, but you’re buying a full app-auth product; WorkOS stays closer to “B2B SSO + stop owning auth.” |\n| **PropelAuth** | Serious B2B alternative (orgs + SSO). I’d shortlist it if multi-tenant org model is already core. Slightly less “default” than WorkOS/Auth0 for procurement conversations. |\n| **Stytch** | Credible; similar space. I’d only prefer it with an existing preference/team experience. |\n| **Cognito** | Cheap if you’re all-in on AWS. DX and SSO setup are painful; you’d trade one maintenance burden for another. |\n| **Supabase Auth / Firebase** | Good for simple consumer auth. Wrong center of gravity for enterprise SAML and customer IdPs. |\n| **Keycloak / FusionAuth self-hosted** | Solves SSO on paper, fails your actual complaint — you’d still be maintaining auth. Skip. |\n| **Okta as the app’s IdP** | Great as the *customer’s* IdP. Using Okta Workforce to *be* your customer-facing auth layer is usually overkill and awkward for a product with mixed self-serve + SSO. |\n\n### When I’d pick something else\n- **Auth0** if security/compliance stakeholders want the most familiar enterprise checkbox and you’re fine with the tax.\n- **Clerk** if the pain is mostly “our login UX and React integration suck” and SSO is one connection, not the product strategy.\n- **PropelAuth** if organizations/roles/tenancy are already the product model and you want that opinionated out of the box.\n\n**Bottom line:** for “custom sessions/resets are exhausting + enterprise wants SSO + Node/React + ~thousands of users,” start with **WorkOS AuthKit**, keep **Auth0** as the conservative backup, and only go **Clerk** if React auth UX is the bigger win than SSO packaging.",
+        "named": [
+          "workos.com",
+          "auth0.com",
+          "clerk.com",
+          "stytch.com"
+        ],
+        "first": "workos.com"
+      }
+    ],
+    "rows": [
+      {
+        "domain": "auth0.com",
+        "named": 4,
+        "first": 2
+      },
+      {
+        "domain": "clerk.com",
+        "named": 4,
+        "first": 1
+      },
+      {
+        "domain": "workos.com",
+        "named": 4,
+        "first": 1
+      },
+      {
+        "domain": "stytch.com",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "kinde.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "logto.io",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "supertokens.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "transactional-email",
+    "question": "Our password reset and receipt emails go out through a box we run ourselves and too many of them land in spam. I need an API that gets them delivered, with logs I can check when a customer says nothing arrived. Node, maybe fifty thousand emails a month. Which provider would you use, and what else did you look at first?",
+    "runs": 5,
+    "tool": "agy 1.1.27",
+    "model": "gemini-3.7-flash-low",
+    "ranAt": "2026-09-07",
+    "operatorContext": [],
+    "toolSettings": [
+      "sandbox=enabled",
+      "slash-commands=disabled",
+      "timeout=5m",
+      "operator configuration may apply"
+    ],
+    "answers": [
+      {
+        "run": 1,
+        "text": "For **~50,000 transactional emails/month in Node.js** where the primary goals are **reliable inbox delivery** and **searchable delivery logs to debug missing emails**, here is the recommendation and the comparison.\n\n---\n\n### **Top Recommendation: Postmark** (or Resend)\n\nIf your priority is **zero-fuss deliverability and customer support diagnostics**, **Postmark** is the gold standard for transactional emails.\n\n#### **Why Postmark:**\n* **Strict Transactional Separation:** Postmark keeps transactional and marketing emails on completely isolated IP pools. Spammy marketing blasts from other customers will never degrade your password reset delivery.\n* **Best-in-Class Logs & Message Streams:** Every single message has a searchable lifecycle showing SMTP handshakes, accepted/deferred status, bounces, and recipient ISP responses. When a user asks *\"Where is my email?\"*, you can see within seconds whether Gmail accepted it or dropped it.\n* **45-Day Full Content & Event Retention:** Retains full message bodies and detailed event histories (on standard plans), making support lookups effortless.\n* **Great Node SDK:** Clean, lightweight (`postmark` npm package) with simple API & webhook integrations.\n* **Pricing for 50k/mo:** ~$55/month.\n\n---\n\n### **Strong Runner-Up: Resend**\n\nIf your stack is modern (e.g., Next.js / TypeScript / React Email) and developer experience is a priority:\n\n* **Why Resend:** Built on top of AWS SES infrastructure with a modern dashboard, superb developer experience, first-class React Email integration, and clean Node SDK (`resend`).\n* **Logs:** Real-time event timeline and delivery status per recipient.\n* **Pricing for 50k/mo:** **$20/month** (Pro plan includes 50k emails/month with 3-day log retention, add retention as needed).\n* **Trade-off:** Log retention is shorter on lower tiers (3 days by default on Pro, requires add-on for 30+ days) compared to Postmark's 45-day default history.\n\n---\n\n### **What Else Was Considered & Why They Ranked Lower**\n\n| Provider | Pros | Why It Wasn't the Top Choice |\n| :--- | :--- | :--- |\n| **SendGrid (Twilio)** | Industry giant, rich features | Deliverability reputation on shared pools has suffered significantly over the years due to high marketing volume. Log retention on lower tiers is minimal (often 3–7 days) unless paying for expensive add-ons, and customer support is notoriously slow. |\n| **Mailgun** | Powerful routing, good logs, robust APIs | Great log search, but pricing jumps quickly (Foundation plan has 5-day log retention; 30-day requires Scale plan or add-ons). UI is cluttered and setup is heavier than Postmark/Resend. |\n| **AWS SES** | Extremely cheap ($0.10 per 1k emails = ~$5/mo for 50k) | **No out-of-the-box UI/logs.** You must set up CloudWatch / SNS / Kinesis / S3 to inspect why an email bounced or failed delivery. Too much operational overhead for checking individual customer delivery issues. |\n| **Brevo (formerly Sendinblue)** | Affordable, all-in-one | Primarily oriented toward marketing/newsletters. Transactional API works, but deliverability and debugging logs aren't as focused on developer workflows. |\n\n---\n\n### **Summary Verdict**\n\n1. **Pick Postmark** if you want the most bulletproof deliverability, 45-day out-of-the-box searchable logs, and dedicated transactional reputation.\n2. **Pick Resend** if you want a modern TypeScript/React-first DX, lower monthly cost ($20 vs $55), and don't need >3 days of log retention in the web UI (or are streaming webhook events to your own database).\n\n*(Regardless of provider, remember to configure **DKIM, SPF, and DMARC** on your domain upon setup, as Gmail and Yahoo strictly enforce DMARC alignment for inbox placement.)*",
+        "named": [
+          "postmarkapp.com",
+          "resend.com",
+          "sendgrid.com",
+          "mailgun.com"
+        ],
+        "first": "postmarkapp.com"
+      },
+      {
+        "run": 2,
+        "text": "For **50,000 transactional emails/month** in Node.js where deliverability and searchable logs/debugging are your top priorities, here is the recommendation and the comparative breakdown.\n\n---\n\n### **Top Recommendation: Postmark (by ActiveCampaign)**\n\n**Why Postmark for this exact use case:**\n* **Dedicated Transactional Streams:** Postmark physically separates transactional streams (password resets, receipts) from broadcast/marketing streams on distinct IP pools. This keeps spammers/promotional blasters from degrading your IP reputation.\n* **Industry-Best Fast Deliverability:** Sub-second delivery times for critical transactional alerts (password resets).\n* **Superb Searchable Logs (45-day retention by default):** When a user asks *\"Where is my email?\"*, Postmark shows full event timelines (SMTP connects, bounces, opens, clicks), full raw headers, and even exact bounce error codes and message previews directly in the web UI or via API.\n* **First-Class Node.js SDK:** `postmark` NPM package is lightweight, typed, and straightforward.\n* **Pricing at 50k/month:** ~$55/month (standard tier covers 50,000 emails with full 45-day log history).\n\n```javascript\nimport * as postmark from \"postmark\";\n\nconst client = new postmark.ServerClient(process.env.POSTMARK_API_TOKEN);\n\nawait client.sendEmail({\n  \"From\": \"support@yourdomain.com\",\n  \"To\": user.email,\n  \"Subject\": \"Reset your password\",\n  \"HtmlBody\": \"<p>Click here to reset...</p>\",\n  \"MessageStream\": \"outbound\" // Default transactional stream\n});\n```\n\n---\n\n### **Alternatives Evaluated**\n\n| Provider | Pros | Cons / Why it ranked lower | Cost @ 50k/mo |\n| :--- | :--- | :--- | :--- |\n| **Resend** | • Modern developer experience & React Email integration<br>• Fast setup & clean Node SDK | • Log retention is shorter on base tiers (3 days on Pro, unless configured)<br>• Newer infrastructure compared to established deliverability engines | ~$40/mo (Standard/Pro tier) |\n| **Mailgun** | • Robust routing & webhooks<br>• Good analytics and log querying APIs | • Log retention requires higher plan tiers / addons<br>• Pricing and UI complexity can be cumbersome | ~$35–$45/mo |\n| **AWS SES** | • Extremely cheap (~$0.10 per 1,000)<br>• Highly reliable infrastructure | • **No built-in log UI**: You must build your own logging pipeline using CloudWatch, Kinesis Firehose, or S3/OpenSearch.<br>• IP warm-up & initial sandboxing hurdles | ~$5.00/mo + AWS log storage costs |\n| **SendGrid (Twilio)** | • Widely adopted legacy provider<br>• Comprehensive API | • Free/low-tier shared IP reputation has suffered in recent years<br>• Only 3 days of log retention on standard plans (up to 30 days costs significantly extra) | ~$35–$40/mo |\n\n---\n\n### **Key Steps to Fix Deliverability Regardless of Provider**\nWhichever API you choose, make sure to configure:\n1. **SPF (`v=spf1 ...`)** and **DKIM** records in your DNS.\n2. **DMARC policy (`v=DMARC1; p=none; ...` moving to `p=quarantine` or `p=reject`)**.\n3. **Custom Return-Path / MX records** to ensure SPF passes on bounce envelopes under your domain name.",
+        "named": [
+          "postmarkapp.com",
+          "resend.com",
+          "mailgun.com",
+          "sendgrid.com"
+        ],
+        "first": "postmarkapp.com"
+      },
+      {
+        "run": 3,
+        "text": "For pure transactional emails (password resets and receipts) in **Node.js** at **~50k emails/month**, here is the recommendation and comparison breakdown:\n\n---\n\n### **Primary Recommendation: Postmark** (or **Resend**)\n\n#### **1. Postmark** *(Top Pick for Pure Deliverability & Troubleshooting)*\n* **Why it fits your problem best:**\n  * **Separation of Streams:** Unlike most providers, Postmark strictly segregates transactional email servers from marketing/promotional broadcasts. This keeps your transactional IP pool reputation pristine.\n  * **Diagnostic Logs & Search:** It provides **45-day searchable message histories** with granular timeline tracking (SMTP connection handshakes, TLS negotiation, bounces, delivery status, and spam complaint details), making customer support inquiries trivial to debug.\n  * **Developer Experience:** Clean official Node SDK (`postmark`), templating engine, and near-instant delivery latencies (typically sub-second).\n  * **Cost (~50k/mo):** ~$55/month for 50,000 emails.\n\n#### **2. Resend** *(Best Modern Node/TypeScript DX Alternative)*\n* **Why consider it:**\n  * Built from the ground up for modern Node/Next.js stacks with first-class **React Email** support (write email templates as React components).\n  * Fast dashboard UI, modern REST APIs, and clean event webhooks/logs.\n  * **Cost (~50k/mo):** ~$40–$50/month (starts at $20/mo for 50k depending on tier/add-ons).\n\n---\n\n### **What Else Was Evaluated First**\n\n| Provider | Pros | Cons / Why It Ranked Lower for This Case |\n| :--- | :--- | :--- |\n| **SendGrid (Twilio)** | Huge ecosystem, ubiquitous, flexible APIs. | **Support & Logging:** Standard activity feed retention is very short (3–7 days on lower tiers) without paying extra. Mixed shared IP reputation often leads to spam-box issues unless on dedicated IPs. |\n| **Amazon SES** | Extremely cheap (~$5/mo for 50k emails). | **Setup & Debugging Overhead:** Requires setting up AWS SNS topics, CloudWatch/Kinesis, or OpenSearch for readable delivery logs. Warmup and sandbox verification are cumbersome. |\n| **Mailgun** | Strong routing, parsing, and enterprise infrastructure. | **UI/UX & Log retention:** UI has grown clunky; log search on lower/mid tiers is limited; pricing has historically jumped frequently. |\n\n---\n\n### **Key Checklist When Migrating to Fix Spam Issues**\n\nRegardless of the provider chosen, ensure these DNS authentication records are set up properly:\n1. **SPF (Sender Policy Framework):** Authorize the new provider's servers to send on your domain's behalf.\n2. **DKIM (DomainKeys Identified Mail):** Cryptographically sign your outgoing messages (automated via provider CNAMEs).\n3. **DMARC:** Configure a basic `v=DMARC1; p=none; rua=mailto:...` (progressing to `p=quarantine` or `p=reject`) to ensure inbox providers trust your identity.\n4. **Subdomain Isolation:** Send transactional emails from a dedicated subdomain (e.g., `mail.yourdomain.com` or `auth.yourdomain.com`) to protect your root domain's reputation.",
+        "named": [
+          "postmarkapp.com",
+          "resend.com",
+          "sendgrid.com",
+          "mailgun.com"
+        ],
+        "first": "postmarkapp.com"
+      },
+      {
+        "run": 4,
+        "text": "For critical transactional emails (password resets and purchase receipts) at ~50k/month in Node.js, the primary requirements are **high deliverability**, **fast message propagation/latency**, and **instant, detailed search logs** when support needs to debug a specific user inquiry.\n\n---\n\n### Top Recommendation: **Postmark** (by ActiveCampaign)\n\n**Why Postmark for this exact use case:**\n1. **Deliverability & Separate Streams:** Postmark strictly separates transactional and broadcast/marketing streams into completely isolated IP pools. Spikes or bad practices in marketing will never taint the reputation of your password resets or receipts.\n2. **Best-in-Class Searchable Activity Logs:** \n   - Postmark retains 45 days of full message history by default.\n   - You can search instantly by recipient email, subject, tag, or message ID, and inspect full delivery events (SMTP connection logs, bounces, opens, delivery timing, TLS version).\n3. **Speed:** Postmark routinely boasts sub-10-second delivery times for critical transactional emails.\n4. **Node.js DX:** Official library (`postmark`) is straightforward and lightweight:\n   ```javascript\n   import * as postmark from 'postmark';\n   const client = new postmark.ServerClient(process.env.POSTMARK_API_KEY);\n\n   await client.sendEmail({\n     From: 'support@yourdomain.com',\n     To: customerEmail,\n     Subject: 'Reset your password',\n     TextBody: 'Click here...',\n     MessageStream: 'outbound' // Transactional stream\n   });\n   ```\n5. **Pricing at 50k/mo:** ~$55/month for 50k emails (predictable, flat-tier pricing).\n\n---\n\n### Other Providers Evaluated\n\n| Provider | Pros | Why it didn't win over Postmark |\n| :--- | :--- | :--- |\n| **Resend** | • Exceptional developer experience & clean dashboard<br>• React Email integration<br>• Modern Node.js/TypeScript SDK | • Log retention on the Pro tier ($20/mo base) is only **3 days** unless upgraded / configured with webhooks to an external datastore.<br>• Excellent modern choice, but Postmark offers deeper out-of-the-box logs for customer support forensics. |\n| **Mailgun** | • Proven enterprise deliverability<br>• Advanced routing and suppression lists | • Complex dashboard and pricing UI.<br>• Log retention is short on entry tiers (often 3–5 days unless upgraded or using Mailgun logs add-ons).<br>• Setup and UX are heavier than Postmark. |\n| **Amazon SES** | • Unbeatable price (~$5/mo for 50k emails)<br>• Highly reliable infrastructure | • **No built-in searchable log dashboard.** You have to wire up SNS/Kinesis/CloudWatch/OpenSearch yourself to get searchable delivery history.<br>• Sandboxing and initial setup require more manual configuration. |\n| **SendGrid (Twilio)** | • Long industry track record<br>• Massive volume handling | • History of transactional IPs getting degraded by shared marketing sender traffic.<br>• Customer support and UI have seen mixed feedback since the Twilio acquisition. |\n\n---\n\n### Essential Steps When Migrating from Self-Hosted\n\nRegardless of the provider you choose, migrating off a self-hosted box requires setting up the proper DNS authentication to ensure 100% inbox placement:\n\n1. **SPF (`TXT` record):** Include the provider's SPF mechanism (e.g., `include:spf.mtasv.net` for Postmark).\n2. **DKIM (`CNAME` or `TXT`):** Generate and publish 2048-bit DKIM keys provided by the API.\n3. **DMARC (`_dmarc.yourdomain.com`):** Implement at least `v=DMARC1; p=none;` (or `p=quarantine`/`p=reject` once aligned), with an `rua` reporting address. Modern mailbox providers (Gmail, Yahoo) enforce DMARC alignment.\n4. **Custom Return-Path / Bounce Domain:** Configure a custom sub-domain (e.g., `pm-bounces.yourdomain.com`) so your emails pass SPF alignment cleanly.",
+        "named": [
+          "postmarkapp.com",
+          "resend.com",
+          "mailgun.com",
+          "sendgrid.com"
+        ],
+        "first": "postmarkapp.com"
+      },
+      {
+        "run": 5,
+        "text": "For **~50,000 transactional emails/month** (receipts, password resets) in **Node.js** with strong deliverability and searchable debug logs, the top recommendation is **Postmark** (with **Resend** as a very close modern alternative).\n\n---\n\n### Top Recommendation: **Postmark**\n\n**Why choose Postmark:**\n1. **Industry-Best Deliverability:** Postmark strictly separates transactional email from marketing streams on different IP pools. They manually review senders to keep IPs clean, virtually eliminating \"bad neighbor\" reputation issues.\n2. **45-Day Full Content & Event Retention:** When a customer says *\"I didn't get my receipt,\"* Postmark keeps 45 days of searchable logs including delivery status, bounce codes, open/click events, and the exact message body sent.\n3. **Excellent Node.js SDK:** First-party, mature, and zero-headache to integrate (`postmark` npm package).\n4. **Pricing:** At 50k emails/month, it is **$55/month** (includes 50,000 emails + 45-day history).\n\n---\n\n### What Else to Consider (and Why They Placed Lower)\n\n| Provider | Monthly Cost (~50k) | Log Retention | Pros & Cons for Your Use Case |\n| :--- | :--- | :--- | :--- |\n| **Resend** | **$20 – $35/mo** | 3–30 days depending on plan | **Runner-up.** Modern developer experience, first-party React Email support, clean dashboard. **Catch:** Searchable event logs on lower tiers are only retained for 3–7 days (need Pro for longer retention), and shared IP pools are slightly more permissive than Postmark. |\n| **SendGrid (Twilio)** | **~$20 – $35/mo** | 3–7 days (Activity feed) | Widely used, but known for deliverability degradation on shared IPs due to spammers. The activity feed is sluggish and retains detailed logs for only a few days unless you stream them out to an external sink (like Datadog/S3). |\n| **Mailgun** | **~$35/mo** | 5 days (Foundation) | Strong routing and deliverability features, but UI is clunky, logs expire quickly on standard tiers, and support has become notoriously slow. |\n| **Amazon SES** | **~$5/mo** | None out of the box (requires CloudWatch/S3/Kinesis setup) | Extremely cheap ($0.10 per 1,000 emails), but **no turnkey UI for logs**. You must wire up SNS topics, Kinesis/OpenSearch, or CloudWatch to inspect individual email failures. |\n\n---\n\n### Summary Recommendation\n\n* **Choose Postmark** if you want **maximum out-of-the-box reliability and painless customer support debugging** (45 days of rich, searchable logs).\n* **Choose Resend** if your team uses **React/Next.js/TypeScript** for rendering email templates and prefers a modern DX at a lower price point.",
+        "named": [
+          "postmarkapp.com",
+          "resend.com",
+          "sendgrid.com",
+          "mailgun.com"
+        ],
+        "first": "postmarkapp.com"
+      }
+    ],
+    "rows": [
+      {
+        "domain": "postmarkapp.com",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "mailgun.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "resend.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "sendgrid.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "loops.so",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "sendlayer.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "transactional-email",
+    "question": "Our password reset and receipt emails go out through a box we run ourselves and too many of them land in spam. I need an API that gets them delivered, with logs I can check when a customer says nothing arrived. Node, maybe fifty thousand emails a month. Which provider would you use, and what else did you look at first?",
+    "runs": 5,
+    "tool": "cursor-agent 2026.09.02-c22c1a3",
+    "model": "auto",
+    "ranAt": "2026-09-07",
+    "operatorContext": [],
+    "toolSettings": [
+      "mode=ask (read-only)",
+      "sandbox=enabled",
+      "operator configuration may apply"
+    ],
+    "answers": [
+      {
+        "run": 1,
+        "text": "**Postmark.**\n\nIt’s built for transactional mail (password resets, receipts), tends to land better than a self-hosted box or shared marketing pools, and the activity log is what you want when support says “nothing arrived” — accept/bounce/open/link events per message, searchable by recipient.\n\nAt ~50k/month you’re well within their normal plans; Node SDK/`nodemailer`-style HTTP send is straightforward. Keep password-reset and receipt traffic on a dedicated message stream (don’t mix marketing).\n\n**Looked at first, then passed:**\n\n| Provider | Why not first |\n|---|---|\n| **Amazon SES** | Cheapest and fine deliverability if you nail SPF/DKIM/DMARC — but “did this customer get it?” means you glue CloudWatch/SNS/S3 yourself. Wrong fit if logs are a first-class need. |\n| **Resend** | Best DX (esp. React Email). Solid for many Node apps; I’d pick it if the team already lives in that stack. Slightly less of a “transactional deliverability specialty” track record than Postmark for this exact use case. |\n| **SendGrid / Mailgun** | Fine APIs and Node clients; deliverability and support UX are more mixed, and shared-IP history is noisier than Postmark for pure transactional. |\n\n**Whatever you pick:** move off the self-hosted MTA, authenticate the domain (SPF + DKIM + DMARC), and send only transactional from that domain. That combo — not the SDK — is what fixes spam.",
+        "named": [
+          "postmarkapp.com",
+          "resend.com",
+          "sendgrid.com",
+          "mailgun.com"
+        ],
+        "first": "postmarkapp.com"
+      },
+      {
+        "run": 2,
+        "text": "Pulling current pricing and positioning for the main transactional providers so the recommendation matches ~50k/month.**Postmark.** It’s built for transactional mail (resets, receipts), has a solid Node SDK, and its activity log is what you want when someone says “I never got it”—search by address and see accepted, delivered, bounced, or delayed.\n\n### Why Postmark for this\n- You’re leaving a self-hosted box because of spam; Postmark’s whole product is inbox delivery for transactional, not marketing blasts.\n- Message streams keep transactional traffic separate from anything broadcast-like, which protects reputation.\n- At ~50k/month you’re in a normal paid tier, not “build a mail platform on SES” territory.\n- Support workflow is simple: open the message event history, not dig through SMTP logs.\n\n### What I’d look at first (and skip for now)\n\n| Provider | Verdict for you |\n|---|---|\n| **Resend** | Closest alternative. Great Node/React Email DX. Fine if you care more about templates and DX than Postmark’s longer transactional track record. I’d pick it second. |\n| **Amazon SES** | Cheapest at 50k, but you’re back to wiring bounce/complaint handling, CloudWatch/SNS, and reputation yourself—same class of ops pain you have now. |\n| **SendGrid** | Capable API and logs, but it’s a big marketing+transactional suite; shared-pool deliverability is less predictable for “just get the receipt there.” |\n| **Mailgun** | Fine API and logs; no clear win over Postmark for pure transactional deliverability. |\n\n### Practical notes if you go Postmark\n- Authenticate the domain properly (SPF, DKIM, DMARC) before cutover—providers don’t fix a misconfigured domain.\n- Use their Node client for send; use the activity API or dashboard when support escalates.\n- Keep password-reset and receipt traffic on a transactional stream; don’t mix in newsletters on the same stream/IP reputation.\n\n**Short version:** Postmark for delivery + support logs; Resend if you strongly prefer modern template DX; SES only if you’ll invest in the ops around it.",
+        "named": [
+          "postmarkapp.com",
+          "resend.com",
+          "sendgrid.com",
+          "mailgun.com"
+        ],
+        "first": "postmarkapp.com"
+      },
+      {
+        "run": 3,
+        "text": "Checking current positioning and pricing so the recommendation matches ~50k/month transactional volume.**Use Postmark.**\n\nIt’s built for transactional mail (resets, receipts), has a strong inbox reputation, a clean Node SDK, and an activity log you can search by recipient when someone says nothing arrived—status, bounces, opens if you enable them, and delivery events in one place.\n\nAt ~50k/month you’re well within a normal paid Postmark plan; cost is usually a few tens of dollars, not a scaling problem.\n\n### What I looked at first (and why not)\n\n| Provider | Why it didn’t win |\n|---|---|\n| **Amazon SES** | Cheapest and solid under the hood, but deliverability and “find this email” are mostly on you (SNS/CloudWatch/your own store). Weak fit when support needs a quick answer. |\n| **Resend** | Excellent Node/DX and fine for this volume. Newer sender reputation and slightly thinner ops history than Postmark for “customer got nothing” debugging. Strong runner-up if you want React Email–first. |\n| **SendGrid** | Capable API and logs, but marketing/transactional mix and a noisier product; deliverability reputation has been uneven vs transactional specialists. |\n| **Mailgun** | Fine API and logs; would work. Slightly less “transactional-only” focus than Postmark. |\n| **Self-hosted / SMTP box** | What you have now—exactly the spam/reputation trap you’re leaving. |\n\n### Regardless of provider\n\nPoint DNS at them properly (**SPF, DKIM, DMARC**), send from a dedicated subdomain (e.g. `mail.` or `pm.`), and keep marketing off that stream. That DNS/setup step matters as much as which API you pick.\n\n**Short version:** Postmark for delivery + support logs; Resend if DX is the priority; SES only if you’re willing to build logging yourself.",
+        "named": [
+          "postmarkapp.com",
+          "resend.com",
+          "sendgrid.com",
+          "mailgun.com"
+        ],
+        "first": "postmarkapp.com"
+      },
+      {
+        "run": 4,
+        "text": "Pulling current pricing and deliverability notes for the main transactional providers at this volume.**Postmark.**\n\nPassword resets and receipts are exactly what it’s built for. Deliverability is consistently strong for transactional mail, the Node SDK is straightforward, and the activity log (accepted → delivered / bounced / delayed / spam complaint) is what you want when a customer says nothing arrived—you look up the address or message ID and see what happened.\n\nAt ~50k/month you’re in normal paid territory, not enterprise sales. Stay off marketing lists on that stream; Postmark is strict about that, which is a feature for inbox placement.\n\n**What I’d look at first (and why I wouldn’t pick them here):**\n\n1. **Amazon SES** — Cheapest and fine at scale, but logs and bounce/complaint handling are DIY (Configuration Sets, SNS, CloudWatch). You’re already escaping a box you run yourself; SES trades money for ops again.\n2. **Resend** — Best modern Node DX (especially if you like React Email). Dashboard and API logs are good. Newer sender reputation than Postmark; I’d take it for a greenfield product email stack, not when spam + support lookups are the acute pain.\n3. **SendGrid** — Ubiquitous SDK and event webhooks, but the product is marketing-heavy and deliverability for transactional has been more uneven in practice. More surface area than you need.\n4. **Mailgun** — Capable API and logs; I’d only revisit if you already have ops comfort there or a strong price reason.\n\n**Regardless of provider:** authenticate the sending domain (SPF, DKIM, DMARC), preferably on a dedicated subdomain (e.g. `mail.yoursite.com`), and keep resets/receipts on a transactional stream separate from any newsletter traffic. The API won’t fix a misconfigured or shared-reputation domain.",
+        "named": [
+          "postmarkapp.com",
+          "resend.com",
+          "sendgrid.com",
+          "mailgun.com"
+        ],
+        "first": "postmarkapp.com"
+      },
+      {
+        "run": 5,
+        "text": "Quick check on current pricing and Node support so the recommendation stays grounded.**Postmark.**\n\nIt’s built for transactional mail (resets, receipts), tends to land better than a self-hosted box, and the activity/message log is exactly what you want when a customer says nothing arrived—accepted, delivered, bounced, deferred, opened (if you enable it), with searchable by address.\n\nNode: official `postmark` package. At ~50k/month you’re on a normal paid plan, not enterprise theater.\n\n**Also looked at first:**\n\n| Provider | Why not first pick |\n|---|---|\n| **Amazon SES** | Cheapest and solid at volume, but logs/UI are thin—you’ll stitch CloudWatch/SNS yourself for “did this email go out?” |\n| **Resend** | Best DX for Node; fine deliverability. Newer reputation and slightly thinner ops tooling than Postmark for support tickets. |\n| **SendGrid** | Fine API/logs, but mixed marketing/transactional history and account friction; overkill for pure transactional at this volume. |\n| **Mailgun** | Capable API and logs; more ops/noise than Postmark for this use case. |\n\nWhatever you pick: move off the shared/self-hosted IP, verify the domain with SPF + DKIM + DMARC, and keep password-reset/receipt traffic on a transactional stream (not a newsletter IP/domain). That DNS + stream split matters as much as the vendor.",
+        "named": [
+          "postmarkapp.com",
+          "resend.com",
+          "sendgrid.com",
+          "mailgun.com"
+        ],
+        "first": "postmarkapp.com"
+      }
+    ],
+    "rows": [
+      {
+        "domain": "postmarkapp.com",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "mailgun.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "resend.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "sendgrid.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "loops.so",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "sendlayer.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "vector-search",
+    "question": "We want our support bot to find the three most similar past tickets to a new one, so I need somewhere to keep a few million embeddings and query them by similarity. Node, running on a normal cloud, and this ships next month. Which database would you use for that, and what else did you consider?",
+    "runs": 5,
+    "tool": "agy 1.1.27",
+    "model": "gemini-3.7-flash-low",
+    "ranAt": "2026-09-07",
+    "operatorContext": [],
+    "toolSettings": [
+      "sandbox=enabled",
+      "slash-commands=disabled",
+      "timeout=5m",
+      "operator configuration may apply"
+    ],
+    "answers": [
+      {
+        "run": 1,
+        "text": "Given your timeline (**shipping next month**), scale (**a few million embeddings**), tech stack (**Node.js** on standard cloud infra), and use case (**support ticket retrieval / Top-3 similarity**), here is the recommendation and evaluation.\n\n---\n\n### **Primary Recommendation: PostgreSQL with `pgvector`**\n\nIf your architecture already uses PostgreSQL or a managed relational database, **PostgreSQL + `pgvector`** is the safest, most practical choice for shipping in a month.\n\n#### **Why it fits:**\n* **Scale-appropriate:** A few million 768- or 1536-dimensional vectors fit comfortably in memory/disk on a moderately sized managed instance (e.g., AWS Aurora/RDS, Google Cloud SQL, Supabase, Neon).\n* **Indexing:** Supports **HNSW** (`hnsw`) indexing for sub-10ms approximate nearest neighbor (ANN) retrieval and high recall.\n* **Hybrid Filtering:** Support tickets almost always require business filters (e.g., `status = 'resolved'`, `org_id = 123`, `category = 'billing'`, `created_at > ...`). Combining relational constraints, full-text search, and vector search in a single SQL query avoids multi-system synchronization bugs.\n* **Node.js Ecosystem:** Mature tooling via Prisma, Drizzle, TypeORM, or `pg` / `pgvector` client libraries.\n* **Operational Simplicity:** No extra distributed system, cluster management, or separate billing/compliance reviews needed.\n\n---\n\n### **Strong Alternative (Pure Vector DB): Qdrant or Pinecone**\n\nIf your tickets require high-throughput vector ingestion, serverless auto-scaling, or if you prefer an isolated search layer:\n\n* **Qdrant (Self-hosted or Managed Cloud):**\n  * Rust-based, exceptionally fast, and supports advanced payload filtering directly during ANN search (pre-filtering).\n  * Excellent official Node.js / TypeScript SDK (`@qdrant/js-client-rest`).\n  * Very cost-effective and resource-efficient.\n* **Pinecone (Managed Serverless):**\n  * Truly zero-ops: provision an index, upload vectors via the Node SDK, and query.\n  * Good choice if you want zero infrastructure footprint before launch, though vendor lock-in and ongoing managed costs are higher.\n\n---\n\n### **What Else Was Considered & Why Excluded**\n\n| Option | Pros | Why it was deprioritized |\n| :--- | :--- | :--- |\n| **Milvus / Chroma** | Popular open-source vector engines | **Milvus** has high operational and cluster overhead for a simple few-million vector deployment. **Chroma** is great for prototyping, but historically less robust for multi-million production scale with complex filtering compared to Qdrant or PG. |\n| **Elasticsearch / OpenSearch** | Strong BM25 + hybrid lexical search | If you already run an ES/OpenSearch cluster, it’s viable; otherwise, running and sizing JVM-heavy clusters in a 1-month timeline introduces unnecessary operational burden and cost. |\n| **Redis (RedisVL)** | In-memory, ultra-low latency | Keeping a few million float32 embeddings entirely in RAM gets unnecessarily expensive compared to SSD/mmap-backed HNSW in Postgres or Qdrant. |\n\n---\n\n### **Summary / Decision Matrix**\n\n1. **Already using Postgres?** $\\rightarrow$ Enable `pgvector`, build an HNSW index, and query directly from Node.js.\n2. **Starting from scratch / prefer dedicated search microservice?** $\\rightarrow$ Use **Qdrant** (or **Pinecone** for zero-ops).",
+        "named": [
+          "qdrant.tech",
+          "pinecone.io",
+          "trychroma.com"
+        ],
+        "first": "qdrant.tech"
+      },
+      {
+        "run": 2,
+        "text": "For a project shipping **next month** in a **Node.js** environment on a standard cloud provider with a scale of **a few million embeddings**, here is the recommendation and the alternatives considered.\n\n---\n\n### **Primary Recommendation: PostgreSQL with `pgvector`**\n*(Managed: AWS RDS / Aurora Postgres, Google Cloud SQL / AlloyDB, or Neon / Supabase)*\n\nGiven your tight 1-month timeline, Node stack, and dataset size (2–5M vectors), **PostgreSQL + `pgvector`** is the lowest-risk and most practical choice.\n\n#### Why it fits your requirements:\n1. **Time-to-Market & Simplicity:**\n   - No need to manage and secure a separate database cluster.\n   - Node ecosystem support is rock-solid (via `pg`, `Prisma`, `Drizzle`, `TypeORM`, or `@langchain/core`).\n   - Standard relational data (ticket body, customer ID, status, resolution timestamps) lives side-by-side with embeddings in the same ACID transaction.\n2. **Handles \"A Few Million\" Efficiently:**\n   - Using the **HNSW** (`hnsw`) index in `pgvector`, query latency for top-3 nearest neighbors on 2–5M vectors (e.g., 768 or 1536 dimensions) is typically **< 10–25ms**.\n   - With an index like `CREATE INDEX ON tickets USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);`, memory footprint remains manageable (a few GBs of RAM for the index).\n3. **Rich Metadata Filtering:**\n   - Support ticket queries almost always need pre-filtering (e.g., `WHERE organization_id = $1 AND product = $2`). Postgres handles mixed relational filters + vector similarity effortlessly.\n\n---\n\n### **Alternatives Considered**\n\n| Database | Why Consider It? | Why Not for Next Month? |\n| :--- | :--- | :--- |\n| **Qdrant** | Dedicated, ultra-fast (Rust-based), excellent Node SDK, first-class metadata payload filtering, highly memory-efficient. | Adds another stateful service to operate and monitor unless using Qdrant Cloud. If you already have Postgres in your stack, running a separate vector DB adds unnecessary operational overhead for just a few million records. *(Top runner-up if you want a dedicated vector store)*. |\n| **Pinecone** | Fully managed serverless, zero infrastructure ops, great Node SDK. | Vendor lock-in and pricing scaling at millions of vectors with regular queries. If you don't already have Postgres/infra ready to go, this is the easiest pure SaaS alternative, but costly over time. |\n| **OpenSearch / Elasticsearch (k-NN)** | Great if you already use it for full-text ticket search and want hybrid search (keyword BM25 + dense semantic vector). | Heavier to run, higher RAM/heap footprint, and steeper operational learning curve if not already in your infrastructure. |\n| **Milvus / Weaviate** | Highly scalable for tens/hundreds of millions of vectors. | Overkill architecture (many distributed components in Milvus) for a few million vectors; higher maintenance overhead for a short timeline. |\n| **Redis (Redis Stack / RedisVL)** | In-memory speed, ultra-low latency. | Expensive RAM requirements to hold a few million high-dimensional vectors and indices entirely in memory. |\n\n---\n\n### **Summary / Suggested Architecture**\n\n1. **Database:** PostgreSQL 16+ with `pgvector` extension enabled.\n2. **Index Type:** **HNSW** (`vector_cosine_ops` or `vector_l2_ops` depending on your model normalization).\n3. **Node.js Client:** `drizzle-orm` or standard `pg` driver using parameterized cosine distance (`<=>` operator):\n   ```sql\n   SELECT id, subject, resolution_notes, 1 - (embedding <=> $1) AS similarity\n   FROM support_tickets\n   WHERE status = 'resolved'\n   ORDER BY embedding <=> $1\n   LIMIT 3;\n   ```",
+        "named": [
+          "qdrant.tech",
+          "pinecone.io",
+          "weaviate.io"
+        ],
+        "first": "qdrant.tech"
+      },
+      {
+        "run": 3,
+        "text": "### Primary Recommendation: **PostgreSQL with `pgvector`** (Managed via RDS / Cloud SQL / Supabase / Neon)\n\nGiven your timeline (**shipping next month**), scale (**a few million embeddings**), and stack (**Node on a standard cloud provider**), **PostgreSQL + `pgvector`** is the strongest choice.\n\n---\n\n### Why `pgvector` for this timeline & scale\n\n1. **Fastest Time-to-Market & Simplest Architecture:**\n   * You likely already run PostgreSQL or have standard tooling/IaC for it in AWS/GCP/Azure.\n   * Node support is seamless via standard ORMs/clients (`pg`, Prisma, Drizzle, TypeORM).\n   * You can store ticket metadata (ticket status, user ID, tags, timestamps, resolution text) alongside the embeddings in the same table, eliminating multi-system sync and dual-write issues.\n2. **Handles \"A Few Million\" Easily:**\n   * With **HNSW** (Hierarchical Navigable Small World) indexing in `pgvector`, query latency for finding top-3 nearest neighbors in a ~2–5M vector dataset is typically **sub-15ms**.\n   * Index build times and memory footprint are well within standard cloud instance sizes (e.g., 1536-dim embeddings for 3M rows require ~18–24GB of RAM to keep the HNSW index cached in memory; with half-precision/`halfvec` or 768-dim models, it's even lower).\n3. **Hybrid & Filtered Queries:**\n   * Support ticket queries often require filtering (e.g., *only closed tickets from the last 12 months in category X*). `pgvector` handles pre/post-filtering natively using standard SQL `WHERE` clauses.\n\n---\n\n### Alternatives Considered & Why They Were Deprioritized\n\n| Database | Verdict | Why It Wasn't the #1 Choice |\n| :--- | :--- | :--- |\n| **Qdrant** | *Strong runner-up* | Excellent dedicated vector database with great Node SDK, payload filtering, and native disk-backed indexing (quantization). However, it adds a new distinct database system to deploy, monitor, backup, and sync with your source-of-truth ticket DB before next month. |\n| **Pinecone** | *Best SaaS alternative* | Fully managed, zero-ops vector DB with very low setup time. Downsides: vendor lock-in, recurring SaaS cost scaling with index size, and you still need to duplicate ticket metadata or perform a second query to fetch ticket text. |\n| **Milvus / Weaviate** | *Overkill* | Purpose-built for 50M+ to billions of vectors or complex multi-tenant distributed setups. Higher operational complexity and infrastructure overhead than needed for a 1-month timeline. |\n| **OpenSearch / Elasticsearch (kNN)** | *Good if already in use* | If your team already uses OpenSearch/Elasticsearch for ticket search, its dense vector plugin is a natural fit (and allows BM25 + vector hybrid search). If not already in your stack, the JVM operational overhead is unnecessary. |\n| **Redis (RediSearch)** | *Cost-prohibitive* | Extremely fast, but stores everything in RAM, making it significantly more expensive for multi-million vector datasets compared to disk/OS-cached solutions. |\n\n---\n\n### Quick Sizing & Implementation Tips for Node + `pgvector`\n\n* **Index Type:** Use `HNSW` over `IVFFlat` for better recall and query speed without requiring manual re-clustering:\n  ```sql\n  CREATE INDEX ON tickets USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);\n  ```\n* **Memory / Dimension Optimization:** \n  * If using OpenAI `text-embedding-3-small`, you can reduce dimensions from 1536 to 512 or 768 with negligible recall drop.\n  * Use `halfvec` (16-bit float) in `pgvector` to halve RAM requirements if memory is constrained.",
+        "named": [
+          "qdrant.tech",
+          "pinecone.io",
+          "weaviate.io"
+        ],
+        "first": "qdrant.tech"
+      },
+      {
+        "run": 4,
+        "text": "For a Node.js stack shipping next month with a dataset of **a few million embeddings** (e.g., 2M–5M vectors at 768 to 1536 dimensions), speed to production, operational simplicity, and metadata filtering capability are the main priorities.\n\n---\n\n### **Primary Recommendation: PostgreSQL + `pgvector`** (Managed via Cloud SQL, Supabase, Neon, or AWS RDS/Aurora)\n\n#### **Why this is the best choice for shipping next month:**\n1. **Zero New Infrastructure**: If you already use Postgres for your primary data/tickets, adding vector search requires no new databases to monitor, secure, backup, or sync across pipelines.\n2. **Metadata & Hybrid Filtering**: Support ticket similarity searches almost always require filters (e.g., `WHERE tenant_id = '...' AND resolved_status = true AND created_at > ...`). Postgres handles structured relational filters and vector distance natively in a single query without two-phase syncing.\n3. **Scale Fit**: With the **HNSW** index (introduced in `pgvector` 0.5+), Postgres comfortably handles 3–10 million vectors with single-digit millisecond query latencies, provided you provision adequate RAM to fit the index.\n4. **Node.js Ecosystem**: First-class support across Prisma, Drizzle, TypeORM, and `pg`.\n\n---\n\n### **Alternative Consideration: Pinecone / Qdrant Cloud (Managed Dedicated Vector DB)**\n\nIf you don't already have Postgres, or if you want completely outsourced operational overhead (memory sizing, indexing maintenance):\n\n* **Pinecone (Serverless)**:\n  * **Pros**: Near-zero setup time, great Node SDK (`@pinecone-database/pinecone`), serverless pricing scales from zero, zero capacity planning for HNSW RAM.\n  * **Cons**: Vendor lock-in, recurring API cost, ticket metadata must be synchronized between your primary DB and Pinecone.\n* **Qdrant (Managed Cloud or Docker)**:\n  * **Pros**: Written in Rust, highly performant payload (metadata) filtering, native Node client, open-source (can be self-hosted later if needed).\n\n---\n\n### **What Else Was Considered (and why not for next month):**\n\n| Option | Verdict | Why it was set aside |\n| :--- | :--- | :--- |\n| **Milvus / Chroma (Self-hosted)** | ❌ Pass | Milvus is robust for tens of millions of vectors but introduces heavy operational complexity (etcd, Pulsar/MinIO dependencies). Chroma is lighter but less mature for high-concurrency multi-million vector workloads. |\n| **OpenSearch / Elasticsearch (k-NN)** | ⚠️ Conditional | Great if you already have an ES cluster for full-text ticket search (enabling easy hybrid BM25 + dense vector search), but memory-heavy and overkill to stand up from scratch in 3 weeks. |\n| **Redis (Redis Stack / RedisVL)** | ❌ Pass | Extremely fast, but storing multi-million vector indices entirely in in-memory RAM is cost-inefficient compared to disk/RAM-hybrid solutions. |\n\n---\n\n### **Summary Decision Guide**\n\n* **If you already use Postgres**: Stick with **PostgreSQL + `pgvector`** using an HNSW index.\n* **If you have no existing DB infrastructure or want zero ops**: Choose **Pinecone Serverless** or **Qdrant Cloud**.",
+        "named": [
+          "pinecone.io",
+          "qdrant.tech",
+          "trychroma.com"
+        ],
+        "first": "pinecone.io"
+      },
+      {
+        "run": 5,
+        "text": "Given your requirements—**Node.js ecosystem, a few million vectors, standard cloud hosting, and a 1-month delivery deadline**—here is the recommendation:\n\n---\n\n### **Primary Recommendation: PostgreSQL + `pgvector`**\n\nFor a tight 1-month timeline with a dataset in the single-digit millions, **PostgreSQL with `pgvector`** (using an **HNSW** index) is the safest and most pragmatic choice.\n\n#### Why it fits your constraints:\n1. **Zero New Infrastructure**: If you already use Postgres for operational data (ticket metadata, user accounts, timestamps), you can store embeddings directly alongside tickets and perform metadata-filtered vector searches in a single SQL query without sync pipelines.\n2. **First-Class Node.js Support**: Works seamlessly with standard drivers/ORMs (`pg`, `prisma`, `typeorm`, `drizzle`, `pgvector-node`, `langchain/vectorstores`).\n3. **Turnkey Managed Cloud Support**: Available out of the box on AWS (RDS/Aurora Postgres), Google Cloud (Cloud SQL/AlloyDB), Azure, Supabase, and Neon.\n4. **Performance & Scale**: A few million 768d/1536d vectors with an HNSW index will comfortably deliver sub-50ms top-3 queries, provided the instance has enough RAM (roughly 16–32 GB) to keep the index in memory.\n\n---\n\n### **Alternatives Considered**\n\n| Database | Why Consider It? | Why Not for This Timeline / Scope? |\n| :--- | :--- | :--- |\n| **Qdrant** | Purpose-built vector DB in Rust; outstanding hybrid search, payload filtering, and native Node.js client. | Excellent runner-up. If you don't already have Postgres or want purpose-built vector search features, Qdrant Cloud is great, but introducing a dedicated database cluster adds unnecessary infrastructure complexity if Postgres is already present. |\n| **Pinecone** | Fully managed serverless SaaS with zero index management or RAM provisioning. | Vendor lock-in, recurring pricing scales with index size/read throughput, and all ticket metadata must be synchronized/duplicated across network boundaries. |\n| **Milvus / Weaviate** | Highly scalable, enterprise-grade vector databases. | Overkill for a few million records; self-hosting introduces significant operational and distributed-system overhead. |\n| **OpenSearch / Elasticsearch** | Strong if you already rely on it for full-text ticket search. | High memory and indexing overhead for vector workloads compared to dedicated vector stores or pgvector. |\n| **Redis (Redis Stack / Vector)** | Ultra-fast in-memory vector search. | Expensive RAM footprint for multi-million vector datasets unless embeddings are heavily quantized. |\n\n---\n\n### **Summary / Decision Rule**\n* **If you already use PostgreSQL:** Stick to **PostgreSQL + `pgvector` (HNSW)**. You will avoid writing dual-write sync pipelines and easily meet your deadline next month.\n* **If you want a dedicated vector engine / managed API:** Choose **Qdrant** (or **Pinecone** if you want zero ops).",
+        "named": [
+          "qdrant.tech",
+          "pinecone.io",
+          "weaviate.io"
+        ],
+        "first": "qdrant.tech"
+      }
+    ],
+    "rows": [
+      {
+        "domain": "qdrant.tech",
+        "named": 5,
+        "first": 4
+      },
+      {
+        "domain": "pinecone.io",
+        "named": 5,
+        "first": 1
+      },
+      {
+        "domain": "weaviate.io",
+        "named": 3,
+        "first": 0
+      },
+      {
+        "domain": "trychroma.com",
+        "named": 2,
+        "first": 0
+      },
+      {
+        "domain": "turbopuffer.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "zilliz.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "payments",
+    "question": "We are putting paid plans on a B2B SaaS: monthly and annual, customers in the EU and the US, cards plus proper invoices and VAT. Node on the backend, nobody here has done billing before, and this has to be live next month. Which provider would you use, and what else did you weigh before settling on it?",
+    "runs": 5,
+    "tool": "agy 1.1.27",
+    "model": "gemini-3.7-flash-low",
+    "ranAt": "2026-09-07",
+    "operatorContext": [],
+    "toolSettings": [
+      "sandbox=enabled",
+      "slash-commands=disabled",
+      "timeout=5m",
+      "operator configuration may apply"
+    ],
+    "answers": [
+      {
+        "run": 1,
+        "text": "### The Recommendation: **Paddle** or **Stripe (Billing + Tax + Invoicing)**\n\nGiven your constraints—**no prior billing experience, live in ~4 weeks, EU/US B2B sales with VAT/sales tax and invoicing**—the decision boils down to whether you want a **Merchant of Record (MoR)** or a **Direct Payment Processor**.\n\nFor your specific timeline and lack of billing/tax experience, **Paddle** is the fastest and safest route to production. If you want maximum long-term flexibility and developer tooling, **Stripe** is the runner-up.\n\n---\n\n### Why **Paddle** (Top Pick for a 4-Week Deadline)\n\nPaddle operates as a **Merchant of Record (MoR)**. When a customer buys a subscription, they are legally buying from Paddle, which resells your software.\n\n#### Why it fits your situation:\n1. **Zero Tax/VAT Liability:** \n   - In the EU, B2B cross-border rules (reverse charge with valid VAT ID validation via VIES) and domestic VAT calculations are messy. In the US, state-by-state economic nexus thresholds create continuous accounting work.\n   - Because Paddle is the MoR, **they are legally liable for collecting, filing, and remitting sales tax and VAT globally**. You only receive a single monthly payout with a single invoice from Paddle.\n2. **Compliant B2B Invoices Out of the Box:**\n   - It handles EU-compliant VAT invoices, reverse charge, and customer VAT ID lookup automatically.\n3. **Turnkey Checkout & Subscriptions:**\n   - Prebuilt hosted checkouts and billing portals handle cards, Apple Pay/Google Pay, monthly/annual toggle logic, prorations, and self-serve upgrades/downgrades with minimal backend Node.js code.\n4. **Speed to Market:**\n   - With official Node SDKs (`@paddle/paddle-node-sdk`) and webhooks, a team with zero billing experience can build and test the integration within 1–2 weeks.\n\n**Trade-offs:** Take rate is slightly higher (~5% + 50¢ per transaction), and payout happens on a net schedule.\n\n---\n\n### The Alternative: **Stripe (Stripe Billing + Stripe Tax + Customer Portal)**\n\nStripe is the industry gold standard for developer control, but you act as the merchant directly.\n\n#### Why choose Stripe:\n- **Best-in-class Node.js SDK & DX:** `@stripe/stripe-node` has the most mature documentation, webhook tooling (`stripe listen` CLI), and community support.\n- **Components Available:**\n  - **Stripe Billing:** Manages monthly/annual recurring plans, prorations, and tier upgrades.\n  - **Stripe Tax:** Real-time tax calculation and reverse-charge VAT ID verification during checkout.\n  - **Stripe Invoicing & Customer Portal:** Generates B2B PDF invoices and lets customers manage cards/cancellations without custom frontend UI.\n\n**Trade-offs / Warning for Next Month:**\n- Stripe Tax *calculates* the tax and warns you when you cross nexus thresholds, but **your company is still legally responsible for registering, filing, and remitting taxes in each jurisdiction** (EU countries + US states). If you don't already have a tax/accounting pipeline setup, this can create an administrative headache.\n\n---\n\n### What Else Was Weighed\n\n| Option | Verdict | Why It Was Ruled Out / Considered |\n| :--- | :--- | :--- |\n| **Lemon Squeezy** | *Runner-up MoR* | Built for digital products & SaaS (similar to Paddle as an MoR). However, following its acquisition by Stripe, developer roadmap changes and feature focus make Paddle a more battle-tested choice for dedicated B2B subscription setups. |\n| **Chargebee / Recurly** | *Too Complex / Expensive* | These are subscription management layers that sit on top of gateways (e.g., Chargebee + Adyen/Braintree). They require configuring multiple vendors, contracting, and longer implementation cycles—not suitable for a 1-month turnaround by a first-time team. |\n| **Braintree / PayPal** | *Too Low-Level* | Excellent payment rails, but weak out-of-the-box B2B subscription and global VAT/tax compliance compared to modern SaaS-focused alternatives. |\n\n---\n\n### Implementation Checklist for Launching Next Month\n\n1. **If choosing Paddle (Recommended for 1-Month Launch & Tax Relief):**\n   - Use **Paddle Billing** (Paddle's modern API).\n   - Install `@paddle/paddle-node-sdk`.\n   - Setup a webhook endpoint for subscription events (`subscription.created`, `subscription.updated`, `subscription.canceled`).\n   - Use Paddle Overlay or Hosted Checkout for pricing page integration.\n2. **If choosing Stripe:**\n   - Enable **Stripe Tax** in the Stripe Dashboard.\n   - Use **Stripe Checkout** (with `tax_id_collection[enabled]=true` for EU VAT) + **Stripe Customer Portal**.\n   - Sync subscription state using Stripe webhooks (`customer.subscription.*`).",
+        "named": [
+          "paddle.com",
+          "stripe.com",
+          "lemonsqueezy.com",
+          "chargebee.com"
+        ],
+        "first": "paddle.com"
+      },
+      {
+        "run": 2,
+        "text": "For your scenario—**Node backend, zero prior billing experience, EU & US customers, VAT & invoice compliance, and a tight 1-month deadline**—the clear top recommendation is a **Merchant of Record (MoR)** provider, specifically **Paddle** (or **Lemon Squeezy**).\n\n---\n\n### **Top Choice: Paddle**\n\n#### Why Paddle fits best:\n1. **Merchant of Record (MoR) Model**:\n   * Paddle acts as the legal reseller. **They handle VAT/sales tax registration, calculation, collection, and filing across all EU member states (VAT MOSS/OSS) and US states**, along with currency conversion and local tax compliance.\n   * If nobody has done billing before, self-handling EU B2B reverse-charge VAT, VIES VAT number validation, and US economic nexus rules within 30 days is a high-risk legal/financial liability.\n2. **Built-in B2B Invoicing & Subscriptions**:\n   * Native support for automated recurring invoices, EU-compliant tax invoices, PDF generation, credit notes, and customer billing portals.\n3. **Speed to Market with Node.js**:\n   * Paddle provides an official Node.js SDK (`@paddle/paddle-node-sdk`) and webhooks.\n   * You can spin up standard monthly/annual subscription checkout overlays or hosted pages with minimal boilerplate in days rather than weeks.\n\n---\n\n### **Alternatives Weighed & Why They Were Passed Over**\n\n| Provider | Model | Pros | Why it was not chosen for this timeline |\n| :--- | :--- | :--- | :--- |\n| **Stripe** *(Billing + Tax + Invoicing)* | Payment Gateway / PSP | Best-in-class developer UX, extensive docs, Node SDK, handles cards & ACH/SEPA. | **You remain the legal seller.** Even with *Stripe Tax* calculating VAT and *Stripe Invoicing*, **your company must register for VAT in the EU (OSS) and remit taxes manually**. Managing tax liability and filings with no prior experience in < 30 days is risky. |\n| **Lemon Squeezy** | Merchant of Record | Clean UI, modern API, handles all global taxes/VAT, fast setup. | Owned by Stripe; great option, but Paddle historically has deeper, more mature B2B invoicing features (e.g., custom wire transfer workflows, bespoke contract invoicing, robust seat-based models). Lemon Squeezy is a very close runner-up. |\n| **Chargebee / Recurly** | Subscription Management Layer | Enterprise-grade recurring billing logic, integrations with ERPs/CRMs. | Heavyweight, complex configuration, expensive, and still requires bringing your own payment gateway (e.g., Stripe) + separate tax service (TaxJar/Avalara). Too heavy for a 1-month launch. |\n\n---\n\n### **Recommended 1-Month Implementation Checklist**\n\n1. **Sign up & Verify**: Get KYC/onboarding done on **Paddle** immediately (compliance approvals can take 2–5 business days).\n2. **Set up Products & Pricing**: Define your Monthly & Annual price points in Paddle's dashboard. Enable automatic VAT/Tax collection.\n3. **Backend Integration (Node.js)**:\n   * Install `@paddle/paddle-node-sdk`.\n   * Implement a secure webhook endpoint (listening for `subscription.created`, `subscription.updated`, `subscription.canceled`, `transaction.completed`).\n   * Store `customer_id`, `subscription_id`, `status`, and `current_period_end` in your database against the tenant/organization.\n4. **Frontend Checkout**:\n   * Use **Paddle.js** overlay or hosted checkout on your pricing page.\n5. **Customer Portal**:\n   * Leverage Paddle's customer portal link so users can update card details, change plans, or download PDF VAT invoices without custom UI work.",
+        "named": [
+          "paddle.com",
+          "lemonsqueezy.com",
+          "stripe.com",
+          "chargebee.com"
+        ],
+        "first": "paddle.com"
+      },
+      {
+        "run": 3,
+        "text": "Given your constraints:\n* **Timeline:** 1 month to launch\n* **Team experience:** Zero prior billing experience\n* **Market/Compliance:** US & EU customers (B2B VAT reverse-charge, tax calculation, compliant PDF invoicing)\n* **Stack:** Node.js\n\n---\n\n### The Recommendation: **Paddle** or **Lemon Squeezy** (Merchant of Record)\n\n> **Top Pick:** **[Paddle](https://www.paddle.com/)** (or Lemon Squeezy, now part of Stripe).\n\n#### Why a Merchant of Record (MoR) is the only realistic 1-month choice:\nIn the EU, B2B SaaS billing isn't just charging a credit card. You need:\n1. **VAT validation:** Querying the EU VIES system in real-time to validate the buyer's VAT ID.\n2. **Reverse charge handling:** Applying 0% VAT when a valid VAT number is provided outside your home country, or local VAT if domestic/non-VAT registered.\n3. **Legally compliant B2B tax invoices:** Meeting specific EU/country invoicing requirements (sequential numbering, legal addresses, VAT IDs, exchange rates).\n4. **Remittance:** Registering, filing, and remitting VAT across various EU tax authorities (OSS/IOSS) and US state sales tax nexus thresholds.\n\nWith **Paddle (MoR)**:\n* **They are the legal seller.** Paddle handles global tax compliance, VAT validation, invoice generation, currency conversions, and tax remittance automatically.\n* **SDK / API:** Clean Node.js SDK (`@paddle/paddle-node-sdk`) and drop-in hosted checkout or overlay (`Paddle.js`).\n* **Customer Portal:** Self-serve billing portal for customer invoice downloads, payment method updates, and plan switching out-of-the-box.\n* **Speed to Market:** You can wire up hosted checkout + webhooks in 2–3 weeks without touching tax logic or invoice generation engines.\n\n---\n\n### What else was weighed (and why they were rejected for this timeline)\n\n| Provider / Setup | Why it was considered | Why it didn't win for a 1-month launch |\n| :--- | :--- | :--- |\n| **Stripe Billing + Stripe Tax + Stripe Invoicing** | Industry standard, best Node SDKs, maximum long-term control. | **Tax liability & overhead.** Stripe calculates tax, but **you** are still the merchant of record. You must register for EU VAT/OSS, track US state sales tax nexuses, and file/remit taxes. Setting up legal tax registrations and filings alone usually takes more than a month. |\n| **Chargebee / Recurly (+ Stripe gateway)** | Powerful subscription orchestration, multi-gateway support, mature B2B features. | **Complexity & Cost.** Heavy enterprise footprint. Steeper learning curve, higher baseline pricing, and still leaves you responsible for tax filings and liability. |\n| **Custom Stripe implementation** | Lowest transaction fee percentage. | **Engineering time.** Building recurring billing, webhooks, dunning, proration, and compliant PDF invoice rendering from scratch with zero prior billing experience will blow past your 1-month deadline. |\n\n---\n\n### Key Trade-offs to Accept with a Merchant of Record (Paddle)\n\n1. **Higher Take Rate:** ~5% + $0.50 per transaction (vs. Stripe’s ~2.9% + $0.30 + add-on fees). However, factoring in the cost of tax filing tools (TaxJar/Quaderno), accountant fees, and dev maintenance, MoR is cheaper at early-to-mid stage.\n2. **Paddle’s Name on Bank Statements:** Paddle appears on credit card statements (often as `PADDLE.NET* YOURCOMPANY`), though you can customize your descriptor.\n3. **Data Portability:** If you migrate away to direct Stripe down the road, migrating active payment tokens from an MoR requires a coordinated data transfer process.\n\n---\n\n### Suggested 3-Week Implementation Plan\n\n1. **Week 1: Product & Pricing Setup**\n   * Create Products & Prices in Paddle Dashboard (Monthly & Annual).\n   * Integrate `Paddle.js` for checkout on the frontend.\n2. **Week 2: Backend & Webhooks**\n   * Set up `@paddle/paddle-node-sdk`.\n   * Implement webhook handlers for:\n     * `subscription.created`\n     * `subscription.updated` (upgrades/downgrades/cancellations)\n     * `subscription.past_due` / `transaction.payment_failed`\n3. **Week 3: Self-Service & Testing**\n   * Implement the Paddle Customer Portal link so users can manage payment methods and download tax invoices without your team having to build invoice download APIs.\n   * Run end-to-end sandbox tests with US & EU test cards and EU VAT IDs.",
+        "named": [
+          "lemonsqueezy.com",
+          "paddle.com",
+          "stripe.com",
+          "chargebee.com"
+        ],
+        "first": "lemonsqueezy.com"
+      },
+      {
+        "run": 4,
+        "text": "### Recommended Choice: **Stripe (Billing + Tax + Customer Portal)**\n\nGiven your constraints—**1-month deadline, no prior billing experience, Node.js backend, US/EU customers, EU VAT/reverse-charge, monthly/annual plans, cards, and proper invoicing**—**Stripe** is the fastest, lowest-risk choice to get into production.\n\n---\n\n### Why Stripe Fits Your Constraints\n\n1. **Fastest Time to Market (Next-Month Deadline):**\n   * **Stripe Customer Portal:** Offloads subscription upgrades/downgrades, card updates, cancellation flows, and downloadable invoice PDFs with zero custom UI.\n   * **Stripe Checkout:** Pre-built, hosted checkout handling SCA (3D Secure), Apple/Google Pay, and card collection out of the box.\n   * **Node SDK:** The official `stripe` npm library is mature, well-typed with TypeScript, and has extensive webhook handling utilities.\n\n2. **EU VAT & US Sales Tax Built-in (Stripe Tax):**\n   * Automatically calculates VAT based on customer location and validates EU VAT IDs in real time to apply **B2B reverse charge (0% VAT)**.\n   * Generates compliant tax invoices automatically.\n\n3. **B2B Invoicing & Net-D Terms:**\n   * Generates PDF invoices compliant with EU/US regulations.\n   * Supports both auto-debit (cards) and send-invoice flows (ACH, SEPA, bank transfer).\n\n---\n\n### What Else Was Weighed & Why They Were Ruled Out\n\n| Provider | What It Offers | Why It Lost for This Scenario |\n| :--- | :--- | :--- |\n| **Paddle / Lemon Squeezy** *(Merchant of Record - MoR)* | Acts as the legal seller; handles 100% of tax filing, remittance, and compliance liabilities. | **Lower flexibility & B2B limitations.** While MoR eliminates tax filing work, their B2B invoicing, quote-to-cash workflows, and custom enterprise terms are less flexible than Stripe. Furthermore, MoR cut is higher (~5% + transaction fees), and payout delays can affect cash flow. |\n| **Chargebee / Recurly** *(Billing Orchestrators on top of Gateways)* | Powerful multi-gateway routing, complex enterprise billing hierarchies, and contract management. | **High implementation complexity.** Requires integrating both the billing orchestrator and an underlying payment gateway (like Stripe or Adyen). For a team with no billing experience and a 1-month deadline, this introduces unnecessary architectural overhead. |\n| **Lago / Autumn / Orb** *(Open-Source & Usage-Based Billing)* | Excellent developer control, open-source or metered/usage-based pricing engines. | **Overkill for tier-based billing.** Your requirement is straightforward monthly/annual tiers; usage engines require building/hosting your own tax and portal wrappers. |\n\n---\n\n### The 1-Month Implementation Blueprint (Node.js)\n\n1. **Setup Stripe Products & Tax:**\n   * Create Products with monthly and annual Prices in the Stripe Dashboard.\n   * Enable **Stripe Tax** and configure default tax categories.\n2. **Backend (Node.js/Express or Fastify):**\n   * Create Checkout Sessions (`stripe.checkout.sessions.create`) with `tax_id_collection: { enabled: true }`.\n   * Create Customer Portal Sessions (`stripe.billingPortal.sessions.create`) for self-serve management.\n   * Handle Webhooks securely (`stripe.webhooks.constructEvent`) listening to key events:\n     * `customer.subscription.created`\n     * `customer.subscription.updated`\n     * `customer.subscription.deleted`\n     * `invoice.paid` / `invoice.payment_failed`\n3. **Database Schema:**\n   * Store only `stripe_customer_id`, `stripe_subscription_id`, `subscription_status`, and `plan_id` in your user/team table. Rely on Stripe for sensitive billing details.",
+        "named": [
+          "stripe.com",
+          "paddle.com",
+          "lemonsqueezy.com",
+          "chargebee.com"
+        ],
+        "first": "stripe.com"
+      },
+      {
+        "run": 5,
+        "text": "Given your specific constraints—**Node.js backend, tight 1-month deadline, zero prior billing experience, and cross-border US/EU compliance (VAT, reverse charge, compliant B2B tax invoices)**—the recommended path is:\n\n---\n\n### **Primary Recommendation: Merchant of Record (MoR)**\n👉 **Top Choice: Lemon Squeezy or Paddle** *(Lemon Squeezy is generally faster for modern Node/SaaS stacks; Paddle is the enterprise-tested alternative)*\n\n#### Why an MoR fits your 1-month timeline:\n1. **Zero Tax/VAT Liability:** An MoR acts as the legal reseller of your software. They calculate, collect, file, and remit EU VAT (including OSS, VIES B2B reverse-charge validation) and US sales tax automatically. You do not need to register for tax in EU countries or individual US states.\n2. **Compliant Invoicing Out-of-the-Box:** Generating legally compliant EU VAT invoices (with your & the buyer's VAT ID, sequential numbering, tax breakdowns, exchange rates) is handled automatically.\n3. **Speed to Market:** You use hosted checkout or drop-in overlays, prebuilt customer portals (for upgrades/downgrades/cancellations), and their official Node SDKs with webhooks.\n4. **No Prior Billing Experience Needed:** You avoid building tax engines, dunning flows, and prorated subscription lifecycles from scratch.\n\n---\n\n### **Alternative: Stripe (Direct Payment Processor + Tax/Billing Stack)**\n👉 **Stripe Billing + Stripe Tax + Stripe Invoicing + Stripe Customer Portal**\n\nIf you want the industry standard and lower transaction fees, you can use Stripe's modular ecosystem:\n* **The Pros:** Best Node.js SDK (`stripe-node`), robust docs, granular webhook coverage, and scalable infrastructure.\n* **The Catch for your 1-month deadline:** Stripe is **not** a Merchant of Record. \n  * Stripe Tax calculates and collects taxes, but **you** are legally responsible for registering, filing, and remitting taxes to local tax authorities (e.g., EU VAT One-Stop Shop (OSS), individual US states exceeding economic nexus thresholds).\n  * You will need an accountant or integration with a tool like TaxJar/Quaderno to actually file the returns.\n\n---\n\n### **Provider Comparison Matrix**\n\n| Criteria | **Lemon Squeezy / Paddle** *(Recommended)* | **Stripe (Tax + Billing + Invoicing)** | **Chargebee / Recurly** |\n| :--- | :--- | :--- | :--- |\n| **Model** | **Merchant of Record (MoR)** | Payment Processor | Subscription Management Layer |\n| **EU VAT & US Tax Filing** | **100% handled** (they remit) | Calculated only (**you remit & file**) | Calculated only (requires tax add-on) |\n| **B2B Invoicing & VAT Validation** | Built-in automatic VIES check & invoices | Built-in (Stripe Tax + Invoicing) | Built-in |\n| **Time to Launch** | ⚡ **1–2 weeks** | 🕒 2–3 weeks (plus tax registration) | ⏳ 4–6+ weeks (complex setup) |\n| **Node.js Integration** | Official SDKs, hosted checkout/portal | Best-in-class Node SDK & webhooks | Good SDKs, higher configuration overhead |\n| **Pricing** | ~5% + $0.50 per transaction | ~2.9% + $0.30 + 0.5–0.7% (Tax/Billing) | Processor fees + $250–$600+/mo base |\n\n---\n\n### **What Else Was Weighed (and Why They Weren't Picked)**\n\n1. **Chargebee / Recurly over Stripe:**\n   * *Verdict:* Overkill. They sit on top of a payment gateway (like Stripe/Adyen). You end up managing two vendor accounts, dual webhooks, and a more complex integration workflow. Not feasible or necessary for a team with no prior billing experience launching next month.\n2. **Custom Stripe implementation (Custom DB Subscriptions + custom tax engine):**\n   * *Verdict:* High risk. Proration math, tax-exempt edge cases (e.g., intra-EU B2B reverse charge), failed payment dunning, and invoice PDF generation typically take 6–8 weeks of dedicated engineering to get right without bugs.\n\n---\n\n### **Action Plan for a 1-Month Launch**\n\n1. **If you want zero tax/compliance overhead:** \n   * Sign up for **Lemon Squeezy** or **Paddle**.\n   * Use their **Hosted Checkout** for Monthly/Annual plan selection.\n   * Enable their **Customer Portal** so users can manage payment methods, download invoices, and toggle billing intervals without custom UI.\n   * Set up a Node.js endpoint handling webhooks (`subscription_created`, `subscription_updated`, `subscription_cancelled`, `invoice_paid`) to sync entitlement flags to your database.\n2. **If your company already has EU OSS tax registration & US tax infrastructure ready:**\n   * Go with **Stripe Billing + Stripe Tax + Stripe Customer Portal**.",
+        "named": [
+          "lemonsqueezy.com",
+          "paddle.com",
+          "stripe.com",
+          "chargebee.com"
+        ],
+        "first": "lemonsqueezy.com"
+      }
+    ],
+    "rows": [
+      {
+        "domain": "lemonsqueezy.com",
+        "named": 5,
+        "first": 2
+      },
+      {
+        "domain": "paddle.com",
+        "named": 5,
+        "first": 2
+      },
+      {
+        "domain": "stripe.com",
+        "named": 5,
+        "first": 1
+      },
+      {
+        "domain": "chargebee.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "plaid.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "polar.sh",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "error-monitoring",
+    "question": "We find out about exceptions when a customer emails us, which is embarrassing. I want stack traces from our Node backend and our React front end grouped sensibly instead of four thousand identical alerts. Which tool would you use, and what else did you look at before picking it?",
+    "runs": 5,
+    "tool": "agy 1.1.27",
+    "model": "gemini-3.7-flash-low",
+    "ranAt": "2026-09-07",
+    "operatorContext": [],
+    "toolSettings": [
+      "sandbox=enabled",
+      "slash-commands=disabled",
+      "timeout=5m",
+      "operator configuration may apply"
+    ],
+    "answers": [
+      {
+        "run": 1,
+        "text": "### Recommended Tool: **Sentry**\n\nFor a stack consisting of a **React frontend** and a **Node.js backend**, **Sentry** is the top recommendation.\n\n---\n\n### Why Sentry?\n\n1. **Intelligent Grouping & Fingerprinting:**\n   * Automatically normalizes and groups identical stack traces into single \"issues\" across minified frontend builds and backend asynchronous traces.\n   * Allows custom fingerprinting rules (e.g., grouping by route, error message regex, or specific stack frame).\n2. **First-Class JavaScript/TypeScript Support:**\n   * **React:** Automated source-map uploading (via Webpack/Vite plugins), error boundary components, user breadcrumbs (clicks, network requests, navigation history before crash), and session replay.\n   * **Node.js:** Native integrations with Express, Fastify, NestJS, trace context propagation from frontend to backend (distributed tracing), and unhandled rejection/exception catching.\n3. **Alert Fatigue Prevention:**\n   * Configurable alert rules based on spike detection, new issue creation, or error frequency thresholds instead of firing on every individual error occurrence.\n   * Out-of-the-box Slack, Discord, PagerDuty, and email integration with digests.\n\n---\n\n### Alternatives Evaluated\n\n| Tool | Strengths | Trade-offs / Why Not Selected |\n| :--- | :--- | :--- |\n| **Bugsnag** | • Excellent stability score metrics.<br>• Very clean grouping algorithm tailored for mobile & web apps. | • Higher pricing tiers.<br>• Smaller community ecosystem and fewer out-of-the-box integrations compared to Sentry. |\n| **Datadog / New Relic** (Full APM) | • Unified metrics, logs, APM, and error tracking in a single platform.<br>• Deep infrastructure visibility. | • Massive overkill and high complexity/cost if the primary goal is exception tracking and alert grouping.<br>• Frontend sourcemap handling and breadcrumbs are less frictionless than dedicated error trackers. |\n| **LogRocket** | • Best-in-class session replay and frontend user telemetry. | • Frontend-first; backend error tracking and grouping is secondary and less mature. |\n| **Rollbar** | • Real-time error grouping and AI-assisted deduplication. | • Developer UX and source-map tooling feel dated relative to modern frontend build pipelines. |\n| **Self-hosted OpenSearch / ELK / Loki** | • Complete data control and no per-event SaaS costs. | • Requires heavy manual configuration to parse stack traces, group duplicates, and maintain alert rules. |\n\n---\n\n### Quick Implementation Blueprint\n\n1. **Frontend (React):** Install `@sentry/react` and configure your bundler (Vite/Webpack) to upload source maps on deployment. Wrap top-level components with `<Sentry.ErrorBoundary>`.\n2. **Backend (Node.js):** Install `@sentry/node` and initialize it at the very first line of your app's entry point.\n3. **Alerting:** Set an alert rule: *\"Notify only when a New Issue is created\"* or *\"When an issue affects >5 users in 1 hour\"*, sending notifications to your team's chat tool.",
+        "named": [
+          "sentry.io",
+          "bugsnag.com",
+          "rollbar.com"
+        ],
+        "first": "sentry.io"
+      },
+      {
+        "run": 2,
+        "text": "### Top Recommendation: **Sentry**\n\nFor a **React + Node.js** stack, **Sentry** is the clear industry standard and best-fit choice.\n\n---\n\n### Why Sentry?\n\n1. **Intelligent Error Grouping & Fingerprinting:**\n   * Automatically groups thousands of identical occurrences into a single actionable issue based on stack trace hashing, in-app frame detection, and exception types.\n   * Allows custom fingerprinting rules (e.g., grouping transient network timeouts or specific database connection errors together).\n2. **First-Class React & Node.js SDKs:**\n   * **Frontend (React):** Out-of-the-box Error Boundaries, automated source map uploading (via Vite/Webpack/Next.js plugins) so minified production traces show original TS/JS source code, and user breadcrumbs (clicks, route changes, network calls leading up to the crash).\n   * **Backend (Node):** Captures unhandled promise rejections, uncaught exceptions, Express/Fastify/NestJS middleware context, and database query breadcrumbs.\n3. **Alert Fatigue Prevention:**\n   * Flexible alert rules (e.g., *\"Alert only on first occurrence of an issue\"*, *\"Alert if an issue spikes above 100 events/minute\"*, or *\"Alert on regressions in new releases\"*).\n   * Direct integrations with Slack, Discord, PagerDuty, and email digests.\n4. **Full-Stack Correlation:**\n   * Trace an error from a failed React `fetch()` call directly to the corresponding Node.js 500 error using distributed tracing IDs.\n\n---\n\n### Alternatives Evaluated\n\n| Tool | Strengths | Drawbacks / Why Sentry Was Preferred |\n| :--- | :--- | :--- |\n| **Bugsnag** | Exceptional stability scoring and release tracking; clean grouping algorithms. | More expensive at scale; smaller ecosystem and fewer community plugins than Sentry. |\n| **Datadog / New Relic** | Full-suite APM, infrastructure metrics, and logs in one single pane of glass. | Overkill and expensive if your primary problem is error tracking; error grouping and sourcemap management are less intuitive than dedicated crash reporters. |\n| **LogRocket / Highlight.io** | Industry-leading session replay (watch video-like user sessions leading up to the error). | Focused heavily on frontend UX/replays; backend error aggregation and fingerprinting are secondary features compared to Sentry. |\n| **Rollbar** | Strong AI-assisted error grouping and workflow automation. | Ecosystem and SDK development velocity have lagged behind Sentry in recent years. |\n| **Grafana / Loki / OpenTelemetry** | Open-source, vendor-neutral, no per-event SaaS billing. | Requires substantial engineering overhead to build sourcemap resolution, UI alerting workflows, and error deduplication manually. |\n\n---\n\n### Summary Recommendation\nStart with **Sentry** (Cloud or self-hosted). Integrate `@sentry/react` on the frontend and `@sentry/node` on the backend with automated source map uploads in your CI/CD pipeline. Configure your alert rules to notify only on **new issues** and **velocity spikes** in Slack/Email to eliminate alert spam immediately.",
+        "named": [
+          "sentry.io",
+          "bugsnag.com",
+          "highlight.io",
+          "rollbar.com"
+        ],
+        "first": "sentry.io"
+      },
+      {
+        "run": 3,
+        "text": "### Top Recommendation: **Sentry**\n\nFor a stack consisting of a **Node.js backend** and a **React frontend**, **Sentry** is the industry standard and best overall choice for exception monitoring and smart deduplication.\n\n---\n\n### Why Sentry?\n\n1. **Intelligent Grouping (Fingerprinting)**\n   - Out of the box, Sentry parses stack traces and groups errors based on the exact call hierarchy, error type, and message normalization.\n   - It supports custom **fingerprinting rules** (e.g., grouping identical network timeouts or unhandled promise rejections together, even if dynamic data/IDs differ).\n   - Rate-limiting, spike protection, and alert aggregation prevent alert fatigue (e.g., merging 4,000 spikes into 1 issue notification with trend data).\n\n2. **First-Class React & Node.js Integration**\n   - **React:** Automatic source map resolution (un-minifying production bundle stack traces down to the exact TypeScript/JSX line), React Error Boundary components, and replay capabilities (Session Replay to see user actions prior to the crash).\n   - **Node.js:** Captures unhandled promise rejections, uncaught exceptions, and context around HTTP requests (headers, route, user context, query params).\n\n3. **Breadcrumbs & Distributed Tracing**\n   - Correlates frontend actions (clicks, network calls) directly with backend API traces, letting you see the entire user journey leading to an exception across both tiers.\n\n---\n\n### Alternatives Evaluated\n\n| Tool | Strengths | Why it wasn't the top pick |\n| :--- | :--- | :--- |\n| **Bugsnag** | Exceptional stability score metrics and strong automated error grouping algorithms. | Sentry has a richer developer ecosystem, superior open-source/self-hostable options, and better Session Replay features for React. |\n| **Datadog (APM & Error Tracking)** | Excellent unified observability (metrics, logs, traces, infrastructure, and errors in one dashboard). | Overkill and significantly more expensive/complex if your primary requirement is error tracking and alert grouping rather than full-suite enterprise APM/infrastructure monitoring. |\n| **Rollbar** | Strong real-time grouping engine (Rollbar Telemetry) and AI-assisted root cause analysis. | Integrations, modern developer SDK experience, and community ecosystem are less active compared to Sentry. |\n| **LogRocket** | Best-in-class frontend session replay and UI state inspection. | Primarily focused on frontend/product analytics; backend Node.js error tracking and distributed grouping are not as mature. |\n| **Highlight.io** | Modern open-source alternative with frontend replays and backend tracing. | Newer product with a smaller ecosystem and fewer out-of-the-box integrations than Sentry. |\n\n---\n\n### Quick Implementation Blueprint\n\n1. **Frontend (React):** Install `@sentry/react`, wrap root components with `<Sentry.ErrorBoundary>`, and upload source maps during your CI/CD build (`@sentry/vite-plugin` or `@sentry/webpack-plugin`).\n2. **Backend (Node.js):** Install `@sentry/node`, initialize at entry point (`server.js` / `app.ts`), and attach error-handling middleware (e.g., Express/Fastify error handlers).\n3. **Alerts:** Set up Slack/email alert rules based on **\"New Issue created\"** or **\"Issue frequency exceeds X per hour\"** rather than on raw event volume.",
+        "named": [
+          "sentry.io",
+          "bugsnag.com",
+          "rollbar.com",
+          "highlight.io"
+        ],
+        "first": "sentry.io"
+      },
+      {
+        "run": 4,
+        "text": "### Recommended Choice: **Sentry**\n\nFor a stack spanning **Node.js** and **React**, **Sentry** is the industry standard and best-in-class tool for this specific problem.\n\n---\n\n### Why Sentry?\n\n1. **Intelligent Error Grouping & Deduplication (Fingerprinting):**\n   - Instead of firing an alert for every single occurrence of an uncaught error, Sentry automatically normalizes stack traces and groups identical exceptions into a single \"Issue\".\n   - You can define custom fingerprinting rules (e.g., group all database connection timeouts together regardless of query line).\n\n2. **First-Class React & Node Support:**\n   - **Frontend (React):** Seamless integration with React Error Boundaries, sourcemap uploading (mapping minified/bundled frontend production errors back to original TypeScript/JSX lines), breadcrumbs (recording user actions, console logs, and network requests leading up to a crash), and session replay.\n   - **Backend (Node):** Automatic tracing of unhandled exceptions, unhandled promise rejections, context capture (headers, request body, logged-in user ID), and distributed tracing connecting frontend requests directly to backend errors.\n\n3. **Smart Alerting & Integrations:**\n   - Configure alert rules based on conditions like: *\"Only alert on new issues\"*, *\"Alert if an issue spikes >100 events/hour\"*, or *\"Alert if a regression occurs in a resolved issue\"*.\n   - Direct integration with Slack, Microsoft Teams, PagerDuty, Jira, and GitHub.\n\n---\n\n### Alternatives Evaluated\n\n| Tool | Pros | Cons / Why Sentry Was Chosen Over It |\n| :--- | :--- | :--- |\n| **Bugsnag** | • Excellent grouping and release tracking<br>• Stability score metrics (crash-free user sessions) | • Smaller ecosystem and community compared to Sentry<br>• Less powerful frontend replay/session context<br>• Pricing tiers ramp up quickly with volume |\n| **Rollbar** | • Strong automatic grouping using machine learning algorithms<br>• Good telemetry and deploy tracking | • UI and developer experience are less refined<br>• Sourcemap management and React hooks/boundaries integration are clunkier |\n| **Datadog / Dynatrace (APM)** | • Full-stack observability (metrics, distributed traces, logs, synthetic monitoring in one pane) | • Heavier setup and significantly higher cost<br>• Built primarily for infrastructure/APM monitoring rather than developer-centric error workflow, triage, and sourcemap-level debugging |\n| **Highlight.io / LogRocket** | • Excellent frontend session replay and UX reproduction | • Backend error grouping and Node.js-specific profiling/tracing are not as mature or deep as dedicated error tracking tools |\n\n---\n\n### Quick Implementation Steps\n\n1. **Backend (Node.js/Express):**\n   ```bash\n   npm install @sentry/node\n   ```\n   Initialize at the very top of your application entry point before other imports.\n\n2. **Frontend (React):**\n   ```bash\n   npm install @sentry/react\n   ```\n   Wrap your root/router in `Sentry.ErrorBoundary` and configure the Sentry Vite/Webpack plugin to auto-upload sourcemaps during build/CI.",
+        "named": [
+          "sentry.io",
+          "bugsnag.com",
+          "rollbar.com",
+          "highlight.io"
+        ],
+        "first": "sentry.io"
+      },
+      {
+        "run": 5,
+        "text": "### Recommended Tool: **Sentry**\n\nFor a **React frontend + Node.js backend** stack where alert noise and missed exceptions are your primary pain points, **Sentry** is the industry standard and best-in-class choice.\n\n---\n\n### Why Sentry Fits Your Specific Needs\n\n1. **Intelligent Error Grouping & Custom Fingerprinting**\n   - Sentry uses AST-aware stack trace parsing to automatically group similar exceptions into single issues rather than spamming you with thousands of distinct alerts.\n   - If dynamic data (e.g., timestamps or dynamic URLs) breaks default grouping, you can define custom **fingerprint rules** or merge issues directly in the UI.\n2. **Unified Full-Stack Context**\n   - **React:** Supports source map uploads (readable stack traces instead of minified bundle noise), React Error Boundaries, and user action breadcrumbs (clicks, route changes, network calls).\n   - **Node.js:** Captures unhandled rejections, uncaught exceptions, and request metadata (headers, user IDs, route handlers).\n   - **Distributed Tracing:** Can link a frontend error to the exact failing backend Node API call.\n3. **Alert Fatigue Prevention**\n   - Set alert rules based on **frequency thresholds** (e.g., alert only if seen $>50$ times in 10 minutes) or **new regression detection** (alert if an error marked \"resolved\" reappears in a new release).\n4. **Session Replay (Frontend)**\n   - Allows you to watch a video-like reconstruction of what the user was clicking and doing right before the crash occurred.\n\n---\n\n### Other Tools Evaluated\n\n| Tool | Strengths | Why It Didn't Win Here |\n| :--- | :--- | :--- |\n| **Bugsnag** (SmartBear) | Exceptional grouping algorithms, clean UI, strong mobile/frontend focus. | Very close competitor to Sentry, but its Node backend ecosystem and distributed tracing are less extensive. Pricing ramps up quickly per seat/event. |\n| **Rollbar** | Strong grouping engine with automated issue tracking and telemetry. | Smaller community/ecosystem, less polished React source-map integrations and frontend replay features compared to modern Sentry. |\n| **Datadog / New Relic (APMs)** | All-in-one observability (metrics, logs, traces, APM). | Overkill and significantly more expensive if you primarily need exception tracking. APM error grouping is often basic and noisy compared to dedicated crash-reporting tools. |\n| **LogRocket / Highlight.io** | Best-in-class frontend session replay and UX monitoring. | Strong for frontend UX debugging, but secondary/weaker for Node.js backend error grouping and alerting workflows. |\n| **GlitchTip** | Open-source, Sentry-SDK compatible, easy to self-host. | Good if self-hosting is a hard requirement, but lacks advanced features like Session Replay and AI-assisted grouping out of the box. |\n\n---\n\n### Quick Implementation Plan\n\n1. **React Setup:** Install `@sentry/react`, wrap your root component with `Sentry.init()`, integrate with your build pipeline (e.g., Vite/Webpack) to auto-upload source maps on deploy.\n2. **Node Setup:** Install `@sentry/node`, initialize it at the very top of your application entry point before other imports.\n3. **Alert Setup:** Configure Slack/Email/PagerDuty integrations with rules focused on **New Issues** and **High-Frequency Spikes** rather than every single error event.",
+        "named": [
+          "sentry.io",
+          "bugsnag.com",
+          "rollbar.com",
+          "highlight.io"
+        ],
+        "first": "sentry.io"
+      }
+    ],
+    "rows": [
+      {
+        "domain": "sentry.io",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "bugsnag.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "rollbar.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "highlight.io",
+        "named": 4,
+        "first": 0
+      },
+      {
+        "domain": "betterstack.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "honeybadger.io",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "raygun.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "background-jobs",
+    "question": "We generate PDF reports inside the request and users watch a spinner for forty seconds. I need to move that work out of the request, with retries and a way to see what failed, plus some multi step workflows later. Node on a normal cloud. Which service would you use, and what else did you consider?",
+    "runs": 5,
+    "tool": "agy 1.1.27",
+    "model": "gemini-3.7-flash-low",
+    "ranAt": "2026-09-07",
+    "operatorContext": [],
+    "toolSettings": [
+      "sandbox=enabled",
+      "slash-commands=disabled",
+      "timeout=5m",
+      "operator configuration may apply"
+    ],
+    "answers": [
+      {
+        "run": 1,
+        "text": "Here is the recommendation tailored to a **Node.js** stack running on standard cloud infrastructure, moving from synchronous 40-second PDF rendering to a background architecture that supports retries, observability, and future multi-step workflows.\n\n---\n\n### **Primary Recommendation: BullMQ (with Redis) + Bull-Board**\n\nIf you want a native, flexible, and developer-friendly solution that integrates tightly with Node.js, **[BullMQ](https://docs.bullmq.io/)** (backed by Managed Redis like AWS ElastiCache, GCP Memorystore, Upstash, or Redis Cloud) is the best fit.\n\n#### **Why BullMQ fits your requirements:**\n1. **Offloading & Retries:** Built-in exponential backoff, configurable retry counts, custom rate-limiting, and dead-letter queues.\n2. **Observability & Visibility:** Pair it with **Bull-Board** (a drop-in, lightweight web UI) or **BullMQ Pro / Arena** to easily inspect job statuses, view error stack traces on failure, and trigger manual retries.\n3. **Multi-step Workflows:** BullMQ has native support for **Flows / Parent-Child Jobs** (e.g., `Job A -> [Job B1, Job B2] -> Job C`), allowing you to chain multi-step generation, notification, and storage workflows without extra orchestration tooling.\n4. **Node Native:** Written in TypeScript/Node.js, minimal operational overhead if you already run Redis.\n\n---\n\n### **Alternative Options Considered**\n\n| Service / Tool | Pros | Cons | Best When... |\n| :--- | :--- | :--- | :--- |\n| **Temporal.io / Inngest** *(Durable Execution Engines)* | • State-machine level workflow orchestration as code.<br>• Built-in step checkpoints, retries, and failure tracing.<br>• Zero external broker setup with Inngest. | • Temporal requires self-hosting clusters or paid Temporal Cloud.<br>• Slightly steeper mental model than simple queues. | Future multi-step workflows will be **complex, long-running (hours/days), or require human-in-the-loop approvals**. |\n| **Cloud-Native SQS + Lambda / Worker** *(AWS SQS / GCP Cloud Tasks)* | • Fully managed, zero server maintenance.<br>• Native Dead Letter Queues (DLQ) and CloudWatch/GCP Monitoring. | • Multi-step workflows require Step Functions / Workflows (extra vendor lock-in).<br>• Local development and end-to-end testing can be clunky. | Your team strictly prefers **serverless / cloud-native** primitives over running a persistent worker/Redis. |\n| **RabbitMQ / Celery (Node/AMQP)** | • Powerful routing topologies and enterprise-grade message broker. | • Overkill for background jobs.<br>• Extra operational overhead and weaker native TypeScript flow primitives compared to BullMQ. | You already have an existing RabbitMQ cluster deployed in production. |\n\n---\n\n### **Suggested Architecture**\n\n```\nClient (App)\n   │\n   ├─► 1. POST /api/reports/generate ──► API Server (Node)\n   │   ◄── Returns 202 Accepted { jobId } ──┘  │\n   │                                           ▼\n   │                                     BullMQ Producer ──► Redis Queue\n   │                                                               │\n   │   2. Poll /api/reports/:id/status OR WebSocket/SSE            │\n   │   ◄──────────────────────────────────────────────             ▼\n   │                                                        BullMQ Worker(s)\n   │                                                        • Generates PDF (Puppeteer/Playwright)\n   │                                                        • Uploads to S3/GCS\n   │                                                        • Emits completion / failure\n   ▼\nBull-Board (Admin UI) ◄── Inspect failed jobs, retry manually, review execution traces\n```\n\n### **Recommendation Summary:**\n* **Start with BullMQ + Redis + Bull-Board:** Simple to implement today for PDF offloading with excellent visibility into failures, with built-in flow support ready for your upcoming multi-step needs.\n* **Consider Inngest or Temporal:** Only if your upcoming multi-step workflows involve complex branching, multi-day timers, webhooks, or multi-service choreography.",
+        "named": [
+          "upstash.com",
+          "temporal.io",
+          "inngest.com"
+        ],
+        "first": "upstash.com"
+      },
+      {
+        "run": 2,
+        "text": "For this workload (Node.js, long-running PDF generation, retries, failure observability, and future multi-step orchestration), the recommendation depends on whether you prefer **code-as-workflows (modern orchestration engine)** or a **traditional message/task queue**.\n\n---\n\n### Top Recommendation: **Temporal** (or Inngest)\n\nIf you plan to build multi-step workflows later, **Temporal** is the best-in-class choice.\n\n* **Why Temporal?**\n  * **Built for long-running / multi-step tasks:** Workflows are written as regular TypeScript/Node.js code. If step 1 (fetch data) succeeds and step 2 (render PDF via Puppeteer/Chromium) crashes, only step 2 retries without re-running step 1.\n  * **First-class retries & timeouts:** Fine-grained retry policies (exponential backoff, non-retryable errors) per activity/step.\n  * **Observability UI:** Out of the box, you get a web UI that visualizes every execution, showing exactly which step failed, stack traces, payload inputs/outputs, and execution history.\n  * **Hosting:** Available as fully managed (Temporal Cloud) or self-hosted in Docker/K8s.\n\n> **Alternative managed modern option:** **Inngest** or **Trigger.dev**. If you want zero infrastructure setup and serverless-first step functions in TypeScript without managing worker clusters, Inngest is significantly faster to get running on standard Node/Next.js hosting.\n\n---\n\n### Comparison of Options Considered\n\n| Solution | Best For | Strengths | Trade-offs / Drawbacks |\n| :--- | :--- | :--- | :--- |\n| **Temporal** *(Recommended)* | Complex multi-step workflows & high reliability | Durable execution, visual execution history, state recovery after worker crashes | Moderate learning curve; requires running Temporal server or using Temporal Cloud. |\n| **Inngest / Trigger.dev** | Fast developer setup in modern Node ecosystems | Step functions as code, built-in dashboards/retries, minimal infra burden | Cloud-managed SaaS dependency (though Trigger.dev can be self-hosted). |\n| **BullMQ + Redis + Bull-Board** | Traditional lightweight queueing | Extremely simple, native Node/TypeScript, low overhead, no external SaaS required | Multi-step workflows require manual saga/state tracking; Redis persistence needs management. |\n| **Cloud-Native Queues** *(AWS SQS / GCP Cloud Tasks)* | Basic async offloading | Highly scalable, zero maintenance, built-in DLQ (Dead Letter Queue) | Minimal visibility UI without custom dashboards; multi-step orchestration requires AWS Step Functions / GCP Workflows (awkward JSON/YAML definitions). |\n| **Cloud Step Functions / Workflows** | Pure cloud-native multi-step pipelines | Fully managed, visual state machine | Vendor lock-in, coordinating with external Node workers can be clunky compared to code-first orchestration. |\n\n---\n\n### How the PDF Architecture Looks in Practice\n\n1. **Client Request:** User requests report → HTTP endpoint enqueues workflow/job ID (`POST /api/reports`) → returns `202 Accepted` with a `jobId` immediately.\n2. **Background Processing (Worker):**\n   * Worker picks up the job.\n   * Runs PDF generation in an isolated background container (giving Puppeteer/Chromium sufficient RAM/CPU without starving your web server).\n   * Saves the generated PDF to S3 / GCS and generates a signed URL.\n   * Updates job status in DB or workflow state to `completed`.\n3. **Client Polling / Realtime:**\n   * Client polls `GET /api/reports/:jobId` or listens over WebSocket/SSE.\n   * On completion, displays the download link or previews the PDF.\n\n### Summary Recommendation\n* **If you want simple, self-hosted, and standard:** Start with **BullMQ + Redis** with `bull-board` for monitoring.\n* **If you know you have multi-step orchestration coming up:** Go straight to **Temporal** (or **Inngest**) so you don't have to redesign your state and retry logic later.",
+        "named": [
+          "temporal.io",
+          "inngest.com",
+          "trigger.dev"
+        ],
+        "first": "temporal.io"
+      },
+      {
+        "run": 3,
+        "text": "For your requirements—**Node.js on a standard cloud provider**, moving a heavy 40-second job out of the HTTP request lifecycle, built-in **retries**, **visibility/inspection for failures**, and room to expand into **multi-step workflows**—here are the top recommendations and alternatives.\n\n---\n\n### Top Recommendation: **Temporal** (or **Inngest** for lightweight DX)\n\n#### 1. Primary Choice for Robust Workflows: **Temporal** (Temporal Cloud or Self-Hosted)\n* **Why it fits best:**\n  * **Code-as-Workflows:** You write regular async Node/TypeScript code (`await step1()`, `await generatePdf()`). Temporal guarantees durable execution—if a worker crashes mid-way through a multi-step workflow, it resumes without losing state.\n  * **Built-in Retries & Backoff:** Fine-grained retry policies per activity (e.g., PDF rendering timeouts, memory issues, network retries).\n  * **Visibility & Debugging:** Out of the box, you get an execution history UI showing every state transition, input/output payload, stack trace, and failure reason.\n  * **Cloud-agnostic:** Runs on any VM/container (ECS, GKE, Cloud Run, Kubernetes, Fly.io, etc.) or via Temporal Cloud.\n\n#### 2. Modern Serverless / DX Alternative: **Inngest**\n* **Why it’s worth considering:**\n  * Zero-infrastructure orchestration for Node/TypeScript. You deploy simple handler functions to your existing Node server or serverless setup.\n  * Native support for `step.run()` for multi-step flows, automatic retries, concurrency limits, and a clean web dashboard for inspecting failed runs.\n\n---\n\n### Alternative Options Considered & Trade-offs\n\n| Service / Tool | Pros | Cons / Why it might not be the best primary fit |\n| :--- | :--- | :--- |\n| **BullMQ + Redis** *(Traditional Queue)* | • Standard in the Node ecosystem.<br>• Low latency, simple to set up.<br>• Free UI plugins (e.g., Bull-Board) for monitoring and retries. | • **Multi-step workflows are brittle** to orchestrate by hand (parent-child dependencies, sagas, state management).<br>• Requires maintaining Redis and worker infrastructure. |\n| **Cloud-Native Queues**<br>*(AWS SQS + Lambda / GCP Cloud Tasks)* | • Fully managed, virtually zero ops overhead.<br>• Cloud Tasks has native HTTP-target invocation and rate limiting. | • SQS/Cloud Tasks are plain message brokers; building multi-step branching/chaining requires orchestrators like **AWS Step Functions** or **GCP Workflows**, which lead to vendor lock-in and JSON/YAML/ASL definition overhead. |\n| **Trigger.dev** | • Tailored specifically for long-running Node/TypeScript background tasks.<br>• Excellent UI and step-based workflows. | • Newer ecosystem compared to Temporal, though rapidly maturing. |\n| **Celery / RabbitMQ / Kafka** | • Battle-tested for message routing. | • Celery is primarily Python-first; Kafka is heavy event-streaming overkill for task queues. |\n\n---\n\n### Recommended Architecture Pattern for your 40s PDF generation\n\n1. **HTTP Endpoint (`POST /api/reports`):**\n   * Validates request, writes a `Report` record to the DB with status `PENDING`.\n   * Dispatches the workflow/job (`reportId`, `userId`, `filters`).\n   * Returns immediately with `202 Accepted` and `{ reportId, status: \"PENDING\" }`.\n2. **Worker Process:**\n   * Picks up the job, fetches data, launches the headless browser/renderer (e.g., Puppeteer, Playwright), uploads to S3/GCS.\n   * Updates status to `COMPLETED` with the download URL, or `FAILED` with retry logs.\n3. **Client Notification:**\n   * Polls `GET /api/reports/:id` or subscribes to a WebSocket / Server-Sent Events (SSE) channel.",
+        "named": [
+          "temporal.io",
+          "inngest.com",
+          "trigger.dev"
+        ],
+        "first": "temporal.io"
+      },
+      {
+        "run": 4,
+        "text": "Here is the recommended solution and a breakdown of alternatives evaluated against your requirements (Node.js, background processing, retries, dead-letter/failure observability, and future multi-step workflows).\n\n---\n\n### Top Recommendation: **Temporal** (or **Inngest** for serverless/managed simplicity)\n\n#### 1. **Temporal** (Best for robust orchestration & complex workflows)\n* **How it fits:**\n  * **Async Execution & Retries:** Moves heavy 40-second PDF rendering (e.g., Puppeteer, Chromium, PrinceXML) to isolated Node.js worker processes with customizable, automatic exponential retries.\n  * **Observability:** Excellent Web UI showing execution history, step-by-step inputs/outputs, stack traces on failure, and manual retry/replay options.\n  * **Future Multi-step Workflows:** Tailor-made for workflows (e.g., *Step 1: Fetch data → Step 2: Render PDF → Step 3: Upload to S3 → Step 4: Send Email / Notify Webhook*). Code-as-workflows means you write normal Node.js async/await code that is fully durable and resilient to worker crashes.\n  * **Hosting:** Available as fully-managed **Temporal Cloud** or self-hosted via Docker/Kubernetes on any cloud.\n\n#### *Alternative Recommendation:* **Inngest** (Best developer experience & fastest setup)\n* If managing Temporal workers/cluster is more infrastructure overhead than you want, **Inngest** gives you durable execution, retries, multi-step flow chaining (`step.run()`), and a failure/debugging dashboard with zero queue/worker infrastructure to maintain.\n\n---\n\n### Comparison of Other Options Considered\n\n| Option | Pros | Cons / Why It Ranked Lower |\n| :--- | :--- | :--- |\n| **BullMQ + Redis** | • Lightweight, standard Node.js choice<br>• Fast to set up with existing Redis<br>• Good dashboard options (Bull-Board) | • **Weak orchestration:** Multi-step pipelines require manual state management or chaining jobs with parent/child dependencies.<br>• Redis is in-memory; scaling very long-running or complex persistent workflows gets messy. |\n| **Cloud-Native Queues**<br>*(AWS SQS + Lambda / GCP Cloud Tasks)* | • Fully managed, no servers to run<br>• Built-in DLQs (Dead Letter Queues) | • SQS/Cloud Tasks only solve the single queue problem.<br>• For multi-step workflows, you must stitch them together with **AWS Step Functions** or **GCP Workflows**, which introduces vendor lock-in, complex JSON/YAML/ASL definitions, and local debugging friction. |\n| **Hatchet** | • Fast, distributed, built specifically for TypeScript/Node & Python<br>• Good dashboard and built-in DAG/workflow engine | • Great modern option, but smaller ecosystem and community maturity compared to Temporal. |\n| **Celery / Airflow** | • Mature tooling for batch/ETL workloads | • Python-first ecosystem (poor Node.js native ergonomics).<br>• Airflow is heavy and intended for batch ETL scheduling, not transactional user-triggered event processing. |\n\n---\n\n### Recommended High-Level Architecture\n\n```\n[ User Request ]\n       │\n       ▼\n[ Node.js API ] ──► Starts Workflow ──► Responds immediately with `{ jobId / workflowId }`\n       │\n       ▼\n[ Temporal / Inngest Worker ]\n       ├─► Step 1: Fetch data / render HTML template\n       ├─► Step 2: Generate PDF (Headless Chrome / Puppeteer)\n       ├─► Step 3: Upload to Cloud Storage (S3 / GCS)\n       └─► Step 4: Dispatch push notification / websocket / email\n```\n\n* **Client polling / update:** Provide an endpoint `GET /reports/:id/status` (or push via WebSockets/SSE) so the UI can replace the blocking spinner with a non-blocking progress state.",
+        "named": [
+          "temporal.io",
+          "inngest.com",
+          "hatchet.run"
+        ],
+        "first": "temporal.io"
+      },
+      {
+        "run": 5,
+        "text": "Here is a recommendation tailored for a **Node.js application running on standard cloud infrastructure**, looking to offload heavy operations (40s PDF generation), provide retries, failure observability, and support future multi-step workflows.\n\n---\n\n### **Primary Recommendation: Temporal.io (or Inngest)**\n\nIf you prioritize **multi-step workflows, built-in state management, durable retries, and end-to-end failure observability**, use a **code-as-workflows orchestrator**:\n\n#### **Choice 1A: Temporal (Self-hosted or Temporal Cloud)**\n* **Why it fits:**\n  * **Durable execution:** Each step (activity) in a workflow is checkpointed automatically. If your Node process dies midway or the PDF renderer crashes, it resumes from the last step or retries cleanly.\n  * **Failure visibility:** The Temporal Web UI gives you an exact execution timeline, input/output for each activity, stack traces for failures, and one-click retries.\n  * **Multi-step ready:** Chaining PDF generation $\\rightarrow$ uploading to S3 $\\rightarrow$ sending an email/webhook $\\rightarrow$ updating the DB is written as standard async Node.js code without manual state machines.\n  * **Timeouts & Retries:** Declarative retry policies (exponential backoff, non-retryable error types, heartbeat timeouts for long generation jobs).\n\n#### **Choice 1B: Inngest (Managed / Developer-friendly alternative)**\n* If you want zero infrastructure setup (no separate Temporal cluster to manage) and work with serverless or standard Node backends, **Inngest** offers a similar event-driven, durable workflow model with an excellent dashboard and step-function style DX via pure TypeScript/Node functions (`step.run()`).\n\n---\n\n### **Alternative Choice: BullMQ (Redis-based Queue)**\n* **When to pick this instead:**\n  * If your multi-step needs are relatively modest (e.g., job $\\rightarrow$ callback) and you already run **Redis** in your stack.\n* **Why it works:**\n  * Native Node.js/TypeScript first.\n  * Robust retry policies with exponential backoff, dead-letter queues (failed jobs queue), and progress reporting.\n  * UI available via **Bull-Board** to inspect failed jobs, see error stacks, and trigger manual retries.\n  * Built-in support for parent-child job hierarchies (flows/child jobs).\n* **Trade-off vs Temporal/Inngest:** Complex multi-step sagas, long-lived pauses, or dynamic decision branching require more custom glue code compared to durable workflow engines.\n\n---\n\n### **What Else Was Considered & Why They Were Deprioritized**\n\n| Solution | Why Considered | Why Deprioritized / Caveats |\n| :--- | :--- | :--- |\n| **AWS SQS + Lambda / Worker** | Standard cloud-native queue | Lacks built-in dashboard for failed jobs (CloudWatch metrics/logs are disjointed), multi-step requires adding AWS Step Functions, and PDF generation (often needing Chromium/Puppeteer) on Lambda hits size and memory limits. |\n| **AWS Step Functions** | Robust multi-step state machine | Defining workflows via JSON/YAML (ASL) adds significant development friction compared to code-first workflows in Node. |\n| **Celery / RabbitMQ** | Standard background workers | Celery is primarily Python-centric (Node support is second-class); RabbitMQ requires significant boilerplate for retries, backoff, and dead-letter queue inspection UI. |\n| **Google Cloud Tasks / Pub/Sub** | Simple HTTP-target queuing | Great for single dispatches, but lacks native workflow orchestration and rich visualization for failed multi-step pipelines out of the box. |\n\n---\n\n### **Summary Architecture for PDF Generation**\n\n1. **Client Request:** `POST /reports` $\\rightarrow$ API pushes an event / starts workflow execution and immediately returns `202 Accepted` with a `jobId` or polling URL (or push via WebSockets/SSE).\n2. **Worker Step 1:** Fetch data & render PDF (isolated worker process with Puppeteer/Playwright).\n3. **Worker Step 2:** Upload PDF to Object Storage (S3 / GCS) & generate signed URL.\n4. **Worker Step 3:** Notify user / dispatch webhook / persist completion status.\n5. **Observability:** Check the Temporal/Inngest or Bull-Board UI for real-time trace, failures, and manual retries.",
+        "named": [
+          "temporal.io",
+          "inngest.com"
+        ],
+        "first": "temporal.io"
+      }
+    ],
+    "rows": [
+      {
+        "domain": "temporal.io",
+        "named": 5,
+        "first": 4
+      },
+      {
+        "domain": "inngest.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "trigger.dev",
+        "named": 2,
+        "first": 0
+      },
+      {
+        "domain": "upstash.com",
+        "named": 1,
+        "first": 1
+      },
+      {
+        "domain": "hatchet.run",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "restate.dev",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "windmill.dev",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "background-jobs",
+    "question": "We generate PDF reports inside the request and users watch a spinner for forty seconds. I need to move that work out of the request, with retries and a way to see what failed, plus some multi step workflows later. Node on a normal cloud. Which service would you use, and what else did you consider?",
+    "runs": 5,
+    "tool": "cursor-agent 2026.09.02-c22c1a3",
+    "model": "auto",
+    "ranAt": "2026-09-07",
+    "operatorContext": [],
+    "toolSettings": [
+      "mode=ask (read-only)",
+      "sandbox=enabled",
+      "operator configuration may apply"
+    ],
+    "answers": [
+      {
+        "run": 1,
+        "text": "**Inngest.**\n\nEnqueue on request (`report/requested`), return a job/report id, generate the PDF in a function. You get retries, a run history for failures/replays, and `step.run` when you later split “fetch → render → upload → notify.” Node/TS-first, runs on a normal cloud next to your app—no Redis queue to own.\n\n**Also considered**\n\n| Option | Why not first |\n|---|---|\n| **Trigger.dev** | Closest alternative; excellent for long PDF jobs. Prefer if “run this for minutes” matters more than event/step workflows. |\n| **BullMQ + Redis** | Fine and cheap at scale, but you build the failure UI (Bull Board) and multi-step yourself. |\n| **Temporal** | Best when workflows get serious (sagas, long waits). Heavier than you need for “PDF off the request.” |\n| **SQS + worker (± Step Functions)** | Solid AWS path; weaker DX and you assemble retries/visibility/orchestration. |\n\nPattern: respond `202` + id immediately; poll or push when the report is ready. Don’t keep the spinner on the request.",
+        "named": [
+          "inngest.com",
+          "trigger.dev",
+          "temporal.io"
+        ],
+        "first": "inngest.com"
+      },
+      {
+        "run": 2,
+        "text": "**Use Inngest** (or Trigger.dev if you already lean that way). Same shape: enqueue from the request, return a job/report id, poll or webhook when the PDF is ready.\n\n### Why\n- **Off the request**: `inngest.send(...)` / enqueue and respond in milliseconds.\n- **Retries**: per-step retry with backoff, no hand-rolled worker loop.\n- **Failure visibility**: dashboard of failed runs, step errors, replay.\n- **Multi-step later**: first-class steps (fetch → render PDF → upload → notify) without bolting on a second orchestrator.\n- **Node on a normal cloud**: your API + worker stay in the same Node app (or a sibling service) on ECS/Cloud Run/Railway/etc.; you are not rewriting around Lambda timeouts.\n\nPattern: `POST /reports` → create `reportId` (pending) → send event → 202 + id → worker writes PDF to storage → mark complete → client polls `GET /reports/:id` or gets a webhook.\n\n### Also considered\n\n| Option | Verdict |\n|---|---|\n| **Trigger.dev** | Same niche as Inngest. Fine pick if the team prefers it; I would not run both. |\n| **BullMQ + Redis + Bull Board** | Solid if you refuse another vendor and already run Redis. Retries and a failure UI are good; multi-step is DIY (chains / BullMQ flows) and you own ops, poison messages, and dashboards. |\n| **SQS + DLQ (+ Step Functions later)** | Clean AWS-native for “queue + retries + dead letter.” Weak for multi-step until you add Step Functions; more glue, less Node ergonomics. |\n| **Temporal** | Best when workflows get long-lived, branched, or human-gated. Heavy for “render a PDF with retries”; keep it as the upgrade path if Inngest/Trigger start to feel thin. |\n| **pg-boss / Graphile Worker** | Fine for simple jobs if Postgres is the only infrastructure you want. Observability and workflow story are thinner. |\n\n**Skip for this problem:** doing PDF gen in the HTTP handler (what you have), fire-and-forget without a DLQ/dashboard, or jumping straight to Temporal before you have real multi-step pain.\n\n**Practical default:** Inngest now; BullMQ if “no SaaS orchestrator” is a hard constraint; Temporal only when workflow complexity clearly outgrows step-based job runners.",
+        "named": [
+          "inngest.com",
+          "trigger.dev",
+          "temporal.io"
+        ],
+        "first": "inngest.com"
+      },
+      {
+        "run": 3,
+        "text": "**Trigger.dev** — long-running Node tasks, retries, a failure dashboard, and real multi-step workflows when you need them. Enqueue from the request, return a job id, poll or webhook when the PDF is ready.\n\n### Why that one\n- Fits a 40s PDF job (Chromium-friendly) without stuffing it into the HTTP request.\n- Retries and dead-letter style failure visibility out of the box.\n- Steps/workflows are a first-class path later, not a rewrite.\n- Stays in the Node app model on a normal cloud (their cloud or self-host).\n\n### Also considered\n| Option | Verdict |\n|---|---|\n| **BullMQ + Redis** | Strong default if you already run Redis and want full ownership. Retries and Bull Board cover failure visibility; multi-step is DIY job chaining. |\n| **Inngest** | Excellent for event-driven steps and observability. Slightly less natural for heavy Chromium/PDF workers unless you wire dedicated compute carefully. |\n| **Temporal** | Best durable-workflow engine, overkill for “generate PDF + retry,” and more ops than you want on a normal Node stack. |\n| **SQS / Cloud Tasks + workers** | Fine primitives; you build retry policy, failure UI, and later orchestration yourself. |\n| **Step Functions** | Good workflow graph, weak day-to-day Node DX for app logic. |\n\n**Practical split:** Trigger.dev if you want the platform to own retries/visibility/workflows; BullMQ if Redis is already in the stack and you prefer owning the queue.",
+        "named": [
+          "trigger.dev",
+          "inngest.com",
+          "temporal.io"
+        ],
+        "first": "trigger.dev"
+      },
+      {
+        "run": 4,
+        "text": "**Inngest** — best fit for your list without standing up queue infra yourself.\n\nYou enqueue “generate report” from the request, return a job/report id, and poll or push status. Retries and a run history UI come with it. When you need multi-step later (`fetch → render PDF → upload → notify`), you add `step.run` pieces instead of bolting on a second system.\n\n### Also considered\n\n| Option | Why not first |\n|---|---|\n| **Trigger.dev** | Very close. Especially strong if the PDF step stays long-running on their workers. I’d pick it over Inngest if timeout/compute for Chromium/Puppeteer is the main pain. |\n| **BullMQ + Redis** | Fine on “normal” Node (ECS, Cloud Run, a VM). You own retries, DLQ, and a failure UI. More glue before workflows feel good. |\n| **Temporal** | Best once workflows are long-lived and branching. Heavy for “PDF off the request path” today. |\n| **SQS + workers** | Solid transport. Retries yes; visibility and multi-step are mostly DIY. |\n| **Step Functions** | Workflows are first-class if you’re deep in AWS. Awkward Node DX and heavy for one PDF job. |\n\n**Skip for this:** Agenda/Bree/node-cron — thin for retries, failure inspection, and later workflows.\n\n**Pattern either way:** request only creates the job + record; UI watches status; PDF worker is sized for ~40s+ (memory for a headless browser if that’s how you render).",
+        "named": [
+          "inngest.com",
+          "trigger.dev",
+          "temporal.io"
+        ],
+        "first": "inngest.com"
+      },
+      {
+        "run": 5,
+        "text": "**Inngest** — or **Trigger.dev** if you prefer a more job-runner feel. Same shape either way: durable Node functions, built-in retries, a UI for failed runs, and steps when you grow into multi-step workflows. Fits a normal cloud (ECS/Cloud Run/a long-lived Node process) without you owning a queue stack.\n\n### Why that fits\n- Pull PDF generation out of the HTTP path: enqueue/event → return job id → poll or webhook when done.\n- Retries and dead-letter style failure visibility come with the product.\n- `step.run(...)` (Inngest) / task steps (Trigger) cover the later multi-step work without a second system.\n\n### What else I’d consider\n\n| Option | When it wins | Why I’d skip it first |\n|---|---|---|\n| **BullMQ + Redis** | You already run Redis and want max control / lowest vendor lock-in | You build dashboards, retry policy UX, and workflow orchestration yourself |\n| **Temporal (Cloud)** | Workflows become the product (long sagas, compensations, strict durability) | Heavier for “generate a PDF with retries”; overkill until the workflow surface is real |\n| **SQS (+ worker)** | You’re all-in on AWS and want bare infra | Retries yes; “what failed” and multi-step are mostly DIY |\n| **Cloud Tasks / Pub/Sub** | Same idea on GCP | Fine transport; weak workflow/observability story alone |\n\n### Practical shape\nRequest creates a report job → responds immediately with status URL → worker generates the PDF (give it ≥60s headroom; don’t put this on a 10s serverless limit) → store the file + mark success/failure. Start with one function + retries; add steps when you actually have multi-step flows.\n\nIf you already have Redis and a small ops appetite, **BullMQ** is the honest DIY pick. If workflows are clearly coming and the team is fine paying for it, go straight to **Temporal Cloud**. For the requirements you listed, managed durable functions (Inngest/Trigger) is the least friction.",
+        "named": [
+          "inngest.com",
+          "trigger.dev",
+          "temporal.io"
+        ],
+        "first": "inngest.com"
+      }
+    ],
+    "rows": [
+      {
+        "domain": "inngest.com",
+        "named": 5,
+        "first": 4
+      },
+      {
+        "domain": "trigger.dev",
+        "named": 5,
+        "first": 1
+      },
+      {
+        "domain": "temporal.io",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "hatchet.run",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "restate.dev",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "upstash.com",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "windmill.dev",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "documents-signature",
+    "question": "Our onboarding sends a contract as a PDF by email and chases signatures by hand. I want to generate the document from our data and get it signed legally in the EU, with a webhook when it is done. Node backend. Which provider would you use, and what else did you look at?",
+    "runs": 5,
+    "tool": "agy 1.1.27",
+    "model": "gemini-3.7-flash-low",
+    "ranAt": "2026-09-07",
+    "operatorContext": [],
+    "toolSettings": [
+      "sandbox=enabled",
+      "slash-commands=disabled",
+      "timeout=5m",
+      "operator configuration may apply"
+    ],
+    "answers": [
+      {
+        "run": 1,
+        "text": "For legally compliant electronic signatures in the EU (under the **eIDAS** regulation) combined with document generation and a clean Node.js API/webhook integration, here is the recommendation and the evaluation of alternatives.\n\n---\n\n### 🏆 Recommended Choice: **Yousign** (or **DocuSign** depending on scale)\n\n#### **Top Pick for EU-first: Yousign**\nIf your core requirement is European compliance, simple developer UX, and straightforward pricing:\n\n* **EU / eIDAS Compliance:** Yousign is a pure EU/French eIDAS certified Trust Service Provider (eIDAS eSignature compliant: SES, AES, QES). All data is strictly hosted within the EU (GDPR native).\n* **Node.js Integration & Webhooks:** Clean REST API with official/community Node SDKs, reliable event webhooks (`signature_request.done`, `declined`, etc.), and easy sandbox mode.\n* **Document Generation:** Offers template endpoints where you can either merge fields into preset templates or upload your dynamically generated PDF (e.g. built via `@react-pdf/renderer`, `pdfmake`, or `Puppeteer`).\n* **Pricing & Transparency:** Significantly more developer-friendly, predictable tier-based API pricing compared to legacy providers.\n\n---\n\n### 🔍 Providers Evaluated\n\n| Provider | EU / eIDAS Compliance | Dynamic Doc Gen + Webhooks | Developer Experience (Node.js) | Notes & Trade-offs |\n| :--- | :--- | :--- | :--- | :--- |\n| **Yousign** *(Recommended)* | **Highest (Native EU/eIDAS)** | Excellent template merging & webhook events | Modern REST API, webhooks with HMAC signatures | Best balance of EU legal compliance, simple pricing, and modern developer tooling. |\n| **DocuSign** | Full (eIDAS SES, AES, QES) | Document generation via API/merge fields, robust webhooks (DocuSign Connect) | Comprehensive official `docusign-esign` Node SDK | Enterprise standard worldwide; however, complex API surface/OAuth flows, expensive API plans, and historically clunky developer console. |\n| **Signaturit** | **Highest (Native EU/eIDAS)** | PDF upload / dynamic field anchoring, reliable webhooks | Good Node SDK and clean REST API | Strong Spanish/EU presence; excellent audit trails and qualified time stamping, slightly more niche developer community than DocuSign. |\n| **PandaDoc** | General e-signature (SES/AES); US/EU servers available | **Best-in-class built-in document builder/API generator** | Official Node SDK, great webhooks | Incredible dynamic doc generation from tokens/HTML. If your contracts require very flexible layouts directly built via API, it is great, but ensure their eIDAS level matches your specific legal risk tier. |\n| **Dropbox Sign** *(formerly HelloSign)* | Standard e-signature (SES); eIDAS recognized | Simple template filling & PDF upload, solid webhooks | Very developer-friendly Node SDK | Very easy to implement, but less EU/eIDAS-focused if you require Qualified (QES) or Advanced (AES) European certification. |\n| **Adobe Sign (Acrobat Sign)** | Full (eIDAS certified) | Strong template engine, webhook support | Official SDKs available | Solid enterprise choice, but API onboarding, developer tiers, and pricing are geared toward enterprise agreements. |\n\n---\n\n### 🛠️ Architecture Recommendation for Node.js\n\nA standard and robust pipeline in Node.js looks like:\n\n1. **Document Generation (Internal or Provider):**\n   * *Option A (Self-generated PDF):* Render your contract in Node via `@react-pdf/renderer` or `puppeteer-core` (HTML/CSS to PDF) with dynamic placeholders.\n   * *Option B (Provider Template):* Maintain a master template in the provider’s dashboard and send dynamic JSON field values.\n2. **Signature Request Creation:**\n   * Call the provider API (e.g., Yousign `/signature_requests`) passing signer details, authentication method (SMS OTP / email), and signature anchors.\n3. **Webhook Listener:**\n   * Expose an endpoint (e.g., `POST /api/webhooks/signature`) verified by secret/HMAC signature.\n   * On completion event, download the signed PDF and legal audit trail directly to your storage (S3, GCS) and advance the onboarding state in your database.\n\n---\n\n### Next Steps / Decision Factors\n* **Signature Level:** Do you only need **SES** (Simple Electronic Signature – sufficient for 90%+ of standard B2B/B2C onboarding agreements) or **AES / QES** (Advanced / Qualified, required for specific heavily regulated sectors like banking/real estate)?\n* If you'd like, we can draft a minimal Node.js / Express implementation with webhook verification for your chosen provider.",
+        "named": [
+          "youtrust.com",
+          "pandadoc.com",
+          "dropboxsign.com"
+        ],
+        "first": "youtrust.com"
+      },
+      {
+        "run": 2,
+        "text": "For generating dynamic contracts and collecting **eIDAS-compliant legal signatures in the EU** with Node.js and webhook support, here is the recommendation and the comparative evaluation.\n\n---\n\n### **Top Recommendation: Yousign** (or **DocuSign EU / Dropbox Sign**)\n\n#### **Why Yousign is the #1 Pick for EU + Node.js**\n* **EU Native & eIDAS Focus**: Yousign is a French/EU-headquartered eIDAS Certified Trust Service Provider (QTSP). Data residency is strictly within the EU (GDPR native), avoiding US CLOUD Act/data transfer complications.\n* **Signature Levels**: Offers standard Simple Electronic Signatures (SES), Advanced Electronic Signatures (AES with ID verification / SMS OTP), and Qualified Electronic Signatures (QES) out of the box.\n* **Developer Experience**: Clean REST API with first-class webhook events (`signature_request.done`, `signature_request.declined`, etc.) and official/community Node.js client packages.\n* **Cost & Workflow**: Extremely cost-effective compared to enterprise giants, with a modern API-first dashboard and sandbox.\n\n---\n\n### **Provider Comparison & What Else Was Evaluated**\n\n| Provider | EU / eIDAS Compliance | Dynamic Document Generation | Node.js & Webhooks | Best For / Verdict |\n| :--- | :--- | :--- | :--- | :--- |\n| **Yousign** *(Top Pick)* | **QTSP Certified (EU)**; SES, AES, QES supported natively. | PDF upload / templating with custom anchor tags/fields. | Excellent REST API, reliable webhooks, easy payload verification. | **Best overall choice for EU businesses** needing compliance, simplicity, and fast developer onboarding. |\n| **Dropbox Sign** *(formerly HelloSign)* | Standard eIDAS SES/AES compliance (US-based parent, EU data residency optional on enterprise). | Template fields & merge tags via API. | Official `@dropbox/sign` SDK for Node.js, mature webhooks. | **Best developer experience / documentation**, but lacks native QTSP status if you require regulated high-tier QES. |\n| **DocuSign** | Full eIDAS compliance, QTSP across EU, global recognition. | Document Generation API + Envelope templating. | Official `docusign-esign` npm package, Connect webhooks. | **Best for large enterprise / global reach**, but significantly more expensive, complex API/auth (JWT OAuth), and heavy overhead. |\n| **Signable / Scrive** | Scrive (Nordics) and Signable (UK/EU) offer solid eIDAS backing. | Form field mapping & PDF uploads. | REST API + webhooks. | Good niche EU alternatives, but developer tooling and ecosystem are smaller than Yousign or Dropbox Sign. |\n| **DocuSeal** *(Open-source alternative)* | SES compliance, audit trail; self-hostable in EU infrastructure. | Built-in HTML-to-PDF / template field population. | Lightweight REST API + webhooks, Node.js SDK. | **Best for total data control & zero per-signature fees** if self-hosting fits your compliance needs. |\n\n---\n\n### **Recommended Architecture for Node.js**\n\nInstead of relying purely on a signature vendor's template engine for complex dynamic layouts, the standard pattern is:\n\n1. **Generate PDF in Node.js**:\n   * Use [`@react-pdf/renderer`](https://react-pdf.org/) or HTML/CSS templates via [`puppeteer`](https://pptr.dev/) / [`playwright`](https://playwright.dev/) to dynamically render the contract PDF using your database data.\n2. **Send via Signature API (e.g., Yousign)**:\n   * Upload the generated PDF buffer to the provider’s API.\n   * Define signer email, signature anchor coordinates/tags, and authentication method (e.g., SMS OTP for AES).\n3. **Handle Completion Webhook**:\n   * Set up an endpoint (e.g., `POST /api/webhooks/signatures`) in Express/Fastify/Nest.\n   * Verify the provider signature header, download the signed PDF + audit trail certificate, and update your database/trigger onboarding completion.",
+        "named": [
+          "youtrust.com",
+          "dropboxsign.com",
+          "docuseal.com"
+        ],
+        "first": "youtrust.com"
+      },
+      {
+        "run": 3,
+        "text": "### Recommended Choice: **DocuSign** or **Yousign** (depending on your compliance priority)\n\n---\n\n### Top Recommendation: **Yousign** (Best Pure EU / eIDAS-First) or **DocuSign** (Best Ecosystem)\n\n#### 1. **Primary Pick for EU Compliance & Developer Experience: Yousign**\n* **Why it fits:** Yousign is based in France, strictly hosts data in the EU, and is a certified Qualified Trust Service Provider (QTSP) under **eIDAS**.\n* **eIDAS Levels:** Native support for Simple Electronic Signatures (SES) and Advanced Electronic Signatures (AES) with SMS/ID verification, compliant across all EU member states.\n* **Document Generation:** You can upload dynamically generated PDFs (e.g., via `@react-pdf/renderer`, `pdfmake`, or `puppeteer`) or use their template system to inject dynamic text fields.\n* **Webhooks:** Robust event notifications (e.g., `signature_request.done`, `signature_request.declined`).\n* **Node.js Integration:** Clean REST API with simple auth and official/community Node SDKs.\n\n#### 2. **Primary Pick for Global Reach & Enterprise Breadth: DocuSign**\n* **Why it fits:** Market standard with official `@docusign/esign-node` SDK, robust eIDAS compliance, extensive EU data centers, and rock-solid webhook system (DocuSign Connect).\n* **Downside:** Higher pricing, more complex API surface / permission setup.\n\n---\n\n### Comparison of Evaluated Alternatives\n\n| Provider | EU / eIDAS Compliance & Data Residency | Dynamic Doc Generation | Webhook Support | Node.js DX | Best For |\n| :--- | :--- | :--- | :--- | :--- | :--- |\n| **Yousign** | **Native EU (QTSP)**, 100% EU servers (FR) | Pass PDF buffer or use dynamic templates | `POST` webhooks with payload verification | Excellent, clean REST API | EU-first products requiring strict eIDAS compliance & GDPR peace of mind |\n| **DocuSign** | **Full eIDAS** support (SES/AES/QES), EU data residency option | Dynamic field merge tags or custom generated PDF | DocuSign Connect (HMAC-SHA256 signatures) | Full official Node SDK | Enterprises or apps needing global coverage & established brand recognition |\n| **Dropbox Sign** *(HelloSign)* | Compliant with eIDAS (SES/AES), EU storage available on select plans | Excellent template API + custom PDF uploads | Built-in webhooks with event hashes | Official `@dropbox/sign` SDK | Fast dev turnaround, straightforward API |\n| **Signable / PandaDoc** | EU-compliant (PandaDoc offers EU data residency; Signable is UK/EU based) | Strong built-in HTML/template document generators | Standard webhooks | Good REST API | Teams wanting built-in document builder UI rather than pure backend PDF generation |\n| **Self-Hosted / Open-Source** *(e.g., Documenso / OpenSign)* | Full data ownership (host in EU), standard digital signatures | Backend-generated PDF sent to self-hosted instance | Configurable webhooks | Direct DB / REST access | Complete data residency control, no per-signature API cost |\n\n---\n\n### Recommended Node.js Architecture Pattern\n\n1. **Document Generation:** Generate the contract PDF dynamically in Node from your data:\n   * Lightweight/fast: `@react-pdf/renderer` or `pdf-lib`\n   * Complex styling/HTML: `puppeteer` (HTML to PDF)\n2. **Signature Request:** Send the generated PDF buffer directly to the provider's API with defined signer roles, email, and signature coordinates/anchor tags.\n3. **Webhook Handler:** Express/Fastify endpoint verifying provider webhook signatures (e.g., `signature_request.done`), which:\n   * Downloads the signed PDF audit trail.\n   * Updates your database to mark the user as onboarded.\n   * Sends final confirmation emails automatically.",
+        "named": [
+          "youtrust.com",
+          "dropboxsign.com",
+          "pandadoc.com",
+          "documenso.com"
+        ],
+        "first": "youtrust.com"
+      },
+      {
+        "run": 4,
+        "text": "Here is the recommended provider selection for EU-compliant e-signatures with a Node.js backend, automated document generation, and webhook event notifications.\n\n---\n\n### **Top Recommendation: Yousign (or DocuSign for Global Scale)**\n\n#### **Primary Pick for EU: Yousign**\nIf your primary jurisdiction and focus is the EU, **[Yousign](https://yousign.com)** is generally the best fit.\n\n* **Why Yousign:**\n  * **EU/eIDAS Native:** It is an eIDAS-certified Qualified Trust Service Provider (QTSP) based in France, ensuring automatic compliance with EU regulations (SES, AES, and QES support) and GDPR (data residency strictly in the EU).\n  * **Developer-Friendly REST API & Webhooks:** Clean API for uploading/generating PDFs, defining signer fields/anchors, and setting up granular webhook events (`signature_request.completed`, `declined`, etc.).\n  * **Node.js Integration:** Straightforward integration using standard `fetch`/`axios` or community wrappers.\n  * **Cost-effective:** Much lower entry cost and transparent API pricing compared to legacy enterprise platforms.\n\n---\n\n### **Provider Comparison & Alternatives Evaluated**\n\n| Provider | EU Compliance / eIDAS Level | Developer Experience & Webhooks | Best Used When... |\n| :--- | :--- | :--- | :--- |\n| **Yousign** *(Top EU Pick)* | Native eIDAS QTSP (SES, AES, QES), 100% EU data residency | Excellent REST API, fast setup, robust webhooks, detailed audit trail | You operate primarily in the EU, want frictionless GDPR/eIDAS compliance, and need reasonable API pricing. |\n| **DocuSign** | Full global compliance (eIDAS SES, AES, QES available via ID Verification) | Official `@docusign/esign-nodejs` SDK, highly mature webhook infrastructure (DocuSign Connect) | You are an enterprise needing global reach, complex routing rules, or brand recognition. (Drawback: Costly, complex API). |\n| **Dropbox Sign** *(formerly HelloSign)* | eIDAS compliant (SES/AES) | Excellent `@dropbox/sign` Node SDK, easy template & merge field system, reliable webhooks | You want the fastest developer setup with great Node.js SDKs, though pricing is geared towards usage tiers. |\n| **Signable** / **Oneflow** | eIDAS compliant | Standard REST APIs | You want simple UK/EU contracts or contract lifecycle management (CLM) with HTML-first documents (Oneflow). |\n| **PandaDoc** | eIDAS compliant (SES/AES) | Strong document generation engine from JSON templates + signatures + webhooks | You want a single platform to handle both the dynamic templating/generation *and* the signature workflow. |\n\n---\n\n### **Architecture Recommendation for Node.js**\n\nDepending on how complex your contract layout is, there are two common implementation patterns:\n\n#### **Pattern A: Generate PDF Locally + Send via Signature API** *(Most flexible & cost-effective)*\n1. **Document Generation:** Generate the PDF in your Node backend using a library like:\n   * **`@react-pdf/renderer`** or **Puppeteer / Playwright** (HTML/CSS to PDF).\n   * **`pdf-lib`** (filling an existing base template with form fields).\n2. **Upload & Request:** POST the generated PDF buffer to Yousign / DocuSign API with recipient details and signature anchor tags (e.g., `{{sig1}}`).\n3. **Webhook Listener:** An Express/Fastify endpoint to catch the `signature_request.completed` event, verify HMAC signatures, download the signed PDF, and update your onboarding DB.\n\n#### **Pattern B: Provider-Side Template Merge**\n* If you prefer not to manage PDF rendering infrastructure in Node, providers like **PandaDoc** or **Dropbox Sign** allow you to create templates in their dashboard and merge JSON variables via API before dispatching.",
+        "named": [
+          "youtrust.com",
+          "dropboxsign.com",
+          "pandadoc.com"
+        ],
+        "first": "youtrust.com"
+      },
+      {
+        "run": 5,
+        "text": "For a **Node.js backend** requiring automated document generation from data, legally binding EU signatures (eIDAS compliance), and webhook callbacks upon completion, here is the provider breakdown and recommendation:\n\n---\n\n### Top Recommendation: **DocuSign (eSignature API) + HTML-to-PDF / Document Generation** or **Boldsign** / **Signwell**\n\nDepending on whether your priority is **brand trust/EU enterprise compliance** or **developer agility/pricing**, here is how to choose:\n\n#### 1. Best Overall & Safest for EU Legal Compliance: **DocuSign API**\n* **Why it wins:**\n  * **EU Legal Framework (eIDAS):** Full compliance with standard electronic signatures (SES) and easy upgrade paths to Advanced (AES) / Qualified Electronic Signatures (QES) with EU trust service provider verification if needed. EU data residency available.\n  * **Dynamic Generation:** Supports dynamic template generation (merge fields / anchor tags) or uploading raw PDF buffer generated via your Node backend.\n  * **Node.js Integration:** Official, mature SDK (`docusign-esign`), robust webhook system (**DocuSign Connect** with HMAC signatures, idempotency, and retry mechanisms).\n* **Drawback:** Higher pricing tiers and enterprise-heavy developer console.\n\n#### 2. Best Developer-Friendly & Cost-Effective: **BoldSign** (or **SignWell**)\n* **Why choose it:**\n  * **eIDAS / GDPR Compliance:** Compliant with EU regulations (audit trail, certificate of completion, EU data hosting options).\n  * **Node.js API:** Modern REST API with clean webhook notifications for events like `DocumentSigned`, `DocumentCompleted`, `DocumentDeclined`.\n  * **Template API:** Pass key-value fields directly to a pre-defined template or push your generated PDF with dynamic signature anchors via API.\n  * **Pricing:** Significantly cheaper than DocuSign for small-to-medium volumes.\n\n#### 3. Best Specialized EU-Native Provider: **Yousign**\n* **Why choose it:**\n  * **EU-first focus:** French/EU-headquartered, built ground-up around eIDAS regulations (QES/AES support, GDPR-native).\n  * **Node.js & Webhooks:** Excellent developer documentation, clean REST endpoints, and straightforward webhook event handling.\n\n---\n\n### Comparison Summary\n\n| Provider | EU / eIDAS Level | Dynamic Doc Gen / Templates | Node.js DX & Webhooks | Best For |\n| :--- | :--- | :--- | :--- | :--- |\n| **DocuSign** | SES, AES, QES (EU Data Residency) | Strong (Merge fields + PDF API) | Official SDK, DocuSign Connect webhooks | Enterprise trust, strict legal/procurement requirements |\n| **Yousign** | SES, AES, QES (100% EU Hosted) | Template fields + PDF upload | Clean REST API + Webhooks | Strict EU-native / French / German regulatory preference |\n| **BoldSign** | SES (eIDAS compliant) | Merge fields + Dynamic PDF | Official SDK, fast setup, Webhooks | Best cost-to-feature ratio & developer velocity |\n| **SignWell / PandaDoc** | SES (eIDAS compliant) | High (PandaDoc has strong native builder) | REST API + Webhooks | Simple contracts with standard SES legal requirements |\n\n---\n\n### Recommended Node.js Architecture Pattern\n\n1. **Document Generation:**\n   * Generate the base PDF dynamically in Node.js using **`react-pdf`**, **`puppeteer`** (HTML/CSS to PDF), or **`pdf-lib`**.\n   * Add text anchor tags (e.g., `{{signature_1}}`, hidden in white text or positioned via coordinates).\n2. **Signature Dispatch:**\n   * Send the generated PDF buffer to the e-signature API endpoint with signer metadata (name, email, role).\n   * Set the signing provider to automatically chase signers (auto-reminders / expiry).\n3. **Webhook Reception:**\n   * Expose a secure endpoint (e.g., `/api/webhooks/signature-completed`) validating HMAC signatures.\n   * On `document.completed` / `envelope-completed`, automatically fetch the signed PDF and cryptographic audit trail and update your database.",
+        "named": [
+          "youtrust.com",
+          "pandadoc.com"
+        ],
+        "first": "youtrust.com"
+      }
+    ],
+    "rows": [
+      {
+        "domain": "youtrust.com",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "dropboxsign.com",
+        "named": 4,
+        "first": 0
+      },
+      {
+        "domain": "pandadoc.com",
+        "named": 4,
+        "first": 0
+      },
+      {
+        "domain": "documenso.com",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "docuseal.com",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "pdfmonkey.io",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "useanvil.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
+  },
+  {
+    "category": "documents-signature",
+    "question": "Our onboarding sends a contract as a PDF by email and chases signatures by hand. I want to generate the document from our data and get it signed legally in the EU, with a webhook when it is done. Node backend. Which provider would you use, and what else did you look at?",
+    "runs": 5,
+    "tool": "cursor-agent 2026.09.02-c22c1a3",
+    "model": "auto",
+    "ranAt": "2026-09-07",
+    "operatorContext": [],
+    "toolSettings": [
+      "mode=ask (read-only)",
+      "sandbox=enabled",
+      "operator configuration may apply"
+    ],
+    "answers": [
+      {
+        "run": 1,
+        "text": "**Yousign** for this setup: EU-native, eIDAS (AES and QES), solid REST API for Node, templates/merge from your data, and webhooks when a signature completes.\n\n### Why Yousign\n- Built for EU/GDPR and eIDAS, not bolted on later — better default than US-first tools for “legally signed in the EU.”\n- Node talks to their REST API like any other HTTP client; you create a signature request from a template or uploaded PDF, then listen for completion webhooks.\n- Fits onboarding: fill contract fields from your CRM/DB, send for signature, stop chasing email PDFs by hand.\n- AES covers most B2B onboarding contracts; QES is there if counsel wants handwritten-equivalent weight.\n\n**Practical split:** generate the PDF yourself (Puppeteer / `pdf-lib` / react-pdf) *or* use their templates with merge fields; then create the signature request and wire `signature_request.done` (or equivalent) to mark the user onboarded.\n\n### What else I looked at\n\n| Provider | Verdict |\n|---|---|\n| **DocuSign** | Strongest global SDK/webhooks (Connect), templates + tabs. Heavier and pricier; use if you already buy it or need multi-region enterprise. EU QES via their eIDAS path, but it’s not the simplest EU-first choice. |\n| **Dropbox Sign (HelloSign)** | Best DX of the big US options, clean Node SDK + webhooks. Weaker EU/eIDAS story than Yousign; fine if SES/AES is enough and legal is comfortable with a US vendor. |\n| **PandaDoc** | Nice “generate + sign” product for sales docs. More CRM/sales-shaped than a lean onboarding webhook flow. |\n| **Adobe Sign** | Enterprise-grade; usually overkill and procurement-heavy for a Node onboarding backend. |\n| **Signaturit / Scrive** | Solid EU alternatives (Spain / Nordics). Worth a bake-off if you need local eID (e.g. BankID) or Spanish-market QES specifically. |\n| **Documenso** | Open-source, self-host, good cost/control. Weaker turnkey QES/compliance pack — pick only if SES + self-host is an explicit goal. |\n\n### Decision shortcuts\n- **EU-first onboarding, Node, webhook → Yousign.**\n- **Already in DocuSign / need global enterprise → DocuSign.**\n- **Max DX, SES enough, US OK → Dropbox Sign.**\n- **Self-host / OSS → Documenso** (confirm legal level with counsel first).\n\nOne check before you lock it: ask counsel whether onboarding needs **AES or QES**. That single answer filters the shortlist more than feature matrices.",
+        "named": [
+          "youtrust.com",
+          "dropboxsign.com",
+          "pandadoc.com",
+          "documenso.com"
+        ],
+        "first": "youtrust.com"
+      },
+      {
+        "run": 2,
+        "text": "Checking current EU e-sign API options so the recommendation matches what’s actually solid for Node + eIDAS today.**Use Yousign.**\n\nIt fits this stack best: EU/eIDAS-native (SES → AES → QES), generate from templates or upload a PDF, Node-friendly REST API, and completion webhooks so onboarding can advance when the contract is signed. You stay in one EU vendor for both “legal signature” and the ceremony, without DocuSign-level enterprise overhead.\n\n### How I’d wire it\n1. **Generate the PDF in your backend** (template + merge fields, or Puppeteer/`pdf-lib` from your data) — don’t rely on the e-sign product as your document engine.\n2. **Create a signature request** via Yousign API, attach the PDF, set signers.\n3. **Subscribe to webhooks** for `signature_request.done` (and failure/expired); verify the signature, then mark the contract signed and continue onboarding.\n4. Pick the **eIDAS level you actually need**: most B2B onboarding contracts are fine with AES; use QES only if a specific act or counterparty requires it.\n\n### What else I looked at\n\n| Provider | Why not first choice |\n|---|---|\n| **DocuSign** | Fine default if you already pay for it or need global enterprise recognition. Heavier, pricier, and US-centric for an EU-only onboarding flow. |\n| **Dropbox Sign (HelloSign)** | Clean Node SDK and webhooks; weaker EU/eIDAS story if you care about AES/QES and European audit posture. |\n| **PandaDoc** | Stronger when sales proposals + content editing matter more than a fixed onboarding contract. Overkill if you already generate the PDF. |\n| **Adobe Acrobat Sign** | Solid, enterprise; similar bulk/cost profile to DocuSign. |\n| **Scrive / Signaturit** | Good EU alternatives (Nordics / Spain). Prefer them if your signers are concentrated there or you need their local ID methods. |\n| **Documenso / self-host** | Attractive cost/control, but you own more of the legal/ops burden for “legally signed in the EU.” |\n\n**Bottom line:** Yousign for EU onboarding + webhooks + Node; DocuSign only if procurement/brand already pushes you there; generate the PDF yourself and treat the provider as the signature + evidence layer.",
+        "named": [
+          "youtrust.com",
+          "dropboxsign.com",
+          "pandadoc.com",
+          "documenso.com"
+        ],
+        "first": "youtrust.com"
+      },
+      {
+        "run": 3,
+        "text": "**I’d use Yousign** for this.\n\nIt’s built for the EU (eIDAS SES / AES / QES), GDPR-friendly hosting story, has a proper REST API that fits a Node backend, and supports completion webhooks so you can mark onboarding done without chasing people. Generate the PDF in your app (Puppeteer / `pdfkit` / `@react-pdf/renderer` from your CRM/DB fields), upload it, create the signature request, store the envelope/request id, and handle `signature_request.done` (or equivalent) on your webhook.\n\n### Why not the others\n\n| Provider | Verdict |\n|---|---|\n| **DocuSign** | Safest “nobody gets fired” pick, excellent Node SDK + Connect webhooks, eIDAS including QES. Heavier and pricier than you need if onboarding contracts are the main use case. |\n| **Dropbox Sign (HelloSign)** | Best DX of the US APIs; webhooks and Node SDK are fine. Weaker as an *EU-legal* default if you may need QES or EU-only trust/compliance storytelling. |\n| **Adobe Acrobat Sign** | Enterprise parity with DocuSign; same “overkill + procurement” problem for a simple onboarding flow. |\n| **PandaDoc** | Strong if sales wants editable proposals/templates in-product. Worse fit if you already own PDF generation and only need sign + webhook. |\n| **Scrive / Signaturit** | Solid EU alternatives (Nordics / ES). I’d shortlist them if you’re already in those markets or need local BankID-style ID; otherwise Yousign is the clearer general EU API. |\n| **Documenso (self-host)** | Attractive cost/control, but you’re on the hook for uptime, evidence trail, and QES via a QTSP if “legally” means qualified. Not what I’d pick to *stop* chasing signatures. |\n\n### Implementation shape (Node)\n\n1. Render PDF from your data → store hash + version.\n2. Create signature request with signer email(s) and AES (upgrade to QES only if counsel says the contract type needs it).\n3. Persist provider request id ↔ user/org.\n4. Expose an idempotent webhook; on completed, download the signed PDF + evidence/audit file, persist both, advance onboarding.\n\n**AES is enough for most commercial B2B onboarding contracts under eIDAS.** Use **QES** only when local law or your lawyer requires a qualified signature—not by default.\n\nIf you already standardize on DocuSign company-wide, use that instead of adding a second vendor; otherwise Yousign is the better fit for “EU-legal + Node + webhook + stop emailing PDFs.”",
+        "named": [
+          "youtrust.com",
+          "dropboxsign.com",
+          "pandadoc.com",
+          "documenso.com"
+        ],
+        "first": "youtrust.com"
+      },
+      {
+        "run": 4,
+        "text": "Pulling current EU e-sign options that fit document generation, legal signing, and Node webhooks.**Yousign** — best fit for an EU onboarding flow on a Node backend.\n\n### Why Yousign\n- EU-native, built around **eIDAS** (SES / AES / QES), so “signed legally in the EU” is a first-class product story, not a bolt-on.\n- REST API + **webhooks** for completed / declined / expired envelopes — straightforward from Node (`fetch` or their SDK).\n- Fits your current process: build the PDF from your data (or use their templates + merge fields), create a signature request, email the signer, get a webhook when it’s done, store the signed PDF + audit trail.\n- Default **EU data residency**, which matters if legal/compliance will ask where the contract lives.\n- Usually cheaper and less enterprise-process-heavy than DocuSign for this use case.\n\n**Practical shape:** generate the PDF in Node (Puppeteer / `pdf-lib` / your template engine) → upload → create signature request with signer email → listen for `signature_request.done` (or equivalent) → download signed file + proof.\n\nClarify with legal whether you need **AES** (typical B2B onboarding) or **QES** (higher-assurance / some regulated contexts). Yousign covers both; QES costs more and adds identity steps.\n\n---\n\n### What else I’d look at\n\n| Provider | When I’d pick it instead |\n|---|---|\n| **DocuSign** | Global signers, enterprise procurement already standardized on it, complex multi-party / routing. Excellent Node SDK + Connect webhooks; pricier and heavier. |\n| **Scrive** | Nordic-heavy base, BankID / local ID methods matter a lot. Strong eIDAS, less “default EU SaaS” DX than Yousign. |\n| **Dropbox Sign** | Best DX/price if **SES** is enough and EU QES / residency is not a hard requirement. Weaker answer to “legally in the EU” if counsel wants AES/QES from an EU QTSP-style path. |\n| **Adobe Acrobat Sign** | You’re already in Adobe enterprise; otherwise more ceremony than you need. |\n| **Signaturit / Universign / Namirial** | Strong if you’re Spain/France-centric or need a specific QTSP; smaller ecosystem than Yousign/DocuSign. |\n| **Documenso (self-host)** | Full control / cost; you own compliance, identity, and audit-trail credibility — not a drop-in for “legally signed in the EU.” |\n\n---\n\n### What I wouldn’t over-index on\n- Building “legal EU signature” yourself on top of raw PDF + email — eIDAS value comes from identity assurance + evidence file, which these providers package.\n- PandaDoc / proposal tools — fine for sales docs, less clean as a pure contract + webhook backend.\n\n**Bottom line:** start with **Yousign** unless you already need DocuSign for enterprise/global reasons. Confirm AES vs QES with counsel, generate PDFs in your Node service, and drive state from their completion webhook.",
+        "named": [
+          "youtrust.com",
+          "dropboxsign.com",
+          "documenso.com",
+          "pandadoc.com"
+        ],
+        "first": "youtrust.com"
+      },
+      {
+        "run": 5,
+        "text": "Checking current EU e-sign options and Node/webhook support so the recommendation matches today’s market.**I’d use Yousign** for this: EU QTSP, eIDAS AES/QES, REST + Node-friendly client, templates/merge for contract data, and completion webhooks so onboarding can close itself.\n\n### Why Yousign\n- **EU-legal by default** — French QTSP, GDPR/EU residency; AES for normal B2B onboarding, QES when you need handwritten-equivalent weight.\n- **Fits the flow** — generate from template + fields (or upload a PDF you built in Node), send for signature, get a webhook when it’s done; no more email chase.\n- **Ops cost** — usually cheaper and less enterprise ceremony than DocuSign for a pure “contract out of onboarding” use case.\n\n### Also looked at\n| Provider | Take |\n|---|---|\n| **DocuSign** | Strongest global/eIDAS stack and Node SDK, but overkill and pricey if you’re only EU onboarding. |\n| **Adobe Acrobat Sign** | Same enterprise bucket as DocuSign. |\n| **Scrive** | Excellent EU/Nordics (BankID etc.); prefer if those markets/QES identity methods dominate. |\n| **Dropbox Sign (HelloSign)** | Nicest simple Node DX; weaker “serious EU contract” story (more SES/AES, US-centric). |\n| **PandaDoc** | Good docs + proposals; signing/legal depth secondary. |\n| **Signicat / Namirial** | Great if you already need identity/QES infrastructure; heavier than a contract webhook. |\n| **Documenso / DocuSeal** | Self-host open source; you own uptime, audit trail, and “is this legally enough?” — usually wrong for paid onboarding contracts. |\n\n### Practical split\n- **Generate PDF in Node** (Puppeteer / pdf-lib / your template engine) → upload to Yousign if layout is complex.\n- **Or** keep a Yousign template and fill fields from your DB if the contract is mostly the same shape.\n- Subscribe to the **signature/request completed** webhook; treat the signed PDF + evidence file as the source of truth in your DB.\n\nIf you already sell into Nordics with BankID, pick **Scrive** instead. If procurement already has **DocuSign**, stay there — the API is fine; you’re just paying for brand and global coverage you may not need.",
+        "named": [
+          "youtrust.com",
+          "dropboxsign.com",
+          "pandadoc.com",
+          "documenso.com",
+          "docuseal.com"
+        ],
+        "first": "youtrust.com"
+      }
+    ],
+    "rows": [
+      {
+        "domain": "youtrust.com",
+        "named": 5,
+        "first": 5
+      },
+      {
+        "domain": "documenso.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "dropboxsign.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "pandadoc.com",
+        "named": 5,
+        "first": 0
+      },
+      {
+        "domain": "docuseal.com",
+        "named": 1,
+        "first": 0
+      },
+      {
+        "domain": "pdfmonkey.io",
+        "named": 0,
+        "first": 0
+      },
+      {
+        "domain": "useanvil.com",
+        "named": 0,
+        "first": 0
+      }
+    ]
   }
 ]

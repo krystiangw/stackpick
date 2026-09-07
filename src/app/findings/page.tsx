@@ -205,6 +205,7 @@ function namedResult(study: Study): Result | null {
       ],
     },
     body: [
+      'This comparison uses Claude Code and Codex across all 26 categories. Additional tools tested for selected categories are outside this study.',
       'Each category question was asked five times in isolation. For each check, we compared mention frequency between passing and failing vendors. Unmeasured checks were excluded from both groups. Table values are percentage-point gaps.',
       'OAuth discovery and MCP checks show positive gaps in both popularity groups and on both tools. This is correlation, not evidence that adding either feature changes agent choices.',
       `Provisioning ${carriedByFame ? 'does not show a positive gap in the lesser-known group on the first tool' : 'has a larger gap among well-known vendors on the first tool'}. On the second tool, ${provisioningClean.quieter <= 0 ? 'the lesser-known group has no positive gap' : 'the gap is smaller among lesser-known vendors'}.`,

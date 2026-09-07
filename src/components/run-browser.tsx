@@ -38,14 +38,14 @@ export function RunBrowser({ runs, batches, vendors }: {
     <div className="py-8" ref={root}>
       <div className="run-toolbar mb-6 rounded-lg border border-rule bg-surface p-4 sm:p-5">
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="flex flex-col gap-2 text-sm font-medium">Tool and date
-            <select value={batch} onChange={(event) => setBatch(event.target.value)} className="min-h-11 w-full rounded-md border border-rule bg-ground px-3 text-sm font-normal">
+          <label className="flex min-w-0 flex-col gap-2 text-sm font-medium">Tool and date
+            <select value={batch} onChange={(event) => setBatch(event.target.value)} className="min-h-11 w-full min-w-0 rounded-md border border-rule bg-ground px-3 text-sm font-normal">
               <option value="all">All batches ({runs.length} answers)</option>
               {batches.map((one) => <option key={one.id} value={one.id}>{one.label}</option>)}
             </select>
           </label>
-          <label className="flex flex-col gap-2 text-sm font-medium">Vendor mentioned
-            <select value={vendor} onChange={(event) => setVendor(event.target.value)} className="min-h-11 w-full rounded-md border border-rule bg-ground px-3 text-sm font-normal">
+          <label className="flex min-w-0 flex-col gap-2 text-sm font-medium">Vendor mentioned
+            <select value={vendor} onChange={(event) => setVendor(event.target.value)} className="min-h-11 w-full min-w-0 rounded-md border border-rule bg-ground px-3 text-sm font-normal">
               <option value="all">Any vendor</option>
               {vendors.map((domain) => <option key={domain} value={domain}>{domain}</option>)}
             </select>

@@ -275,7 +275,8 @@ export default async function MethodologyPage() {
         </p>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-soft">
           A second tool repeated the set without reading those instructions and answered in English.
-          The findings page reports the two check associations that appeared on both tools.
+          The findings page reports the two check associations that appeared on Claude Code and Codex across all 26 categories.
+          Additional tools on selected category pages are outside that comparison.
         </p>
       </section>
 

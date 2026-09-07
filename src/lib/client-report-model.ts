@@ -6,6 +6,7 @@
  * Written by `scripts/client-report.mts` at the moment it writes the markdown, from the same
  * variables. Nothing recomputes it later.
  */
+import type { AgentCoverage } from './agent-coverage'
 import type { BriefReview } from './report-brief'
 import type { RecommendationReview } from './recommendation-review'
 
@@ -33,8 +34,9 @@ export type ReportModel = {
   recommendationReview?: RecommendationReview | null
   /** Where every answer can be read in full. Null when we hold no runs for the category yet. */
   runsUrl: string | null
+  runAvailability?: AgentCoverage[]
   /** `blind` is a run that could read none of the operator's local instructions, which is the clean case. */
-  runs: { tool: string; version: string; model: string; ran: string; count: number; named: number; blind: boolean }[]
+  runs: { tool: string; version: string; model: string; ran: string; count: number; named: number; blind: boolean; settings?: string[] }[]
   named: { named: number; first: number; of: number }
   /** Everyone named more often than the subject, worst gap first. */
   rivals: { domain: string; named: number; first: number; clear: boolean }[]

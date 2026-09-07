@@ -7,6 +7,10 @@ import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
 import { SITE_URL } from '@/lib/site'
 import cells from '@/data/cells.json'
+import { AgentCoverageNotice } from '@/components/agent-coverage-notice'
+import { coverageFor } from '@/lib/agent-coverage'
+import { agentLabel, modelLabel, AGENT_SAMPLE_LIMIT } from '@/lib/agent-label'
+import type { DiscoveryCell } from '@/lib/discovery-cell'
 import { RunBrowser } from '@/components/run-browser'
 import { AnswerMarkdown } from '@/components/answer-markdown'
 
@@ -76,7 +80,7 @@ export default async function RunsPage({ params }: { params: Promise<{ category:
   recordVisit(`/c/${id}/runs`, (await headers()).get('user-agent'))
 
   // Cleanest first: a run that read none of this machine's instructions comes before one that did.
-  const held = cells
+  const held = (cells as DiscoveryCell[])
     .filter((candidate) => candidate.category === id)
     .sort((a, b) => a.operatorContext.length - b.operatorContext.length)
   const cell = held[0]
@@ -96,6 +100,11 @@ export default async function RunsPage({ params }: { params: Promise<{ category:
         <p className="mt-4 text-lg leading-relaxed text-ink-soft">
           {held.reduce((sum, one) => sum + one.answers.length, 0)} recorded answers. Browse by tool, date or vendor, then open a run to read it.
         </p>
+        <div className="mt-5 flex flex-wrap gap-2" aria-label="Recorded tools">
+          {[...new Set(held.map(one => one.tool.split(' ')[0]))].map(tool => <span key={tool} className="rounded-md border border-rule bg-surface px-3 py-2 text-xs"><strong>{agentLabel(tool)}</strong> · {held.filter(one => one.tool.split(' ')[0] === tool).reduce((sum, one) => sum + one.runs, 0)} answers</span>)}
+        </div>
+        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-ink-soft">{AGENT_SAMPLE_LIMIT}</p>
+        <AgentCoverageNotice batches={coverageFor(id)} />
         <details className="mt-6 rounded-lg border border-rule bg-surface p-5">
           <summary className="cursor-pointer text-sm font-medium">The exact question</summary>
           <blockquote className="mt-3 max-w-3xl border-l-2 border-brass pl-4 leading-relaxed text-ink-soft">{cell.question}</blockquote>
@@ -113,7 +122,7 @@ export default async function RunsPage({ params }: { params: Promise<{ category:
       </section>
 
       <RunBrowser
-        batches={held.map((one, index) => ({ id: `batch-${index}`, label: `${one.tool.split(' ')[0]} / ${one.ranAt} / ${one.answers.length} runs` }))}
+        batches={held.map((one, index) => ({ id: `batch-${index}`, label: `${agentLabel(one.tool)} / ${modelLabel(one.model)} / ${one.ranAt} / ${one.answers.length} runs` }))}
         vendors={category.domains}
         runs={held.flatMap((one, batchIndex) => one.answers.map((answer) => {
           const runId = `run-${one.tool.split(' ')[0]}-${one.ranAt}-${answer.run}`
@@ -125,7 +134,7 @@ export default async function RunsPage({ params }: { params: Promise<{ category:
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <p className="flex flex-wrap items-center gap-2 text-xs text-ink-faint">
-                        <span className="rounded bg-brass-soft px-2 py-1 font-mono text-brass">{one.tool.split(' ')[0]}</span>
+                        <span className="rounded bg-brass-soft px-2 py-1 font-mono text-brass">{agentLabel(one.tool)}</span>
                         <span>{one.ranAt}</span><span>Run {answer.run}</span>
                       </p>
                       <h2 className="mt-3 text-base font-medium sm:text-lg">
@@ -138,9 +147,10 @@ export default async function RunsPage({ params }: { params: Promise<{ category:
                 </summary>
                 <div className="border-t border-rule px-5 pb-6 pt-5 sm:px-7">
                   <div className="mb-6 flex flex-wrap items-center justify-between gap-3 text-xs text-ink-faint">
-                    <p>{one.tool} ({one.model})</p>
+                    <p>{one.tool} ({modelLabel(one.model)})</p>
                     <a href={`#${runId}`} className="inline-flex min-h-11 items-center text-brass underline underline-offset-4">Link to this run</a>
                   </div>
+                  {one.toolSettings && one.toolSettings.length > 0 && <p className="mb-5 text-xs leading-relaxed text-ink-faint">Recorded setup: {one.toolSettings.join('; ')}.</p>}
                   <AnswerMarkdown text={answer.text} />
                   <details className="mt-8 border-t border-rule pt-5">
                     <summary className="cursor-pointer text-sm font-medium">Original text</summary>

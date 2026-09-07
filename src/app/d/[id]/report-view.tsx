@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import { AgentCoverageNotice } from '@/components/agent-coverage-notice'
+import { agentLabel, modelLabel, AGENT_SAMPLE_LIMIT } from '@/lib/agent-label'
 import type { ReportModel } from '@/lib/client-report-model'
 import { readsAsPolish } from '@/lib/vendors'
 import { RECOMMENDATION_LABELS, RECOMMENDATION_LIMIT, UNREVIEWED_RECOMMENDATIONS } from '@/lib/recommendation-review'
@@ -140,6 +142,7 @@ export function ReportView({ model }: { model: ReportModel }) {
         </div>
       </section>
 
+      <AgentCoverageNotice batches={model.runAvailability ?? []} />
       <nav aria-label="Report sections" className="mt-5 flex flex-wrap gap-2 text-sm print:hidden">
         <a href="#report-next" className="nav-link border border-rule">Next steps</a>
         <a href="#report-runs" className="nav-link border border-rule">Agent evidence</a>
@@ -218,12 +221,12 @@ export function ReportView({ model }: { model: ReportModel }) {
             <summary className="cursor-pointer text-sm font-medium">Read {winnerQuotes.length} quoted excerpts</summary>
           <ul className="mt-5 space-y-4">
             {winnerQuotes.map((quote) => (
-              <li key={`${quote.tool}-${quote.run}`} className="border-l-2 border-brass pl-4">
+              <li key={`${agentLabel(quote.tool)}-${quote.run}`} className="border-l-2 border-brass pl-4">
                 <p className="leading-relaxed text-ink">
                   “<Quoted said={quote.said} />”
                 </p>
                 <p className="mt-1 font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">
-                  {quote.tool} · run {quote.run}
+                  {agentLabel(quote.tool)} · run {quote.run}
                   {readsAsPolish(quote.said) ? ' · in Polish' : ''}
                 </p>
               </li>
@@ -238,12 +241,12 @@ export function ReportView({ model }: { model: ReportModel }) {
           <h2 className="text-xl font-semibold tracking-tight">What the runs said about you</h2>
           <ul className="mt-5 space-y-4">
             {yourQuotes.map((quote) => (
-              <li key={`${quote.tool}-${quote.run}`} className="border-l-2 border-rule pl-4">
+              <li key={`${agentLabel(quote.tool)}-${quote.run}`} className="border-l-2 border-rule pl-4">
                 <p className="leading-relaxed text-ink">
                   “<Quoted said={quote.said} />”
                 </p>
                 <p className="mt-1 font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">
-                  {quote.tool} · run {quote.run}
+                  {agentLabel(quote.tool)} · run {quote.run}
                   {readsAsPolish(quote.said) ? ' · in Polish' : ''}
                 </p>
               </li>
@@ -287,9 +290,9 @@ export function ReportView({ model }: { model: ReportModel }) {
               {model.runs.map((run) => (
                 <tr key={`${run.tool}-${run.ran}`}>
                   <td className="border-b border-rule py-2 font-mono">
-                    {run.tool} {run.version}
+                    {agentLabel(run.tool)} {run.version}
                   </td>
-                  <td className="border-b border-rule py-2 font-mono">{run.model}</td>
+                  <td className="border-b border-rule py-2 font-mono">{modelLabel(run.model)}</td>
                   <td className="border-b border-rule py-2 text-right tabular-nums">{run.count}</td>
                   <td className="border-b border-rule py-2 text-right tabular-nums">{run.named}</td>
                   <td className="border-b border-rule py-2 text-right font-mono text-ink-faint">{run.ran}</td>
@@ -298,6 +301,9 @@ export function ReportView({ model }: { model: ReportModel }) {
             </tbody>
           </table>
         </div>
+        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-soft">{AGENT_SAMPLE_LIMIT}</p>
+        {model.runs.some(run => run.model === 'auto') && <p className="mt-2 max-w-3xl text-sm leading-relaxed text-ink-soft">Cursor Auto selected the underlying model; the CLI did not disclose its identity.</p>}
+        {model.runs.some(run => run.settings?.length) && <details className="mt-4 rounded-lg border border-rule p-4"><summary className="cursor-pointer text-sm font-medium">Recorded tool settings</summary><ul className="mt-3 space-y-3 text-sm text-ink-soft">{model.runs.filter(run => run.settings?.length).map(run => <li key={`${run.tool}-${run.model}-${run.ran}`}><strong>{agentLabel(run.tool)} · {run.ran}:</strong> {run.settings!.join('; ')}.</li>)}</ul></details>}
         {/* Both caveats travel with the numbers or they do not travel at all. The markdown carries
             them; a prettier rendering that quietly drops them is the worst version of this page. */}
         {model.guest && (

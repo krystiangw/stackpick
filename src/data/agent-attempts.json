@@ -1,0 +1,118 @@
+[
+  {
+    "category": "auth",
+    "tool": "agy 1.1.27",
+    "model": "gemini-3.7-flash-low",
+    "date": "2026-09-07",
+    "attempted": 5,
+    "answered": 5
+  },
+  {
+    "category": "background-jobs",
+    "tool": "agy 1.1.27",
+    "model": "gemini-3.7-flash-low",
+    "date": "2026-09-07",
+    "attempted": 5,
+    "answered": 5
+  },
+  {
+    "category": "documents-signature",
+    "tool": "agy 1.1.27",
+    "model": "gemini-3.7-flash-low",
+    "date": "2026-09-07",
+    "attempted": 5,
+    "answered": 5
+  },
+  {
+    "category": "error-monitoring",
+    "tool": "agy 1.1.27",
+    "model": "gemini-3.7-flash-low",
+    "date": "2026-09-07",
+    "attempted": 5,
+    "answered": 5
+  },
+  {
+    "category": "payments",
+    "tool": "agy 1.1.27",
+    "model": "gemini-3.7-flash-low",
+    "date": "2026-09-07",
+    "attempted": 5,
+    "answered": 5
+  },
+  {
+    "category": "transactional-email",
+    "tool": "agy 1.1.27",
+    "model": "gemini-3.7-flash-low",
+    "date": "2026-09-07",
+    "attempted": 5,
+    "answered": 5
+  },
+  {
+    "category": "vector-search",
+    "tool": "agy 1.1.27",
+    "model": "gemini-3.7-flash-low",
+    "date": "2026-09-07",
+    "attempted": 5,
+    "answered": 5
+  },
+  {
+    "category": "auth",
+    "tool": "cursor-agent 2026.09.02-c22c1a3",
+    "model": "auto",
+    "date": "2026-09-07",
+    "attempted": 5,
+    "answered": 4,
+    "reason": "Cursor account usage limit"
+  },
+  {
+    "category": "background-jobs",
+    "tool": "cursor-agent 2026.09.02-c22c1a3",
+    "model": "auto",
+    "date": "2026-09-07",
+    "attempted": 5,
+    "answered": 5
+  },
+  {
+    "category": "documents-signature",
+    "tool": "cursor-agent 2026.09.02-c22c1a3",
+    "model": "auto",
+    "date": "2026-09-07",
+    "attempted": 5,
+    "answered": 5
+  },
+  {
+    "category": "error-monitoring",
+    "tool": "cursor-agent 2026.09.02-c22c1a3",
+    "model": "auto",
+    "date": "2026-09-07",
+    "attempted": 5,
+    "answered": 0,
+    "reason": "Cursor account usage limit"
+  },
+  {
+    "category": "payments",
+    "tool": "cursor-agent 2026.09.02-c22c1a3",
+    "model": "auto",
+    "date": "2026-09-07",
+    "attempted": 5,
+    "answered": 0,
+    "reason": "Cursor account usage limit"
+  },
+  {
+    "category": "transactional-email",
+    "tool": "cursor-agent 2026.09.02-c22c1a3",
+    "model": "auto",
+    "date": "2026-09-07",
+    "attempted": 5,
+    "answered": 5
+  },
+  {
+    "category": "vector-search",
+    "tool": "cursor-agent 2026.09.02-c22c1a3",
+    "model": "auto",
+    "date": "2026-09-07",
+    "attempted": 5,
+    "answered": 0,
+    "reason": "Cursor account usage limit"
+  }
+]

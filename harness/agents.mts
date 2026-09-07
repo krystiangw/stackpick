@@ -18,6 +18,8 @@ export type Agent = {
   /** Non-interactive invocation. Each CLI spells "do not ask me anything" differently. */
   argv: (prompt: string, model?: string) => string[]
   version: () => string
+  /** Discovery asks for an answer without granting integration-run write permissions. */
+  discovery?: { argv: (prompt: string, model?: string) => string[]; settings: string[] }
   /**
    * The same invocation with the operator's own configuration shut out: no CLAUDE.md, no hooks,
    * no skills. Measured 2026-08-16, and it is not optional politeness. The first discovery cell
@@ -156,12 +158,20 @@ export const AGENTS: Record<string, Agent> = {
       '5m',
     ],
     version: () => firstLine('agy', ['--version']),
+    discovery: {
+      argv: (prompt, model) => ['--print', prompt, '--model', model ?? 'gemini-3.7-flash-low', '--sandbox', '--disable-slash-commands', '--output-format', 'text', '--print-timeout', '5m'],
+      settings: ['sandbox=enabled', 'slash-commands=disabled', 'timeout=5m', 'operator configuration may apply'],
+    },
     contextFiles: (dir) => [...ifThere(join(homedir(), '.gemini', 'GEMINI.md')), ...upwards(dir, 'GEMINI.md')],
   },
   cursor: {
     bin: 'cursor-agent',
     argv: (prompt, model) => ['-p', prompt, '--force', ...(model ? ['--model', model] : [])],
     version: () => firstLine('cursor-agent', ['--version']),
+    discovery: {
+      argv: (prompt, model) => ['--print', prompt, '--mode', 'ask', '--sandbox', 'enabled', '--trust', '--output-format', 'text', ...(model ? ['--model', model] : [])],
+      settings: ['mode=ask (read-only)', 'sandbox=enabled', 'operator configuration may apply'],
+    },
     contextFiles: (dir) => [...upwards(dir, 'AGENTS.md'), ...upwards(dir, '.cursorrules')],
   },
 }

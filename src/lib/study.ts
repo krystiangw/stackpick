@@ -1,6 +1,7 @@
 import { CATEGORIES, CURATED_DOMAINS } from './categories'
 import cells from '@/data/cells.json'
 import type { Report } from './store'
+import type { DiscoveryCell } from './discovery-cell'
 
 /**
  * The sixth study, computed rather than typed.
@@ -46,12 +47,15 @@ export type Study = {
 
 const toolOf = (tool: string) => tool.split(' ')[0]
 
-export function buildStudy(reports: Report[]): Study {
+export function buildStudy(reports: Report[], recordedCells: DiscoveryCell[] = cells): Study {
+  // This association study predates the seven-category expansion. Keep its two-tool cohort;
+  // selected-category evidence is not a new full-corpus comparison or an unobserved zero.
+  const studyCells = recordedCells.filter(cell => ['claude', 'codex'].includes(toolOf(cell.tool)))
   const rows: Row[] = []
   for (const domain of CURATED_DOMAINS) {
     const category = CATEGORIES.find((candidate) => candidate.domains.includes(domain))
     if (!category) continue
-    const held = cells.filter((cell) => cell.category === category.id)
+    const held = studyCells.filter((cell) => cell.category === category.id)
     if (held.length === 0) continue
     const report = reports.find((candidate) => candidate.domain === domain)
     if (!report) continue
@@ -71,8 +75,8 @@ export function buildStudy(reports: Report[]): Study {
     })
   }
 
-  const tools = [...new Set(cells.map((cell) => toolOf(cell.tool)))]
-  const cleanTool = tools.find((tool) => cells.some((cell) => toolOf(cell.tool) === tool && cell.operatorContext.length === 0)) ?? null
+  const tools = [...new Set(studyCells.map((cell) => toolOf(cell.tool)))]
+  const cleanTool = tools.find((tool) => studyCells.some((cell) => toolOf(cell.tool) === tool && cell.operatorContext.length === 0)) ?? null
 
   const rate = (of: Row[], tool: string, measure: Measure) =>
     of.length === 0

@@ -19,6 +19,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { AGENTS } from './agents.mjs'
+import { isAccountLimit } from '../src/lib/discovery-budget'
 
 /** A question that has not answered in five minutes is a broken run, not a vendor's problem. */
 const TIMEOUT_MS = Number(process.env.ASK_TIMEOUT_MS ?? 300_000)
@@ -85,7 +86,7 @@ for (let run = from; run < from + runs; run++) {
   writeFileSync(join(dir, 'ASK.md'), `${question}\n`)
 
   const startedAt = new Date().toISOString()
-  const result = spawnSync(agent.bin, (clean ?? agent).argv(question, model), {
+  const result = spawnSync(agent.bin, (clean ?? agent.discovery ?? agent).argv(question, model), {
     cwd: dir,
     encoding: 'utf8',
     timeout: TIMEOUT_MS,
@@ -110,7 +111,7 @@ for (let run = from; run < from + runs; run++) {
         auth: clean ? 'api-key' : 'subscription',
         cleanRoom: Boolean(clean),
         operatorContext: clean ? [] : agent.contextFiles(dir),
-        toolSettings: agent.settings?.() ?? [],
+        toolSettings: [...(agent.settings?.() ?? []), ...(clean ? [] : agent.discovery?.settings ?? [])],
         startedAt,
         finishedAt: new Date().toISOString(),
         exitCode: result.status,
@@ -123,6 +124,10 @@ for (let run = from; run < from + runs; run++) {
     )}\n`,
   )
   console.log(`  run-${run}: exit ${result.status}, ${(answer.length / 1024).toFixed(1)} kB`)
+  if (isAccountLimit(result.stderr ?? '')) {
+    console.log('Account usage limit: stopping this batch. Remaining attempts were not started.')
+    break
+  }
 }
 
 console.log(`\nNow read who was named, by rule rather than by asking a model: npm run asked -- ${category}`)

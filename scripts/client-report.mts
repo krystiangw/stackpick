@@ -16,7 +16,11 @@
  */
 import { randomBytes } from 'node:crypto'
 import { readFileSync, writeFileSync } from 'node:fs'
-import cells from '../src/data/cells.json'
+import storedCells from '../src/data/cells.json'
+import type { DiscoveryCell } from '../src/lib/discovery-cell'
+import { coverageFor } from '../src/lib/agent-coverage'
+import { AGENT_SAMPLE_LIMIT, modelLabel } from '../src/lib/agent-label'
+const cells = storedCells as DiscoveryCell[]
 import { CATEGORIES, CURATED_DOMAINS, categoryFor } from '../src/lib/categories'
 import { getStore, type Report } from '../src/lib/store'
 import { FORMULA_VERSION } from '../src/lib/score'
@@ -145,6 +149,7 @@ const briefReview = reviewFile
   ? readBriefReview(JSON.parse(readFileSync(reviewFile, 'utf8')), { domain, category: category.id, question })
   : null
 if (rest.includes('--publish')) requirePublishableBrief(briefReview)
+const runAvailability = coverageFor(category.id)
 const runsAll = held.reduce((sum, one) => sum + one.runs, 0)
 const labelOfGuest = domain.split('.')[0]
 
@@ -339,14 +344,17 @@ if (!cell) {
     const there = live
       ? one.answers.filter((answer) => certain(mentionsIn(answer.text, withGuest)).some((mention) => mention.domain === domain)).length
       : (one.rows.find((row) => row.domain === domain)?.named ?? 0)
-    lines.push(`| ${one.ranAt} | ${one.tool} | ${one.model} | ${one.runs} | ${there} |`)
+    lines.push(`| ${one.ranAt} | ${one.tool} | ${modelLabel(one.model)} | ${one.runs} | ${there} |`)
     const [toolName, ...toolVersion] = one.tool.split(' ')
-    forModel.runs.push({ tool: toolName, version: toolVersion.join(' '), model: one.model, ran: one.ranAt, count: one.runs, named: there, blind: one.operatorContext.length === 0 })
+    forModel.runs.push({ tool: toolName, version: toolVersion.join(' '), model: one.model, ran: one.ranAt, count: one.runs, named: there, blind: one.operatorContext.length === 0, settings: one.toolSettings ?? [] })
   }
   lines.push('')
   lines.push(`**${domain} was named in ${namedAll} of ${runsAll} runs on ${toolCount} ${plural(toolCount, 'tool', 'tools')} for this question.**${namedAll > 0 ? ` Named first in ${firstAll}.` : ''}`)
   lines.push('')
-  lines.push('Each run used a separate session with no shared context; these counts apply to the question and setup recorded here.')
+  for (const batch of runAvailability.filter(batch => batch.answered < batch.attempted)) lines.push('', `${batch.tool}, ${batch.date}: ${batch.answered} of ${batch.attempted} attempts returned answers. ${batch.reason ?? 'Unsuccessful calls'}. The missing answers are excluded from mention counts.`)
+  lines.push('Each run used a separate session; these counts apply to the question and setup recorded here.', '', AGENT_SAMPLE_LIMIT)
+  if (held.some(one => one.model === 'auto')) lines.push('', 'Cursor Auto selected the underlying model; the CLI did not disclose its identity.')
+  for (const one of held.filter(one => one.toolSettings?.length)) lines.push('', `${one.tool}, ${modelLabel(one.model)}, ${one.ranAt}: ${one.toolSettings!.join('; ')}.`)
 }
 lines.push('')
 lines.push(...scoreSection({ card, scannedAt: report.scannedAt, findings: report.findings }))
@@ -510,6 +518,7 @@ const model: ReportModel = {
   recommendationReview,
   runsUrl: cell ? `${SITE_URL}/c/${category.id}/runs` : null,
   runs: forModel.runs,
+  ...(runAvailability.length ? { runAvailability } : {}),
   named: { named: namedAll, first: firstAll, of: runsAll },
   // Both lists in one, with the gap that decides whether we call it clear: a run apart is inside
   // what this many runs can separate, and the document says so in words as well.
