@@ -79,7 +79,7 @@ function scaleAnchor(comparison: Awaited<ReturnType<typeof buildComparison>>, to
     // Named, because unnamed it reads as a rank in your market and is not one. A reader whose
     // product is a SaaS for equity analysts was told he was ahead of 1 of 168, where all 168 are
     // developer tools we picked. That sentence sells; it does not diagnose.
-    return `Higher than ${comparison.percentile.betterThan} of the ${comparison.percentile.outOf} domains we have scanned, which are developer tools we curated rather than your market`
+    return `Higher than ${comparison.percentile.betterThan} of ${comparison.percentile.outOf} scanned domains. These are developer tools I selected, not a sample of your market.`
   }
   return null
 }
@@ -155,13 +155,12 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <div className="mt-8 border-l-2 border-warn bg-surface p-6">
           <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">This link will not last</h2>
           <p className="mt-3 max-w-2xl leading-relaxed">
-            Our database is full and refused to store this scan, so the report is being held in memory and the
-            address stops working the next time we deploy. The measurement itself is exactly the one everybody
-            else gets. Save the page or run it again once we have sorted the storage out, and write to{' '}
+            Save this page; the database is full, so this scan is held in memory and its temporary link expires at the next deploy.
+            Rerun the scan once storage is available, or request a permanent copy at{' '}
             <a href="mailto:hello@letagentsin.com" className="text-brass underline underline-offset-4">
               hello@letagentsin.com
-            </a>{' '}
-            if you need a permanent copy sooner.
+            </a>
+            .
           </p>
         </div>
       )}
@@ -170,22 +169,21 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           evidence we did keep, labelled as recovered rather than passed off as what we wrote. */}
       {degraded.length > 0 && (
         <div className="mt-8 border-l-2 border-brass bg-surface p-6">
-          <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-brass">We withdrew a finding on this page</h2>
+          <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-brass">I withdrew a finding on this page</h2>
           {degraded.map((withdrawn) => (
             <div key={withdrawn.checkId} className="mt-3 max-w-2xl">
               <p className="leading-relaxed">
-                <span className="font-mono text-sm">{withdrawn.checkId}</span>: {withdrawn.because} The scan itself is
-                untouched and so is every other row below.
+                <span className="font-mono text-sm">{withdrawn.checkId}</span>: {withdrawn.because} The stored scan and every other row are unchanged.
               </p>
               {withdrawn.evidence && withdrawn.evidence.length > 0 && (
                 <p className="mt-3 text-sm leading-relaxed text-ink-faint">
-                  Recovered from this scan&apos;s own record, not from the sentence we published: it asked{' '}
-                  {withdrawn.evidence.length} {withdrawn.evidence.length === 1 ? 'origin' : 'origins'} for OAuth
-                  metadata, starting with {withdrawn.evidence.slice(0, 3).join(', ')}.
+                  Recovered evidence from the scan record: it requested OAuth metadata from{' '}
+                  {withdrawn.evidence.length} {withdrawn.evidence.length === 1 ? 'origin' : 'origins'}, starting with{' '}
+                  {withdrawn.evidence.slice(0, 3).join(', ')}.
                 </p>
               )}
               <p className="mt-3 text-sm leading-relaxed text-ink-faint">
-                This report is a scan from a single moment, on formula v{scorecard.formulaVersion}. The current
+                This scan used formula v{scorecard.formulaVersion}. The current
                 verdict for {report.domain} is at{' '}
                 <a href={`/v/${report.domain}`} className="text-brass underline underline-offset-4">
                   /v/{report.domain}
@@ -246,7 +244,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
         <p className="mt-3 font-mono text-xs text-ink-faint">
           {unmeasured > 0
-            ? `of the ${measurable} points that apply to you and we could measure · ${unmeasured} of ${scorecard.max} ${unmeasured === 1 ? 'was' : 'were'} not scored`
+            ? `of ${measurable} applicable, measurable points · ${unmeasured} of ${scorecard.max} ${unmeasured === 1 ? 'was' : 'were'} not scored`
             : `all ${scorecard.max} points were measurable on this domain`}
         </p>
 
@@ -271,11 +269,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       {!looksLikeDeveloperProduct && !findings.blocksPlainRequests && !findings.rateLimitedUs && !findings.truncation && (
         <section className="border-b border-rule py-8">
           <div className="border-l-2 border-warn bg-surface p-6">
-            <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">Probably the wrong yardstick</h2>
+            <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">The formula may not apply</h2>
             <p className="mt-3 max-w-2xl leading-relaxed">
-              We found no documentation, no SDK and no API description, so this may not be a product
-              developers integrate. The formula measures whether an agent can adopt you as a building block.
-              Judged as anything else, the score below is not meaningful.
+              The scan found no documentation, SDK or API description, so this formula for products developers integrate may not apply.
             </p>
           </div>
         </section>
@@ -288,12 +284,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           <div className="border-l-2 border-warn bg-surface p-6">
             <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">This scan ran out of time</h2>
             <p className="mt-3 max-w-2xl leading-relaxed">
-              Your site took longer to read than the {Math.round(findings.truncation.budgetMs / 1000)} seconds a
-              scan is allowed, so {findings.truncation.unmeasuredChecks.length} of the{' '}
-              {scorecard.checks.length} checks never got {findings.truncation.unmeasuredChecks.length === 1 ? 'its' : 'their'} evidence and{' '}
-              {findings.truncation.unmeasuredChecks.length === 1 ? 'is' : 'are'} marked unmeasurable rather than
-              scored. The number above is out of what we did measure, so it is not a worse result, it is a
-              smaller one. Scanning again usually finishes.
+              The scan exceeded its {Math.round(findings.truncation.budgetMs / 1000)} seconds, leaving{' '}
+              {findings.truncation.unmeasuredChecks.length} of {scorecard.checks.length} checks unmeasured and excluded from the score.
+              Try scanning again.
             </p>
           </div>
         </section>
@@ -305,10 +298,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">This domain resolves elsewhere</h2>
             <p className="mt-3 max-w-2xl leading-relaxed">
               {findings.resolvedElsewhere.requestedDomain} redirects to{' '}
-              <span className="font-mono text-sm">{findings.resolvedElsewhere.finalUrl}</span>, so everything
-              below was measured on {findings.resolvedElsewhere.finalDomain}. That is worth knowing on its own:
-              an agent asking for {findings.resolvedElsewhere.requestedDomain} ends up reading a different
-              company&rsquo;s pages, and every sentence here names the host its number came from.
+              <span className="font-mono text-sm">{findings.resolvedElsewhere.finalUrl}</span>, so these findings
+              describe {findings.resolvedElsewhere.finalDomain}.
             </p>
           </div>
         </section>
@@ -317,12 +308,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       {findings.rateLimitedUs && (
         <section className="border-b border-rule py-8">
           <div className="border-l-2 border-warn bg-surface p-6">
-            <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">We were rate limited</h2>
+            <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-warn">The scan was rate limited</h2>
             <p className="mt-3 max-w-2xl leading-relaxed">
-              Every request we made was answered with 429. That is either a limit we triggered or a gate on the
-              network we scan from, and we cannot tell those apart from here. Either way it is not a measurement
-              of how you treat agents, so the checks that depended on reading you are marked unmeasurable rather
-              than failed.
+              Every request returned 429, leaving dependent checks unmeasured because the test cannot distinguish a triggered limit from a network restriction.
             </p>
           </div>
         </section>
@@ -333,13 +321,13 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       {findings.botChallenge && !findings.agentStatusesSeen?.some((status) => status >= 200 && status < 400) && (
         <section className="border-b border-rule py-8">
           <div className="border-l-2 border-fail bg-surface p-6">
-            <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-fail">A challenge, not a limit</h2>
+            <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-fail">The HTTP test received a JavaScript challenge</h2>
             <p className="mt-3 max-w-2xl leading-relaxed">
-              Your edge answered <span className="font-mono">{findings.agentStatus}</span> and asked the caller to
-              run JavaScript to prove it is a browser. A person never sees it. No agent can pass it, because an
-              agent is an HTTP client, so this is the one wall on this page that stops the funnel before any of it
-              starts. We score it rather than excusing it as our own traffic: everything below was measured
-              through it and is a floor, not a ceiling.
+              The HTTP test received <span className="font-mono">{findings.agentStatus}</span> and a JavaScript challenge,
+              blocking clients without JavaScript.
+            </p>
+            <p className="mt-3 max-w-2xl leading-relaxed">
+              The scan scores this challenge as a failure; the findings reflect what was measurable through it.
             </p>
           </div>
         </section>
@@ -352,67 +340,22 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       {findings.blocksPlainRequests && !findings.rateLimitedUs && !findings.botChallenge && (
         <section className="border-b border-rule py-8">
           <div className="border-l-2 border-fail bg-surface p-6">
-            <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-fail">Blocked at the door</h2>
+            <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-fail">The HTTP test was refused</h2>
             <p className="mt-3 max-w-2xl leading-relaxed">
-              The home page answered <span className="font-mono">{findings.agentStatus}</span> to a request
-              identifying itself as an agent, and{' '}
-              <span className="font-mono">{findings.browserStatus}</span> to the same request sent as Chrome.{' '}
+              The home page returned <span className="font-mono">{findings.agentStatus}</span> to the HTTP test&apos;s
+              agent user-agent and <span className="font-mono">{findings.browserStatus}</span> to its Chrome user-agent.{' '}
               {findings.browserStatus >= 200 && findings.browserStatus < 400
-                ? 'The user-agent was the only difference between them.'
-                : 'Both were refused, so this reads as an edge rule about where the request came from rather than about agents.'}{' '}
-              Everything below was measured through that wall and is a floor, not a ceiling.
+                ? 'Only the user-agent differed.'
+                : 'Both requests were refused; this test cannot establish whether the restriction targets agents.'}
+            </p>
+            <p className="mt-3 max-w-2xl leading-relaxed">
+              The findings reflect what the scan could measure despite these refusals.
             </p>
           </div>
         </section>
       )}
 
       {fixPlan && <FixFirst plan={fixPlan} />}
-
-      {/* Directly under the fix list, which is the only moment on this page where the reader is
-          holding something they would forward to somebody else. It used to sit last, after ten
-          sections and the whole evidence table, which is a form placed where the intent it needs
-          has already gone. The score and every piece of evidence stay ungated above and below it:
-          the corpus is public and the formula is published, so gating the number would cost us
-          the thing that makes it worth reading and buy nothing. */}
-      <section className="border-b border-rule py-12">
-        <EmailGate
-          domain={report.domain}
-          reportId={report.id}
-          failingCount={failing.length}
-          temporary={isHeldOnly(id)}
-          privacyLinked={CONTROLLER_IS_NAMED}
-        />
-      </section>
-
-      {/* The one sentence that separates a scan from an audit, at the only moment the reader
-          is holding a list of things to do and wondering whether any of it changes behaviour. */}
-      <section className="border-b border-rule py-10">
-        <h2 className="text-lg font-semibold tracking-tight">None of this tells you whether an agent picked you</h2>
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Everything above is a file an agent could read. Whether one actually chose you is a different
-          measurement, and we have not run it on {report.domain}. What we have run it on is a rich text editor
-          vendor: six agents, one brief, six isolated copies of a real codebase. All six picked the same
-          competitor, and the vendor being studied was never named, not even on a rejection list, while the runs
-          named and dismissed ten alternatives between them. In an earlier round, run before we isolated the
-          copies, it was named twice and struck off both times in four words:{' '}
-          <span className="font-mono text-sm text-ink">Fully commercial, licence key required.</span> That study
-          is about them, not about you. It is here because it is the difference between a file and a decision.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link
-            href="/audit"
-            className="bg-ink px-5 py-3 font-mono text-sm text-ground transition-opacity hover:opacity-85"
-          >
-            Read the audits in full
-          </Link>
-          <Link
-            href="/pricing"
-            className="border border-ink/40 px-5 py-3 font-mono text-sm transition-colors hover:border-brass hover:text-brass"
-          >
-            What the same run on {report.domain} costs
-          </Link>
-        </div>
-      </section>
 
       <ComparisonSection comparison={comparison} domain={report.domain} />
 
@@ -451,12 +394,13 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       <section className="border-b border-rule py-10">
         <h2 className="text-lg font-semibold tracking-tight">Every check</h2>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
-          Each line is one HTTP observation with a published rule, so you can rerun any of them yourself.
-          Most are the same tomorrow if you are: the two that are not are the front door and the signup page,
-          which answer inconsistently on their own, which is why those two are fetched three times and say so
-          when the tries disagreed. Everything else is asked once. PASS and PART are counted. UNMEASURED means we could not
-          evaluate it, N/A means it does not apply to a product like yours, and neither is in the score or
-          its denominator.{' '}
+          Each row shows one HTTP observation under a published rule you can rerun.
+          The front door and signup page can vary, so the scan requests those two three times and reports disagreements.
+          Everything else is requested once.
+        </p>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          PASS and PART count toward the score. UNMEASURED means the scan could not evaluate the check; N/A means it does not apply.
+          Both are excluded from the score and its denominator.{' '}
           <Link href="/methodology" className="text-brass underline underline-offset-4">
             See the formula
           </Link>
@@ -506,7 +450,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       </section>
 
       <section className="border-b border-rule py-10">
-        <h2 className="text-lg font-semibold tracking-tight">What we discovered on the way</h2>
+        <h2 className="text-lg font-semibold tracking-tight">What the scan found</h2>
         <dl className="mt-5 grid gap-x-8 gap-y-3 font-mono text-xs sm:grid-cols-2">
           {[
             ['Docs', withSource(findings.discovered.docs, findings.discovered.linkSources.docs)],
@@ -561,10 +505,12 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           <div className="mt-6 border-l-2 border-warn bg-surface p-5">
             <p className="max-w-2xl leading-relaxed">
               Your package declares{' '}
-              <span className="font-mono text-sm">{findings.npm.license}</span> rather than a plain licence
-              identifier. We do not score this, because a commercial licence is a business model, not a defect.
-              We report it because in six agent runs on a comparable decision, every model that hit a licence
-              key requirement dropped that vendor in one line, without opening the product.{' '}
+              <span className="font-mono text-sm">{findings.npm.license}</span> instead of a plain licence identifier;
+              the scan does not score this.
+            </p>
+            <p className="mt-3 max-w-2xl leading-relaxed">
+              In six agent runs, every model encountering a licence key requirement dropped that vendor in one line, without opening the product.
+              Those runs tested a comparable decision.{' '}
               <Link href="/findings" className="text-brass underline underline-offset-4">
                 What the runs showed
               </Link>
@@ -575,9 +521,40 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         {!findings.funnel.signup.consistent && (
           <p className="mt-4 font-mono text-xs text-warn">
             The signup page answered inconsistently across three tries ({findings.funnel.signup.statusesSeen.join(', ')}).
-            Bot gates do that, and an agent hitting the wrong try simply leaves.
           </p>
         )}
+      </section>
+
+      <section className="border-b border-rule py-12">
+        <EmailGate
+          domain={report.domain}
+          reportId={report.id}
+          failingCount={failing.length}
+          hasUnmeasuredChecks={scorecard.checks.some((check) => check.inconclusive)}
+          temporary={isHeldOnly(id)}
+          privacyLinked={CONTROLLER_IS_NAMED}
+        />
+      </section>
+
+      <section className="border-b border-rule py-10">
+        <h2 className="text-lg font-semibold tracking-tight">Agent choices were not measured</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          The scan tests HTTP access and published files; it does not measure whether agents choose {report.domain}.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href="/audit"
+            className="bg-ink px-5 py-3 font-mono text-sm text-ground transition-opacity hover:opacity-85"
+          >
+            Read the audits in full
+          </Link>
+          <Link
+            href="/pricing"
+            className="border border-ink/40 px-5 py-3 font-mono text-sm transition-colors hover:border-brass hover:text-brass"
+          >
+            Audit pricing for {report.domain}
+          </Link>
+        </div>
       </section>
 
     </main>
