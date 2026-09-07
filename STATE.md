@@ -1,4 +1,4 @@
-# Let Agents In: migawka na 2026-09-07 (prod v783, korpus 181, formuła 9.57)
+# Let Agents In: migawka na 2026-09-07 (prod v784, korpus 181, formuła 9.57)
 
 Biznes na jednej stronie: `docs/business.md`. Historia rund: `docs/journal-2026-08.md` (do 11.08)
 i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dziennik.
@@ -6,10 +6,11 @@ i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dzi
 ## Nad czym pracujemy
 
 1. **Przepisanie tekstów po audycie** `docs/copy-audit-2026-09-07.md` (codex gpt-6-astra high,
-   zgoda Krystiana na wszystkie fazy). Faza 1+2 (generator raportu, drafty) zrobiona przez codexa,
-   czeka na mój przegląd i bramki. Dalej: 3 `/pricing`, 4 email-gate i `/r/<id>`, 5 landing,
-   `/audit`, kategorie, 6 metodologia, findings, raport branżowy, 7 docs, visibility, `/d/<id>`.
-   Każda faza = osobny commit i deploy. Po fazie 1 przegenerować 10 raportów pod tymi samymi id.
+   zgoda Krystiana na wszystkie fazy). Faza 1+2 ZROBIONA (v784, c3ecc05): generator, widok
+   `/d/<id>`, drafty; 10 raportów i próbka przegenerowane pod tymi samymi id, bramki dostawy zielone.
+   Faza 3 (`/pricing`) w toku u codexa. Dalej: 4 email-gate i `/r/<id>`, 5 landing, `/audit`,
+   kategorie, 6 metodologia, findings, raport branżowy, 7 docs, visibility. Osobny commit i deploy
+   na fazę. Brief do fazy w scratchpadzie sesji (`rewrite-phase3-prompt.md`), wzór dla kolejnych.
 2. **Kampania „raport w prezencie"**: 10 raportów pod `/d/<id>`, drafty w
    `outreach/drafts/gift-report-2026-09-03.private.md` (poza gitem). Send-as hello@ przez SMTP
    Resenda działa (mail-tester 9.3/10, dkim/spf/dmarc pass). Wysyła Krystian po „ok" na drafty.
@@ -17,7 +18,8 @@ i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dzi
 
 ## Co blokuje
 
-- „ok" Krystiana na przepisane drafty (nic nie wychodzi bez tego).
+- „ok" Krystiana na przepisane drafty (nic nie wychodzi bez tego) i decyzja o Transloadit
+  (biegi odpowiadały o object storage, nie o uploadzie: wysyłać czy wstrzymać).
 - Rozszerzenie Chrome bywa odłączone; popup send-as Gmaila jest poza jego zasięgiem.
 
 ## Decyzje, których nie cofamy
