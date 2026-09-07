@@ -33,12 +33,11 @@ export default async function AuditIndexPage() {
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Full agent audits</p>
         <h1 className="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-tight tracking-tight">
-          What agents do when nobody is watching, across {spell(categories)} categories
+          Agent integration studies across {spell(categories)} categories
         </h1>
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
-          Each audit is the same instrument pointed at one category: agents given a brief and nothing else, in
-          isolated copies of a working application, with every source they consulted recorded. {runs} runs so
-          far, and {blocked} of them ended at something only a human could do.
+          Agents received a brief in isolated copies of a working application. Each study records the sources they consulted.
+          Across {runs} runs, {blocked} reported a step that needed a human.
         </p>
       </section>
 
@@ -88,14 +87,13 @@ export default async function AuditIndexPage() {
       </section>
 
       <section className="py-12">
-        <h2 className="text-lg font-semibold tracking-tight">The same instrument, pointed at your category</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Commission an integration audit</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          These were run to build the method, so the subjects are vendors we have no relationship with and
-          the write-ups are public. Yours would not be: nothing from a paid audit is published without your
-          written agreement. If you are one of the four and you think a page here is wrong, write to us and
-          the correction goes up beside the finding, or the page comes down. That offer is not conditional
-          on you buying anything, and it applies to an interpretation more than to a check, because an
-          interpretation is the part you cannot rerun yourself.
+          These public studies cover vendors I have no relationship with. Nothing from a paid audit is published without your written agreement.
+        </p>
+        <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
+          If a finding about your product is wrong, write to me. I publish the correction beside the finding or take the page down.
+          You do not need to buy an audit to request a correction.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <TrackedLink click="pricing" href="/pricing" className="bg-ink px-5 py-3 font-mono text-sm text-ground transition-opacity hover:opacity-85">

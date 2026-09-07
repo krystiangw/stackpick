@@ -28,7 +28,7 @@ picks it up (a person or an agent) can continue without the original session.
 | 1, 2 | `scripts/client-report.mts`, `src/app/d/[id]/report-view.tsx`, shared wording, outreach drafts | shipped v784, commit c3ecc05; ten reports and `/d/sample` republished |
 | 3 | `src/app/pricing/page.tsx` | shipped v785, commit 6a3a97a |
 | 4 | `src/components/email-gate.tsx`, `src/app/r/[id]/page.tsx` | shipped v786, commit bd8fa5d |
-| 5 | `src/app/page.tsx`, `src/app/audit/page.tsx`, `src/app/c/[category]/page.tsx` | to do, brief below |
+| 5 | Landing, audit index, categories; UI and run reader added at owner request | implemented; build, lint and UI checks passed; review/deploy next |
 | 6 | `src/app/methodology/page.tsx`, `src/app/findings/page.tsx`, `src/app/report/page.tsx` | to do, brief below |
 | 7 | `src/app/docs/page.tsx`, `src/app/visibility/page.tsx`, `src/app/d/[id]/page.tsx` | to do, brief below |
 
@@ -95,3 +95,18 @@ Apply phase 7 of the audit: `src/app/docs/page.tsx`, `src/app/visibility/page.ts
 Re-run `python3 ~/.claude/skills/agent-discoverability/scripts/check.py https://letagentsin.com
 --pricing https://letagentsin.com/pricing` and the surface meter on the live pages, and record
 both here.
+
+## UI scope added by the owner, 2026-09-07
+
+The owner also requested visual and UX improvements, specifically the text-heavy `/c/<category>/runs` pages.
+Phase 5 includes shared navigation, a shorter home page, expandable category rankings, and a run browser.
+The run browser filters by tool/date and vendor, opens individual answers, renders Markdown tables and links,
+and retains the full original text with matcher-based highlighting. No prompts, answers or counts change.
+
+Phase 5 approximate authored word counts (same TypeScript AST extraction before and after):
+landing 761 to 545; audit index 211 to 145; category template 384 to 272.
+No exact-literal guards changed. Review found missing study anchors and filtered hash navigation; both were corrected and added to browser checks. Long original prompts and quoted evidence are exempt from sentence limits.
+The conditional corpus/formula disclosure keeps its computed fields together; its expanded branch can exceed 25 words.
+Validation: build (typecheck and rules), lint, Markdown safety audit, browser interactions at 390/1440 px
+in light/dark themes. All 15 original email-category answers matched character for character.
+Evidence: `data/ui-rewrite-2026-09-07/` (local, ignored).

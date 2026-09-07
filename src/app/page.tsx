@@ -22,34 +22,10 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { alternates: { canonical: SITE_URL } }
 
 const EVIDENCE = [
-  {
-    figure: '18 / 18',
-    against: '0 / 12',
-    claim: 'Eighteen runs produced code. None obtained its own credential where one was needed.',
-    detail:
-      'Eighteen runs in isolated copies of a real application across four categories. Eight integrations were exercised; ten were checked from artefacts, including one whose payment interface was absent from the build. In the three that need an account, every run stopped at the signup form and said so in its own words. In the fourth no account was needed and the barrier still appeared, earlier: a required licence key struck vendors off during dependency research, before their product was opened.',
-  },
-  {
-    figure: '0 / 10',
-    against: '6 / 6',
-    claim: 'The same model skipped sources in one study and fetched them in another.',
-    detail:
-      'In one study the cheaper model fetched no external source in ten runs and said so: own knowledge only. In another, where the choice turned on a licence, every run fetched sources including all of the cheaper ones. The task appears to affect source use; these studies do not isolate its effect from the model or prompt.',
-  },
-  {
-    figure: '5 → 0',
-    against: 'one line of code',
-    claim: 'A provider that won five of eight greenfield runs won none of twelve against real code.',
-    detail:
-      'The app already had a session cookie. Adopting that provider meant running a second identity system just to upload a file, and three separate runs rejected it in almost the same words.',
-  },
-  {
-    figure: '0 / 20',
-    against: 'considered in 19',
-    claim: 'Nineteen runs rejected a provider over the same framework assumption.',
-    detail:
-      'One provider was never selected, yet was considered and dismissed in nineteen of twenty runs, always because it assumes a framework the project did not use. An example for the missing framework is a candidate fix. We have not tested whether it changes the choice.',
-  },
+  { figure: '18 / 18', against: '0 / 12', claim: 'All eighteen runs produced code. None obtained its own credential when needed.', detail: 'Eight integrations were exercised; ten were checked from artefacts, including one with a missing payment interface. Four categories were tested.', href: '/findings#wall' },
+  { figure: '0 / 10', against: '6 / 6', claim: 'The same model skipped sources for storage and fetched them for editor licensing.', detail: 'Source use varied between the two studies. The task effect was not isolated from the model or prompt.', href: '/findings#sources' },
+  { figure: '5 → 0', against: 'one line of code', claim: 'Five of eight greenfield runs chose a provider; none of twelve chose it for an existing app.', detail: 'The app already had a session cookie. Three runs rejected adding a second identity system for file uploads.', href: '/findings#codebase' },
+  { figure: '0 / 20', against: 'considered in 19', claim: 'Nineteen runs rejected one provider over the same framework assumption.', detail: 'A framework-specific example is a candidate fix. Its effect on selection has not been tested.', href: '/findings#absent' },
 ]
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ domain?: string }> }) {
@@ -63,55 +39,76 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
 
   return (
     <main className="mx-auto max-w-5xl px-6">
-      <section className="border-b border-rule py-16 sm:py-24">
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">
-          Agent readiness, measured from outside
-        </p>
-        <h1 className="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">
-          Can an AI agent get from your docs to a working integration?
-        </h1>
-        <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-soft">
-          Start with {CHECKS.length} free checks of your public site: documentation, access paths and API signals.
-          The scan identifies things to investigate. A hands-on audit follows an agent through agreed
-          integration tasks, records where it needs help, and retests one small fix. The scan alone does
-          not test signup or complete an API call.
-        </p>
-        {coverage.signupNeedsJavaScript > 0 && (
-          <p className="mt-4 max-w-2xl font-mono text-sm leading-relaxed text-ink-soft">
-            {/* One string, because a line break between two JSX expressions renders as a space and
-                put one in front of every comma in this sentence. */}
-            {`Of ${coverage.domains} vendors we can compare today` +
-              (coverage.curated > coverage.domains ? ` (we hold ${coverage.curated}; the rest are waiting for a rescan)` : '') +
-              (coverage.publishedFormula !== coverage.currentFormula
-                ? `, measured under formula ${coverage.publishedFormula} while the scanner runs ${coverage.currentFormula}, so a scan you run today can disagree with the row below it`
-                : '') +
-              `, ${coverage.signupNeedsJavaScript} serve a signup form that renders nothing without JavaScript, `}
-            {coverage.signupRefusesAgents > 0
-              ? `and ${coverage.signupRefusesAgents} answer an agent with a refusal where a browser gets through.`
-              : 'which our HTTP-only scanner cannot render. A browser-capable agent may still use it; a blank response alone does not establish a blocked signup.'}
-          </p>
-        )}
-        <div className="mt-8 max-w-xl">
-          <ScanForm autoFocus initialDomain={asked} />
+      <section className="home-hero border-b border-rule py-12 sm:py-20">
+        <div className="grid items-start gap-10 lg:grid-cols-[1.5fr_1fr] lg:gap-14">
+          <div>
+            <p className="eyebrow">Agent readiness</p>
+            <h1 className="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-[1.08] tracking-tight sm:text-5xl">
+              From your docs to a working integration.
+            </h1>
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-ink-soft">
+              Start with {CHECKS.length} free checks of your public site. Get a scorecard of documentation,
+              access paths and API signals, with the evidence behind each result.
+            </p>
+            <div className="mt-7 max-w-xl">
+              <ScanForm autoFocus initialDomain={asked} />
+            </div>
+            <WebMcpTools />
+            <p className="mt-3 text-sm text-ink-faint">Free. No account. Reads only what you publish.</p>
+            <p className="mt-6 text-sm text-ink-soft">I&apos;m Krystian Gwizdała. I built the scanner and run the audits.</p>
+          </div>
+          <aside className="sample-panel rounded-lg border border-rule bg-surface p-6 sm:p-7" aria-label="An example scorecard">
+            <div className="flex items-center justify-between gap-3">
+              <p className="eyebrow">Inside a scorecard</p>
+              <span className="rounded-full bg-brass-soft px-2.5 py-1 text-xs font-medium text-brass">Public example</span>
+            </div>
+            {example && (
+              <>
+                <div className="mt-6 flex items-baseline justify-between gap-4">
+                  <Link href={`/r/${example.reportId}`} className="font-mono text-lg text-brass underline underline-offset-4">{example.domain}</Link>
+                  <p className="font-mono text-3xl tracking-tight tabular-nums">{example.total}<span className="text-base text-ink-faint"> / {example.max}</span></p>
+                </div>
+                <p className="mt-2 text-xs text-ink-faint">Highest measured share in {categories[0].category.label.toLowerCase()}.</p>
+                <div className="mt-7"><FunnelMark stages={example.stages} height={72} showLegend /></div>
+              </>
+            )}
+            <p className="mt-6 border-t border-rule pt-5 text-sm leading-relaxed text-ink-soft">
+              The scan alone does not test signup or complete an API call. An integration audit tests agreed tasks and records human handoffs.
+            </p>
+            <Link href="/d/sample" className="mt-5 inline-flex min-h-11 items-center text-sm font-medium text-brass underline underline-offset-4">Read a full agent report <span aria-hidden="true" className="ml-2">↗</span></Link>
+          </aside>
         </div>
-        {/* Renders nothing. Offers the same scan to an agent running inside the visitor's browser. */}
-        <WebMcpTools />
-        <p className="mt-3 font-mono text-xs text-ink-faint">
-          Free. No account. Reads only what you publish.
-        </p>
+        {coverage.signupNeedsJavaScript > 0 && (
+          <details className="mt-8 rounded-md border border-rule px-4 py-3 text-sm text-ink-soft">
+            <summary className="cursor-pointer font-medium">What the current scans can tell us</summary>
+            <p className="mt-3 max-w-3xl leading-relaxed">
+              {`Of ${coverage.domains} vendors we can compare today` +
+                (coverage.curated > coverage.domains ? ` (we hold ${coverage.curated}; the rest are waiting for a rescan)` : '') +
+                (coverage.publishedFormula !== coverage.currentFormula
+                  ? `, measured under formula ${coverage.publishedFormula} while the scanner runs ${coverage.currentFormula}. A new scan can disagree with the published row`
+                  : '') +
+                `, ${coverage.signupNeedsJavaScript} serve a signup form that renders nothing without JavaScript. `}
+              {coverage.signupRefusesAgents > 0
+                ? `${coverage.signupRefusesAgents} refuse an agent request where a browser request gets through.`
+                : 'Our HTTP-only scanner cannot render those forms. A browser-capable agent may still use them.'}
+              {' '}A blank response alone does not establish a blocked signup.
+            </p>
+          </details>
+        )}
       </section>
 
       <section className="border-b border-rule py-14">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">What we found</h2>
-        <div className="mt-8 grid gap-px bg-rule sm:grid-cols-3">
+        <div className="mt-7 grid gap-4 sm:grid-cols-2">
           {EVIDENCE.map((item) => (
-            <article key={item.figure} className="flex flex-col gap-3 bg-ground p-6">
+            <article key={item.figure} className="flex flex-col gap-3 rounded-lg border border-rule bg-surface p-6">
               <div className="flex items-baseline gap-2 font-mono">
                 <span className="text-3xl font-semibold tracking-tight tabular-nums">{item.figure}</span>
                 <span className="text-xs text-ink-faint">{item.against}</span>
               </div>
               <h3 className="text-balance font-medium leading-snug">{item.claim}</h3>
               <p className="text-sm leading-relaxed text-ink-soft">{item.detail}</p>
+              <Link href={item.href} className="mt-auto inline-flex min-h-11 items-center text-sm text-brass underline underline-offset-4">Read the study</Link>
             </article>
           ))}
         </div>
@@ -131,25 +128,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
           The score groups public HTTP signals into five stages. Completing those stages is a separate
           question: an integration audit tests the actual task, including credentials and human handoffs.
         </p>
-        {example && (
-          <div className="mt-8 flex flex-wrap items-end gap-6 border border-rule p-6">
-            <FunnelMark stages={example.stages} height={72} showLegend />
-            <div className="flex flex-col gap-1">
-              <p className="font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">
-                What the five stages look like on one real domain
-              </p>
-              <p className="font-mono text-sm">
-                <Link href={`/r/${example.reportId}`} className="text-brass underline underline-offset-4">
-                  {example.domain}
-                </Link>{' '}
-                <span className="tabular-nums text-ink-soft">
-                  {example.total} / {example.max}
-                </span>{' '}
-                <span className="text-ink-faint">· current leader in {categories[0].category.label.toLowerCase()}</span>
-              </p>
-            </div>
-          </div>
-        )}
+
 
         <ol className="mt-8 flex flex-col">
           {STAGES.map((stage) => (
@@ -186,17 +165,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
           </div>
           <div id="watch" className="flex scroll-mt-8 flex-col gap-3 bg-ground p-8">
             <h3 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Monitoring</h3>
-            <p className="text-2xl font-semibold tracking-tight">When it breaks, you hear it from us</p>
+            <p className="text-2xl font-semibold tracking-tight">Know when a scan result changes</p>
             <p className="text-sm leading-relaxed text-ink-soft">
-              An edge rule that starts refusing agents changes nothing a person sees in a browser, so the first
-              sign is usually an integration that quietly stopped working. We rerun the checks weekly and write
-              only when a verdict moves, naming what it says now and what it said before.
+              Checks run weekly. When a verdict changes, the email shows the previous result and the new one.
             </p>
             <p className="text-sm leading-relaxed text-ink-soft">
-              The agent part asks one buying question five times and counts which providers are named. I start
-              those runs manually, aiming for monthly checks; I may skip a batch, and unchanged results
-              produce no email. These are recommendation answers, with no signup or integration attempt.
-              Coverage is limited to the {CATEGORIES.length} categories we measure.
+              I start five agent runs manually, aiming for monthly checks. I may skip a batch; unchanged results produce no email.
+              </p>
+            <p className="text-sm leading-relaxed text-ink-soft">
+              Each run answers one buying question, without signup or integration. Coverage is limited to the {CATEGORIES.length} categories we measure.
             </p>
             <p className="text-sm leading-relaxed text-ink-soft">
               Free while we are building it, and we will ask before it ever costs anything. No account, no card,
@@ -222,12 +199,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
           whether to pay for an audit should not have to hunt for who would be doing it. */}
       <section className="border-t border-rule py-10">
         <p className="max-w-2xl leading-relaxed text-ink-soft">
-          Run by Krystian Gwizdała. The scanner, the formula, the agent runs and every number on this site are
-          mine, and an audit is run by me rather than by a team you never meet.{' '}
+          I run the scans, write the briefs and discuss the audit results with you.{' '}
           <TrackedLink click="audit" href="/audit" className="text-brass underline underline-offset-4">
-            Four audits are published in full
+            Read the four published audits
           </TrackedLink>{' '}
-          so you can see the work before deciding whether it is worth anything to you.
+          to see the work.
         </p>
       </section>
     </main>

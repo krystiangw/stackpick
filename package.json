@@ -72,6 +72,8 @@
     "posthog-js": "^1.418.10",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "undici": "^8.10.0"
   },
   "devDependencies": {

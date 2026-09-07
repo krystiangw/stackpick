@@ -7,6 +7,8 @@ import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
 import { SITE_URL } from '@/lib/site'
 import cells from '@/data/cells.json'
+import { RunBrowser } from '@/components/run-browser'
+import { AnswerMarkdown } from '@/components/answer-markdown'
 
 /**
  * The answers themselves, whole, with the vendor names marked.
@@ -89,54 +91,71 @@ export default async function RunsPage({ params }: { params: Promise<{ category:
           </Link>
         </p>
         <h1 className="mt-4 max-w-3xl text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-          What the agent actually answered, all {held.reduce((sum, one) => sum + one.answers.length, 0)} times
+          The agent answers
         </h1>
-        <blockquote className="mt-6 max-w-2xl border-l-2 border-brass pl-5 leading-relaxed">{cell.question}</blockquote>
-        {/* Every cell on the page, not just the cleanest one. The header used to name one tool and one
-            date while the sections below carried answers from all of them, so a page holding two
-            months of runs said they were all from the first morning. */}
-        <p className="mt-4 font-mono text-xs leading-relaxed text-ink-faint">
-          {held.map((one) => `${one.tool} (${one.model}), ${one.ranAt}, ${one.answers.length} runs`).join(' · ')}.
-          Each run is a separate session with nothing carried between them. Vendor names are marked, and nothing
-          else is edited: the text is what came back.
+        <p className="mt-4 text-lg leading-relaxed text-ink-soft">
+          {held.reduce((sum, one) => sum + one.answers.length, 0)} recorded answers. Browse by tool, date or vendor, then open a run to read it.
+        </p>
+        <details className="mt-6 rounded-lg border border-rule bg-surface p-5">
+          <summary className="cursor-pointer text-sm font-medium">The exact question</summary>
+          <blockquote className="mt-3 max-w-3xl border-l-2 border-brass pl-4 leading-relaxed text-ink-soft">{cell.question}</blockquote>
+        </details>
+        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-soft">
+          Each run used a separate session. Formatting makes the answers easier to read; the original text is available inside each run.
+          Vendor counts use our published matcher. A first mention records order, not a purchase.
         </p>
         {held.some((one) => one.operatorContext.length > 0) && (
-          <p className="mt-3 max-w-2xl font-mono text-xs leading-relaxed text-ink-faint">
-            Not every cell here is a clean measurement: the{' '}
-            {held
-              .filter((one) => one.operatorContext.length > 0)
-              .map((one) => `${one.tool.split(' ')[0]} runs of ${one.ranAt}`)
-              .join(' and ')}{' '}
-            could read the operator instructions on the machine they ran on, which is also why some answers below
-            are in Polish rather than English: those instructions ask for it.
+          <p className="mt-4 rounded-md border-l-2 border-warn bg-surface p-4 text-sm leading-relaxed text-ink-soft">
+            The {held.filter((one) => one.operatorContext.length > 0).map((one) => `${one.tool.split(' ')[0]} runs of ${one.ranAt}`).join(' and ')} could read operator instructions.
+            Those instructions request Polish, so some answers are in Polish. Results describe this setup.
           </p>
         )}
       </section>
 
-      {held.flatMap((one) =>
-        one.answers.map((answer) => (
-        <section key={`${one.tool}-${answer.run}`} className="border-b border-rule py-10">
-          <div className="flex flex-wrap items-baseline gap-3">
-            <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">
-              {one.tool.split(' ')[0]} · {one.ranAt} · run {answer.run}
-            </h2>
-            <p className="font-mono text-xs text-ink-soft">
-              {answer.first ? `named ${answer.first} first` : 'named no vendor we measure'}
-              {answer.named.length > 1 ? ` · ${answer.named.length} of ours named in all` : ''}
-            </p>
-          </div>
-          <div className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-ink-soft">
-            {marked(answer.text, category.domains)}
-          </div>
-        </section>
-        )),
-      )}
+      <RunBrowser
+        batches={held.map((one, index) => ({ id: `batch-${index}`, label: `${one.tool.split(' ')[0]} / ${one.ranAt} / ${one.answers.length} runs` }))}
+        vendors={category.domains}
+        runs={held.flatMap((one, batchIndex) => one.answers.map((answer) => {
+          const runId = `run-${one.tool.split(' ')[0]}-${one.ranAt}-${answer.run}`
+          return {
+            id: runId, batch: `batch-${batchIndex}`, vendors: answer.named,
+            content: (
+              <details id={runId} className="run-card rounded-lg border border-rule bg-surface">
+                <summary className="cursor-pointer list-none p-5 sm:p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="flex flex-wrap items-center gap-2 text-xs text-ink-faint">
+                        <span className="rounded bg-brass-soft px-2 py-1 font-mono text-brass">{one.tool.split(' ')[0]}</span>
+                        <span>{one.ranAt}</span><span>Run {answer.run}</span>
+                      </p>
+                      <h2 className="mt-3 text-base font-medium sm:text-lg">
+                        {answer.first ? `${answer.first} named first` : 'No measured vendor named'}
+                      </h2>
+                      <p className="mt-2 text-sm text-ink-soft">{answer.named.length} measured {answer.named.length === 1 ? 'vendor' : 'vendors'} mentioned</p>
+                    </div>
+                    <span className="run-toggle mt-1 shrink-0 text-sm font-medium text-brass"><span className="when-closed">Read</span><span className="when-open">Close</span> <span aria-hidden="true">+</span></span>
+                  </div>
+                </summary>
+                <div className="border-t border-rule px-5 pb-6 pt-5 sm:px-7">
+                  <div className="mb-6 flex flex-wrap items-center justify-between gap-3 text-xs text-ink-faint">
+                    <p>{one.tool} ({one.model})</p>
+                    <a href={`#${runId}`} className="inline-flex min-h-11 items-center text-brass underline underline-offset-4">Link to this run</a>
+                  </div>
+                  <AnswerMarkdown text={answer.text} />
+                  <details className="mt-8 border-t border-rule pt-5">
+                    <summary className="cursor-pointer text-sm font-medium">Original text</summary>
+                    <pre data-original-answer={runId} className="mt-4 whitespace-pre-wrap break-words rounded-md bg-ground p-4 font-mono text-xs leading-relaxed text-ink-soft">{marked(answer.text, category.domains)}</pre>
+                  </details>
+                </div>
+              </details>
+            ),
+          }
+        }))}
+      />
 
       <section className="py-10">
         <p className="max-w-2xl text-sm leading-relaxed text-ink-soft">
-          Counting who was named is done by a published list of names and a published regular expression, never by
-          a second model reading the first one&apos;s answer. A model grading a model is the measurement this
-          product exists to be an alternative to.{' '}
+          Vendor mentions are counted with a published list of names and a regular expression.{' '}
           <Link href="/methodology#named" className="text-brass underline underline-offset-4">
             How the counting works
           </Link>{' '}

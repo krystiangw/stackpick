@@ -3,6 +3,7 @@ import { CONTROLLER_IS_NAMED, CORPUS_LICENCE, CORPUS_LICENCE_IS_PUBLISHED, SELLE
 import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google'
 import Link from 'next/link'
 import { SITE_URL } from '@/lib/site'
+import { SiteNavigation } from '@/components/site-navigation'
 import './globals.css'
 
 const plexSans = IBM_Plex_Sans({
@@ -24,7 +25,7 @@ const plexMono = IBM_Plex_Mono({
  * no card was wanted. "Free, no account" is the sentence we would have wanted Auth0 to have.
  */
 const DESCRIPTION =
-  'Scan whether an AI coding agent can discover, sign up for and integrate your SaaS. Free deterministic checks, public methodology and dated evidence.'
+  'Free checks of your public docs, access paths and API signals. Agent integration audits with a clear method and dated evidence.'
 const TITLE = 'AI agent readiness scanner for SaaS · Let Agents In'
 
 export const metadata: Metadata = {
@@ -68,7 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   email: 'hello@letagentsin.com',
                   founder: { '@type': 'Person', name: 'Krystian Gwizdała' },
                   description:
-                    'Measures whether an AI coding agent can find, register with and integrate a product, using deterministic HTTP checks with published rules.',
+                    'Investigates agent choices and integration tasks, with separate deterministic HTTP checks and published evidence.',
                 },
                 {
                   '@type': 'Dataset',
@@ -97,45 +98,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }),
           }}
         />
-        <header className="border-b border-rule">
-          <div className="mx-auto flex max-w-5xl flex-wrap items-baseline justify-between gap-x-4 gap-y-2 px-6 py-4">
-            <Link href="/" className="font-mono text-base font-semibold tracking-tight">
-              Let Agents <span className="text-brass">In</span>
+        <a href="#main-content" className="skip-link">Skip to content</a>
+        <header className="site-header border-b border-rule bg-ground">
+          <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-4">
+            <Link href="/" className="inline-flex min-h-11 items-center gap-2.5 font-mono text-base font-semibold tracking-tight">
+              <span aria-hidden="true" className="brand-mark">↳</span>
+              <span>Let Agents <span className="text-brass">In</span></span>
             </Link>
-            <nav className="flex flex-wrap gap-x-5 gap-y-2 font-mono text-xs [&>a]:py-1.5 uppercase tracking-widest text-ink-faint">
-              <Link href="/docs" className="hover:text-ink">
-                Docs
-              </Link>
-              <Link href="/methodology" className="hover:text-ink">
-                Methodology
-              </Link>
-              <Link href="/c" className="hover:text-ink">
-                Categories
-              </Link>
-              <Link href="/report" className="hover:text-ink">
-                Report
-              </Link>
-              <Link href="/findings" className="hover:text-ink">
-                Findings
-              </Link>
-              <Link href="/audit" className="hover:text-ink">
-                Audits
-              </Link>
-              <Link href="/visibility" className="hover:text-ink">
-                AI visibility
-              </Link>
-              <Link href="/pricing" className="hover:text-ink">
-                Pricing
-              </Link>
-            </nav>
+            <SiteNavigation />
           </div>
         </header>
+        <div id="main-content" tabIndex={-1} />
         {children}
         <footer className="mt-24 border-t border-rule">
           <div className="mx-auto flex max-w-5xl flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-6 py-8 font-mono text-xs text-ink-faint">
             <p className="max-w-2xl">
-              Let Agents In measures agent behaviour, not marketing. Every check on the free scan is an HTTP
-              request with a published rule.
+              Independent agent studies and public HTTP checks. Built and run by one engineer.
             </p>
             {/* One person does the work, and a buyer weighing a five-figure engagement with a stranger
                 asks who that is before anything else. Naming him costs nothing and hiding him is what

@@ -246,7 +246,7 @@ export default async function FindingsPage() {
       </section>
 
       {results.map((result) => (
-        <section key={result.id} className="border-b border-rule py-12">
+        <section key={result.id} id={result.id} className="border-b border-rule py-12">
           <h2 className="max-w-2xl text-balance text-2xl font-semibold leading-snug tracking-tight">
             {result.heading}
           </h2>

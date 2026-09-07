@@ -54,9 +54,9 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
   if (!category) return {}
   const cell = cellFor(id)
   return {
-    title: `${category.label}: which vendors an AI agent can reach · Let Agents In`,
+    title: `${category.label}: agent mentions and HTTP checks · Let Agents In`,
     description: cell
-      ? `Which ${category.label.toLowerCase()} vendors an unattended AI agent can discover and integrate, where it stops, and who it names when asked. Every result links to dated evidence.`
+      ? `Agent answers and public HTTP checks for ${category.label.toLowerCase()}, with dated evidence.`
       : `Agent readiness measured across ${category.label.toLowerCase()}, check by check.`,
     alternates: { canonical: `${SITE_URL}/c/${id}` },
   }
@@ -86,7 +86,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
             '@context': 'https://schema.org',
             '@type': 'Dataset',
             name: `${category.label}: agent reachability dataset`,
-            description: `Dated measurements of where an unattended agent stops across ${category.label.toLowerCase()}, with the evidence behind every verdict.`,
+            description: `Dated HTTP checks and agent mention counts across ${category.label.toLowerCase()}.`,
             url: `${SITE_URL}/c/${id}`,
             isAccessibleForFree: true,
             creator: { '@type': 'Organization', name: 'Let Agents In', url: SITE_URL },
@@ -101,12 +101,12 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Category</p>
         <h1 className="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-tight tracking-tight">
-          {category.label}: who an agent can reach, and where it stops
+          {category.label}
         </h1>
         {cell && (
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-soft">
-            We put one question to an agent {held.map((one) => `${one.runs} times on ${toolName(one)}`).join(' and ')},
-            every run a separate session with nothing carried between them, and counted the vendors it named.{' '}
+            One question, {held.map((one) => `${one.runs} runs on ${toolName(one)}`).join(' and ')}.
+            Each run used a separate session. The table counts vendor mentions.{' '}
             <span className="font-medium text-ink">
               {invisible} of {rows.length} vendors we measure in this category were never named once.
             </span>
@@ -117,16 +117,16 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
       {reachability && (
         <section className="border-b border-rule py-12">
           <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">
-            Can an unattended agent finish?
+            Measured access checks
           </h2>
           <p className="mt-4 max-w-2xl text-lg leading-relaxed text-ink-soft">
-            We measured {reachability.measured} of the {reachability.inCategory} providers on this shelf.{' '}
+            We measured {reachability.measured} of the {reachability.inCategory} providers in this category.{' '}
             <span className="font-medium text-ink">
               {reachability.clear.length === 0
                 ? 'None cleared every barrier we test.'
                 : `${reachability.clear.length} cleared every barrier we test.`}
             </span>{' '}
-            This is reachability, not a product recommendation: we do not measure feature fit, price or support.
+            These HTTP checks do not establish integration success. Feature fit, price and support are outside their scope.
           </p>
 
           <div className="mt-7 grid gap-7 md:grid-cols-3">
@@ -185,8 +185,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
             {cell.question}
           </blockquote>
           <p className="mt-4 font-mono text-xs leading-relaxed text-ink-faint">
-            {cell.tool} ({cell.model}), {cell.runs} runs, {cell.ranAt}. The question names no vendor and asks for
-            a recommendation, which is the shape a developer types.
+            {cell.tool} ({cell.model}), {cell.runs} runs, {cell.ranAt}. The question asks for a recommendation without naming a vendor.
           </p>
           {/* Across every cell on the page, not the one whose numbers happen to head it. `cell` is
               the cleanest by construction, so this asked the empty list every time and the warning
@@ -196,11 +195,9 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
             // The warning goes above the table for the same reason it does in the terminal reader:
             // a reader who has seen the numbers has already believed them.
             <p className="mt-3 max-w-2xl font-mono text-xs leading-relaxed text-ink-faint">
-              Not a clean measurement: the {contaminated.map(toolName).join(' and ')} runs could read the operator
-              instructions on the machine they ran on ({[...new Set(contaminated.flatMap((one) => one.operatorContext))].join(', ')}),
-              which is also why some answers are in Polish rather than English: those instructions ask for it. They
-              describe an agent there rather than an agent at your customer, and we say so rather than publish the
-              number alone.
+              The {contaminated.map(toolName).join(' and ')} runs could read the operator
+              instructions ({[...new Set(contaminated.flatMap((one) => one.operatorContext))].join(', ')}).
+              Those instructions request Polish, so some answers are in Polish. Results describe this setup, not an agent at your customer.
             </p>
           )}
         </section>
@@ -238,11 +235,11 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
                       const there = one.rows.find((candidate) => candidate.domain === row.domain)
                       return (
                         <td key={one.tool} className="py-2.5 pr-4 text-right font-mono tabular-nums">
-                          {there ? `${there.named}/${one.runs}` : '—'}
+                          {there ? `${there.named}/${one.runs}` : '-'}
                         </td>
                       )
                     })}
-                    <td className="py-2.5 pr-4 text-right font-mono tabular-nums">{cell ? row.first : '—'}</td>
+                    <td className="py-2.5 pr-4 text-right font-mono tabular-nums">{cell ? row.first : '-'}</td>
                     <td className="py-2.5 pr-4 text-right font-mono tabular-nums text-ink-soft">
                       {scored ? `${scored.total}/${scored.max}` : 'not measured'}
                     </td>
@@ -253,13 +250,12 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
           </table>
         </div>
         <p className="mt-5 max-w-2xl text-sm leading-relaxed text-ink-soft">
-          The two columns answer different questions. <span className="font-medium">Named</span> is whether you were
-          in the room at all. <span className="font-medium">Named first</span> is whether you were the answer. A
-          vendor at zero is not losing on price or features in these runs: it is not being considered.
+          <span className="font-medium">Named</span> counts runs that mentioned a vendor.
+          <span className="font-medium"> Named first</span> counts runs that mentioned it before any other vendor we measure.
+          Mention order does not establish a purchasing decision.
         </p>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
-          {cell?.runs ?? 5} runs separate a wall from silence and nothing finer. Two vendors a run or two apart are
-          not ranked by this, and we would rather say that than sell the gap.{' '}
+          A batch of {cell?.runs ?? 5} runs is a small sample. A one- or two-run difference does not establish a ranking.{' '}
           <Link href={`/c/${id}/runs`} className="text-brass underline underline-offset-4">
             Read what the agent actually answered
           </Link>{' '}
@@ -273,7 +269,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
           <a href={`/c/${id}/corpus.json`} className="text-brass underline underline-offset-4">
             Download this category as JSON
           </a>{' '}
-          with every dated measurement and the barrier where an unattended agent stops.
+          with dated measurements and the recorded access barriers.
         </p>
       </section>
 
