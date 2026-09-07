@@ -53,7 +53,19 @@ nadpisaniem. Metadane prób w `src/data/agent-attempts.json` odpowiadają rzeczy
 Lokalne dowody: `data/agent-expansion-2026-09-07/`, w tym 284 pliki surowych wyników i ich SHA-256,
 kopie wcześniejszych dostaw i draftów, modele raportów, testy przeglądarkowe oraz PDF.
 Kontrole obejmują zgodność transcriptów, mianowników i źródeł; widoki 390/1440 px; filtry;
-komunikaty o brakujących próbach; wydruk z pełnymi dowodami. Status wdrożenia uzupełniany po publikacji.
+komunikaty o brakujących próbach; wydruk z pełnymi dowodami.
+
+Wdrożono **v793, commit `3a112e3`** po typecheck, lint, rules, build i przeglądzie Codex bez uwag.
+Pierwszy przegląd wykrył porównywanie partii zależne od kolejności kluczy JSON. Poprawiono je
+przed publikacją: ponowny eksport tych samych danych zachowuje oryginał, a zmiana dowodów
+nadal jest odrzucana. Test obejmuje też brakujące historyczne `toolSettings` i puste ustawienia.
+
+Ponownie opublikowano dziewięć raportów i próbkę. Kontrola produkcji potwierdziła aktualne
+liczniki, modele, źródła i zalecenia na 10 stronach dostaw oraz zgodność 159 oryginalnych
+odpowiedzi na siedmiu stronach przebiegów. Prywatne dostawy nadal mają noindex/nofollow.
+Dowód: `data/agent-expansion-2026-09-07/live-verification.json`.
 
 Free odnawia się 10 września. Pracę na 16 brakujących odpowiedziach przygotowano do wznowienia
-po jednej próbie dziennie, bez zmiany planu. Szczegóły: `docs/cursor-free-plan-2026-09-07.md`.
+po jednej próbie dziennie, bez zmiany planu. Lokalny harmonogram jest włączony, pierwsza próba
+11 września o 10:15 czasu Warszawy. Nie publikuje wyników automatycznie.
+Szczegóły: `docs/cursor-free-plan-2026-09-07.md`.

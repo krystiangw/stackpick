@@ -12,9 +12,12 @@ The site scans a vendor's domain with 16 deterministic HTTP checks (no JavaScrip
 9.57, `src/lib/score.ts`), and keeps a corpus of 181 vendor domains in 26 buying categories
 (`src/lib/categories.ts`) that is rescanned regularly and published at `/findings` and `/c/<category>`.
 
-On top of the scan it runs real agents: one buying question per category, put to a coding agent
-(codex, claude) five times per batch in isolated sessions, and counts in how many runs each
-vendor was named. Those runs are published at `/c/<category>/runs`.
+On top of the scan it runs real agents: one buying question per category, put to Codex and
+Claude Code five times per batch in separate sessions. Seven campaign categories also have
+35 Antigravity and 19 Cursor Auto answers collected on September 7. Sixteen Cursor attempts
+hit the Free account limit and are excluded from mention counts. Those runs, their dates,
+settings and missing answers are published at `/c/<category>/runs`. Auto does not disclose
+its underlying model. The full-corpus association study remains limited to the original two tools.
 
 The product argument: observing agents choosing and integrating a product can reveal failures
 that a vendor can act on. Whether those failures cause lost sales remains a business hypothesis;
@@ -45,7 +48,8 @@ and a report is bought by writing to hello@letagentsin.com. Turning it on is `do
 - Buttons: counted since v783 (2026-09-07), visible on `/app`. Nothing was pressed before that
   which left a trace (no scans of domains outside the corpus, no leads, no watches).
 - Go-to-market: a campaign prepared for ten corpus vendors with MCP or OAuth discovery signals
-  and 0 of 15 mentions for the category question; nine passed the brief-fit review. Each gets
+  and initially 0 of 15 mentions for the category question; nine passed the brief-fit review.
+  Expanded samples changed some counts: DocuSeal 2/25, Upstash 1/25, Chroma 2/20. Each gets
   the $49 report free and one question. Drafts, recipients and rules: `outreach/drafts/gift-report-2026-09-03.private.md`
   (kept out of git on purpose, the report links inside are bearer keys). Nothing is sent without
   the owner's explicit approval of the drafts.
@@ -62,6 +66,11 @@ and a report is bought by writing to hello@letagentsin.com. Turning it on is `do
   recommendations have been replaced with reviewed next steps tied to each scan. Transloadit
   remains excluded pending a new brief and runs. Live evidence and completion criteria:
   `docs/readiness-verification-2026-09-07.md`. Readiness is not permission to send.
+- Agent expansion, 2026-09-07 (v793): nine reports, the sample and unsent drafts now reflect
+  54 additional answers. A local daily queue will collect only the 16 missing Cursor answers
+  after the account reset, starting no earlier than September 11; it pauses on any error.
+  No upgrade was purchased. Collection does not automatically publish reports.
+  Evidence: `docs/agent-expansion-2026-09-07.md`; budget: `docs/cursor-free-plan-2026-09-07.md`.
 
 ## Decisions that stand
 
@@ -91,7 +100,8 @@ and a report is bought by writing to hello@letagentsin.com. Turning it on is `do
 ## What an auditor should look at first
 
 1. Whether the product argument is true at the scale we claim: 181 domains, one question per
-   category, five runs per batch, two tools. `/findings` and `/c/<category>/runs` are the evidence.
+   category, five runs per original batch, two tools across all categories and extra tools in
+   seven selected categories. `/findings` and `/c/<category>/runs` are the evidence.
 2. Whether anybody outside will pay: zero customers, no checkout, and a first campaign that has
    not been sent. Everything before a reply is a hypothesis.
 3. Whether the copy sells or explains itself: `docs/copy-audit-2026-09-07.md`.

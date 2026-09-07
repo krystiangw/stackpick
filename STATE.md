@@ -1,4 +1,4 @@
-# Let Agents In: migawka na 2026-09-07 (prod v792, korpus 181, formuła 9.57)
+# Let Agents In: migawka na 2026-09-07 (prod v793, korpus 181, formuła 9.57)
 
 Biznes na jednej stronie: `docs/business.md`. Historia rund: `docs/journal-2026-08.md` (do 11.08)
 i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dziennik.
@@ -9,7 +9,7 @@ i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dzi
    pod dotychczasowymi linkami i zgodna próbka Loops na `/d/sample`. Generator wymaga oceny
    briefu i zaleceń powiązanych z SHA-256 skanu. Korekty niepotwierdzonych zaleceń dostarczone.
    Dziewięć lokalnych `.eml` w `data/product-review-2026-09-07/email-drafts/`, nic nie wysłano.
-   Kontrola: 10 stron dostaw bez logowania, 7 stron przebiegów / 105 pełnych odpowiedzi,
+   Kontrola po rozszerzeniu agentów: 10 stron dostaw bez logowania, 7 stron przebiegów / 159 pełnych odpowiedzi,
    35 działających źródeł, skrzynki i zgodność maili. Dowody i audyt zamknięcia:
    `docs/readiness-verification-2026-09-07.md`. Pilotaż: `docs/integration-pilot-2026-09-07.md`
    (1500 USD jako hipoteza, 2 zadania, 24 próby, limit 12 h, niewykonany i niesprzedany).
@@ -26,13 +26,19 @@ i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dzi
    Po odwołaniu wstrzymania: pierwsza mała tura Loops, DocuSeal, Raygun, Logto; ocena odpowiedzi
    o trafności zadania. Wysyła Krystian. Otwarć poszczególnych dostaw nie śledzimy.
 
-## Następny kierunek produktu
+## Rozszerzenie agentów i następne pomiary
 
-Po pytaniu właściciela o innych agentów: rozszerzyć dowody poza Claude Code i dwie wersje
-Codexa. Adaptery Gemini przez Antigravity i Cursor istnieją, ale nie mają przebiegów w obecnym
-korpusie kategorii. Osobny visibility nie jest pokryciem raportów kampanii. Następny dobór próby:
-Gemini, potem Cursor, jawny model/wersja i oddzielne wyniki. To kierunek dalszych pomiarów;
-nowych testów w ramach przebudowy UI nie uruchomiono.
+Opublikowano 35 odpowiedzi Antigravity i 19 Cursor Auto w siedmiu kategoriach kampanii.
+Zachowano 391 wcześniejszych odpowiedzi; razem 445. Dziewięć raportów, próbka i niewysłane
+drafty mają aktualne liczniki. Brakujące 16 odpowiedzi Cursor to limit konta, nie brak wzmianki.
+Auto nie ujawnia modelu bazowego. Badanie korelacji w 26 kategoriach pozostaje oparte na
+pierwotnych Claude Code i Codex. Dowody: `docs/agent-expansion-2026-09-07.md`.
+
+Cursor pozostaje Free. Panel: reset 10.09; brak publicznej dokładnej liczby żądań.
+Lokalny LaunchAgent `com.letagentsin.cursor-discovery` sprawdza kolejkę o 10:15;
+pierwsza dopuszczalna próba 11.09, najwyżej jedna dziennie, tylko 16 braków.
+Błąd zatrzymuje kolejkę. Komputer musi być dostępny; wyniki wymagają osobnej kontroli
+i publikacji. Szczegóły i wyłączenie: `docs/cursor-free-plan-2026-09-07.md`.
 
 ## Co blokuje
 
@@ -54,6 +60,8 @@ nowych testów w ramach przebudowy UI nie uruchomiono.
 
 ## Stan produkcji
 
+v793 (`3a112e3`): Antigravity i Cursor w raportach, jawne modele i daty, brakujące próby poza
+mianownikiem. Kontrola live: 10 dostaw, 7 stron przebiegów, zgodność 159 pełnych odpowiedzi.
 v792 (`99b31ca`): dokumentacja API, visibility i raporty z rozwijanymi dowodami oraz pełnym wydrukiem.
 v791 (`fba5a5f`): krótsza metodologia, findings i raport branżowy; tabele i sekcje rozwijane.
 v790 (`1bd0ae8`): nawigacja, landing, kategorie i przeglądarka odpowiedzi agentów.

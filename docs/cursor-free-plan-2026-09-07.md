@@ -50,3 +50,22 @@ npx tsx harness/discovery-queue.mts data/agent-expansion-2026-09-07/cursor-queue
 Surowe wyniki kolejki są przechowywane poza repozytorium w `~/.letagentsin-cursor-queue/2026-09-07/`.
 Przed dopisaniem do raportów trzeba przejrzeć wyniki, wyeksportować każdy datowany katalog przez
 `export-cells.mts --append`, przeliczyć modele raportów i przejść zwykłe kontrole publikacji.
+
+## Włączony harmonogram
+
+Zainstalowano i załadowano lokalny LaunchAgent:
+`~/Library/LaunchAgents/com.letagentsin.cursor-discovery.plist`.
+Sprawdza kolejkę codziennie o **10:15 czasu komputera** (obecnie Europe/Warsaw).
+Pierwsze wywołanie agenta może nastąpić **11 września o 10:15**. Kontrola po instalacji:
+zadanie załadowane, zero uruchomień; kolejka zgłasza 16 braków i `waiting`.
+
+To zadanie lokalne: wymaga zalogowanego użytkownika i dostępnego komputera. Uśpienie lub brak
+sieci może opóźnić pomiar. Nie gwarantujemy ukończenia 26 września. Po zebraniu 16 odpowiedzi
+kolejne kontrole nie wywołują Cursor. Wyniki wymagają osobnego przeglądu i publikacji.
+Logi: `data/agent-expansion-2026-09-07/cursor-schedule.log` i `cursor-schedule-error.log`.
+
+Wyłączenie harmonogramu:
+
+```bash
+launchctl bootout "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.letagentsin.cursor-discovery.plist"
+```
