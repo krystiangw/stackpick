@@ -51,7 +51,8 @@ and a report is bought by writing to hello@letagentsin.com. Turning it on is `do
   the owner's explicit approval of the drafts.
 - Copy: an outside editorial audit on 2026-09-07 (`docs/copy-audit-2026-09-07.md`) judged the
   site and the report closer to "written by a model" than "by a person", and a rewrite in the
-  audit's order is under way.
+  audit's order is complete through phase 7 (v792). Pages and delivered reports now use shorter
+  introductions, comparison tables and expandable evidence. Validation: `docs/ui-ux-review-2026-09-07.md`.
 - Campaign status, 2026-09-07: **on hold at the owner's request while the product is refined**.
   Report quality and restart criteria: `docs/product-readiness-2026-09-07.md`.
 - Product refinement, 2026-09-07: all ten campaign briefs reviewed (nine documented fits,

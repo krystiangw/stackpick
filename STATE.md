@@ -1,4 +1,4 @@
-# Let Agents In: migawka na 2026-09-07 (prod v788, korpus 181, formuła 9.57)
+# Let Agents In: migawka na 2026-09-07 (prod v792, korpus 181, formuła 9.57)
 
 Biznes na jednej stronie: `docs/business.md`. Historia rund: `docs/journal-2026-08.md` (do 11.08)
 i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dziennik.
@@ -13,17 +13,26 @@ i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dzi
    35 działających źródeł, skrzynki i zgodność maili. Dowody i audyt zamknięcia:
    `docs/readiness-verification-2026-09-07.md`. Pilotaż: `docs/integration-pilot-2026-09-07.md`
    (1500 USD jako hipoteza, 2 zadania, 24 próby, limit 12 h, niewykonany i niesprzedany).
-1. **Copy po audycie:** w tym etapie poprawiono zakres na `/pricing`, landing, findings
-   i metodologii: skan nie dowodzi ukończenia integracji ani utraty sprzedaży; poprawka
-   dokumentacji wymaga testu przed/po. To zamknięcie ryzyk pierwszej kampanii, nie deklaracja
-   wykonania całego wcześniejszego siedmiofazowego planu redakcyjnego. Audyt źródłowy:
-   `docs/copy-audit-2026-09-07.md`.
+1. **Copy i UI zamknięte:** pozostałe fazy 5-7 planu redakcyjnego wdrożone jako v790-v792.
+   Krótsze strony, czytelna historia przebiegów z filtrami i rozwijanymi odpowiedziami,
+   raport z widoczną oceną zakresu, wynikami i rozwijanymi dowodami. Wydruk zawiera pełne treści.
+   Kontrola live: 10 dostaw, 7 stron przebiegów / 105 pełnych odpowiedzi, 9 stron publicznych.
+   Opis i testy: `docs/ui-ux-review-2026-09-07.md`; zamknięty plan i liczniki słów:
+   `docs/copy-rewrite-plan.md`. Znany wyjątek zewnętrznego checkera: zachowane dyrektywy robots.txt.
 2. **Kampania „raport w prezencie”:** 9 aktywnych odbiorców, Transloadit wyłączony do nowego
    briefu i nowych przebiegów. Kanoniczne drafty: `outreach/drafts/gift-report-2026-09-03.private.md`
    (poza gitem); instrukcja pakietu `data/product-review-2026-09-07/README-ready.md`.
    Send-as hello@ przez SMTP Resenda uprzednio sprawdzony (mail-tester 9.3/10, DKIM/SPF/DMARC pass).
    Po odwołaniu wstrzymania: pierwsza mała tura Loops, DocuSeal, Raygun, Logto; ocena odpowiedzi
    o trafności zadania. Wysyła Krystian. Otwarć poszczególnych dostaw nie śledzimy.
+
+## Następny kierunek produktu
+
+Po pytaniu właściciela o innych agentów: rozszerzyć dowody poza Claude Code i dwie wersje
+Codexa. Adaptery Gemini przez Antigravity i Cursor istnieją, ale nie mają przebiegów w obecnym
+korpusie kategorii. Osobny visibility nie jest pokryciem raportów kampanii. Następny dobór próby:
+Gemini, potem Cursor, jawny model/wersja i oddzielne wyniki. To kierunek dalszych pomiarów;
+nowych testów w ramach przebudowy UI nie uruchomiono.
 
 ## Co blokuje
 
@@ -44,6 +53,10 @@ i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dzi
 - Billing wyłączony, monitoring darmowy bez daty końca, raport kupowany mailem.
 
 ## Stan produkcji
+
+v792 (`99b31ca`): dokumentacja API, visibility i raporty z rozwijanymi dowodami oraz pełnym wydrukiem.
+v791 (`fba5a5f`): krótsza metodologia, findings i raport branżowy; tabele i sekcje rozwijane.
+v790 (`1bd0ae8`): nawigacja, landing, kategorie i przeglądarka odpowiedzi agentów.
 
 v788 (`33e5b4c`): końcowe korekty obietnic na stronie i źródeł Chroma/Polar.
 v787 (`a1139d3`): obowiązkowe oceny briefu/zaleceń, raporty z ocenionymi następnymi krokami,

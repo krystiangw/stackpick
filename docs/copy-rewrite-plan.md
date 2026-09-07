@@ -30,7 +30,7 @@ picks it up (a person or an agent) can continue without the original session.
 | 4 | `src/components/email-gate.tsx`, `src/app/r/[id]/page.tsx` | shipped v786, commit bd8fa5d |
 | 5 | Landing, audit index, categories; UI and run reader added at owner request | shipped v790, commit 1bd0ae8; run-reader and responsive UI checks passed |
 | 6 | `src/app/methodology/page.tsx`, `src/app/findings/page.tsx`, `src/app/report/page.tsx` | shipped v791, commit fba5a5f; responsive research-page checks passed |
-| 7 | `src/app/docs/page.tsx`, `src/app/visibility/page.tsx`, `src/app/d/[id]/page.tsx` | implemented; final validation and deployment in progress |
+| 7 | `src/app/docs/page.tsx`, `src/app/visibility/page.tsx`, `src/app/d/[id]/page.tsx` | shipped v792, commit 99b31ca; report reader, print and live evidence checks passed |
 
 Measured before: site copy scored 0 to 35 on the surface meter
 (`python3 ~/.claude/skills/human-tone/slopscore.py <dir>`), reports 51 to 54. The meter reads
@@ -148,3 +148,48 @@ No exact-literal guards changed in phases 5-7. Original prompts and quotations r
 including their punctuation and longer sentences. Conditional corpus disclosures retain their computed
 fields. Existing stored recommendations and report evidence retain their wording; the reader controls
 when to expand them. The additional visibility words explain when results become available.
+
+## Final live verification, v792
+
+Phases 5-7 shipped as `1bd0ae8` / v790, `fba5a5f` / v791 and `99b31ca` / v792.
+Each phase passed typecheck, lint, repository rules, build and the final Codex review.
+No corpus rescan ran during deployment. Outreach and report generation were left unchanged.
+
+Anonymous production HTML checks passed for nine private deliveries and `/d/sample`, seven
+campaign run pages (105 original answers matched in full), and nine public pages. The report
+checks cover question identity, numbers, reviewed findings, next steps, validation, source links
+and noindex/nofollow. Browser checks at 390/1440 px cover disclosure controls, filters, keyboard
+navigation, hash/history navigation, light/dark themes and absence of page-level overflow.
+Printing includes the exact question and full reviewed evidence, then restores disclosure state.
+
+At 390 px, initial page heights changed from 13906 to 6065 px for the home page, 21010 to
+10649 px for methodology, 15417 to 11135 px for findings, and 6949 to 4960 px for `/d/sample`.
+These measurements describe the default reading view; collapsed evidence is still present.
+
+The requested agent-discoverability script returned **10 PASS, 1 FAIL, 0 inconclusive**.
+The failure is `robots-directives`: the script rejects the existing `Content-Signal:` and
+`AI-Catalog:` lines. This is the known, retained directive decision documented in methodology;
+`scripts/rules.mts` explicitly protects the catalogue line. This rewrite did not alter robots.txt.
+HTML availability, bot parity, bot access, metadata, pricing, llms.txt, catalogue and sitemap passed.
+
+The surface meter was rerun on main-content Markdown extracted from live server HTML, including
+collapsed sections and original report quotations, with code blocks marked as code. Results:
+
+| Live page | Surface score |
+|---|---:|
+| Home | 1.8 |
+| Pricing | 0.0 |
+| Audit index | 0.0 |
+| Transactional email category | 0.0 |
+| Methodology | 13.1 |
+| Findings | 5.0 |
+| Industry report | 0.0 |
+| API docs | 0.0 |
+| Visibility | 21.7 |
+| Sample delivery | 34.8 |
+
+The sample's flags are punctuation in retained quotations. The meter cannot judge naturalness,
+truth or usefulness; no original quote was altered to lower its score. Extraction differs from
+the original audit, so these are current readings, not a controlled before/after comparison.
+Full logs, rendered screenshots, PDF and verification JSON: `data/ui-rewrite-2026-09-07/` (ignored).
+See `docs/ui-ux-review-2026-09-07.md` for the UI changes. Campaign hold remains in force.
