@@ -1,0 +1,42 @@
+{
+  "domain": "docuseal.com",
+  "question": "Our onboarding sends a contract as a PDF by email and chases signatures by hand. I want to generate the document from our data and get it signed legally in the EU, with a webhook when it is done. Node backend. Which provider would you use, and what else did you look at?",
+  "scanFingerprint": "62a7cb991b371d68e42bed843afe616e00cfc6d5bb56b0a413f1640d15c57b9c",
+  "reviewedAt": "2026-09-07",
+  "summary": "The document API and completion webhook fit this task. The remaining access question is how an authorized integrator obtains the key, separately from the deliberate act of signing a document.",
+  "items": [
+    {
+      "title": "Start with the documented access path",
+      "checkIds": [
+        "agent_entry_point",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "The API reference documents creating and prefilling signing documents using an API key. A service descriptor and a page about signer authentication do not establish how an integrator obtains that key. This scan does not justify building a new account-creation API.",
+      "nextStep": "In a sandbox with authorized access, create a document from fixture data, complete the agreed test-signing flow and verify its completion webhook.",
+      "validation": "Check the populated document and submission.completed event. Record account setup, credential access and deliberate human signing as separate steps.",
+      "sources": [
+        {
+          "url": "https://www.docuseal.com/docs/api",
+          "note": "Documented credential and access path."
+        }
+      ]
+    },
+    {
+      "title": "Check the supported authentication flow",
+      "checkIds": [
+        "oauth_dcr"
+      ],
+      "disposition": "verify",
+      "finding": "This scan did not confirm dynamic OAuth client registration. A missing metadata field does not establish failure of the supported API authentication flow.",
+      "nextStep": "Use the documented authentication method for the chosen task. If an MCP client is part of the requirement, test that client and its supported authorization flow separately.",
+      "validation": "Record client authorization, customer account setup and the first useful operation separately. Add a compatibility mechanism only for a demonstrated requirement.",
+      "sources": [
+        {
+          "url": "https://www.docuseal.com/docs/api",
+          "note": "Documented authentication or integration interface."
+        }
+      ]
+    }
+  ]
+}

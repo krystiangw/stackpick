@@ -1,0 +1,19 @@
+{
+  "domain": "windmill.dev",
+  "category": "background-jobs",
+  "status": "documented",
+  "rationale": "Windmill documents background workflow tasks with logs and retries, and TypeScript execution including a NodeJS mode. This supports moving PDF work to workers and later composing workflows. NodeJS mode is restricted to Cloud and Self-Hosted Enterprise according to its documentation; the deployment plan and PDF dependencies require confirmation.",
+  "nextStep": "Choose the intended deployment and runtime. Move a synthetic PDF job to a worker, return control to the caller, induce a recoverable failure and verify retry logs and the output artifact.",
+  "sources": [
+    {
+      "url": "https://www.windmill.dev/docs/core_concepts/workflows_as_code",
+      "note": "Documents task execution, retries and workflow observability."
+    },
+    {
+      "url": "https://www.windmill.dev/docs/getting_started/scripts_quickstart/typescript",
+      "note": "Documents runtime choices and plan restrictions for NodeJS mode."
+    }
+  ],
+  "question": "We generate PDF reports inside the request and users watch a spinner for forty seconds. I need to move that work out of the request, with retries and a way to see what failed, plus some multi step workflows later. Node on a normal cloud. Which service would you use, and what else did you consider?",
+  "reviewedAt": "2026-09-07"
+}

@@ -1,0 +1,63 @@
+{
+  "domain": "upstash.com",
+  "question": "We generate PDF reports inside the request and users watch a spinner for forty seconds. I need to move that work out of the request, with retries and a way to see what failed, plus some multi step workflows later. Node on a normal cloud. Which service would you use, and what else did you consider?",
+  "scanFingerprint": "5810aca089cb1d79363563e54b9a43af378654310521d39cf01b582078d47603",
+  "reviewedAt": "2026-09-07",
+  "summary": "QStash documents console-issued tokens and delivery to your worker endpoint. Verify the complete PDF job, including retries and its output; acceptance into the queue alone is not the result the buyer needs.",
+  "items": [
+    {
+      "title": "Start with the documented access path",
+      "checkIds": [
+        "agent_entry_point",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "QStash documents obtaining its bearer token in the console. The scanned pages about signing-key rotation and Redis credentials do not establish how a new QStash customer starts. The PDF worker still runs on the customer's endpoint.",
+      "nextStep": "Use an authorized QStash token to dispatch a PDF fixture to a controlled worker endpoint. Induce one recoverable failure.",
+      "validation": "Verify the PDF artifact, delivery retry and failure record. Check worker runtime limits; a queued message alone does not complete the PDF job.",
+      "sources": [
+        {
+          "url": "https://upstash.com/docs/qstash/api/authentication",
+          "note": "Documented credential and access path."
+        },
+        {
+          "url": "https://upstash.com/docs/qstash/features/security",
+          "note": "Interface used by the proposed test."
+        }
+      ]
+    },
+    {
+      "title": "Check the supported authentication flow",
+      "checkIds": [
+        "oauth_dcr"
+      ],
+      "disposition": "verify",
+      "finding": "This scan did not confirm dynamic OAuth client registration. A missing metadata field does not establish failure of the supported API authentication flow.",
+      "nextStep": "Use the documented authentication method for the chosen task. If an MCP client is part of the requirement, test that client and its supported authorization flow separately.",
+      "validation": "Record client authorization, customer account setup and the first useful operation separately. Add a compatibility mechanism only for a demonstrated requirement.",
+      "sources": [
+        {
+          "url": "https://upstash.com/docs/qstash/features/security",
+          "note": "Documented authentication or integration interface."
+        }
+      ]
+    },
+    {
+      "title": "Verify signup before changing it",
+      "checkIds": [
+        "signup_reachable",
+        "signup_no_captcha"
+      ],
+      "disposition": "verify",
+      "finding": "The HTTP scan did not read a complete native signup form. It did not execute JavaScript or complete the identity-provider flow, so it cannot establish the behavior of a browser-capable agent.",
+      "nextStep": "Test the supported signup route only if account creation is in scope and authorized. Otherwise start the integration test with an owner-provided test account.",
+      "validation": "Record whether the route completes, requires a person or fails. Do not recommend changing account protection solely from a script marker or missing server-rendered form.",
+      "sources": [
+        {
+          "url": "https://upstash.com/docs/qstash/api/authentication",
+          "note": "Documented access prerequisites for the product."
+        }
+      ]
+    }
+  ]
+}

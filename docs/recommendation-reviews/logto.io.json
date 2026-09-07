@@ -1,0 +1,99 @@
+{
+  "domain": "logto.io",
+  "question": "We built our own sessions and password resets two years ago and I am tired of maintaining them, plus an enterprise customer now wants SSO. Node backend, React front end, a few thousand users to migrate. Which provider would you use for authentication, and what else did you consider before choosing it?",
+  "scanFingerprint": "2fbc2129f0fc97e9d115dc91fb76cf9544db1b3c1aa7996140769d564b0a4e36",
+  "reviewedAt": "2026-09-07",
+  "summary": "Logto already provides a Management API reference and a documented M2M setup. Tenant-user administration and initial access to Logto are different steps; test the migration and SSO path with that distinction recorded.",
+  "items": [
+    {
+      "title": "Start with the documented access path",
+      "checkIds": [
+        "agent_entry_point",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "Logto's Management API guide starts with an M2M application created in the console. Managing tenant users is different from creating a Logto customer account or obtaining the initial administrator credential. The scan's CRUD-user phrase does not demonstrate unattended onboarding.",
+      "nextStep": "In an authorized test tenant, follow the documented access setup and test one synthetic user's login and the agreed migration or SSO step.",
+      "validation": "Verify the authenticated identity and permitted API response. Record initial administrator and identity-provider configuration separately from agent execution.",
+      "sources": [
+        {
+          "url": "https://docs.logto.io/integrate-logto/interact-with-management-api",
+          "note": "Documented credential and access path."
+        },
+        {
+          "url": "https://docs.logto.io/quick-starts/react",
+          "note": "Interface used by the proposed test."
+        }
+      ]
+    },
+    {
+      "title": "Use the existing API reference",
+      "checkIds": [
+        "machine_readable_api"
+      ],
+      "disposition": "no-change",
+      "finding": "The Management API guide already links to the separate API reference at openapi.logto.io. Our scan did not follow that path; this is not evidence that the product has no machine-readable API description.",
+      "nextStep": "Test whether an agent starting from the product guide can find the existing reference and the operation needed for the task.",
+      "validation": "Record the navigation path and retrieved specification. Recommend a linking change only if this test identifies a reproducible discovery failure.",
+      "sources": [
+        {
+          "url": "https://docs.logto.io/integrate-logto/interact-with-management-api",
+          "note": "Official API guide and reference link."
+        }
+      ]
+    },
+    {
+      "title": "Check the supported authentication flow",
+      "checkIds": [
+        "oauth_dcr"
+      ],
+      "disposition": "verify",
+      "finding": "This scan did not confirm dynamic OAuth client registration. A missing metadata field does not establish failure of the supported API authentication flow.",
+      "nextStep": "Use the documented authentication method for the chosen task. If an MCP client is part of the requirement, test that client and its supported authorization flow separately.",
+      "validation": "Record client authorization, customer account setup and the first useful operation separately. Add a compatibility mechanism only for a demonstrated requirement.",
+      "sources": [
+        {
+          "url": "https://docs.logto.io/quick-starts/react",
+          "note": "Documented authentication or integration interface."
+        }
+      ]
+    },
+    {
+      "title": "Verify signup before changing it",
+      "checkIds": [
+        "signup_reachable",
+        "signup_no_captcha"
+      ],
+      "disposition": "verify",
+      "finding": "The HTTP scan did not read a complete native signup form. It did not execute JavaScript or complete the identity-provider flow, so it cannot establish the behavior of a browser-capable agent.",
+      "nextStep": "Test the supported signup route only if account creation is in scope and authorized. Otherwise start the integration test with an owner-provided test account.",
+      "validation": "Record whether the route completes, requires a person or fails. Do not recommend changing account protection solely from a script marker or missing server-rendered form.",
+      "sources": [
+        {
+          "url": "https://docs.logto.io/integrate-logto/interact-with-management-api",
+          "note": "Documented access prerequisites for the product."
+        }
+      ]
+    },
+    {
+      "title": "Test discovery and offer understanding",
+      "checkIds": [
+        "price_in_snippet"
+      ],
+      "disposition": "verify",
+      "finding": "The scan found no amount or entry condition in the pricing description. These observations do not show that an agent failed to read the documentation or understand the applicable offer.",
+      "nextStep": "Ask an agent to find the relevant quickstart and, where needed, identify the price and entry requirements for this workload.",
+      "validation": "Compare the retrieved source and stated conditions with the actual product documentation. Prioritize a change only when the task reveals a specific failure.",
+      "sources": [
+        {
+          "url": "https://docs.logto.io/integrate-logto/interact-with-management-api",
+          "note": "Existing documentation to use in a discovery test."
+        },
+        {
+          "url": "https://logto.io/pricing",
+          "note": "Pricing page assessed by the recorded HTTP scan."
+        }
+      ]
+    }
+  ]
+}

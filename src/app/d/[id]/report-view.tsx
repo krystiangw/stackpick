@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 import type { ReportModel } from '@/lib/client-report-model'
 import { readsAsPolish } from '@/lib/vendors'
+import { RECOMMENDATION_LABELS, RECOMMENDATION_LIMIT, UNREVIEWED_RECOMMENDATIONS } from '@/lib/recommendation-review'
+import { BRIEF_LABELS, BRIEF_LIMIT, UNREVIEWED_BRIEF } from '@/lib/report-brief'
 
 /**
  * The delivered report as a page somebody can take into a meeting.
@@ -64,6 +66,30 @@ export function ReportView({ model }: { model: ReportModel }) {
         </p>
       </header>
 
+      <section className="mt-8 rounded-lg border border-rule bg-surface p-6">
+        <h2 className="text-xl font-semibold tracking-tight">The task tested</h2>
+        {model.question ? (
+          <blockquote className="mt-4 max-w-3xl border-l-2 border-brass pl-4 leading-relaxed text-ink">
+            {model.question}
+          </blockquote>
+        ) : <p className="mt-4 text-ink-soft">No buying question is recorded for this report.</p>}
+        {model.briefReview ? (
+          <div className="mt-5 space-y-3 text-sm leading-relaxed text-ink-soft">
+            <p className="font-semibold text-ink">{BRIEF_LABELS[model.briefReview.status]}</p>
+            <p>{model.briefReview.rationale}</p>
+            <ul className="space-y-2">
+              {model.briefReview.sources.map((source, index) => (
+                <li key={`${source.url}-${index}`}>
+                  <a href={source.url} className="text-brass underline underline-offset-4">{source.note}</a>
+                </li>
+              ))}
+            </ul>
+            <p><strong className="text-ink">Next step:</strong> {model.briefReview.nextStep}</p>
+            <p>Reviewed {model.briefReview.reviewedAt}. {BRIEF_LIMIT}</p>
+          </div>
+        ) : <p className="mt-5 text-sm leading-relaxed text-ink-soft">{UNREVIEWED_BRIEF}</p>}
+      </section>
+
       {/* The two numbers a reader takes away, side by side, because they answer different questions
           and a report that leads with one of them gets quoted as if the other did not exist. */}
       <section className="mt-8 grid gap-6 sm:grid-cols-2">
@@ -86,7 +112,7 @@ export function ReportView({ model }: { model: ReportModel }) {
               </p>
               <p className="mt-2 text-sm leading-relaxed text-ink-soft">
                 {named.named === 0
-                  ? 'These counts apply to the question and setup recorded below.'
+                  ? 'These counts apply to this question and the recorded setup.'
                   : `Named first in ${named.first} of them.`}
               </p>
               <div className="mt-4">
@@ -109,6 +135,30 @@ export function ReportView({ model }: { model: ReportModel }) {
             <Bar points={score.total} of={score.measurable} tone={share(score.total, score.measurable) >= 60 ? 'pass' : 'fail'} />
           </div>
         </div>
+      </section>
+
+      <section className="mt-12">
+        <h2 className="text-xl font-semibold tracking-tight">Reviewed next steps</h2>
+        {model.recommendationReview ? (
+          <>
+            <p className="mt-3 max-w-3xl leading-relaxed text-ink-soft">{model.recommendationReview.summary}</p>
+            <p className="mt-3 text-sm leading-relaxed text-ink-faint">Reviewed {model.recommendationReview.reviewedAt}. {RECOMMENDATION_LIMIT}</p>
+            <div className="mt-6 space-y-5">
+              {model.recommendationReview.items.map((item) => (
+                <div key={item.title} className="break-inside-avoid rounded-lg border border-rule bg-surface p-5">
+                  <p className="font-mono text-xs text-brass">{RECOMMENDATION_LABELS[item.disposition]}</p>
+                  <h3 className="mt-2 text-lg font-semibold">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-ink-soft">{item.finding}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-ink-soft"><strong className="text-ink">Next step:</strong> {item.nextStep}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-ink-soft"><strong className="text-ink">Validation:</strong> {item.validation}</p>
+                  <ul className="mt-3 space-y-2 text-sm">
+                    {item.sources.map((source, index) => <li key={`${source.url}-${index}`}><a className="text-brass underline underline-offset-4" href={source.url}>{source.note}</a></li>)}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : <p className="mt-3 max-w-3xl leading-relaxed text-ink-soft">{UNREVIEWED_RECOMMENDATIONS}</p>}
       </section>
 
       {model.rivals.length > 0 && (
@@ -233,11 +283,6 @@ export function ReportView({ model }: { model: ReportModel }) {
             </tbody>
           </table>
         </div>
-        {model.question && (
-          <blockquote className="mt-5 max-w-2xl border-l-2 border-rule pl-4 leading-relaxed text-ink-soft">
-            {model.question}
-          </blockquote>
-        )}
         {/* Both caveats travel with the numbers or they do not travel at all. The markdown carries
             them; a prettier rendering that quietly drops them is the worst version of this page. */}
         {model.guest && (
@@ -301,7 +346,8 @@ export function ReportView({ model }: { model: ReportModel }) {
 
       {model.failing.length > 0 && (
         <section className="mt-12">
-          <h2 className="text-xl font-semibold tracking-tight">Checks below full points</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Recorded scan observations</h2>
+          <p className="mt-2 text-sm text-ink-soft">These are the original automated observations. The review above qualifies their interpretation.</p>
           <div className="mt-6 space-y-4">
             {model.failing.map((check) => (
               <div key={check.label} className="break-inside-avoid rounded-lg border border-rule bg-surface p-5">
@@ -312,43 +358,9 @@ export function ReportView({ model }: { model: ReportModel }) {
                   </p>
                 </div>
                 <p className="mt-2 break-words text-sm leading-relaxed text-ink-soft">{check.detail}</p>
-                {check.unblock && (
-                  <p className="mt-3 border-l-2 border-brass pl-3 text-sm leading-relaxed text-ink">
-                    <span className="font-mono text-xs uppercase tracking-[0.15em] text-brass">Fix</span>{' '}
-                    {check.unblock}
-                  </p>
-                )}
               </div>
             ))}
           </div>
-        </section>
-      )}
-
-      {model.fixes.length > 0 && (
-        <section className="mt-12 break-inside-avoid">
-          <h2 className="text-xl font-semibold tracking-tight">What to fix first</h2>
-          {model.fixClaim && <p className="mt-2 max-w-2xl leading-relaxed text-ink-soft">{model.fixClaim}</p>}
-          <ol className="mt-6 space-y-4">
-            {model.fixes.map((fix, index) => (
-              <li key={fix.label} className="flex gap-4 break-inside-avoid">
-                <span className="mt-0.5 font-mono text-sm tabular-nums text-brass">{String(index + 1).padStart(2, '0')}</span>
-                <div>
-                  <p className="font-medium">
-                    {fix.label}{' '}
-                    <span className="font-mono text-xs uppercase tracking-[0.15em] text-brass">
-                      +{fix.gain} points · effort estimate: {fix.effort}
-                    </span>
-                  </p>
-                  <p className="mt-1 max-w-2xl text-sm leading-relaxed text-ink-soft">{fix.how}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-          {model.behindUnmeasured > 0 && (
-            <p className="mt-5 max-w-2xl text-sm leading-relaxed text-ink-soft">
-              Note: {model.behindUnmeasured} unmeasured points excluded from the gain calculation.
-            </p>
-          )}
         </section>
       )}
 

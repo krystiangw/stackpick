@@ -73,20 +73,20 @@ const TIERS: readonly Tier[] = [
       `Each extra buying question: ${priceOf(skuById('extra-question')!)} a month`,
     ],
     note: 'Free while I am building it. I will ask before charging you.',
-    featured: true,
     cta: { label: 'Watch a domain', href: '/#watch', click: 'watch' },
   },
   {
     name: 'Audit and fixes',
     price: 'By conversation',
     cadence: 'one to three weeks',
-    pitch: 'I write your brief and read every transcript.',
+    pitch: 'I test an integration, improve one small part and test it again.',
     includes: [
-      "Build runs without anyone answering the agent's questions",
-      'Registration, credentials and first integration examined',
-      'Fixes scoped from the observed failures',
+      'Two agreed tasks, with evidence from each attempt',
+      'Account access and human handoffs recorded separately',
+      'One small documentation or example fix, then a retest',
     ],
-    note: 'Four figures. I scope the work once you agree what to measure.',
+    note: 'Four figures. We agree access, success criteria and work limits before starting. Larger product changes are scoped separately.',
+    featured: true,
     sample: { label: 'Read the four published audits', href: '/audit' },
     cta: { label: 'Ask what it would cost', href: 'mailto:hello@letagentsin.com?subject=Agent%20audit', click: 'mail-audit' },
   },
@@ -283,7 +283,7 @@ export default async function PricingPage() {
         </p>
         <p className="mt-5">
           <Link href="/audit" className="font-mono text-sm text-brass underline underline-offset-4">
-            Read the four published audits, which are the sample of the deliverable
+            Read the four published build studies
           </Link>
         </p>
           </div>
@@ -450,7 +450,7 @@ export default async function PricingPage() {
             ],
             [
               'Audit access',
-              'I use the product as a customer sees it. I need no repository access, staging environment or calls with your engineers.',
+              'We agree a test account, permitted operations and synthetic data before starting. Some tasks need a sandbox or credentials from an account owner. A required human authorization step is recorded separately from an integration failure.',
             ],
             [
               'Fixes without an audit',

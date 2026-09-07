@@ -1,0 +1,19 @@
+{
+  "domain": "loops.so",
+  "category": "transactional-email",
+  "question": "Our password reset and receipt emails go out through a box we run ourselves and too many of them land in spam. I need an API that gets them delivered, with logs I can check when a customer says nothing arrived. Node, maybe fifty thousand emails a month. Which provider would you use, and what else did you look at first?",
+  "status": "documented",
+  "reviewedAt": "2026-09-07",
+  "rationale": "Loops documents API-triggered password resets and purchase confirmations, with delivery metrics for diagnosing bounces and complaints. This supports the core task in the question. Suitability for the stated volume and actual inbox placement still require evaluation; this report did not send email.",
+  "nextStep": "Confirm that this scenario represents buyers you want to reach. Then test a password reset and a receipt in an authorized test setup, recording template setup, credentials, API responses and delivery evidence separately.",
+  "sources": [
+    {
+      "url": "https://loops.so/docs/transactional",
+      "note": "Documents password resets, purchase confirmations, delivery metrics and test recipients."
+    },
+    {
+      "url": "https://loops.so/docs/api-reference/send-transactional-email",
+      "note": "Documents the transactional sending endpoint and its request requirements."
+    }
+  ]
+}

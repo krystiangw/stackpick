@@ -1,0 +1,19 @@
+{
+  "domain": "trychroma.com",
+  "category": "vector-search",
+  "status": "documented",
+  "rationale": "Chroma documents storing embeddings and querying nearest neighbors through JavaScript/TypeScript APIs, including a result-count parameter. This supports retrieving three similar tickets. Latency, retrieval quality, cost and operation at a few million embeddings remain workload-specific and were not measured by this report.",
+  "nextStep": "Use synthetic or approved ticket fixtures with a fixed embedding model. Verify the three returned record IDs against a known test set, then scope a separate representative-volume benchmark if required.",
+  "sources": [
+    {
+      "url": "https://docs.trychroma.com/docs/overview/getting-started",
+      "note": "Documents collections, ingestion, cloud setup and similarity queries."
+    },
+    {
+      "url": "https://docs.trychroma.com/reference/js-collection",
+      "note": "Documents JavaScript queries using embeddings and nResults."
+    }
+  ],
+  "question": "We want our support bot to find the three most similar past tickets to a new one, so I need somewhere to keep a few million embeddings and query them by similarity. Node, running on a normal cloud, and this ships next month. Which database would you use for that, and what else did you consider?",
+  "reviewedAt": "2026-09-07"
+}

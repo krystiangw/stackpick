@@ -1,0 +1,23 @@
+{
+  "domain": "raygun.com",
+  "category": "error-monitoring",
+  "status": "documented",
+  "rationale": "Raygun documents Node and React crash reporting and grouping repeated errors using stack information. This directly supports the task of diagnosing backend and frontend exceptions without treating each occurrence as a new issue. Actual grouping quality and alert volume were not tested in these discovery runs.",
+  "nextStep": "Send synthetic Node and React exceptions through an authorized test application. Repeat one exception and introduce a distinct one; verify grouping, readable source locations and the configured notification behavior.",
+  "sources": [
+    {
+      "url": "https://raygun.com/documentation/language-guides/nodejs/crash-reporting/installation/",
+      "note": "Documents the Node crash-reporting SDK."
+    },
+    {
+      "url": "https://raygun.com/documentation/language-guides/javascript/crash-reporting/react/",
+      "note": "Documents React error collection with Raygun4JS."
+    },
+    {
+      "url": "https://raygun.com/documentation/product-guides/crash-reporting/error-grouping/",
+      "note": "Documents default and custom error grouping."
+    }
+  ],
+  "question": "We find out about exceptions when a customer emails us, which is embarrassing. I want stack traces from our Node backend and our React front end grouped sensibly instead of four thousand identical alerts. Which tool would you use, and what else did you look at before picking it?",
+  "reviewedAt": "2026-09-07"
+}

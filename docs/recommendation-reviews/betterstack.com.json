@@ -1,0 +1,78 @@
+{
+  "domain": "betterstack.com",
+  "question": "We find out about exceptions when a customer emails us, which is embarrassing. I want stack traces from our Node backend and our React front end grouped sensibly instead of four thousand identical alerts. Which tool would you use, and what else did you look at before picking it?",
+  "scanFingerprint": "3d15f6c5dbcfbb8c9aa91183db589f8948bcd2b12951867064368ea20e0f8ca5",
+  "reviewedAt": "2026-09-07",
+  "summary": "Better Stack documents error ingestion through Sentry SDKs and separate management API tokens. The scan did not identify the SDK path, so an additional vendor SDK is not justified by this result.",
+  "items": [
+    {
+      "title": "Start with the documented access path",
+      "checkIds": [
+        "agent_entry_point",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "Better Stack documents team-scoped Telemetry tokens for the Errors API and a separate ingestion configuration for sending errors with a Sentry SDK. These credentials serve different purposes. A search for general provisioning phrases does not establish whether the documented integration can be completed.",
+      "nextStep": "Configure an authorized test Errors application and instrument Node and React fixtures using the documented ingestion setup.",
+      "validation": "Verify repeated and distinct exception groups and readable source locations. Confirm that ingestion credentials and management API credentials are used for their intended operations.",
+      "sources": [
+        {
+          "url": "https://betterstack.com/docs/errors/api/getting-api-token/",
+          "note": "Documented credential and access path."
+        },
+        {
+          "url": "https://betterstack.com/docs/errors/collecting-errors/sentry-sdk/",
+          "note": "Interface used by the proposed test."
+        }
+      ]
+    },
+    {
+      "title": "Verify signup before changing it",
+      "checkIds": [
+        "signup_no_captcha"
+      ],
+      "disposition": "verify",
+      "finding": "A CAPTCHA-related marker was present in the signup HTML, but this scan did not submit the form or establish that it challenges the integration path.",
+      "nextStep": "Test the supported signup route only if account creation is in scope and authorized. Otherwise start the integration test with an owner-provided test account.",
+      "validation": "Record whether the route completes, requires a person or fails. Do not recommend changing account protection solely from a script marker or missing server-rendered form.",
+      "sources": [
+        {
+          "url": "https://betterstack.com/docs/errors/api/getting-api-token/",
+          "note": "Documented access prerequisites for the product."
+        }
+      ]
+    },
+    {
+      "title": "Use the documented error-ingestion SDK",
+      "checkIds": [
+        "typed_package"
+      ],
+      "disposition": "no-change",
+      "finding": "The package check was unmeasured. Better Stack documents sending Node and browser exceptions through Sentry SDKs; failing to identify a vendor-named package is not evidence of a missing integration SDK.",
+      "nextStep": "Configure an authorized test Errors application and instrument Node and React fixtures using the documented ingestion setup.",
+      "validation": "Verify repeated and distinct exception groups and readable source locations. Confirm that ingestion credentials and management API credentials are used for their intended operations.",
+      "sources": [
+        {
+          "url": "https://betterstack.com/docs/errors/collecting-errors/sentry-sdk/",
+          "note": "Documented Node and browser Sentry SDK integration."
+        }
+      ]
+    },
+    {
+      "title": "Test discovery and offer understanding",
+      "checkIds": [
+        "llms_txt"
+      ],
+      "disposition": "verify",
+      "finding": "The scan found no llms.txt at the probed addresses. These observations do not show that an agent failed to read the documentation or understand the applicable offer.",
+      "nextStep": "Ask an agent to find the relevant quickstart and, where needed, identify the price and entry requirements for this workload.",
+      "validation": "Compare the retrieved source and stated conditions with the actual product documentation. Prioritize a change only when the task reveals a specific failure.",
+      "sources": [
+        {
+          "url": "https://betterstack.com/docs/errors/api/getting-api-token/",
+          "note": "Existing documentation to use in a discovery test."
+        }
+      ]
+    }
+  ]
+}

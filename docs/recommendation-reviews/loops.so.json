@@ -1,0 +1,45 @@
+{
+  "domain": "loops.so",
+  "question": "Our password reset and receipt emails go out through a box we run ourselves and too many of them land in spam. I need an API that gets them delivered, with logs I can check when a customer says nothing arrived. Node, maybe fifty thousand emails a month. Which provider would you use, and what else did you look at first?",
+  "scanFingerprint": "325053c78b04123db7c2c683bd4f4f846232cb042b90e7be86883c96d28ba0a6",
+  "reviewedAt": "2026-09-07",
+  "summary": "The sending API and CLI document use of an existing key. Start by checking delivery of a password reset and receipt after access is granted; these scans do not establish a need for a new account-creation interface.",
+  "items": [
+    {
+      "title": "Start with the documented access path",
+      "checkIds": [
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "Loops documents testing an existing API key and storing an existing key in its CLI. The selected scan pages do not establish whether a separate account or key creation interface exists. A dashboard handoff is not by itself a defect in sending email.",
+      "nextStep": "With an authorized test key and prepared templates, send a password reset and a receipt to controlled recipients.",
+      "validation": "Record template setup, each API response and delivery evidence separately. An accepted request alone does not prove inbox delivery.",
+      "sources": [
+        {
+          "url": "https://loops.so/docs/cli/auth",
+          "note": "Documented credential and access path."
+        },
+        {
+          "url": "https://loops.so/docs/api-reference/send-transactional-email",
+          "note": "Interface used by the proposed test."
+        }
+      ]
+    },
+    {
+      "title": "Check the supported authentication flow",
+      "checkIds": [
+        "oauth_dcr"
+      ],
+      "disposition": "verify",
+      "finding": "This scan did not confirm dynamic OAuth client registration. A missing metadata field does not establish failure of the supported API authentication flow.",
+      "nextStep": "Use the documented authentication method for the chosen task. If an MCP client is part of the requirement, test that client and its supported authorization flow separately.",
+      "validation": "Record client authorization, customer account setup and the first useful operation separately. Add a compatibility mechanism only for a demonstrated requirement.",
+      "sources": [
+        {
+          "url": "https://loops.so/docs/api-reference/send-transactional-email",
+          "note": "Documented authentication or integration interface."
+        }
+      ]
+    }
+  ]
+}

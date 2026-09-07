@@ -5,6 +5,23 @@ i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dzi
 
 ## Nad czym pracujemy
 
+0. **Produkt przed kampanią** — zakres i warunki wznowienia:
+   `docs/product-readiness-2026-09-07.md`. Pierwszy etap: trafność pytania w raporcie, źródła
+   dopasowania oraz sposób sprawdzenia zaleceń po zmianie. Pierwszy etap zrobiony lokalnie:
+   `data/product-review-2026-09-07/loops.html` i `.md`, świeży lokalny skan 07.09 (14/17),
+   historyczne biegi bez zmian (0/15). Build, lint, rules i audit-report-scope zielone.
+   Generator wymaga `--brief-review FILE` przy publikacji. Zmiany czekają na przegląd i wdrożenie.
+   Etap 2: ocenione 10 firm (`docs/brief-reviews/README.md`), 9 dopasowań, Transloadit partial.
+   Etap 3: zakres pilotażu gotowy (`docs/integration-pilot-2026-09-07.md`): propozycja 1500 USD,
+   24 próby, limit 12 h operatora; nie zmienia cennika. Nowe lokalne raporty: DocuSeal 13/17,
+   Raygun 7/16, Logto 9/16, historycznie każde 0/15. NIE GOTOWE DO DOSTAWY: kontrola zaleceń
+   wykazała pominięte API reference Raygun/Logto oraz niepotwierdzoną rolę CAPTCHA.
+   Konkretne źródła i korekty: `docs/evidence-review-2026-09-07.md`.
+   Aktualizacja: korekty są w generatorze/widoku, 9 ocen powiązanych z SHA-256 skanu w
+   `docs/recommendation-reviews/`. Publikacja wymaga obu ocen; nowe raporty `data/product-review-2026-09-07/<domena>.md`.
+   9 maili bez prognoz wzrostu punktacji, skrzynki ponownie sprawdzone. Build, lint, audit-delivery,
+   audit-report-scope i audit-recommendations zielone. Pozostały wdrożenie i sprawdzenie żywych linków.
+
 1. **Przepisanie tekstów po audycie** `docs/copy-audit-2026-09-07.md` (codex gpt-6-astra high,
    zgoda Krystiana na wszystkie fazy). Faza 1+2 ZROBIONA (v784, c3ecc05): generator, widok
    `/d/<id>`, drafty; 10 raportów i próbka przegenerowane pod tymi samymi id, bramki dostawy zielone.
@@ -21,8 +38,9 @@ i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dzi
 - **KAMPANIA WSTRZYMANA (Krystian, 2026-09-07): nie wysyłać żadnego maila do dziesięciu firm,
   dopóki nie odwoła wstrzymania wprost.** Do 07.09 nic nie wyszło (Sent z hello@: tylko trzy sondy).
 
-- Drafty ma za „ok" (07.09), ale wysyłka czeka na odwołanie wstrzymania. Otwarte: Transloadit
-  (wysyłać czy wstrzymać), widoczność repo albo migawki korpusu na stronie.
+- Drafty ma za „ok" (07.09), ale wysyłka czeka na odwołanie wstrzymania. Transloadit pozostaje
+  wstrzymany: częściowe dopasowanie wymaga nowego pytania i biegów. Otwarte: korekta zaleceń
+  raportów oraz widoczność repo albo migawki korpusu na stronie.
 - Rozszerzenie Chrome bywa odłączone; popup send-as Gmaila jest poza jego zasięgiem.
 
 ## Decyzje, których nie cofamy

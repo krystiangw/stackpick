@@ -6,6 +6,9 @@
  * Written by `scripts/client-report.mts` at the moment it writes the markdown, from the same
  * variables. Nothing recomputes it later.
  */
+import type { BriefReview } from './report-brief'
+import type { RecommendationReview } from './recommendation-review'
+
 export type ReportModel = {
   domain: string
   category: string
@@ -25,6 +28,9 @@ export type ReportModel = {
   score: { total: number; measurable: number; max: number }
   stages: { title: string; question: string; points: number; measurable: number }[]
   question: string | null
+  /** Absent on older stored deliveries; absence is displayed as unreviewed. */
+  briefReview?: BriefReview | null
+  recommendationReview?: RecommendationReview | null
   /** Where every answer can be read in full. Null when we hold no runs for the category yet. */
   runsUrl: string | null
   /** `blind` is a run that could read none of the operator's local instructions, which is the clean case. */
@@ -38,7 +44,7 @@ export type ReportModel = {
   unmeasured: { label: string; detail: string }[]
   /** Checks that do not apply to this product, and why. They are why the denominator is smaller. */
   notApplicable: { label: string; detail: string }[]
-  fixes: { label: string; gain: number; effort: string; how: string }[]
+  fixes: { label: string; gain: number; effort: string; how: string; verify?: string }[]
   fixClaim: string | null
   /** Points behind checks nothing could evaluate, so they are outside the fix arithmetic. */
   behindUnmeasured: number

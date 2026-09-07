@@ -14,6 +14,33 @@ in three months will not remember what the pricing page promised today.
 
 ## Before taking money
 
+**Question fit comes before category membership.** Review the exact question in `src/data/cells.json`
+against current product documentation. Save JSON (see `docs/brief-reviews/loops.so.json`) with the
+domain, category id, exact question, review date, status, rationale, next step and source URLs
+with evidence notes. `documented` means the public product supports the use case, not that buyers
+have confirmed its importance. `partial` and `mismatch` require a better brief and new runs.
+
+Pass `--brief-review FILE` when generating. Without documented fit, the generator writes local
+drafts but refuses `--publish`. It also refuses to pool batches with different questions. Do not
+rewrite a recorded question to fit a review. Older deliveries without reviews are labelled
+unreviewed in the portal; their counts are retained.
+
+**Review recommendations separately from question fit.** A missed URL or a script marker does
+not establish a missing feature or a blocked integration. Check the vendor's actual docs before
+recommending an API, spec or signup change. Record the evidence and whether the next step is a
+verification task or a justified change. Current examples and delivery holds:
+`docs/evidence-review-2026-09-07.md`. Save the assessment in `docs/recommendation-reviews/` and
+pass `--recommendation-review FILE`. Every failed or unmeasured check must be covered, with
+sources, an interpretation and a validation step. Publication now requires both reviews.
+The recommendation review is bound to the exact question and a SHA-256 fingerprint of the scan
+date, findings and scorecard. A changed scan requires a new assessment.
+
+Use `--scan-file FILE` to deliver an already reviewed scan snapshot without changing the public
+corpus or silently substituting a newer scan. The snapshot domain must match the report.
+Reviewed deliveries show editorial next steps and the original scan observations; automatic
+point-gain plans are not presented as recommendations. Older models retain their stored numbers,
+but unreviewed repair advice is withheld in the portal and the missing review is disclosed.
+
 0. **A buyer is almost never in the corpus.** The domains we publish are the ones we chose to
    write about; a prospect who finds us is usually not one of them. That is not a refusal any more:
    place them into the category they belong to and the report is read out of the same answers.
@@ -85,14 +112,18 @@ LETAGENTSIN_RUNS=$HOME/.letagentsin-runs-codex npm run ask -- <category> codex 5
 LETAGENTSIN_RUNS_ALL=$HOME/.letagentsin-runs-codex npx tsx scripts/export-cells.mts
 
 # the report itself
-MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/client-report.mts their.com --out their.md
+MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npx tsx scripts/client-report.mts their.com --brief-review path/to/brief.json --recommendation-review path/to/recommendations.json --scan-file path/to/scan.json --out their.md
 ```
+
+The generator also writes `their.md.json`, the structured input for the same report. Review both
+renderings locally before using `--publish`. Validation steps are proposed follow-up tests, not
+evidence that a change has already improved agent choices or integration.
 
 Read it before sending, the whole file, as the buyer. Every defect found in this document so far was
 found by reading it and none by an audit: quotes cut mid-address, a vendor whose site we could not
 read being handed advice about OAuth, "oAuth" in the fix plan. The generator is deliberately blunt:
-if no run mentioned them it says so in one sentence, and that sentence is the product. What it must
-never do is soften a zero.
+if no run mentioned them it preserves that count. Interpret it within the reviewed question and
+recorded setup. A zero alone is not a diagnosis of the vendor's acquisition funnel.
 
 Run both guards first, because between them they replay every sentence the two customer documents can
 print against the data underneath them: whether the category has the ten runs on two tools the price
@@ -101,6 +132,8 @@ promises, and whether the repair arithmetic closes.
 ```bash
 MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npm run audit-delivery
 MONGODB_URI=$(heroku config:get MONGODB_URI -a stackpick) npm run audit-fix-arithmetic
+npm run audit-report-scope
+npm run audit-recommendations
 ```
 
 The second one guards the only sum a buyer does themselves: "Fix the 2 cheapest items below and

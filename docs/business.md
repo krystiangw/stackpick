@@ -16,8 +16,9 @@ On top of the scan it runs real agents: one buying question per category, put to
 (codex, claude) five times per batch in isolated sessions, and counts in how many runs each
 vendor was named. Those runs are published at `/c/<category>/runs`.
 
-The product argument, in one sentence: an agent that cannot read your pricing, create a key or
-finish signup without a browser will pick a competitor, and the vendor never sees the lost sale.
+The product argument: observing agents choosing and integrating a product can reveal failures
+that a vendor can act on. Whether those failures cause lost sales remains a business hypothesis;
+the published scans and mention counts do not measure lost revenue.
 
 ## What is for sale
 
@@ -51,6 +52,12 @@ and a report is bought by writing to hello@letagentsin.com. Turning it on is `do
 - Copy: an outside editorial audit on 2026-09-07 (`docs/copy-audit-2026-09-07.md`) judged the
   site and the report closer to "written by a model" than "by a person", and a rewrite in the
   audit's order is under way.
+- Campaign status, 2026-09-07: **on hold at the owner's request while the product is refined**.
+  Report quality and restart criteria: `docs/product-readiness-2026-09-07.md`.
+- Product refinement, 2026-09-07: all ten campaign briefs reviewed (nine documented fits,
+  Transloadit partial). A $1,500 integration pilot is scoped in `docs/integration-pilot-2026-09-07.md`
+  as a pricing hypothesis, not a catalog change. Fresh local reports remain drafts: manual
+  review found recommendations unsupported by the scan (`docs/evidence-review-2026-09-07.md`).
 
 ## Decisions that stand
 

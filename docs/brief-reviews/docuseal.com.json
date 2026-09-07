@@ -1,0 +1,19 @@
+{
+  "domain": "docuseal.com",
+  "category": "documents-signature",
+  "status": "documented",
+  "rationale": "DocuSeal documents generating and prefilling signing documents through its API, Node examples, and a webhook after all parties complete signing. The vendor describes eIDAS support. The required signature level and suitability for a particular contract remain buyer requirements, not a legal conclusion of this report.",
+  "nextStep": "Confirm the contract type and required signature level. In a sandbox, generate a document from fixture data and verify the completed-document webhook using authorized test signers. Record any human signing step separately.",
+  "sources": [
+    {
+      "url": "https://www.docuseal.com/docs/api",
+      "note": "Documents template creation, prefilling, Node examples and submission.completed webhooks."
+    },
+    {
+      "url": "https://www.docuseal.com/compliance",
+      "note": "Vendor description of signature standards; not an independent legal assessment."
+    }
+  ],
+  "question": "Our onboarding sends a contract as a PDF by email and chases signatures by hand. I want to generate the document from our data and get it signed legally in the EU, with a webhook when it is done. Node backend. Which provider would you use, and what else did you look at?",
+  "reviewedAt": "2026-09-07"
+}

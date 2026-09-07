@@ -1,0 +1,23 @@
+{
+  "domain": "logto.io",
+  "category": "auth",
+  "status": "documented",
+  "rationale": "Logto documents React authentication, migration of existing users and enterprise SSO connectors. These match the core replacement-and-migration scenario. Compatibility with the buyer's password hashes and identity provider still needs verification; this report did not migrate accounts or configure SSO.",
+  "nextStep": "Choose the customer's identity provider and a supported migration path. Test a synthetic migrated user, a React login and an authorized enterprise SSO flow, including the human configuration required.",
+  "sources": [
+    {
+      "url": "https://docs.logto.io/quick-starts/react",
+      "note": "Documents React login integration and prerequisites."
+    },
+    {
+      "url": "https://docs.logto.io/user-management/user-migration",
+      "note": "Documents bulk and just-in-time user migration."
+    },
+    {
+      "url": "https://docs.logto.io/connectors/enterprise-connectors",
+      "note": "Documents enterprise identity-provider connectors."
+    }
+  ],
+  "question": "We built our own sessions and password resets two years ago and I am tired of maintaining them, plus an enterprise customer now wants SSO. Node backend, React front end, a few thousand users to migrate. Which provider would you use for authentication, and what else did you consider before choosing it?",
+  "reviewedAt": "2026-09-07"
+}

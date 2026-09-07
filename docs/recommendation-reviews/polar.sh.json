@@ -1,0 +1,66 @@
+{
+  "domain": "polar.sh",
+  "question": "We are putting paid plans on a B2B SaaS: monthly and annual, customers in the EU and the US, cards plus proper invoices and VAT. Node on the backend, nobody here has done billing before, and this has to be live next month. Which provider would you use, and what else did you weigh before settling on it?",
+  "scanFingerprint": "4a0db7a3b1a34c43bc753f6e306fe927af215a2e30c0ecca2d9a38acf83815d5",
+  "reviewedAt": "2026-09-07",
+  "summary": "Polar provides a separate sandbox for testing the billing flow. The useful next step is an authorized sandbox subscription test, with seller setup and payment authorization recorded separately.",
+  "items": [
+    {
+      "title": "Start with the documented access path",
+      "checkIds": [
+        "agent_entry_point",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "Polar documents a separate sandbox with its own accounts, organizations and access tokens. The scan did not read an authentication page. That gap cannot establish absent provisioning, and seller authorization must remain an explicit prerequisite.",
+      "nextStep": "Use an authorized sandbox organization and sandbox token to test the agreed subscription checkout, resulting webhook and entitlement.",
+      "validation": "Verify the sandbox event, invoice access and entitlement. Record account-owner steps. Do not use live payments or production tokens for this test.",
+      "sources": [
+        {
+          "url": "https://polar.sh/docs/integrate/sandbox",
+          "note": "Documented credential and access path."
+        },
+        {
+          "url": "https://polar.sh/docs/api-reference/introduction",
+          "note": "Interface used by the proposed test."
+        }
+      ]
+    },
+    {
+      "title": "Verify signup before changing it",
+      "checkIds": [
+        "signup_no_captcha"
+      ],
+      "disposition": "verify",
+      "finding": "A CAPTCHA-related marker was present in the signup HTML, but this scan did not submit the form or establish that it challenges the integration path.",
+      "nextStep": "Test the supported signup route only if account creation is in scope and authorized. Otherwise start the integration test with an owner-provided test account.",
+      "validation": "Record whether the route completes, requires a person or fails. Do not recommend changing account protection solely from a script marker or missing server-rendered form.",
+      "sources": [
+        {
+          "url": "https://polar.sh/docs/integrate/sandbox",
+          "note": "Documented access prerequisites for the product."
+        }
+      ]
+    },
+    {
+      "title": "Test discovery and offer understanding",
+      "checkIds": [
+        "price_in_snippet"
+      ],
+      "disposition": "verify",
+      "finding": "The scan found no amount or entry condition in the pricing description. These observations do not show that an agent failed to read the documentation or understand the applicable offer.",
+      "nextStep": "Ask an agent to find the relevant quickstart and, where needed, identify the price and entry requirements for this workload.",
+      "validation": "Compare the retrieved source and stated conditions with the actual product documentation. Prioritize a change only when the task reveals a specific failure.",
+      "sources": [
+        {
+          "url": "https://polar.sh/docs/integrate/sandbox",
+          "note": "Existing documentation to use in a discovery test."
+        },
+        {
+          "url": "https://polar.sh/pricing",
+          "note": "Pricing page assessed by the recorded HTTP scan."
+        }
+      ]
+    }
+  ]
+}

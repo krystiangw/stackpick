@@ -1,0 +1,19 @@
+{
+  "domain": "upstash.com",
+  "category": "background-jobs",
+  "status": "documented",
+  "rationale": "Upstash QStash documents moving work out of a request through HTTP delivery with retries, while Workflow supports multi-step execution and failure recovery. This fits the task when PDF processing runs on a customer-hosted endpoint. QStash itself is not hosted PDF execution; that distinction must remain explicit.",
+  "nextStep": "Test a PDF job against an authorized worker endpoint, induce one recoverable failure, and verify retry behavior, output and failure visibility. Confirm endpoint runtime limits before testing a multi-step workflow.",
+  "sources": [
+    {
+      "url": "https://upstash.com/docs/qstash/overall/usecases",
+      "note": "Documents background-job dispatch to an existing endpoint."
+    },
+    {
+      "url": "https://upstash.com/docs/workflow/howto/failures",
+      "note": "Documents workflow retries, failure handling and recovery."
+    }
+  ],
+  "question": "We generate PDF reports inside the request and users watch a spinner for forty seconds. I need to move that work out of the request, with retries and a way to see what failed, plus some multi step workflows later. Node on a normal cloud. Which service would you use, and what else did you consider?",
+  "reviewedAt": "2026-09-07"
+}

@@ -1,0 +1,19 @@
+{
+  "domain": "betterstack.com",
+  "category": "error-monitoring",
+  "status": "documented",
+  "rationale": "Better Stack Errors documents ingesting Node and browser exceptions through Sentry SDKs and grouping occurrences using stack traces, exception type and normalized messages. This supports the backend-and-frontend error task. React boundary coverage, source maps and notification settings still need a test in the actual application.",
+  "nextStep": "Configure an authorized test application and send synthetic backend and React errors. Verify repeated and distinct errors form the expected groups, inspect stack traces and test notification settings separately.",
+  "sources": [
+    {
+      "url": "https://betterstack.com/docs/errors/collecting-errors/sentry-sdk/",
+      "note": "Documents Node and browser error ingestion via Sentry SDKs."
+    },
+    {
+      "url": "https://betterstack.com/docs/errors/using-the-product/exception-grouping/",
+      "note": "Documents default grouping and fingerprint overrides."
+    }
+  ],
+  "question": "We find out about exceptions when a customer emails us, which is embarrassing. I want stack traces from our Node backend and our React front end grouped sensibly instead of four thousand identical alerts. Which tool would you use, and what else did you look at before picking it?",
+  "reviewedAt": "2026-09-07"
+}

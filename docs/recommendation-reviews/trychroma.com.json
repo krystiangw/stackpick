@@ -1,0 +1,67 @@
+{
+  "domain": "trychroma.com",
+  "question": "We want our support bot to find the three most similar past tickets to a new one, so I need somewhere to keep a few million embeddings and query them by similarity. Node, running on a normal cloud, and this ships next month. Which database would you use for that, and what else did you consider?",
+  "scanFingerprint": "42adf5af11a4a61dbf6b0fd8c6220ebc2f2024461d4ae089e44abd569bb1ccb7",
+  "reviewedAt": "2026-09-07",
+  "summary": "Chroma documents a browser handoff followed by headless login with an API key. Test retrieval after authorized access; the signup page alone does not show whether the Node integration works.",
+  "items": [
+    {
+      "title": "Start with the documented access path",
+      "checkIds": [
+        "agent_entry_point",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "Chroma documents browser login and a headless CLI login using an API key created in the Cloud dashboard. That provides a documented human handoff before headless operation. An identity-provider signup path does not establish that integration with an authorized key fails.",
+      "nextStep": "Give the agent an authorized test database and fixed embedding fixtures, then ask it to return the three nearest ticket IDs.",
+      "validation": "Compare returned IDs and distances with the known fixture. Record dashboard access separately. A small fixture does not validate latency or cost at millions of embeddings.",
+      "sources": [
+        {
+          "url": "https://docs.trychroma.com/docs/cli/login",
+          "note": "Documented credential and access path."
+        },
+        {
+          "url": "https://docs.trychroma.com/docs/run-chroma/clients",
+          "note": "Interface used by the proposed test."
+        }
+      ]
+    },
+    {
+      "title": "Verify signup before changing it",
+      "checkIds": [
+        "signup_reachable",
+        "signup_no_captcha"
+      ],
+      "disposition": "verify",
+      "finding": "The HTTP scan did not read a complete native signup form. It did not execute JavaScript or complete the identity-provider flow, so it cannot establish the behavior of a browser-capable agent.",
+      "nextStep": "Test the supported signup route only if account creation is in scope and authorized. Otherwise start the integration test with an owner-provided test account.",
+      "validation": "Record whether the route completes, requires a person or fails. Do not recommend changing account protection solely from a script marker or missing server-rendered form.",
+      "sources": [
+        {
+          "url": "https://docs.trychroma.com/docs/cli/login",
+          "note": "Documented access prerequisites for the product."
+        }
+      ]
+    },
+    {
+      "title": "Test discovery and offer understanding",
+      "checkIds": [
+        "price_in_snippet"
+      ],
+      "disposition": "verify",
+      "finding": "The scan found no amount or entry condition in the pricing description. These observations do not show that an agent failed to read the documentation or understand the applicable offer.",
+      "nextStep": "Ask an agent to find the relevant quickstart and, where needed, identify the price and entry requirements for this workload.",
+      "validation": "Compare the retrieved source and stated conditions with the actual product documentation. Prioritize a change only when the task reveals a specific failure.",
+      "sources": [
+        {
+          "url": "https://docs.trychroma.com/docs/cli/login",
+          "note": "Existing documentation to use in a discovery test."
+        },
+        {
+          "url": "https://trychroma.com/pricing",
+          "note": "Pricing page assessed by the recorded HTTP scan."
+        }
+      ]
+    }
+  ]
+}

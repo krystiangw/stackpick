@@ -1,0 +1,19 @@
+{
+  "domain": "transloadit.com",
+  "category": "file-storage",
+  "status": "partial",
+  "rationale": "Transloadit supports upload processing and export to customer-owned storage. The historical question mainly asks for durable screenshot storage and fast serving, without a processing requirement. Transloadit's temporary files are removed after 24 hours and must not serve as a production CDN. Its omission therefore cannot diagnose a failure to discover its core product.",
+  "nextStep": "Hold this report. Review the proposed upload-processing brief, freeze it under a new study identifier and collect fresh runs before drawing a discovery conclusion. Keep the historical storage question and its results intact.",
+  "sources": [
+    {
+      "url": "https://transloadit.com/docs/faq/temporary-purge/",
+      "note": "Documents temporary retention and the requirement to export to owned storage for serving."
+    },
+    {
+      "url": "https://transloadit.com/demos/file-exporting/watermark-an-image-and-store-it-over-sftp/",
+      "note": "Demonstrates upload, image transformation and export as a processing pipeline."
+    }
+  ],
+  "question": "Support agents in our helpdesk need to attach screenshots to help articles, so I need somewhere to put those uploads and serve them back fast. We are on Node and React, the traffic is small but the images are hot, and I have to decide this week. Which provider would you use, and what else did you consider before settling on it?",
+  "reviewedAt": "2026-09-07"
+}

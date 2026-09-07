@@ -1,0 +1,59 @@
+{
+  "domain": "windmill.dev",
+  "question": "We generate PDF reports inside the request and users watch a spinner for forty seconds. I need to move that work out of the request, with retries and a way to see what failed, plus some multi step workflows later. Node on a normal cloud. Which service would you use, and what else did you consider?",
+  "scanFingerprint": "e5092af4edf93d748d809d7a3aa7ba3f3878ccaf8243aaf973c3454c2f270301",
+  "reviewedAt": "2026-09-07",
+  "summary": "The scan did not reach Windmill token documentation, which describes both scoped tokens and CLI creation. Test that existing path on the intended deployment before proposing another onboarding interface.",
+  "items": [
+    {
+      "title": "Start with the documented access path",
+      "checkIds": [
+        "agent_entry_point",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "Windmill documents scoped tokens and CLI token creation. The scan did not reach an authentication page, so it could not measure provisioning. The documented CLI path must be evaluated with its authentication prerequisites; it does not establish account creation from nothing.",
+      "nextStep": "On the agreed deployment, use an authorized token to run a PDF fixture asynchronously and exercise one recoverable failure.",
+      "validation": "Check the returned job ID, finished PDF and retry logs. Record the selected runtime and plan, and any initial account-owner step.",
+      "sources": [
+        {
+          "url": "https://www.windmill.dev/docs/core_concepts/user_tokens",
+          "note": "Documented credential and access path."
+        }
+      ]
+    },
+    {
+      "title": "Check the supported authentication flow",
+      "checkIds": [
+        "oauth_dcr"
+      ],
+      "disposition": "verify",
+      "finding": "This scan did not confirm dynamic OAuth client registration. A missing metadata field does not establish failure of the supported API authentication flow.",
+      "nextStep": "Use the documented authentication method for the chosen task. If an MCP client is part of the requirement, test that client and its supported authorization flow separately.",
+      "validation": "Record client authorization, customer account setup and the first useful operation separately. Add a compatibility mechanism only for a demonstrated requirement.",
+      "sources": [
+        {
+          "url": "https://www.windmill.dev/docs/core_concepts/user_tokens",
+          "note": "Documented authentication or integration interface."
+        }
+      ]
+    },
+    {
+      "title": "Verify signup before changing it",
+      "checkIds": [
+        "signup_reachable",
+        "signup_no_captcha"
+      ],
+      "disposition": "verify",
+      "finding": "The HTTP scan did not read a complete native signup form. It did not execute JavaScript or complete the identity-provider flow, so it cannot establish the behavior of a browser-capable agent.",
+      "nextStep": "Test the supported signup route only if account creation is in scope and authorized. Otherwise start the integration test with an owner-provided test account.",
+      "validation": "Record whether the route completes, requires a person or fails. Do not recommend changing account protection solely from a script marker or missing server-rendered form.",
+      "sources": [
+        {
+          "url": "https://www.windmill.dev/docs/core_concepts/user_tokens",
+          "note": "Documented access prerequisites for the product."
+        }
+      ]
+    }
+  ]
+}

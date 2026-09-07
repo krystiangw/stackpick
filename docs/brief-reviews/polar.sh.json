@@ -1,0 +1,19 @@
+{
+  "domain": "polar.sh",
+  "category": "payments",
+  "status": "documented",
+  "rationale": "Polar documents recurring monthly and annual subscriptions, card charging and downloadable invoices, and describes its Merchant of Record role for sales taxes. This fits the SaaS billing scenario. Seller eligibility, the buyer's invoicing requirements and approval timing must still be checked; this report did not process payments or assess tax compliance.",
+  "nextStep": "Confirm seller eligibility and invoice requirements. Use the sandbox to test a subscription checkout, the resulting webhook and entitlement, and invoice availability. Record seller verification and human payment authorization separately.",
+  "sources": [
+    {
+      "url": "https://polar.sh/docs/features/subscriptions/introduction",
+      "note": "Documents recurring intervals, renewals and customer invoice access."
+    },
+    {
+      "url": "https://polar.sh/docs/merchant-of-record/introduction",
+      "note": "Describes Polar's Merchant of Record model and tax responsibilities."
+    }
+  ],
+  "question": "We are putting paid plans on a B2B SaaS: monthly and annual, customers in the EU and the US, cards plus proper invoices and VAT. Node on the backend, nobody here has done billing before, and this has to be live next month. Which provider would you use, and what else did you weigh before settling on it?",
+  "reviewedAt": "2026-09-07"
+}

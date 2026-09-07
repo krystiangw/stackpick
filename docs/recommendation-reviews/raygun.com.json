@@ -1,0 +1,96 @@
+{
+  "domain": "raygun.com",
+  "question": "We find out about exceptions when a customer emails us, which is embarrassing. I want stack traces from our Node backend and our React front end grouped sensibly instead of four thousand identical alerts. Which tool would you use, and what else did you look at before picking it?",
+  "scanFingerprint": "a3125b8ba9d01b474408897556c561ba60f82745bab726da0a691b5a5b9433f6",
+  "reviewedAt": "2026-09-07",
+  "summary": "Raygun already documents an API specification and token operations that this scan missed. The signup marker also needs verification. The useful next test is a working Node and React error-reporting fixture.",
+  "items": [
+    {
+      "title": "Start with the documented access path",
+      "checkIds": [
+        "agent_entry_point",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "Raygun's API guide describes personal access tokens, scoped operations and regeneration of an application API key. The scan's selected external-access-token page was not sufficient to assess all credential operations. Regenerating a key for an existing application is not creating a new customer account.",
+      "nextStep": "With an authorized test application, instrument the Node and React fixtures and send repeated and distinct synthetic exceptions.",
+      "validation": "Verify visible events, expected grouping and source locations. Record which access steps need an account owner. Do not rotate an existing live key.",
+      "sources": [
+        {
+          "url": "https://raygun.com/documentation/product-guides/raygun-api/",
+          "note": "Documented credential and access path."
+        }
+      ]
+    },
+    {
+      "title": "Use the existing API reference",
+      "checkIds": [
+        "machine_readable_api"
+      ],
+      "disposition": "no-change",
+      "finding": "The official API guide already links to an OpenAPI specification. Our scan did not discover it; publishing another specification is not justified by this observation.",
+      "nextStep": "Test whether an agent starting from the product guide can find the existing reference and the operation needed for the task.",
+      "validation": "Record the navigation path and retrieved specification. Recommend a linking change only if this test identifies a reproducible discovery failure.",
+      "sources": [
+        {
+          "url": "https://raygun.com/documentation/product-guides/raygun-api/",
+          "note": "Official API guide and reference link."
+        }
+      ]
+    },
+    {
+      "title": "Check the supported authentication flow",
+      "checkIds": [
+        "oauth_dcr",
+        "mcp_present"
+      ],
+      "disposition": "verify",
+      "finding": "This scan did not confirm dynamic OAuth client registration and could not measure the MCP surface because the registry did not answer.",
+      "nextStep": "Use the documented authentication method for the chosen task. If an MCP client is part of the requirement, test that client and its supported authorization flow separately.",
+      "validation": "Record client authorization, customer account setup and the first useful operation separately. Add a compatibility mechanism only for a demonstrated requirement.",
+      "sources": [
+        {
+          "url": "https://raygun.com/documentation/product-guides/raygun-api/",
+          "note": "Documented authentication or integration interface."
+        }
+      ]
+    },
+    {
+      "title": "Verify signup before changing it",
+      "checkIds": [
+        "signup_no_captcha"
+      ],
+      "disposition": "verify",
+      "finding": "A CAPTCHA-related marker was present in the signup HTML, but this scan did not submit the form or establish that it challenges the integration path.",
+      "nextStep": "Test the supported signup route only if account creation is in scope and authorized. Otherwise start the integration test with an owner-provided test account.",
+      "validation": "Record whether the route completes, requires a person or fails. Do not recommend changing account protection solely from a script marker or missing server-rendered form.",
+      "sources": [
+        {
+          "url": "https://raygun.com/documentation/product-guides/raygun-api/",
+          "note": "Documented access prerequisites for the product."
+        }
+      ]
+    },
+    {
+      "title": "Test discovery and offer understanding",
+      "checkIds": [
+        "llms_txt",
+        "price_in_snippet"
+      ],
+      "disposition": "verify",
+      "finding": "The scan found no llms.txt at the probed addresses and no amount or entry condition in the pricing description. These observations do not show that an agent failed to read the documentation or understand the applicable offer.",
+      "nextStep": "Ask an agent to find the relevant quickstart and, where needed, identify the price and entry requirements for this workload.",
+      "validation": "Compare the retrieved source and stated conditions with the actual product documentation. Prioritize a change only when the task reveals a specific failure.",
+      "sources": [
+        {
+          "url": "https://raygun.com/documentation/product-guides/raygun-api/",
+          "note": "Existing documentation to use in a discovery test."
+        },
+        {
+          "url": "https://raygun.com/pricing",
+          "note": "Pricing page assessed by the recorded HTTP scan."
+        }
+      ]
+    }
+  ]
+}

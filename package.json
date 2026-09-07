@@ -37,6 +37,8 @@
     "audit-llms": "tsx scripts/audit-llms.mts",
     "noise-floor": "tsx scripts/noise-floor.mts",
     "audit-delivery": "tsx scripts/audit-delivery.mts",
+    "audit-report-scope": "tsx scripts/audit-report-scope.mts",
+    "audit-recommendations": "tsx scripts/audit-recommendations.mts",
     "audit-our-api": "tsx scripts/audit-our-api.mts",
     "indexnow": "tsx scripts/indexnow.mts",
     "audit-published-urls": "tsx scripts/published-urls.mts | tsx scripts/audit-published-urls.mts",

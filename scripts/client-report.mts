@@ -15,10 +15,10 @@
  *   the cell     what an agent actually answered, quoted, with the spread across runs visible
  */
 import { randomBytes } from 'node:crypto'
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import cells from '../src/data/cells.json'
 import { CATEGORIES, CURATED_DOMAINS, categoryFor } from '../src/lib/categories'
-import { getStore } from '../src/lib/store'
+import { getStore, type Report } from '../src/lib/store'
 import { FORMULA_VERSION } from '../src/lib/score'
 import { brandTaken, certain, mentionsIn, nameGuest, quotedAbout, readsAsPolish } from '../src/lib/vendors'
 import { normalizeDomain } from '../src/lib/scan/discover'
@@ -26,12 +26,15 @@ import { SITE_URL } from '../src/lib/site'
 import { buildFixPlan } from '../src/lib/fixfirst'
 import { scoreSection } from '../src/lib/report-numbers'
 import type { ReportModel } from '../src/lib/client-report-model'
+import { readRecommendationReview, requireRecommendationReview, RECOMMENDATION_LABELS, RECOMMENDATION_LIMIT, UNREVIEWED_RECOMMENDATIONS } from '../src/lib/recommendation-review'
+import { recommendationReviewInput } from '../src/lib/recommendation-evidence'
+import { BRIEF_LABELS, BRIEF_LIMIT, SCAN_ACTION_LIMIT, UNREVIEWED_BRIEF, readBriefReview, reportQuestion, requirePublishableBrief, verifyScanAction } from '../src/lib/report-brief'
 
 const plural = (count: number, one: string, many: string) => (count === 1 ? one : many)
 
 const [given, ...rest] = process.argv.slice(2)
 if (!given) {
-  console.error('usage: npx tsx scripts/client-report.mts <domain> [--out FILE] [--category ID] [--brand NAME]')
+  console.error('usage: npx tsx scripts/client-report.mts <domain> [--out FILE] [--category ID] [--brand NAME] [--brief-review FILE] [--recommendation-review FILE] [--scan-file FILE] [--publish]')
   process.exit(2)
 }
 // Sprawdzane PRZY ARGUMENTACH, nie przed samym zapisem: `--id` i `--sample` bez `--publish` byly
@@ -132,6 +135,16 @@ const held = cells
   .filter((candidate) => candidate.category === category.id)
   .sort((a, b) => a.operatorContext.length - b.operatorContext.length)
 const cell = held[0]
+const question = reportQuestion(held)
+const reviewAt = rest.indexOf('--brief-review')
+const reviewFile = reviewAt === -1 ? null : rest[reviewAt + 1]
+if (reviewAt !== -1 && (!reviewFile || reviewFile.startsWith('--'))) {
+  throw new Error('--brief-review needs a JSON file path.')
+}
+const briefReview = reviewFile
+  ? readBriefReview(JSON.parse(readFileSync(reviewFile, 'utf8')), { domain, category: category.id, question })
+  : null
+if (rest.includes('--publish')) requirePublishableBrief(briefReview)
 const runsAll = held.reduce((sum, one) => sum + one.runs, 0)
 const labelOfGuest = domain.split('.')[0]
 
@@ -208,11 +221,17 @@ if (live) {
 // Newest, not the corpus row. The corpus row is what makes vendors comparable to each other, and
 // this report compares nobody: a buyer who fixed their llms.txt yesterday and rescanned would have
 // been sold last week's scorecard under a heading written in the present tense.
-const report = await getStore().latestForDomain(domain)
+const scanAt = rest.indexOf('--scan-file')
+const scanFile = scanAt === -1 ? null : rest[scanAt + 1]
+if (scanAt !== -1 && (!scanFile || scanFile.startsWith('--'))) throw new Error('--scan-file needs a JSON file path.')
+const report: Report | null = scanFile
+  ? JSON.parse(readFileSync(scanFile, 'utf8'))
+  : await getStore().latestForDomain(domain)
 if (!report) {
   console.error(`brak skanu dla ${domain}. Uruchom: npm run scan ${domain}`)
   process.exit(1)
 }
+if (report.domain !== domain) throw new Error('Scan file belongs to a different domain.')
 
 /**
  * A guest whose address redirects into the corpus is not a guest, it is a vendor we already publish
@@ -236,6 +255,15 @@ const card = report.scorecard
 const measurable = card.measurable ?? card.max
 const failed = card.checks.filter((check) => !check.inconclusive && !check.notApplicable && check.points < check.max)
 const unmeasured = card.checks.filter((check) => check.inconclusive)
+const recommendationAt = rest.indexOf('--recommendation-review')
+const recommendationFile = recommendationAt === -1 ? null : rest[recommendationAt + 1]
+if (recommendationAt !== -1 && (!recommendationFile || recommendationFile.startsWith('--'))) {
+  throw new Error('--recommendation-review needs a JSON file path.')
+}
+const recommendationReview = recommendationFile
+  ? readRecommendationReview(JSON.parse(readFileSync(recommendationFile, 'utf8')), recommendationReviewInput(report, question))
+  : null
+if (rest.includes('--publish')) requireRecommendationReview(recommendationReview)
 
 
 /**
@@ -289,7 +317,21 @@ if (!cell) {
 } else {
   lines.push('Question tested:')
   lines.push('')
-  lines.push(`> ${cell.question}`)
+  lines.push(`> ${question}`)
+  lines.push('')
+  if (briefReview) {
+    lines.push(`**Question fit: ${BRIEF_LABELS[briefReview.status]}.** Reviewed ${briefReview.reviewedAt}.`)
+    lines.push('')
+    lines.push(briefReview.rationale)
+    lines.push('')
+    for (const source of briefReview.sources) lines.push(`- ${source.note} ${source.url}`)
+    lines.push('')
+    lines.push(`Next step: ${briefReview.nextStep}`)
+    lines.push('')
+    lines.push(BRIEF_LIMIT)
+  } else {
+    lines.push(UNREVIEWED_BRIEF)
+  }
   lines.push('')
   lines.push('| Date | Tool and version | Recorded model | Runs | Mentions |')
   lines.push('|---|---|---|---|---|')
@@ -313,7 +355,22 @@ lines.push('## 2. Next steps and scan evidence')
 lines.push('')
 lines.push('The scan measures HTTP responses and public-page text; it does not test a completed integration.')
 lines.push('')
-if (plan) {
+lines.push(SCAN_ACTION_LIMIT)
+lines.push('')
+if (recommendationReview) {
+  lines.push(`**Reviewed next steps (${recommendationReview.reviewedAt})**`, '', recommendationReview.summary, '', RECOMMENDATION_LIMIT, '')
+  for (const item of recommendationReview.items) {
+    lines.push(`### ${item.title}`, '', `**${RECOMMENDATION_LABELS[item.disposition]}**`, '', item.finding, '', `Next step: ${item.nextStep}`, '', `Validation: ${item.validation}`, '')
+    for (const source of item.sources) lines.push(`- ${source.note} ${source.url}`)
+    lines.push('')
+  }
+  lines.push('### Recorded scan observations', '', 'These are the original automated observations. The review above qualifies their interpretation.', '')
+  for (const check of failed) lines.push(`- **${check.label} (${check.points}/${check.max})**: ${observed(check)}`)
+  lines.push('')
+} else {
+  lines.push(`**${UNREVIEWED_RECOMMENDATIONS}**`, '')
+}
+if (plan && !recommendationReview) {
   lines.push(plan.claim)
   lines.push('')
   lines.push('| Check | Points | Observed | Action | Point gain | Effort (estimate) |')
@@ -326,6 +383,10 @@ if (plan) {
     lines.push('')
     lines.push(`*Table note: ${plan.unmeasured} unmeasured points excluded from the gain calculation.*`)
   }
+  lines.push('')
+  lines.push('### How to validate the changes')
+  lines.push('')
+  for (const step of plan.steps) lines.push(`- **${step.label}**: ${verifyScanAction(step.checkId)}`)
   lines.push('')
 }
 if (unmeasured.length > 0) {
@@ -428,12 +489,48 @@ const markdown = `${lines.join('\n')}\n`
 writeFileSync(out, markdown)
 console.log(`${out} zapisany, ${lines.length} linii`)
 
-// The same document behind a link, because a buyer forwards a URL and archives an attachment. The
-// id is the only key: the report names a vendor's failures in more detail than anything we publish
-// for free, so it is never indexed and never listed.
+const model: ReportModel = {
+  domain,
+  category: category.label,
+  preparedAt,
+  formulaVersion: card.formulaVersion,
+  formulaNow: card.formulaVersion === FORMULA_VERSION ? null : FORMULA_VERSION,
+  scannedAt: report.scannedAt,
+  guest,
+  missedByWord,
+  score: { total: card.total, measurable, max: card.max },
+  stages: card.stages.map((stage) => ({
+    title: stage.title,
+    question: stage.question,
+    points: stage.points,
+    measurable: stage.measurable ?? stage.max,
+  })),
+  question,
+  briefReview,
+  recommendationReview,
+  runsUrl: cell ? `${SITE_URL}/c/${category.id}/runs` : null,
+  runs: forModel.runs,
+  named: { named: namedAll, first: firstAll, of: runsAll },
+  // Both lists in one, with the gap that decides whether we call it clear: a run apart is inside
+  // what this many runs can separate, and the document says so in words as well.
+  rivals: [
+    ...ahead.map((other) => ({ domain: other, named: namedAcross(other), first: firstAcross(other), clear: true })),
+    ...level.map((other) => ({ domain: other, named: namedAcross(other), first: firstAcross(other), clear: false })),
+  ],
+  quotes: forModel.quotes,
+  failing: failed.map((check) => ({ label: check.label, points: check.points, max: check.max, detail: observed(check), unblock: check.unblock ?? null })),
+  unmeasured: unmeasured.map((check) => ({ label: check.label, detail: check.detail })),
+  notApplicable: card.checks.filter((check) => check.notApplicable).map((check) => ({ label: check.label, detail: check.detail })),
+  fixes: recommendationReview ? [] : (plan?.steps ?? []).map((step) => ({ label: step.label, gain: step.gain, effort: step.effort, how: step.how, verify: verifyScanAction(step.checkId) })),
+  fixClaim: recommendationReview ? null : plan?.claim ?? null,
+  behindUnmeasured: plan?.unmeasured ?? 0,
+}
+
+// Keep a local rendering input beside the markdown for review before publishing a delivery.
+writeFileSync(`${out}.json`, `${JSON.stringify(model, null, 2)}\n`)
+
+// The id is the only delivery key; reports are never indexed or listed.
 if (rest.includes('--publish')) {
-  // A fixed id when the operator asks for one, so a link that has been sent to somebody keeps
-  // working when the report behind it is regenerated. Anything else gets an unguessable one.
   const at = rest.indexOf('--id')
   const chosen = at === -1 ? null : rest[at + 1]
   if (at !== -1 && (!chosen || chosen.startsWith('--') || !/^[\w-]{3,40}$/.test(chosen))) {
@@ -441,40 +538,6 @@ if (rest.includes('--publish')) {
     process.exit(2)
   }
   const id = chosen ?? randomBytes(9).toString('base64url')
-  const model: ReportModel = {
-    domain,
-    category: category.label,
-    preparedAt,
-    formulaVersion: card.formulaVersion,
-    formulaNow: card.formulaVersion === FORMULA_VERSION ? null : FORMULA_VERSION,
-    scannedAt: report.scannedAt,
-    guest,
-    missedByWord,
-    score: { total: card.total, measurable, max: card.max },
-    stages: card.stages.map((stage) => ({
-      title: stage.title,
-      question: stage.question,
-      points: stage.points,
-      measurable: stage.measurable ?? stage.max,
-    })),
-    question: cell?.question ?? null,
-    runsUrl: cell ? `${SITE_URL}/c/${category.id}/runs` : null,
-    runs: forModel.runs,
-    named: { named: namedAll, first: firstAll, of: runsAll },
-    // Both lists in one, with the gap that decides whether we call it clear: a run apart is inside
-    // what this many runs can separate, and the document says so in words as well.
-    rivals: [
-      ...ahead.map((other) => ({ domain: other, named: namedAcross(other), first: firstAcross(other), clear: true })),
-      ...level.map((other) => ({ domain: other, named: namedAcross(other), first: firstAcross(other), clear: false })),
-    ],
-    quotes: forModel.quotes,
-    failing: failed.map((check) => ({ label: check.label, points: check.points, max: check.max, detail: observed(check), unblock: check.unblock ?? null })),
-    unmeasured: unmeasured.map((check) => ({ label: check.label, detail: check.detail })),
-    notApplicable: card.checks.filter((check) => check.notApplicable).map((check) => ({ label: check.label, detail: check.detail })),
-    fixes: (plan?.steps ?? []).map((step) => ({ label: step.label, gain: step.gain, effort: step.effort, how: step.how })),
-    fixClaim: plan?.claim ?? null,
-    behindUnmeasured: plan?.unmeasured ?? 0,
-  }
   await getStore().saveDelivery({
     id,
     domain,
