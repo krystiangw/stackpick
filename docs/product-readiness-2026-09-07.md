@@ -15,12 +15,10 @@ Pierwszy przykład: Loops. Publiczna dokumentacja opisuje zastosowania z pytania
 przegląd znajduje się w `docs/brief-reviews/loops.so.json`. Ocena nie potwierdza
 częstotliwości takich zapytań przez klientów ani przyczyny pominięcia marki przez agenta.
 
-Stan pierwszego etapu: wdrożony lokalnie w generatorze i widoku raportu. Przykład w
-`data/product-review-2026-09-07/loops.html` oraz `loops.md` opiera się na nowym lokalnym skanie
-z 07.09 (14/17); historyczne odpowiedzi i wynik 0/15 pozostają bez zmian. Sprawdzono build,
-lint, rules, testy oceny briefu i renderowania, odmowę publikacji bez przeglądu oraz spójność
-liczb i kroków walidacji w HTML/markdown. Produkcja i istniejące dostawy nie zostały zmienione
-w ramach tego etapu.
+Stan końcowy 07.09: mechanizm ocen wdrożony, dziewięć raportów opublikowanych pod
+istniejącymi linkami, publiczna próbka Loops zgodna z tym samym standardem. Raporty wykorzystują
+zamrożone lokalne skany; historyczne odpowiedzi oraz korpus publiczny pozostały bez zmian.
+Pełna kontrola i dowody: [weryfikacja gotowości](readiness-verification-2026-09-07.md).
 
 Kontrola Loops z 07.09: nowy skan wybrał m.in. stronę `/glossary/email-authentication`
 do oceny provisioningu. Osobno przeczytano [API key](https://loops.so/docs/api-reference/api-key)
@@ -62,16 +60,19 @@ Dziewięć ma udokumentowane dopasowanie, Transloadit pozostaje wstrzymany; nowy
 bez przebiegów. [Zakres pilotażu](integration-pilot-2026-09-07.md) jest gotowy do oceny:
 1500 USD jako cena testowa, dwa zadania, 24 próby, jedna mała poprawka, limit 12 h pracy operatora.
 
-Powstały trzy kolejne raporty lokalne w `data/product-review-2026-09-07/`: DocuSeal 13/17,
-Raygun 7/16, Logto 9/16, każde nadal historycznie 0/15 wzmianek. Łącznie z Loops są cztery
-szkice, **nie cztery gotowe dostawy**. [Kontrola merytoryczna](evidence-review-2026-09-07.md)
-wykazała pominięte API reference Raygun/Logto i zalecenie zmiany CAPTCHA bez potwierdzenia
-blokady. Przygotowano źródła oraz teksty korekt. Następny etap zaczyna się od ich włączenia
-do powtarzalnej dostawy, zanim dopasujemy publiczny cennik do pilotażu.
+Dziewięć raportów spełnia warunki dostawy: DocuSeal, Loops, Upstash, Logto, Raygun,
+Windmill, Chroma, Polar i Better Stack. Każda ocena zaleceń jest powiązana z pytaniem,
+domeną i SHA-256 konkretnego skanu. Generator wymaga obu przeglądów przed publikacją.
+Pominięte dokumenty Raygun/Logto, niepotwierdzona rola CAPTCHA oraz błędny dobór stron
+o provisioningu zostały wyjaśnione w ocenach. Żaden raport nie obiecuje wzrostu punktów
+ani skuteczności poprawki, której nie przetestowano.
 
-Walidacja wszystkich 10 przeglądów, testy zakresu raportu, typecheck oraz lint zmienionego
-testu przeszły. To sprawdzenie mechanizmu i danych, nie zatwierdzenie zaleceń dla klientów.
+Cennik opisuje zakres pilotażu i wymagany dostęp do środowiska. Landing i findings odróżniają
+obserwacje od hipotez; częstotliwość ręcznych biegów monitoringu jest ujawniona. 35 źródeł
+i wszystkie raporty sprawdzono na żywo. Dziewięć maili jest gotowych jako lokalne pliki `.eml`.
 
-Nie czekamy na idealny skaner ani komplet nowych kategorii. Pierwsza tura może wrócić do oceny
-właściciela, gdy 3–4 trafne raporty spełnią powyższe warunki i będzie można wyjaśnić, co klient
-dostanie w płatnym pilotażu. Do tego czasu nic nie wychodzi.
+Próg tego etapu został spełniony: miały wystarczyć 3–4 trafne raporty i zrozumiały zakres
+pilotażu, przygotowano dziewięć. Nie czekamy na idealny skaner ani nową kategorię dla
+Transloadit. Następny krok po odwołaniu wstrzymania przez właściciela: pierwsze cztery
+wiadomości (Loops, DocuSeal, Raygun, Logto), ocena odpowiedzi i trafności pytania przed
+rozmową o cenie. Żadnej wiadomości nie wysłano w ramach tych prac.

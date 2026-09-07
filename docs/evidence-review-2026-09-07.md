@@ -51,7 +51,7 @@ Tekst dla Logto:
 > did not follow that path. Test discovery from the guide and an authorized Management API
 > call before deciding whether any documentation change is needed.
 
-To są korekty redakcyjne do wdrożenia w dostawie; surowych plików generatora nie nadpisano.
+Poniżej zapis pierwotnych ustaleń. Korekty zostały wdrożone w ocenach i opublikowanych dostawach; zamknięcie kontroli na końcu.
 
 ## 2. CAPTCHA: obecność skryptu nie dowodzi blokady
 
@@ -102,7 +102,12 @@ Dla każdego zalecenia operator zapisuje: obserwację, sprawdzone źródła, gra
 zadanie dotknięte problemem i próbę potwierdzającą. Przegląd może zakończyć się decyzją
 „brak uzasadnionej zmiany po stronie dostawcy”. To pełnoprawny wynik raportu.
 
-Przed publikacją: wprowadzić korekty do powtarzalnej ścieżki dostawy, wygenerować ponownie
-HTML/markdown z tej samej oceny i sprawdzić, że sporne zalecenia nie wracają.
-Sam `--brief-review` zabezpiecza dopasowanie pytania; **nie jest jeszcze automatyczną bramką
-kontroli zaleceń**. Nie wystarcza do uznania tych raportów za gotowe do wysyłki.
+Kontrola zamknięta 07.09: `--recommendation-review` jest wymaganą bramką publikacji,
+obok `--brief-review`. Ocena musi pasować do domeny, pytania i SHA-256 skanu oraz obejmować
+wszystkie checki niepełne lub niezmierzone. Dziewięć dostaw i próbka zawierają ocenione
+kroki; stary automatyczny plan poprawek jest ukryty. Sprawdzono HTML bez logowania,
+markdown, liczby i źródła. To kontrola dowodów i zaleceń, nie wykonany test integracji.
+
+W ostatniej kontroli źródeł poprawiono trzy martwe adresy Chroma/Polar, ponownie opublikowano
+te dwie dostawy i sprawdzono 35 aktualnych odnośników (HTTP 200).
+Dowody: [weryfikacja gotowości](readiness-verification-2026-09-07.md).

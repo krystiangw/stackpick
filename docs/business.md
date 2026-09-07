@@ -6,9 +6,9 @@ else in this repository is either code, an operating runbook in `docs/`, or the 
 
 ## What it is
 
-letagentsin.com measures whether an AI agent can find, sign up for and integrate a software
-product without a person in the loop. The site scans a vendor's domain with 16 deterministic
-HTTP checks (no JavaScript, no account), scores the result with a published formula (version
+letagentsin.com investigates how agents choose and integrate software. Its HTTP scan measures
+public signals; an integration audit separately tests task completion and human handoffs.
+The site scans a vendor's domain with 16 deterministic HTTP checks (no JavaScript, no account), scores the result with a published formula (version
 9.57, `src/lib/score.ts`), and keeps a corpus of 181 vendor domains in 26 buying categories
 (`src/lib/categories.ts`) that is rescanned regularly and published at `/findings` and `/c/<category>`.
 
@@ -44,9 +44,9 @@ and a report is bought by writing to hello@letagentsin.com. Turning it on is `do
   Named AI crawlers (GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot) do fetch us.
 - Buttons: counted since v783 (2026-09-07), visible on `/app`. Nothing was pressed before that
   which left a trace (no scans of domains outside the corpus, no leads, no watches).
-- Go-to-market: a campaign to ten corpus vendors that run an MCP server or OAuth client
-  registration and were named in 0 of 15 agent runs. Each gets the $49 report free and one
-  question. Drafts, recipients and rules: `outreach/drafts/gift-report-2026-09-03.private.md`
+- Go-to-market: a campaign prepared for ten corpus vendors with MCP or OAuth discovery signals
+  and 0 of 15 mentions for the category question; nine passed the brief-fit review. Each gets
+  the $49 report free and one question. Drafts, recipients and rules: `outreach/drafts/gift-report-2026-09-03.private.md`
   (kept out of git on purpose, the report links inside are bearer keys). Nothing is sent without
   the owner's explicit approval of the drafts.
 - Copy: an outside editorial audit on 2026-09-07 (`docs/copy-audit-2026-09-07.md`) judged the
@@ -56,8 +56,11 @@ and a report is bought by writing to hello@letagentsin.com. Turning it on is `do
   Report quality and restart criteria: `docs/product-readiness-2026-09-07.md`.
 - Product refinement, 2026-09-07: all ten campaign briefs reviewed (nine documented fits,
   Transloadit partial). A $1,500 integration pilot is scoped in `docs/integration-pilot-2026-09-07.md`
-  as a pricing hypothesis, not a catalog change. Fresh local reports remain drafts: manual
-  review found recommendations unsupported by the scan (`docs/evidence-review-2026-09-07.md`).
+  as a pricing hypothesis, not a catalog change. Nine source-reviewed reports and a matching
+  public sample are published; nine local unsent emails are ready. Unsupported automatic
+  recommendations have been replaced with reviewed next steps tied to each scan. Transloadit
+  remains excluded pending a new brief and runs. Live evidence and completion criteria:
+  `docs/readiness-verification-2026-09-07.md`. Readiness is not permission to send.
 
 ## Decisions that stand
 

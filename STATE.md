@@ -1,47 +1,38 @@
-# Let Agents In: migawka na 2026-09-07 (prod v784, korpus 181, formuła 9.57)
+# Let Agents In: migawka na 2026-09-07 (prod v788, korpus 181, formuła 9.57)
 
 Biznes na jednej stronie: `docs/business.md`. Historia rund: `docs/journal-2026-08.md` (do 11.08)
 i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dziennik.
 
 ## Nad czym pracujemy
 
-0. **Produkt przed kampanią** — zakres i warunki wznowienia:
-   `docs/product-readiness-2026-09-07.md`. Pierwszy etap: trafność pytania w raporcie, źródła
-   dopasowania oraz sposób sprawdzenia zaleceń po zmianie. Pierwszy etap zrobiony lokalnie:
-   `data/product-review-2026-09-07/loops.html` i `.md`, świeży lokalny skan 07.09 (14/17),
-   historyczne biegi bez zmian (0/15). Build, lint, rules i audit-report-scope zielone.
-   Generator wymaga `--brief-review FILE` przy publikacji. Zmiany czekają na przegląd i wdrożenie.
-   Etap 2: ocenione 10 firm (`docs/brief-reviews/README.md`), 9 dopasowań, Transloadit partial.
-   Etap 3: zakres pilotażu gotowy (`docs/integration-pilot-2026-09-07.md`): propozycja 1500 USD,
-   24 próby, limit 12 h operatora; nie zmienia cennika. Nowe lokalne raporty: DocuSeal 13/17,
-   Raygun 7/16, Logto 9/16, historycznie każde 0/15. NIE GOTOWE DO DOSTAWY: kontrola zaleceń
-   wykazała pominięte API reference Raygun/Logto oraz niepotwierdzoną rolę CAPTCHA.
-   Konkretne źródła i korekty: `docs/evidence-review-2026-09-07.md`.
-   Aktualizacja: korekty są w generatorze/widoku, 9 ocen powiązanych z SHA-256 skanu w
-   `docs/recommendation-reviews/`. Publikacja wymaga obu ocen; nowe raporty `data/product-review-2026-09-07/<domena>.md`.
-   9 maili bez prognoz wzrostu punktacji, skrzynki ponownie sprawdzone. Build, lint, audit-delivery,
-   audit-report-scope i audit-recommendations zielone. Pozostały wdrożenie i sprawdzenie żywych linków.
-
-1. **Przepisanie tekstów po audycie** `docs/copy-audit-2026-09-07.md` (codex gpt-6-astra high,
-   zgoda Krystiana na wszystkie fazy). Faza 1+2 ZROBIONA (v784, c3ecc05): generator, widok
-   `/d/<id>`, drafty; 10 raportów i próbka przegenerowane pod tymi samymi id, bramki dostawy zielone.
-   Faza 3 (`/pricing`) w toku u codexa. Dalej: 4 email-gate i `/r/<id>`, 5 landing, `/audit`,
-   kategorie, 6 metodologia, findings, raport branżowy, 7 docs, visibility. Osobny commit i deploy
-   na fazę. Brief do fazy w scratchpadzie sesji (`rewrite-phase3-prompt.md`), wzór dla kolejnych.
-2. **Kampania „raport w prezencie"**: 10 raportów pod `/d/<id>`, drafty w
-   `outreach/drafts/gift-report-2026-09-03.private.md` (poza gitem). Send-as hello@ przez SMTP
-   Resenda działa (mail-tester 9.3/10, dkim/spf/dmarc pass). Wysyła Krystian po „ok" na drafty.
-   Odbiorcy: wspólne skrzynki firm z tabeli, imię w pierwszej linii.
+0. **Produkt przed kampanią — materiały gotowe.** Dziewięć źródłowo ocenionych raportów
+   pod dotychczasowymi linkami i zgodna próbka Loops na `/d/sample`. Generator wymaga oceny
+   briefu i zaleceń powiązanych z SHA-256 skanu. Korekty niepotwierdzonych zaleceń dostarczone.
+   Dziewięć lokalnych `.eml` w `data/product-review-2026-09-07/email-drafts/`, nic nie wysłano.
+   Kontrola: 10 stron dostaw bez logowania, 7 stron przebiegów / 105 pełnych odpowiedzi,
+   35 działających źródeł, skrzynki i zgodność maili. Dowody i audyt zamknięcia:
+   `docs/readiness-verification-2026-09-07.md`. Pilotaż: `docs/integration-pilot-2026-09-07.md`
+   (1500 USD jako hipoteza, 2 zadania, 24 próby, limit 12 h, niewykonany i niesprzedany).
+1. **Copy po audycie:** w tym etapie poprawiono zakres na `/pricing`, landing, findings
+   i metodologii: skan nie dowodzi ukończenia integracji ani utraty sprzedaży; poprawka
+   dokumentacji wymaga testu przed/po. To zamknięcie ryzyk pierwszej kampanii, nie deklaracja
+   wykonania całego wcześniejszego siedmiofazowego planu redakcyjnego. Audyt źródłowy:
+   `docs/copy-audit-2026-09-07.md`.
+2. **Kampania „raport w prezencie”:** 9 aktywnych odbiorców, Transloadit wyłączony do nowego
+   briefu i nowych przebiegów. Kanoniczne drafty: `outreach/drafts/gift-report-2026-09-03.private.md`
+   (poza gitem); instrukcja pakietu `data/product-review-2026-09-07/README-ready.md`.
+   Send-as hello@ przez SMTP Resenda uprzednio sprawdzony (mail-tester 9.3/10, DKIM/SPF/DMARC pass).
+   Po odwołaniu wstrzymania: pierwsza mała tura Loops, DocuSeal, Raygun, Logto; ocena odpowiedzi
+   o trafności zadania. Wysyła Krystian. Otwarć poszczególnych dostaw nie śledzimy.
 
 ## Co blokuje
 
 - **KAMPANIA WSTRZYMANA (Krystian, 2026-09-07): nie wysyłać żadnego maila do dziesięciu firm,
   dopóki nie odwoła wstrzymania wprost.** Do 07.09 nic nie wyszło (Sent z hello@: tylko trzy sondy).
 
-- Drafty ma za „ok" (07.09), ale wysyłka czeka na odwołanie wstrzymania. Transloadit pozostaje
-  wstrzymany: częściowe dopasowanie wymaga nowego pytania i biegów. Otwarte: korekta zaleceń
-  raportów oraz widoczność repo albo migawki korpusu na stronie.
-- Rozszerzenie Chrome bywa odłączone; popup send-as Gmaila jest poza jego zasięgiem.
+- Transloadit: nowy brief jest szkicem z zerem przebiegów. Nie dodawać starego raportu do
+  gotowych dziewięciu wiadomości. Nie blokuje rozpoczęcia od trafnych raportów.
+- Billing i tożsamość sprzedawcy pozostają do domknięcia przed przyjęciem płatności.
 
 ## Decyzje, których nie cofamy
 
@@ -54,7 +45,10 @@ i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dzi
 
 ## Stan produkcji
 
-v783: cennik przebudowany (v782), licznik przycisków (v783), `/app` pokazuje „buttons pressed".
+v788 (`33e5b4c`): końcowe korekty obietnic na stronie i źródeł Chroma/Polar.
+v787 (`a1139d3`): obowiązkowe oceny briefu/zaleceń, raporty z ocenionymi następnymi krokami,
+cennik z konkretnym zakresem pilotażu. Dziewięć dostaw oraz próbka ponownie opublikowane.
+Typecheck, lint, rules, build i wymagane przeglądy Codex zielone; korpus i dawne biegi bez zmian.
 Ruch: 3 kliknięcia z Google w 28 dni; rendery „browser" to głównie crawler z nagłówkiem Mozilla.
 Zero klientów, leady i obserwacje w bazie to nasze testy. DMARC p=none, pierwszy raport od Google
 zdrowy (DKIM pass przez forward Porkbuna).
@@ -63,4 +57,5 @@ zdrowy (DKIM pass przez forward Porkbuna).
 
 `oauth_dcr` 0/1 u nas; rescoring historii; schemat odpowiedzi agenta i N>=8; przegląd DMARC
 ~17.09 i decyzja o `p=quarantine`; PostHog; Paddle i tożsamość sprzedawcy; limit 400 kB odczytu;
+publiczna migawka korpusu / dostępność repo do niezależnego przeliczenia skanów;
 typed_package na vercel.com; filtr właściciela llms.txt; wiersz `{day:"probe"}` w visits.
