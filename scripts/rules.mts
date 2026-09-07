@@ -603,7 +603,8 @@ console.log('\nrunbooki nie odsylaja do komend, ktorych nie ma')
 const wKatalogu = new Set(readdirSync('scripts'))
 const npmSkrypty = new Set(Object.keys(JSON.parse(readFileSync('package.json', 'utf8')).scripts as Record<string, string>))
 const martwe: string[] = []
-for (const plik of readdirSync('docs').filter((name) => name.endsWith('.md'))) {
+// Dzienniki to historia, nie runbook: komenda, ktora kiedys istniala, ma prawo tam zostac.
+for (const plik of readdirSync('docs').filter((name) => name.endsWith('.md') && !name.startsWith('journal-'))) {
   const tresc = readFileSync(`docs/${plik}`, 'utf8')
   // Kazde rozszerzenie, nie tylko `.mts`: w tym repo sa `.ts` i `.sh`, wiec regula zawezona do
   // jednego rozszerzenia przepuszczalaby dokladnie te wywolania, ktore najlatwiej zgnic.
@@ -3851,7 +3852,9 @@ const naDysku = (dir: string): string[] =>
     if (entry.isDirectory()) return entry.name === 'node_modules' ? [] : naDysku(path)
     return /\.(md|mdx|tsx?|mts|txt)$/.test(entry.name) && !/\.private\.md$/.test(entry.name) && path !== 'scripts/rules.mts' ? [path] : []
   })
-const przecieki = ['outreach', 'docs', 'src', 'scripts', 'public'].filter(existsSync).flatMap(naDysku).flatMap((f) => linkDoDostawy(readFileSync(f, 'utf8')).map((id) => `${f}: ${id}`))
+// Takze pliki z katalogu glownego: STATE.md niosl id probki przez trzy tygodnie, bo nikt go nie skanowal.
+const wKorzeniu = readdirSync('.', { withFileTypes: true }).filter((e) => e.isFile() && /\.md$/.test(e.name)).map((e) => e.name)
+const przecieki = [...wKorzeniu, ...['outreach', 'docs', 'src', 'scripts', 'public'].filter(existsSync).flatMap(naDysku)].flatMap((f) => linkDoDostawy(readFileSync(f, 'utf8')).map((id) => `${f}: ${id}`))
 check('zadnego /d/<id> poza probka w plikach, ktore moga trafic do repo', przecieki.join(', '), '')
 // Kontrolka z wymyslonym id: prawdziwy w tym pliku bylby dokladnie przeciekiem, o ktory chodzi.
 check('sonda widzi klucz', linkDoDostawy('see https://letagentsin.com/d/abcDEF123-_x today').length, 1)
