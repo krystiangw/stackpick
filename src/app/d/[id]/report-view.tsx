@@ -60,7 +60,7 @@ export function ReportView({ model }: { model: ReportModel }) {
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">{model.category}</p>
         <h1 className="mt-3 text-4xl font-semibold tracking-tight">{model.domain}</h1>
         <p className="mt-3 max-w-2xl text-lg leading-relaxed text-ink-soft">
-          What an AI agent does with you: whether it names you at all, and whether it could use you once it does.
+          Agent mentions for the tested question and scan results for public pages.
         </p>
       </header>
 
@@ -75,7 +75,7 @@ export function ReportView({ model }: { model: ReportModel }) {
             <>
               <p className="mt-3 text-2xl font-semibold tracking-tight text-ink-soft">Not yet answered</p>
               <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-                We hold no agent runs for this category yet, so this half is unanswered rather than negative.
+                No agent runs are available for this category yet.
               </p>
             </>
           ) : (
@@ -86,7 +86,7 @@ export function ReportView({ model }: { model: ReportModel }) {
               </p>
               <p className="mt-2 text-sm leading-relaxed text-ink-soft">
                 {named.named === 0
-                  ? 'No run named you. That is an absence, not a bad review.'
+                  ? 'These counts apply to the question and setup recorded below.'
                   : `Named first in ${named.first} of them.`}
               </p>
               <div className="mt-4">
@@ -96,14 +96,14 @@ export function ReportView({ model }: { model: ReportModel }) {
           )}
         </div>
         <div className="rounded-lg border border-rule bg-surface p-6">
-          <p className="font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">Usable once named</p>
+          <p className="font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">Scan score</p>
           <p className="mt-3 text-5xl font-semibold tabular-nums tracking-tight">
             {score.total}
             <span className="text-2xl text-ink-faint"> / {score.measurable}</span>
           </p>
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">
             Measurable points under formula v{model.formulaVersion}. Scanned {model.scannedAt.slice(0, 10)}.
-            {model.formulaNow ? ` The scanner now runs v${model.formulaNow}, so a rescan can move this.` : ''}
+            {model.formulaNow ? ` The scanner now runs v${model.formulaNow}.` : ''}
           </p>
           <div className="mt-4">
             <Bar points={score.total} of={score.measurable} tone={share(score.total, score.measurable) >= 60 ? 'pass' : 'fail'} />
@@ -113,9 +113,9 @@ export function ReportView({ model }: { model: ReportModel }) {
 
       {model.rivals.length > 0 && (
         <section className="mt-12 break-inside-avoid">
-          <h2 className="text-xl font-semibold tracking-tight">Who the agent named instead</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Other vendors named</h2>
           <p className="mt-2 max-w-2xl leading-relaxed text-ink-soft">
-            The same {named.of} runs, the same question, read by the same rule.
+            Mention counts for the tested question.
           </p>
           <div className="mt-6 space-y-4">
             {[{ domain: model.domain, named: named.named, first: named.first, clear: true, you: true }, ...model.rivals.map((rival) => ({ ...rival, you: false }))]
@@ -129,7 +129,7 @@ export function ReportView({ model }: { model: ReportModel }) {
                     </p>
                     <p className="font-mono text-sm tabular-nums text-ink-faint">
                       {row.named}/{named.of} named · {row.first} first
-                      {!row.you && !row.clear ? ' · inside the noise' : ''}
+                      {!row.you && !row.clear ? ' · one-run gap' : ''}
                     </p>
                   </div>
                   <div className="mt-1">
@@ -140,9 +140,7 @@ export function ReportView({ model }: { model: ReportModel }) {
           </div>
           {strongest && missed > 0 && (
             <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
-              {strongest.domain} was named in {strongest.named} of these {named.of} runs; you were named in{' '}
-              {named.named}. A single mention apart is inside what {named.of} runs can separate, and the rows where
-              that is the case are marked above rather than presented as a lead.
+              A one-run gap in this sample of {named.of} does not establish a rank.
             </p>
           )}
         </section>
@@ -150,9 +148,9 @@ export function ReportView({ model }: { model: ReportModel }) {
 
       {winnerQuotes.length > 0 && (
         <section className="mt-12 break-inside-avoid rounded-lg border border-brass bg-brass-soft p-6">
-          <h2 className="text-xl font-semibold tracking-tight">What being chosen sounded like</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Quotes about the vendor named first</h2>
           <p className="mt-2 max-w-2xl leading-relaxed text-ink-soft">
-            The runs&apos; own words about {winnerQuotes[0].who}. This is the wording your pages have to answer.
+            Quotes about {winnerQuotes[0].who} from runs that named it first.
           </p>
           <ul className="mt-5 space-y-4">
             {winnerQuotes.map((quote) => (
@@ -191,9 +189,8 @@ export function ReportView({ model }: { model: ReportModel }) {
               in its own scoring: one fact, two places, and the second one silently wrong. */}
           {yourQuotes.filter((quote) => readsAsPolish(quote.said)).length > 0 && (
             <p className="mt-5 max-w-2xl text-sm leading-relaxed text-ink-soft">
-              {yourQuotes.filter((quote) => readsAsPolish(quote.said)).length} of the quotes above are in Polish, because
-              that run happened on a machine whose operator instructions ask for it, which is the same contamination the
-              caveat below names. We print what the run wrote rather than a translation: a translated quote is our
+              {yourQuotes.filter((quote) => readsAsPolish(quote.said)).length} of these quotes are in Polish, as requested
+              by the operator instructions available to those runs. Quotes retain their original language; a translated quote is our
               sentence, not the agent&apos;s.
             </p>
           )}
@@ -202,7 +199,7 @@ export function ReportView({ model }: { model: ReportModel }) {
           {named.named - yourQuotes.length > 0 && (
             <p className="mt-5 max-w-2xl text-sm leading-relaxed text-ink-soft">
               {named.named - yourQuotes.length} of the runs that named you did so only in a table or a list of links,
-              with no sentence about you to quote. The count reads the run&apos;s own list of providers, not the quotes.
+              with no sentence about you to quote.
             </p>
           )}
         </section>
@@ -215,7 +212,7 @@ export function ReportView({ model }: { model: ReportModel }) {
             <thead>
               <tr className="text-left font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">
                 <th className="border-b border-rule pb-2">Tool</th>
-                <th className="border-b border-rule pb-2">Model</th>
+                <th className="border-b border-rule pb-2">Recorded model</th>
                 <th className="border-b border-rule pb-2 text-right">Runs</th>
                 <th className="border-b border-rule pb-2 text-right">Named you</th>
                 <th className="border-b border-rule pb-2 text-right">Date</th>
@@ -245,39 +242,36 @@ export function ReportView({ model }: { model: ReportModel }) {
             them; a prettier rendering that quietly drops them is the worst version of this page. */}
         {model.guest && (
           <p className="mt-5 max-w-2xl text-sm leading-relaxed text-ink-soft">
-            You are not one of the providers these runs were collected for. Nothing was rerun: the question, the
-            sessions and the answers are the ones already published, and only the reading resolves your name as well
-            as theirs. Every count here was recomputed alongside you rather than copied.
+            You were outside the original provider list; the question, sessions and answers were not rerun, and every
+            provider&apos;s count was recomputed with your domain and any supplied brand included in matching.
           </p>
         )}
         {model.missedByWord > 0 && (
           <p className="mt-5 max-w-2xl border-l-2 border-warn pl-4 text-sm leading-relaxed text-ink-soft">
             {model.missedByWord} of these answers use your name as a word without naming {model.domain}, and we did
-            not count them. We count a domain rather than a word, because a word can belong to somebody else and a
-            mention moved onto the wrong report cannot be undone by any sentence in it. If those answers are about you
-            under a different domain, tell us and we will recount.
+            not count them.
           </p>
         )}
         {model.runsUrl && (
           <p className="mt-4 font-mono text-sm">
             <a href={model.runsUrl} className="text-brass underline underline-offset-4">
-              Every answer above in full, unedited and marked where a vendor is named
+              Raw runs
             </a>
           </p>
         )}
         {model.runs.some((run) => !run.blind) && (
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-soft">
-            Not a clean measurement, and we say so on the free pages too:{' '}
-            {model.runs.filter((run) => !run.blind).map((run) => run.tool).join(', ')} ran on a machine whose local
-            operator instructions they could read.
+            The tools ran on one laptop;{' '}
+            {[...new Set(model.runs.filter((run) => !run.blind).map((run) => run.tool))].join(', ')} could read local
+            operator instructions.
           </p>
         )}
       </section>
 
       <section className="mt-12 break-before-page break-inside-avoid">
-        <h2 className="text-xl font-semibold tracking-tight">Where an agent stops</h2>
+        <h2 className="text-xl font-semibold tracking-tight">Scan stages</h2>
         <p className="mt-2 max-w-2xl leading-relaxed text-ink-soft">
-          The five stages an agent walks in order. A stage at zero is where it turns around.
+          The scan measures HTTP responses and public-page text; it does not test a completed integration.
         </p>
         <div className="mt-6 space-y-5">
           {model.stages.map((stage) => (
@@ -307,7 +301,7 @@ export function ReportView({ model }: { model: ReportModel }) {
 
       {model.failing.length > 0 && (
         <section className="mt-12">
-          <h2 className="text-xl font-semibold tracking-tight">What failed, and the address it failed at</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Checks below full points</h2>
           <div className="mt-6 space-y-4">
             {model.failing.map((check) => (
               <div key={check.label} className="break-inside-avoid rounded-lg border border-rule bg-surface p-5">
@@ -342,7 +336,7 @@ export function ReportView({ model }: { model: ReportModel }) {
                   <p className="font-medium">
                     {fix.label}{' '}
                     <span className="font-mono text-xs uppercase tracking-[0.15em] text-brass">
-                      +{fix.gain} · {fix.effort}
+                      +{fix.gain} points · effort estimate: {fix.effort}
                     </span>
                   </p>
                   <p className="mt-1 max-w-2xl text-sm leading-relaxed text-ink-soft">{fix.how}</p>
@@ -352,8 +346,7 @@ export function ReportView({ model }: { model: ReportModel }) {
           </ol>
           {model.behindUnmeasured > 0 && (
             <p className="mt-5 max-w-2xl text-sm leading-relaxed text-ink-soft">
-              {model.behindUnmeasured} further points sit behind checks nothing could evaluate, so they are outside the
-              arithmetic above.
+              Note: {model.behindUnmeasured} unmeasured points excluded from the gain calculation.
             </p>
           )}
         </section>
@@ -361,10 +354,9 @@ export function ReportView({ model }: { model: ReportModel }) {
 
       {model.notApplicable.length > 0 && (
         <section className="mt-12 break-inside-avoid">
-          <h2 className="text-xl font-semibold tracking-tight">What does not apply to you</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Inapplicable checks</h2>
           <p className="mt-2 max-w-2xl leading-relaxed text-ink-soft">
-            Why the denominator above is smaller than the formula maximum. These are not failures and not gaps in our
-            reading: there is nothing there to measure.
+            Inapplicable points are excluded from the score denominator.
           </p>
           <ul className="mt-5 space-y-3">
             {model.notApplicable.map((check) => (
@@ -381,7 +373,7 @@ export function ReportView({ model }: { model: ReportModel }) {
         <section className="mt-12 break-inside-avoid">
           <h2 className="text-xl font-semibold tracking-tight">What we could not measure</h2>
           <p className="mt-2 max-w-2xl leading-relaxed text-ink-soft">
-            None of this counts against you. It is printed because a score out of everything would.
+            Unmeasured points are excluded from the score denominator.
           </p>
           <ul className="mt-5 space-y-3">
             {model.unmeasured.map((check) => (
@@ -396,12 +388,12 @@ export function ReportView({ model }: { model: ReportModel }) {
       {/* The limits travel with the numbers. A rendering that drops them is a rendering that
           promises more than the method does. */}
       <section className="mt-12 break-inside-avoid border-t border-rule pt-8">
-        <h2 className="text-xl font-semibold tracking-tight">What this report is not</h2>
+        <h2 className="text-xl font-semibold tracking-tight">Limits</h2>
         <p className="mt-2 max-w-2xl leading-relaxed text-ink-soft">
-          It is not a ranking, and it is not a promise that fixing a row moves an agent. Two checks are the only ones
-          we can show a relationship with being named, and we publish which two rather than implying every check
-          matters equally. Everything above is reproducible: the formula is published, the question is printed, and
-          the runs are quoted.
+          This report does not rank vendors or show that a fix changes agent choices. Only two checks correlate with
+          being named; see the <a href="/findings" className="text-brass underline underline-offset-4">findings</a>.
+          You can reproduce the scan using the published formula and check the counts against the printed question
+          and quoted answers.
         </p>
       </section>
     </article>

@@ -397,7 +397,9 @@ check('lista pol jest generowana z rekordu', privacySource.includes('Object.valu
 // na stderr widzi operator, a zero czyta kupujacy.
 console.log('\nzero wymienien niesie swoja dwuznacznosc')
 const generatorSource = readFileSync('scripts/client-report.mts', 'utf8')
-check('markdown pisze o niepoliczonych wystapieniach', generatorSource.includes('without naming ${domain}, and we did not count them'), true)
+const disclosesUncountedNames = (source: string) => source.includes('without naming ${domain}, and we did not count them')
+check('markdown discloses excluded ambiguous names', disclosesUncountedNames(generatorSource), true)
+check('control: removing the exclusion fails the disclosure', disclosesUncountedNames(generatorSource.replace('and we did not count them', 'and we counted them')), false)
 check('model niesie te liczbe', generatorSource.includes('missedByWord,'), true)
 check('strona raportu tez ja pokazuje', readFileSync('src/app/d/[id]/report-view.tsx', 'utf8').includes('model.missedByWord > 0'), true)
 // Kontrolka: to nie jest tylko komunikat dla operatora.
@@ -2192,7 +2194,8 @@ check('bo tam wiemy, ze to ta paczka', staleRow('site-link').points, 0)
 // 52 of 91 rows in the plan are partial: provisioning language found, one phrase short. Telling
 // them to document a management API when we just matched "management api" reads as not having looked.
 const provRemedy = (points: number) => REMEDIES['programmatic_provisioning'].how({} as never, { points } as never)
-check('wiersz czesciowy slyszy, ze jest o krok', provRemedy(1).includes('one phrase away'), true)
+check('partial provisioning identifies the existing text', provRemedy(1).includes('beside the existing provisioning text'), true)
+check('control: missing provisioning does not claim existing text', provRemedy(0).includes('beside the existing provisioning text'), false)
 check('wiersz bez niczego slyszy, zeby udokumentowac', provRemedy(0).includes('Document how a key is created'), true)
 check('i te dwa zdania nie sa tym samym', provRemedy(1) === provRemedy(0), false)
 
@@ -3925,8 +3928,12 @@ check('polskie z samym o z kreska', readsAsPolish('który produkt polecasz'), tr
 check('angielskie zdanie o vendorach zostaje czyste', readsAsPolish('I would pick LaunchDarkly over Unleash for the kill switch'), false)
 // Kontrolka na sam raport: znacznik i zdanie wyjasniajace stoja w generatorze, nie w mojej glowie.
 const generatorRaportu = readFileSync('scripts/client-report.mts', 'utf8')
-check('raport znakuje cytat', generatorRaportu.includes("' (in Polish)'"), true)
-check('i tlumaczy, dlaczego go nie tlumaczy', generatorRaportu.includes('a translated quote is our sentence'), true)
+const labelsPolishQuotes = (source: string) => source.includes("' (in Polish)'")
+check('report labels Polish quotations', labelsPolishQuotes(generatorRaportu), true)
+check('control: removing Polish labels fails the disclosure', labelsPolishQuotes(generatorRaportu.replaceAll("' (in Polish)'", "''")), false)
+const disclosesTranslation = (source: string) => source.includes('a translated quote is our sentence')
+check('report attributes translated wording to its author', disclosesTranslation(generatorRaportu), true)
+check('control: attributing a translation to the agent fails', disclosesTranslation(generatorRaportu.replace('a translated quote is our sentence', 'a translated quote is the agent sentence')), false)
 // Miesieczny mail to drugi dokument, ktory dostaje platnik, i niesie ten sam cytat z tych samych
 // biegow. Znacznik jezyka musi byc w obu, inaczej jeden z nich klamie przez przemilczenie.
 const mail = readFileSync('scripts/cell-email.mts', 'utf8')

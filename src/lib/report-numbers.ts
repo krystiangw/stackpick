@@ -19,47 +19,35 @@ export function scoreSection(scan: {
   const measurable = card.measurable ?? card.max
   const unmeasured = card.checks.filter((check) => check.inconclusive)
   const notApplicable = card.checks.filter((check) => check.notApplicable)
-  const plural = (count: number, one: string, many: string) => (count === 1 ? one : many)
-
   const lines: string[] = [
-    `Scanned ${scan.scannedAt.slice(0, 10)} under formula ${card.formulaVersion}${
-      card.formulaVersion === FORMULA_VERSION ? '' : ` (the scanner now runs ${FORMULA_VERSION})`
-    }: **${card.total} of ${measurable} measurable points**.`,
+    '| Scan | Result |',
+    '|---|---|',
+    `| Scan date | ${scan.scannedAt.slice(0, 10)} |`,
+    `| Formula version | ${card.formulaVersion} |`,
+    `| Score | ${card.total}/${measurable} weighted points |`,
+    `| Checks measured | ${card.checks.filter((check) => !check.inconclusive && !check.notApplicable).length} of ${card.checks.length} |`,
+    `| Unmeasured | ${unmeasured.length} |`,
+    `| Inapplicable | ${notApplicable.length} |`,
+    '',
   ]
-
-  // Before the table, not in a footnote. froala.com refuses every request we make, including one
-  // from a Chrome user-agent, so eight of their fifteen checks are unmeasured; the report opened
-  // with "4 of 6 measurable points" and went straight on to advise them about OAuth. A buyer whose
-  // site we could not read has to be told that first, in the same breath as the number.
+  if (card.formulaVersion !== FORMULA_VERSION) {
+    lines.push(`Current scanner formula: ${FORMULA_VERSION}.`, '')
+  }
   if (unmeasured.length > 0) {
-    // Counted, then the conditions named separately. A scan can be refused at the edge AND run out
-    // of time AND hold a check that is inconclusive for its own unrelated reason, so attaching every
-    // unmeasured check to one cause would be exactly the kind of claim this report exists not to
-    // make. Each line below carries its own reason in its own words.
-    lines.push(
-      '',
-      `${unmeasured.length} of the ${card.checks.length} checks could not be measured, so the number above is out of what we could see rather than out of everything. Every one of them is listed below with the reason, and none counts against you.`,
-    )
     const conditions = [
       turnedAwayAtTheEdge(findings) ? 'your edge refused ordinary requests' : null,
-      findings.truncation ? 'we reached our time budget with work still outstanding, which is ours rather than yours' : null,
+      findings.truncation ? 'the scan reached its time budget with work outstanding' : null,
     ].filter((one): one is string => one !== null)
-    if (conditions.length > 0) {
-      lines.push('', `During this scan ${conditions.join(', and ')}. Where that is why a check is unmeasured, the line below says so.`)
-    }
+    if (conditions.length > 0) lines.push(`During this scan ${conditions.join(', and ')}.`, '')
   }
-
-  // The other half of the same duty, and the half that was missing.
+  lines.push('| Stage | Points | Maximum (including unmeasured and inapplicable) |', '|---|---|---|',
+    ...card.stages.map((stage) => `| ${stage.title} | ${stage.points} | ${stage.max} |`), '')
+  if (unmeasured.length > 0 || notApplicable.length > 0) {
+    lines.push('*Table note: unmeasured and inapplicable points are excluded from the score denominator.*', '')
+  }
   if (notApplicable.length > 0) {
-    lines.push(
-      '',
-      `${notApplicable.length} of the ${card.checks.length} checks ${plural(notApplicable.length, 'does', 'do')} not apply to you, which is why the table below counts ${card.max} points on paper and your score is out of ${measurable}:`,
-      '',
-      ...notApplicable.map((check) => `- **${check.label}**: ${check.detail}`),
-    )
+    lines.push('Inapplicable checks:', '', ...notApplicable.map((check) => `- **${check.label}**: ${check.detail}`), '')
   }
-
-  lines.push('', '| Stage | Points |', '|---|---|', ...card.stages.map((stage) => `| ${stage.title} | ${stage.points}/${stage.max} |`), '')
   return lines
 }
 
@@ -72,5 +60,5 @@ export function arithmeticExplained(scan: Parameters<typeof scoreSection>[0]): b
   const measurable = scan.card.measurable ?? scan.card.max
   if (onPaper === measurable) return true
   const text = scoreSection(scan).join('\n')
-  return text.includes('could not be measured') || text.includes('do not apply to you') || text.includes('does not apply to you')
+  return /\| (?:Unmeasured|Inapplicable) \| [1-9]\d* \|/.test(text) && text.includes('excluded from the score denominator')
 }

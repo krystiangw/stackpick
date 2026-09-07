@@ -62,9 +62,7 @@ export default async function DeliveredReportPage({ params }: { params: Promise<
 
       <section className="mt-14 border-t border-rule pt-8">
         <p className="max-w-2xl leading-relaxed text-ink-soft">
-          Every number above is reproducible: the scan half is the published formula, and the runs half is
-          quoted from answers you can read in full. If a sentence here is wrong about your product, tell us
-          and we will recheck it by hand.
+          If a sentence here is wrong about your product, email me and I will recheck it by hand.
         </p>
         <p className="mt-4 font-mono text-sm print:hidden">
           {/* The subject is prefilled, as it is on the public vendor page. The dispute runbook says
