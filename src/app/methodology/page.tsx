@@ -17,13 +17,13 @@ const RIVALS_READ_ON = '19 August 2026'
 
 export const metadata: Metadata = {
   title: 'Methodology: Let Agents In',
-  description: 'Every check, its rule and why it costs a vendor money. The formula is published so the score can be reproduced.',
+  description: 'The scoring formula, HTTP checks, measurement limits and recorded agent-run method.',
 }
 
 const CLASS_COST: Record<string, string> = {
-  training: 'Blocking it keeps you out of model weights.',
-  search: 'Blocking it keeps you out of cited answers.',
-  user: 'Blocking it stops your customer’s agent from reading your docs mid-integration.',
+  training: 'Controls crawling for model training; it does not remove existing training data.',
+  search: 'Controls the named search crawler; citations can also come from other sources.',
+  user: 'Controls a named on-demand fetcher when it requests your pages.',
 }
 
 /**
@@ -81,22 +81,23 @@ export default async function MethodologyPage() {
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Formula v{FORMULA_VERSION}</p>
         <h1 className="mt-4 max-w-2xl text-balance text-4xl font-semibold leading-tight tracking-tight">
-          The whole formula, published, so the number can be argued with.
+          Scoring formula and method
         </h1>
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
-          Scanners in this category derive a score from a single call to a language model. That number does
-          not reproduce, and asking a vendor to act on it is asking them to trust a coin flip. Every check
-          below is an HTTP request with a fixed rule. {CHECKS.length} checks, {MAX_SCORE} points. Every result
-          we publish is downloadable at{' '}
-          <a href="/corpus.json" className="text-brass underline underline-offset-4">
-            /corpus.json
-          </a>
-          , because arguing with a formula is easier with the data than with the prose.
+          {CHECKS.length} HTTP checks with fixed rules, worth up to {MAX_SCORE} points.
+          Download the published measurements at{' '}
+          <a href="/corpus.json" className="text-brass underline underline-offset-4">/corpus.json</a>.
+          The score describes public signals; integration success requires a separate task test.
         </p>
+        <nav aria-label="On this page" className="mt-6 flex flex-wrap gap-2 text-sm">
+          {[['checks', 'Checks'], ['noise', 'Repeatability'], ['series', 'Monitoring'], ['named', 'Agent counts'], ['limits', 'Limits']].map(([id, label]) => (
+            <a key={id} href={`#${id}`} className="nav-link border border-rule">{label}</a>
+          ))}
+        </nav>
       </section>
 
       <section className="border-b border-rule py-12">
-        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Checks</h2>
+        <h2 id="checks" className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Checks</h2>
         <div className="mt-6 flex flex-col gap-8">
           {STAGES.map((stage) => {
             const checks = CHECKS.filter((check) => check.stage === stage.id)
@@ -122,10 +123,9 @@ export default async function MethodologyPage() {
                             number that drifts. */}
                         {check.id === 'typed_package' && packageEvidence.registrySearch > 0 && (
                           <span className="text-sm leading-relaxed text-ink-faint">
-                            Weakest evidence first: {packageEvidence.registrySearch} of the{' '}
-                            {packageEvidence.measured} measured rows name a package we matched by who publishes
-                            it, rather than by you naming it on your site, in llms.txt or in your docs. Every
-                            row says which, and <code>corpus.json</code> carries it as <code>npmSource</code>.
+                            {packageEvidence.registrySearch} of {packageEvidence.measured} measured rows rely on registry publisher matching.
+                            This is weaker than a package link on the vendor site, in llms.txt or in documentation.
+                            <code>corpus.json</code> records the source as <code>npmSource</code>.
                           </span>
                         )}
                         {/* The anchor is the helpUri every machine-readable result points at. */}
@@ -145,9 +145,7 @@ export default async function MethodologyPage() {
       <section className="border-b border-rule py-12">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">The three crawler classes</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          robots.txt names bots, and the names fall into three classes that cost you completely different
-          things. Pasting an “AI bots” list off the internet blocks all three at once, which is how companies
-          cut off their own prospects without noticing.
+          The named bots fall into three classes. A robots.txt rule can allow or refuse each class separately.
         </p>
         <div className="mt-6 flex flex-col">
           {(['training', 'search', 'user'] as const).map((crawlerClass) => (
@@ -169,29 +167,27 @@ export default async function MethodologyPage() {
       <section className="border-b border-rule py-12">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Agent entry paths probed</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          None of these is a ratified standard yet. They are the paths that reference implementations
-          actually publish, and a hit on any of them means someone wrote a procedure for a machine.
+          These candidate paths come from reference implementations. A matching file is a discovery signal, not proof that an integration works.
         </p>
         <p className="mt-4 font-mono text-xs leading-relaxed text-ink-soft">{AGENT_ENTRY_PATHS.join('  ·  ')}</p>
       </section>
 
       <section className="border-b border-rule py-12">
-        <h2 className="text-lg font-semibold tracking-tight">Three verdict states, and what the score is out of</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Verdicts and the score denominator</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          {MAX_SCORE} points exist on paper. A domain is scored out of the points that both apply to it and we
-          could evaluate, and the scorecard prints that denominator beside the number. Charging a vendor for
-          our own blind spots would make a site we could not read look worse than one we could.
+          The maximum is {MAX_SCORE} points. Each domain is scored out of the applicable points we could measure.
+          The scorecard prints that denominator beside the score.
         </p>
         <dl className="mt-6 flex max-w-2xl flex-col">
           {[
-            ['PASS and PART', 'Measured, and counted in both the score and the denominator.'],
+            ['PASS, PART and FAIL', 'Measured. Earned points enter the score; the check maximum enters the denominator.'],
             [
               'UNMEASURED',
-              'We could not evaluate it: an edge that refused our requests, a form assembled by JavaScript, too few documentation pages to conclude anything. Out of the score and out of the denominator, and each of these lines says what would make it measurable.',
+              'We could not evaluate the check. Examples include refused requests, JavaScript forms and insufficient documentation. Excluded from the score and denominator, with a reason.',
             ],
             [
               'N/A',
-              'The check does not apply to a product of this kind. A library with no accounts cannot fail a check about signup gates. Out of the score and out of the denominator.',
+              'The check does not apply to this product type, such as signup for a library without accounts. Excluded from the score and denominator.',
             ],
           ].map(([state, meaning]) => (
             <div key={state} className="grid gap-1 border-t border-rule py-4 sm:grid-cols-[10rem_1fr] sm:gap-6">
@@ -201,153 +197,58 @@ export default async function MethodologyPage() {
           ))}
         </dl>
         <p className="mt-6 max-w-2xl text-sm leading-relaxed text-ink-soft">
-          Rankings and the industry report sort on the share of measurable points, which is why a smaller
-          number can sit above a larger one: 6 of 9 is ahead of 8 of 14.
+          Rankings use the share of measurable points. For example, 6 of 9 is ahead of 8 of 14.
         </p>
       </section>
 
-      {/* The number a reader needs before they compare two of our own scans and conclude something
-          from a single row that moved. Measured rather than estimated, so it is printed. */}
-      <section className="border-b border-rule py-12">
-        <h2 className="text-lg font-semibold tracking-tight">How much the corpus moves on its own</h2>
-        {/* Four percentages follow, each with its own date and pair, and a reader skimming reads
-            that as us not knowing our own figure. The answer goes first; the history explains it. */}
-        <p className="mt-4 max-w-2xl font-medium leading-relaxed">
-          The figure today is {NOISE_FLOOR_PERCENT.toFixed(2)} percent. The paragraphs below are how it was
-          measured and what it replaces, in order, because a number like this is only worth as much as the
-          pair of scans behind it.
-        </p>
+      <section id="noise" className="border-b border-rule py-12">
+        <h2 className="text-lg font-semibold tracking-tight">Repeatability</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          On 10 August 2026 we rescanned all 167 domains twice, with no rule changed between the two runs,
-          and compared every verdict: 15 of 2,338 moved, which is 0.64 percent. A difference smaller than
-          that, in our numbers or in yours, is the internet being the internet rather than something that
-          changed.
+          The recorded noise floor is {NOISE_FLOOR_PERCENT.toFixed(2)} percent of verdicts.
+          It measures variation between rescans across the corpus. Recheck an individual result before acting on it.
         </p>
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Measured again on 17 August 2026 and, for the first time, in the only way that answers the question:{' '}
-          {NOISE_FLOOR_PERCENT.toFixed(2)} percent, 15 verdicts of 2,550 across 170 domains, the same formula on both
-          sides. What is new is the pair. Every earlier figure compared two passes of one sweep, and a sweep&apos;s first
-          pass asks the npm registry cold while its second finds the answers cached, so those pairs moved one way: the
-          last of them 27 up and 3 down. This one compares the warm pass of two separate sweeps six hours apart, and it
-          moves 9 up and 6 down. A symmetric spread is what measurement noise looks like; a one-sided one is a cache
-          warming up with our name on it.
-        </p>
-        {/* Read one by one on 17 August, because a number this small is worth knowing the parts of. */}
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Ten of those fifteen are a verdict that disagreed with the verdict before it, which is 0.39 percent. The other
-          five are a row we could not measure on one of the two days: a signup page that answered us on Monday and
-          refused on Tuesday is not a changed verdict, it is a missing one, and we count it here rather than quietly
-          leaving it out. The figure we quote is the larger one.
-        </p>
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          It is higher than the 0.20 percent it replaces, and we would rather print that than keep a flattering number
-          nobody measured properly. That figure came from formula 9.8, twelve days and twenty-odd rule changes ago, and
-          today&apos;s scanner asks each domain far more questions, so there are more answers that can arrive
-          differently on a second asking. The earlier repairs described below are real and still in place; the floor is
-          measured on the scanner we run today, not the one we ran then.
-        </p>
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          How much of it was ours we found out by measuring rather than by assuming. The scanner gives
-          itself 27 seconds per domain, and a scan that runs out publishes several verdicts as unmeasured,
-          which is a fact about our clock and not about the vendor. One run published eleven such verdicts
-          across two domains, and repeating those two scans by hand cut that run&apos;s movement from 23
-          rows to 12. Truncated scans are retried now. Two other repairs followed from reading what still
-          moved: a vendor whose edge answers every one of our POSTs with an empty 202, ours included to a
-          path nobody registered, is reported as unmeasured instead of as having no MCP server, and a
-          product that publishes prices is no longer told it has no accounts merely because we could not
-          find the link. The floor fell from 0.39 to 0.20 across those three.
-        </p>
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          What is left is five rows, and none of them is a verdict changing its mind about a vendor. Two
-          are MCP endpoints that answer one pass and not the next, two are documentation pages that refuse
-          us once and answer the second time, and one is a docs page that renders differently depending on
-          which of a vendor&apos;s pages we land on. We ask a host for about nineteen documents inside that
-          27 second budget, which is itself a burst, so some of what remains is still ours.
-        </p>
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          It is not evenly spread. Nine of the fifteen sit in the three checks that depend on a host
-          answering us at all, and the rest are single rows. We chased two of them rather than assume:
-          name.com went from refusing us to answering, and answers a browser and both agent user-agents we
-          asked as that day identically three times over, so the change was theirs and transient. froala.com answers
-          403, 200, 403 in the same alternating pattern to a browser as to us, so its row moving is froala
-          being froala.
-        </p>
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          The uncomfortable consequence, printed because it is true: our own adversarial audits put the
-          error rate in these verdicts at 0.39 percent, which is now the smaller of the two. It was the
-          larger of them for a week, until the floor was measured against a pair that does not confound
-          it with a warming cache. They are different measurements, a wrong rule against an
-          unstable network, and together they mean no single row is evidence on its own. Rescan before you
-          act on one, and treat the checks above the fold as the durable part.
-        </p>
-        {/* Kept as a separate paragraph rather than folded into the figure above it. Averaging a
-            newer pass into an older rate would hide which families have been attacked and which
-            have not, and that is the part a reader needs to weigh a row. */}
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          The most recent pass, on 13 August 2026, checked 282 published verdicts against the live
-          sites by hand and found no errors: every CAPTCHA we name is in the signup page we name it
-          on, every link we call dead answers 404, every domain we say publishes no OAuth metadata
-          publishes none on nine hosts, and every domain we say has no agent entry file has none on
-          nine paths. Each of those probes carries a control that finds the positive case, because a
-          check that can only return “nothing here” proves nothing. That pass does not replace the
-          0.39 percent: it covers the families it covers, and the rate above still stands for the
-          rules it was measured on.
-        </p>
+        <div className="mt-6 overflow-x-auto" tabIndex={0} role="region" aria-label="Noise measurements">
+          <table className="w-full min-w-[36rem] text-sm">
+            <thead><tr className="border-b border-rule text-left"><th className="p-3">Measurement</th><th className="p-3">Sample</th><th className="p-3">Observed movement</th></tr></thead>
+            <tbody>
+              <tr className="border-b border-rule"><td className="p-3">10 August 2026</td><td className="p-3">167 domains, 2,338 verdicts; unchanged rules</td><td className="p-3">15 verdicts, 0.64%</td></tr>
+              <tr className="border-b border-rule"><td className="p-3">Earlier pairs, formula 9.8</td><td className="p-3">Two passes within one sweep</td><td className="p-3">0.39% before three repairs; 0.20% after</td></tr>
+              <tr className="border-b border-rule"><td className="p-3">17 August 2026</td><td className="p-3">170 domains, 2,550 verdicts; warm passes six hours apart, same formula</td><td className="p-3">15 verdicts, {NOISE_FLOOR_PERCENT.toFixed(2)}%; 9 up, 6 down</td></tr>
+              <tr className="border-b border-rule"><td className="p-3">17 August breakdown</td><td className="p-3">10 changed verdicts; 5 changed measurability</td><td className="p-3">0.39% excluding measurability changes</td></tr>
+              <tr className="border-b border-rule"><td className="p-3">Adversarial rule audits</td><td className="p-3">Separate measurement of incorrect verdicts</td><td className="p-3">0.39% recorded error rate</td></tr>
+              <tr className="border-b border-rule"><td className="p-3">13 August 2026 manual pass</td><td className="p-3">282 verdicts in the checked families</td><td className="p-3">No errors found; does not replace the earlier error rate</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <details className="mt-6 rounded-lg border border-rule p-5">
+          <summary className="cursor-pointer font-medium">What changed in the measurements</summary>
+          <ul className="mt-4 list-disc space-y-3 pl-5 text-sm leading-relaxed text-ink-soft">
+            <li>Within-sweep pairs mixed a cold npm cache with a warm one. The last such pair moved 27 verdicts up and 3 down.</li>
+            <li>The 17 August pair used warm passes from separate sweeps. It replaced a formula 9.8 measurement made twelve days and over twenty rule changes earlier.</li>
+            <li>The scanner allows 27 seconds per domain. One run exhausted that budget on two domains, leaving eleven verdicts unmeasured. Repeating them reduced movement from 23 rows to 12. Truncated scans are now retried.</li>
+            <li>Two other repairs treated catch-all empty 202 responses as unmeasured and stopped inferring absent accounts from a missing link when prices were published.</li>
+            <li>The earlier 0.20% result contained five unstable rows: two MCP endpoints, two refused documentation pages, and one page varying by discovery path. A scan requests about nineteen documents within its 27-second budget.</li>
+            <li>Nine of the fifteen rows in the newer pair depended on host responses. name.com answered browser and both agent user-agents identically in three repeated checks. froala.com alternated 403, 200, 403 for the browser too.</li>
+            <li>The 13 August manual pass covered signup CAPTCHA markers, confirmed 404s, OAuth discovery on nine hosts and entry files on nine paths. Positive controls accompanied the probes. Its coverage was limited to those families.</li>
+          </ul>
+        </details>
       </section>
 
       {/* A monitored customer cannot check any of this themselves: they see one email or no email,
           and the only thing that makes the series worth paying for is knowing which movements we
           refuse to attribute to them. Written from watch.ts rather than about it. */}
       <section id="series" className="scroll-mt-8 border-b border-rule py-12">
-        <h2 className="text-lg font-semibold tracking-tight">What makes two scans comparable, and what breaks it</h2>
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          A series is only worth something if a movement in it means something changed at your end. Four
-          things break that. Three are ours outright and we carry the cost of them without writing to you.
-          The fourth, a host refusing us, is treated as ours until it turns out to be your own edge turning a
-          non-browser away, and that single exception is most of what monitoring is for.
-        </p>
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          <strong className="font-semibold text-ink">A changed formula is never compared raw.</strong> Two
-          scorecards go side by side only when both were measured under the same formula version. When the
-          formula has moved, your last measurement is rescored under today&apos;s rules first, so both sides
-          speak the same formula and the mail says that is what happened. If that rescore cannot be done,
-          nothing is sent at all, because the alternative is a subject line telling somebody their site lost
-          ground on the morning we tightened a rule.
-        </p>
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          <strong className="font-semibold text-ink">Where a rescore cannot be honest, the check is
-          dropped.</strong> Rescoring works where today&apos;s rule reads a stored measurement. Where the rule
-          does its own reading during the scan, matching phrases across documentation pages or probing
-          addresses, the stored report keeps what matched rather than the pages it matched in, so a rescore
-          faithfully reproduces the old reading and the difference is our rule rather than your site. So every
-          release that touched the scoring of a check is recorded against that check by hand, and those checks
-          are removed from your list rather than explained in a paragraph under a subject line that already
-          said you lost ground. When 9.32 asked a provisioning phrase to carry its evidence beside it, that
-          list is what stood between nineteen vendors and an email about a point nobody had taken from them.
-        </p>
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          <strong className="font-semibold text-ink">A check we could not measure is never called
-          worse.</strong> Unmeasured is not ranked against pass or fail, and on its own it does not earn an
-          email. We put a number on why: between two passes of one sweep, 21 of the 22 verdicts that moved
-          went from unmeasured to pass, sixteen of them because the first pass asked the npm registry with a
-          cold cache and the second found the answer already there. A watcher active that hour would have been
-          told their typed SDK now passes, about a change that happened entirely inside our scanner.
-        </p>
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          <strong className="font-semibold text-ink">Our own 429 is our problem.</strong> When a host refuses
-          us because we asked too fast, we wait and ask again, and if it still refuses, the row says we could
-          not measure it and names the host rather than reporting an absence. The one exception is the whole
-          point of the product: if the refusal came from your own edge, with a browser challenge rather than a
-          rate limit, and we never got past it, you are told. Nothing a person sees in a browser changes when
-          that happens, and every check that needed those pages falls silent, which is exactly the failure
-          this site exists to catch. A challenge we did get through is not a wall and does not write to you.
-        </p>
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          What is left after those four is the floor: {NOISE_FLOOR_PERCENT.toFixed(2)} percent of verdicts move
-          between two clean measurements of an unchanged internet. That is a rate across a corpus and not a
-          reason to ignore your own row: one verdict moving between two states we can both measure does write
-          to you, because that is the thing you subscribed to. It is a reason to rescan before you act on a
-          single row, and the reason the series rather than any one scan in it is what is worth having.
+        <h2 className="text-lg font-semibold tracking-tight">When monitoring sends an alert</h2>
+        <dl className="mt-5 divide-y divide-rule">
+          {[
+            ['Same formula', 'The earlier measurement is rescored under the current formula before comparison. If it cannot be rescored, no email is sent.'],
+            ['Comparable evidence', 'Checks whose scan-time interpretation changed are excluded when stored evidence cannot support the new rule. Release 9.32 changed provisioning evidence; nineteen vendors were protected from a misleading comparison.'],
+            ['Measured on both sides', 'A change to or from unmeasured does not trigger an alert by itself. In one within-sweep pair, 21 of 22 changes were unmeasured to pass; sixteen came from the npm cache.'],
+            ['Rate limits and challenges', 'A 429 is retried, then recorded as unmeasured if it persists. An unresolved browser challenge from the vendor edge can trigger an alert. A challenge the scanner passed does not.'],
+          ].map(([title, body]) => <div key={title} className="grid gap-2 py-4 sm:grid-cols-[12rem_1fr]"><dt className="font-medium">{title}</dt><dd className="max-w-2xl text-sm leading-relaxed text-ink-soft">{body}</dd></div>)}
+        </dl>
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          One changed, comparable verdict can trigger an email. The {NOISE_FLOOR_PERCENT.toFixed(2)} percent corpus noise floor is a reason to verify it before making a change.
         </p>
       </section>
 
@@ -357,56 +258,24 @@ export default async function MethodologyPage() {
       <section id="named" className="scroll-mt-8 border-b border-rule py-12">
         <h2 className="text-lg font-semibold tracking-tight">How the agent runs are counted</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          One question per category, written to be the question a developer would type, naming no vendor and
-          asking for a recommendation. It is put to an agent five times, each run in its own empty directory with
-          nothing carried between them, and the answers are kept whole and published under each category.
+          Each category has a buying question that names no vendor. A batch asks it five times in separate sessions and empty directories.
+          The complete answers are published under the category.
         </p>
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Who was named is decided by a published list of names and a published regular expression, never by a
-          second model reading the first one&apos;s answer: a model grading a model is the measurement this
-          product exists to be an alternative to. A brand that is also an ordinary English word counts only when
-          the writing says it is a brand, which means emphasis or code or a link around it, capitals throughout,
-          or the capitalised form used more than once in the same answer. “the bunny hops” is not bunny.net and
-          “**Sanity**” is sanity.io. <span className="font-medium">Named</span> is how many runs mentioned a
-          vendor at all; <span className="font-medium">named first</span> is how many mentioned it before any
-          other vendor we measure.
+        <dl className="mt-5 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-lg border border-rule p-5"><dt className="font-medium">Named</dt><dd className="mt-2 text-sm text-ink-soft">Number of runs that mentioned a vendor.</dd></div>
+          <div className="rounded-lg border border-rule p-5"><dt className="font-medium">Named first</dt><dd className="mt-2 text-sm text-ink-soft">Number of runs that mentioned it before any other vendor we measure. This records order, not a purchase.</dd></div>
+        </dl>
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          A published name list and regular expression count mentions. Common-word brands need emphasis, code, a link, all capitals, or repeated capitalised use.
+          “the bunny hops” does not count as bunny.net; “**Sanity**” counts as sanity.io.
         </p>
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Five runs provide a small descriptive sample, so nothing here ranks two vendors that finish
-          close or estimates how often real buyers would choose them. And these runs are not a clean measurement: they ran on a machine whose operator instructions
-          they could read, and those instructions ask for answers in Polish, which is why some of the published
-          answers are in Polish rather than English. It describes an agent on that machine rather than an agent
-          at your customer. The whole set was repeated on a second tool that reads none of those instructions and
-          answers in English, and the two checks that separate vendors survive there as well, which is reported on
-          the findings page.
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          Five runs are a small sample. They do not rank close results or estimate real buyer choices.
+          Some batches could read local instructions requesting Polish. Those answers describe that setup.
         </p>
-      </section>
-
-      <section className="border-b border-rule py-12">
-        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">We are scored by this too</h2>
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          This site is in the scanner like anybody else, and it fails a check we publish. There is no OAuth
-          metadata on any host we run, so the scanner discovers no OAuth client-registration path. The reason is
-          that our MCP server needs no account at all, which makes the check inapplicable in spirit and
-          failing in fact, and we would rather show the failing row than write ourselves an exemption nobody
-          else gets. Scan the domain in the box on any page and you will get the same card a vendor gets.
-        </p>
-        {/* Measured rather than remembered: our own note said Lighthouse rejected both non-standard
-            lines, and the run says it rejects one. The number carries its date because it is a
-            reading of somebody else's tool on a given day, not a property of this file. */}
-        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          The same is true of a score we do not control. Lighthouse 13.4.1 rates this site 92 for SEO rather
-          than 100, and the whole deduction is one line of our{' '}
-          <a href="/robots.txt" className="text-brass underline underline-offset-4">
-            robots.txt
-          </a>
-          : it calls <code className="font-mono text-[0.9em]">AI-Catalog:</code> an unknown directive, measured
-          on 19 August 2026. RFC 9309 tells a parser to ignore lines it does not recognise, so the file is
-          valid and the validator is behind it, but the deduction is real and anybody who runs the tool on us
-          will see it. We keep the line, because we tell vendors to publish an agent catalog and deleting ours
-          to turn a number green would be the cheapest kind of advice.{' '}
-          <code className="font-mono text-[0.9em]">Content-Signal:</code>, on the line above it, costs nothing:
-          the same version accepts it.
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          A second tool repeated the set without reading those instructions and answered in English.
+          The findings page reports the two check associations that appeared on both tools.
         </p>
       </section>
 
@@ -424,30 +293,19 @@ export default async function MethodologyPage() {
           <a href="https://agent-ready.dev" className="text-brass underline underline-offset-4">
             agent-ready.dev
           </a>{' '}
-          runs 70 checks against the Vercel Agent Readability Spec, llmstxt.org and a dozen protocol
-          manifests, plus 23 accessibility checks, counted on their own pages on {RIVALS_READ_ON}. On
-          discovery and parsing it is more thorough than we are
-          and we would send you there for that: if you want to know whether your markdown mirrors, canonical
-          tags and structured data are right, they will tell you and we will not.
+          runs 70 checks against the Vercel Agent Readability Spec, llmstxt.org and a dozen protocol manifests,
+          plus 23 accessibility checks, counted on their own pages on {RIVALS_READ_ON}.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Their published specification contains the words signup, provisioning and CAPTCHA zero times. Their
-          own summary is discovery, structure, context: can an agent find your pages, parse them, understand
-          them. That is the stage this corpus measures as {discoveryShare} percent solved. Ours starts at
-          the next one, where the same corpus measures {entryShare} percent, and the difference is not a
-          disagreement about scoring:
-          they answer whether an agent can read you, we answer whether one can join you.
+          Its specification focuses on discovery, structure and context. The words signup, provisioning and CAPTCHA appeared zero times in that reading.
+          Our corpus earned {discoveryShare} percent of discovery points and {entryShare} percent of agent-entry points.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Two of their checks were better than ours and are now in the scanner: whether the links inside
-          llms.txt still answer, and whether a site serves an agent user-agent less than it serves a browser.
-          We took neither of their per-page SEO checks, because they measure how a page reads to a search
-          index rather than whether an agent gets in, and that is the only question this score answers.{' '}
-          <a href="https://github.com/kodustech/agent-readiness" className="text-brass underline underline-offset-4">
-            kodustech/agent-readiness
-          </a>{' '}
-          is a different axis again: it grades your own repository for whether a coding agent can work inside
-          it, which is a question about your codebase rather than about your funnel.
+          Two checks informed ours: llms.txt link health and differences between browser and agent responses. Per-page SEO checks remain outside this score.
+        </p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          <a href="https://github.com/kodustech/agent-readiness" className="text-brass underline underline-offset-4">kodustech/agent-readiness</a>{' '}
+          evaluates whether a coding agent can work in your repository.
         </p>
       </section>
 
@@ -455,7 +313,7 @@ export default async function MethodologyPage() {
         <section className="border-b border-rule py-12">
           <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">What we score</h2>
           <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-            This scanner is pointed at this site too. On {ours.scannedAt} it measured{' '}
+            On {ours.scannedAt}, this site scored{' '}
             <span className="font-mono tabular-nums">
               {ours.total} of {ours.measurable}
             </span>{' '}
@@ -463,46 +321,52 @@ export default async function MethodologyPage() {
             <Link href={`/r/${ours.reportId}`} className="text-brass underline underline-offset-4">
               the scorecard is public
             </Link>{' '}
-            like everyone else&apos;s.
+            .
             {ours.failing.length > 0 && (
               <>
                 {' '}
                 {/* One expression rather than a wrapped sentence, which is a readability choice
                     and nothing more: the two commits that split it were chasing a space that my
                     own tag-stripping extraction had added, not the page. */}
-                We fail <code>{ours.failing.join(', ')}</code>{', and we are not going to fix it: our tools take no credential, so there is no client for an agent to register, and rewriting the rule until we passed would be marking our own work.'}
+                We fail <code>{ours.failing.join(', ')}</code>{'. Our MCP tool requires no credential. The scan discovers no OAuth client-registration path.'}
               </>
             )}
+          </p>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-soft">
+            Lighthouse 13.4.1 scored this site 92 of 100 for SEO on 19 August 2026.
+            Its deduction was <code>AI-Catalog:</code> in <a href="/robots.txt" className="text-brass underline underline-offset-4">robots.txt</a>.
+            The same version accepted <code>Content-Signal:</code>. RFC 9309 allows parsers to ignore unknown lines. We retain the catalog directive.
           </p>
         </section>
       )}
 
-      <section className="py-12">
-        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Known limits</h2>
-        <ol className="mt-5 flex flex-col gap-4">
+      <section id="limits" className="py-12">
+        <h2 className="text-lg font-semibold tracking-tight">Limits and probe rules</h2>
+        <p className="mt-3 max-w-2xl text-sm text-ink-soft">Open a rule for its threshold, exception and recorded examples.</p>
+        <div className="mt-5 space-y-3">
           {[
-            'llms.txt does two different jobs and the evidence on them points opposite ways, so here is both halves. As a thing crawlers pull, it is close to dead: Ahrefs looked at 137,210 domains in June 2026 and found 97 per cent of published files served no traffic at all, Otterly measured 84 requests to it against 62,100 AI-bot visits over ninety days, and John Mueller said in June 2025 that no AI system uses it. As a map an agent working on a task reads, it earns its point: Mintlify ran 2,400 agent tasks across twenty documentation sites in July 2026 and averaged 2.23 wrong URLs per task on HTML, 1.42 on plain markdown, and 0.11 when an llms.txt pointed the way. We score the second job, because that is the one that ends in somebody using your API. Our own eighteen runs never cited the file, which is weaker evidence than it sounds, since a run can read a file without naming it. One point, and if you are choosing what to do first, this is not it.',
-            'We ask as ourselves and as the two on-demand fetchers an edge is most likely to have a rule for, ChatGPT-User and Claude-User, at the documentation page we picked, and at your home page as well when your edge answers us with a JavaScript challenge. amplitude.com answers a named agent 404 at one documentation URL and 200 at another, so a pass here means the page we read was served, not that every page is. The extra pair of requests exists because an edge on a verified-bot allowlist refuses every user-agent it has no rule for, which is ours, while serving the two agents this whole site is about: bitmovin.com challenges us and hands Claude-User the page in full. Training crawlers are deliberately not part of this: refusing the crawler that builds a training set is a different decision from refusing the agent a customer sent, and this check only measures the second.',
-            'A 429 never takes a point away from you. If a host rate limits us, the checks that depended on reading it come back unmeasured and say so, because scoring our own traffic as your refusal would be an accusation. We also wait and ask again before recording one, and the door test spaces its three tries, so we are not manufacturing the limit we would then have to explain. One thing we do report without scoring it: when the limit carries a challenge marker, the edge chose to challenge rather than to throttle, and that is a wall a browser passes invisibly and an HTTP client cannot pass at all. The row names the host and how many of our requests it challenged. It still costs no points.',
-            'Pricing pages are read twice and the self-serve wording is the union of both reads. One vendor answered the same URL with and without its free-tier sentence forty minutes apart, which moved a scored point; the scorecard says when the two reads disagreed.',
-            'The client registration check follows more than the apex: the signup origin, any MCP host, and the subdomains an authorization or resource server conventionally lives on. It also follows the pointer rather than stopping at the host: a protected-resource document names the authorization servers that guard it, and we read those too, in both of the well-known layouts deployments use, with the issuer path before or after the well-known segment. Finding nothing across all of them is a measurement, and the scorecard names the origins we probed so you can rerun exactly what we ran. Since 9.33 a host whose every request was dropped before it left us, because it had already refused a connection or left our requests unanswered in that scan, is not counted among them: a request we never sent is not evidence, and if that leaves nothing asked, the check is unmeasurable rather than failed.',
-            'The snippet check reads what a search result would quote about your price: the description tag on your pricing page, or its opening words when there is no tag, and never the body underneath. That is the point of it. An agent shortlisting providers drops candidates on the summary without opening the page, so a price sitting three paragraphs down does not exist at the moment the decision is made. It passes on an amount, a rate, or the entry condition in words: free, no card, no account. It is one point, because a description is one string and rewriting it costs minutes.',
-            'Bot gates are not deterministic. The same signup endpoint answered 200 once and 403 four times during research, so gated checks run up to three times and the scorecard says how many tries it took and when they disagreed.',
-            'A passing file is not a passing experience. Publishing llms.txt scores a point here and still tells you nothing about whether an agent chose you. That is what the paid audit measures.',
-            'Discovery can be wrong. Docs, pricing, signup and the npm package are inferred from your own links. The scorecard shows exactly what it found so you can see when it guessed badly.',
-            `We stop reading any one response at ${MAX_BYTES_PER_RESPONSE.toLocaleString('en-US')} bytes, and that ceiling is ours rather than yours, so it never becomes a finding about you. A documentation or pricing page larger than that is cut mid-document, and the checks that read it say they could not measure it and name the cap, instead of reporting the little we managed to read as what you serve: filestack.com's quickstart renders 12,282 characters to a complete read and 53 to ours. Since 9.50 the same ceiling stopped deciding which of your pages we read at all. A guessed path that comes back cut short used to look like an application shell and was skipped, so we would go and read a different page and publish a true sentence about the wrong one. Now a path in that state is checked against a control asking for an address nobody registered: only a host that answers that one the same enormous way is treated as serving one shell everywhere, and if the control does not answer, we skip the path exactly as before rather than guess. Measured across the corpus on 2026-08-20: 885 requests, 114 responses over the cap, and 16 paths on nine domains that the old rule struck out.`,
-            'A soft 404 is treated as absence. Sites that answer 200 with an app shell for unknown paths are read as not having the file, which is also how an agent reads them.',
-            `The provisioning check reads the documentation landing page, at most three more chosen by how directly a path promises credentials, and any llms.txt files you publish, which is why the scorecard often says more than four documents. It looks for these ${PROVISIONING_PATTERN_COUNT} phrases and names the ones it found: ${PROVISIONING_PATTERN_LABELS.join('; ')}. The creation phrase counts only with something programmatic in the same sentence, because "click Generate key. This creates an API key" is documented key creation and is not a path an agent can take. Since 9.32 the three bare phrases carry the same burden: a name on its own is a menu entry, so one of them counts only where the same sentence also names a credential or has something being created, and the sentence we quote is that sentence. Reading the words behind every credited row is what made that necessary. Twenty-eight of eighty stood on nothing else, among them "Media management API integration", "Content Delivery API Management API Image Service" and "Important Change to the Twilio Phone Number Provisioning API". A sample of a large documentation set is still a sample, so a vendor whose credential page was not among them can tell us and we will rescan.`,
-            'A control probe runs before the agent-entry checks: we ask for a path nobody registered, in the same namespace and with the same Accept header, and a file that comes back looking like that answer is dropped. Per file, not per namespace: sentry.io answers any .md path with the same 976-byte page and still publishes a real 106-byte descriptor, so suppressing the whole namespace would have thrown away the file we were looking for. When the control itself does not answer - a timeout, a rate limit, a refusal at their edge - a hit is neither credited nor denied: the check says it could not tell, because a host that renders every unknown path reads exactly like a vendor who publishes one. The MCP check runs the same control, because a bare 405 is the ordinary answer to a POST at a path a site does not route, whether or not it runs an MCP server: an address counts when it completes the handshake, challenges with WWW-Authenticate, sits on a host built for MCP, or answers differently from an unrouted path on the same origin - and when the answer is one only a control can read - a refusal, an empty 202, a bare 405 - and that control never came back, that address is reported as unmeasured rather than as an absence. A handshake, a JSON body or an OAuth challenge needs no control and still counts.',
-            'The door test sends LetAgentsIn/1.0 up to three times - fewer only when the scan is about to run out of its own time budget - and reports what came back next to what a Chrome user-agent got, so a site that serves browsers and refuses agents shows both numbers. Apart from the named-agent probes above, every other request in the scan is sent as a browser, because we are measuring the content, not the gate.',
-            `WebMCP is a check we deliberately do not have, and its absence from your scorecard is ours rather than yours. The specification (W3C Web Machine Learning Community Group, draft of 26 August 2026) has a page register tools at runtime through document.modelContext, so the only honest way to see whether you have any is to load your page in a browser and ask getTools(). Every request we make is plain HTTP with no JavaScript, so the best we could do is search your HTML for registerTool, which reads a bundled chunk as an absence and would publish that you expose no tools about a site that exposes several. Lighthouse checked it in three audits of its agentic browsing category on ${RIVALS_READ_ON}, because it already drives Chrome, and if you want that number, get it there. We register a scan tool on our own home page, which is the only WebMCP claim on this site we can stand behind.`,
+            { title: 'llms.txt: a navigation signal', body: 'The file earns one point as a map of documentation. It does not establish agent selection. Our eighteen build runs never cited it; a run may read a file without citing it.\n\nAhrefs reported 137,210 domains in June 2026, with 97 percent of published files serving no traffic. Otterly reported 84 requests against 62,100 AI-bot visits over ninety days. John Mueller said in June 2025 that no AI system used it.\n\nMintlify tested 2,400 tasks across twenty documentation sites in July 2026. Wrong URLs averaged 2.23 per task on HTML, 1.42 on markdown and 0.11 with an llms.txt map. These studies measure different uses; none establishes a priority fix for a specific vendor.' },
+            { title: 'Agent user-agents: page-specific observations', body: 'The scanner requests the selected documentation page as itself, ChatGPT-User and Claude-User. A JavaScript challenge also triggers probes of the home page. Training crawlers are outside this check.\n\namplitude.com returned 404 for one documentation URL and 200 for another. bitmovin.com challenged our scanner but served Claude-User the page. A pass applies to the page tested.' },
+            { title: 'Rate limits do not subtract points', body: 'A 429 is retried. If it persists, dependent checks are unmeasured. Signup probes are spaced apart.\n\nA challenge marker is reported separately, with the host and request count. It still costs no points. A browser-capable agent may behave differently from this HTTP client.' },
+            { title: 'Pricing is read twice', body: 'Self-serve wording is the union of both reads. One vendor changed its free-tier sentence between reads forty minutes apart. The scorecard records disagreements.' },
+            { title: 'OAuth discovery follows hosts and issuers', body: 'The check follows the apex, signup origin, MCP host and conventional authorization or resource-server subdomains. Protected-resource metadata can lead to authorization servers. Both well-known layouts are tried, with the issuer path before or after the well-known segment.\n\nThe scorecard lists attempted origins. Since 9.33, requests skipped after an earlier connection failure or timeout do not count as attempts. If no request was sent, the check is unmeasured.' },
+            { title: 'Price snippets use the description or opening text', body: 'The check reads the pricing-page description tag, or opening text if the tag is absent. It does not use the rest of the page. An amount, rate or entry condition such as free, no card or no account passes. The check is worth one point.' },
+            { title: 'Signup gates are retried', body: 'Gated checks run up to three times. The scorecard records the number of attempts and any disagreement. During research, one endpoint returned 200 once and 403 four times.' },
+            { title: 'A passing file does not establish integration success', body: 'The scan measures HTTP signals. Agent recommendations and task-based integration audits are separate measurements.' },
+            { title: 'Discovery can select the wrong page', body: 'Documentation, pricing, signup and npm-package paths are inferred from links. The scorecard names the selected pages so you can identify a bad match.' },
+            { title: 'Response size and discovery limits', body: `Each response is capped at ${MAX_BYTES_PER_RESPONSE.toLocaleString('en-US')} bytes. Checks depending on a truncated document are unmeasured and name the cap. filestack.com returned 12,282 characters to a full quickstart read and 53 to ours.\n\nSince 9.50, the ceiling stopped deciding which of your pages we read without a control comparison. A truncated guessed path is compared with an unregistered address. Matching oversized responses indicate a shared shell; if the control does not answer, we skip the path.\n\nOn 2026-08-20, 885 requests produced 114 responses above the cap. The old rule had excluded 16 paths on nine domains.` },
+            { title: 'Soft 404s count as absence', body: 'An application shell returned for an unknown path does not establish that the requested file exists.' },
+            { title: 'Provisioning uses a limited documentation sample', body: `The check reads the documentation landing page, at most three additional credential-related pages, and discovered llms.txt files. It tests ${PROVISIONING_PATTERN_COUNT} phrases: ${PROVISIONING_PATTERN_LABELS.join('; ')}.\n\nA creation phrase requires programmatic context in the same sentence. Since 9.32, three bare phrases also require a credential or creation context. A menu label alone does not count.\n\nThe repair followed a review where twenty-eight of eighty credited rows depended on bare wording. Examples included "Media management API integration", "Content Delivery API Management API Image Service" and "Important Change to the Twilio Phone Number Provisioning API".\n\nThe scorecard quotes the matching sentence. A missing credential page can change the conclusion; send its URL for a rescan.` },
+            { title: 'Control probes distinguish files from catch-all responses', body: 'An unregistered path is requested in the same namespace with the same Accept header. Each entry file is compared with that response. Per file, not per namespace.\n\nsentry.io returned a 976-byte page for unknown .md paths and a real 106-byte descriptor. If the control times out, is rate limited or is refused, the check says it could not tell.\n\nMCP uses the same control. A bare 405 can also be an unrouted POST response. An address can count through a handshake, WWW-Authenticate, an MCP-specific host, or a response differing from an unrouted path on the origin.\n\nWhen the answer is one only a control can read, a missing control makes it unmeasured. This applies to refusals, empty 202s and bare 405s. A handshake, a JSON body or an OAuth challenge needs no control and still counts.' },
+            { title: 'Signup request identity and budget', body: 'LetAgentsIn/1.0 is sent up to three times, stopping early if the scan budget is nearly exhausted. Results appear beside a Chrome user-agent response. Other requests use a browser user-agent, except the named-agent probes described above.' },
+            { title: 'WebMCP is outside this HTTP scan', body: `The W3C Web Machine Learning Community Group draft of 26 August 2026 registers tools through document.modelContext at runtime. Detecting them requires a browser and getTools(); this scanner executes no JavaScript.\n\nLighthouse included three WebMCP audits on ${RIVALS_READ_ON}. This site registers its own scan tool on the home page. No WebMCP result is inferred for other sites from their HTML.` },
           ].map((limit, index) => (
-            <li key={limit} className="grid grid-cols-[2rem_1fr] gap-4">
-              <span className="font-mono text-xs text-ink-faint">{String(index + 1).padStart(2, '0')}</span>
-              <span className="text-sm leading-relaxed text-ink-soft">{limit}</span>
-            </li>
+            <details key={limit.title} className="rounded-lg border border-rule bg-surface px-5 py-4">
+              <summary className="cursor-pointer text-sm font-medium"><span className="mr-3 font-mono text-xs text-brass">{String(index + 1).padStart(2, '0')}</span>{limit.title}</summary>
+              <div className="mt-4 max-w-3xl space-y-3">{limit.body.split('\n\n').map((paragraph) => <p key={paragraph} className="text-sm leading-relaxed text-ink-soft">{paragraph}</p>)}</div>
+            </details>
           ))}
-        </ol>
+        </div>
       </section>
     </main>
   )

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   title: 'Findings: Let Agents In',
   // No count here: the sixth exhibit is measured from the corpus and takes itself down when the
   // data cannot carry it, so a number in the description would be a promise the page can break.
-  description: 'What agents pick when nobody is watching, where every one of them stops, and which of our own checks has anything to do with being named.',
+  description: 'Recorded agent choices, integration attempts and an observational comparison with HTTP scan results.',
 }
 
 type Result = {
@@ -23,13 +23,14 @@ type Result = {
   heading: string
   numbers: string[][]
   body: string[]
+  comparison?: { columns: string[]; rows: string[][] }
   quote?: { text: string; caption: string; translated?: boolean }
 }
 
 const RESULTS: Result[] = [
   {
     id: 'wall',
-    heading: 'Four agent studies, eighteen runs, one wall in four disguises',
+    heading: 'Four studies, eighteen runs and credential handoffs',
     numbers: [
       ['Runs verified running, with the integration exercised', '8 of 8'],
       ['Further runs whose shipped code we confirmed from their artefacts', '10'],
@@ -37,11 +38,12 @@ const RESULTS: Result[] = [
       ['Categories where the same barrier appeared', '4 of 4'],
     ],
     body: [
-      'Four studies, four categories, eighteen runs in isolated copies of a real application: choose a rich text editor, add image upload and hosting, replace a proxy cookie with real authentication, sell two support plans. Every run produced integration code: eight integrations were exercised against a running app; the other ten were checked from the dependencies and components left on disk, without confirming end-to-end success. One of those ten shipped a green build whose payment interface the bundler had silently removed, which is a finding in itself and reported in that audit. In the three categories where the work needs a credential, not one of twelve runs obtained one, and each said the same thing in its own words: creating the account needs a human.',
-      'One category needed no credential and the barrier appeared anyway, earlier: vendors whose libraries require a licence key were struck off during dependency research, in one line each, before any product was opened. In these runs, a licence requirement affected selection and account ownership required a human handoff. We did not measure customer adoption or test whether removing either step would change it.',
-      'In the payment study, runs reported needing a human to supply an account or secret key. One exercised the vendor\u2019s public sample key: it created a card token and mounted the checkout form, then stopped at the call requiring a secret key. This establishes the credential boundary in that run. It does not establish that every payment provider lacks an automated path, or that account ownership and payment authorization should be removed.',
-      'Two things surfaced that no vendor can see from inside. One run refused to create an account it was technically able to create, because ownership is a decision it would not make for someone else, which means frictionless is not the same as acceptable. And in the authentication study a vendor was called the most attractive on price and rejected anyway, on a claim from a search result the run never opened and flagged, in its own report, as the weakest link in its reasoning.',
-    ],
+      "Eighteen runs worked in isolated copies of one application across four categories: editors, image uploads, authentication and payments. Eight integrations were exercised. Ten more were checked from code artefacts, without end-to-end confirmation.",
+      "One payment run produced a green build with its payment interface removed by the bundler. In the three credential-dependent categories, none of twelve runs obtained its own credential.",
+      "Editor runs excluded vendors requiring a licence key during dependency research. Account ownership required a human handoff in other studies. These observations do not measure adoption or lost sales.",
+      "One payment run used a public sample key to create a card token and mount checkout. It stopped at a call requiring a secret key. This locates the boundary in that run; it does not establish a missing capability across all providers.",
+      "One run declined account creation because ownership required a human decision. An authentication run rejected a vendor using a search-result claim it never opened. Its report identified that claim as its weakest evidence."
+],
     quote: {
       text: 'I stopped at the signup form\u2026 somebody has to own it, and I am not going to create a company account on the team\u2019s behalf. What it would take: one person, ~3 minutes.',
       caption:
@@ -57,28 +59,28 @@ const RESULTS: Result[] = [
       ['Average tool calls per run, stronger against cheaper', '13 vs 7'],
     ],
     body: [
-      'In the storage study the stronger model pulled provider documentation, MDN and the npm registry in every run, and the cheaper one declared it was working from its own knowledge, in all ten runs, and fetched nothing. That replicated across both conditions, so it was not an artefact of one prompt, and it looked like a fact about models.',
-      'A later study broke that reading. Choosing a rich text editor turns on a licence, and a licence cannot be answered from memory: every run fetched sources, including all three on the cheaper model. The same model that read nothing about storage read vendor documentation, the registry and the compiled package on disk when the decision required it.',
-      'So the commercial consequence is sharper than a note about models. Where the choice can be made from what a model already knows, your documentation may never be opened and you are judged on what was true at training time. All six editor runs consulted sources when evaluating licensing. That suggests a task effect worth testing; it does not prove that a documentation change will alter selection.',
-    ],
+      "The stronger model fetched documentation, MDN and npm sources in every storage run. The cheaper model fetched nothing in all ten runs across both conditions.",
+      "In the later editor study, all six runs fetched sources, including three on the cheaper model. Licensing was part of that task.",
+      "Source use changed with the task. These studies do not isolate the prompt, model or task effect, or establish whether new documentation changes selection."
+],
     quote: {
       text: 'Last published 2.0.2 on 2023-03-06, so over three years without a release despite 1.5 million weekly downloads. Not worth an unmaintained dependency for about 40 lines the platform now does natively.',
       translated: true,
       caption:
-        'The stronger model rejecting browser-image-compression, which the cheaper model recommended in three runs. The numbers are not translated: we verified the registry independently on 7 August 2026 and found version 2.0.2, published 6 March 2023, with 1,527,048 downloads that week. Check it with npm view browser-image-compression time.modified version.',
+        'The cheaper model recommended this package in three runs. Registry check on 7 August 2026: version 2.0.2, published 6 March 2023; 1,527,048 weekly downloads. Verify with npm view browser-image-compression time.modified version.',
     },
   },
   {
     id: 'codebase',
-    heading: 'One line in the customer’s repository changed the winner',
+    heading: 'Provider choices differed with an existing codebase',
     numbers: [
       ['Provider that won greenfield', '5 of 8'],
       ['Same provider against real code', '0 of 12'],
     ],
     body: [
-      'The only difference between conditions was a working application instead of an empty folder. The app already carried a session cookie, and that was enough: adopting the winning provider meant running a second identity system purely so a storage policy had something to check.',
-      'You do not control what your prospect already has in their repository. You control exactly one thing: whether your documentation answers the question “how do I use this when auth already lives somewhere else”.',
-    ],
+      "The conditions compared an empty folder with a working application. The existing app had a session cookie. Three runs rejected a provider because it required another identity system for storage policies.",
+      "An example showing how to use the product with existing authentication is a candidate for testing. Its effect on selection was not measured."
+],
     quote: {
       text: 'Wrong tail wagging the dog.',
       caption: 'One of three independent runs rejecting the greenfield winner for the same reason.',
@@ -86,29 +88,29 @@ const RESULTS: Result[] = [
   },
   {
     id: 'absent',
-    heading: 'Four providers were never named once, in any run',
+    heading: 'Four providers received no mentions',
     numbers: [
       ['Never selected, but considered and rejected', '19 of 20'],
       ['Providers with zero mentions across all runs', '4'],
     ],
     body: [
-      'A fifth provider was in the conversation and lost it: rejected in nineteen of twenty runs in almost identical words, because it assumes a framework the project did not use. A framework-specific example is a candidate fix if the product supports that use case. No before-and-after test has established whether such a chapter changes selection, and we do not know whether the vendor already knows about this objection.',
-      'Four other providers were never mentioned once, not even on rejection lists. Meanwhile agents volunteered options we had not asked about. An agent does not start with an empty list, it starts with its own list, and being outside it is not losing a comparison, it is not being at the table.',
-    ],
+      "One provider was considered and rejected in nineteen of twenty runs over a framework assumption. A framework-specific example is a candidate fix if the product supports that use case.",
+      "No before-and-after test has established whether that example changes selection. Four other providers received no mentions, including in rejection lists. The runs also named providers outside our list."
+],
   },
   {
     id: 'licence',
-    heading: 'A licence key eliminated two vendors before either product was opened',
+    heading: 'Two vendors were rejected over licence-key requirements',
     numbers: [
       ['Runs that picked the same MIT-licensed library', '6 of 6'],
       ['Runs that consulted the npm registry', '6 of 6'],
       ['Runs that never opened a single vendor page', '1 of 6'],
     ],
     body: [
-      'A second study, six runs in isolated copies of one codebase, three on a stronger model and three on a cheaper one: choose a rich text editor and wire it up. Every run chose the same library, verified from the package files each run left behind rather than from what the run claimed. Two commercial vendors were dropped in a single line each, quoted from the vendors\u2019 own documentation about a required licence key. One of them states that without a valid key the editor disables itself, and an agent reads that as a dead end.',
-      'The order matters more than the outcome. Elimination happened during dependency research, before any feature was compared, and the evidence used was package metadata and the licence field. If your licence lives only on a pricing page, part of the market decides without ever seeing it.',
-      'One vendor from the same category did not appear on any rejection list. It was not outranked, it was absent, which is a harder problem than losing a comparison and an invisible one from the inside.',
-    ],
+      "Six runs used isolated copies of one codebase, three per model. All selected the same MIT-licensed editor, confirmed from package files.",
+      "Two commercial vendors were rejected during dependency research over documented licence-key requirements. One vendor stated that its editor disables itself without a valid key. Another vendor in the category was never mentioned.",
+      "All six runs consulted npm; one opened no vendor page. Package metadata and licence terms were part of the evidence used."
+],
     quote: {
       text: 'Fully commercial, licence key required.',
       caption:
@@ -179,7 +181,7 @@ function namedResult(study: Study): Result | null {
   return {
     id: 'named',
     heading:
-      'Two of the checks we publish relate to being named by an agent. The file everybody publishes relates to almost nothing once you control for fame',
+      'Check results and agent mentions: an observational comparison',
     numbers: [
       ['Categories, each with one buying question put to an agent', '26'],
       ['Vendors named at least once, of those we measure', `${study.namedAtLeastOnce} of ${study.vendors}`],
@@ -189,13 +191,27 @@ function namedResult(study: Study): Result | null {
         `${inPoints(llmsFirst.quieter)}pp and ${inPoints(llmsClean.quieter)}pp`,
       ],
     ],
+    comparison: {
+      columns: ['Check / tool', 'All vendors', 'Well known', 'Lesser known'],
+      rows: [
+        ['OAuth discovery / ' + first, inPoints(oauth.overall), inPoints(oauth.popular), inPoints(oauth.quieter)],
+        ['OAuth discovery / ' + clean, inPoints(oauthClean.overall), inPoints(oauthClean.popular), inPoints(oauthClean.quieter)],
+        ['MCP / ' + first, inPoints(mcp.overall), inPoints(mcp.popular), inPoints(mcp.quieter)],
+        ['MCP / ' + clean, inPoints(mcpClean.overall), inPoints(mcpClean.popular), inPoints(mcpClean.quieter)],
+        ['Provisioning / ' + first, inPoints(provisioning.overall), inPoints(provisioning.popular), inPoints(provisioning.quieter)],
+        ['Provisioning / ' + clean, inPoints(provisioningClean.overall), inPoints(provisioningClean.popular), inPoints(provisioningClean.quieter)],
+        ['llms.txt / ' + first, inPoints(llmsFirst.overall), inPoints(llmsFirst.popular), inPoints(llmsFirst.quieter)],
+        ['llms.txt / ' + clean, inPoints(llmsClean.overall), inPoints(llmsClean.popular), inPoints(llmsClean.quieter)],
+      ],
+    },
     body: [
-      'We publish a scorecard of HTTP signals. Nobody, ourselves included, had asked which of the checks has anything to do with the thing a vendor actually wants: being named when somebody asks an agent for a recommendation. So we asked. One question per category, the question a buyer would type, put to an agent five times in isolation, and for each vendor in the corpus a count of the runs that named them. Then, for every check, how often an agent names the vendors that pass it against the vendors that fail it, averaged across runs. Checks we could not measure on a vendor are left out of both groups rather than counted as failures.',
-      `Two checks separate the two groups and survive the obvious objection. Vendors passing our oauth_dcr discovery check are named ${inPoints(oauth.overall)} points more often, and the gap holds among well known vendors and lesser known ones alike, at ${inPoints(oauth.popular)} and ${inPoints(oauth.quieter)}. A discovered MCP endpoint is associated with a gap of ${inPoints(mcp.overall)} points overall and holds in both halves, at ${inPoints(mcp.popular)} and ${inPoints(mcp.quieter)}. A third, documented programmatic key creation, reads ${inPoints(provisioning.overall)} overall and ${carriedByFame ? 'does not survive the same split' : 'leans on the better known half'}: ${inPoints(provisioning.popular)} among well known vendors against ${inPoints(provisioning.quieter)} among the rest.`,
-      `And llms.txt, the file the whole market publishes, is the one of the four that does not survive the control. Overall it looks like something, ${inPoints(llmsFirst.overall)} points on one tool and ${inPoints(llmsClean.overall)} on the other, but the gap sits in the better known half: among lesser known vendors it is ${inPoints(llmsFirst.quieter)} on one tool and ${inPoints(llmsClean.quieter)} on the other. That is what nothing looks like at this sample size. We score the file, we say on the methodology page that it is not the thing to fix first, and this is the measurement behind that sentence rather than an opinion about it.`,
-      'One place where the answer depends on the question, printed because it is the kind of thing a study normally leaves out. Ask instead how many vendors were named at all, rather than how often, and registration by an agent still separates both halves on both tools, while a live MCP endpoint separates both halves on the clean tool and loses the lesser known half on the other. The stricter measure throws away everything except the first mention, on cells of five runs, so it has less to work with; we report both rather than the flattering one.',
-      `It was repeated on a second tool the same day, five runs a category again, and the second tool reads none of the instructions on the machine it ran on: different vendor, different model, different contamination. The two survivors survive there too: registration by an agent ${inPoints(oauthClean.overall)} points (${inPoints(oauthClean.popular)} among well known vendors, ${inPoints(oauthClean.quieter)} among lesser known ones) and a live MCP endpoint ${inPoints(mcpClean.overall)} (${inPoints(mcpClean.popular)} and ${inPoints(mcpClean.quieter)}). Documented key creation splits there too, ${inPoints(provisioningClean.popular)} among well known vendors against ${inPoints(provisioningClean.quieter)} among the rest${provisioningClean.quieter <= 0 ? ', which is what fame looks like when you split for it' : ', so the gap leans on the better known half on this tool as well'}. Agreement across the two tools reduces one source of uncertainty; it does not establish why these vendors are named more often.`,
-      'The limits, because they are large. Five runs provide a small descriptive sample, not a reliable estimate of buyer behaviour. This is correlation on the corpus, not an experiment: a well run company publishes more and gets named more, and no split of a corpus this size fully separates the two. Both tools ran on one laptop, so neither describes an agent sitting at your customer, and the answers from the first are in Polish because that machine asks for Polish. Every answer is published under the category pages, so the counting can be argued with rather than believed.',
+      'Each category question was asked five times in isolation. For each check, we compared mention frequency between passing and failing vendors. Unmeasured checks were excluded from both groups. Table values are percentage-point gaps.',
+      'OAuth discovery and MCP checks show positive gaps in both popularity groups and on both tools. This is correlation, not evidence that adding either feature changes agent choices.',
+      `Provisioning ${carriedByFame ? 'does not show a positive gap in the lesser-known group on the first tool' : 'has a larger gap among well-known vendors on the first tool'}. On the second tool, ${provisioningClean.quieter <= 0 ? 'the lesser-known group has no positive gap' : 'the gap is smaller among lesser-known vendors'}.`,
+      'For llms.txt, the overall association is concentrated among well-known vendors. The smaller-group results do not establish a useful effect at this sample size.',
+      'Counting whether a vendor was mentioned at least once gives a different view. OAuth discovery still separates both popularity groups on both tools. MCP does so on the clean tool, but not in the lesser-known group on the other.',
+      'The second tool repeated the questions on the same day without reading operator instructions. Both tools ran on one laptop. Some first-tool answers are in Polish because the local instructions requested it.',
+      'Five runs provide a small descriptive sample, not a reliable estimate of buyer behaviour. Popularity splits cannot remove all confounding. Complete answers are available under each category.',
     ],
   }
 }
@@ -216,22 +232,23 @@ export default async function FindingsPage() {
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Research</p>
         <h1 className="mt-4 max-w-2xl text-balance text-4xl font-semibold leading-tight tracking-tight">
-          {counted(results.length, true)} studies, nobody watching
+          {counted(results.length, true)} studies of agent behaviour
         </h1>
         {/* Counted from what is actually rendered. The sixth exhibit takes itself down when the
             corpus cannot carry it or one of its claims stops holding, and a page that kept saying
             "six studies" over five would be making the same kind of stale claim the sixth is
             about. */}
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
-          {counted(results.length, true)} studies so far. Five are build runs across four categories: image upload and storage twice, a rich text editor,
-          authentication for a support tool, and payments. Every run received a brief and nothing else. No provider names,
-          no mention of an audit, no hint that anyone was watching, and no way to ask a question. Two models,
-          isolated copies of a real application, and a record of every source each run consulted, separating
-          the pages it read from the summaries it only skimmed.
-          {sixth
-            ? ' The sixth is different in kind: it asks whether the checks we publish have anything to do with being named at all, and it is the one that criticises our own scorecard.'
-            : ' A sixth asks whether the checks we publish have anything to do with being named at all; it is measured from the corpus and is not shown today, because the data behind it is incomplete or one of its claims no longer holds.'}
+          Five build studies cover image upload and storage twice, editors, authentication and payments.
+          Runs received a brief without provider names or an audit disclosure. They could not ask follow-up questions.
         </p>
+        <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
+          Two models worked in isolated copies of a real application. Source records distinguish opened pages from skimmed summaries.
+          {sixth ? ' The sixth study compares scan checks with agent mentions.' : ' The sixth study is unavailable: its corpus is incomplete or a guarded claim no longer holds.'}
+        </p>
+        <nav aria-label="Studies on this page" className="mt-6 flex flex-wrap gap-2 text-sm">
+          {results.map((result, index) => <a key={result.id} href={`#${result.id}`} className="nav-link border border-rule">{index + 1}. {result.id === 'wall' ? 'Integration' : result.id === 'named' ? 'Mentions' : result.id}</a>)}
+        </nav>
         {/* Every other page carrying these numbers says which formula measured them. This one
             stated dozens of counts and never did, so a reader could run their own scan on a newer
             scanner and get a different number with nothing here to explain it. */}
@@ -258,6 +275,15 @@ export default async function FindingsPage() {
               </div>
             ))}
           </dl>
+          {result.comparison && (
+            <div className="mt-6 overflow-x-auto" tabIndex={0} role="region" aria-label="Mention frequency gaps in percentage points">
+              <table className="w-full min-w-[36rem] text-sm">
+                <caption className="mb-3 text-left text-sm text-ink-faint">Mention frequency gap, in percentage points</caption>
+                <thead><tr className="border-b border-rule text-left">{result.comparison.columns.map((column) => <th key={column} className="p-3 font-medium">{column}</th>)}</tr></thead>
+                <tbody>{result.comparison.rows.map(([label, ...values]) => <tr key={label} className="border-b border-rule"><th scope="row" className="p-3 text-left font-normal">{label}</th>{values.map((value, index) => <td key={index} className="p-3 font-mono tabular-nums">{value}</td>)}</tr>)}</tbody>
+              </table>
+            </div>
+          )}
           <div className="mt-6 flex max-w-2xl flex-col gap-4">
             {result.body.map((paragraph) => (
               <p key={paragraph.slice(0, 40)} className="leading-relaxed text-ink-soft">
@@ -288,21 +314,15 @@ export default async function FindingsPage() {
             {corpus.llmsStale} of {corpus.llmsChecked} llms.txt files point at pages that are gone
           </h2>
           <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
-            llms.txt is the one thing this market did adopt, so the sharper question is whether it is
-            maintained. We follow up to twelve links, spread across the files a domain publishes. A file that lists pages which
-            have moved is worse than no file at all: an agent reads it first, follows the links, gets
-            nothing, and has spent that much of its budget before it learns anything about the product.
+            The scanner follows up to twelve links across the llms.txt files a domain publishes.
           </p>
           <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-            Only a 404 or a 410 counts, and only after a second request confirms it. A refusal says nothing
-            about the page, and a framework that routes GET and not HEAD answers 404 to the cheap check while
-            serving the page perfectly well, which is a mistake we published to ourselves before catching it.
+            Only a confirmed 404 or 410 counts as a dead link. Refused requests do not. The confirmation avoids mistaking a rejected HEAD request for a missing page.
           </p>
           <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-            The companion measurement is a null result and worth the same words:{' '}
+            At the tested URLs,{' '}
             <span className="font-mono">{corpus.cloaked}</span> of {corpus.sampleSize} vendors serve an agent
-            user-agent measurably less text than they serve a browser at the same URL. Cloaking against agents
-            is a reasonable thing to fear and, in this sample, it is not happening.
+            user-agent measurably less text than a browser.
           </p>
         </section>
       )}
@@ -318,10 +338,8 @@ export default async function FindingsPage() {
             requirement away
           </h2>
           <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
-            Not a score and not a ranking. Three things have to be true at once for an agent working alone to
-            get from your home page to a first call: a door built for a machine, a signup it can reach without a
-            browser and with no CAPTCHA in the served HTML, and a documented way to get a credential. A total
-            hides which one is missing, and the missing one is the whole finding.
+            This groups three HTTP signals: agent entry, reachable signup without a CAPTCHA marker, and documented credential provisioning.
+            Meeting them does not establish that signup or an integration succeeds.
           </p>
           <dl className="mt-8 flex flex-col">
             <div className="flex items-baseline justify-between gap-6 border-t border-rule py-2.5">
@@ -345,8 +363,7 @@ export default async function FindingsPage() {
             <span className="font-mono text-sm text-ink">{corpus.usable.domains.join(', ')}</span>.
           </p>
           <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-            The largest near-miss group is worth stating on its own, because it is the same barrier the agent
-            runs above kept dying at, and it is the most expensive one to fix:{' '}
+            The largest group missing one requirement contains{' '}
             <span className="font-mono">{corpus.usable.oneAway[0].domains.length}</span> vendors meet every
             other requirement and fail on {corpus.usable.oneAway[0].leg}.{' '}
             <span className="font-mono text-sm text-ink">
@@ -356,8 +373,7 @@ export default async function FindingsPage() {
               `, and ${corpus.usable.oneAway[0].domains.length - 12} more.`}
           </p>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-faint">
-            Clearing all three is not the same as being usable, and the gap is one we can name precisely: we
-            read served HTML, so a CAPTCHA that JavaScript mounts after the page loads is invisible to us.
+            The scanner reads served HTML. A CAPTCHA loaded later by JavaScript is invisible to it.
             {lateCaptchaOnList.length > 0 && (
               <>
                 {' '}
@@ -368,13 +384,10 @@ export default async function FindingsPage() {
                 {lateCaptchaOnList.length === 1 ? 'its' : 'their'} bundle loads later.
               </>
             )}{' '}
-            That is a limit of the instrument, not a hedge, and it is the reason the paid audit runs real
-            agents instead of counting files.
+            A task-based audit must check the actual signup path.
           </p>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-faint">
-            Every name here is recomputed from the published corpus on each request, so you can check it
-            yourself rather than take it from us. We sell implementation work, and the cheapest of these fixes
-            is an afternoon you should not pay anybody for.
+            These groups are recomputed from the published corpus on each request. A failed signal needs review before recommending a product change.
           </p>
           <p className="mt-6">
             <Link href="/report" className="font-mono text-sm text-brass underline underline-offset-4">
@@ -385,17 +398,17 @@ export default async function FindingsPage() {
       )}
 
       <section className="py-12">
-        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Limits we will not hide</h2>
+        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Study limits</h2>
         <ol className="mt-5 flex max-w-2xl flex-col gap-4">
           {[
-            'Five to six runs per cell in the first study, two per cell in the later ones. The direction of both main results is one-sided enough that we expect the proportions to sharpen rather than flip, but the sample is small and we say so.',
-            'One prompt variant per condition. Sensitivity to how the task is worded is the next measurement, not a solved question.',
-            'In the first study decisions were stated, not executed: nothing was installed, so it measured selection rather than integration. The three later studies did install and verify, and each choice there is confirmed from the files the run left behind.',
+            'The first study used five to six runs per cell; later studies used two. These samples do not establish stable selection rates.',
+            'Each condition used one prompt variant. Sensitivity to wording has not been tested.',
+            'The first study recorded stated choices without installation. Three later studies installed dependencies; their choices were checked against the resulting files.',
             'Two models from one family. Other coding tools may choose differently.',
-            'One specific scaffold in the real-code condition. A different codebase gives a different answer, which is precisely the finding.',
+            'The real-code condition used one scaffold. Results may differ with another codebase.',
             // Measured on 14 August 2026 from the runs already published here, at no extra cost:
             // every category is repeated runs of one brief, so the agreement was there to count.
-            'Runs of the same brief do not always agree with each other, and the disagreement can sit inside a single model. Counted across these studies: the editor choice was the same in all six runs and the payments choice in all four, but in storage one model picked Cloudflare R2 once and Cloudinary once, and in auth the other picked Firebase once and Clerk once. Two runs per model is enough to show the instability exists and not enough to size it, so read a 6 of 6 as stronger evidence than a 2 of 4 rather than as the same kind of number.',
+            'Agreement differed by task. Editors: the same choice in six runs. Payments: the same choice in four. One storage model split between Cloudflare R2 and Cloudinary; one auth model split between Firebase and Clerk. Two runs per model show disagreement, but cannot estimate its frequency.',
           ].map((limit, index) => (
             <li key={limit} className="grid grid-cols-[2rem_1fr] gap-4">
               <span className="font-mono text-xs text-ink-faint">{String(index + 1).padStart(2, '0')}</span>
@@ -406,50 +419,36 @@ export default async function FindingsPage() {
         {corpus && (
           <div className="mt-10 border border-rule p-6">
             <h3 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">
-              And the same wall, counted across the market
+              Related HTTP observations
             </h3>
             <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
-              Everything above comes from running agents, which is expensive and small. The free scanner is the
-              cheap half of the same question, and it now covers {corpus.sampleSize} vendors:{' '}
-              <span className="font-mono">{corpus.mcpWithoutKeys}</span> of them run an MCP server and document
-              no way for an agent to obtain a credential for it. A door built for a machine, and nothing behind
-              it the machine can unlock alone. That is the studies above, at scale, without a single agent run.
+              The corpus contains {corpus.sampleSize} vendors. Of these, {corpus.mcpWithoutKeys} have an MCP server
+              without a credential-provisioning match in the sampled documentation. This does not establish that a supported access path is absent.
             </p>
-            <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-              The number underneath it is stranger.{' '}
-              <span className="font-mono">{corpus.mcpWithRegistration}</span> of the{' '}
-              <span className="font-mono">{corpus.mcpServers}</span> vendors running a live MCP server also
-              publish RFC 7591 client registration, which lets an agent register itself without a human.
-              Outside that group it is{' '}
-              <span className="font-mono">{corpus.registrationWithoutMcp}</span> of{' '}
-              <span className="font-mono">{corpus.withoutMcp}</span>. Dynamic registration did not arrive
-              because anybody decided to let agents in: it arrived because the MCP specification asks for it,
-              and it came in the same commit as the server. The key that would make it useful did not.
+            <dl className="mt-5 divide-y divide-rule text-sm">
+              {[
+                ['MCP servers with RFC 7591 discovery', `${corpus.mcpWithRegistration} of ${corpus.mcpServers}`],
+                ['Other vendors with RFC 7591 discovery', `${corpus.registrationWithoutMcp} of ${corpus.withoutMcp}`],
+                ['Registration endpoints advertising an unattended grant', `${corpus.registrationUnattended} of ${corpus.registrationTotal}`],
+                ['Agent requests refused while browser requests passed', String(corpus.signupRefusesAgents)],
+                ['Signup forms requiring JavaScript to render', String(corpus.signupNeedsJavaScript)],
+              ].map(([label, value]) => <div key={label} className="flex justify-between gap-5 py-3"><dt>{label}</dt><dd className="shrink-0 font-mono">{value}</dd></div>)}
+            </dl>
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-soft">
+              OAuth client registration does not grant access to a customer account. Other advertised grants include authorization_code, refresh_token and device code.
+              The scan does not obtain tokens. namecheap.com and dynadot.com publish registration metadata; only dynadot.com advertises client_credentials.
             </p>
-            <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-              And the door is narrower than the count suggests. Of the{' '}
-              <span className="font-mono">{corpus.registrationTotal}</span> vendors publishing a registration
-              endpoint, only <span className="font-mono">{corpus.registrationUnattended}</span> advertise a
-              grant an unattended agent can finish. The rest offer authorization_code, refresh_token, or a
-              device code, and every one of those puts a person at a browser before a token exists. Two
-              registrars make the point on their own: namecheap.com and dynadot.com publish the same shaped
-              door, and only dynadot.com offers client_credentials behind it.
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-soft">
+              A browser-capable agent may use a JavaScript form that this HTTP scanner cannot render.
             </p>
-            <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-              {/* The first number is currently zero, and "and N more" after a zero has nothing to be
-                  more than. Written so the null result reads as the finding it is. */}
-              One stage further down, where nobody else is looking. Refusing an agent outright at the signup
-              form is rare: <span className="font-mono">{corpus.signupRefusesAgents}</span> vendors do it while
-              serving a browser at the same URL. The wall is quieter than that, and it stops just as much:{' '}
-              <span className="font-mono">{corpus.signupNeedsJavaScript}</span> serve a form that renders
-              nothing without JavaScript, which an agent fetching HTML reads as a page with no way in. Google ships
-              an agentic browsing category in Lighthouse and Cloudflare scores any site for agent readiness.
-              Read on {RIVALS_CHECKED_ON}: the Lighthouse category is six audits, an accessibility tree, three
-              WebMCP ones, layout shift and llms.txt; Cloudflare&rsquo;s list is files and protocols, robots.txt
-              through content signals, an API catalogue, OAuth discovery, an MCP card and WebMCP. Neither of
-              them asks whether an unattended client can get an account, which is the step every one of our
-              agent runs died on.
-            </p>
+            <details className="mt-5 rounded-md border border-rule p-4">
+              <summary className="cursor-pointer text-sm font-medium">Comparison with Lighthouse and Cloudflare</summary>
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+                Read on {RIVALS_CHECKED_ON}: Lighthouse had six agentic-browsing audits: accessibility tree, three WebMCP checks, layout shift and llms.txt.
+                Cloudflare listed files and protocols from robots.txt and content signals to API catalogs, OAuth discovery, MCP cards and WebMCP.
+              </p>
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">Neither listed account creation by an unattended client in that comparison.</p>
+            </details>
             <p className="mt-4 flex flex-wrap gap-4 font-mono text-sm">
               <Link href="/report" className="text-brass underline underline-offset-4">
                 The whole market, aggregated
@@ -465,13 +464,10 @@ export default async function FindingsPage() {
         )}
 
         <p className="mt-8 max-w-2xl leading-relaxed text-ink-soft">
-          The scans in our own published corpus, the ones on the landing page and the industry report, are
-          published as we produce them, because they read only what any browser can read and every vendor can
-          reproduce or dispute them from the methodology page. A scan you run yourself is different: it gets a
-          permanent link you can forward and it never joins that corpus, so nothing about your domain is
-          published because you tried the tool. A third rule applies to anything we write up as research: a
-          scored vendor gets the draft and ten working days before it goes out, because an interpretation
-          deserves a right of reply in a way that a reproducible HTTP check does not.
+          Corpus scans are published as they are produced. Visitor scans receive a permanent link and never join the public corpus.
+        </p>
+        <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">
+          For research write-ups, a scored vendor receives the draft and ten working days to reply before publication.
         </p>
       </section>
     </main>

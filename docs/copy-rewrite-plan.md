@@ -28,8 +28,8 @@ picks it up (a person or an agent) can continue without the original session.
 | 1, 2 | `scripts/client-report.mts`, `src/app/d/[id]/report-view.tsx`, shared wording, outreach drafts | shipped v784, commit c3ecc05; ten reports and `/d/sample` republished |
 | 3 | `src/app/pricing/page.tsx` | shipped v785, commit 6a3a97a |
 | 4 | `src/components/email-gate.tsx`, `src/app/r/[id]/page.tsx` | shipped v786, commit bd8fa5d |
-| 5 | Landing, audit index, categories; UI and run reader added at owner request | implemented; build, lint and UI checks passed; review/deploy next |
-| 6 | `src/app/methodology/page.tsx`, `src/app/findings/page.tsx`, `src/app/report/page.tsx` | to do, brief below |
+| 5 | Landing, audit index, categories; UI and run reader added at owner request | shipped v790, commit 1bd0ae8; run-reader and responsive UI checks passed |
+| 6 | `src/app/methodology/page.tsx`, `src/app/findings/page.tsx`, `src/app/report/page.tsx` | rewritten; validation and deployment in progress |
 | 7 | `src/app/docs/page.tsx`, `src/app/visibility/page.tsx`, `src/app/d/[id]/page.tsx` | to do, brief below |
 
 Measured before: site copy scored 0 to 35 on the surface meter
@@ -110,3 +110,11 @@ The conditional corpus/formula disclosure keeps its computed fields together; it
 Validation: build (typecheck and rules), lint, Markdown safety audit, browser interactions at 390/1440 px
 in light/dark themes. All 15 original email-category answers matched character for character.
 Evidence: `data/ui-rewrite-2026-09-07/` (local, ignored).
+
+## Phase 6 implementation
+
+Current probe rules are separated from repair history. Repeatability measurements and mention-frequency
+comparisons are tables. Known limits have short titles and expandable detail. Research headings and
+industry-report claims describe observations without inferring customer adoption or completed integrations.
+All exact-literal guards remain intact; none changed. Dates, formula fields, denominators, source links,
+original quotes and publication permissions remain. Word counts are recorded after final validation.
