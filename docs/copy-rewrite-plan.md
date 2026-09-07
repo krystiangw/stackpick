@@ -29,8 +29,8 @@ picks it up (a person or an agent) can continue without the original session.
 | 3 | `src/app/pricing/page.tsx` | shipped v785, commit 6a3a97a |
 | 4 | `src/components/email-gate.tsx`, `src/app/r/[id]/page.tsx` | shipped v786, commit bd8fa5d |
 | 5 | Landing, audit index, categories; UI and run reader added at owner request | shipped v790, commit 1bd0ae8; run-reader and responsive UI checks passed |
-| 6 | `src/app/methodology/page.tsx`, `src/app/findings/page.tsx`, `src/app/report/page.tsx` | rewritten; validation and deployment in progress |
-| 7 | `src/app/docs/page.tsx`, `src/app/visibility/page.tsx`, `src/app/d/[id]/page.tsx` | to do, brief below |
+| 6 | `src/app/methodology/page.tsx`, `src/app/findings/page.tsx`, `src/app/report/page.tsx` | shipped v791, commit fba5a5f; responsive research-page checks passed |
+| 7 | `src/app/docs/page.tsx`, `src/app/visibility/page.tsx`, `src/app/d/[id]/page.tsx` | implemented; final validation and deployment in progress |
 
 Measured before: site copy scored 0 to 35 on the surface meter
 (`python3 ~/.claude/skills/human-tone/slopscore.py <dir>`), reports 51 to 54. The meter reads
@@ -104,7 +104,7 @@ The run browser filters by tool/date and vendor, opens individual answers, rende
 and retains the full original text with matcher-based highlighting. No prompts, answers or counts change.
 
 Phase 5 approximate authored word counts (same TypeScript AST extraction before and after):
-landing 761 to 545; audit index 211 to 145; category template 384 to 272.
+landing 761 to 545; audit index 211 to 145; category template 379 to 267.
 No exact-literal guards changed. Review found missing study anchors and filtered hash navigation; both were corrected and added to browser checks. Long original prompts and quoted evidence are exempt from sentence limits.
 The conditional corpus/formula disclosure keeps its computed fields together; its expanded branch can exceed 25 words.
 Validation: build (typecheck and rules), lint, Markdown safety audit, browser interactions at 390/1440 px
@@ -118,3 +118,33 @@ comparisons are tables. Known limits have short titles and expandable detail. Re
 industry-report claims describe observations without inferring customer adoption or completed integrations.
 All exact-literal guards remain intact; none changed. Dates, formula fields, denominators, source links,
 original quotes and publication permissions remain. Word counts are recorded after final validation.
+
+## Phase 7 implementation
+
+API instructions now separate calls, response fields and examples. Visibility states what the report
+contains and explains the queue without promising a completion time. Delivered reports show the question-fit status before the two
+measured results and reviewed next steps. The exact question expands in place. Evidence, validation details,
+quote collections and individual scan observations expand on demand. The question-fit status and scope
+limits remain visible. Print report expands all evidence and restores the reader's choices afterward.
+Stored report models, original questions, excerpts, recommendations and source links are unchanged.
+
+Final approximate authored word counts, extracted with the same TypeScript AST method from
+`43e4c8f` and the new files. Code examples and class attributes are excluded; shared components,
+computed values and stored report prose are not counted. These are source estimates, not live word totals.
+
+| Page source | Before | After |
+|---|---:|---:|
+| Landing | 761 | 545 |
+| Audit index | 211 | 145 |
+| Category template | 379 | 267 |
+| Methodology | 4639 | 2078 |
+| Findings | 3426 | 1791 |
+| Industry report | 988 | 553 |
+| API docs | 803 | 447 |
+| Visibility | 106 | 115 |
+| Delivery wrapper | 94 | 67 |
+
+No exact-literal guards changed in phases 5-7. Original prompts and quotations remain verbatim,
+including their punctuation and longer sentences. Conditional corpus disclosures retain their computed
+fields. Existing stored recommendations and report evidence retain their wording; the reader controls
+when to expand them. The additional visibility words explain when results become available.

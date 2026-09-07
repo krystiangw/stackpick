@@ -247,7 +247,7 @@ export default async function FindingsPage() {
           {sixth ? ' The sixth study compares scan checks with agent mentions.' : ' The sixth study is unavailable: its corpus is incomplete or a guarded claim no longer holds.'}
         </p>
         <nav aria-label="Studies on this page" className="mt-6 flex flex-wrap gap-2 text-sm">
-          {results.map((result, index) => <a key={result.id} href={`#${result.id}`} className="nav-link border border-rule">{index + 1}. {result.id === 'wall' ? 'Integration' : result.id === 'named' ? 'Mentions' : result.id}</a>)}
+          {results.map((result, index) => <a key={result.id} href={`#${result.id}`} className="nav-link border border-rule">{index + 1}. {({ wall: 'Integration', sources: 'Sources', codebase: 'Existing code', absent: 'Missing mentions', licence: 'Licensing', named: 'Mentions' } as Record<string, string>)[result.id]}</a>)}
         </nav>
         {/* Every other page carrying these numbers says which formula measured them. This one
             stated dozens of counts and never did, so a reader could run their own scan on a newer

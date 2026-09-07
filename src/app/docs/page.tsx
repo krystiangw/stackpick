@@ -33,19 +33,20 @@ export default async function DocsPage() {
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Docs</p>
         <h1 className="mt-4 max-w-2xl text-balance text-4xl font-semibold leading-tight tracking-tight">
-          Everything here works without an account
+          Scan API and response formats
         </h1>
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
-          There is no signup, no key and no OAuth flow, because the scan reads only public pages and there is
-          nothing to protect. If you are building the same kind of thing, that decision is the one worth
-          copying: a gate with nothing behind it costs you every agent that cannot pass it and buys nothing.
+          The scan reads public pages. You do not need an account, an API key or OAuth.
         </p>
+        <nav aria-label="API sections" className="mt-6 flex flex-wrap gap-2 text-sm">
+          {[['scan-api', 'Scan'], ['progress-api', 'Progress'], ['access-api', 'Limits & formats'], ['refusals', 'Errors']].map(([id, label]) => <a key={id} href={`#${id}`} className="nav-link border border-rule">{label}</a>)}
+        </nav>
       </section>
 
       <section className="border-b border-rule py-12">
-        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Scan a domain</h2>
+        <h2 id="scan-api" className="text-xl font-semibold tracking-tight">Scan a domain</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          One endpoint, one field. It returns a scorecard and a permanent link to the readable version.
+          POST /api/scan with a domain. The response contains its scorecard and an ID for the permanent <code>/r/&lt;id&gt;</code> page.
         </p>
         <div className="mt-5">
           <Code>{`curl -X POST ${BASE}/api/scan \\
@@ -53,19 +54,17 @@ export default async function DocsPage() {
   -d '{"domain": "example.com"}'`}</Code>
         </div>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-soft">
-          The response carries <code className="font-mono text-xs">id</code>,{' '}
-          <code className="font-mono text-xs">domain</code> and{' '}
-          <code className="font-mono text-xs">scorecard</code>. Every check reports{' '}
-          <code className="font-mono text-xs">points</code>, <code className="font-mono text-xs">max</code>{' '}
-          and a human-readable <code className="font-mono text-xs">detail</code>. A check may also carry{' '}
-          <code className="font-mono text-xs">inconclusive: true</code>, which means it scored zero because we
-          could not measure it rather than because the thing is absent, or{' '}
-          <code className="font-mono text-xs">notApplicable: true</code>, which means the check does not apply to
-          a product of this kind. Treat those differently: they are our blind spot, not a defect in the site.
-          Both are excluded from <code className="font-mono text-xs">measurable</code>, which is the denominator
-          to divide by. Dividing by <code className="font-mono text-xs">max</code> reports a domain we could not
-          fully read as worse than one we could, which is the one mistake this format exists to prevent.
+          The response includes <code>id</code>, <code>domain</code> and <code>scorecard</code>.
+          Each check has <code>points</code>, <code>max</code> and a readable <code>detail</code>.
+          Divide the total by <code>measurable</code> for the score share.
         </p>
+        <dl className="mt-5 divide-y divide-rule rounded-lg border border-rule bg-surface px-5">
+          {[
+            ['inconclusive: true', 'The check scored zero because it could not be measured. Excluded from the measurable denominator.'],
+            ['notApplicable: true', 'The check does not apply to this product. Excluded from the measurable denominator.'],
+            ['max', 'Full theoretical maximum. It can include checks that were not measurable or applicable.'],
+          ].map(([field, description]) => <div key={field} className="grid gap-2 py-4 sm:grid-cols-[13rem_1fr]"><dt className="font-mono text-sm">{field}</dt><dd className="text-sm leading-relaxed text-ink-soft">{description}</dd></div>)}
+        </dl>
         <div className="mt-5">
           <Code>{`{
   "id": "example-com-202608072143",
@@ -91,11 +90,10 @@ export default async function DocsPage() {
       </section>
 
       <section className="border-b border-rule py-12">
-        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Progress events</h2>
+        <h2 id="progress-api" className="text-xl font-semibold tracking-tight">Progress events</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          A scan usually takes a few seconds and can reach a minute, mostly because signup probes run three times: bot gates answer
-          inconsistently and a single try would be a coin flip. If you would rather not wait in silence, the
-          streaming endpoint emits the real steps as they happen.
+          POST /api/scan/stream for server-sent progress events. Scans usually take seconds and can run for a minute.
+          Signup probes run up to three times. The final done event includes the result ID.
         </p>
         <div className="mt-5">
           <Code>{`curl -N -X POST ${BASE}/api/scan/stream \\
@@ -111,47 +109,41 @@ data: {"id":"example-com-202608072143","total":9,"max":${MAX_SCORE}}`}</Code>
       </section>
 
       <section className="border-b border-rule py-12">
-        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Credentials and provisioning</h2>
+        <h2 id="access-api" className="text-xl font-semibold tracking-tight">Access, limits and formats</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          There are none. You do not create an API key, there is no management API to call and no service
-          account to provision, because every endpoint is open. The limits are {PER_DOMAIN_PER_HOUR} scans an hour
-          per domain and {PER_CALLER_PER_HOUR} per caller, and a domain scanned again within{' '}
-          {REUSE_WINDOW_MS / 60000} minutes returns the stored result rather than a fresh one. Exceeding a limit
-          returns 429 with a <code className="font-mono text-xs">retry-after</code> header telling you exactly how
-          long to wait.
+          Scan endpoints require no credentials. Limits are {PER_DOMAIN_PER_HOUR} scans per domain and {PER_CALLER_PER_HOUR} per caller each hour.
+          Repeat requests within {REUSE_WINDOW_MS / 60000} minutes return the stored result.
+          A 429 response includes a <code className="font-mono text-xs">retry-after</code> header.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          There is also an MCP server at <span className="font-mono text-xs">/mcp</span>, Streamable HTTP, no
-          authentication, one tool called <span className="font-mono text-xs">scan_domain</span>. It runs the same
-          scan as the REST endpoint through the same limits, and the card describing it is at{' '}
-          <span className="font-mono text-xs">/.well-known/mcp.json</span>.
+          Connect to <code>/mcp</code> over Streamable HTTP. The <code>scan_domain</code> tool takes a domain and uses the REST scan limits.
+          No authentication is required. Its descriptor is <code>/.well-known/mcp.json</code>.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          The home page registers the same <span className="font-mono text-xs">scan_domain</span> tool through{' '}
+          The home page also registers <code>scan_domain</code> through{' '}
           <a href="https://webmachinelearning.github.io/webmcp/" className="text-brass underline underline-offset-4">
             WebMCP
           </a>
-          , so an agent running inside a visitor&rsquo;s browser can call it without driving the form. It is in
-          origin trial in Chrome 149+ and Edge 150+, read on {WEBMCP_READ_ON}, so on most visits{' '}
-          <span className="font-mono text-xs">document.modelContext</span> is absent and nothing is registered.
-          Nothing here depends on it: the endpoints above do the same work with no JavaScript at all, which is the
-          argument this whole site makes.
+          . Origin trial support: Chrome 149+ and Edge 150+, read on {WEBMCP_READ_ON}.
+          Registration requires <code>document.modelContext</code>. The HTTP endpoints work without JavaScript.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Both surfaces take a <code className="font-mono text-xs">format</code>.{' '}
-          <code className="font-mono text-xs">sarif</code> returns SARIF 2.1.0, so a scan can run in your pipeline
-          and fail a build when the score drops. Only the failing checks become results: a clean domain handing a
-          code-scanning pipeline sixteen alerts, one of them saying there was nothing to check, is worse than
-          useless. The passing, unmeasured and not-applicable ones are counted in the run properties, so a clean
-          sheet is still distinguishable from a scan that could not look.{' '}
-          <code className="font-mono text-xs">agent</code> returns markdown tasks instead of a report: one task per
-          failing check, each carrying the measurement behind it and a link to the rule, with the unmeasured checks
-          listed separately and marked as not failures.
+          The scan API and MCP tool accept a <code>format</code> option.
         </p>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-lg border border-rule bg-surface p-5">
+            <h3 className="font-mono text-sm font-medium">sarif</h3>
+            <p className="mt-3 text-sm leading-relaxed text-ink-soft">Returns SARIF 2.1.0. Only the failing checks become results.</p>
+            <p className="mt-3 text-sm leading-relaxed text-ink-soft">Passing, unmeasured and inapplicable checks are counted in the run properties.</p>
+          </div>
+          <div className="rounded-lg border border-rule bg-surface p-5">
+            <h3 className="font-mono text-sm font-medium">agent</h3>
+            <p className="mt-3 text-sm leading-relaxed text-ink-soft">Returns a Markdown task per failing check, with its measurement and rule link. Unmeasured checks are listed separately and marked as not failures.</p>
+          </div>
+        </div>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Every scan we publish is downloadable as one dataset: <span className="font-mono text-xs">/corpus.json</span>{' '}
-          and <span className="font-mono text-xs">/corpus.csv</span>, one row per domain and check, with the
-          verdict and the sentence it was measured from. Free to use and quote{' '}
+          Download published scans from <code>/corpus.json</code> or <code>/corpus.csv</code>.
+          Each row contains the domain, check, verdict and observed evidence. Free to use and quote{' '}
           {CORPUS_LICENCE_IS_PUBLISHED ? (
             <Link href="/corpus-licence" className="text-brass underline underline-offset-4">
               under these terms
@@ -159,11 +151,10 @@ data: {"id":"example-com-202608072143","total":9,"max":${MAX_SCORE}}`}</Code>
           ) : (
             'with attribution'
           )}
-          , which makes it
-          the fastest way to disagree with us.
+          .
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Machine-readable descriptions of all of this live at{' '}
+          Machine-readable descriptions:{' '}
           <Link href="/openapi.json" className="text-brass underline underline-offset-4">
             /openapi.json
           </Link>
@@ -174,22 +165,18 @@ data: {"id":"example-com-202608072143","total":9,"max":${MAX_SCORE}}`}</Code>
       </section>
 
       <section className="border-b border-rule py-12">
-        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Refusals</h2>
+        <h2 id="refusals" className="text-xl font-semibold tracking-tight">Rejected hosts</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          The scanner fetches whatever you send it, so it refuses anything that is not a public host: IP
-          literals, private and loopback ranges, link-local addresses including the cloud metadata endpoint,
-          and names that do not resolve. Redirects are followed by hand and re-checked at every hop against
-          the resolved address, because a public hostname is free to redirect into a private one.
+          Only public hosts are accepted. IP literals, private and loopback ranges, link-local addresses, cloud metadata endpoints and unresolved names are refused.
+          Each redirect destination is resolved and checked again.
         </p>
       </section>
 
       <section className="py-12">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Reading a scorecard</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          {CHECKS.length} checks across {STAGES.length} stages, {MAX_SCORE} points. The stages follow the order
-          an agent actually meets them in, so a low score in an early stage makes the later ones academic: a
-          site that refuses plain HTTP requests cannot be evaluated on its documentation, and the scorecard
-          says so rather than scoring the same wall five times.
+          {CHECKS.length} checks across {STAGES.length} stages, worth up to {MAX_SCORE} points.
+          A refused page can leave dependent checks unmeasured. The scorecard records that limit.
         </p>
         <ol className="mt-6 flex flex-col">
           {STAGES.map((stage) => (
@@ -205,8 +192,7 @@ data: {"id":"example-com-202608072143","total":9,"max":${MAX_SCORE}}`}</Code>
           <Link href="/methodology" className="text-brass underline underline-offset-4">
             methodology page
           </Link>
-          . If a result looks wrong, it is reproducible with curl, and we would rather be corrected than be
-          confidently wrong in someone else&rsquo;s inbox.
+          . Use the recorded URLs and responses to investigate a disputed result.
         </p>
       </section>
     </main>

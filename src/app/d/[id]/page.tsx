@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ReportMarkdown } from '@/components/report-markdown'
 import { ReportView } from './report-view'
+import { ReportPrint } from '@/components/report-print'
 import { getStore } from '@/lib/store'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
@@ -37,12 +38,12 @@ export default async function DeliveredReportPage({ params }: { params: Promise<
 
   return (
     // The attribute the print stylesheet looks for. Only this page is a document somebody prints.
-    <main data-deliverable className="mx-auto max-w-5xl px-6 py-14">
+    <main data-deliverable className="mx-auto max-w-5xl px-6 py-8 sm:py-14">
       <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-rule pb-4 print:pb-2">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">
           {delivery.sample ? 'Sample report' : 'Your report'} · formula v{delivery.formulaVersion}
         </p>
-        <p className="font-mono text-xs text-ink-faint">Prepared {delivery.preparedAt.slice(0, 10)}</p>
+        <div className="flex items-center gap-4"><p className="font-mono text-xs text-ink-faint">Prepared {delivery.preparedAt.slice(0, 10)}</p><ReportPrint /></div>
       </div>
 
       {/* A delivered document is not rewritten and not deleted, so the only honest place to say
@@ -50,9 +51,7 @@ export default async function DeliveredReportPage({ params }: { params: Promise<
           a scale claim we withdrew from the generator, and whoever holds the link reads it today. */}
       {retracted !== '' && (
         <p className="mt-6 max-w-2xl border-l-2 border-brass pl-4 text-sm leading-relaxed text-ink-soft">
-          One sentence below says how common something is across other companies (&ldquo;{retracted}&rdquo;), and we
-          never measured that. It is out of the report we generate today. This copy is kept exactly as it was
-          delivered rather than edited after the fact, so you can see what you were sent.
+          Withdrawn claim: &ldquo;{retracted}&rdquo;. We did not measure it. This archived report retains the original wording; current reports omit it.
         </p>
       )}
 
@@ -62,7 +61,7 @@ export default async function DeliveredReportPage({ params }: { params: Promise<
 
       <section className="mt-14 border-t border-rule pt-8">
         <p className="max-w-2xl leading-relaxed text-ink-soft">
-          If a sentence here is wrong about your product, email me and I will recheck it by hand.
+          Check the counts against the recorded answers. If a finding about your product is wrong, email me for a manual review.
         </p>
         <p className="mt-4 font-mono text-sm print:hidden">
           {/* The subject is prefilled, as it is on the public vendor page. The dispute runbook says

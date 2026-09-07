@@ -57,45 +57,48 @@ export function ReportView({ model }: { model: ReportModel }) {
   const yourQuotes = model.quotes.filter((quote) => quote.about === 'you')
 
   return (
-    <article className="print:text-[11pt]">
+    <article className="report-reading print:text-[11pt]">
       <header className="border-b border-rule pb-8">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">{model.category}</p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight">{model.domain}</h1>
+        <h1 className="mt-3 break-words text-3xl font-semibold tracking-tight sm:text-4xl">{model.domain}</h1>
         <p className="mt-3 max-w-2xl text-lg leading-relaxed text-ink-soft">
           Agent mentions for the tested question and scan results for public pages.
         </p>
       </header>
 
-      <section className="mt-8 rounded-lg border border-rule bg-surface p-6">
+      <section className="mt-6 rounded-lg border border-rule bg-surface p-4 sm:p-6">
         <h2 className="text-xl font-semibold tracking-tight">The task tested</h2>
         {model.question ? (
-          <blockquote className="mt-4 max-w-3xl border-l-2 border-brass pl-4 leading-relaxed text-ink">
-            {model.question}
-          </blockquote>
+          <details className="mt-3">
+            <summary className="cursor-pointer text-sm font-medium">Read the exact question</summary>
+            <blockquote className="mt-3 max-w-3xl border-l-2 border-brass pl-4 leading-relaxed text-ink">
+              {model.question}
+            </blockquote>
+          </details>
         ) : <p className="mt-4 text-ink-soft">No buying question is recorded for this report.</p>}
         {model.briefReview ? (
-          <div className="mt-5 space-y-3 text-sm leading-relaxed text-ink-soft">
+          <div className="mt-4 text-sm leading-relaxed text-ink-soft">
             <p className="font-semibold text-ink">{BRIEF_LABELS[model.briefReview.status]}</p>
-            <p>{model.briefReview.rationale}</p>
-            <ul className="space-y-2">
-              {model.briefReview.sources.map((source, index) => (
-                <li key={`${source.url}-${index}`}>
-                  <a href={source.url} className="text-brass underline underline-offset-4">{source.note}</a>
-                </li>
-              ))}
-            </ul>
-            <p><strong className="text-ink">Next step:</strong> {model.briefReview.nextStep}</p>
-            <p>Reviewed {model.briefReview.reviewedAt}. {BRIEF_LIMIT}</p>
+            <p className="mt-2">{BRIEF_LIMIT}</p>
+            <details className="mt-4 border-t border-rule pt-3">
+              <summary className="cursor-pointer font-medium">Question review and sources</summary>
+              <div className="mt-3 space-y-3">
+                <p>{model.briefReview.rationale}</p>
+                <ul className="space-y-2">{model.briefReview.sources.map((source, index) => <li key={`${source.url}-${index}`}><a href={source.url} className="text-brass underline underline-offset-4">{source.note}</a></li>)}</ul>
+                <p><strong className="text-ink">Next step:</strong> {model.briefReview.nextStep}</p>
+                <p>Reviewed {model.briefReview.reviewedAt}.</p>
+              </div>
+            </details>
           </div>
         ) : <p className="mt-5 text-sm leading-relaxed text-ink-soft">{UNREVIEWED_BRIEF}</p>}
       </section>
 
       {/* The two numbers a reader takes away, side by side, because they answer different questions
           and a report that leads with one of them gets quoted as if the other did not exist. */}
-      <section className="mt-8 grid gap-6 sm:grid-cols-2">
+      <section className="mt-6 grid grid-cols-2 gap-3 sm:gap-6">
         {/* No runs held is not zero mentions. A category we have not run yet would otherwise be
             published as a finding about the vendor, which is the opposite of what happened. */}
-        <div className="rounded-lg border border-rule bg-surface p-6">
+        <div className="rounded-lg border border-rule bg-surface p-4 sm:p-6">
           <p className="font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">Named by an agent</p>
           {model.runs.length === 0 ? (
             <>
@@ -106,9 +109,9 @@ export function ReportView({ model }: { model: ReportModel }) {
             </>
           ) : (
             <>
-              <p className="mt-3 text-5xl font-semibold tabular-nums tracking-tight">
+              <p className="mt-3 text-3xl font-semibold sm:text-5xl tabular-nums tracking-tight">
                 {named.named}
-                <span className="text-2xl text-ink-faint"> / {named.of} runs</span>
+                <span className="text-base text-ink-faint sm:text-2xl"> / {named.of} runs</span>
               </p>
               <p className="mt-2 text-sm leading-relaxed text-ink-soft">
                 {named.named === 0
@@ -121,11 +124,11 @@ export function ReportView({ model }: { model: ReportModel }) {
             </>
           )}
         </div>
-        <div className="rounded-lg border border-rule bg-surface p-6">
+        <div className="rounded-lg border border-rule bg-surface p-4 sm:p-6">
           <p className="font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">Scan score</p>
-          <p className="mt-3 text-5xl font-semibold tabular-nums tracking-tight">
+          <p className="mt-3 text-3xl font-semibold sm:text-5xl tabular-nums tracking-tight">
             {score.total}
-            <span className="text-2xl text-ink-faint"> / {score.measurable}</span>
+            <span className="text-base text-ink-faint sm:text-2xl"> / {score.measurable}</span>
           </p>
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">
             Measurable points under formula v{model.formulaVersion}. Scanned {model.scannedAt.slice(0, 10)}.
@@ -137,7 +140,13 @@ export function ReportView({ model }: { model: ReportModel }) {
         </div>
       </section>
 
-      <section className="mt-12">
+      <nav aria-label="Report sections" className="mt-5 flex flex-wrap gap-2 text-sm print:hidden">
+        <a href="#report-next" className="nav-link border border-rule">Next steps</a>
+        <a href="#report-runs" className="nav-link border border-rule">Agent evidence</a>
+        <a href="#report-scan" className="nav-link border border-rule">Scan details</a>
+      </nav>
+
+      <section id="report-next" className="mt-10">
         <h2 className="text-xl font-semibold tracking-tight">Reviewed next steps</h2>
         {model.recommendationReview ? (
           <>
@@ -148,12 +157,15 @@ export function ReportView({ model }: { model: ReportModel }) {
                 <div key={item.title} className="break-inside-avoid rounded-lg border border-rule bg-surface p-5">
                   <p className="font-mono text-xs text-brass">{RECOMMENDATION_LABELS[item.disposition]}</p>
                   <h3 className="mt-2 text-lg font-semibold">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-ink-soft">{item.finding}</p>
                   <p className="mt-3 text-sm leading-relaxed text-ink-soft"><strong className="text-ink">Next step:</strong> {item.nextStep}</p>
-                  <p className="mt-3 text-sm leading-relaxed text-ink-soft"><strong className="text-ink">Validation:</strong> {item.validation}</p>
-                  <ul className="mt-3 space-y-2 text-sm">
-                    {item.sources.map((source, index) => <li key={`${source.url}-${index}`}><a className="text-brass underline underline-offset-4" href={source.url}>{source.note}</a></li>)}
-                  </ul>
+                  <details className="mt-4 border-t border-rule pt-3">
+                    <summary className="cursor-pointer text-sm font-medium">Evidence and how to validate</summary>
+                    <p className="mt-3 text-sm leading-relaxed text-ink-soft"><strong className="text-ink">Observation:</strong> {item.finding}</p>
+                    <p className="mt-3 text-sm leading-relaxed text-ink-soft"><strong className="text-ink">Validation:</strong> {item.validation}</p>
+                    <ul className="mt-3 space-y-2 text-sm">
+                      {item.sources.map((source, index) => <li key={`${source.url}-${index}`}><a className="text-brass underline underline-offset-4" href={source.url}>{source.note}</a></li>)}
+                    </ul>
+                  </details>
                 </div>
               ))}
             </div>
@@ -172,7 +184,7 @@ export function ReportView({ model }: { model: ReportModel }) {
               .sort((a, b) => b.named - a.named)
               .map((row) => (
                 <div key={row.domain}>
-                  <div className="flex items-baseline justify-between gap-4">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                     <p className={`font-mono text-sm ${row.you ? 'font-semibold text-brass' : 'text-ink-soft'}`}>
                       {row.domain}
                       {row.you ? ' (you)' : ''}
@@ -202,6 +214,8 @@ export function ReportView({ model }: { model: ReportModel }) {
           <p className="mt-2 max-w-2xl leading-relaxed text-ink-soft">
             Quotes about {winnerQuotes[0].who} from runs that named it first.
           </p>
+          <details className="mt-4">
+            <summary className="cursor-pointer text-sm font-medium">Read {winnerQuotes.length} quoted excerpts</summary>
           <ul className="mt-5 space-y-4">
             {winnerQuotes.map((quote) => (
               <li key={`${quote.tool}-${quote.run}`} className="border-l-2 border-brass pl-4">
@@ -215,6 +229,7 @@ export function ReportView({ model }: { model: ReportModel }) {
               </li>
             ))}
           </ul>
+          </details>
         </section>
       )}
 
@@ -255,10 +270,10 @@ export function ReportView({ model }: { model: ReportModel }) {
         </section>
       )}
 
-      <section className="mt-12 break-inside-avoid">
+      <section id="report-runs" className="mt-10 break-inside-avoid">
         <h2 className="text-xl font-semibold tracking-tight">What we ran</h2>
         <div className="mt-4 overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
+          <table className="w-full min-w-[34rem] border-collapse text-sm">
             <thead>
               <tr className="text-left font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">
                 <th className="border-b border-rule pb-2">Tool</th>
@@ -313,7 +328,7 @@ export function ReportView({ model }: { model: ReportModel }) {
         )}
       </section>
 
-      <section className="mt-12 break-before-page break-inside-avoid">
+      <section id="report-scan" className="mt-10 break-before-page break-inside-avoid">
         <h2 className="text-xl font-semibold tracking-tight">Scan stages</h2>
         <p className="mt-2 max-w-2xl leading-relaxed text-ink-soft">
           The scan measures HTTP responses and public-page text; it does not test a completed integration.
@@ -323,7 +338,7 @@ export function ReportView({ model }: { model: ReportModel }) {
             <div key={stage.title}>
               {/* A stage where nothing could be measured is not a stage scoring zero, and drawing
                   an empty bar beside "0/0" is the version of this page that accuses by layout. */}
-              <div className="flex items-baseline justify-between gap-4">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                 <p className="font-medium">{stage.title}</p>
                 <p className="font-mono text-sm tabular-nums text-ink-faint">
                   {stage.measurable === 0 ? 'nothing measurable' : `${stage.points}/${stage.measurable}`}
@@ -350,15 +365,15 @@ export function ReportView({ model }: { model: ReportModel }) {
           <p className="mt-2 text-sm text-ink-soft">These are the original automated observations. The review above qualifies their interpretation.</p>
           <div className="mt-6 space-y-4">
             {model.failing.map((check) => (
-              <div key={check.label} className="break-inside-avoid rounded-lg border border-rule bg-surface p-5">
-                <div className="flex items-baseline justify-between gap-4">
+              <details key={check.label} className="report-check break-inside-avoid rounded-lg border border-rule bg-surface p-4">
+                <summary className="flex cursor-pointer items-baseline justify-between gap-4">
                   <p className="font-medium text-ink">{check.label}</p>
                   <p className="font-mono text-sm tabular-nums text-fail">
                     {check.points}/{check.max}
                   </p>
-                </div>
-                <p className="mt-2 break-words text-sm leading-relaxed text-ink-soft">{check.detail}</p>
-              </div>
+                </summary>
+                <p className="mt-3 break-words text-sm leading-relaxed text-ink-soft">{check.detail}</p>
+              </details>
             ))}
           </div>
         </section>
@@ -370,6 +385,8 @@ export function ReportView({ model }: { model: ReportModel }) {
           <p className="mt-2 max-w-2xl leading-relaxed text-ink-soft">
             Inapplicable points are excluded from the score denominator.
           </p>
+          <details className="mt-4 rounded-lg border border-rule p-4">
+            <summary className="cursor-pointer text-sm font-medium">Read {model.notApplicable.length} check details</summary>
           <ul className="mt-5 space-y-3">
             {model.notApplicable.map((check) => (
               <li key={check.label} className="border-l-2 border-rule pl-4">
@@ -378,6 +395,7 @@ export function ReportView({ model }: { model: ReportModel }) {
               </li>
             ))}
           </ul>
+          </details>
         </section>
       )}
 
@@ -387,6 +405,8 @@ export function ReportView({ model }: { model: ReportModel }) {
           <p className="mt-2 max-w-2xl leading-relaxed text-ink-soft">
             Unmeasured points are excluded from the score denominator.
           </p>
+          <details className="mt-4 rounded-lg border border-rule p-4">
+            <summary className="cursor-pointer text-sm font-medium">Read {model.unmeasured.length} check details</summary>
           <ul className="mt-5 space-y-3">
             {model.unmeasured.map((check) => (
               <li key={check.label} className="border-l-2 border-rule pl-4">
@@ -395,6 +415,7 @@ export function ReportView({ model }: { model: ReportModel }) {
               </li>
             ))}
           </ul>
+          </details>
         </section>
       )}
       {/* The limits travel with the numbers. A rendering that drops them is a rendering that

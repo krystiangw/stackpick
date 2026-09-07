@@ -193,3 +193,13 @@ summary::marker { color: var(--color-brass); }
 .answer-table :is(th, td) { padding: .8rem 1rem; border-bottom: 1px solid var(--color-rule); text-align: left; }
 .answer-table th { background: var(--color-ground); color: var(--color-ink); font-weight: 500; }
 .answer-table tr:last-child td { border-bottom: 0; }
+
+.report-check > summary::after { content: '+'; color: var(--color-brass); font-size: 1rem; }
+.report-check[open] > summary::after { content: '−'; }
+.report-reading :is(h1, h2, h3) { overflow-wrap: anywhere; }
+@media print {
+  [data-deliverable] details::details-content { display: contents; content-visibility: visible; }
+  [data-deliverable] details > :not(summary) { display: block !important; }
+  [data-deliverable] summary { list-style: none; }
+  [data-deliverable] summary::after { content: none !important; }
+}
