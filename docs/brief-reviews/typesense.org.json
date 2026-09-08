@@ -1,0 +1,23 @@
+{
+  "domain": "typesense.org",
+  "category": "search",
+  "question": "Our users cannot find anything in our knowledge base because the search is a SQL LIKE query. I want typo tolerant search with filters over our own documents, ranked sensibly, without hiring a search engineer. Node backend, a few hundred thousand documents. Which service would you use, and what else did you consider?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Typesense documents document collections, typo-tolerant search, filters and JavaScript integration. These support the knowledge-base brief. Capacity, relevance and hosted-cluster cost still need the actual corpus and query workload.",
+  "nextStep": "Update and delete documents, repeat the same query set, and confirm the collection returns the expected current records.",
+  "sources": [
+    {
+      "url": "https://typesense.org/docs/guide/building-a-search-application.html",
+      "note": "JavaScript client setup, collections, document indexing and search."
+    },
+    {
+      "url": "https://typesense.org/docs/guide/vanilla-js-search-bar.html",
+      "note": "Typo-tolerant search integration and search UI."
+    },
+    {
+      "url": "https://cloud.typesense.org/pricing",
+      "note": "Cloud pricing is separate from operating a local open-source instance."
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "domain": "imagekit.io",
+  "question": "Support agents in our helpdesk need to attach screenshots to help articles, so I need somewhere to put those uploads and serve them back fast. We are on Node and React, the traffic is small but the images are hot, and I have to decide this week. Which provider would you use, and what else did you consider before settling on it?",
+  "scanFingerprint": "4c171c69c189d458b15124e81f60375b1b48788dc192293e6b407c82038ae9a3",
+  "reviewedAt": "2026-09-08",
+  "summary": "Test the first screenshot upload and an expired-token retry. The recorded mentions do not show whether an agent can complete these tasks.",
+  "items": [
+    {
+      "title": "Test the documented integration",
+      "checkIds": [
+        "agent_entry_point",
+        "oauth_dcr",
+        "mcp_present",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "The React guide already documents server-generated upload authentication. Missing entry/OAuth probes and an unavailable MCP registry are not evidence that this SDK route is missing. Account-key creation and issuing a short-lived upload signature are separate steps.",
+      "nextStep": "Add a Node authentication endpoint and upload a screenshot from React. Persist the returned file reference and render it after reloading the article. Let upload authentication expire, confirm the UI reports the failure, then request fresh authentication and retry once.",
+      "validation": "Keep file ID, delivered image, authentication expiry and retry output. Never send the private API key to the browser.",
+      "sources": [
+        {
+          "url": "https://imagekit.io/docs/integration/react",
+          "note": "React upload utility, delivery components and server-generated authentication."
+        },
+        {
+          "url": "https://imagekit.io/docs/api-reference/upload-file/upload-file",
+          "note": "Server/client upload authentication and file constraints."
+        }
+      ]
+    }
+  ]
+}

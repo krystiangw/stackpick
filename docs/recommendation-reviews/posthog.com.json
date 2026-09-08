@@ -1,0 +1,38 @@
+{
+  "domain": "posthog.com",
+  "question": "Nobody here can answer which parts of our product people actually use, and we are guessing at the roadmap. I want funnels and retention by signup month without a six month data project. React app, Node backend, small team, EU customers so privacy matters. Which tool would you use, and what else did you weigh?",
+  "scanFingerprint": "4a41c28b6b2977b055c035693a1180bd05567dcdef5cfeb4ce411cbc672436a5",
+  "reviewedAt": "2026-09-08",
+  "summary": "Test a signup funnel and a retention table with known answers. The recorded mentions do not show whether an agent can complete these tasks.",
+  "items": [
+    {
+      "title": "Test the documented integration",
+      "checkIds": [
+        "docs_without_js",
+        "agent_entry_point",
+        "signup_no_captcha",
+        "signup_reachable",
+        "programmatic_provisioning",
+        "self_serve"
+      ],
+      "disposition": "verify",
+      "finding": "Our reader tried docs.posthog.com, while the current React documentation is readable at posthog.com/docs and includes an agent installation wizard. Its pricing response also exceeded our cap. Those are measurement limits. Missing entry/provisioning evidence and a script-rendered signup do not establish a blocked setup.",
+      "nextStep": "Instrument a synthetic signup-to-activation funnel in React and Node with the same stable user ID. Check that the funnel matches a known event sequence. Load dated synthetic signup and return events for two monthly cohorts, then verify the retention table against hand-calculated expected counts.",
+      "validation": "Record event names, IDs, timestamps and expected/actual funnel and cohort counts. Confirm the selected EU host and avoid unnecessary personal fields.",
+      "sources": [
+        {
+          "url": "https://posthog.com/docs/libraries/react",
+          "note": "React SDK, agent wizard and stable identity linkage."
+        },
+        {
+          "url": "https://posthog.com/docs/product-analytics/retention",
+          "note": "Start/return events, monthly cohorts and retention definitions."
+        },
+        {
+          "url": "https://posthog.com/services",
+          "note": "Public EU cloud option and product analytics offering."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "domain": "scrapingbee.com",
+  "question": "We need to log into a supplier portal nobody gives us an API for, click through it and pull a table, on a schedule and from a server. Running headless Chrome ourselves keeps breaking. Which service would you use for that, and what else did you look at before picking it?",
+  "scanFingerprint": "d7d3cd1f70ecff8d2d22bc2fa71cbfeaf0c5899da0b7a9eb3a28de025c54b960",
+  "reviewedAt": "2026-09-08",
+  "summary": "Test a portal table extraction and an expired-session retry. The recorded mentions do not show whether an agent can complete these tasks.",
+  "items": [
+    {
+      "title": "Test the documented integration",
+      "checkIds": [
+        "agent_entry_point",
+        "oauth_dcr",
+        "signup_no_captcha",
+        "signup_reachable",
+        "programmatic_provisioning",
+        "machine_readable_api"
+      ],
+      "disposition": "verify",
+      "finding": "JavaScript scenarios and cookies provide a documented route. Missing entry/OAuth/spec probes and unobserved account signup or key creation do not establish a failed extraction. Test this route with an authorized fixture before deciding whether its interaction model fits the real portal.",
+      "nextStep": "Call the API from Node with a JavaScript scenario that logs into a controlled fixture portal and extracts a known table. Run the same job again with an expired test cookie. Detect the login page, refresh access through the supported flow and check that output contains the expected rows.",
+      "validation": "Record scenario steps, response status and exact extracted rows. The scheduler and session renewal belong to the fixture; do not label an empty response a successful scrape.",
+      "sources": [
+        {
+          "url": "https://www.scrapingbee.com/documentation/",
+          "note": "API key, cookies, JavaScript scenarios and extraction rules."
+        },
+        {
+          "url": "https://www.scrapingbee.com/blog/build-job-board-web-scraping/",
+          "note": "Example login scenario with form filling and cookies."
+        }
+      ]
+    },
+    {
+      "title": "Make the relevant entry cost easy to check",
+      "checkIds": [
+        "price_in_snippet"
+      ],
+      "disposition": "verify",
+      "finding": "The pricing description contains no amount or entry condition. That metadata observation does not explain recommendation frequency.",
+      "nextStep": "Check the current plan for this task before adding a concrete entry condition to the description. Keep paid features and hosted versus local costs distinct.",
+      "validation": "Any proposed wording must match the chosen plan. No recommendation uplift has been measured.",
+      "sources": [
+        {
+          "url": "https://scrapingbee.com/pricing",
+          "note": "Pricing page whose description was captured in the scan."
+        }
+      ]
+    }
+  ]
+}

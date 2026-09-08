@@ -1,0 +1,48 @@
+{
+  "domain": "mux.com",
+  "question": "Customers want to upload short product demo videos and have them play smoothly on phones. I am not building an encoding pipeline. Node backend, React front end, and this has to ship this quarter. Which provider would you use for video hosting and playback, and what else did you consider?",
+  "scanFingerprint": "61959e3e0a8f6cbc5365b1b727b5c7109e9eb9fc25ec2f3795bc1397ed2f9d82",
+  "reviewedAt": "2026-09-08",
+  "summary": "Test upload-to-playback and recovery from an interrupted upload. The recorded mentions do not show whether an agent can complete these tasks.",
+  "items": [
+    {
+      "title": "Test the documented integration",
+      "checkIds": [
+        "agent_entry_point",
+        "signup_no_captcha",
+        "signup_reachable",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "The scan matched signing-key creation, which is different from the initial API token used by the Node backend. Mux already documents direct uploads and React components. Missing entry files and an unreadable dashboard signup do not establish a blocked video integration.",
+      "nextStep": "Create a Direct Upload URL from Node, upload a short fixture video from React and wait for the asset-ready evidence before playing it on a phone-sized viewport. Interrupt an upload, resume or retry through the supported uploader flow, and verify that the application attaches the correct completed asset to the demo.",
+      "validation": "Record upload ID, asset-ready status, playback ID and visible playback. Upload completion alone is not evidence that video processing or playback succeeded.",
+      "sources": [
+        {
+          "url": "https://www.mux.com/docs/guides/upload-files-directly",
+          "note": "Backend-created authenticated Direct Upload URLs."
+        },
+        {
+          "url": "https://www.mux.com/docs/guides/mux-uploader",
+          "note": "React upload component, pause/resume, asset-ready events and playback identifiers."
+        }
+      ]
+    },
+    {
+      "title": "Make the relevant entry cost easy to check",
+      "checkIds": [
+        "price_in_snippet"
+      ],
+      "disposition": "verify",
+      "finding": "The pricing description contains no amount or entry condition. That metadata observation does not explain recommendation frequency.",
+      "nextStep": "Check the current plan for this task before adding a concrete entry condition to the description. Keep paid features and hosted versus local costs distinct.",
+      "validation": "Any proposed wording must match the chosen plan. No recommendation uplift has been measured.",
+      "sources": [
+        {
+          "url": "https://mux.com/pricing",
+          "note": "Pricing page whose description was captured in the scan."
+        }
+      ]
+    }
+  ]
+}

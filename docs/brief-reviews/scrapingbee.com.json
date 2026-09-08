@@ -1,0 +1,19 @@
+{
+  "domain": "scrapingbee.com",
+  "category": "browser-infrastructure",
+  "question": "We need to log into a supplier portal nobody gives us an API for, click through it and pull a table, on a schedule and from a server. Running headless Chrome ourselves keeps breaking. Which service would you use for that, and what else did you look at before picking it?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "ScrapingBee documents JavaScript scenarios, supplied cookies and structured extraction, including an example login flow. This supports a controlled supplier-portal extraction. The application must supply scheduling and manage authentication; the docs alone do not establish compatibility with a particular portal.",
+  "nextStep": "Run the same job again with an expired test cookie. Detect the login page, refresh access through the supported flow and check that output contains the expected rows.",
+  "sources": [
+    {
+      "url": "https://www.scrapingbee.com/documentation/",
+      "note": "API key, cookies, JavaScript scenarios and extraction rules."
+    },
+    {
+      "url": "https://www.scrapingbee.com/blog/build-job-board-web-scraping/",
+      "note": "Example login scenario with form filling and cookies."
+    }
+  ]
+}

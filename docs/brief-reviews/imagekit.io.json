@@ -1,0 +1,19 @@
+{
+  "domain": "imagekit.io",
+  "category": "file-storage",
+  "question": "Support agents in our helpdesk need to attach screenshots to help articles, so I need somewhere to put those uploads and serve them back fast. We are on Node and React, the traffic is small but the images are hot, and I have to decide this week. Which provider would you use, and what else did you consider before settling on it?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "ImageKit documents React uploads, server-generated authentication and image delivery/optimization. This fits screenshot attachments in Node and React. Actual upload recovery and delivery performance have not been tested.",
+  "nextStep": "Let upload authentication expire, confirm the UI reports the failure, then request fresh authentication and retry once.",
+  "sources": [
+    {
+      "url": "https://imagekit.io/docs/integration/react",
+      "note": "React upload utility, delivery components and server-generated authentication."
+    },
+    {
+      "url": "https://imagekit.io/docs/api-reference/upload-file/upload-file",
+      "note": "Server/client upload authentication and file constraints."
+    }
+  ]
+}

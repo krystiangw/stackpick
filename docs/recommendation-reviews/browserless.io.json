@@ -1,0 +1,48 @@
+{
+  "domain": "browserless.io",
+  "question": "We need to log into a supplier portal nobody gives us an API for, click through it and pull a table, on a schedule and from a server. Running headless Chrome ourselves keeps breaking. Which service would you use for that, and what else did you look at before picking it?",
+  "scanFingerprint": "4ee8a8eaadf557802ca6c93f6be0b0dff55b4dc96b3d53b4f039e63e11047206",
+  "reviewedAt": "2026-09-08",
+  "summary": "Test a scheduled table extraction and an expired portal login. The recorded mentions do not show whether an agent can complete these tasks.",
+  "items": [
+    {
+      "title": "Test the documented integration",
+      "checkIds": [
+        "agent_entry_point",
+        "signup_no_captcha",
+        "signup_reachable",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "The scan found a Token Management API but awarded only partial provisioning credit. The docs already describe account tokens and session persistence. Missing entry files and a JavaScript signup form do not establish an unusable browser. Choose persistent state when the schedule outlives a running session.",
+      "nextStep": "Connect to an authorized fixture portal, log in, extract a known table and persist state using the documented option for the chosen browser library. Start a later invocation, reload state and extract updated rows. Expire the portal session and verify that the job stops with an explicit authentication result or follows the supported login flow.",
+      "validation": "Record expected rows, persistence lifetime and expired-login behavior. Standard reconnect is Puppeteer-only; do not claim it works as a Playwright disconnect.",
+      "sources": [
+        {
+          "url": "https://docs.browserless.io/baas/session-management",
+          "note": "Persistent state versus standard reconnect; dashboard API token."
+        },
+        {
+          "url": "https://docs.browserless.io/baas/session-management/standard-sessions",
+          "note": "Puppeteer-only reconnect semantics, deadlines and session termination."
+        }
+      ]
+    },
+    {
+      "title": "Recheck the two robots.txt paths",
+      "checkIds": [
+        "robots_paths_resolve"
+      ],
+      "disposition": "verify",
+      "finding": "The scan found /single-sign-on and /invite no longer answering at the paths allowed by robots.txt.",
+      "nextStep": "Check whether these are stale public links or intentional account routes. Update the declarations or redirects if they point to retired pages.",
+      "validation": "Confirm the intended targets and repeat the same path checks. This is navigation maintenance, not proof of a recommendation effect.",
+      "sources": [
+        {
+          "url": "https://www.browserless.io/robots.txt",
+          "note": "Exact source associated with the sampled scan observation."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "domain": "typesense.org",
+  "question": "Our users cannot find anything in our knowledge base because the search is a SQL LIKE query. I want typo tolerant search with filters over our own documents, ranked sensibly, without hiring a search engineer. Node backend, a few hundred thousand documents. Which service would you use, and what else did you consider?",
+  "scanFingerprint": "0337bfe456ae1e40a1902e9a69b5942ae5cd1d064e0aae65f0c28d03c302c1fc",
+  "reviewedAt": "2026-09-08",
+  "summary": "Test filtered typo search and an index update. The recorded mentions do not show whether an agent can complete these tasks.",
+  "items": [
+    {
+      "title": "Test the documented integration",
+      "checkIds": [
+        "agent_entry_point",
+        "oauth_dcr",
+        "mcp_present",
+        "signup_no_captcha",
+        "self_serve",
+        "machine_readable_api"
+      ],
+      "disposition": "verify",
+      "finding": "Typesense provides a JavaScript SDK and a documented instance API-key path. Our missing entry/spec probes and unavailable MCP registry do not establish an unusable integration. The cloud signup CAPTCHA marker was not exercised. Cloud pricing and a local open-source instance are different starting points.",
+      "nextStep": "Create a collection from a labeled knowledge-base fixture using the JavaScript client, then test typo queries and category filters. Update and delete documents, repeat the same query set, and confirm the collection returns the expected current records.",
+      "validation": "Record schema, per-document import results, query parameters and returned IDs. Keep cloud cost and full-corpus performance outside a small functional fixture.",
+      "sources": [
+        {
+          "url": "https://typesense.org/docs/guide/building-a-search-application.html",
+          "note": "JavaScript client setup, collections, document indexing and search."
+        },
+        {
+          "url": "https://typesense.org/docs/guide/vanilla-js-search-bar.html",
+          "note": "Typo-tolerant search integration and search UI."
+        },
+        {
+          "url": "https://cloud.typesense.org/pricing",
+          "note": "Cloud pricing is separate from operating a local open-source instance."
+        }
+      ]
+    }
+  ]
+}

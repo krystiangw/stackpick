@@ -1,0 +1,19 @@
+{
+  "domain": "restate.dev",
+  "category": "background-jobs",
+  "question": "We generate PDF reports inside the request and users watch a spinner for forty seconds. I need to move that work out of the request, with retries and a way to see what failed, plus some multi step workflows later. Node on a normal cloud. Which service would you use, and what else did you consider?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Restate documents Node services, durable steps and retries, which support moving a PDF job out of a request and extending it into a workflow. PDF dependencies, artifact storage and runtime requirements still need a fixture.",
+  "nextStep": "Make the storage step fail once, then inspect its retry and final artifact. Check whether any external side effect was duplicated.",
+  "sources": [
+    {
+      "url": "https://docs.restate.dev/quickstart",
+      "note": "Local server, CLI, Node SDK and preconfigured coding-agent plugin with docs MCP."
+    },
+    {
+      "url": "https://docs.restate.dev/develop/ts/durable-steps",
+      "note": "Durable steps retry unless configured otherwise or stopped with a terminal error."
+    }
+  ]
+}

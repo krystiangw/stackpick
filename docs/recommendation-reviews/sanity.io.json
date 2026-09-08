@@ -1,0 +1,53 @@
+{
+  "domain": "sanity.io",
+  "question": "Our marketing team asks us to change homepage copy and every change costs a deploy. I want them editing content themselves while our Next.js app renders it, with proper preview and versioning. Which content platform would you use, and what else did you look at first?",
+  "scanFingerprint": "4ff18525bde598a3bdd61eb2c7919b2923fe2ac1fecd1c17ae46a1fb20cdd819",
+  "reviewedAt": "2026-09-08",
+  "summary": "Test draft preview and restoring a published copy change. The recorded mentions do not show whether an agent can complete these tasks.",
+  "items": [
+    {
+      "title": "Test the documented integration",
+      "checkIds": [
+        "agent_entry_point",
+        "signup_no_captcha",
+        "signup_reachable",
+        "programmatic_provisioning",
+        "typed_package"
+      ],
+      "disposition": "verify",
+      "finding": "The scanner missed the typed SDK, but next-sanity and the JavaScript client are documented. It also found CLI token creation, despite partial provisioning credit. An unreadable signup form and missing conventional entry file do not establish a broken editing workflow.",
+      "nextStep": "Wire a homepage document into a Next.js App Router fixture, then preview a saved draft without exposing it to unauthenticated public visitors. Publish a copy change and verify it appears without a code deploy; restore a previous revision within the selected plan's history window and verify the result.",
+      "validation": "Keep draft/public output, revision IDs and cache/update behavior. Check token permissions and retention before treating rollback as supported for older content.",
+      "sources": [
+        {
+          "url": "https://www.sanity.io/docs/nextjs/live-content-guide",
+          "note": "Next.js live content, project access and preview integration."
+        },
+        {
+          "url": "https://www.sanity.io/docs/http-reference/history",
+          "note": "Authenticated document revision retrieval."
+        },
+        {
+          "url": "https://www.sanity.io/docs/developer-guides/find-and-restore-deleted-documents",
+          "note": "History retention depends on plan; restoration uses documented APIs."
+        }
+      ]
+    },
+    {
+      "title": "Make the relevant entry cost easy to check",
+      "checkIds": [
+        "price_in_snippet"
+      ],
+      "disposition": "verify",
+      "finding": "The pricing description contains no amount or entry condition. That metadata observation does not explain recommendation frequency.",
+      "nextStep": "Check the current plan for this task before adding a concrete entry condition to the description. Keep paid features and hosted versus local costs distinct.",
+      "validation": "Any proposed wording must match the chosen plan. No recommendation uplift has been measured.",
+      "sources": [
+        {
+          "url": "https://sanity.io/pricing",
+          "note": "Pricing page whose description was captured in the scan."
+        }
+      ]
+    }
+  ]
+}

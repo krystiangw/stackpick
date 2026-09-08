@@ -1,0 +1,50 @@
+{
+  "domain": "uploadcare.com",
+  "question": "Support agents in our helpdesk need to attach screenshots to help articles, so I need somewhere to put those uploads and serve them back fast. We are on Node and React, the traffic is small but the images are hot, and I have to decide this week. Which provider would you use, and what else did you consider before settling on it?",
+  "scanFingerprint": "74f9213bfc089bf0401ffd755eef6b0c6ec99b61f04e2a2f490dc6429e872271",
+  "reviewedAt": "2026-09-08",
+  "summary": "Test the first screenshot upload and an expired-signature retry. The recorded mentions do not show whether an agent can complete these tasks.",
+  "items": [
+    {
+      "title": "Test the documented integration",
+      "checkIds": [
+        "agent_entry_point",
+        "oauth_dcr",
+        "mcp_present",
+        "signup_no_captcha",
+        "signup_reachable",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "Uploadcare already has upload APIs and a server-side signing helper. A project secret is supplied from an authorized account; missing OAuth/entry probes and an unavailable MCP registry do not show that an upload is blocked. The signup form was not observable to the HTTP reader.",
+      "nextStep": "Use a Node-generated upload signature to upload a screenshot from React, store it permanently, and display the returned delivery URL after reloading the article. Expire the upload signature deliberately, confirm a useful failure, then obtain a fresh signature and retry without creating a broken attachment.",
+      "validation": "Check stored-file status, returned URL, reloaded image and expiry/retry responses. Keep the project secret on the server.",
+      "sources": [
+        {
+          "url": "https://uploadcare.com/docs/security/secure-uploads/",
+          "note": "Signed upload expiry and Node signing helper."
+        },
+        {
+          "url": "https://uploadcare.com/docs/api/upload/upload/base-upload/",
+          "note": "Direct uploads and temporary versus permanent storage."
+        }
+      ]
+    },
+    {
+      "title": "Check the crawl-delay policy for interactive readers",
+      "checkIds": [
+        "no_crawl_delay"
+      ],
+      "disposition": "verify",
+      "finding": "robots.txt applies a ten-second crawl delay to the agents we check. This is a published policy; we did not measure agents waiting or abandoning an integration.",
+      "nextStep": "Decide whether that policy is intended for interactive documentation access. If changing it, scope the change to documented reader behavior and server capacity.",
+      "validation": "Verify the applicable rules and measure an actual read sequence before claiming an integration improvement.",
+      "sources": [
+        {
+          "url": "https://uploadcare.com/robots.txt",
+          "note": "Exact source associated with the sampled scan observation."
+        }
+      ]
+    }
+  ]
+}

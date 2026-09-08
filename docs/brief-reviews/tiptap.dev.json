@@ -1,0 +1,19 @@
+{
+  "domain": "tiptap.dev",
+  "category": "rich-text-editors",
+  "question": "Our support agents write help articles in a plain textarea and keep asking for bold, bullet lists and pasted screenshots. I need a real editor inside our React app, one we can extend later with custom blocks, and I have to pick this week. Which editor would you use, and what else did you weigh before settling on it?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Tiptap documents a React editor with formatting and extensions, plus paste/drop handlers. It fits the help-article editor brief if the application supplies image upload and storage: FileHandler explicitly does not upload files to a server.",
+  "nextStep": "Connect FileHandler to an existing controlled upload endpoint. Paste a screenshot, insert its returned URL, then reject an upload and show a useful error without inserting a broken image.",
+  "sources": [
+    {
+      "url": "https://tiptap.dev/docs/editor/getting-started/install/react",
+      "note": "React setup and StarterKit formatting extensions."
+    },
+    {
+      "url": "https://tiptap.dev/docs/editor/extensions/functionality/filehandler",
+      "note": "Paste/drop events; explicitly no server upload functionality."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "domain": "tigrisdata.com",
+  "category": "file-storage",
+  "question": "Support agents in our helpdesk need to attach screenshots to help articles, so I need somewhere to put those uploads and serve them back fast. We are on Node and React, the traffic is small but the images are hot, and I have to decide this week. Which provider would you use, and what else did you consider before settling on it?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Tigris documents S3-compatible Node uploads, presigned access and public object delivery. These support help-article screenshots. Public buckets require payment-method verification for newer organizations; private presigned delivery is a different option.",
+  "nextStep": "Let a presigned upload URL expire, confirm rejection, then generate a fresh URL and retry to the intended object key.",
+  "sources": [
+    {
+      "url": "https://www.tigrisdata.com/docs/sdks/s3/aws-js-sdk/",
+      "note": "Node S3 client, credentials and presigned GET/PUT examples."
+    },
+    {
+      "url": "https://www.tigrisdata.com/docs/buckets/public-bucket/",
+      "note": "Public delivery domains and payment-method verification for newer organizations."
+    },
+    {
+      "url": "https://www.tigrisdata.com/docs/mcp/remote/",
+      "note": "Documented remote MCP endpoint and authorization flow."
+    }
+  ]
+}

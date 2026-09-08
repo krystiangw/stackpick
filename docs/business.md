@@ -53,14 +53,15 @@ and a report is bought by writing to hello@letagentsin.com. Turning it on is `do
   Expanded samples changed some counts: DocuSeal 2/25, Upstash 1/25, Chroma 2/20. Each gets
   the $49 report free and one question. Drafts, recipients and rules: `outreach/drafts/gift-report-2026-09-03.private.md`
   (kept out of git on purpose, the report links inside are bearer keys). Nothing is sent without
-  the owner's authorization. The September 8 goal authorized 20 tailored sends; all are complete.
+  the owner's authorization. The September 8 goal authorized the first 20 tailored sends. The owner then requested 20 more to different firms; both waves are complete.
 - Copy: an outside editorial audit on 2026-09-07 (`docs/copy-audit-2026-09-07.md`) judged the
   site and the report closer to "written by a model" than "by a person", and a rewrite in the
   audit's order is complete through phase 7 (v792). Pages and delivered reports now use shorter
   introductions, comparison tables and expandable evidence. Validation: `docs/ui-ux-review-2026-09-07.md`.
-- Campaign status, updated 2026-09-08: **20 individual emails sent to 20 companies under the expanded owner goal, including Loops**.
+- Campaign status, updated 2026-09-08: **40 individual emails sent to 40 companies in two owner-authorized waves, including Loops**.
   Each links its own reviewed report. Gmail SENT, sender, recipient and content verified.
-  Campaign, selection and evidence: `docs/outreach-top20-2026-09-08.md`. The earlier first-send stage is retained in `docs/outreach-first-send-2026-09-08.md`.
+  Campaign, selection and evidence: `docs/outreach-top20-2026-09-08.md` and `docs/outreach-wave2-2026-09-08.md`.
+  The second wave introduces Krystian and offers a prepared one-page plan for two agent integration tasks. The tasks have not been executed. The earlier first-send stage is retained in `docs/outreach-first-send-2026-09-08.md`.
   Report quality and restart criteria: `docs/product-readiness-2026-09-07.md`.
 - Product refinement, 2026-09-07: all ten campaign briefs reviewed (nine documented fits,
   Transloadit partial). A $1,500 integration pilot is scoped in `docs/integration-pilot-2026-09-07.md`
@@ -79,7 +80,7 @@ and a report is bought by writing to hello@letagentsin.com. Turning it on is `do
   execution evidence and managed work; neither more agents nor transcripts are unique advantages.
   The recommendation is to validate the scoped $1,500 service with paid customers before expanding
   monitoring. The owner subsequently approved the introductory public price and withdrawal of future
-  monitoring prices. This is not validated demand. The owner later authorized 20 tailored messages; all were sent on September 8. No paid demand has been established.
+  monitoring prices. This is not validated demand. The owner later authorized two waves of 20 tailored messages; all 40 were sent on September 8. No paid demand has been established.
 
 ## Decisions that stand
 
@@ -111,7 +112,7 @@ and a report is bought by writing to hello@letagentsin.com. Turning it on is `do
 1. Whether the product argument is true at the scale we claim: 181 domains, one question per
    category, five runs per original batch, two tools across all categories and extra tools in
    seven selected categories. `/findings` and `/c/<category>/runs` are the evidence.
-2. Whether anybody outside will pay: zero customers, no checkout, and 20 authorized outreach messages
+2. Whether anybody outside will pay: zero customers, no checkout, and 40 authorized outreach messages
    sent on September 8 with reviewed reports. Demand remains unvalidated.
 3. Whether the copy sells or explains itself: `docs/copy-audit-2026-09-07.md`.
 4. Whether the numbers on the site match the corpus: `npm run build` runs the guards.

@@ -1,0 +1,49 @@
+{
+  "domain": "tiptap.dev",
+  "question": "Our support agents write help articles in a plain textarea and keep asking for bold, bullet lists and pasted screenshots. I need a real editor inside our React app, one we can extend later with custom blocks, and I have to pick this week. Which editor would you use, and what else did you weigh before settling on it?",
+  "scanFingerprint": "97a3d4233a17f9b92e177d4568a0f1897d00cf27a5dc38f2969917a188b49b7c",
+  "reviewedAt": "2026-09-08",
+  "summary": "Test saving an article and pasting a screenshot. The recorded mentions do not show whether an agent can complete these tasks.",
+  "items": [
+    {
+      "title": "Test the documented integration",
+      "checkIds": [
+        "agent_entry_point",
+        "oauth_dcr",
+        "mcp_present",
+        "signup_no_captcha",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "The core React editor can be installed from npm. Cloud signup, credential provisioning and OAuth metadata are not prerequisites for that local editor. The missing entry probe and unavailable MCP registry do not justify building new interfaces. Image upload remains application work, as FileHandler states explicitly.",
+      "nextStep": "Add the React editor with bold and lists; save and reload a help article and check its formatting survives. Connect FileHandler to an existing controlled upload endpoint. Paste a screenshot, insert its returned URL, then reject an upload and show a useful error without inserting a broken image.",
+      "validation": "Keep saved document JSON, reloaded rendering, upload response and rejected-upload behavior. Do not count pasting a local preview as a durable uploaded image.",
+      "sources": [
+        {
+          "url": "https://tiptap.dev/docs/editor/getting-started/install/react",
+          "note": "React setup and StarterKit formatting extensions."
+        },
+        {
+          "url": "https://tiptap.dev/docs/editor/extensions/functionality/filehandler",
+          "note": "Paste/drop events; explicitly no server upload functionality."
+        }
+      ]
+    },
+    {
+      "title": "Make the relevant entry cost easy to check",
+      "checkIds": [
+        "price_in_snippet"
+      ],
+      "disposition": "verify",
+      "finding": "The pricing description contains no amount or entry condition. That metadata observation does not explain recommendation frequency.",
+      "nextStep": "Check the current plan for this task before adding a concrete entry condition to the description. Keep paid features and hosted versus local costs distinct.",
+      "validation": "Any proposed wording must match the chosen plan. No recommendation uplift has been measured.",
+      "sources": [
+        {
+          "url": "https://tiptap.dev/pricing",
+          "note": "Pricing page whose description was captured in the scan."
+        }
+      ]
+    }
+  ]
+}

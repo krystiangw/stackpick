@@ -1,0 +1,39 @@
+{
+  "domain": "uploadthing.com",
+  "question": "Support agents in our helpdesk need to attach screenshots to help articles, so I need somewhere to put those uploads and serve them back fast. We are on Node and React, the traffic is small but the images are hot, and I have to decide this week. Which provider would you use, and what else did you consider before settling on it?",
+  "scanFingerprint": "dfecee4e92ce3e13decccc30faab6d2fb5f6d69e07418f9cae6613d8e84493f3",
+  "reviewedAt": "2026-09-08",
+  "summary": "Test the first upload and recovery from a rejected file. The recorded mentions do not show whether an agent can complete these tasks.",
+  "items": [
+    {
+      "title": "Test the documented integration",
+      "checkIds": [
+        "llms_txt",
+        "agent_entry_point",
+        "mcp_present",
+        "programmatic_provisioning",
+        "self_serve",
+        "typed_package",
+        "machine_readable_api"
+      ],
+      "disposition": "verify",
+      "finding": "Our scan missed the uploadthing package and OpenAPI surface; the docs explicitly provide both an SDK setup and REST API reference. Its pricing reader rejected a homepage anchor, so tiers were unmeasured. Missing llms/entry/MCP paths do not establish a blocked FileRoute integration.",
+      "nextStep": "Create an authenticated image FileRoute with the Express adapter, connect the React uploader, and persist the completed screenshot URL with the article. Reject an oversized or unauthorized upload, show the error in React, then retry a valid authorized file and confirm only its successful attachment is stored.",
+      "validation": "Keep route validation, completion callback, stored URL and reloaded image. A client-side preview is not a completed stored upload.",
+      "sources": [
+        {
+          "url": "https://docs.uploadthing.com/backend-adapters/express",
+          "note": "Node adapter, dashboard token and FileRoute configuration."
+        },
+        {
+          "url": "https://docs.uploadthing.com/api-reference/react",
+          "note": "React upload components and callbacks."
+        },
+        {
+          "url": "https://docs.uploadthing.com/api-reference/openapi-spec",
+          "note": "Published REST API/OpenAPI reference."
+        }
+      ]
+    }
+  ]
+}

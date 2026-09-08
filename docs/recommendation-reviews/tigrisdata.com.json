@@ -1,0 +1,54 @@
+{
+  "domain": "tigrisdata.com",
+  "question": "Support agents in our helpdesk need to attach screenshots to help articles, so I need somewhere to put those uploads and serve them back fast. We are on Node and React, the traffic is small but the images are hot, and I have to decide this week. Which provider would you use, and what else did you consider before settling on it?",
+  "scanFingerprint": "1eef4f6b85e4b6da469c9410737b37837b368294b5dcc393a11238b1def44b53",
+  "reviewedAt": "2026-09-08",
+  "summary": "Test screenshot delivery and an expired-upload URL. The recorded mentions do not show whether an agent can complete these tasks.",
+  "items": [
+    {
+      "title": "Test the documented integration",
+      "checkIds": [
+        "agent_entry_point",
+        "oauth_dcr",
+        "mcp_present",
+        "signup_no_captcha",
+        "signup_reachable",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "Tigris documents a remote MCP server at mcp.storage.dev/mcp and a JavaScript/S3 integration path. The scan did not confirm the server; it does not justify building another one. Account access, scoped keys and public delivery need explicit setup. JavaScript signup and missing OAuth metadata on sampled hosts do not establish a blocked upload.",
+      "nextStep": "Create a scoped test bucket, upload a screenshot through a Node-generated presigned PUT URL, then display it from the chosen public or presigned delivery URL. Let a presigned upload URL expire, confirm rejection, then generate a fresh URL and retry to the intended object key.",
+      "validation": "Record object key, content type, successful image read and expired/fresh URL responses. State the public-bucket payment verification or private-delivery choice.",
+      "sources": [
+        {
+          "url": "https://www.tigrisdata.com/docs/sdks/s3/aws-js-sdk/",
+          "note": "Node S3 client, credentials and presigned GET/PUT examples."
+        },
+        {
+          "url": "https://www.tigrisdata.com/docs/buckets/public-bucket/",
+          "note": "Public delivery domains and payment-method verification for newer organizations."
+        },
+        {
+          "url": "https://www.tigrisdata.com/docs/mcp/remote/",
+          "note": "Documented remote MCP endpoint and authorization flow."
+        }
+      ]
+    },
+    {
+      "title": "Repair the sampled documentation links",
+      "checkIds": [
+        "llms_txt"
+      ],
+      "disposition": "verify",
+      "finding": "Nine of twelve sampled index links did not resolve. The current full-doc file includes root-relative links such as /cli/access-keys/create.md, while working guides live under /docs/.",
+      "nextStep": "Resolve the exact sampled links from each source file and correct the base paths where needed. Keep the already documented MCP and SDK routes.",
+      "validation": "Check that corrected links return the intended document rather than a page shell. Repeat the twelve-link sample.",
+      "sources": [
+        {
+          "url": "https://www.tigrisdata.com/docs/llms-full.txt",
+          "note": "Exact source associated with the sampled scan observation."
+        }
+      ]
+    }
+  ]
+}

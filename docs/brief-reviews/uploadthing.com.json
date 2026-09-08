@@ -1,0 +1,23 @@
+{
+  "domain": "uploadthing.com",
+  "category": "file-storage",
+  "question": "Support agents in our helpdesk need to attach screenshots to help articles, so I need somewhere to put those uploads and serve them back fast. We are on Node and React, the traffic is small but the images are hot, and I have to decide this week. Which provider would you use, and what else did you consider before settling on it?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "UploadThing documents an Express adapter, React upload components and FileRoutes with validation and completion callbacks. These fit screenshot attachments in Node and React. Actual persistence and recovery still need a fixture.",
+  "nextStep": "Reject an oversized or unauthorized upload, show the error in React, then retry a valid authorized file and confirm only its successful attachment is stored.",
+  "sources": [
+    {
+      "url": "https://docs.uploadthing.com/backend-adapters/express",
+      "note": "Node adapter, dashboard token and FileRoute configuration."
+    },
+    {
+      "url": "https://docs.uploadthing.com/api-reference/react",
+      "note": "React upload components and callbacks."
+    },
+    {
+      "url": "https://docs.uploadthing.com/api-reference/openapi-spec",
+      "note": "Published REST API/OpenAPI reference."
+    }
+  ]
+}

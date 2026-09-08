@@ -1,0 +1,26 @@
+{
+  "domain": "firecrawl.dev",
+  "question": "We need to log into a supplier portal nobody gives us an API for, click through it and pull a table, on a schedule and from a server. Running headless Chrome ourselves keeps breaking. Which service would you use for that, and what else did you look at before picking it?",
+  "scanFingerprint": "a3484e064b22ff7469f366b463a87f16179497c3ba7b876a7b5e476e68836182",
+  "reviewedAt": "2026-09-08",
+  "summary": "Test portal extraction and recovery when the login expires. The recorded mentions do not show whether an agent can complete these tasks.",
+  "items": [
+    {
+      "title": "Test the documented integration",
+      "checkIds": [
+        "signup_no_captcha",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "Current docs distinguish Browser Sandbox for API/SDK sessions from Interact for CLI/MCP workflows. Use that supported split. The partial provisioning phrase refers to obtaining an initial dashboard key; the reCAPTCHA marker was not exercised. Neither observation demonstrates a failed portal integration.",
+      "nextStep": "Use the documented Node Browser Sandbox API with an authorized fixture portal. Log in, extract a known table, and close the session while saving its profile. Open a new session using the saved profile, verify the next table extraction, then expire portal authentication and check that it is detected rather than reported as empty data.",
+      "validation": "Keep extracted rows, profile/session identifiers and logged-out detection. Record scheduling separately; do not use the legacy hidden browser CLI as the recommended agent path.",
+      "sources": [
+        {
+          "url": "https://docs.firecrawl.dev/features/browser",
+          "note": "Browser Sandbox API/SDK, persistent profiles and supported Interact versus legacy CLI distinction."
+        }
+      ]
+    }
+  ]
+}

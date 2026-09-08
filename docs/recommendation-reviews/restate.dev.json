@@ -1,0 +1,35 @@
+{
+  "domain": "restate.dev",
+  "question": "We generate PDF reports inside the request and users watch a spinner for forty seconds. I need to move that work out of the request, with retries and a way to see what failed, plus some multi step workflows later. Node on a normal cloud. Which service would you use, and what else did you consider?",
+  "scanFingerprint": "6368ed983433f1c1993532ca69e8513e8a8eb73d79e0320d6bd84c4c5dac67b9",
+  "reviewedAt": "2026-09-08",
+  "summary": "Test the PDF job and recovery from a failed step. The recorded mentions do not show whether an agent can complete these tasks.",
+  "items": [
+    {
+      "title": "Test the documented integration",
+      "checkIds": [
+        "oauth_dcr",
+        "mcp_present",
+        "signup_no_captcha",
+        "signup_reachable",
+        "programmatic_provisioning",
+        "self_serve",
+        "machine_readable_api"
+      ],
+      "disposition": "verify",
+      "finding": "The quickstart already ships a coding-agent plugin with documentation MCP access. Our remote probes missed that route. Local server setup is documented; missing cloud signup and OAuth evidence does not block that local path. The pricing HTML and Markdown-negotiation observations do not establish cloud terms or a missing API.",
+      "nextStep": "Move a fixture PDF job into a Restate service and return a job reference from the HTTP request. Retrieve the completed PDF separately. Make the storage step fail once, then inspect its retry and final artifact. Check whether any external side effect was duplicated.",
+      "validation": "Keep request latency, invocation history, readable PDF output and side-effect count. Record local versus cloud setup separately.",
+      "sources": [
+        {
+          "url": "https://docs.restate.dev/quickstart",
+          "note": "Local server, CLI, Node SDK and preconfigured coding-agent plugin with docs MCP."
+        },
+        {
+          "url": "https://docs.restate.dev/develop/ts/durable-steps",
+          "note": "Durable steps retry unless configured otherwise or stopped with a terminal error."
+        }
+      ]
+    }
+  ]
+}

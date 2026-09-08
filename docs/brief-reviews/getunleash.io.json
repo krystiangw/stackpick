@@ -1,0 +1,19 @@
+{
+  "domain": "getunleash.io",
+  "category": "feature-flags",
+  "question": "We need to ship a checkout redesign to internal staff first and be able to kill it without a deploy, and later run a proper A/B test on it. Node and React, no dedicated platform team. Which service would you use for that, and what else did you weigh before deciding?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Unleash documents user targeting, variants, rollout and kill-switch behavior, plus an A/B workflow that sends exposure events to an analytics tool. It fits the checkout brief when that measurement component is included; Unleash alone is not the full statistical analysis stack.",
+  "nextStep": "Assign stable A/B variants and send impression plus conversion events to a controlled analytics sink. Verify exposure and outcome attribution for known users.",
+  "sources": [
+    {
+      "url": "https://docs.getunleash.io/guides/a-b-testing",
+      "note": "Targeting, stable variants, impressions and conversion attribution using an analytics tool."
+    },
+    {
+      "url": "https://docs.getunleash.io/api",
+      "note": "Instance APIs and OpenAPI specification; client/server SDKs."
+    }
+  ]
+}

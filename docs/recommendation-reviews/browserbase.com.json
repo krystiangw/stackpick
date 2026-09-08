@@ -1,0 +1,27 @@
+{
+  "domain": "browserbase.com",
+  "question": "We need to log into a supplier portal nobody gives us an API for, click through it and pull a table, on a schedule and from a server. Running headless Chrome ourselves keeps breaking. Which service would you use for that, and what else did you look at before picking it?",
+  "scanFingerprint": "db921c7e9c95e3970b33f7c9963a5e4b32e624978914faf8cea7ec751d5be94e",
+  "reviewedAt": "2026-09-08",
+  "summary": "Test table extraction and recovery when the portal login expires. The recorded mentions do not show whether an agent can complete these tasks.",
+  "items": [
+    {
+      "title": "Test the documented integration",
+      "checkIds": [
+        "oauth_dcr",
+        "signup_no_captcha",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "Contexts already have an API-key-based Node workflow. Missing OAuth metadata does not block that route. A reCAPTCHA marker at signup was not exercised. The scan also matched provisioning text about a 1Password service account; that is not proof of Browserbase account provisioning.",
+      "nextStep": "Use the Node SDK to open an authorized fixture portal, log in and extract a known table; close the session with Context persistence enabled. Start another scheduled invocation with that Context, extract the updated table, then expire the portal login and check that the job reports or handles reauthentication explicitly.",
+      "validation": "Compare expected and extracted rows, session IDs, persistence and expired-login behavior. Never treat a login page or empty table as successful extraction.",
+      "sources": [
+        {
+          "url": "https://docs.browserbase.com/platform/browser/core-features/contexts",
+          "note": "Node Context API, persistence after session close and invalidated portal sessions."
+        }
+      ]
+    }
+  ]
+}

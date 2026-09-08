@@ -5,7 +5,17 @@ i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dzi
 
 ## Nad czym pracujemy
 
-**Kampania 20 firm zakończona wysyłką, 08.09:** wszystkie wiadomości SENT w Gmail,
+**Druga partia 20/20 wysłana, 08.09 20:05–20:08 CEST:** razem 40 różnych firm.
+Nowy styl: krótkie przedstawienie Krystiana, konkretny wynik i jedno CTA — oferta przygotowanego
+planu dwóch testów agenta. Wszystkie adresy imienne i publicznie potwierdzone; brak ponownych
+wysyłek do pierwszej partii. 20 nowych raportów z ocenami dokumentacji i świeżymi skanami;
+bez nowych biegów, upgrade'u Cursor i zmiany korpusu. 20/20 SENT odczytano, treść i dostawy
+zweryfikowano. PostHog wysłany mimo błędu narzędzia; odnaleziony w SENT, nie ponawiany.
+Lista: `docs/outreach-wave2-2026-09-08.md`; prywatnie `data/outreach-wave2-2026-09-08/campaign.json`.
+Plany są propozycjami, testów nie wykonano. Następny krok: odpowiedzi i dopasowanie pilotażu;
+bez automatycznych follow-upów i bez kolejnej partii przed oceną tych kontaktów.
+
+**Pierwsza partia 20 firm zakończona wysyłką, 08.09:** wszystkie wiadomości SENT w Gmail,
 16:04–16:31 CEST. Każda ma imiennego odbiorcę, właściwy raport i nadawcę
 Krystian from Let Agents In <hello@letagentsin.com>. Dodatkowe 11 raportów opublikowano
 po przeglądzie dokumentacji i kontroli lokalnej/live. Nie wykonywano nowych biegów agentów;
@@ -34,7 +44,7 @@ potem ręczne rozliczenie; `docs/payments-first-sales-2026-09-08.md`. Bez urucha
 0. **Produkt przed kampanią — materiały gotowe.** Dziewięć źródłowo ocenionych raportów
    pod dotychczasowymi linkami i zgodna próbka Loops na `/d/sample`. Generator wymaga oceny
    briefu i zaleceń powiązanych z SHA-256 skanu. Korekty niepotwierdzonych zaleceń dostarczone.
-   Wszystkie 20 wysłanych `.eml` w `data/outreach-top20-2026-09-08/sent/`;
+   Wysłane `.eml`: pierwsze 20 w `data/outreach-top20-2026-09-08/sent/`, kolejne 20 w `data/outreach-wave2-2026-09-08/sent/`;
    stare szkice przeniesiono poza kolejki. Nowe 11 dostaw ma własne oceny briefów i zaleceń.
    Kontrola po rozszerzeniu agentów: 10 stron dostaw bez logowania, 7 stron przebiegów / 159 pełnych odpowiedzi,
    35 działających źródeł, skrzynki i zgodność maili. Dowody i audyt zamknięcia:
@@ -46,12 +56,12 @@ potem ręczne rozliczenie; `docs/payments-first-sales-2026-09-08.md`. Bez urucha
    Kontrola live: 10 dostaw, 7 stron przebiegów / 105 pełnych odpowiedzi, 9 stron publicznych.
    Opis i testy: `docs/ui-ux-review-2026-09-07.md`; zamknięty plan i liczniki słów:
    `docs/copy-rewrite-plan.md`. Znany wyjątek zewnętrznego checkera: zachowane dyrektywy robots.txt.
-2. **Kampania „raport w prezencie”:** 9 aktywnych odbiorców, Transloadit wyłączony do nowego
+2. **Historia kampanii „raport w prezencie”:** początkowo 9 odbiorców, następnie dwie partie po 20. Transloadit wyłączony do nowego
    briefu i nowych przebiegów. Kanoniczne drafty: `outreach/drafts/gift-report-2026-09-03.private.md`
    (poza gitem); instrukcja pakietu `data/product-review-2026-09-07/README-ready.md`.
    Send-as hello@ przez SMTP Resenda uprzednio sprawdzony (mail-tester 9.3/10, DKIM/SPF/DMARC pass).
-   Loops wysłany; proponowana kolejna tura: DocuSeal, Raygun, Logto; ocena odpowiedzi
-   o trafności zadania. Wysyła Krystian. Otwarć poszczególnych dostaw nie śledzimy.
+   Loops, DocuSeal, Raygun i Logto wysłane w pierwszej partii. Teraz ocena odpowiedzi
+   o trafności zadania i proponowanym planie. Wysyła Krystian. Otwarć poszczególnych dostaw nie śledzimy.
 
 ## Rozszerzenie agentów i następne pomiary
 

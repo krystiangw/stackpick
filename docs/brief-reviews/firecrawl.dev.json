@@ -1,0 +1,15 @@
+{
+  "domain": "firecrawl.dev",
+  "category": "browser-infrastructure",
+  "question": "We need to log into a supplier portal nobody gives us an API for, click through it and pull a table, on a schedule and from a server. Running headless Chrome ourselves keeps breaking. Which service would you use for that, and what else did you look at before picking it?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Firecrawl currently documents Browser Sandbox sessions, authentication, code execution and persistent profiles. These support interacting with a supplier portal. A scheduled authenticated extraction still needs a controlled fixture; ordinary page scraping is not the same task.",
+  "nextStep": "Open a new session using the saved profile, verify the next table extraction, then expire portal authentication and check that it is detected rather than reported as empty data.",
+  "sources": [
+    {
+      "url": "https://docs.firecrawl.dev/features/browser",
+      "note": "Browser Sandbox API/SDK, persistent profiles and supported Interact versus legacy CLI distinction."
+    }
+  ]
+}

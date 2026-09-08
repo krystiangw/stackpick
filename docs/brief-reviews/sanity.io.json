@@ -1,0 +1,23 @@
+{
+  "domain": "sanity.io",
+  "category": "headless-cms",
+  "question": "Our marketing team asks us to change homepage copy and every change costs a deploy. I want them editing content themselves while our Next.js app renders it, with proper preview and versioning. Which content platform would you use, and what else did you look at first?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Sanity documents Next.js live content and visual editing plus document revision history. This fits the marketing-copy brief. Preview access, public cache updates and history retention for the selected plan need a fixture.",
+  "nextStep": "Publish a copy change and verify it appears without a code deploy; restore a previous revision within the selected plan's history window and verify the result.",
+  "sources": [
+    {
+      "url": "https://www.sanity.io/docs/nextjs/live-content-guide",
+      "note": "Next.js live content, project access and preview integration."
+    },
+    {
+      "url": "https://www.sanity.io/docs/http-reference/history",
+      "note": "Authenticated document revision retrieval."
+    },
+    {
+      "url": "https://www.sanity.io/docs/developer-guides/find-and-restore-deleted-documents",
+      "note": "History retention depends on plan; restoration uses documented APIs."
+    }
+  ]
+}

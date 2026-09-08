@@ -1,0 +1,19 @@
+{
+  "domain": "apify.com",
+  "category": "browser-infrastructure",
+  "question": "We need to log into a supplier portal nobody gives us an API for, click through it and pull a table, on a schedule and from a server. Running headless Chrome ourselves keeps breaking. Which service would you use for that, and what else did you look at before picking it?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Apify documents Playwright/Puppeteer login flows and scheduled Actor runs. These support the supplier-portal brief. A specific Actor, authorized portal and output schema need a fixture before reliability can be assessed.",
+  "nextStep": "Schedule another run, expire the fixture login and confirm the Actor reports or recovers from authentication failure without silently storing empty or duplicate rows.",
+  "sources": [
+    {
+      "url": "https://docs.apify.com/academy/puppeteer-playwright/common-use-cases/logging-into-a-website",
+      "note": "Login and cookie handling with Playwright/Puppeteer."
+    },
+    {
+      "url": "https://docs.apify.com/actors/running/schedules",
+      "note": "Console/API scheduling of previously tested Actors."
+    }
+  ]
+}

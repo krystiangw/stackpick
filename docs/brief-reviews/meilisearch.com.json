@@ -1,0 +1,19 @@
+{
+  "domain": "meilisearch.com",
+  "category": "search",
+  "question": "Our users cannot find anything in our knowledge base because the search is a SQL LIKE query. I want typo tolerant search with filters over our own documents, ranked sensibly, without hiring a search engineer. Node backend, a few hundred thousand documents. Which service would you use, and what else did you consider?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Meilisearch documents a Node SDK, document indexing, filtering and ranked text search. These fit replacing SQL LIKE over a knowledge base. A few hundred thousand documents still require a capacity and relevance test with representative content.",
+  "nextStep": "Update and delete fixture documents, wait for indexing tasks, then confirm filtered results reflect the changes and no stale deleted result remains.",
+  "sources": [
+    {
+      "url": "https://www.meilisearch.com/docs/getting_started/sdks/javascript",
+      "note": "Node SDK, credentials, indexing tasks and filtered search."
+    },
+    {
+      "url": "https://www.meilisearch.com/docs/capabilities/filtering_sorting_faceting/overview",
+      "note": "Filterable and sortable attributes require index configuration."
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "domain": "meilisearch.com",
+  "question": "Our users cannot find anything in our knowledge base because the search is a SQL LIKE query. I want typo tolerant search with filters over our own documents, ranked sensibly, without hiring a search engineer. Node backend, a few hundred thousand documents. Which service would you use, and what else did you consider?",
+  "scanFingerprint": "38e75eb480c3a6c8256e854b894eac1ffd2d0a10bffc74c0f66931477ca7d0f0",
+  "reviewedAt": "2026-09-08",
+  "summary": "Test filtered typo search and an index update. The recorded mentions do not show whether an agent can complete these tasks.",
+  "items": [
+    {
+      "title": "Test the documented integration",
+      "checkIds": [
+        "agent_entry_point",
+        "oauth_dcr",
+        "mcp_present",
+        "signup_no_captcha",
+        "signup_reachable",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "The scan itself found a Create API key endpoint. Its partial provisioning score is not evidence that another API is needed. Use the documented Node SDK and instance credentials. Missing entry metadata, unreadable cloud signup and an unavailable MCP registry do not invalidate that route.",
+      "nextStep": "Index a small, labeled knowledge-base fixture from Node. Run typo queries with category filters and compare the top results with expected documents. Update and delete fixture documents, wait for indexing tasks, then confirm filtered results reflect the changes and no stale deleted result remains.",
+      "validation": "Keep task completion, expected versus returned IDs and query settings. A small fixture validates wiring; it does not establish performance at the full corpus size.",
+      "sources": [
+        {
+          "url": "https://www.meilisearch.com/docs/getting_started/sdks/javascript",
+          "note": "Node SDK, credentials, indexing tasks and filtered search."
+        },
+        {
+          "url": "https://www.meilisearch.com/docs/capabilities/filtering_sorting_faceting/overview",
+          "note": "Filterable and sortable attributes require index configuration."
+        }
+      ]
+    },
+    {
+      "title": "Make the relevant entry cost easy to check",
+      "checkIds": [
+        "price_in_snippet"
+      ],
+      "disposition": "verify",
+      "finding": "The pricing description contains no amount or entry condition. That metadata observation does not explain recommendation frequency.",
+      "nextStep": "Check the current plan for this task before adding a concrete entry condition to the description. Keep paid features and hosted versus local costs distinct.",
+      "validation": "Any proposed wording must match the chosen plan. No recommendation uplift has been measured.",
+      "sources": [
+        {
+          "url": "https://meilisearch.com/pricing",
+          "note": "Pricing page whose description was captured in the scan."
+        }
+      ]
+    }
+  ]
+}

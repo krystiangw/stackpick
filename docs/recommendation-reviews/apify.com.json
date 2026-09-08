@@ -1,0 +1,31 @@
+{
+  "domain": "apify.com",
+  "question": "We need to log into a supplier portal nobody gives us an API for, click through it and pull a table, on a schedule and from a server. Running headless Chrome ourselves keeps breaking. Which service would you use for that, and what else did you look at before picking it?",
+  "scanFingerprint": "33e0593a6c5ab6609dd0f3ca9a2e6d8907b82a5ae32c1899cea08f464cb847a1",
+  "reviewedAt": "2026-09-08",
+  "summary": "Test a scheduled Actor run and recovery from an expired login. The recorded mentions do not show whether an agent can complete these tasks.",
+  "items": [
+    {
+      "title": "Test the documented integration",
+      "checkIds": [
+        "signup_no_captcha",
+        "signup_reachable",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "The scan found Apify MCP but did not establish key provisioning, and the console signup form needed JavaScript. The documented Actor and scheduling APIs provide a route after account authorization. Account handoff is separate from proving the Actor produces correct data.",
+      "nextStep": "Build an Actor for a controlled portal login and known table extraction, then run it once and verify the dataset. Schedule another run, expire the fixture login and confirm the Actor reports or recovers from authentication failure without silently storing empty or duplicate rows.",
+      "validation": "Keep Actor/run IDs, scheduled invocation, expected dataset rows and failure output. Record any required account authorization separately.",
+      "sources": [
+        {
+          "url": "https://docs.apify.com/academy/puppeteer-playwright/common-use-cases/logging-into-a-website",
+          "note": "Login and cookie handling with Playwright/Puppeteer."
+        },
+        {
+          "url": "https://docs.apify.com/actors/running/schedules",
+          "note": "Console/API scheduling of previously tested Actors."
+        }
+      ]
+    }
+  ]
+}

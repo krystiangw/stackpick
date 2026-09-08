@@ -1,0 +1,23 @@
+{
+  "domain": "strapi.io",
+  "category": "headless-cms",
+  "question": "Our marketing team asks us to change homepage copy and every change costs a deploy. I want them editing content themselves while our Next.js app renders it, with proper preview and versioning. Which content platform would you use, and what else did you look at first?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Strapi documents frontend preview and Content History, fitting marketing-managed copy in Next.js. History requires Growth or Enterprise and covers edits made in the Content Manager; API writes are not versioned there. Hosting and CMS licensing must be chosen explicitly.",
+  "nextStep": "Publish the change, confirm the rendered page updates without a code deploy, then restore the previous Content Manager version and verify the public result.",
+  "sources": [
+    {
+      "url": "https://docs.strapi.io/cms/features/preview",
+      "note": "Preview configuration, free preview versus paid Live Preview."
+    },
+    {
+      "url": "https://docs.strapi.io/cms/features/content-history",
+      "note": "Growth/Enterprise history, retention limits and Content Manager-only revisions."
+    },
+    {
+      "url": "https://docs.strapi.io/cms/features/api-tokens",
+      "note": "API-token access for content integration."
+    }
+  ]
+}

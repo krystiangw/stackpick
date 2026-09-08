@@ -1,0 +1,53 @@
+{
+  "domain": "getunleash.io",
+  "question": "We need to ship a checkout redesign to internal staff first and be able to kill it without a deploy, and later run a proper A/B test on it. Node and React, no dedicated platform team. Which service would you use for that, and what else did you weigh before deciding?",
+  "scanFingerprint": "8da6ff9125d4bcc63c35ca13367f962784de3bcb0462c96ad3cf79e5507c9f8a",
+  "reviewedAt": "2026-09-08",
+  "summary": "Test the checkout kill switch and experiment-event tracking. The recorded mentions do not show whether an agent can complete these tasks.",
+  "items": [
+    {
+      "title": "Test the documented integration",
+      "checkIds": [
+        "llms_txt",
+        "agent_entry_point",
+        "oauth_dcr",
+        "mcp_present",
+        "signup_no_captcha",
+        "signup_reachable",
+        "programmatic_provisioning",
+        "self_serve",
+        "machine_readable_api"
+      ],
+      "disposition": "verify",
+      "finding": "Our scan hit its time budget and left many checks unmeasured. The current docs already expose SDKs, an instance API and an OpenAPI specification. These gaps are not vendor defects. Use an authorized local or hosted instance and include the external analytics sink in the A/B task.",
+      "nextStep": "Target a checkout flag to synthetic internal staff in Node and React, then disable it and measure when both return to the original checkout. Assign stable A/B variants and send impression plus conversion events to a controlled analytics sink. Verify exposure and outcome attribution for known users.",
+      "validation": "Record flag propagation, stable assignment and expected exposure/conversion counts. Toy data verifies wiring, not statistical significance.",
+      "sources": [
+        {
+          "url": "https://docs.getunleash.io/guides/a-b-testing",
+          "note": "Targeting, stable variants, impressions and conversion attribution using an analytics tool."
+        },
+        {
+          "url": "https://docs.getunleash.io/api",
+          "note": "Instance APIs and OpenAPI specification; client/server SDKs."
+        }
+      ]
+    },
+    {
+      "title": "Make the relevant entry cost easy to check",
+      "checkIds": [
+        "price_in_snippet"
+      ],
+      "disposition": "verify",
+      "finding": "The pricing description contains no amount or entry condition. That metadata observation does not explain recommendation frequency.",
+      "nextStep": "Check the current plan for this task before adding a concrete entry condition to the description. Keep paid features and hosted versus local costs distinct.",
+      "validation": "Any proposed wording must match the chosen plan. No recommendation uplift has been measured.",
+      "sources": [
+        {
+          "url": "https://getunleash.io/pricing",
+          "note": "Pricing page whose description was captured in the scan."
+        }
+      ]
+    }
+  ]
+}

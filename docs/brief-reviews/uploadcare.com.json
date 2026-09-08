@@ -1,0 +1,19 @@
+{
+  "domain": "uploadcare.com",
+  "category": "file-storage",
+  "question": "Support agents in our helpdesk need to attach screenshots to help articles, so I need somewhere to put those uploads and serve them back fast. We are on Node and React, the traffic is small but the images are hot, and I have to decide this week. Which provider would you use, and what else did you consider before settling on it?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Uploadcare documents direct image uploads, storage behavior and signed browser uploads with a Node signing helper. This supports screenshot attachments. React wiring, permanent storage and delivery latency need a test.",
+  "nextStep": "Expire the upload signature deliberately, confirm a useful failure, then obtain a fresh signature and retry without creating a broken attachment.",
+  "sources": [
+    {
+      "url": "https://uploadcare.com/docs/security/secure-uploads/",
+      "note": "Signed upload expiry and Node signing helper."
+    },
+    {
+      "url": "https://uploadcare.com/docs/api/upload/upload/base-upload/",
+      "note": "Direct uploads and temporary versus permanent storage."
+    }
+  ]
+}

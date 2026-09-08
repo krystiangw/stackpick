@@ -1,0 +1,19 @@
+{
+  "domain": "mux.com",
+  "category": "video",
+  "question": "Customers want to upload short product demo videos and have them play smoothly on phones. I am not building an encoding pipeline. Node backend, React front end, and this has to ship this quarter. Which provider would you use for video hosting and playback, and what else did you consider?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Mux documents direct uploads, a React uploader, processing status and playback IDs. This fits uploading and serving short demo videos without building an encoding pipeline. Mobile playback quality and network recovery need a fixture.",
+  "nextStep": "Interrupt an upload, resume or retry through the supported uploader flow, and verify that the application attaches the correct completed asset to the demo.",
+  "sources": [
+    {
+      "url": "https://www.mux.com/docs/guides/upload-files-directly",
+      "note": "Backend-created authenticated Direct Upload URLs."
+    },
+    {
+      "url": "https://www.mux.com/docs/guides/mux-uploader",
+      "note": "React upload component, pause/resume, asset-ready events and playback identifiers."
+    }
+  ]
+}
