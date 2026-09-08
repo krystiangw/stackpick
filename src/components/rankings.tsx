@@ -31,15 +31,14 @@ export function Rankings({ rankings }: { rankings: RankedCategory[] }) {
         </p>
       </div>
 
+      <details className="mt-6 rounded-lg border border-rule bg-surface p-5 sm:p-6">
+        <summary className="cursor-pointer text-base font-medium">Browse all {rankings.length} categories and their scorecards</summary>
       <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
         Ordered by the share of measurable points earned. Unmeasured and inapplicable checks do not count against a vendor.
       </p>
       <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-faint">
         An asterisk (*) means too little was measurable for a fair comparison. These rows appear last, regardless of their percentage.
       </p>
-      <details className="mt-6 rounded-lg border border-rule bg-surface p-5 sm:p-6">
-        <summary className="cursor-pointer text-base font-medium">Browse all {rankings.length} categories and their scorecards</summary>
-
       <div className="mt-10 grid gap-10 md:grid-cols-2">
         {rankings.map(({ category, entries, median }) => (
           <div key={category.id}>

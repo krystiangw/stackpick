@@ -89,8 +89,8 @@ export function WatchForm({
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-3">
-      <div className="flex flex-col gap-3 sm:flex-row">
+    <form onSubmit={submit} className="@container flex flex-col gap-3">
+      <div className="flex flex-col gap-3 @xl:flex-row">
         {!domain && (
           <input
             type="text"
@@ -99,7 +99,7 @@ export function WatchForm({
             onChange={(event) => setSite(event.target.value)}
             placeholder="yourdomain.com"
             aria-label="Domain to watch"
-            className="w-full border border-rule bg-surface px-4 py-3 font-mono text-base sm:text-sm sm:w-1/2"
+            className="min-w-0 w-full flex-1 border border-rule bg-surface px-4 py-3 font-mono text-base"
           />
         )}
         <input
@@ -109,7 +109,7 @@ export function WatchForm({
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@company.com"
           aria-label="Where to send the alerts"
-          className="w-full border border-rule bg-surface px-4 py-3 font-mono text-base sm:text-sm"
+          className="min-w-0 w-full flex-1 border border-rule bg-surface px-4 py-3 font-mono text-base"
         />
         <button
           type="submit"
