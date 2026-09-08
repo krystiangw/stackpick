@@ -9,7 +9,9 @@ i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dzi
 ofertami, wdrożony jako v796. Audyt: `docs/landing-review-2026-09-08.md`. Dziewięć maili skrócono i skierowano
 do imiennych kontaktów; `docs/outreach-review-2026-09-08.md`. Właściciel zlecił próbkę
 wyłącznie do siebie przed pierwszym klientem. Próbka wysłana z hello@ i potwierdzona w INBOX;
-do klientów zero wiadomości, kampania nadal wstrzymana.
+następnie właściciel polecił pierwszą wysyłkę: **Loops wysłany do Chrisa 08.09 o 16:04 CEST**.
+Osiem kolejnych maili zapisano i zweryfikowano jako szkice Gmail, bez zgody na ich wysyłkę.
+Stan i kolejność: `docs/outreach-first-send-2026-09-08.md`.
 
 **Ocena przewagi biznesowej ukończona 08.09:** `docs/business-advantage-2026-09-08.md`.
 Sprawdzono aktualne cenniki i istniejące publiczne raporty konkurencji; bez zakupów i nowych
@@ -17,14 +19,15 @@ testów u dostawców. Lightsage konkuruje także wykonaniem kodu i obsługą Man
 jeden demonstrator diagnozy/poprawki/retestu, rozmowy po odwołaniu wstrzymania, następnie
 płatne pilotaże po 1500 USD. Właściciel następnie zatwierdził zmianę oferty: monitoring jako
 bezpłatna beta bez zapowiedzi ceny; 1500 USD za każdy z pierwszych dwóch pilotaży. Popyt
-pozostaje niesprawdzony. Cennik wdrożony jako v795; kampania nadal wstrzymana.
+pozostaje niesprawdzony. Cennik wdrożony jako v795; późniejsza zgoda na pierwszy mail i jego wynik opisane wyżej.
 Kontrola: `docs/pricing-update-2026-09-08.md`. Pierwsze płatności: sprzedaż przez rozmowę,
 potem ręczne rozliczenie; `docs/payments-first-sales-2026-09-08.md`. Bez uruchamiania checkoutu.
 
 0. **Produkt przed kampanią — materiały gotowe.** Dziewięć źródłowo ocenionych raportów
    pod dotychczasowymi linkami i zgodna próbka Loops na `/d/sample`. Generator wymaga oceny
    briefu i zaleceń powiązanych z SHA-256 skanu. Korekty niepotwierdzonych zaleceń dostarczone.
-   Dziewięć lokalnych `.eml` w `data/product-review-2026-09-07/email-drafts/`, nic nie wysłano.
+   Osiem niewysłanych `.eml` w `data/product-review-2026-09-07/email-drafts/`; wysłany Loops
+   przeniesiono do `data/outreach-send-2026-09-08/sent/`.
    Kontrola po rozszerzeniu agentów: 10 stron dostaw bez logowania, 7 stron przebiegów / 159 pełnych odpowiedzi,
    35 działających źródeł, skrzynki i zgodność maili. Dowody i audyt zamknięcia:
    `docs/readiness-verification-2026-09-07.md`. Pilotaż: `docs/integration-pilot-2026-09-07.md`
@@ -39,7 +42,7 @@ potem ręczne rozliczenie; `docs/payments-first-sales-2026-09-08.md`. Bez urucha
    briefu i nowych przebiegów. Kanoniczne drafty: `outreach/drafts/gift-report-2026-09-03.private.md`
    (poza gitem); instrukcja pakietu `data/product-review-2026-09-07/README-ready.md`.
    Send-as hello@ przez SMTP Resenda uprzednio sprawdzony (mail-tester 9.3/10, DKIM/SPF/DMARC pass).
-   Po odwołaniu wstrzymania: pierwsza mała tura Loops, DocuSeal, Raygun, Logto; ocena odpowiedzi
+   Loops wysłany; proponowana kolejna tura: DocuSeal, Raygun, Logto; ocena odpowiedzi
    o trafności zadania. Wysyła Krystian. Otwarć poszczególnych dostaw nie śledzimy.
 
 ## Rozszerzenie agentów i następne pomiary
@@ -58,8 +61,8 @@ i publikacji. Szczegóły i wyłączenie: `docs/cursor-free-plan-2026-09-07.md`.
 
 ## Co blokuje
 
-- **KAMPANIA WSTRZYMANA (Krystian, 2026-09-07): nie wysyłać żadnego maila do dziesięciu firm,
-  dopóki nie odwoła wstrzymania wprost.** Do 07.09 nic nie wyszło (Sent z hello@: tylko trzy sondy).
+- **08.09: właściciel zatwierdził jedną wysyłkę — Loops wysłany.** Pozostałe osiem wiadomości
+  ma tylko szkice Gmail; przed ich wysłaniem potrzebne jest kolejne polecenie. Nie wysyłać Loops ponownie.
 
 - Transloadit: nowy brief jest szkicem z zerem przebiegów. Nie dodawać starego raportu do
   gotowych dziewięciu wiadomości. Nie blokuje rozpoczęcia od trafnych raportów.

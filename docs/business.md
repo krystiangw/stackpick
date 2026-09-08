@@ -58,7 +58,8 @@ and a report is bought by writing to hello@letagentsin.com. Turning it on is `do
   site and the report closer to "written by a model" than "by a person", and a rewrite in the
   audit's order is complete through phase 7 (v792). Pages and delivered reports now use shorter
   introductions, comparison tables and expandable evidence. Validation: `docs/ui-ux-review-2026-09-07.md`.
-- Campaign status, 2026-09-07: **on hold at the owner's request while the product is refined**.
+- Campaign status, updated 2026-09-08: **first Loops email sent with explicit owner authorization; eight further messages prepared as Gmail drafts only**.
+  Send verification and next order: `docs/outreach-first-send-2026-09-08.md`. The September 7 hold was lifted for this first send.
   Report quality and restart criteria: `docs/product-readiness-2026-09-07.md`.
 - Product refinement, 2026-09-07: all ten campaign briefs reviewed (nine documented fits,
   Transloadit partial). A $1,500 integration pilot is scoped in `docs/integration-pilot-2026-09-07.md`
@@ -77,7 +78,7 @@ and a report is bought by writing to hello@letagentsin.com. Turning it on is `do
   execution evidence and managed work; neither more agents nor transcripts are unique advantages.
   The recommendation is to validate the scoped $1,500 service with paid customers before expanding
   monitoring. The owner subsequently approved the introductory public price and withdrawal of future
-  monitoring prices. This is not validated demand. Outreach stays on hold.
+  monitoring prices. This is not validated demand. The owner later approved the first Loops email; the other eight remain unsent drafts.
 
 ## Decisions that stand
 
@@ -109,7 +110,7 @@ and a report is bought by writing to hello@letagentsin.com. Turning it on is `do
 1. Whether the product argument is true at the scale we claim: 181 domains, one question per
    category, five runs per original batch, two tools across all categories and extra tools in
    seven selected categories. `/findings` and `/c/<category>/runs` are the evidence.
-2. Whether anybody outside will pay: zero customers, no checkout, and a first campaign that has
-   not been sent. Everything before a reply is a hypothesis.
+2. Whether anybody outside will pay: zero customers, no checkout, and one authorized first email
+   sent to Loops on September 8. Eight further messages are drafts. Demand remains unvalidated.
 3. Whether the copy sells or explains itself: `docs/copy-audit-2026-09-07.md`.
 4. Whether the numbers on the site match the corpus: `npm run build` runs the guards.
