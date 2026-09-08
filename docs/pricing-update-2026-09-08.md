@@ -27,7 +27,12 @@ Zakup nadal zaczyna się mailem. Zalecana obsługa pierwszej płatności:
 
 Walidacja lokalna: build obejmujący typecheck i reguły oraz pełny lint zakończone poprawnie.
 Przegląd wskazał stary znacznik wymagany przez reguły i niejasną chronologię audytu; oba
-poprawiono. Końcowy przegląd i wdrożenie pozostają do potwierdzenia.
+poprawiono. Końcowy przegląd Codex zakończył się bez uwag.
 Przeglądarka przy 390 i 1440 px: cztery oferty, poprawne ceny i metadane, brak poziomego
 przewijania, działające rozwijanie warunków, poprawne cele linków. Linków mailowych nie
 uruchamiano, formularzy nie wysyłano. Zrzuty i wyniki w `data/pricing-2026-09-08/`.
+
+Wdrożono **v795 (`fb94a59`)**. Build Heroku przeszedł, proces web jest up. Kontrola live
+przy 390 i 1440 px potwierdziła HTTP 200, aktualne ceny i metadane, cztery karty, brak
+poziomego przewijania, działające rozwijanie warunków i cele linków. Strona główna
+i `llms.txt` odpowiadają 200 z nowym zakresem monitoringu. Kampania pozostaje wstrzymana.

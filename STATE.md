@@ -1,4 +1,4 @@
-# Let Agents In: migawka na 2026-09-08 (prod v794, korpus 181, formuła 9.57)
+# Let Agents In: migawka na 2026-09-08 (prod v795, korpus 181, formuła 9.57)
 
 Biznes na jednej stronie: `docs/business.md`. Historia rund: `docs/journal-2026-08.md` (do 11.08)
 i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dziennik.
@@ -11,7 +11,9 @@ testów u dostawców. Lightsage konkuruje także wykonaniem kodu i obsługą Man
 jeden demonstrator diagnozy/poprawki/retestu, rozmowy po odwołaniu wstrzymania, następnie
 płatne pilotaże po 1500 USD. Właściciel następnie zatwierdził zmianę oferty: monitoring jako
 bezpłatna beta bez zapowiedzi ceny; 1500 USD za każdy z pierwszych dwóch pilotaży. Popyt
-pozostaje niesprawdzony. Trwa weryfikacja i wdrożenie cennika; kampania nadal wstrzymana.
+pozostaje niesprawdzony. Cennik wdrożony jako v795; kampania nadal wstrzymana.
+Kontrola: `docs/pricing-update-2026-09-08.md`. Pierwsze płatności: sprzedaż przez rozmowę,
+potem ręczne rozliczenie; `docs/payments-first-sales-2026-09-08.md`. Bez uruchamiania checkoutu.
 
 0. **Produkt przed kampanią — materiały gotowe.** Dziewięć źródłowo ocenionych raportów
    pod dotychczasowymi linkami i zgodna próbka Loops na `/d/sample`. Generator wymaga oceny
@@ -67,6 +69,11 @@ i publikacji. Szczegóły i wyłączenie: `docs/cursor-free-plan-2026-09-07.md`.
 - Billing wyłączony, monitoring darmowy bez daty końca, raport kupowany mailem.
 
 ## Stan produkcji
+
+v795 (`fb94a59`): skan i samodzielna beta monitoringu bezpłatne, raport 49 USD, pierwsze dwa
+pilotaże po 1500 USD. Wycofano zapowiedzi abonamentów i pakietów; eksperymentalne wzmianki
+agentów bez gwarantowanej kadencji. Typecheck, lint, rules, build i przegląd Codex zielone;
+kontrola live 390/1440 px, metadane, FAQ i linki. Billing wyłączony, żadnych wiadomości.
 
 v794 (`09693c7`): alerty monitoringu mają HTML i krótszy tekst: obserwacja przed punktacją,
 przycisk do dowodów, najwyżej trzy pełne opisy, dalsze zmiany jako krótkie statusy.
