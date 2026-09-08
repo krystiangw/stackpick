@@ -50,12 +50,8 @@ export default async function RefundsPage() {
         <div>
           <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Monitoring</h2>
           <p className="mt-4">
-            Cancel whenever you like and it stops at the end of the month you have paid for.{' '}
-            {REFUNDS.refundsCurrentMonth
-              ? 'The current month is refunded pro rata.'
-              : 'The month already running is not refunded, because it has already been measured and delivered: the checks ran, and the mail went out or honestly had nothing to report.'}{' '}
-            Nothing renews silently: the mail that announces a renewal goes out before the charge, and the stop link is
-            in every message we send.
+            Monitoring is a free beta, so there is no subscription payment to refund.
+            You can stop it through the link in any monitoring email.
           </p>
         </div>
 

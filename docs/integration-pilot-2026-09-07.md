@@ -1,7 +1,9 @@
 # Pilotaż: od dokumentacji do działającej integracji
 
-Status: przygotowana propozycja zakresu. Cena jest hipotezą do sprawdzenia w rozmowach,
-nie zmianą publicznego cennika ani uruchomieniem sprzedaży. Nie wykonano jeszcze tego pilotażu.
+Status z 08.09: właściciel zatwierdził publikację ceny 1500 USD za każdy z pierwszych dwóch
+pilotaży w opisanym zakresie. Dostępność i zamówienie potwierdzamy w rozmowie; dalsze projekty
+wyceniamy osobno. Popyt i ekonomika nadal wymagają sprawdzenia. Pilotażu jeszcze nie wykonano
+ani nie sprzedano; publikacja oferty nie uruchamia billing ani kampanii.
 
 ## Co klient kupuje
 

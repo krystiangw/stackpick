@@ -585,7 +585,7 @@ check('i mowi, ze trzeba do nich napisac', runbookBillingu.includes('Write to ev
 // Miesieczna polowa monitoringu nie ma za soba zadnego harmonogramu: trzy crony na tej aplikacji to
 // mirror rejestru MCP, kontrola limitow i przemiat watchow. Runbook ma to mowic wprost, bo obietnica
 // trzymana pamiecia jest ta, ktora wygasa w trzecim miesiacu.
-check('runbook dostawy mowi, ze miesieczny mail jest reczny', runbookDostawy.includes('no schedule behind it'), true)
+check('runbook dostawy mowi, ze eksperyment agentowy nie ma kadencji', runbookDostawy.includes('Agent mention checks are experimental and have no fixed schedule.'), true)
 const crony = readdirSync('src/app/api/cron')
 check('cronow jest tyle, ile runbook zaklada', crony.length, 3)
 
@@ -3787,31 +3787,25 @@ check('i link renderuje sie warunkowo', pricingPage.includes('tier.sample && sam
 const reportScript = readFileSync('scripts/client-report.mts', 'utf8')
 check('--id nie bierze innej flagi za wartosc', reportScript.includes("chosen.startsWith('--')"), true)
 
-// Cennik obiecuje piec biegow agentowych miesiecznie, a zaden cron ich nie odswieza: robi to
-// czlowiek. Dopoki dokumentacja dostawy nadal to przyznaje, cennik tez musi - inaczej kupujacy
-// czyta harmonogram tam, gdzie jest kalendarz. Gdy harmonogram powstanie, ten straznik oblewa
-// build i przypomina, ze zdanie na cenniku juz nie jest prawda.
-console.log('\ncennik przyznaje, ze miesieczna polowa nie ma harmonogramu')
-const dostawaMowiOBrakuHarmonogramu = readFileSync('docs/delivering-a-report.md', 'utf8').includes(
-  'The monthly half of monitoring has no schedule behind it',
+// Monitoring HTTP ma kadencje; eksperymentalne wzmianki agentow jej nie maja.
+// Zachowujemy dotychczasowa ochrone zgodnosci runbooka z obietnica dla klienta.
+console.log('\ncennik odroznia bete HTTP od eksperymentalnych wzmianek')
+const deliveryHasExperimentalMentions = readFileSync('docs/delivering-a-report.md', 'utf8').includes(
+  'Agent mention checks are experimental and have no fixed schedule.',
 )
 const cennikSource = readFileSync('src/app/pricing/page.tsx', 'utf8')
 const manualMonitoringFacts = [
-  'I start the five monthly agent runs',
-  'read the email before sending it',
-  'I may skip them when there is nothing to report',
-  'I choose the sending day; it is not a fixed monthly date',
+  'experimental and run manually',
+  'no fixed schedule or guaranteed number of runs',
+  'review any results before sharing them',
+  'do not test signup or integration',
 ]
 const disclosesManualMonitoring = (source: string) => {
-  const answer = source.match(/'Monthly monitoring schedule',\s*'([^']+)'/)?.[1] ?? ''
+  const answer = source.match(/'Are agent mentions monitored every month\?',\s*'([^']+)'/)?.[1] ?? ''
   return manualMonitoringFacts.every((fact) => answer.includes(fact))
 }
-check('dokumentacja dostawy nadal to przyznaje', dostawaMowiOBrakuHarmonogramu, true)
-check(
-  'i cennik mowi to samo kupujacemu',
-  !dostawaMowiOBrakuHarmonogramu || disclosesManualMonitoring(cennikSource),
-  true,
-)
+check('runbook nazywa eksperyment i brak kadencji', deliveryHasExperimentalMentions, true)
+check('cennik ujawnia te same ograniczenia', disclosesManualMonitoring(cennikSource), true)
 for (const fact of manualMonitoringFacts) {
   check(`control: removing "${fact}" fails the manual monitoring disclosure`, disclosesManualMonitoring(cennikSource.replace(fact, '')), false)
 }

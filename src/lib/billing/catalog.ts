@@ -1,5 +1,9 @@
 /**
- * What is for sale, with the price stated once.
+ * Report pricing and dormant billing mappings.
+ *
+ * Since 2026-09-08 the monitoring prices below are withdrawn, never-sold proposals,
+ * retained for the disabled billing integration and its tests. They are not public offers.
+ * Do not configure those provider prices without a new scope and pricing decision.
  *
  * The pricing page carried every figure as a literal in its own JSX and in its meta description,
  * and the same numbers appear in the delivery runbook, in the report and in the terms. A price
@@ -25,6 +29,9 @@ export type Sku = {
 }
 
 const priceId = (name: string) => process.env[`BILLING_PRICE_${name}`] ?? ''
+
+// A service agreed by email, not a payment-provider SKU or an inventory counter.
+export const INTEGRATION_PILOT = { usd: 1500, places: 2 } as const
 
 export const CATALOG: readonly Sku[] = [
   { id: 'report-one', label: 'One agent report', cents: 4_900, currency: 'USD', interval: 'once', domains: 1, providerPriceId: priceId('REPORT_ONE') },
@@ -77,10 +84,9 @@ export function priceOf(sku: Sku): string {
  * to whoever owns the business and it cannot be set from a rule. What is here is the mechanism, so
  * that setting it later is one line rather than an argument about what free meant.
  *
- * Two promises constrain what may be written here. `/pricing` says the price is printed so the
- * reader knows what it will become, and the home page says we will ask before it ever costs
- * anything. So a date arriving without a message to everyone already subscribed would break the
- * second one, and `docs/turning-billing-on.md` carries that step.
+ * The beta has no announced end date or future price. The home page promises that we
+ * will ask before charging. A paid launch needs a new scope, price and explicit consent
+ * from existing subscribers; `docs/turning-billing-on.md` records that prerequisite.
  *
  * WHAT THIS DATE DOES NOT DO, because a half-built mechanism described as a whole one is worse than
  * none: the monitoring cron serves every confirmed, unstopped watch and reads neither this date nor

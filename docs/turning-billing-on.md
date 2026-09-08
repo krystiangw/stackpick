@@ -1,5 +1,11 @@
 # Turning billing on
 
+**Decision, 2026-09-08:** monitoring is a free beta with no announced end date or future price.
+The old monthly, annual, agency and extra-question prices are withdrawn. Do not create or
+activate those products from this historical runbook. A paid monitoring launch requires a new
+scope, cadence, price and subscriber-consent decision. Billing stays off. The first two
+integration pilots are $1500 each, agreed and invoiced separately after seller/payment readiness.
+
 Everything on our side is written and switched off. With `BILLING_PROVIDER` unset, `/api/billing/webhook`
 answers 404 exactly as it did before the code existed, so nothing here is live until somebody does
 the steps below in order.
@@ -36,11 +42,12 @@ Written 2026-08-18, when the only way to buy was `mailto:`.
   Open question that comes first: **when does free monitoring end**. Until that date exists the
   credit has no base, and the question of a mechanism is moot.
 
-## 1. Create the products, one per row
+## 1. Historical billing mappings — not authorization to activate
 
-Amounts come from `src/lib/billing/catalog.ts` and must match what `/pricing` shows, because the
-page reads the same file. Create each price in Paddle, then copy its price id into the environment
-variable named here.
+The table records the disabled integration in `src/lib/billing/catalog.ts`. Only the one-off
+report remains a public offer from this table. Monitoring rows are historical, never-sold
+proposals retained for mapping tests, not current prices or instructions to create products.
+Before any paid launch, reconcile the approved offer, catalogue and this runbook.
 
 | Catalogue id | What it is | Amount | Interval | Env var |
 |---|---|---|---|---|
@@ -84,7 +91,7 @@ id or a token from it:
 - `paddle().checkoutFor` returning a checkout for the SKU, opened with the price id from the
   catalogue and with `customData` carrying the buyer's email and domain.
 - The three `mailto:` CTAs on `/pricing` pointing at that checkout instead, for the report and the
-  monitoring plans. The audit CTA stays an email on purpose: it is priced in a conversation.
+  monitoring plans. The pilot CTA stays an email: the introductory price is public, but scope and availability must be agreed.
 - Somewhere to land after payment that says what happens next, because a report is delivered by
   hand and a buyer who sees nothing assumes it failed.
 

@@ -7,8 +7,11 @@
 
 - Free scan: 16 deterministic checks across five funnel stages (discovery, agent entry,
   registration, provisioning, integration). No language model is involved and no account is needed.
-- Paid audit: real agent runs against a real codebase, measuring which provider gets picked
-  and in which words the others are rejected.
+- Monitoring beta: free weekly HTTP checks and confirmed-change alerts; no audit purchase required.
+  Agent mention checks are experimental, manual and have no fixed schedule.
+- One agent report: recorded answers to one buying question, chosen providers and full transcripts.
+- Integration pilot: two agreed tasks, an initial test, one small documentation or example fix
+  and a retest. See [Pricing](/pricing) for the introductory offer and scope.
 
 ## For agents
 

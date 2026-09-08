@@ -42,8 +42,8 @@ export default async function TermsPage() {
               published formula
             </Link>
             , and a set of agent runs that record which providers an agent names when asked a buying question. The free
-            scan needs no account and no card. The paid products are a one-off report, monitoring by the month, and an
-            audit priced by conversation, all described on{' '}
+            scan needs no account and no card. Monitoring is a free beta, available independently. The paid products are
+            a one-off report and an integration pilot with an agreed scope, described on{' '}
             <Link href="/pricing" className="text-brass underline underline-offset-4">
               /pricing
             </Link>
@@ -92,8 +92,8 @@ export default async function TermsPage() {
             <Link href="/pricing" className="text-brass underline underline-offset-4">
               /pricing
             </Link>{' '}
-            and are stated in US dollars. Monitoring renews monthly until you stop it, and every mail we send carries
-            the stop link. Refunds are on{' '}
+            and are stated in US dollars. Monitoring is free, with no announced paid price or end date.
+            We will ask before charging you. Every monitoring email carries a stop link. Refunds are on{' '}
             <Link href="/refunds" className="text-brass underline underline-offset-4">
               /refunds
             </Link>

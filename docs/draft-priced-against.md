@@ -1,5 +1,10 @@
 # Draft, not published: what a reader should be told about the $29 scanners
 
+**Historical comparison, 19 August.** The broader internal assessment, including direct
+coding-agent competitors and prices checked on 8 September, is
+[business-advantage-2026-09-08.md](business-advantage-2026-09-08.md).
+This draft is not the current market assessment and remains unpublished.
+
 **Status: a draft, and after the decision audit of 20 August 2026 it stays one on purpose. This is
 material for a one-to-one conversation, not copy for the site.** A dated price checked the morning of
 a sales reply is honest; the same number sitting on a page goes stale without anybody touching it.

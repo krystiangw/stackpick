@@ -5,6 +5,14 @@ i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dzi
 
 ## Nad czym pracujemy
 
+**Ocena przewagi biznesowej ukończona 08.09:** `docs/business-advantage-2026-09-08.md`.
+Sprawdzono aktualne cenniki i istniejące publiczne raporty konkurencji; bez zakupów i nowych
+testów u dostawców. Lightsage konkuruje także wykonaniem kodu i obsługą Managed. Rekomendacja:
+jeden demonstrator diagnozy/poprawki/retestu, rozmowy po odwołaniu wstrzymania, następnie
+płatne pilotaże po 1500 USD. Właściciel następnie zatwierdził zmianę oferty: monitoring jako
+bezpłatna beta bez zapowiedzi ceny; 1500 USD za każdy z pierwszych dwóch pilotaży. Popyt
+pozostaje niesprawdzony. Trwa weryfikacja i wdrożenie cennika; kampania nadal wstrzymana.
+
 0. **Produkt przed kampanią — materiały gotowe.** Dziewięć źródłowo ocenionych raportów
    pod dotychczasowymi linkami i zgodna próbka Loops na `/d/sample`. Generator wymaga oceny
    briefu i zaleceń powiązanych z SHA-256 skanu. Korekty niepotwierdzonych zaleceń dostarczone.
@@ -12,7 +20,7 @@ i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dzi
    Kontrola po rozszerzeniu agentów: 10 stron dostaw bez logowania, 7 stron przebiegów / 159 pełnych odpowiedzi,
    35 działających źródeł, skrzynki i zgodność maili. Dowody i audyt zamknięcia:
    `docs/readiness-verification-2026-09-07.md`. Pilotaż: `docs/integration-pilot-2026-09-07.md`
-   (1500 USD jako hipoteza, 2 zadania, 24 próby, limit 12 h, niewykonany i niesprzedany).
+   (1500 USD jako zatwierdzona cena pierwszych dwóch zleceń, 2 zadania, 24 próby, limit 12 h; niewykonany i niesprzedany).
 1. **Copy i UI zamknięte:** pozostałe fazy 5-7 planu redakcyjnego wdrożone jako v790-v792.
    Krótsze strony, czytelna historia przebiegów z filtrami i rozwijanymi odpowiedziami,
    raport z widoczną oceną zakresu, wynikami i rozwijanymi dowodami. Wydruk zawiera pełne treści.

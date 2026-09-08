@@ -4,7 +4,7 @@ import { TrackedLink } from '@/components/tracked-link'
 import type { Click } from '@/lib/clicks'
 import { CHECKS, MAX_SCORE } from '@/lib/score'
 import { CATEGORIES, CURATED_DOMAINS } from '@/lib/categories'
-import { priceOf, skuById } from '@/lib/billing/catalog'
+import { priceOf, skuById, INTEGRATION_PILOT } from '@/lib/billing/catalog'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
 import { SITE_URL } from '@/lib/site'
@@ -13,13 +13,15 @@ import { NOISE_FLOOR_PERCENT } from '@/lib/published'
 import { publishedCorpus } from '@/lib/published'
 import { edgeRefusalsInCorpus, sweptOn } from '@/lib/limits'
 
+const pilotPrice = `$${INTEGRATION_PILOT.usd.toLocaleString('en-US')}`
+
 export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/pricing` },
   title: 'Pricing: Let Agents In',
   // The prices go in the snippet. A pricing description with no number in it reads as "contact
   // sales", and the runs we published measured agents passing over a vendor on exactly that
   // reading, without opening the page that would have corrected it.
-  description: `Free scan: ${CHECKS.length} deterministic checks, no account or card. One agent report: ${priceOf(skuById('report-one')!)}. Monitoring is free during development, then ${priceOf(skuById('watch-monthly')!)} a month. Audit priced by conversation.`,
+  description: `Free scan: ${CHECKS.length} deterministic checks, no account or card. One agent report: ${priceOf(skuById('report-one')!)}. Free monitoring beta. Integration pilot: ${pilotPrice} each for the first ${INTEGRATION_PILOT.places} pilots.`,
 }
 
 type Tier = {
@@ -49,13 +51,26 @@ const TIERS: readonly Tier[] = [
     cta: { label: 'Scan your domain', href: '/', click: 'scan' },
   },
   {
+    name: 'Monitoring beta',
+    price: 'Free',
+    cadence: 'no account or card',
+    pitch: 'Know when a public scan result changes.',
+    includes: [
+      'Weekly checks run automatically',
+      'Email alerts for confirmed changes',
+      'Available on its own; no audit needed',
+    ],
+    note: 'Free while I am building it. I will ask before charging you.',
+    cta: { label: 'Watch a domain', href: '/#watch', click: 'watch' },
+  },
+  {
     name: 'One agent report',
     price: priceOf(skuById('report-one')!),
     cadence: 'once, per domain',
-    pitch: 'I send you the recorded answers to a buying question.',
+    pitch: 'See which providers agents recommend for one buying question.',
     includes: [
       'A question chosen for your category',
-      'Each run in a separate session',
+      'At least ten answers across two tools',
       'Every transcript included',
     ],
     note: `Available for the ${CATEGORIES.length} categories I measure. I confirm category fit before you pay.`,
@@ -63,32 +78,20 @@ const TIERS: readonly Tier[] = [
     cta: { label: 'Ask for a report', href: 'mailto:hello@letagentsin.com?subject=One%20agent%20report', click: 'mail-report' },
   },
   {
-    name: 'Monitoring',
-    price: 'Free',
-    cadence: `during development, later ${priceOf(skuById('watch-monthly')!)} a month per domain`,
-    pitch: 'I track changes in access and agent mentions.',
-    includes: [
-      'Weekly checks run automatically',
-      `Three domains: ${priceOf(skuById('watch-pack-3')!)} a month`,
-      `Each extra buying question: ${priceOf(skuById('extra-question')!)} a month`,
-    ],
-    note: 'Free while I am building it. I will ask before charging you.',
-    cta: { label: 'Watch a domain', href: '/#watch', click: 'watch' },
-  },
-  {
-    name: 'Audit and fixes',
-    price: 'By conversation',
-    cadence: 'one to three weeks',
+    name: 'Integration pilot',
+    price: pilotPrice,
+    cadence: `once, per product · first ${INTEGRATION_PILOT.places} pilots`,
     pitch: 'I test an integration, improve one small part and test it again.',
     includes: [
-      'Two agreed tasks, with evidence from each attempt',
-      'Account access and human handoffs recorded separately',
-      'One small documentation or example fix, then a retest',
+      'Two agreed tasks, tested with two agent tools',
+      '24 planned attempts across the initial test and retest',
+      'One small documentation or example fix',
+      'Runnable test project and a before/after report',
     ],
-    note: 'Four figures. We agree access, success criteria and work limits before starting. Larger product changes are scoped separately.',
+    note: 'Up to 12 hours of my work. Delivery within 10 business days of agreed scope and ready access. Larger changes are scoped separately.',
     featured: true,
-    sample: { label: 'Read the four published audits', href: '/audit' },
-    cta: { label: 'Ask what it would cost', href: 'mailto:hello@letagentsin.com?subject=Agent%20audit', click: 'mail-audit' },
+    sample: { label: 'See earlier integration studies', href: '/audit' },
+    cta: { label: 'Discuss your two tasks', href: 'mailto:hello@letagentsin.com?subject=Agent%20audit', click: 'mail-audit' },
   },
 ]
 
@@ -124,10 +127,10 @@ export default async function PricingPage() {
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Pricing</p>
         <h1 className="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-tight tracking-tight">
-          Free scans. Agent reports and audits.
+          Start with a scan. Test an integration when you need to.
         </h1>
         <p className="mt-5 max-w-2xl leading-relaxed text-ink-soft">
-          I check how agents find and use your product. Choose a scan, a report, ongoing monitoring or an audit with fixes.
+          Scan and monitor public access for free. Buy a report to see agent recommendations, or agree a pilot to test and improve an integration.
         </p>
         <div className="mt-7 flex flex-wrap gap-3">
           <TrackedLink
@@ -151,57 +154,7 @@ export default async function PricingPage() {
       </section>
 
       <section className="border-b border-rule py-12">
-        <h2 className="text-lg font-semibold tracking-tight">Plan comparison</h2>
-        <div className="mt-6 overflow-x-auto">
-          <table className="w-full min-w-[56rem] border-collapse text-left">
-            <thead>
-              <tr>
-                <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em]" />
-                <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em]">Free scan</th>
-                <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em]">One agent report</th>
-                <th className="border-b border-rule bg-brass-soft p-3 align-top font-mono text-xs uppercase tracking-[0.15em]">Monitoring</th>
-                <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em]">Audit and fixes</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">What runs</th>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">{CHECKS.length} deterministic HTTP checks</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">One buying question put to an agent at least ten times on two tools</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Weekly HTTP checks. One buying question across five isolated monthly agent runs, within the measured categories. Manual schedule below.</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Agents given a working app and a brief to ship an integration</td>
-              </tr>
-              <tr>
-                <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">Who does it</th>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">A script</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Agents; answers counted by a published matcher</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Agents; answers counted by a published matcher</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Agents with transcript review</td>
-              </tr>
-              <tr>
-                <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">What you get</th>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">A permanent link to the scorecard</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Mention count, chosen providers and quoted reasons for passing over your product</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Verdict change alerts and a monthly agent count email</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Stall locations, every artefact and scoped fixes</td>
-              </tr>
-              <tr>
-                <th className="border-b border-rule p-3 align-top font-mono text-xs uppercase tracking-[0.15em] text-ink-faint">Price</th>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">$0</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">{priceOf(skuById('report-one')!)} once</td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">
-                  Free during development
-                  <span className="mt-1 block font-mono text-xs text-ink-faint">later {priceOf(skuById('watch-monthly')!)} a month</span>
-                </td>
-                <td className="border-b border-rule p-3 align-top text-sm leading-relaxed">Four figures, scoped by conversation</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="border-b border-rule py-12">
-        <div className="grid gap-px bg-rule sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-px bg-rule sm:grid-cols-2">
           {TIERS.map((tier) => (
             <article
               key={tier.name}
@@ -421,16 +374,24 @@ export default async function PricingPage() {
         <div className="mt-6 flex flex-col">
           {[
             [
-              'Monthly monitoring schedule',
-              'I start the five monthly agent runs and read the email before sending it. Runs cost money on external tools, so I may skip them when there is nothing to report. I choose the sending day; it is not a fixed monthly date. Unchanged results produce no email.',
+              'What does the monitoring beta include?',
+              'Weekly HTTP checks and email alerts for confirmed changes. You can use it without buying a report or pilot. Stop through the link in any email. There is no end date or announced paid price; I will ask before charging you.',
             ],
             [
-              'Agency work',
-              `The Agency pack covers ten domains for ${priceOf(skuById('watch-agency')!)} a month. I quote larger portfolios and reports carrying your name individually.`,
+              'Are agent mentions monitored every month?',
+              'Agent mention checks are experimental and run manually in selected categories. They have no fixed schedule or guaranteed number of runs. I review any results before sharing them. They do not test signup or integration. For a defined set of answers, order a one-off report.',
             ],
             [
-              'Annual billing and cancellation',
-              'Pay for ten months and get twelve. Monthly monitoring has no minimum term. Stop monitoring through the link in any email.',
+              'What is included in the pilot price?',
+              'Two tasks, two agent tools and three attempts per task and tool, before and after: 24 planned attempts. The price covers up to 12 hours of my work, including one documentation or example fix of up to two hours, and up to $100 in tool costs. We agree access and success criteria before starting. Work beyond these limits needs a separate agreement.',
+            ],
+            [
+              'What if the pilot finds nothing to fix?',
+              'You receive the evidence and that conclusion. If there is no suitable fix, I repeat the baseline and label it as such. The pilot pays for the agreed investigation, not a promised improvement in agent choices or sales. Any incomplete work is identified and we agree how to finish or settle it.',
+            ],
+            [
+              'Is the introductory pilot price still available?',
+              `The first ${INTEGRATION_PILOT.places} agreed pilots are ${pilotPrice} each. I confirm availability, the scope and payment arrangements before you commit. Further projects are quoted separately.`,
             ],
             [
               'Hourly work',

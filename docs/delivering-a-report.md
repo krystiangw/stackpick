@@ -9,8 +9,8 @@ in three months will not remember what the pricing page promised today.
 | Product | Price | What we owe |
 |---|---|---|
 | One agent report | $49, once | One buying question put to an agent **ten times across two tools**, how many named them, who was picked instead, every transcript |
-| Monitoring | $79 a month a domain | The 16 checks rerun weekly with an email only when a verdict moves, plus one cell a month. Packs: three $179, Agency ten $499. Year for the price of ten months. Extra buying question $29 a month |
-| Audit and fixes | Four figures | Build runs against a real application, transcripts and artefacts, the argument about what it means |
+| Monitoring beta | Free, no announced end date or future price | The 16 checks rerun weekly with alerts for confirmed changes. Available independently. Agent mention checks are a separate manual experiment without a fixed cadence or guaranteed run count |
+| Integration pilot | $1500 each for the first two agreed pilots | Two tasks, two tools, 24 planned attempts before/after, one small fix, runnable fixture and evidence. Scope: `docs/integration-pilot-2026-09-07.md` |
 
 ## Before taking money
 
@@ -159,16 +159,13 @@ create with their prices, the webhook and the two events we act on, the one vari
 on, and the checkout **that does not exist yet** and blocks everything after it. What is left is a
 person's: the legal name and address of the seller, and a Paddle account.
 
-**The monthly half of monitoring has no schedule behind it.** Three crons run on this app - the MCP
-registry mirror, the quota check and the watch sweep - and none of them refreshes the agent runs or
-sends the monthly mail. The weekly checks are automatic; the five runs a month that `/pricing`
-promises a monitoring customer are `scripts/cell-email.mts` printing a draft for a person to read and
-send. With four free watches that is a chore. **On the day somebody pays, it is the obligation**, and
-whoever turns billing on should decide whether it becomes a cron or stays a calendar reminder with a
-name against it. Written here rather than remembered, because a promise kept by memory is the one
-that lapses in month three.
+**Agent mention checks are experimental and have no fixed schedule.** This is the scope
+approved on 2026-09-08, replacing the previous five-runs-per-month promise. Weekly HTTP
+checks and confirmed-change alerts remain automatic and free. The agent experiment is
+manual, limited to selected categories, and has no guaranteed run count or delivery date.
+`scripts/cell-email.mts` prepares a draft for operator review; it does not authorize sending.
+A one-off paid report has its own agreed scope and must not be substituted with this experiment.
 
-Since 2026-08-19 `/pricing` says this to the buyer as well, under *Is the monthly agent run
-automatic?*, so the admission is not only in this file. A rule in `scripts/rules.mts` keeps the two
-tied together: while this paragraph is here, that sentence has to be on the page, and when the
-schedule finally exists the build fails until somebody rewrites both.
+The pricing FAQ and homepage disclose the distinction. Before offering paid monitoring,
+agree a useful scope, reliable cadence, price and existing-subscriber consent, and update
+both the public offer and this runbook. The dormant catalogue prices are withdrawn proposals.

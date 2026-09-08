@@ -164,13 +164,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
             </div>
           </div>
           <div id="watch" className="flex scroll-mt-8 flex-col gap-3 bg-ground p-8">
-            <h3 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Monitoring</h3>
+            <h3 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Monitoring beta</h3>
             <p className="text-2xl font-semibold tracking-tight">Know when a scan result changes</p>
             <p className="text-sm leading-relaxed text-ink-soft">
               Checks run weekly. When a verdict changes, the email shows the previous result and the new one.
             </p>
             <p className="text-sm leading-relaxed text-ink-soft">
-              I start five agent runs manually, aiming for monthly checks. I may skip a batch; unchanged results produce no email.
+              Agent mention checks are a separate experiment, run manually without a fixed schedule or guaranteed number of runs.
               </p>
             <p className="text-sm leading-relaxed text-ink-soft">
               Each run answers one buying question, without signup or integration. Coverage is limited to the {CATEGORIES.length} categories we measure.
@@ -182,7 +182,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
             {/* The visitor who wants the agent half without the standing part had no way to say so,
                 and the page that sells it is two clicks away behind a price list. */}
             <p className="text-sm leading-relaxed text-ink-soft">
-              Want the agent runs once rather than every month?{' '}
+              Want a defined set of agent answers?{' '}
               <TrackedLink click="pricing" href="/pricing" className="text-brass underline underline-offset-4">
                 One report, ten runs, two tools
               </TrackedLink>
