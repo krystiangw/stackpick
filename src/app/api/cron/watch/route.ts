@@ -212,9 +212,9 @@ export async function POST(request: Request) {
           lastTotal: previousCard.total,
           lastMeasurable: previousCard.measurable ?? previousCard.max,
         }
-        const { subject, text } = changeEmail(
+        const { subject, text, html } = changeEmail(
           watchAtBaseline, report, confirmed, previousCard !== previous.scorecard, previous.scannedAt)
-        const sent = await sendEmail(watch.email, subject, text)
+        const sent = await sendEmail(watch.email, subject, text, html)
         if (sent.delivered) mailed += 1
       }
 

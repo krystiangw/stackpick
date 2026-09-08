@@ -943,7 +943,7 @@ const withBaseline = changeEmail(
   false,
   '2026-06-30T07:12:00.000Z',
 ).text
-check('mail datuje podstawe porownania', withBaseline.includes('from 5 of 10 measured on 2026-06-30.'), true)
+check('mail datuje podstawe porownania', withBaseline.includes('Previous: 5/10, measured on 2026-06-30.'), true)
 check('i bierze date z pomiaru, nie z ostatniego zajrzenia', withBaseline.includes('2026-08-18'), false)
 // Kontrolka: bez poprzedniego raportu mail nie ma prawa zmyslic daty.
 check('bez poprzedniego raportu zadnej daty nie ma', mailFor(false).text.includes('measured on'), false)
@@ -987,9 +987,12 @@ const fellOut = changeEmail(
   moved([verdict(1, 1)], [verdict(0, 1, { inconclusive: true })]),
   false,
 ).text
-check('niemierzalne ma wlasny naglowek', fellOut.includes('We could not measure it this time (1):'), true)
-check('i nie stoi pod slowem "Gained"', /Gained or moved \(\d+\):[\s\S]*unmeasured/.test(fellOut), false)
-check('i mowi, ze nie liczy sie przeciwko nim', fellOut.includes('nothing in this last group counts against your score'), true)
+check('niemierzalne ma wlasny naglowek', fellOut.includes('Could not verify'), true)
+const clearUnknownEmail = (text: string) => text.includes('Could not verify') && text.includes('They do not count against your score') && !/gained|improved/i.test(text)
+check('niemierzalne nie jest przedstawione jako poprawa', clearUnknownEmail(fellOut), true)
+check('kontrola: usuniecie zastrzezenia jest wykrywane', clearUnknownEmail(fellOut.replace('They do not count against your score', 'Your score declined')), false)
+check('kontrola: nazwanie braku odczytu poprawa jest wykrywane', clearUnknownEmail(`Improved: ${fellOut}`), false)
+check('i mowi, ze nie liczy sie przeciwko nim', fellOut.includes('They do not count against your score'), true)
 // A check the earlier scan never had must not be reported as a change from nothing.
 check('nowy check nie jest zmiana', moved([], [verdict(1, 1)]).length, 0)
 
@@ -1007,7 +1010,7 @@ const withRemedy = changeEmail(
   moved([verdict(1, 1, { id: 'llms_txt', label: 'llms.txt published' })], [verdict(0, 1, { id: 'llms_txt', label: 'llms.txt published' })]),
   false,
 ).text
-check('mail niesie instrukcje przy stracie', withRemedy.includes('What to do about llms.txt published:'), true)
+check('mail niesie instrukcje przy stracie', withRemedy.includes('Suggested next step for llms.txt published:'), true)
 // Kontrolka: przy checku, dla ktorego nie publikujemy kroku, mail nie ma prawa zmyslic instrukcji.
 const noRemedy = changeEmail(
   { domain: 'v.test', id: 'w1', email: 'a@v.test', lastTotal: 6, lastMeasurable: 10 } as never,
@@ -1022,7 +1025,7 @@ const noRemedy = changeEmail(
   ),
   false,
 ).text
-check('a przy checku bez kroku nic nie zmysla', noRemedy.includes('What to do about'), false)
+check('a przy checku bez kroku nic nie zmysla', noRemedy.includes('Suggested next step for'), false)
 
 // A reseed moves rules, and a rule that moved is not news about the vendor.
 check('inna wersja formuly to nie porownanie', comparableScorecards({ formulaVersion: '9.2' }, { formulaVersion: '9.3' }), false)
@@ -3437,7 +3440,7 @@ check('i wyznacza mu wczesniejszy termin', cronWatch.includes('watch.recheckAt =
 // ma wlasne testy wyzej. Ten straznik zlapal moj wlasny refaktor w chwili, w ktorej go zrobilem.
 check('mail dostaje tylko potwierdzone przeciecie', cronWatch.includes('reproducedChanges(waiting, changes)'), true)
 check('a ruch widziany raz zaczyna wlasna runde', cronWatch.includes('unseenChanges(waiting, changes)'), true)
-const doubleMeasured = 'Every verdict listed here was measured twice, about half an hour apart; a verdict that moved only once is not in this email.'
+const doubleMeasured = 'Each change appeared in two scans. Changes seen only once are held for another check.'
 const watchEmailSource = readFileSync('src/lib/watch-email.ts', 'utf8')
 check('mail wyjasnia podwojny pomiar', watchEmailSource.includes(doubleMeasured), true)
 check(
