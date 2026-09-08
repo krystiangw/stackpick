@@ -5,13 +5,21 @@ i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dzi
 
 ## Nad czym pracujemy
 
+**Kampania 20 firm zakończona wysyłką, 08.09:** wszystkie wiadomości SENT w Gmail,
+16:04–16:31 CEST. Każda ma imiennego odbiorcę, właściwy raport i nadawcę
+Krystian from Let Agents In <hello@letagentsin.com>. Dodatkowe 11 raportów opublikowano
+po przeglądzie dokumentacji i kontroli lokalnej/live. Nie wykonywano nowych biegów agentów;
+świeże skany są migawkami dostaw, korpus bez zmian. Lista: `docs/outreach-top20-2026-09-08.md`.
+Prywatny manifest: `data/outreach-top20-2026-09-08/campaign.json`. Nie wysyłać ponownie.
+Popyt pozostaje niepotwierdzony; następny krok to ocena odpowiedzi i dopasowanie zadania do pilotażu.
+
 **Landing i outreach, 08.09:** nowy pierwszy ekran z odbiorcą, konkretnym przykładem i trzema
 ofertami, wdrożony jako v796. Audyt: `docs/landing-review-2026-09-08.md`. Dziewięć maili skrócono i skierowano
 do imiennych kontaktów; `docs/outreach-review-2026-09-08.md`. Właściciel zlecił próbkę
 wyłącznie do siebie przed pierwszym klientem. Próbka wysłana z hello@ i potwierdzona w INBOX;
 następnie właściciel polecił pierwszą wysyłkę: **Loops wysłany do Chrisa 08.09 o 16:04 CEST**.
-Osiem kolejnych maili zapisano i zweryfikowano jako szkice Gmail, bez zgody na ich wysyłkę.
-Stan i kolejność: `docs/outreach-first-send-2026-09-08.md`.
+Osiem kolejnych maili było wtedy szkicami Gmail; po rozszerzeniu celu wysłano je wraz z
+dodatkowymi 11 wiadomościami. Historia pierwszej wysyłki: `docs/outreach-first-send-2026-09-08.md`.
 
 **Ocena przewagi biznesowej ukończona 08.09:** `docs/business-advantage-2026-09-08.md`.
 Sprawdzono aktualne cenniki i istniejące publiczne raporty konkurencji; bez zakupów i nowych
@@ -26,8 +34,8 @@ potem ręczne rozliczenie; `docs/payments-first-sales-2026-09-08.md`. Bez urucha
 0. **Produkt przed kampanią — materiały gotowe.** Dziewięć źródłowo ocenionych raportów
    pod dotychczasowymi linkami i zgodna próbka Loops na `/d/sample`. Generator wymaga oceny
    briefu i zaleceń powiązanych z SHA-256 skanu. Korekty niepotwierdzonych zaleceń dostarczone.
-   Osiem niewysłanych `.eml` w `data/product-review-2026-09-07/email-drafts/`; wysłany Loops
-   przeniesiono do `data/outreach-send-2026-09-08/sent/`.
+   Wszystkie 20 wysłanych `.eml` w `data/outreach-top20-2026-09-08/sent/`;
+   stare szkice przeniesiono poza kolejki. Nowe 11 dostaw ma własne oceny briefów i zaleceń.
    Kontrola po rozszerzeniu agentów: 10 stron dostaw bez logowania, 7 stron przebiegów / 159 pełnych odpowiedzi,
    35 działających źródeł, skrzynki i zgodność maili. Dowody i audyt zamknięcia:
    `docs/readiness-verification-2026-09-07.md`. Pilotaż: `docs/integration-pilot-2026-09-07.md`
@@ -48,8 +56,8 @@ potem ręczne rozliczenie; `docs/payments-first-sales-2026-09-08.md`. Bez urucha
 ## Rozszerzenie agentów i następne pomiary
 
 Opublikowano 35 odpowiedzi Antigravity i 19 Cursor Auto w siedmiu kategoriach kampanii.
-Zachowano 391 wcześniejszych odpowiedzi; razem 445. Dziewięć raportów, próbka i niewysłane
-drafty mają aktualne liczniki. Brakujące 16 odpowiedzi Cursor to limit konta, nie brak wzmianki.
+Zachowano 391 wcześniejszych odpowiedzi; razem 445. Pierwotne dziewięć raportów i próbka mają zaktualizowane liczniki;
+późniejsza kampania 20 firm korzysta z tych samych odpowiedzi. Brakujące 16 odpowiedzi Cursor to limit konta, nie brak wzmianki.
 Auto nie ujawnia modelu bazowego. Badanie korelacji w 26 kategoriach pozostaje oparte na
 pierwotnych Claude Code i Codex. Dowody: `docs/agent-expansion-2026-09-07.md`.
 
@@ -61,11 +69,11 @@ i publikacji. Szczegóły i wyłączenie: `docs/cursor-free-plan-2026-09-07.md`.
 
 ## Co blokuje
 
-- **08.09: właściciel zatwierdził jedną wysyłkę — Loops wysłany.** Pozostałe osiem wiadomości
-  ma tylko szkice Gmail; przed ich wysłaniem potrzebne jest kolejne polecenie. Nie wysyłać Loops ponownie.
+- **08.09: wszystkie 20 wiadomości wysłano i zweryfikowano.** Nie ma zaległej wysyłki
+  w tej kampanii. Brak automatycznych przypomnień; nie dublować wiadomości.
 
 - Transloadit: nowy brief jest szkicem z zerem przebiegów. Nie dodawać starego raportu do
-  gotowych dziewięciu wiadomości. Nie blokuje rozpoczęcia od trafnych raportów.
+  kampanii bez nowego briefu i pomiarów. Pozostałe 20 wiadomości już wysłano.
 - Billing i tożsamość sprzedawcy pozostają do domknięcia przed przyjęciem płatności.
 
 ## Decyzje, których nie cofamy

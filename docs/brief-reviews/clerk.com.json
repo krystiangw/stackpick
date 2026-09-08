@@ -1,0 +1,19 @@
+{
+  "domain": "clerk.com",
+  "category": "auth",
+  "question": "We built our own sessions and password resets two years ago and I am tired of maintaining them, plus an enterprise customer now wants SSO. Node backend, React front end, a few thousand users to migrate. Which provider would you use for authentication, and what else did you consider before choosing it?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Clerk documents user migration and enterprise SSO for application organizations. This supports the main Node/React migration scenario. The reviewed migration example uses Auth.js; a custom store still requires mapping its IDs, hashes and session behavior.",
+  "nextStep": "Agree the legacy schema and password-hash format, then test a few synthetic migrated accounts plus one enterprise connection.",
+  "sources": [
+    {
+      "url": "https://clerk.com/docs/guides/development/migrating/authjs",
+      "note": "Illustrates database user export, password-hash fields, ID mapping and migration tooling; the example is Auth.js, not every custom store."
+    },
+    {
+      "url": "https://clerk.com/docs/guides/organizations/add-members/sso",
+      "note": "Documents organization-scoped SAML/OIDC enterprise connections and related configuration errors."
+    }
+  ]
+}

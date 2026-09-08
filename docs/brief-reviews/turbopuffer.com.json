@@ -1,0 +1,19 @@
+{
+  "domain": "turbopuffer.com",
+  "category": "vector-search",
+  "question": "We want our support bot to find the three most similar past tickets to a new one, so I need somewhere to keep a few million embeddings and query them by similarity. Node, running on a normal cloud, and this ships next month. Which database would you use for that, and what else did you consider?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "turbopuffer documents vector storage and similarity queries and publishes a TypeScript client. This fits retrieving similar support tickets from Node. This report did not benchmark millions of embeddings or establish the cost for that workload.",
+  "nextStep": "Confirm the ticket-search scenario and an authorized test budget, then test a labeled dataset with the TypeScript client.",
+  "sources": [
+    {
+      "url": "https://turbopuffer.com/docs/quickstart",
+      "note": "Documents dashboard API keys and the write/query loop for a vector namespace."
+    },
+    {
+      "url": "https://github.com/turbopuffer/turbopuffer-typescript",
+      "note": "Official TypeScript client for the API; package metadata links this repository."
+    }
+  ]
+}

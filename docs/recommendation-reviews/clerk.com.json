@@ -1,0 +1,51 @@
+{
+  "domain": "clerk.com",
+  "question": "We built our own sessions and password resets two years ago and I am tired of maintaining them, plus an enterprise customer now wants SSO. Node backend, React front end, a few thousand users to migrate. Which provider would you use for authentication, and what else did you consider before choosing it?",
+  "scanFingerprint": "16ac87c58e5c0ee7bee12bdbc0d09aac92d910b7fee988deb5c5639489b18d7f",
+  "reviewedAt": "2026-09-08",
+  "summary": "Check migrated sign-in and enterprise SSO as two tasks. The scan cannot tell whether a custom user store will migrate correctly, and end-user API keys are not the same as credentials for setting up a Clerk project.",
+  "items": [
+    {
+      "title": "Verify the legacy account and enterprise sign-in paths",
+      "checkIds": [
+        "oauth_dcr",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "The scan found OAuth metadata without a registration endpoint and a provisioning phrase about application users creating their own API keys. Neither establishes how a developer obtains a Clerk project secret or whether migrated users can sign in.",
+      "nextStep": "Use an authorized test instance and synthetic legacy users. Map IDs and hashes, verify sign-in, then configure a test enterprise connection.",
+      "validation": "Check identity continuity, expected organization membership and failed-login behavior. Do not add dynamic registration simply to gain a scan point.",
+      "sources": [
+        {
+          "url": "https://clerk.com/docs/guides/development/migrating/authjs",
+          "note": "Illustrates database user export, password-hash fields, ID mapping and migration tooling; the example is Auth.js, not every custom store."
+        },
+        {
+          "url": "https://clerk.com/docs/guides/organizations/add-members/sso",
+          "note": "Documents organization-scoped SAML/OIDC enterprise connections and related configuration errors."
+        }
+      ]
+    },
+    {
+      "title": "Separate dashboard signup from the migration",
+      "checkIds": [
+        "signup_no_captcha",
+        "signup_reachable"
+      ],
+      "disposition": "verify",
+      "finding": "The dashboard signup form requires JavaScript, so its gates were not measurable to our HTTP reader. Migration with an existing authorized project is a different path.",
+      "nextStep": "Provide a project before the migration test, or explicitly include browser-assisted project creation in scope.",
+      "validation": "Record the handoff and its duration. A script-rendered form alone does not justify redesigning onboarding.",
+      "sources": [
+        {
+          "url": "https://dashboard.clerk.com/sign-up",
+          "note": "Signup page recorded in the scan."
+        },
+        {
+          "url": "https://clerk.com/docs/guides/development/migrating/authjs",
+          "note": "Illustrates database user export, password-hash fields, ID mapping and migration tooling; the example is Auth.js, not every custom store."
+        }
+      ]
+    }
+  ]
+}

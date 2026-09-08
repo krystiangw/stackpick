@@ -1,0 +1,52 @@
+{
+  "domain": "inngest.com",
+  "question": "We generate PDF reports inside the request and users watch a spinner for forty seconds. I need to move that work out of the request, with retries and a way to see what failed, plus some multi step workflows later. Node on a normal cloud. Which service would you use, and what else did you consider?",
+  "scanFingerprint": "13221befffe18234a3c72d1bae2675ce0f6592c797825b8cf1cc84a06baccc91",
+  "reviewedAt": "2026-09-08",
+  "summary": "Start with an event-triggered PDF function and a recoverable failure. Keep local development, cloud signing credentials and account setup as separate observations.",
+  "items": [
+    {
+      "title": "Follow one function from event to completed artifact",
+      "checkIds": [
+        "agent_entry_point",
+        "oauth_dcr",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "The scan found an ai.txt file without the procedural markers it expects and did not confirm OAuth registration or programmatic provisioning. Inngest documents environment signing keys and a local development mode without them; OAuth registration is not a prerequisite for this SDK task.",
+      "nextStep": "Have the agent create a PDF function using a durable step. First test locally, then repeat in an authorized cloud environment with the required credentials.",
+      "validation": "Record the event, function execution, failed step, retry and output artifact. Do not treat a local run as proof of cloud onboarding.",
+      "sources": [
+        {
+          "url": "https://www.inngest.com/docs/guides/background-jobs",
+          "note": "Event-triggered functions use durable steps with automatic retries."
+        },
+        {
+          "url": "https://www.inngest.com/docs/platform/signing-keys",
+          "note": "Cloud signing keys belong to environments; local Dev Server does not require one."
+        }
+      ]
+    },
+    {
+      "title": "Record the cloud account handoff separately",
+      "checkIds": [
+        "signup_no_captcha",
+        "signup_reachable"
+      ],
+      "disposition": "verify",
+      "finding": "The signup page needs JavaScript and its form gates were unmeasurable to our HTTP reader. This is not evidence that a browser-assisted signup or an existing account cannot work.",
+      "nextStep": "If cloud signup is part of the agreed task, observe it in the chosen browser-capable tool; otherwise provide an authorized account before timing integration.",
+      "validation": "Record any human handoff and its reason. Do not ask for server-rendered signup or weaker gates solely to change this score.",
+      "sources": [
+        {
+          "url": "https://app.inngest.com/sign-up",
+          "note": "Signup URL reached by the scan."
+        },
+        {
+          "url": "https://www.inngest.com/docs/platform/signing-keys",
+          "note": "Cloud signing keys belong to environments; local Dev Server does not require one."
+        }
+      ]
+    }
+  ]
+}

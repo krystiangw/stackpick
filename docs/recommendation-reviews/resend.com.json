@@ -1,0 +1,29 @@
+{
+  "domain": "resend.com",
+  "question": "Our password reset and receipt emails go out through a box we run ourselves and too many of them land in spam. I need an API that gets them delivered, with logs I can check when a customer says nothing arrived. Node, maybe fifty thousand emails a month. Which provider would you use, and what else did you look at first?",
+  "scanFingerprint": "0782323eb74c531d26061885e09a77b81f73f9a2c59f7f5ee4c280920a15da25",
+  "reviewedAt": "2026-09-08",
+  "summary": "Resend already documents API-key creation in its CLI. The partial scan result is not a reason to build another provisioning interface. The useful next test is sending and diagnosing a transactional email after access is granted.",
+  "items": [
+    {
+      "title": "Verify the first send, including delivery evidence",
+      "checkIds": [
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "The scan found only one provisioning phrase. The CLI already documents creating API keys; its initial login takes an existing key. Those are different steps, and the score does not establish a missing API.",
+      "nextStep": "Give the agent an authorized test key and verified sender. Ask it to send a password reset and receipt to controlled recipients, then locate the request and delivery evidence.",
+      "validation": "Record the initial account handoff, API responses, message identifiers and delivery status separately. An accepted request is not proof of inbox placement.",
+      "sources": [
+        {
+          "url": "https://resend.com/docs/send-with-nodejs",
+          "note": "Node SDK sending guide requires an API key and verified domain."
+        },
+        {
+          "url": "https://resend.com/docs/cli",
+          "note": "CLI authenticates with an existing key, can create further keys, send emails and retrieve logs."
+        }
+      ]
+    }
+  ]
+}

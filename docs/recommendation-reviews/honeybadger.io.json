@@ -1,0 +1,54 @@
+{
+  "domain": "honeybadger.io",
+  "question": "We find out about exceptions when a customer emails us, which is embarrassing. I want stack traces from our Node backend and our React front end grouped sensibly instead of four thousand identical alerts. Which tool would you use, and what else did you look at before picking it?",
+  "scanFingerprint": "f0a9f3a1281e956080a7945dd707c360a56ff9f892ba2275d763b0fe8a7eb0d1",
+  "reviewedAt": "2026-09-08",
+  "summary": "The useful test is whether an agent can wire up error capture and inspect sensible groups. A Turnstile marker on signup does not tell us whether an existing-project integration will fail.",
+  "items": [
+    {
+      "title": "Check capture and grouping with an existing project",
+      "checkIds": [
+        "agent_entry_point",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "The scan did not find a conventional agent entry file and did not reach key-management documentation. The JavaScript configuration already accepts a project API key; missing provisioning evidence is not a missing error-ingestion interface.",
+      "nextStep": "Give the agent an authorized test project and ask it to report repeated and distinct exceptions from Node and React, using default grouping first.",
+      "validation": "Verify receipt, readable stack traces and expected groups. Use a custom fingerprint only if the fixture demonstrates a grouping problem.",
+      "sources": [
+        {
+          "url": "https://docs.honeybadger.io/lib/javascript/integration/browser/",
+          "note": "Browser JavaScript integration guide."
+        },
+        {
+          "url": "https://docs.honeybadger.io/lib/javascript/reference/configuration/",
+          "note": "JavaScript client configuration includes the project API key and Node configuration."
+        },
+        {
+          "url": "https://docs.honeybadger.io/lib/javascript/errors/customizing-error-grouping/",
+          "note": "Explains default grouping and custom fingerprints."
+        }
+      ]
+    },
+    {
+      "title": "Observe the signup gate before recommending a change",
+      "checkIds": [
+        "signup_no_captcha"
+      ],
+      "disposition": "verify",
+      "finding": "The signup HTML contains a Turnstile marker. We did not complete signup, so this is not a measured agent block.",
+      "nextStep": "If account creation matters to the pilot, record the supported browser flow and any human handoff. Keep that result separate from SDK setup.",
+      "validation": "Report the actual stopping point; do not infer that every signup is challenged or recommend removing anti-abuse controls.",
+      "sources": [
+        {
+          "url": "https://app.honeybadger.io/users/sign_up?plan=team",
+          "note": "Signup page containing the recorded marker."
+        },
+        {
+          "url": "https://docs.honeybadger.io/lib/javascript/reference/configuration/",
+          "note": "JavaScript client configuration includes the project API key and Node configuration."
+        }
+      ]
+    }
+  ]
+}

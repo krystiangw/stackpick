@@ -1,0 +1,82 @@
+{
+  "domain": "hatchet.run",
+  "question": "We generate PDF reports inside the request and users watch a spinner for forty seconds. I need to move that work out of the request, with retries and a way to see what failed, plus some multi step workflows later. Node on a normal cloud. Which service would you use, and what else did you consider?",
+  "scanFingerprint": "a6c243953ae80ddf7d2a10b442575a624e05592c4bb40c39afd28ce2f612c383",
+  "reviewedAt": "2026-09-08",
+  "summary": "Hatchet already has agent skills, a documentation MCP server and embedded execution. Test that route for the PDF job. The scan missed documented capabilities and found two potentially stale documentation links.",
+  "items": [
+    {
+      "title": "Use the documented agent setup and runtime",
+      "checkIds": [
+        "agent_entry_point",
+        "oauth_dcr",
+        "mcp_present",
+        "programmatic_provisioning",
+        "signup_no_captcha",
+        "signup_reachable"
+      ],
+      "disposition": "verify",
+      "finding": "Our probes missed the docs MCP endpoint and could not read the cloud signup form. Current docs describe CLI skills, TypeScript embedded execution without a token, and a dashboard token for cloud use. Neither missing OAuth metadata nor an unreadable signup proves this task is blocked.",
+      "nextStep": "Give the agent the coding-agent guide and a PDF fixture. Test local execution first; assess the cloud account and token handoff separately if required.",
+      "validation": "Record worker startup, a returned artifact and recovery from one deliberate failure. Distinguish documentation search via MCP from executing tasks via the SDK or CLI.",
+      "sources": [
+        {
+          "url": "https://docs.hatchet.run/v1/from-temporal-to-hatchet",
+          "note": "Documents tasks, durable workflows, retries, logging and TypeScript equivalents."
+        },
+        {
+          "url": "https://docs.hatchet.run/v1/quickstart",
+          "note": "Cloud quickstart provides a dashboard token and CLI profile."
+        },
+        {
+          "url": "https://docs.hatchet.run/v1/using-coding-agents",
+          "note": "Documents CLI skills, embedded TypeScript mode without an account, and the docs MCP endpoint."
+        }
+      ]
+    },
+    {
+      "title": "Recheck the two sampled documentation links",
+      "checkIds": [
+        "llms_txt"
+      ],
+      "disposition": "verify",
+      "finding": "The scan found llms.txt and llms-full.txt but two sampled index links did not resolve. The current coding-agent guide documents alternative per-page Markdown and MCP access.",
+      "nextStep": "Check /v1/index and /reference/python/index from the exact llms files. If still stale, update or redirect them to current pages.",
+      "validation": "Verify the replacement serves the intended content and repeat the link sample. This would repair navigation, not demonstrate a change in recommendations.",
+      "sources": [
+        {
+          "url": "https://docs.hatchet.run/llms.txt",
+          "note": "Index sampled by the scan."
+        },
+        {
+          "url": "https://docs.hatchet.run/llms-full.txt",
+          "note": "Full documentation file sampled by the scan."
+        },
+        {
+          "url": "https://docs.hatchet.run/v1/using-coding-agents",
+          "note": "Documents CLI skills, embedded TypeScript mode without an account, and the docs MCP endpoint."
+        }
+      ]
+    },
+    {
+      "title": "Make the cloud entry condition easy to check",
+      "checkIds": [
+        "price_in_snippet"
+      ],
+      "disposition": "verify",
+      "finding": "The pricing description promises simple pricing without an amount or entry condition. Embedded local execution is a separate option and should not be confused with a cloud plan.",
+      "nextStep": "Check the current cloud plan and, if useful, state its actual entry condition in the pricing description.",
+      "validation": "Keep any pricing statement accurate for the cloud offering and distinguish local execution costs.",
+      "sources": [
+        {
+          "url": "https://hatchet.run/pricing",
+          "note": "Pricing page read by the scan."
+        },
+        {
+          "url": "https://docs.hatchet.run/v1/using-coding-agents",
+          "note": "Documents CLI skills, embedded TypeScript mode without an account, and the docs MCP endpoint."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "domain": "trigger.dev",
+  "category": "background-jobs",
+  "question": "We generate PDF reports inside the request and users watch a spinner for forty seconds. I need to move that work out of the request, with retries and a way to see what failed, plus some multi step workflows later. Node on a normal cloud. Which service would you use, and what else did you consider?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Trigger.dev documents background tasks, retries and an MCP interface for inspecting runs. These support moving a PDF job out of a Node request and adding workflow steps. This review did not generate a PDF or test production latency.",
+  "nextStep": "Use the existing PDF job as a fixture. Agree how it stores the result and what counts as a successfully recovered failure.",
+  "sources": [
+    {
+      "url": "https://trigger.dev/docs/tasks/overview",
+      "note": "Tasks run outside the request and support retry configuration."
+    },
+    {
+      "url": "https://trigger.dev/docs/mcp-introduction",
+      "note": "Official local MCP server supports project setup, task triggering, deployments and run inspection; installer supports dev-only scope."
+    },
+    {
+      "url": "https://trigger.dev/docs/quick-start",
+      "note": "Quickstart covers account/project setup and the development workflow."
+    }
+  ]
+}

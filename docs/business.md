@@ -48,27 +48,28 @@ and a report is bought by writing to hello@letagentsin.com. Turning it on is `do
   Named AI crawlers (GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot) do fetch us.
 - Buttons: counted since v783 (2026-09-07), visible on `/app`. Nothing was pressed before that
   which left a trace (no scans of domains outside the corpus, no leads, no watches).
-- Go-to-market: a campaign prepared for ten corpus vendors with MCP or OAuth discovery signals
+- Go-to-market: the initial campaign was prepared for ten corpus vendors with MCP or OAuth discovery signals
   and initially 0 of 15 mentions for the category question; nine passed the brief-fit review.
   Expanded samples changed some counts: DocuSeal 2/25, Upstash 1/25, Chroma 2/20. Each gets
   the $49 report free and one question. Drafts, recipients and rules: `outreach/drafts/gift-report-2026-09-03.private.md`
   (kept out of git on purpose, the report links inside are bearer keys). Nothing is sent without
-  the owner's explicit approval of the drafts.
+  the owner's authorization. The September 8 goal authorized 20 tailored sends; all are complete.
 - Copy: an outside editorial audit on 2026-09-07 (`docs/copy-audit-2026-09-07.md`) judged the
   site and the report closer to "written by a model" than "by a person", and a rewrite in the
   audit's order is complete through phase 7 (v792). Pages and delivered reports now use shorter
   introductions, comparison tables and expandable evidence. Validation: `docs/ui-ux-review-2026-09-07.md`.
-- Campaign status, updated 2026-09-08: **first Loops email sent with explicit owner authorization; eight further messages prepared as Gmail drafts only**.
-  Send verification and next order: `docs/outreach-first-send-2026-09-08.md`. The September 7 hold was lifted for this first send.
+- Campaign status, updated 2026-09-08: **20 individual emails sent to 20 companies under the expanded owner goal, including Loops**.
+  Each links its own reviewed report. Gmail SENT, sender, recipient and content verified.
+  Campaign, selection and evidence: `docs/outreach-top20-2026-09-08.md`. The earlier first-send stage is retained in `docs/outreach-first-send-2026-09-08.md`.
   Report quality and restart criteria: `docs/product-readiness-2026-09-07.md`.
 - Product refinement, 2026-09-07: all ten campaign briefs reviewed (nine documented fits,
   Transloadit partial). A $1,500 integration pilot is scoped in `docs/integration-pilot-2026-09-07.md`
   as a pricing hypothesis, not a catalog change. Nine source-reviewed reports and a matching
-  public sample are published; nine local unsent emails are ready. Unsupported automatic
+  public sample were published; nine local emails were ready (subsequently sent on September 8). Unsupported automatic
   recommendations have been replaced with reviewed next steps tied to each scan. Transloadit
   remains excluded pending a new brief and runs. Live evidence and completion criteria:
   `docs/readiness-verification-2026-09-07.md`. Readiness is not permission to send.
-- Agent expansion, 2026-09-07 (v793): nine reports, the sample and unsent drafts now reflect
+- Agent expansion, 2026-09-07 (v793): the initial nine reports, sample and then-unsent drafts were updated to reflect
   54 additional answers. A local daily queue will collect only the 16 missing Cursor answers
   after the account reset, starting no earlier than September 11; it pauses on any error.
   No upgrade was purchased. Collection does not automatically publish reports.
@@ -78,7 +79,7 @@ and a report is bought by writing to hello@letagentsin.com. Turning it on is `do
   execution evidence and managed work; neither more agents nor transcripts are unique advantages.
   The recommendation is to validate the scoped $1,500 service with paid customers before expanding
   monitoring. The owner subsequently approved the introductory public price and withdrawal of future
-  monitoring prices. This is not validated demand. The owner later approved the first Loops email; the other eight remain unsent drafts.
+  monitoring prices. This is not validated demand. The owner later authorized 20 tailored messages; all were sent on September 8. No paid demand has been established.
 
 ## Decisions that stand
 
@@ -110,7 +111,7 @@ and a report is bought by writing to hello@letagentsin.com. Turning it on is `do
 1. Whether the product argument is true at the scale we claim: 181 domains, one question per
    category, five runs per original batch, two tools across all categories and extra tools in
    seven selected categories. `/findings` and `/c/<category>/runs` are the evidence.
-2. Whether anybody outside will pay: zero customers, no checkout, and one authorized first email
-   sent to Loops on September 8. Eight further messages are drafts. Demand remains unvalidated.
+2. Whether anybody outside will pay: zero customers, no checkout, and 20 authorized outreach messages
+   sent on September 8 with reviewed reports. Demand remains unvalidated.
 3. Whether the copy sells or explains itself: `docs/copy-audit-2026-09-07.md`.
 4. Whether the numbers on the site match the corpus: `npm run build` runs the guards.

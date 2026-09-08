@@ -1,0 +1,53 @@
+{
+  "domain": "turbopuffer.com",
+  "question": "We want our support bot to find the three most similar past tickets to a new one, so I need somewhere to keep a few million embeddings and query them by similarity. Node, running on a normal cloud, and this ships next month. Which database would you use for that, and what else did you consider?",
+  "scanFingerprint": "27b46d52b1f520868a45a6790a28beac895a44a1efb3b4701b1ca9141e172db4",
+  "reviewedAt": "2026-09-08",
+  "summary": "A zero in these recorded recommendations is not a missing-SDK diagnosis: turbopuffer has a TypeScript client. Verify a real retrieval task and its access/cost assumptions before proposing product changes.",
+  "items": [
+    {
+      "title": "Test retrieval through the documented client",
+      "checkIds": [
+        "agent_entry_point",
+        "oauth_dcr",
+        "mcp_present",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "The scan did not find conventional agent-entry or OAuth-registration surfaces, did not reach key documentation and could not query the MCP registry. The quickstart documents a dashboard API key and the official TypeScript client provides an integration path.",
+      "nextStep": "With authorized access, have the agent write a labeled ticket dataset and query the three nearest matches using the TypeScript client. Only assess MCP if that interface is part of the requirement.",
+      "validation": "Record credential setup, embedding dimensions, distance metric and returned ticket IDs. A registry timeout says nothing about MCP availability; a tiny fixture proves no production-scale performance.",
+      "sources": [
+        {
+          "url": "https://turbopuffer.com/docs/quickstart",
+          "note": "Documents dashboard API keys and the write/query loop for a vector namespace."
+        },
+        {
+          "url": "https://github.com/turbopuffer/turbopuffer-typescript",
+          "note": "Official TypeScript client for the API; package metadata links this repository."
+        }
+      ]
+    },
+    {
+      "title": "Keep paid access distinct from a blocked integration",
+      "checkIds": [
+        "price_in_snippet",
+        "self_serve"
+      ],
+      "disposition": "verify",
+      "finding": "The scan found no free-tier or no-card wording. The pricing page lists minimum usage commitments. Paid entry is a commercial condition, not proof that an agent cannot use the API.",
+      "nextStep": "Agree the applicable commitment and test budget before running the fixture. If changing the description, state the actual entry condition rather than promising a free tier.",
+      "validation": "Record account access and expected usage charges separately from task completion; no billing or paid test was performed for this report.",
+      "sources": [
+        {
+          "url": "https://turbopuffer.com/docs/quickstart",
+          "note": "Documents dashboard API keys and the write/query loop for a vector namespace."
+        },
+        {
+          "url": "https://turbopuffer.com/pricing",
+          "note": "Current pricing lists minimum usage commitments rather than a free-tier statement."
+        }
+      ]
+    }
+  ]
+}

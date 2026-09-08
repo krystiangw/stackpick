@@ -1,0 +1,19 @@
+{
+  "domain": "workos.com",
+  "category": "auth",
+  "question": "We built our own sessions and password resets two years ago and I am tired of maintaining them, plus an enterprise customer now wants SSO. Node backend, React front end, a few thousand users to migrate. Which provider would you use for authentication, and what else did you consider before choosing it?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "WorkOS documents importing users from a custom data store and enterprise SSO through its Node SDK. This directly fits the two parts of the question. A particular legacy session format and hash configuration still need validation.",
+  "nextStep": "Use synthetic legacy accounts to check import and sign-in, then connect one test organization to an identity provider.",
+  "sources": [
+    {
+      "url": "https://workos.com/docs/migrate/other-services",
+      "note": "Documents importing users from a custom data store, password hashes, user-ID mapping and migration tooling."
+    },
+    {
+      "url": "https://workos.com/docs/sso",
+      "note": "Documents enterprise SSO and the Node SDK."
+    }
+  ]
+}

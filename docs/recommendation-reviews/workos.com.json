@@ -1,0 +1,49 @@
+{
+  "domain": "workos.com",
+  "question": "We built our own sessions and password resets two years ago and I am tired of maintaining them, plus an enterprise customer now wants SSO. Node backend, React front end, a few thousand users to migrate. Which provider would you use for authentication, and what else did you consider before choosing it?",
+  "scanFingerprint": "83d2dd7a5b243308afb995069190d0321673cf45b78363e1f0616dee306b6f77",
+  "reviewedAt": "2026-09-08",
+  "summary": "WorkOS was named in this study, but mentions do not show a working migration. The next useful evidence is a legacy account signing in successfully and an enterprise connection completing its login.",
+  "items": [
+    {
+      "title": "Test migration and SSO from the documented starting point",
+      "checkIds": [
+        "agent_entry_point"
+      ],
+      "disposition": "verify",
+      "finding": "The scan did not find a file at its conventional agent-entry paths. WorkOS already has a custom-store migration guide, a CLI and SSO documentation. This does not establish a missing integration path.",
+      "nextStep": "Have an agent follow the migration guide in an authorized test environment, preserving legacy IDs. Then add a test enterprise sign-in.",
+      "validation": "Record import output, successful and rejected logins, organization mapping and handoffs. Successful import alone does not verify password compatibility.",
+      "sources": [
+        {
+          "url": "https://workos.com/docs/migrate/other-services",
+          "note": "Documents importing users from a custom data store, password hashes, user-ID mapping and migration tooling."
+        },
+        {
+          "url": "https://workos.com/docs/sso",
+          "note": "Documents enterprise SSO and the Node SDK."
+        }
+      ]
+    },
+    {
+      "title": "Check pricing against both parts of the brief",
+      "checkIds": [
+        "price_in_snippet"
+      ],
+      "disposition": "verify",
+      "finding": "The scanned description mentions organization-based pricing but no amount or entry condition. The task combines user authentication and enterprise connections, whose pricing should be assessed separately.",
+      "nextStep": "Use the current AuthKit and SSO terms to price a few thousand users and one enterprise customer; only then consider a more explicit description.",
+      "validation": "State which charges apply to users and which to connections. No link between this metadata observation and recommendation frequency was established.",
+      "sources": [
+        {
+          "url": "https://workos.com/pricing",
+          "note": "Pricing page whose description was recorded."
+        },
+        {
+          "url": "https://workos.com/docs/sso",
+          "note": "Documents enterprise SSO and the Node SDK."
+        }
+      ]
+    }
+  ]
+}

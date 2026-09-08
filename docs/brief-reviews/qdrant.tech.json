@@ -1,0 +1,19 @@
+{
+  "domain": "qdrant.tech",
+  "category": "vector-search",
+  "question": "We want our support bot to find the three most similar past tickets to a new one, so I need somewhere to keep a few million embeddings and query them by similarity. Node, running on a normal cloud, and this ships next month. Which database would you use for that, and what else did you consider?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Qdrant documents storing vectors and querying similarity from its JavaScript client. This fits the support-ticket retrieval task. The requested scale of a few million embeddings, recall and response latency were not benchmarked.",
+  "nextStep": "Agree embedding dimensions, filters and expected results for a small labeled ticket set before testing production-scale capacity.",
+  "sources": [
+    {
+      "url": "https://qdrant.tech/documentation/cloud-quickstart/",
+      "note": "Shows a cloud cluster, API key, JavaScript client, collections and vector search."
+    },
+    {
+      "url": "https://api.qdrant.tech/",
+      "note": "API reference documents vector storage and query operations."
+    }
+  ]
+}

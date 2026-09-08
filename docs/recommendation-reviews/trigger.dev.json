@@ -1,0 +1,56 @@
+{
+  "domain": "trigger.dev",
+  "question": "We generate PDF reports inside the request and users watch a spinner for forty seconds. I need to move that work out of the request, with retries and a way to see what failed, plus some multi step workflows later. Node on a normal cloud. Which service would you use, and what else did you consider?",
+  "scanFingerprint": "943dab1a582a42d90581aa413b58eaed2e4a6661ead87d2d78ad7fee3ccd9238",
+  "reviewedAt": "2026-09-08",
+  "summary": "Test the documented task and MCP workflow before changing onboarding. Our HTTP probes missed the local MCP interface, so that observation should not become advice to build a server.",
+  "items": [
+    {
+      "title": "Run and inspect the PDF task through the supported tools",
+      "checkIds": [
+        "agent_entry_point",
+        "oauth_dcr",
+        "mcp_present",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "Our probes did not confirm an agent entry file, OAuth metadata or a responding remote MCP address. Trigger.dev documents a local MCP server and project setup. Missing remote probe responses do not invalidate that path.",
+      "nextStep": "In an authorized dev project, give the agent the documented setup instructions and ask it to trigger a PDF task and inspect a deliberately failed run.",
+      "validation": "Record account/project handoffs, tool authorization, returned artifact and retry history. Test MCP installation separately from task execution.",
+      "sources": [
+        {
+          "url": "https://trigger.dev/docs/tasks/overview",
+          "note": "Tasks run outside the request and support retry configuration."
+        },
+        {
+          "url": "https://trigger.dev/docs/mcp-introduction",
+          "note": "Official local MCP server supports project setup, task triggering, deployments and run inspection; installer supports dev-only scope."
+        },
+        {
+          "url": "https://trigger.dev/docs/quick-start",
+          "note": "Quickstart covers account/project setup and the development workflow."
+        }
+      ]
+    },
+    {
+      "title": "Check the cost assumptions in the PDF scenario",
+      "checkIds": [
+        "price_in_snippet"
+      ],
+      "disposition": "verify",
+      "finding": "The scanned pricing description contains no amount or entry condition. This says nothing about why an agent named Trigger.dev in an answer.",
+      "nextStep": "Check the current plan against the expected PDF runtime, machine requirements and retry volume before adding an entry condition to the description.",
+      "validation": "A proposed description must match the actual plan; a cost estimate must state workload assumptions. No recommendation uplift has been measured.",
+      "sources": [
+        {
+          "url": "https://trigger.dev/pricing",
+          "note": "Pricing page whose description was captured in the scan."
+        },
+        {
+          "url": "https://trigger.dev/docs/tasks/overview",
+          "note": "Tasks run outside the request and support retry configuration."
+        }
+      ]
+    }
+  ]
+}

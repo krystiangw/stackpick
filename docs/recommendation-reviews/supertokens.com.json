@@ -1,0 +1,78 @@
+{
+  "domain": "supertokens.com",
+  "question": "We built our own sessions and password resets two years ago and I am tired of maintaining them, plus an enterprise customer now wants SSO. Node backend, React front end, a few thousand users to migrate. Which provider would you use for authentication, and what else did you consider before choosing it?",
+  "scanFingerprint": "5d276dacc56782cbf964a4a35510285be45220a5bb22231ea31b7765495d2b50",
+  "reviewedAt": "2026-09-08",
+  "summary": "The scan did not identify supertokens-node, but the published package includes type declarations. Start with the documented SDK and session migration, and keep unavailable scan evidence out of the diagnosis.",
+  "items": [
+    {
+      "title": "Verify account continuity with the existing SDK",
+      "checkIds": [
+        "agent_entry_point",
+        "oauth_dcr",
+        "programmatic_provisioning",
+        "typed_package"
+      ],
+      "disposition": "verify",
+      "finding": "The scan missed the typed package and found no conventional agent-entry or OAuth-registration surface. supertokens-node publishes type declarations, and the migration guide documents creating a session after validating the old token. This is not evidence that a new SDK or OAuth registration endpoint is needed.",
+      "nextStep": "Using an authorized test deployment, have the agent implement the legacy-session handoff and configure one test tenant with its intended SSO method.",
+      "validation": "Check old-token validation, identity mapping, new-session issuance and rejected invalid tokens. Verify the chosen identity-provider configuration separately.",
+      "sources": [
+        {
+          "url": "https://supertokens.com/docs/migration/session-migration",
+          "note": "Shows validation of an old token before creating a new SuperTokens session."
+        },
+        {
+          "url": "https://supertokens.com/docs/authentication/enterprise/introduction",
+          "note": "Documents workforce-IdP SSO and per-tenant login methods."
+        },
+        {
+          "url": "https://registry.npmjs.org/supertokens-node/latest",
+          "note": "Official package metadata identifies its TypeScript declaration entry and repository."
+        }
+      ]
+    },
+    {
+      "title": "Treat signup and MCP gaps as unmeasured",
+      "checkIds": [
+        "signup_no_captcha",
+        "signup_reachable",
+        "mcp_present"
+      ],
+      "disposition": "verify",
+      "finding": "Our reader did not locate a signup link, and the MCP registry failed to answer. Neither observation shows that SuperTokens lacks an onboarding path or MCP server.",
+      "nextStep": "Agree cloud versus self-hosted deployment before testing onboarding. If MCP is needed, verify its documented availability and authorization independently.",
+      "validation": "Record the supported access path and any human handoff. A registry outage creates no vendor repair task.",
+      "sources": [
+        {
+          "url": "https://supertokens.com/docs/migration/session-migration",
+          "note": "Shows validation of an old token before creating a new SuperTokens session."
+        },
+        {
+          "url": "https://supertokens.com/docs/authentication/enterprise/introduction",
+          "note": "Documents workforce-IdP SSO and per-tenant login methods."
+        }
+      ]
+    },
+    {
+      "title": "Check the relevant deployment and SSO price",
+      "checkIds": [
+        "price_in_snippet"
+      ],
+      "disposition": "verify",
+      "finding": "The pricing description names on-premises and SaaS deployment without an amount or entry condition. The cost of the selected deployment and enterprise features is not established by that description.",
+      "nextStep": "Confirm the chosen deployment, user volume and SSO requirements against current pricing before proposing more specific metadata.",
+      "validation": "Any published entry condition must apply to that offering; do not infer a recommendation effect from a snippet.",
+      "sources": [
+        {
+          "url": "https://supertokens.com/pricing",
+          "note": "Pricing page inspected by the scan."
+        },
+        {
+          "url": "https://supertokens.com/docs/authentication/enterprise/introduction",
+          "note": "Documents workforce-IdP SSO and per-tenant login methods."
+        }
+      ]
+    }
+  ]
+}

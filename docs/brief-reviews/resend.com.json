@@ -1,0 +1,19 @@
+{
+  "domain": "resend.com",
+  "category": "transactional-email",
+  "question": "Our password reset and receipt emails go out through a box we run ourselves and too many of them land in spam. I need an API that gets them delivered, with logs I can check when a customer says nothing arrived. Node, maybe fifty thousand emails a month. Which provider would you use, and what else did you look at first?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Resend documents sending email from Node and inspecting requests through its CLI. Password resets and receipts fit this API. Inbox placement and the economics of 50,000 monthly emails were not tested.",
+  "nextStep": "Confirm that password resets and receipts represent the buyers you want to reach. A follow-up test should distinguish successful requests from delivery evidence.",
+  "sources": [
+    {
+      "url": "https://resend.com/docs/send-with-nodejs",
+      "note": "Node SDK sending guide requires an API key and verified domain."
+    },
+    {
+      "url": "https://resend.com/docs/cli",
+      "note": "CLI authenticates with an existing key, can create further keys, send emails and retrieve logs."
+    }
+  ]
+}

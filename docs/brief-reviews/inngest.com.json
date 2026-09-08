@@ -1,0 +1,19 @@
+{
+  "domain": "inngest.com",
+  "category": "background-jobs",
+  "question": "We generate PDF reports inside the request and users watch a spinner for forty seconds. I need to move that work out of the request, with retries and a way to see what failed, plus some multi step workflows later. Node on a normal cloud. Which service would you use, and what else did you consider?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Inngest documents event-triggered background functions, retried steps and later workflow steps in its TypeScript SDK. This fits the PDF-job scenario. Artifact storage, resource requirements and recovery behavior still need an integration test.",
+  "nextStep": "Separate local proof of the job from cloud deployment. Define the output artifact and a deliberate failure to recover from.",
+  "sources": [
+    {
+      "url": "https://www.inngest.com/docs/guides/background-jobs",
+      "note": "Event-triggered functions use durable steps with automatic retries."
+    },
+    {
+      "url": "https://www.inngest.com/docs/platform/signing-keys",
+      "note": "Cloud signing keys belong to environments; local Dev Server does not require one."
+    }
+  ]
+}

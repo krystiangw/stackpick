@@ -1,5 +1,8 @@
 # Pierwsza wysyłka — 08.09.2026
 
+**Późniejsza aktualizacja:** właściciel rozszerzył cel do 20 firm. Wszystkie wiadomości wysłano;
+aktualny stan: `docs/outreach-top20-2026-09-08.md`. Opis poniżej dokumentuje wcześniejszy etap.
+
 Właściciel po próbnym mailu i poprawkach landing page polecił: „wysylaj piersza wiadomosc
 i szykuj kolejne”. To upoważnienie do jednej wysyłki i przygotowania następnych szkiców.
 Zastępuje wcześniejsze wstrzymanie w tym zakresie.

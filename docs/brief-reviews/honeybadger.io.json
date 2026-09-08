@@ -1,0 +1,23 @@
+{
+  "domain": "honeybadger.io",
+  "category": "error-monitoring",
+  "question": "We find out about exceptions when a customer emails us, which is embarrassing. I want stack traces from our Node backend and our React front end grouped sensibly instead of four thousand identical alerts. Which tool would you use, and what else did you look at before picking it?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Honeybadger documents JavaScript error capture and configurable grouping. The Node/backend and browser/frontend scenario fits its SDK; whether the default groups are useful for a particular application needs a fixture.",
+  "nextStep": "Agree a repeated exception and a genuinely different exception in Node and React, then check their resulting groups.",
+  "sources": [
+    {
+      "url": "https://docs.honeybadger.io/lib/javascript/integration/browser/",
+      "note": "Browser JavaScript integration guide."
+    },
+    {
+      "url": "https://docs.honeybadger.io/lib/javascript/reference/configuration/",
+      "note": "JavaScript client configuration includes the project API key and Node configuration."
+    },
+    {
+      "url": "https://docs.honeybadger.io/lib/javascript/errors/customizing-error-grouping/",
+      "note": "Explains default grouping and custom fingerprints."
+    }
+  ]
+}

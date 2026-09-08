@@ -1,0 +1,53 @@
+{
+  "domain": "qdrant.tech",
+  "question": "We want our support bot to find the three most similar past tickets to a new one, so I need somewhere to keep a few million embeddings and query them by similarity. Node, running on a normal cloud, and this ships next month. Which database would you use for that, and what else did you consider?",
+  "scanFingerprint": "c2ff09c99b09da5792d0234af739d0523ef0c85b3b2f04d2692015708a640b6e",
+  "reviewedAt": "2026-09-08",
+  "summary": "Qdrant was named in every recorded answer for this question. That is useful recommendation evidence, but the next test should verify correct ticket retrieval from Node rather than seek more scan points.",
+  "items": [
+    {
+      "title": "Follow the documented cluster and client setup",
+      "checkIds": [
+        "agent_entry_point",
+        "oauth_dcr",
+        "signup_no_captcha",
+        "signup_reachable",
+        "programmatic_provisioning"
+      ],
+      "disposition": "verify",
+      "finding": "The scan did not locate signup or key documentation in its selected pages and found no conventional agent-entry or OAuth-registration surface. The Cloud quickstart explicitly documents cluster access and API-key authentication.",
+      "nextStep": "Give the agent an authorized cluster or observe its supported setup. Ask it to load labeled ticket embeddings and retrieve the three nearest tickets from Node.",
+      "validation": "Verify dimensions, distance choice, filters and expected results. Record credential handoffs separately; a small fixture is not evidence of million-vector capacity.",
+      "sources": [
+        {
+          "url": "https://qdrant.tech/documentation/cloud-quickstart/",
+          "note": "Shows a cloud cluster, API key, JavaScript client, collections and vector search."
+        },
+        {
+          "url": "https://api.qdrant.tech/",
+          "note": "API reference documents vector storage and query operations."
+        }
+      ]
+    },
+    {
+      "title": "Check the plan for the actual embedding workload",
+      "checkIds": [
+        "price_in_snippet"
+      ],
+      "disposition": "verify",
+      "finding": "The scanned pricing description lists deployment options without an amount or entry condition. It does not determine the cost of the proposed ticket corpus.",
+      "nextStep": "Estimate the intended vector count, dimensions, payloads and query rate using the current deployment pricing. Consider clearer metadata only after that distinction is explicit.",
+      "validation": "State the workload assumptions and chosen deployment. Do not describe a small quickstart cluster as a production capacity test.",
+      "sources": [
+        {
+          "url": "https://qdrant.tech/pricing/",
+          "note": "Pricing page inspected by the scan."
+        },
+        {
+          "url": "https://qdrant.tech/documentation/cloud-quickstart/",
+          "note": "Shows a cloud cluster, API key, JavaScript client, collections and vector search."
+        }
+      ]
+    }
+  ]
+}

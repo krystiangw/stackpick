@@ -1,0 +1,19 @@
+{
+  "domain": "hatchet.run",
+  "category": "background-jobs",
+  "question": "We generate PDF reports inside the request and users watch a spinner for forty seconds. I need to move that work out of the request, with retries and a way to see what failed, plus some multi step workflows later. Node on a normal cloud. Which service would you use, and what else did you consider?",
+  "status": "documented",
+  "reviewedAt": "2026-09-08",
+  "rationale": "Hatchet documents TypeScript tasks, retries, workers, durable workflows and run inspection. These support moving a PDF job out of the request. The report did not run a worker or verify PDF-generation dependencies.",
+  "nextStep": "Choose embedded or cloud execution explicitly, then define the PDF output and a retryable failure.",
+  "sources": [
+    {
+      "url": "https://docs.hatchet.run/v1/from-temporal-to-hatchet",
+      "note": "Documents tasks, durable workflows, retries, logging and TypeScript equivalents."
+    },
+    {
+      "url": "https://docs.hatchet.run/v1/using-coding-agents",
+      "note": "Documents CLI skills, embedded TypeScript mode without an account, and the docs MCP endpoint."
+    }
+  ]
+}
