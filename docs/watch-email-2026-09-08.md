@@ -25,4 +25,7 @@ wykrywające nazwanie braku odczytu poprawą lub usunięcie zastrzeżenia o punk
 Cztery warianty obejrzano w przeglądarce przy 390 i 800 px, bez poziomego przewijania.
 Podglądy: `data/watch-email-2026-09-08/` (lokalne fixture, nie prawdziwe tokeny subskrypcji).
 
-Nie wysłano wiadomości testowej. Status publikacji uzupełniany po przeglądzie i wdrożeniu.
+Wdrożono v794 (`09693c7`) po typecheck, lint, rules, build i przeglądzie Codex bez uwag.
+Produkcja: web up, strona główna HTTP 200. Nie wysłano wiadomości testowej ani nie uruchomiono
+crona ręcznie. Renderowanie sprawdzono w przeglądarce; odbioru w Gmail/Outlook nie testowano
+przez wysłanie wiadomości. Następne potwierdzone zmiany korzystają z nowego szablonu.

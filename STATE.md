@@ -1,4 +1,4 @@
-# Let Agents In: migawka na 2026-09-07 (prod v793, korpus 181, formuła 9.57)
+# Let Agents In: migawka na 2026-09-08 (prod v794, korpus 181, formuła 9.57)
 
 Biznes na jednej stronie: `docs/business.md`. Historia rund: `docs/journal-2026-08.md` (do 11.08)
 i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dziennik.
@@ -60,6 +60,10 @@ i publikacji. Szczegóły i wyłączenie: `docs/cursor-free-plan-2026-09-07.md`.
 
 ## Stan produkcji
 
+v794 (`09693c7`): alerty monitoringu mają HTML i krótszy tekst: obserwacja przed punktacją,
+przycisk do dowodów, najwyżej trzy pełne opisy, dalsze zmiany jako krótkie statusy.
+Zachowano daty, potwierdzenie drugim pomiarem, brak odczytu poza punktacją i wypisanie.
+Nie wysłano testowego maila. Podglądy i kontrola: `docs/watch-email-2026-09-08.md`.
 v793 (`3a112e3`): Antigravity i Cursor w raportach, jawne modele i daty, brakujące próby poza
 mianownikiem. Kontrola live: 10 dostaw, 7 stron przebiegów, zgodność 159 pełnych odpowiedzi.
 v792 (`99b31ca`): dokumentacja API, visibility i raporty z rozwijanymi dowodami oraz pełnym wydrukiem.
