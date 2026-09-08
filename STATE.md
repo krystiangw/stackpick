@@ -1,4 +1,4 @@
-# Let Agents In: migawka na 2026-09-08 (prod v795, korpus 181, formuła 9.57)
+# Let Agents In: migawka na 2026-09-08 (prod v796, korpus 181, formuła 9.57)
 
 Biznes na jednej stronie: `docs/business.md`. Historia rund: `docs/journal-2026-08.md` (do 11.08)
 i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dziennik.
@@ -6,9 +6,10 @@ i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dzi
 ## Nad czym pracujemy
 
 **Landing i outreach, 08.09:** nowy pierwszy ekran z odbiorcą, konkretnym przykładem i trzema
-ofertami. Audyt: `docs/landing-review-2026-09-08.md`. Dziewięć maili skrócono i skierowano
+ofertami, wdrożony jako v796. Audyt: `docs/landing-review-2026-09-08.md`. Dziewięć maili skrócono i skierowano
 do imiennych kontaktów; `docs/outreach-review-2026-09-08.md`. Właściciel zlecił próbkę
-wyłącznie do siebie przed pierwszym klientem; kampania nadal wstrzymana.
+wyłącznie do siebie przed pierwszym klientem. Próbka wysłana z hello@ i potwierdzona w INBOX;
+do klientów zero wiadomości, kampania nadal wstrzymana.
 
 **Ocena przewagi biznesowej ukończona 08.09:** `docs/business-advantage-2026-09-08.md`.
 Sprawdzono aktualne cenniki i istniejące publiczne raporty konkurencji; bez zakupów i nowych
@@ -74,6 +75,11 @@ i publikacji. Szczegóły i wyłączenie: `docs/cursor-free-plan-2026-09-07.md`.
 - Billing wyłączony, monitoring darmowy bez daty końca, raport kupowany mailem.
 
 ## Stan produkcji
+
+v796 (`cc97d24`): landing pokazuje odbiorcę, przykład problemu i trzy oferty. 19% mniej
+widocznego tekstu; krótsza strona mobile, szersze pola monitoringu. Kontrole lokalne i live
+320–1440 px, dwa motywy, typecheck/rules/build/lint oraz Codex review zakończone.
+Szczegóły: `docs/landing-review-2026-09-08.md`.
 
 v795 (`fb94a59`): skan i samodzielna beta monitoringu bezpłatne, raport 49 USD, pierwsze dwa
 pilotaże po 1500 USD. Wycofano zapowiedzi abonamentów i pakietów; eksperymentalne wzmianki

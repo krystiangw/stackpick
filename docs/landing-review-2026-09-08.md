@@ -46,3 +46,12 @@ Badania publiczne są opisane jako niezależne, nie płatne referencje klientów
 Dowody lokalne poza gitem: `data/landing-review-2026-09-08/` (before, local, pomiary i kontrole).
 To poprawa czytelności i sposobu prezentacji oferty. Jej wpływ na zainteresowanie i sprzedaż
 pozostaje do sprawdzenia na rzeczywistych odbiorcach.
+
+## Produkcja
+
+Wdrożono jako **v796 (`cc97d24`)**. Przed wdrożeniem: brak procesu przemiatu korpusu,
+brak workflow in progress, Heroku tylko web. Istniejący worker visibility nie jest przemiotem
+i nie był zatrzymywany. Po wdrożeniu ponowiono kontrolę sześciu kombinacji ekranu/motywu.
+Wszystkie bez overflow i błędów JS. Homepage, pricing, metodologia, findings, próbka i badanie
+płatności odpowiadają HTTP 200. Metadane strony głównej zawierają nowy opis usługi.
+Dowody: live-checks.json, live-routes.json i live-*.png w katalogu audytu.

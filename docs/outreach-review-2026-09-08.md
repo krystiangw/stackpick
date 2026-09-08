@@ -41,3 +41,12 @@ Kanoniczne teksty: `outreach/drafts/gift-report-2026-09-03.private.md`.
 Niewysłane `.eml`: `data/product-review-2026-09-07/email-drafts/`.
 Weryfikacja liczników i zachowania linków: `data/outreach-review-2026-09-08/draft-verification.json`.
 Prywatne linki raportów są kluczami dostępu i nie trafiają do tego dokumentu ani gita.
+
+## Autoryzowany test do właściciela
+
+08.09 wysłano jedną próbkę Loops wyłącznie do własnej skrzynki właściciela, przez Gmail
+z aliasu hello@letagentsin.com. Temat zaczyna się od `[TEST — tylko do nas]`. Gmail potwierdził
+INBOX i SENT; sprawdzono From, To, brak Cc/Bcc oraz zgodność treści z kanonicznym draftem.
+Dziewięć plików EML zachowuje status owner-hold. Wysłanych wiadomości do klientów: zero.
+Identyfikator i nagłówki testu: ignorowany data/outreach-review-2026-09-08/self-test-result.json.
+Test własnej skrzynki potwierdza treść i nadawcę, nie dostarczalność do dziewięciu obcych domen.
