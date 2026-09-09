@@ -13,7 +13,10 @@ bezpośredni adres email.
 - Pola: imię, email służbowy, firma lub produkt, rodzaj zainteresowania i krótki opis.
 - Plan: darmowy, limit 50 zgłoszeń miesięcznie.
 - Powiadomienia: jedyny obecnie zweryfikowany adres to prywatny Gmail właściciela. Nie kupiono
-  upgrade'u i nie wysłano testowego zgłoszenia.
+  upgrade'u.
+- Test produkcyjny 09.09, 11:22 CEST: jedno zgłoszenie z oznaczeniem `TEST` przeszło przez
+  endpoint (`302 → /thanks`), pojawiło się w panelu Submissions i dostarczyło powiadomienie do
+  Gmaila z kompletem pól. Zgłoszenie można usunąć lub zarchiwizować w panelu Formspree.
 
 ## Ograniczenia i następny krok
 

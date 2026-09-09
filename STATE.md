@@ -7,7 +7,8 @@ i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dzi
 
 **Formularz kontaktowy, 09.09:** sprzedażowe CTA prowadzą do `/pricing#contact` i wspólnego
 formularza Formspree (`mpzkgdjw`, 50 zgłoszeń/mies. w planie darmowym). Powiadomienia trafiają
-na prywatny Gmail, nie wykonano testowego submitu i nie kupiono upgrade'u. Konfiguracja i limit:
+na prywatny Gmail, test produkcyjny przeszedł 09.09 (302 → /thanks, wpis w Submissions i email),
+nie kupiono upgrade'u. Konfiguracja i limit:
 `docs/formspree-contact-form-2026-09-09.md`. Po pierwszych realnych odpowiedziach zdecydujemy,
 czy dodać zweryfikowane `hello@letagentsin.com`, zmienić plan albo wrócić do `/api/lead`.
 
