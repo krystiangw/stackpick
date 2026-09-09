@@ -11,7 +11,8 @@ pole dodano do stron kategorii. Pozostałe powody braku indeksacji są historycz
 otwieramy prywatnych raportów dla indeksowania. Formularz skanu ma teraz widoczne stany
 disabled, pole `example.com`, etykietę `Scan domain` i wyraźny focus. Stopka używa tekstu
 `Built and run by one engineer.` jako linku, a raport dostał odstęp nad nazwą kategorii po
-linii metadanych. Build, lint, rules i diff check przechodzą; wdrożenie czeka na commit.
+linii metadanych. Build na Heroku, lint, rules i diff check przechodzą. Wdrożono jako v801;
+walidacja Dataset w Search Console została uruchomiona 09.09.
 
 **Formularz kontaktowy, 09.09:** sprzedażowe CTA prowadzą do `/pricing#contact` i wspólnego
 formularza Formspree (`mpzkgdjw`, 50 zgłoszeń/mies. w planie darmowym). Powiadomienia trafiają
@@ -112,6 +113,11 @@ i publikacji. Szczegóły i wyłączenie: `docs/cursor-free-plan-2026-09-07.md`.
   na `/pricing#contact`, a email zostaje dla praw, sporów i błędów.
 
 ## Stan produkcji
+
+v801 (`c57c8b4`, 09.09): pole `license` na Datasetach kategorii (warunkowo zgodne z konfiguracją
+licencji), opis warunków na metodologii, wyraźniejszy formularz skanu, linkowana stopka i odstęp
+nad kategorią w raporcie. Heroku build przeszedł; Search Console pokazuje „Validation started”
+dla 24 elementów bez `license`.
 
 v798 (`258d5ff`, 09.09): SEO — HTTP/www przekierowuje do HTTPS bez www; canonical metodologii
 i czterech studiów, czytelniejsze tytuły i CTA, krótszy Paddle z rozwijanymi cytatami.
