@@ -16,6 +16,7 @@ import { headers } from 'next/headers'
 const RIVALS_READ_ON = '19 August 2026'
 
 export const metadata: Metadata = {
+  alternates: { canonical: `${SITE_URL}/methodology` },
   title: 'Methodology: Let Agents In',
   description: 'The scoring formula, HTTP checks, measurement limits and recorded agent-run method.',
 }

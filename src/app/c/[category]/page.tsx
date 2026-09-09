@@ -11,6 +11,7 @@ import cells from '@/data/cells.json'
 import { AgentCoverageNotice } from '@/components/agent-coverage-notice'
 import { coverageFor } from '@/lib/agent-coverage'
 import { agentLabel, modelLabel, AGENT_SAMPLE_LIMIT } from '@/lib/agent-label'
+import { TrackedLink } from '@/components/tracked-link'
 
 /**
  * One page per category, and the only page on the site that answers the question a vendor
@@ -57,8 +58,12 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
   if (!category) return {}
   const cell = cellFor(id)
   return {
-    title: `${category.label}: agent mentions and HTTP checks · Let Agents In`,
-    description: cell
+    title: id === 'transactional-email'
+      ? 'Which email APIs do coding agents recommend? · Let Agents In'
+      : `${category.label}: agent mentions and HTTP checks · Let Agents In`,
+    description: id === 'transactional-email'
+      ? 'Recorded coding-agent recommendations for transactional email APIs. Compare vendor mentions by tool, read the answers, and see what these tests can tell your team.'
+      : cell
       ? `Agent answers and public HTTP checks for ${category.label.toLowerCase()}, with dated evidence.`
       : `Agent readiness measured across ${category.label.toLowerCase()}, check by check.`,
     alternates: { canonical: `${SITE_URL}/c/${id}` },
@@ -104,7 +109,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Category</p>
         <h1 className="mt-4 max-w-3xl text-balance text-4xl font-semibold leading-tight tracking-tight">
-          {category.label}
+          {id === 'transactional-email' ? 'Which email APIs do coding agents recommend?' : category.label}
         </h1>
         {cell && (
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-soft">
@@ -117,6 +122,12 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
         )}
         <AgentCoverageNotice batches={coverageFor(id)} />
         {held.length > 0 && <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">{AGENT_SAMPLE_LIMIT}</p>}
+        {id === 'transactional-email' && (
+          <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm">
+            <Link href="#mentions" className="text-brass underline underline-offset-4">Compare recorded mentions</Link>
+            <Link href={`/c/${id}/runs`} className="text-brass underline underline-offset-4">Read the full answers</Link>
+          </div>
+        )}
       </section>
 
       {reachability && (
@@ -208,7 +219,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
         </section>
       )}
 
-      <section className="border-b border-rule py-12">
+      <section className="scroll-mt-24 border-b border-rule py-12" id="mentions">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Named, and measured</h2>
         <div className="mt-6 overflow-x-auto">
           <table className="w-full min-w-[36rem] border-collapse text-sm">
@@ -278,6 +289,21 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
           with dated measurements and the recorded access barriers.
         </p>
       </section>
+
+      {id === 'transactional-email' && (
+        <section className="border-b border-rule py-10">
+          <h2 className="text-xl font-semibold tracking-tight">Do you build an email API?</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+            A report brings together the mentions, omissions and HTTP checks for your product.
+            To test whether an agent can actually send an email with it, we agree a separate integration pilot.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-4 text-sm">
+            <Link href="/d/sample" className="text-brass underline underline-offset-4">See a sample report</Link>
+            <TrackedLink click="pricing" href="/pricing" className="text-brass underline underline-offset-4">Report & pilot pricing</TrackedLink>
+            <TrackedLink click="mail-report" href="mailto:hello@letagentsin.com?subject=Agent%20report%20%E2%80%94%20transactional%20email" className="text-brass underline underline-offset-4">Ask about your email API</TrackedLink>
+          </div>
+        </section>
+      )}
 
       <section className="py-12">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Every category</h2>

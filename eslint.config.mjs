@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Local campaign scripts and generated evidence are gitignored, not application sources.
+    "data/**",
   ]),
   {
     // A leading underscore is how this repo says "destructured to drop it", which is the only way

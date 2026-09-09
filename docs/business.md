@@ -42,8 +42,11 @@ and a report is bought by writing to hello@letagentsin.com. Turning it on is `do
 ## Where the business actually is
 
 - Customers: none. The 27 leads and 8 watches in the database are our own tests.
-- Traffic: Google Search Console shows 3 clicks and 600 impressions in the 28 days to 2026-09-03,
-  average position 47. The server counter shows a few hundred "browser" renders a day, but their
+- Traffic: Google Search Console read on 2026-09-08 shows 5 clicks, 721 impressions, 0.7% CTR and
+  average position 44.1 with the 28-day filter (available chart data August 11–September 6).
+  The prior September 3 baseline was 3 clicks / 600 impressions / position 47; these overlapping
+  windows do not establish a growth trend. See `docs/seo-audit-2026-09-08.md` for indexing issues.
+  The server counter shows a few hundred "browser" renders a day, but their
   shape (one hit each on a hundred different report pages) is a crawler with a browser header.
   Named AI crawlers (GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot) do fetch us.
 - Buttons: counted since v783 (2026-09-07), visible on `/app`. Nothing was pressed before that

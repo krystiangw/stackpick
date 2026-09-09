@@ -137,28 +137,28 @@
     }
   ],
   "verdict": {
-    "headline": "Named in all four runs, chosen in none, and one run struck you off on fee figures taken from your competitors' pages.",
+    "headline": "Four runs mentioned Paddle. All four chose Stripe.",
     "body": [
-      "Four agents, two models, four isolated copies, one brief: sell two support plans. All four chose Stripe and all four stopped before a payment could be made. Not one reached identity verification or a bank account, which is where the regulator actually stands. They stopped at account creation, which is a vendor decision.",
-      "One run measured the wall exactly rather than describing it. Stripe's public sample publishable key still works and created a real card token; the checkout iframe mounts; and the run stops on the single call that needs a secret key, which answers 403 secret_key_required. So an agent can get to the last step alone, and the last step is the one nobody offers.",
-      "Paddle was named in all four runs and chosen in none, and the reasons diverge in a way worth reading. One run called it genuinely lighter to test, since sandbox signup skips business and domain approval. Another rejected it for needing manual seller approval, judging that harder than a Stripe key, which is the live merchant-of-record onboarding rather than the sandbox. A third rejected it on fee figures taken from comparison pages published by competing payment providers, pages it never opened and said so. Three runs, three different pictures of the same onboarding, and the one that decided the outcome was looking at the wrong half of it."
+      "Four runs, two models, one task: add a checkout for two support plans. All four chose Stripe; none completed a payment. Their reports describe an account or credential handoff, not a completed integration.",
+      "The reasons for rejecting Paddle differed. Run A described manual seller approval; run D described its sandbox as lighter to test. Run B used competitor pricing summaries and acknowledged that it had not opened those pages. These are the runs’ accounts of onboarding and pricing, not independent verification of every claim.",
+      "The useful next test is whether a clear account of sandbox access, live approval and fees changes how agents describe the product. We have not tested that change. Four runs on this brief do not measure lost sales or establish which payment provider is best."
     ]
   },
   "recommendations": [
     {
-      "title": "Publish your own entry requirements in text a summariser will quote",
-      "body": "Two of four runs formed their picture of your onboarding from third-party comparison content, one of them written by a competitor, and both said so. What a search engine summarises about your sandbox, your approval step and your fees is the version being acted on. That is checkable today and fixable with a page.",
+      "title": "Make sandbox access and live approval easy to distinguish",
+      "body": "Runs A and D described different entry requirements. Put the sandbox steps and the separate live approval process together in a short, dated explanation. Then repeat the task and check whether agents still confuse the two.",
       "effort": "hours"
     },
     {
-      "title": "Issue a sandbox credential that commits nobody",
-      "body": "Every run stopped before a payment could be made, and the one that went furthest stopped at a key. Identity checks are law and nobody is asking you to skip them, but an expiring test credential issued without an account, and before any agreement, is entirely your choice. No provider in this category offers one, so the first that does is the only one an agent can finish with.",
-      "effort": "weeks"
+      "title": "Check what pricing summaries say about your product",
+      "body": "Run B relied on competitor summaries it did not open. Compare those statements with your own pricing page and clarify the scope of the fees in text an agent can quote. A clearer page may help; this study did not test its effect.",
+      "effort": "hours"
     },
     {
-      "title": "Make the sandbox and live split impossible to miss, including in a search summary",
-      "body": "Your sandbox is self-serve with no business or domain approval, and one run found that and said so. Another described your onboarding as manual seller approval, which is the live merchant-of-record path, and that is the run whose picture decided the outcome. The distinction exists in your documentation; what it does not do is survive into the summaries agents read instead.",
-      "effort": "hours"
+      "title": "Test a complete sandbox handoff",
+      "body": "All four runs stopped at an account or credential step for Stripe, the provider they chose. In a new, explicitly scoped Paddle test, give an agent an authorised sandbox account and check whether it can complete the checkout. That would separate access problems from implementation problems.",
+      "effort": "days"
     }
   ],
   "limits": [
@@ -166,6 +166,6 @@
     "One brief and one scaffold. Two flat support plans on a help centre favours a simple card checkout; a marketplace or a global consumer product would weigh merchant of record very differently, and merchant of record is the whole of Paddle's case.",
     "Rejection reasons are summaries taken from each run's own report. Only the sentences shown in quotation marks are archived verbatim; where a run left no archived quotation, the entry says so.",
     "Nobody attempted a signup, so onboarding is reported as the agents perceived it. Where they disagreed, we checked: sandbox accounts are self-serve with email verification and no business or domain approval, and the manual review applies to live merchant-of-record accounts. One run was describing the live path.",
-    "Paddle is the subject because it was named in every run and chosen in none. The finding about sandbox credentials applies to the whole category, including the provider that won."
+    "Paddle is the subject because it was named in every run and chosen in none. The runs attempted integration with Stripe; this study does not show whether they could have completed a Paddle integration with an authorised sandbox account."
   ]
 }

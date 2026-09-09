@@ -1,7 +1,8 @@
-import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getAudit, listAudits, tally } from '@/lib/audit'
+import { SITE_URL } from '@/lib/site'
+import { TrackedLink } from '@/components/tracked-link'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,10 +10,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const audit = await getAudit(slug)
   if (!audit) return { title: 'Audit not found: Let Agents In' }
+  const counts = tally(audit)
+  const title = slug === 'paddle-payments'
+    ? `Paddle in coding-agent tests: chosen in ${counts.subjectChosen} of ${counts.totalRuns} runs`
+    : `${audit.subject}: coding agent integration study`
   return {
-    title: `${audit.subject}: what agents actually did`,
+    title,
+    alternates: { canonical: `${SITE_URL}/audit/${audit.slug}` },
     description: audit.verdict.headline,
-    openGraph: { title: `${audit.subject} · agent audit`, description: audit.verdict.headline },
+    openGraph: { title, description: audit.verdict.headline, url: `${SITE_URL}/audit/${audit.slug}` },
   }
 }
 
@@ -33,7 +39,7 @@ export default async function AuditPage({ params }: { params: Promise<{ slug: st
   )
 
   return (
-    <main className="mx-auto max-w-5xl px-6">
+    <main data-deliverable className="mx-auto max-w-5xl px-6">
       <section className="border-b border-rule py-14">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">
           Full agent audit · {audit.subject} · {audit.runDate}
@@ -41,6 +47,13 @@ export default async function AuditPage({ params }: { params: Promise<{ slug: st
         <h1 className="mt-5 max-w-3xl text-balance text-3xl font-semibold leading-[1.15] tracking-tight sm:text-[2.75rem]">
           {audit.verdict.headline}
         </h1>
+
+        {slug === 'paddle-payments' && (
+          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-soft">
+            The task was a checkout for two support plans. The runs disagreed about Paddle&rsquo;s onboarding,
+            and one relied on competitor pricing summaries. None completed a payment with the provider it chose.
+          </p>
+        )}
 
         <div className="mt-10 grid gap-px bg-rule sm:grid-cols-3">
           {[
@@ -65,7 +78,7 @@ export default async function AuditPage({ params }: { params: Promise<{ slug: st
         </div>
       </section>
 
-      <section className="border-b border-rule py-12">
+      <section className="border-b border-rule py-12" id="task">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">What the agents were asked</h2>
         <blockquote className="mt-5 max-w-2xl border-l-2 border-brass pl-5 text-lg italic leading-relaxed">
           {audit.task}
@@ -117,10 +130,13 @@ export default async function AuditPage({ params }: { params: Promise<{ slug: st
                   Run {rejection.run}, {rejection.model} · {rejection.verbatim ? 'verbatim' : 'our summary, no quotation archived'}
                 </figcaption>
                 {rejection.verbatim ? (
-                  <>
-                    <blockquote className="mt-2 text-lg italic leading-relaxed">{rejection.verbatim}</blockquote>
-                    <p className="mt-2 font-mono text-xs text-ink-faint">{rejection.reason}</p>
-                  </>
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-base leading-relaxed">
+                      {rejection.reason}
+                      <span className="ml-2 text-sm text-brass">Read quote</span>
+                    </summary>
+                    <blockquote className="mt-3 text-base italic leading-relaxed text-ink-soft">{rejection.verbatim}</blockquote>
+                  </details>
                 ) : (
                   <p className="mt-2 text-lg leading-relaxed">{rejection.reason}</p>
                 )}
@@ -133,8 +149,8 @@ export default async function AuditPage({ params }: { params: Promise<{ slug: st
       <section className="border-b border-rule py-12">
         <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Did they read anything live</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          An agent that never fetches a page cannot see your documentation, however good it is. It recommends
-          from memory, and memory is a year out of date.
+          These counts show which runs fetched live sources. They do not establish that a run read
+          {` ${audit.subject}'s `}own documentation or checked every claim it used.
         </p>
         <div className="mt-6 flex flex-col">
           {counts.liveSourcesByModel.map((entry) => (
@@ -192,22 +208,21 @@ export default async function AuditPage({ params }: { params: Promise<{ slug: st
       </section>
 
       <section className="border-t border-rule py-12">
-        <h2 className="text-lg font-semibold tracking-tight">This is what a full audit produces</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Where would agents get stuck with your product?</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
-          Agents on one brief, in isolated copies of a real codebase, nobody watching, every source they
-          consulted recorded. The same instrument pointed at your product and your category takes two to three
-          weeks.
+          An integration pilot tests two tasks with two tools, records the failed steps, and includes
+          one small fix and a retest. We agree the tasks before starting.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/pricing" className="bg-ink px-5 py-3 font-mono text-sm text-ground transition-opacity hover:opacity-85">
-            What it costs
-          </Link>
-          <a
-            href="mailto:hello@letagentsin.com?subject=Full%20agent%20audit"
+          <TrackedLink click="pricing" href="/pricing" className="bg-ink px-5 py-3 font-mono text-sm text-ground transition-opacity hover:opacity-85">
+            See pilot scope & pricing
+          </TrackedLink>
+          <TrackedLink click="mail-audit"
+            href={`mailto:hello@letagentsin.com?subject=${encodeURIComponent(`Integration pilot — after reading ${audit.subject} study`)}`}
             className="border border-ink/40 px-5 py-3 font-mono text-sm transition-colors hover:border-brass hover:text-brass"
           >
-            Ask what your brief would be
-          </a>
+            Discuss a task for your product
+          </TrackedLink>
         </div>
       </section>
     </main>

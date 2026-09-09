@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/audit` },
-  title: 'Agent audits: Let Agents In',
+  title: 'Coding agent integration studies: choices and blockers · Let Agents In',
   description:
     'Every category we have measured, in isolated copies of a real application. What agents chose, what they rejected, and where each of them stopped.',
 }
