@@ -37,7 +37,9 @@ Report and pilot prices live in `src/lib/billing/catalog.ts`. Its old monitoring
 never-sold billing mappings, not current offers; monthly, annual, agency and extra-question prices
 were withdrawn with owner approval on September 8. Billing is off: no payment provider is
 connected, `/terms`, `/privacy` and `/refunds` depend on a seller identity that is not complete,
-and a report is bought by writing to hello@letagentsin.com. Turning it on is `docs/turning-billing-on.md`.
+and a report or pilot inquiry now starts at the Formspree form on `/pricing#contact`. Rights,
+disputes and error reports still use hello@letagentsin.com. The first form endpoint is documented
+in `docs/formspree-contact-form-2026-09-09.md`. Turning billing on is `docs/turning-billing-on.md`.
 
 ## Where the business actually is
 

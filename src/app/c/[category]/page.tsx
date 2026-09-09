@@ -300,7 +300,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
           <div className="mt-5 flex flex-wrap gap-4 text-sm">
             <Link href="/d/sample" className="text-brass underline underline-offset-4">See a sample report</Link>
             <TrackedLink click="pricing" href="/pricing" className="text-brass underline underline-offset-4">Report & pilot pricing</TrackedLink>
-            <TrackedLink click="mail-report" href="mailto:hello@letagentsin.com?subject=Agent%20report%20%E2%80%94%20transactional%20email" className="text-brass underline underline-offset-4">Ask about your email API</TrackedLink>
+            <TrackedLink click="mail-report" href={`/pricing?interest=report&context=${encodeURIComponent(category.label)}#contact`} className="text-brass underline underline-offset-4">Ask about your email API</TrackedLink>
           </div>
         </section>
       )}

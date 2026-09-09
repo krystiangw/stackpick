@@ -12,6 +12,8 @@ import { getStore } from '@/lib/store'
 import { NOISE_FLOOR_PERCENT } from '@/lib/published'
 import { publishedCorpus } from '@/lib/published'
 import { edgeRefusalsInCorpus, sweptOn } from '@/lib/limits'
+import { ContactForm, type ContactInterest } from '@/components/contact-form'
+import { CONTROLLER_IS_NAMED } from '@/lib/seller'
 
 const pilotPrice = `$${INTEGRATION_PILOT.usd.toLocaleString('en-US')}`
 
@@ -75,7 +77,7 @@ const TIERS: readonly Tier[] = [
     ],
     note: `Available for the ${CATEGORIES.length} categories I measure. I confirm category fit before you pay.`,
     sample: { label: 'Read a real one, start to finish', href: '/d/sample' },
-    cta: { label: 'Ask for a report', href: 'mailto:hello@letagentsin.com?subject=One%20agent%20report', click: 'mail-report' },
+    cta: { label: 'Ask for a report', href: '/pricing?interest=report&context=pricing-tier#contact', click: 'mail-report' },
   },
   {
     name: 'Integration pilot',
@@ -91,14 +93,17 @@ const TIERS: readonly Tier[] = [
     note: 'Up to 12 hours of my work. Delivery within 10 business days of agreed scope and ready access. Larger changes are scoped separately.',
     featured: true,
     sample: { label: 'See earlier integration studies', href: '/audit' },
-    cta: { label: 'Discuss your two tasks', href: 'mailto:hello@letagentsin.com?subject=Agent%20audit', click: 'mail-audit' },
+    cta: { label: 'Discuss your two tasks', href: '/pricing?interest=pilot&context=pricing-tier#contact', click: 'mail-audit' },
   },
 ]
 
 const asDay = (day: string) =>
   new Date(`${day}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
 
-export default async function PricingPage() {
+export default async function PricingPage({ searchParams }: { searchParams: Promise<{ interest?: string; context?: string }> }) {
+  const query = await searchParams
+  const defaultInterest: ContactInterest = query.interest === 'report' || query.interest === 'other' ? query.interest : 'pilot'
+  const context = query.context?.slice(0, 160)
   // Linked only when it is there AND marked as a sample. A fresh deployment has no deliveries and a
   // link to a 404 is worse than no link, but the flags are independent: publishing a customer's
   // report with `--id sample` and no `--sample` would otherwise put their document on the pricing
@@ -204,6 +209,15 @@ export default async function PricingPage() {
             </article>
           ))}
         </div>
+      </section>
+
+      <section id="contact" className="scroll-mt-6 border-b border-rule py-12">
+        <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">Start a conversation</p>
+        <h2 className="mt-3 text-2xl font-semibold tracking-tight">Tell me what you want to test.</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          Use the short form for a report, an integration pilot or a question about fit. I read every message and reply myself.
+        </p>
+        <ContactForm defaultInterest={defaultInterest} context={context} privacyLinked={CONTROLLER_IS_NAMED} />
       </section>
 
       <section className="border-b border-rule py-12">
@@ -363,8 +377,8 @@ export default async function PricingPage() {
           I discuss the results with you directly.
         </p>
         <p className="mt-4 font-mono text-sm">
-          <TrackedLink click="mail-hello" href="mailto:hello@letagentsin.com" className="text-brass underline underline-offset-4">
-            hello@letagentsin.com
+          <TrackedLink click="mail-hello" href="/pricing?interest=other&context=auditor#contact" className="text-brass underline underline-offset-4">
+            Use the inquiry form
           </TrackedLink>
         </p>
       </section>

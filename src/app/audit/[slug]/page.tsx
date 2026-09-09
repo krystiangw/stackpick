@@ -218,7 +218,7 @@ export default async function AuditPage({ params }: { params: Promise<{ slug: st
             See pilot scope & pricing
           </TrackedLink>
           <TrackedLink click="mail-audit"
-            href={`mailto:hello@letagentsin.com?subject=${encodeURIComponent(`Integration pilot — after reading ${audit.subject} study`)}`}
+            href={`/pricing?interest=pilot&context=${encodeURIComponent(audit.subject)}#contact`}
             className="border border-ink/40 px-5 py-3 font-mono text-sm transition-colors hover:border-brass hover:text-brass"
           >
             Discuss a task for your product

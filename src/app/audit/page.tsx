@@ -101,7 +101,7 @@ export default async function AuditIndexPage() {
           </TrackedLink>
           <TrackedLink
             click="mail-audit"
-            href="mailto:hello@letagentsin.com?subject=Full%20agent%20audit"
+            href="/pricing?interest=pilot&context=audits-index#contact"
             className="border border-ink/40 px-5 py-3 font-mono text-sm transition-colors hover:border-brass hover:text-brass"
           >
             Ask what your brief would be

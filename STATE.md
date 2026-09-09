@@ -5,6 +5,12 @@ i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dzi
 
 ## Nad czym pracujemy
 
+**Formularz kontaktowy, 09.09:** sprzedażowe CTA prowadzą do `/pricing#contact` i wspólnego
+formularza Formspree (`mpzkgdjw`, 50 zgłoszeń/mies. w planie darmowym). Powiadomienia trafiają
+na prywatny Gmail, nie wykonano testowego submitu i nie kupiono upgrade'u. Konfiguracja i limit:
+`docs/formspree-contact-form-2026-09-09.md`. Po pierwszych realnych odpowiedziach zdecydujemy,
+czy dodać zweryfikowane `hello@letagentsin.com`, zmienić plan albo wrócić do `/api/lead`.
+
 **Druga partia 20/20 wysłana, 08.09 20:05–20:08 CEST:** razem 40 różnych firm.
 Nowy styl: krótkie przedstawienie Krystiana, konkretny wynik i jedno CTA — oferta przygotowanego
 planu dwóch testów agenta. Wszystkie adresy imienne i publicznie potwierdzone; brak ponownych
@@ -93,7 +99,8 @@ i publikacji. Szczegóły i wyłączenie: `docs/cursor-free-plan-2026-09-07.md`.
 - livekit.com i agora.io poza kampanią (pytanie o wideo nie pasuje do ich produktu); polar.sh
   i betterstack.com w zamian.
 - Deploy tylko po typecheck, lint, rules, build i codex review; nigdy w trakcie przemiatu.
-- Billing wyłączony, monitoring darmowy bez daty końca, raport kupowany mailem.
+- Billing wyłączony, monitoring darmowy bez daty końca; raport i pilot zaczynają się od formularza
+  na `/pricing#contact`, a email zostaje dla praw, sporów i błędów.
 
 ## Stan produkcji
 

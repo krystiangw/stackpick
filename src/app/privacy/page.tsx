@@ -75,11 +75,12 @@ export default async function PrivacyPage() {
               And if our database refuses the write, the report lives only in memory and its page says so.
             </li>
             <li>
-              <strong className="text-ink">An email address</strong>, when you give one: to send a scan result, to
-              confirm a domain you asked us to watch, or to deliver something you bought. A watch record holds{' '}
+              <strong className="text-ink">Contact details</strong>, when you give them: an email address to send a scan result, to
+              confirm a domain you asked us to watch, or to deliver something you bought. An inquiry submission also includes
+              your name, company or product, selected interest and message. A watch record holds{' '}
               {Object.values(WATCH_FIELDS_DISCLOSED).join(', ')}. That list is generated from the record itself rather
-              than written here, so it cannot fall behind it. Nothing is bought from anybody, nothing is joined to
-              anything, and no third party receives it.
+              than written here, so it cannot fall behind it. The inquiry form sends the fields you enter to Formspree
+              for delivery to the owner&apos;s notification address; we do not buy data or join it to another service.
             </li>
             <li>
               <strong className="text-ink">A page counter.</strong> A date, a path or the name of a button that was pressed, and whether the request looked like
@@ -126,7 +127,7 @@ export default async function PrivacyPage() {
         <div>
           <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Who processes it for us</h2>
           <p className="mt-4">
-            Heroku (hosting, EU region), MongoDB Atlas (storage), Resend (email delivery), PostHog Cloud EU
+            Heroku (hosting, EU region), MongoDB Atlas (storage), Resend (scorecard and monitoring email delivery), Formspree (contact-form delivery), PostHog Cloud EU
             (cookieless aggregate web analytics), and, only when you run the visibility beta, the configured model
             providers Anthropic, OpenAI, Google and Perplexity. Each sees only what is needed to do that job. A payment provider
             is added here the day payments go live, and it will be named before anybody is asked for a card.
@@ -139,7 +140,8 @@ export default async function PrivacyPage() {
             Scan results are kept as long as they are published, because a permanent link that stops working is worse
             than one that ages. An address given for monitoring is kept until you stop it: every email we send carries
             a stop link, and using it ends the mail immediately. An address given for a one-off delivery is kept for as
-            long as we owe you a receipt or a rescan. Visibility audit jobs and their answers are kept while the beta
+            long as we owe you a receipt or a rescan. Inquiry messages are kept in Formspree and the owner&apos;s mailbox
+            as needed to answer and manage the conversation. Visibility audit jobs and their answers are kept while the beta
             is being evaluated; ask us to delete one by sending its identifier.
           </p>
         </div>
