@@ -97,6 +97,12 @@ i publikacji. Szczegóły i wyłączenie: `docs/cursor-free-plan-2026-09-07.md`.
 
 ## Stan produkcji
 
+v797 (`7f2d905`, 09.09): SEO — HTTP/www przekierowuje do HTTPS bez www; canonical metodologii
+i czterech studiów, czytelniejsze tytuły i CTA, krótszy Paddle z rozwijanymi cytatami.
+Typecheck/rules/build/lint/test routingu i Codex review pass; 28 kontroli HTTP produkcji pass.
+GSC baseline: 5 kliknięć / 721 wyświetleń, filtr 28 dni z danymi do 06.09. To nie wynik zmian.
+Opis: `docs/seo-fix-2026-09-09.md`; nadal czekamy na przetworzenie adresów przez Google.
+
 v796 (`cc97d24`): landing pokazuje odbiorcę, przykład problemu i trzy oferty. 19% mniej
 widocznego tekstu; krótsza strona mobile, szersze pola monitoringu. Kontrole lokalne i live
 320–1440 px, dwa motywy, typecheck/rules/build/lint oraz Codex review zakończone.
