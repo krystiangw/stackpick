@@ -60,7 +60,7 @@ export function ReportView({ model }: { model: ReportModel }) {
 
   return (
     <article className="report-reading print:text-[11pt]">
-      <header className="border-b border-rule pb-8">
+      <header className="border-b border-rule pb-8 pt-6 sm:pt-8">
         <p className="font-mono text-xs uppercase tracking-[0.18em] text-brass">{model.category}</p>
         <h1 className="mt-3 break-words text-3xl font-semibold tracking-tight sm:text-4xl">{model.domain}</h1>
         <p className="mt-3 max-w-2xl text-lg leading-relaxed text-ink-soft">

@@ -6,6 +6,7 @@ import { loadRankings } from '@/lib/rankings'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
 import { SITE_URL } from '@/lib/site'
+import { CORPUS_LICENCE, CORPUS_LICENCE_IS_PUBLISHED } from '@/lib/seller'
 import { lookupCategoryById } from '@/lib/lookup'
 import cells from '@/data/cells.json'
 import { AgentCoverageNotice } from '@/components/agent-coverage-notice'
@@ -97,6 +98,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
             description: `Dated HTTP checks and agent mention counts across ${category.label.toLowerCase()}.`,
             url: `${SITE_URL}/c/${id}`,
             isAccessibleForFree: true,
+            license: CORPUS_LICENCE_IS_PUBLISHED ? CORPUS_LICENCE.url : `${SITE_URL}/methodology`,
             creator: { '@type': 'Organization', name: 'Let Agents In', url: SITE_URL },
             distribution: {
               '@type': 'DataDownload',

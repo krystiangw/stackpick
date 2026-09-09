@@ -98,6 +98,15 @@ export default async function MethodologyPage() {
       </section>
 
       <section className="border-b border-rule py-12">
+        <h2 className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Dataset terms</h2>
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
+          The published measurements may be reused, quoted and republished with attribution to Let Agents In
+          and a link to this methodology. Keep the formula version with any figures so another reader can
+          check which rules produced them.
+        </p>
+      </section>
+
+      <section className="border-b border-rule py-12">
         <h2 id="checks" className="font-mono text-sm uppercase tracking-[0.15em] text-ink-faint">Checks</h2>
         <div className="mt-6 flex flex-col gap-8">
           {STAGES.map((stage) => {

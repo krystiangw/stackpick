@@ -102,21 +102,27 @@ export function ScanForm({ autoFocus = false, initialDomain = '' }: { autoFocus?
   return (
     <div className="flex flex-col gap-3">
       <form onSubmit={submit} className="flex flex-col gap-2 sm:flex-row">
+        <label htmlFor="scan-domain" className="sr-only">Domain to scan</label>
         <input
           ref={field}
+          id="scan-domain"
           value={domain}
           onChange={(changed) => setDomain(changed.target.value)}
-          placeholder="yourdomain.com"
+          placeholder="example.com"
           disabled={scanning}
           aria-label="Domain to scan"
-          className="min-w-0 flex-1 border border-rule bg-surface px-4 py-3 font-mono text-base placeholder:text-ink-faint disabled:opacity-60"
+          className="min-h-12 min-w-0 flex-1 rounded-md border-2 border-rule bg-ground px-4 py-3 font-mono text-base text-ink placeholder:text-ink-faint transition-colors focus:border-brass focus:outline-none focus:ring-2 focus:ring-brass/20 disabled:opacity-70"
         />
         <button
           type="submit"
           disabled={scanning || domain.trim().length === 0}
-          className="bg-ink px-6 py-3 font-mono text-sm font-medium tracking-wide text-ground transition-opacity hover:opacity-85 disabled:opacity-40"
+          className={scanning
+            ? 'inline-flex min-h-12 items-center justify-center rounded-md border-2 border-brass bg-brass px-6 py-3 font-mono text-sm font-medium tracking-wide text-ground cursor-wait'
+            : domain.trim().length === 0
+              ? 'inline-flex min-h-12 items-center justify-center rounded-md border-2 border-rule bg-sunken px-6 py-3 font-mono text-sm font-medium tracking-wide text-ink-soft cursor-not-allowed'
+              : 'inline-flex min-h-12 items-center justify-center rounded-md border-2 border-ink bg-ink px-6 py-3 font-mono text-sm font-medium tracking-wide text-ground transition-colors hover:border-brass hover:bg-brass hover:text-ground focus:outline-none focus:ring-2 focus:ring-brass/30'}
         >
-          {scanning ? 'Scanning…' : 'Scan'}
+          {scanning ? 'Scanning…' : 'Scan domain'}
         </button>
       </form>
 

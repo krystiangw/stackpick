@@ -113,13 +113,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="mt-24 border-t border-rule">
           <div className="mx-auto flex max-w-5xl flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-6 py-8 font-mono text-xs text-ink-faint">
             <p className="max-w-2xl">
-              Independent agent studies and public HTTP checks. Built and run by one engineer.
+              Independent agent studies and public HTTP checks.{' '}
+              <a
+                href="https://one-good-engineer.github.io/"
+                className="text-brass underline underline-offset-4 hover:text-ink"
+              >
+                Built and run by one engineer.
+              </a>
             </p>
-            {/* One person does the work, and a buyer weighing a five-figure engagement with a stranger
-                asks who that is before anything else. Naming him costs nothing and hiding him is what
-                reads as evasive. */}
-            {/* Linked only once the imprint behind them is real: the pages answer 404 while the
-                seller details are unset, and a footer link into a 404 is worse than no link. */}
             {/* Privacy is linked on its own flag: it answers a duty that starts when the email form
                 starts collecting addresses, and that is already true. Terms and refunds describe a
                 sale and stay behind the seller details. */}
@@ -139,15 +140,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   Refunds
                 </Link>
               )}
-            </p>
-            <p>
-              Built by{' '}
-              <a
-                href="https://one-good-engineer.github.io/"
-                className="text-brass underline underline-offset-4 hover:text-ink"
-              >
-                Krystian Gwizdała
-              </a>
             </p>
           </div>
         </footer>

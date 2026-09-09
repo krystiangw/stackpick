@@ -1,9 +1,17 @@
-# Let Agents In: migawka na 2026-09-08 (prod v796, korpus 181, formuła 9.57)
+# Let Agents In: migawka na 2026-09-09 (prod v800, korpus 181, formuła 9.57)
 
 Biznes na jednej stronie: `docs/business.md`. Historia rund: `docs/journal-2026-08.md` (do 11.08)
 i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dziennik.
 
 ## Nad czym pracujemy
+
+**SEO i czytelność interfejsu, 09.09:** GSC wskazało 24 elementy Dataset bez pola `license`;
+pole dodano do stron kategorii. Pozostałe powody braku indeksacji są historyczne, zamierzone
+(prywatne `/r/` i `/watch/`, warunkowe `/v/`) albo oznaczają brak danych Google, więc nie
+otwieramy prywatnych raportów dla indeksowania. Formularz skanu ma teraz widoczne stany
+disabled, pole `example.com`, etykietę `Scan domain` i wyraźny focus. Stopka używa tekstu
+`Built and run by one engineer.` jako linku, a raport dostał odstęp nad nazwą kategorii po
+linii metadanych. Build, lint, rules i diff check przechodzą; wdrożenie czeka na commit.
 
 **Formularz kontaktowy, 09.09:** sprzedażowe CTA prowadzą do `/pricing#contact` i wspólnego
 formularza Formspree (`mpzkgdjw`, 50 zgłoszeń/mies. w planie darmowym). Powiadomienia trafiają
