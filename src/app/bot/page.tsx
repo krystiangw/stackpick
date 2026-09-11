@@ -3,13 +3,13 @@ import Link from 'next/link'
 import { headers } from 'next/headers'
 import { AGENT_UA, DEFAULT_SCAN_BUDGET_MS, MAX_BYTES_PER_RESPONSE, MAX_PER_SITE } from '@/lib/scan/http'
 import { recordVisit } from '@/lib/visits'
-import { SITE_URL } from '@/lib/site'
+import { pageMetadata } from '@/lib/site'
 
-export const metadata: Metadata = {
-  alternates: { canonical: `${SITE_URL}/bot` },
+export const metadata: Metadata = pageMetadata({
+  path: '/bot',
   title: 'Our scanner in your logs: Let Agents In',
   description: `What LetAgentsIn/1.0 is doing on your site, how much of it there is, and how to stop it. It reads text over HTTP, runs nothing, and asks at most ${MAX_PER_SITE} things at once.`,
-}
+})
 
 /**
  * The page our user-agent points at.

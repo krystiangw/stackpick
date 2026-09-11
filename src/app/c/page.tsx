@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { CATEGORIES } from '@/lib/categories'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
-import { SITE_URL } from '@/lib/site'
+import { pageMetadata } from '@/lib/site'
 import cells from '@/data/cells.json'
 
 /**
@@ -13,12 +13,12 @@ import cells from '@/data/cells.json'
  */
 export const revalidate = 600
 
-export const metadata: Metadata = {
-  alternates: { canonical: `${SITE_URL}/c` },
+export const metadata: Metadata = pageMetadata({
+  path: '/c',
   title: 'Who an AI agent names, by category · Let Agents In',
   description:
     'One buying question per category, put to an agent in isolation, on two different tools. Who it names, who it names first, and how many vendors it never mentions.',
-}
+})
 
 export default async function CategoriesPage() {
   recordVisit('/c', (await headers()).get('user-agent'))

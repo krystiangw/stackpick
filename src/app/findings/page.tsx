@@ -3,20 +3,20 @@ import Link from 'next/link'
 import { buildIndustryReport } from '@/lib/industry'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
-import { SITE_URL } from '@/lib/site'
+import { pageMetadata } from '@/lib/site'
 import { FORMULA_VERSION } from '@/lib/score'
 import { buildStudy, inPoints, studyClaims, type Study } from '@/lib/study'
 import { publishedCorpus } from '@/lib/published'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  alternates: { canonical: `${SITE_URL}/findings` },
+export const metadata: Metadata = pageMetadata({
+  path: '/findings',
   title: 'How coding agents choose developer tools: our studies · Let Agents In',
   // No count here: the sixth exhibit is measured from the corpus and takes itself down when the
   // data cannot carry it, so a number in the description would be a promise the page can break.
   description: 'Recorded agent choices, integration attempts and an observational comparison with HTTP scan results.',
-}
+})
 
 type Result = {
   id: string

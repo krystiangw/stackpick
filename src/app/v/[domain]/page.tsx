@@ -100,13 +100,15 @@ export async function generateMetadata({ params }: { params: Promise<{ domain: s
   // in that window all 170 sitemap URLs said noindex, which is what Search Console wrote about.
   // The page states the formula it was measured under and the date, twice, in its own body.
   if (!categoryFor(name)) return { title: `${name} · Let Agents In`, robots: { index: false }, ...canonical }
+  const title = `Is ${name} ready for AI agents? ${scorecard.total}/${measurable} · Let Agents In`
+  const description =
+    `${name} scores ${scorecard.total} of ${measurable} measurable points across ${CHECKS.length} ` +
+    'deterministic HTTP checks: whether an agent can find it, register with it and integrate it.'
   return {
-    title: `Is ${name} ready for AI agents? ${scorecard.total}/${measurable} · Let Agents In`,
-    description:
-      `${name} scores ${scorecard.total} of ${measurable} measurable points across ${CHECKS.length} ` +
-      'deterministic HTTP checks: whether an agent can find it, register with it and integrate it.',
+    title,
+    description,
     alternates: { canonical: `${SITE_URL}/v/${name}` },
-    openGraph: { title: `${name} · ${scorecard.total}/${measurable}`, type: 'article' },
+    openGraph: { title: `${name} · ${scorecard.total}/${measurable}`, description, type: 'article', url: `${SITE_URL}/v/${name}`, siteName: 'Let Agents In' },
   }
 }
 

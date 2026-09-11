@@ -6,7 +6,7 @@ import { AGENT_ENTRY_PATHS, PROVISIONING_PATTERN_COUNT, PROVISIONING_PATTERN_LAB
 import { AI_CRAWLERS } from '@/lib/scan/robots'
 import { MAX_BYTES_PER_RESPONSE } from '@/lib/scan/http'
 import { verdictOf } from '@/lib/corpus'
-import { SITE_URL } from '@/lib/site'
+import { SITE_URL, pageMetadata } from '@/lib/site'
 import { getStore, type Report } from '@/lib/store'
 import { CHECKS, FORMULA_VERSION, MAX_SCORE, STAGES } from '@/lib/score'
 import { recordVisit } from '@/lib/visits'
@@ -15,11 +15,11 @@ import { headers } from 'next/headers'
 /** Kiedy policzylismy liczby CUDZEGO skanera. Straznik oblewa build, gdy zrobi sie starsza niz 60 dni. */
 const RIVALS_READ_ON = '19 August 2026'
 
-export const metadata: Metadata = {
-  alternates: { canonical: `${SITE_URL}/methodology` },
+export const metadata: Metadata = pageMetadata({
+  path: '/methodology',
   title: 'Methodology: Let Agents In',
   description: 'The scoring formula, HTTP checks, measurement limits and recorded agent-run method.',
-}
+})
 
 const CLASS_COST: Record<string, string> = {
   training: 'Controls crawling for model training; it does not remove existing training data.',

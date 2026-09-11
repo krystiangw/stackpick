@@ -31,10 +31,14 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
   const { category: id } = await params
   const category = CATEGORIES.find((candidate) => candidate.id === id)
   if (!category) return {}
+  const title = `What the agent actually answered: ${category.label} · Let Agents In`
+  const description = `Every answer from our ${category.label.toLowerCase()} runs, in full, with the vendors it named marked.`
+  const url = `${SITE_URL}/c/${id}/runs`
   return {
-    title: `What the agent actually answered: ${category.label} · Let Agents In`,
-    description: `Every answer from our ${category.label.toLowerCase()} runs, in full, with the vendors it named marked.`,
-    alternates: { canonical: `${SITE_URL}/c/${id}/runs` },
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, siteName: 'Let Agents In', type: 'website' },
   }
 }
 
@@ -95,7 +99,7 @@ export default async function RunsPage({ params }: { params: Promise<{ category:
           </Link>
         </p>
         <h1 className="mt-4 max-w-3xl text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-          The agent answers
+          {category.label}: the agent answers
         </h1>
         <p className="mt-4 text-lg leading-relaxed text-ink-soft">
           {held.reduce((sum, one) => sum + one.answers.length, 0)} recorded answers. Browse by tool, date or vendor, then open a run to read it.

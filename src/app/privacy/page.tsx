@@ -4,13 +4,13 @@ import { headers } from 'next/headers'
 import { recordVisit } from '@/lib/visits'
 import { CONTROLLER, CONTROLLER_IS_NAMED, SELLER, SELLER_IS_COMPLETE } from '@/lib/seller'
 import { WATCH_FIELDS_DISCLOSED } from '@/lib/watch'
-import { SITE_URL } from '@/lib/site'
+import { pageMetadata } from '@/lib/site'
 
-export const metadata: Metadata = {
-  alternates: { canonical: `${SITE_URL}/privacy` },
+export const metadata: Metadata = pageMetadata({
+  path: '/privacy',
   title: 'Privacy: Let Agents In',
   description: 'What we store, what we do not, and how to have it deleted. No cookies, advertising or session recording.',
-}
+})
 
 /**
  * Short because the product is short on data. The scanner reads public pages of companies, so the

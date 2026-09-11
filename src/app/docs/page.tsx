@@ -5,16 +5,16 @@ import { PER_CALLER_PER_HOUR, PER_DOMAIN_PER_HOUR, REUSE_WINDOW_MS } from '@/lib
 import { CHECKS, FORMULA_VERSION, MAX_SCORE, STAGES } from '@/lib/score'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
-import { SITE_URL } from '@/lib/site'
+import { SITE_URL, pageMetadata } from '@/lib/site'
 
 /** When the browser support below was last read at the source. A version number ages faster than prose. */
 const WEBMCP_READ_ON = '30 August 2026'
 
-export const metadata: Metadata = {
-  alternates: { canonical: `${SITE_URL}/docs` },
+export const metadata: Metadata = pageMetadata({
+  path: '/docs',
   title: 'Docs: Let Agents In',
   description: 'How to scan a domain from code: endpoints, response shape, limits, and how to read a scorecard.',
-}
+})
 
 const BASE = SITE_URL
 

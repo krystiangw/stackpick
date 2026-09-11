@@ -4,17 +4,17 @@ import { headers } from 'next/headers'
 import { CHECKS } from '@/lib/score'
 import { publishedCorpus } from '@/lib/published'
 import { recordVisit } from '@/lib/visits'
-import { SITE_URL } from '@/lib/site'
+import { pageMetadata } from '@/lib/site'
 import { oauthMetadataInCorpus } from '@/lib/limits'
 
-export const metadata: Metadata = {
-  alternates: { canonical: `${SITE_URL}/standard` },
+export const metadata: Metadata = pageMetadata({
+  path: '/standard',
   title: 'AgentReady, and what we measure instead: Let Agents In',
+  // The description is what an agent reads instead of opening the page, which is a check we
+  // publish about other people. A stale number here is the failure we sell finding.
   description:
-    // The description is what an agent reads instead of opening the page, which is a check we
-    // publish about other people. A stale number here is the failure we sell finding.
     'The AgentReady standard has 30 requirements and 7 of them are MUST. We measure six of those seven and go further on four. Half of what we check has no equivalent in the spec at all, and we publish which half.',
-}
+})
 
 /**
  * Where we stand against somebody else's standard.

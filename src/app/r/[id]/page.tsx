@@ -44,6 +44,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     openGraph: {
       title: `${report.domain} · ${report.scorecard.total}/${report.scorecard.measurable ?? report.scorecard.max}`,
       description: headline.claim,
+      siteName: 'Let Agents In',
+      type: 'article',
     },
     twitter: { card: 'summary_large_image' },
   }

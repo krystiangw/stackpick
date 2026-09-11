@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { CATEGORIES, CURATED_DOMAINS } from '@/lib/categories'
 import { publishedCorpus } from '@/lib/published'
 import { getStore } from '@/lib/store'
-import { SITE_URL } from '@/lib/site'
+import { pageMetadata } from '@/lib/site'
 
 /**
  * Every vendor we hold, linked. A sitemap tells a crawler the pages exist; a page linking them
@@ -13,12 +13,12 @@ import { SITE_URL } from '@/lib/site'
 /** Cached for the same reason as the pages it links: it is a crawler's first stop. */
 export const revalidate = 600
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/v',
   title: 'Every vendor we have measured · Let Agents In',
   description:
     'Agent readiness scores for the vendors in our corpus, by category. Each is measured with the same deterministic HTTP checks and republished whenever we rescan.',
-  alternates: { canonical: `${SITE_URL}/v` },
-}
+})
 
 export default async function VendorIndex() {
   const { reports, formulaVersion } = await publishedCorpus()

@@ -4,13 +4,13 @@ import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import { recordVisit } from '@/lib/visits'
 import { REFUNDS, SELLER, SELLER_IS_COMPLETE } from '@/lib/seller'
-import { SITE_URL } from '@/lib/site'
+import { pageMetadata } from '@/lib/site'
 
-export const metadata: Metadata = {
-  alternates: { canonical: `${SITE_URL}/terms` },
+export const metadata: Metadata = pageMetadata({
+  path: '/terms',
   title: 'Terms: Let Agents In',
   description: 'What you are buying, what it does not promise, and what happens when either side wants to stop.',
-}
+})
 
 /**
  * Written to be read, and only about things this product actually does. Every clause here answers

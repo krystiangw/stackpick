@@ -2,13 +2,13 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { CORPUS_LICENCE, CORPUS_LICENCE_IS_PUBLISHED } from '@/lib/seller'
-import { SITE_URL } from '@/lib/site'
+import { pageMetadata } from '@/lib/site'
 
-export const metadata: Metadata = {
-  alternates: { canonical: `${SITE_URL}/corpus-licence` },
+export const metadata: Metadata = pageMetadata({
+  path: '/corpus-licence',
   title: 'Using the corpus: Let Agents In',
   description: 'What you may do with the published measurements, and what attribution means here.',
-}
+})
 
 /**
  * The terms behind a sentence three published files already carry. It answers 404 until the grant

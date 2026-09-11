@@ -7,7 +7,7 @@ import { CATEGORIES, CURATED_DOMAINS } from '@/lib/categories'
 import { priceOf, skuById, INTEGRATION_PILOT } from '@/lib/billing/catalog'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
-import { SITE_URL } from '@/lib/site'
+import { pageMetadata } from '@/lib/site'
 import { getStore } from '@/lib/store'
 import { NOISE_FLOOR_PERCENT } from '@/lib/published'
 import { publishedCorpus } from '@/lib/published'
@@ -17,14 +17,14 @@ import { CONTROLLER_IS_NAMED } from '@/lib/seller'
 
 const pilotPrice = `$${INTEGRATION_PILOT.usd.toLocaleString('en-US')}`
 
-export const metadata: Metadata = {
-  alternates: { canonical: `${SITE_URL}/pricing` },
+export const metadata: Metadata = pageMetadata({
+  path: '/pricing',
   title: 'Pricing: Let Agents In',
   // The prices go in the snippet. A pricing description with no number in it reads as "contact
   // sales", and the runs we published measured agents passing over a vendor on exactly that
   // reading, without opening the page that would have corrected it.
   description: `Free scan: ${CHECKS.length} deterministic checks, no account or card. One agent report: ${priceOf(skuById('report-one')!)}. Free monitoring beta. Integration pilot: ${pilotPrice} each for the first ${INTEGRATION_PILOT.places} pilots.`,
-}
+})
 
 type Tier = {
   name: string

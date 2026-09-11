@@ -58,16 +58,20 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
   const category = CATEGORIES.find((candidate) => candidate.id === id)
   if (!category) return {}
   const cell = cellFor(id)
+  const title = id === 'transactional-email'
+    ? 'Which email APIs do coding agents recommend? · Let Agents In'
+    : `${category.label}: agent mentions and HTTP checks · Let Agents In`
+  const description = id === 'transactional-email'
+    ? 'Recorded coding-agent recommendations for transactional email APIs. Compare vendor mentions by tool, read the answers, and see what these tests can tell your team.'
+    : cell
+    ? `Agent answers and public HTTP checks for ${category.label.toLowerCase()}, with dated evidence.`
+    : `Agent readiness measured across ${category.label.toLowerCase()}, check by check.`
+  const url = `${SITE_URL}/c/${id}`
   return {
-    title: id === 'transactional-email'
-      ? 'Which email APIs do coding agents recommend? · Let Agents In'
-      : `${category.label}: agent mentions and HTTP checks · Let Agents In`,
-    description: id === 'transactional-email'
-      ? 'Recorded coding-agent recommendations for transactional email APIs. Compare vendor mentions by tool, read the answers, and see what these tests can tell your team.'
-      : cell
-      ? `Agent answers and public HTTP checks for ${category.label.toLowerCase()}, with dated evidence.`
-      : `Agent readiness measured across ${category.label.toLowerCase()}, check by check.`,
-    alternates: { canonical: `${SITE_URL}/c/${id}` },
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, siteName: 'Let Agents In', type: 'website' },
   }
 }
 

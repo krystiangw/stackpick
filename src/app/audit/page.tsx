@@ -4,19 +4,19 @@ import { TrackedLink } from '@/components/tracked-link'
 import { listAudits, tally } from '@/lib/audit'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
-import { SITE_URL } from '@/lib/site'
+import { pageMetadata } from '@/lib/site'
 
 const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']
 const spell = (n: number) => WORDS[n] ?? String(n)
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  alternates: { canonical: `${SITE_URL}/audit` },
+export const metadata: Metadata = pageMetadata({
+  path: '/audit',
   title: 'Coding agent integration studies: choices and blockers · Let Agents In',
   description:
     'Every category we have measured, in isolated copies of a real application. What agents chose, what they rejected, and where each of them stopped.',
-}
+})
 
 export default async function AuditIndexPage() {
   recordVisit('/audit', (await headers()).get('user-agent'))

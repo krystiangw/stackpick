@@ -5,17 +5,17 @@ import { buildIndustryReport, type CheckTally } from '@/lib/industry'
 import { NOISE_FLOOR_PERCENT } from '@/lib/published'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
-import { SITE_URL } from '@/lib/site'
+import { pageMetadata } from '@/lib/site'
 import { AGENT_ENTRY_PATH_COUNT } from '@/lib/scan/funnel'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  alternates: { canonical: `${SITE_URL}/report` },
+export const metadata: Metadata = pageMetadata({
+  path: '/report',
   title: 'The agent readiness of developer tooling: Let Agents In',
   description:
     'Aggregate HTTP check results across the published corpus, with dates, coverage and measurement limits.',
-}
+})
 
 const percent = (share: number) => `${Math.round(share * 100)}%`
 

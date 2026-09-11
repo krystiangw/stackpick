@@ -2,10 +2,14 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { VisibilityForm } from '@/components/visibility-form'
 import { recordVisit } from '@/lib/visits'
-import { SITE_URL } from '@/lib/site'
+import { pageMetadata } from '@/lib/site'
 
 export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Can AI agents find your product? · Let Agents In', description: 'Recorded brand mentions and citations from Codex, Claude and Gemini, with Perplexity Search shown separately.', alternates: { canonical: `${SITE_URL}/visibility` } }
+export const metadata: Metadata = pageMetadata({
+  path: '/visibility',
+  title: 'Can AI agents find your product? · Let Agents In',
+  description: 'Recorded brand mentions and citations from Codex, Claude and Gemini, with Perplexity Search shown separately.',
+})
 
 export default async function VisibilityPage({ searchParams }: { searchParams: Promise<{ audit?: string }> }) {
   recordVisit('/visibility', (await headers()).get('user-agent'))

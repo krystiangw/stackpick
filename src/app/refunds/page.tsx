@@ -3,13 +3,13 @@ import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import { recordVisit } from '@/lib/visits'
 import { REFUNDS, SELLER, SELLER_IS_COMPLETE } from '@/lib/seller'
-import { SITE_URL } from '@/lib/site'
+import { pageMetadata } from '@/lib/site'
 
-export const metadata: Metadata = {
-  alternates: { canonical: `${SITE_URL}/refunds` },
+export const metadata: Metadata = pageMetadata({
+  path: '/refunds',
   title: 'Refunds: Let Agents In',
   description: 'What we give back and when, for the one-off report and for monitoring.',
-}
+})
 
 /**
  * A refund policy is a payment provider's hard requirement and a buyer's second question. Written
