@@ -39,6 +39,11 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
     description,
     alternates: { canonical: url },
     openGraph: { title, description, url, siteName: 'Let Agents In', type: 'website' },
+    // These pages repeat the category's own topic in full-answer form and were outranking the
+    // category page for the same queries with zero clicks of their own (GSC, board task #61,
+    // 2026-09-14). Kept linked and crawlable (follow: true) so Google still reaches them from the
+    // category page; just excluded from ranking on their own.
+    robots: { index: false, follow: true },
   }
 }
 

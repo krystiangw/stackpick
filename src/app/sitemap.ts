@@ -23,9 +23,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }))
   // One per category, ranked above a single vendor page: it answers the question somebody types
   // ("who do agents recommend for X") rather than the one they type only when they know us.
-  const cells = CATEGORIES.flatMap((category) => [
-    { url: `${BASE}/c/${category.id}`, changeFrequency: 'weekly' as const, priority: 0.6 },
-    { url: `${BASE}/c/${category.id}/runs`, changeFrequency: 'monthly' as const, priority: 0.4 },
-  ])
+  // The /runs page for each category is deliberately noindex (board task #61/#62: it was
+  // cannibalizing the category page's ranking for zero clicks of its own), so it has no place
+  // in a sitemap either - a noindex URL in the sitemap is exactly the mismatch GSC already flagged
+  // once on /v/[domain] (see that file's comment).
+  const cells = CATEGORIES.map((category) => ({
+    url: `${BASE}/c/${category.id}`,
+    changeFrequency: 'weekly' as const,
+    priority: 0.6,
+  }))
   return [...pages, ...cells, ...vendors]
 }
