@@ -1,163 +1,58 @@
-# Let Agents In: migawka na 2026-09-09 (prod v800, korpus 181, formuła 9.57)
+# Let Agents In: migawka na 2026-09-14 (prod v804, korpus 181, formuła 9.57)
 
-Biznes na jednej stronie: `docs/business.md`. Historia rund: `docs/journal-2026-08.md` (do 11.08)
-i `docs/journal-2026-08-09.md` (11.08 do 07.09). Ten plik to tylko stan, nie dziennik.
+Biznes: `docs/business.md`. Historia rund: `docs/journal-2026-08.md`, `docs/journal-2026-08-09.md`
+(do 07.09). Ten plik to stan, nie dziennik; szczegóły wdrożeń są w `docs/` i w git log.
 
 ## Nad czym pracujemy
 
-**SEO i czytelność interfejsu, 09.09:** GSC wskazało 24 elementy Dataset bez pola `license`;
-pole dodano do stron kategorii. Pozostałe powody braku indeksacji są historyczne, zamierzone
-(prywatne `/r/` i `/watch/`, warunkowe `/v/`) albo oznaczają brak danych Google, więc nie
-otwieramy prywatnych raportów dla indeksowania. Formularz skanu ma teraz widoczne stany
-disabled, pole `example.com`, etykietę `Scan domain` i wyraźny focus. Stopka używa tekstu
-`Built and run by one engineer.` jako linku, a raport dostał odstęp nad nazwą kategorii po
-linii metadanych. Build na Heroku, lint, rules i diff check przechodzą. Wdrożono jako v801;
-walidacja Dataset w Search Console została uruchomiona 09.09.
+**SEO, 14.09 (tablica #61/#62, zamknięte):** SEO-raport wykazał w GSC, że `/c/*/runs` weszły
+do indeksu 06-08.09 i zabrały 184/421 wyświetleń bez klików, spychając strony kategorii.
+Decyzja właściciela: `noindex, follow` na `/c/*/runs` plus usunięcie ich z sitemapy (v804,
+`9b08a11`). Unikalne h1/title/description były już od v803 (11.09). Sprawdzić GSC ok. 17-18.09,
+czy wyświetlenia wróciły na strony kategorii. Nie otwieramy prywatnych `/r/`, `/watch/` do indeksu.
 
-**Formularz kontaktowy, 09.09:** sprzedażowe CTA prowadzą do `/pricing#contact` i wspólnego
-formularza Formspree (`mpzkgdjw`, 50 zgłoszeń/mies. w planie darmowym). Powiadomienia trafiają
-na prywatny Gmail, test produkcyjny przeszedł 09.09 (302 → /thanks, wpis w Submissions i email),
-nie kupiono upgrade'u. Konfiguracja i limit:
-`docs/formspree-contact-form-2026-09-09.md`. Po pierwszych realnych odpowiedziach zdecydujemy,
-czy dodać zweryfikowane `hello@letagentsin.com`, zmienić plan albo wrócić do `/api/lead`.
+**Kampania „raport w prezencie”:** 40 firm w dwóch partiach wysłano 08.09 (listy:
+`docs/outreach-top20-2026-09-08.md`, `docs/outreach-wave2-2026-09-08.md`; `.eml` w
+`data/outreach-*/sent/`). Nie wysyłać ponownie, bez automatycznych follow-upów, bez kolejnej
+partii przed oceną odpowiedzi. Odpowiedzi trafiają na Formspree (`mpzkgdjw`, 50/mies.) i Gmail.
+Następny krok: odpowiedzi i dopasowanie pilotażu (1500 USD, 2 zadania, 24 próby;
+`docs/integration-pilot-2026-09-07.md`). Popyt nadal niepotwierdzony, zero klientów.
 
-**Druga partia 20/20 wysłana, 08.09 20:05–20:08 CEST:** razem 40 różnych firm.
-Nowy styl: krótkie przedstawienie Krystiana, konkretny wynik i jedno CTA — oferta przygotowanego
-planu dwóch testów agenta. Wszystkie adresy imienne i publicznie potwierdzone; brak ponownych
-wysyłek do pierwszej partii. 20 nowych raportów z ocenami dokumentacji i świeżymi skanami;
-bez nowych biegów, upgrade'u Cursor i zmiany korpusu. 20/20 SENT odczytano, treść i dostawy
-zweryfikowano. PostHog wysłany mimo błędu narzędzia; odnaleziony w SENT, nie ponawiany.
-Lista: `docs/outreach-wave2-2026-09-08.md`; prywatnie `data/outreach-wave2-2026-09-08/campaign.json`.
-Plany są propozycjami, testów nie wykonano. Następny krok: odpowiedzi i dopasowanie pilotażu;
-bez automatycznych follow-upów i bez kolejnej partii przed oceną tych kontaktów.
-
-**Pierwsza partia 20 firm zakończona wysyłką, 08.09:** wszystkie wiadomości SENT w Gmail,
-16:04–16:31 CEST. Każda ma imiennego odbiorcę, właściwy raport i nadawcę
-Krystian from Let Agents In <hello@letagentsin.com>. Dodatkowe 11 raportów opublikowano
-po przeglądzie dokumentacji i kontroli lokalnej/live. Nie wykonywano nowych biegów agentów;
-świeże skany są migawkami dostaw, korpus bez zmian. Lista: `docs/outreach-top20-2026-09-08.md`.
-Prywatny manifest: `data/outreach-top20-2026-09-08/campaign.json`. Nie wysyłać ponownie.
-Popyt pozostaje niepotwierdzony; następny krok to ocena odpowiedzi i dopasowanie zadania do pilotażu.
-
-**Landing i outreach, 08.09:** nowy pierwszy ekran z odbiorcą, konkretnym przykładem i trzema
-ofertami, wdrożony jako v796. Audyt: `docs/landing-review-2026-09-08.md`. Dziewięć maili skrócono i skierowano
-do imiennych kontaktów; `docs/outreach-review-2026-09-08.md`. Właściciel zlecił próbkę
-wyłącznie do siebie przed pierwszym klientem. Próbka wysłana z hello@ i potwierdzona w INBOX;
-następnie właściciel polecił pierwszą wysyłkę: **Loops wysłany do Chrisa 08.09 o 16:04 CEST**.
-Osiem kolejnych maili było wtedy szkicami Gmail; po rozszerzeniu celu wysłano je wraz z
-dodatkowymi 11 wiadomościami. Historia pierwszej wysyłki: `docs/outreach-first-send-2026-09-08.md`.
-
-**Ocena przewagi biznesowej ukończona 08.09:** `docs/business-advantage-2026-09-08.md`.
-Sprawdzono aktualne cenniki i istniejące publiczne raporty konkurencji; bez zakupów i nowych
-testów u dostawców. Lightsage konkuruje także wykonaniem kodu i obsługą Managed. Rekomendacja:
-jeden demonstrator diagnozy/poprawki/retestu, rozmowy po odwołaniu wstrzymania, następnie
-płatne pilotaże po 1500 USD. Właściciel następnie zatwierdził zmianę oferty: monitoring jako
-bezpłatna beta bez zapowiedzi ceny; 1500 USD za każdy z pierwszych dwóch pilotaży. Popyt
-pozostaje niesprawdzony. Cennik wdrożony jako v795; późniejsza zgoda na pierwszy mail i jego wynik opisane wyżej.
-Kontrola: `docs/pricing-update-2026-09-08.md`. Pierwsze płatności: sprzedaż przez rozmowę,
-potem ręczne rozliczenie; `docs/payments-first-sales-2026-09-08.md`. Bez uruchamiania checkoutu.
-
-0. **Produkt przed kampanią — materiały gotowe.** Dziewięć źródłowo ocenionych raportów
-   pod dotychczasowymi linkami i zgodna próbka Loops na `/d/sample`. Generator wymaga oceny
-   briefu i zaleceń powiązanych z SHA-256 skanu. Korekty niepotwierdzonych zaleceń dostarczone.
-   Wysłane `.eml`: pierwsze 20 w `data/outreach-top20-2026-09-08/sent/`, kolejne 20 w `data/outreach-wave2-2026-09-08/sent/`;
-   stare szkice przeniesiono poza kolejki. Nowe 11 dostaw ma własne oceny briefów i zaleceń.
-   Kontrola po rozszerzeniu agentów: 10 stron dostaw bez logowania, 7 stron przebiegów / 159 pełnych odpowiedzi,
-   35 działających źródeł, skrzynki i zgodność maili. Dowody i audyt zamknięcia:
-   `docs/readiness-verification-2026-09-07.md`. Pilotaż: `docs/integration-pilot-2026-09-07.md`
-   (1500 USD jako zatwierdzona cena pierwszych dwóch zleceń, 2 zadania, 24 próby, limit 12 h; niewykonany i niesprzedany).
-1. **Copy i UI zamknięte:** pozostałe fazy 5-7 planu redakcyjnego wdrożone jako v790-v792.
-   Krótsze strony, czytelna historia przebiegów z filtrami i rozwijanymi odpowiedziami,
-   raport z widoczną oceną zakresu, wynikami i rozwijanymi dowodami. Wydruk zawiera pełne treści.
-   Kontrola live: 10 dostaw, 7 stron przebiegów / 105 pełnych odpowiedzi, 9 stron publicznych.
-   Opis i testy: `docs/ui-ux-review-2026-09-07.md`; zamknięty plan i liczniki słów:
-   `docs/copy-rewrite-plan.md`. Znany wyjątek zewnętrznego checkera: zachowane dyrektywy robots.txt.
-2. **Historia kampanii „raport w prezencie”:** początkowo 9 odbiorców, następnie dwie partie po 20. Transloadit wyłączony do nowego
-   briefu i nowych przebiegów. Kanoniczne drafty: `outreach/drafts/gift-report-2026-09-03.private.md`
-   (poza gitem); instrukcja pakietu `data/product-review-2026-09-07/README-ready.md`.
-   Send-as hello@ przez SMTP Resenda uprzednio sprawdzony (mail-tester 9.3/10, DKIM/SPF/DMARC pass).
-   Loops, DocuSeal, Raygun i Logto wysłane w pierwszej partii. Teraz ocena odpowiedzi
-   o trafności zadania i proponowanym planie. Wysyła Krystian. Otwarć poszczególnych dostaw nie śledzimy.
-
-## Rozszerzenie agentów i następne pomiary
-
-Opublikowano 35 odpowiedzi Antigravity i 19 Cursor Auto w siedmiu kategoriach kampanii.
-Zachowano 391 wcześniejszych odpowiedzi; razem 445. Pierwotne dziewięć raportów i próbka mają zaktualizowane liczniki;
-późniejsza kampania 20 firm korzysta z tych samych odpowiedzi. Brakujące 16 odpowiedzi Cursor to limit konta, nie brak wzmianki.
-Auto nie ujawnia modelu bazowego. Badanie korelacji w 26 kategoriach pozostaje oparte na
-pierwotnych Claude Code i Codex. Dowody: `docs/agent-expansion-2026-09-07.md`.
-
-Cursor pozostaje Free. Panel: reset 10.09; brak publicznej dokładnej liczby żądań.
-Lokalny LaunchAgent `com.letagentsin.cursor-discovery` sprawdza kolejkę o 10:15;
-pierwsza dopuszczalna próba 11.09, najwyżej jedna dziennie, tylko 16 braków.
-Błąd zatrzymuje kolejkę. Komputer musi być dostępny; wyniki wymagają osobnej kontroli
-i publikacji. Szczegóły i wyłączenie: `docs/cursor-free-plan-2026-09-07.md`.
+**Cursor Free:** LaunchAgent `com.letagentsin.cursor-discovery` o 10:15 dobiera 16 braków,
+najwyżej jedna próba dziennie, błąd zatrzymuje kolejkę; wyniki wymagają ręcznej kontroli
+i publikacji. `docs/cursor-free-plan-2026-09-07.md`.
 
 ## Co blokuje
 
-- **08.09: wszystkie 20 wiadomości wysłano i zweryfikowano.** Nie ma zaległej wysyłki
-  w tej kampanii. Brak automatycznych przypomnień; nie dublować wiadomości.
-
-- Transloadit: nowy brief jest szkicem z zerem przebiegów. Nie dodawać starego raportu do
-  kampanii bez nowego briefu i pomiarów. Pozostałe 20 wiadomości już wysłano.
-- Billing i tożsamość sprzedawcy pozostają do domknięcia przed przyjęciem płatności.
+- Billing i tożsamość sprzedawcy do domknięcia przed przyjęciem płatności (sprzedaż przez
+  rozmowę, rozliczenie ręczne; `docs/payments-first-sales-2026-09-08.md`).
+- Transloadit: brief bez przebiegów, nie wraca do kampanii bez nowych pomiarów.
+- GSC ma 2-3 dni opóźnienia: efektów v803/v804 nie da się jeszcze zmierzyć.
 
 ## Decyzje, których nie cofamy
 
-- Klucz Resenda z transkryptu zostaje, bez rotacji (07.09).
-- Raporty liczone jako `/d`, nigdy po id; kliknięcia jako `/click/<nazwa>` z zamkniętej listy.
-- livekit.com i agora.io poza kampanią (pytanie o wideo nie pasuje do ich produktu); polar.sh
-  i betterstack.com w zamian.
-- Deploy tylko po typecheck, lint, rules, build i codex review; nigdy w trakcie przemiatu.
-- Billing wyłączony, monitoring darmowy bez daty końca; raport i pilot zaczynają się od formularza
-  na `/pricing#contact`, a email zostaje dla praw, sporów i błędów.
+- Klucz Resenda z transkryptu zostaje bez rotacji (07.09).
+- Raporty liczone jako `/d`, nigdy po id; kliki jako `/click/<nazwa>` z zamkniętej listy.
+- livekit.com i agora.io poza kampanią; polar.sh i betterstack.com zamiast nich.
+- Deploy po typecheck, lint, rules, build i review świeżym subagentem na innym modelu
+  (Codex wyłączony od 11.09); nigdy w trakcie przemiatu korpusu.
+- Billing wyłączony, monitoring darmowa beta bez daty końca, raport 49 USD, dwa pierwsze
+  pilotaże po 1500 USD; sprzedaż zaczyna się od `/pricing#contact`.
+- Noindex na `/c/*/runs` (14.09): nie przywracać do sitemapy bez nowych danych GSC.
 
 ## Stan produkcji
 
-v801 (`c57c8b4`, 09.09): pole `license` na Datasetach kategorii (warunkowo zgodne z konfiguracją
-licencji), opis warunków na metodologii, wyraźniejszy formularz skanu, linkowana stopka i odstęp
-nad kategorią w raporcie. Heroku build przeszedł; Search Console pokazuje „Validation started”
-dla 24 elementów bez `license`.
-
-v798 (`258d5ff`, 09.09): SEO — HTTP/www przekierowuje do HTTPS bez www; canonical metodologii
-i czterech studiów, czytelniejsze tytuły i CTA, krótszy Paddle z rozwijanymi cytatami.
-Dodano formularz Formspree dla zapytań sprzedażowych, z zachowaniem kontekstu raportu/pilotażu
-i lokalną informacją o prywatności. Typecheck/rules/build/lint/test routingu i Codex review pass;
-28 kontroli HTTP produkcji pass.
-GSC baseline: 5 kliknięć / 721 wyświetleń, filtr 28 dni z danymi do 06.09. To nie wynik zmian.
-Opis: `docs/seo-fix-2026-09-09.md`; nadal czekamy na przetworzenie adresów przez Google.
-
-v796 (`cc97d24`): landing pokazuje odbiorcę, przykład problemu i trzy oferty. 19% mniej
-widocznego tekstu; krótsza strona mobile, szersze pola monitoringu. Kontrole lokalne i live
-320–1440 px, dwa motywy, typecheck/rules/build/lint oraz Codex review zakończone.
-Szczegóły: `docs/landing-review-2026-09-08.md`.
-
-v795 (`fb94a59`): skan i samodzielna beta monitoringu bezpłatne, raport 49 USD, pierwsze dwa
-pilotaże po 1500 USD. Wycofano zapowiedzi abonamentów i pakietów; eksperymentalne wzmianki
-agentów bez gwarantowanej kadencji. Typecheck, lint, rules, build i przegląd Codex zielone;
-kontrola live 390/1440 px, metadane, FAQ i linki. Billing wyłączony, żadnych wiadomości.
-
-v794 (`09693c7`): alerty monitoringu mają HTML i krótszy tekst: obserwacja przed punktacją,
-przycisk do dowodów, najwyżej trzy pełne opisy, dalsze zmiany jako krótkie statusy.
-Zachowano daty, potwierdzenie drugim pomiarem, brak odczytu poza punktacją i wypisanie.
-Nie wysłano testowego maila. Podglądy i kontrola: `docs/watch-email-2026-09-08.md`.
-v793 (`3a112e3`): Antigravity i Cursor w raportach, jawne modele i daty, brakujące próby poza
-mianownikiem. Kontrola live: 10 dostaw, 7 stron przebiegów, zgodność 159 pełnych odpowiedzi.
-v792 (`99b31ca`): dokumentacja API, visibility i raporty z rozwijanymi dowodami oraz pełnym wydrukiem.
-v791 (`fba5a5f`): krótsza metodologia, findings i raport branżowy; tabele i sekcje rozwijane.
-v790 (`1bd0ae8`): nawigacja, landing, kategorie i przeglądarka odpowiedzi agentów.
-
-v788 (`33e5b4c`): końcowe korekty obietnic na stronie i źródeł Chroma/Polar.
-v787 (`a1139d3`): obowiązkowe oceny briefu/zaleceń, raporty z ocenionymi następnymi krokami,
-cennik z konkretnym zakresem pilotażu. Dziewięć dostaw oraz próbka ponownie opublikowane.
-Typecheck, lint, rules, build i wymagane przeglądy Codex zielone; korpus i dawne biegi bez zmian.
-Ruch: 3 kliknięcia z Google w 28 dni; rendery „browser" to głównie crawler z nagłówkiem Mozilla.
-Zero klientów, leady i obserwacje w bazie to nasze testy. DMARC p=none, pierwszy raport od Google
-zdrowy (DKIM pass przez forward Porkbuna).
+v804 (`9b08a11`, 14.09): noindex,follow na `/c/*/runs`, sitemap bez tych URL (223 wpisy).
+v803 (`e9c8e3b`, 11.09): unikalne h1/title/og:description dla `/c/*/runs`.
+v801 (`c57c8b4`, 09.09): `license` na Datasetach kategorii, formularz skanu, stopka; walidacja
+GSC 24 elementów uruchomiona 09.09.
+v798 (`258d5ff`, 09.09): HTTPS bez www, canonicale, Formspree (`docs/seo-fix-2026-09-09.md`).
+GSC baseline 28 dni do 06.09: 5 kliknięć / 721 wyświetleń.
+Wcześniej: v796 landing, v795 cennik, v793 Antigravity+Cursor w raportach (445 odpowiedzi
+łącznie), v787 obowiązkowe oceny briefu i zaleceń. DMARC p=none, decyzja o quarantine ~17.09.
 
 ## Zaległości (bez zmian)
 
-`oauth_dcr` 0/1 u nas; rescoring historii; schemat odpowiedzi agenta i N>=8; przegląd DMARC
-~17.09 i decyzja o `p=quarantine`; PostHog; Paddle i tożsamość sprzedawcy; limit 400 kB odczytu;
-publiczna migawka korpusu / dostępność repo do niezależnego przeliczenia skanów;
-typed_package na vercel.com; filtr właściciela llms.txt; wiersz `{day:"probe"}` w visits.
+`oauth_dcr` 0/1 u nas; rescoring historii; schemat odpowiedzi agenta i N>=8; PostHog; Paddle;
+limit 400 kB odczytu; publiczna migawka korpusu; typed_package na vercel.com; filtr właściciela
+llms.txt; wiersz `{day:"probe"}` w visits.
