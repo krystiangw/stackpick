@@ -7,7 +7,7 @@ import { CATEGORIES, CURATED_DOMAINS } from '@/lib/categories'
 import { priceOf, skuById, INTEGRATION_PILOT } from '@/lib/billing/catalog'
 import { recordVisit } from '@/lib/visits'
 import { headers } from 'next/headers'
-import { pageMetadata } from '@/lib/site'
+import { pageMetadata, SITE_URL } from '@/lib/site'
 import { getStore } from '@/lib/store'
 import { NOISE_FLOOR_PERCENT } from '@/lib/published'
 import { publishedCorpus } from '@/lib/published'
@@ -217,7 +217,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           Use the short form for a report, an integration pilot or a question about fit. I read every message and reply myself.
         </p>
-        <ContactForm defaultInterest={defaultInterest} context={context} privacyLinked={CONTROLLER_IS_NAMED} />
+        <ContactForm defaultInterest={defaultInterest} context={context} privacyLinked={CONTROLLER_IS_NAMED} thanksUrl={`${SITE_URL}/thanks`} />
       </section>
 
       <section className="border-b border-rule py-12">

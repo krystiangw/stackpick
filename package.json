@@ -22,6 +22,7 @@
     "watch-baselines": "tsx scripts/watch-baselines.mts",
     "visibility": "tsx harness/visibility.mts",
     "visibility-worker": "tsx harness/visibility-worker.mts",
+    "traffic": "tsx scripts/traffic.mts",
     "typecheck": "tsc --noEmit",
     "rules": "tsx scripts/rules.mts",
     "diff-corpus": "tsx scripts/diff-corpus.mts",
