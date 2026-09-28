@@ -51,7 +51,10 @@ const urls = asked.filter((one) => one.startsWith('http'))
  */
 async function chosen(): Promise<string[]> {
   if (urls.length > 0) return urls
-  const all = await fromSitemap()
+  // The sitemap carries the noindex `/runs` pages on purpose, to make Google refetch and drop them
+  // (see the comment in src/app/sitemap.ts). Passing them on to IndexNow would be asking an index
+  // to come look at a page we are telling it not to keep, so they come back out here, in both modes.
+  const all = (await fromSitemap()).filter((url) => !url.endsWith('/runs'))
   return asked.includes('--all') ? all : all.filter((url) => !url.includes('/v/'))
 }
 const submitting = await chosen()
